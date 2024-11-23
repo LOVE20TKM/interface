@@ -1,1 +1,0 @@
-(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[9082],{87869:function(n,_,u){(window.__NEXT_P=window.__NEXT_P||[]).push(["/acting",function(){return u(68736)}])}},function(n){n.O(0,[4846,7526,3844,7140,9638,2624,5551,7399,8736,2888,9774,179],function(){return n(n.s=87869)}),_N_E=n.O()}]);
