@@ -1,6 +1,6 @@
 ---
-title: 'LOVE20 代币简介'
-description: 'LOVE20 代币是 LOVE20 协议部署时自动创建的第一个代币'
+title: 'LOVE20代币简介'
+description: 'LOVE20代币是LOVE20协议部署时自动创建的第一个代币'
 ---
 
 ## 0. 关于 LOVE20 协议与 LOVE20 代币
