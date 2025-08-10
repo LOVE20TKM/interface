@@ -25,7 +25,7 @@ LOVE20 中的 **“LOVE”** 代表爱，包括对自己、他人以及热爱事
 
 任何地址都可以用 {{PARENT_SYMBOL}} 参与申购 {{SYMBOL}} 代币，申购价格固定，所有地址申购价格均相同。
 
-申购募资目标为 {{LAUNCH_GOAL}} 个 {{PARENT_SYMBOL}}（即价格为: 1 {{PARENT_SYMBOL}} = {{PRICE}} {{SYMBOL}}），如果实际募资到的 {{PARENT_SYMBOL}} 数量超过目标，超额部分会在公平发射结束后按申购比例返还给参与者。
+申购募资总目标为 {{LAUNCH_GOAL}} 个 {{PARENT_SYMBOL}}（即价格为: 1 {{PARENT_SYMBOL}} = {{PRICE}} {{SYMBOL}}），如果实际募资到的 {{PARENT_SYMBOL}} 总数量超过目标，超额部分会在公平发射结束后按申购比例返还给参与者。
 
 公平发射结束后，你可以在任何时间按申购比例领取{{SYMBOL}}代币；超过募资比例的 {{PARENT_SYMBOL}} 会在领取时返还。​
 
