@@ -74,6 +74,7 @@ const nextConfig = {
       '/my/myaction': { page: '/my/myaction' },
       '/my/actionrewards': { page: '/my/actionrewards' },
       '/my/govrewards': { page: '/my/govrewards' },
+      '/my/rewardsofaction': { page: '/my/rewardsofaction' },
       '/tokens': { page: '/tokens' },
       '/tokens/children': { page: '/tokens/children' },
       '/verify': { page: '/verify' },
