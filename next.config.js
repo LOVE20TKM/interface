@@ -84,7 +84,6 @@ const nextConfig = {
       '/vote/actions4submit': { page: '/vote/actions4submit' },
       '/vote/history': { page: '/vote/history' },
       '/vote/vote': { page: '/vote/vote' },
-      '/security-test': { page: '/security-test' },
     };
   },
   images: {
