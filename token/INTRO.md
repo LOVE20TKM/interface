@@ -82,4 +82,4 @@ LOVE20 协议的应用场景很灵活，可以由社群自由探索，包括但�
 
 以上是对 LOVE20 协议和 {{SYMBOL}}代币的简单介绍。
 
-如需详细了解 LOVE20 协议和相关代币规则，请前往协议的 [Github 文档首页](https://love20tkm.github.io/docs/)，仔细阅读协议白皮书。
+想进一步了解 LOVE20 协议和相关代币规则，请前往协议的 [Github 文档首页](https://love20tkm.github.io/docs/)，仔细阅读协议白皮书。
