@@ -7,6 +7,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { Plus, Trash2 } from 'lucide-react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { validateVerificationRule, validateVerificationKey } from '@/src/lib/securityUtils';
 
 // shadcn/ui
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,14 @@ const FormSchema = z.object({
   verificationRule: z
     .string()
     .min(1, { message: '验证规则不能为空' })
-    .refine((val) => getCharLength(val) <= 10000, { message: '验证规则不能超过10000字' }),
+    .refine((val) => getCharLength(val) <= 10000, { message: '验证规则不能超过10000字' })
+    .refine(
+      (val) => {
+        const validation = validateVerificationRule(val);
+        return validation.isValid;
+      },
+      { message: '验证规则包含不安全的内容，请检查是否包含HTML标签、脚本代码或不安全的链接' },
+    ),
 
   // 使用数组存储多组 key-value
   verificationPairs: z.array(
@@ -73,11 +81,25 @@ const FormSchema = z.object({
           {
             message: `关键词最多${MAX_VERIFICATION_KEY_CHARS}个汉字或${MAX_VERIFICATION_KEY_BYTES}个英文数字`,
           },
+        )
+        .refine(
+          (val) => {
+            const validation = validateVerificationKey(val);
+            return validation.isValid;
+          },
+          { message: '验证名称包含不安全的内容' },
         ),
       value: z
         .string()
         .min(1, { message: '验证信息提示不能为空' })
-        .refine((val) => getCharLength(val) <= 1000, { message: '验证信息内容（value）不能超过1000字' }),
+        .refine((val) => getCharLength(val) <= 1000, { message: '验证信息内容（value）不能超过1000字' })
+        .refine(
+          (val) => {
+            const validation = validateVerificationRule(val);
+            return validation.isValid;
+          },
+          { message: '验证信息内容包含不安全的内容' },
+        ),
     }),
   ),
 

@@ -12,6 +12,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { ActionInfo } from '@/src/types/love20types';
 import { formatTokenAmount } from '@/src/lib/format';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
+import SafeText from '@/src/components/Common/SafeText';
 
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -105,9 +106,9 @@ const ActionDetail: React.FC<ActivityDetailProps> = ({
 
           <div className="mb-4">
             <h3 className="text-sm font-bold mb-2">验证规则</h3>
-            <p className="text-greyscale-500 whitespace-pre-wrap">
-              <LinkIfUrl text={actionInfo?.body.verificationRule} />
-            </p>
+            <div className="text-greyscale-500">
+              <LinkIfUrl text={actionInfo?.body.verificationRule} preserveLineBreaks={true} />
+            </div>
           </div>
           <div className="mb-4">
             <h3 className="text-sm font-bold mb-2">报名参加行动时，行动者要提供的信息</h3>
@@ -115,8 +116,16 @@ const ActionDetail: React.FC<ActivityDetailProps> = ({
               <ul className="list-disc pl-5">
                 {actionInfo.body.verificationKeys.map((key: string, index: number) => (
                   <li key={index} className="text-greyscale-500">
-                    <div>{key} :</div>
-                    <div>{actionInfo.body.verificationInfoGuides[index]}</div>
+                    <div className="text-sm font-bold text-greyscale-900">
+                      <SafeText text={key} showWarning={true} /> :
+                    </div>
+                    <div>
+                      <SafeText
+                        text={actionInfo.body.verificationInfoGuides[index]}
+                        showWarning={true}
+                        preserveLineBreaks={true}
+                      />
+                    </div>
                   </li>
                 ))}
               </ul>

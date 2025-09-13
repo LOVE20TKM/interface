@@ -84,11 +84,65 @@ const nextConfig = {
       '/vote/actions4submit': { page: '/vote/actions4submit' },
       '/vote/history': { page: '/vote/history' },
       '/vote/vote': { page: '/vote/vote' },
+      '/security-test': { page: '/security-test' },
     };
   },
   images: {
     unoptimized: true, // 静态导出需要这个设置
   },
+
+  // 安全头部配置 - 仅在开发模式下启用（静态导出不支持自定义headers）
+  ...(process.env.NODE_ENV === 'development'
+    ? {
+        async headers() {
+          // 直接在这里定义安全配置，避免模块导入问题
+          const developmentCSP = [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live http://localhost:* ws://localhost:*",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data: https: blob:",
+            "font-src 'self' data:",
+            "connect-src 'self' https: wss: ws: http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*",
+            "frame-src 'none'",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+          ].join('; ');
+
+          return [
+            {
+              source: '/(.*)',
+              headers: [
+                {
+                  key: 'Content-Security-Policy-Report-Only',
+                  value: developmentCSP,
+                },
+                {
+                  key: 'X-Frame-Options',
+                  value: 'DENY',
+                },
+                {
+                  key: 'X-Content-Type-Options',
+                  value: 'nosniff',
+                },
+                {
+                  key: 'X-XSS-Protection',
+                  value: '1; mode=block',
+                },
+                {
+                  key: 'Referrer-Policy',
+                  value: 'strict-origin-when-cross-origin',
+                },
+                {
+                  key: 'Permissions-Policy',
+                  value: 'camera=(), microphone=(), geolocation=(), payment=()',
+                },
+              ],
+            },
+          ];
+        },
+      }
+    : {}),
   // devIndicators: false,
 };
 

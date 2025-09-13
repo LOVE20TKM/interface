@@ -4,6 +4,7 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import { formatTokenAmount } from '@/src/lib/format';
 import { ActionInfo } from '@/src/types/love20types';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
+import SafeText from '@/src/components/Common/SafeText';
 
 interface BasicInfoProps {
   actionInfo: ActionInfo;
@@ -45,8 +46,8 @@ export default function BasicInfo({ actionInfo }: BasicInfoProps) {
       {actionInfo.body.verificationRule && (
         <div className="mt-4">
           <div className="font-bold text-sm mb-2">验证规则:</div>
-          <div className="whitespace-pre-wrap leading-loose bg-gray-50 p-2 rounded-md">
-            <LinkIfUrl text={actionInfo.body.verificationRule} />
+          <div className="leading-loose bg-gray-50 p-2 rounded-md">
+            <LinkIfUrl text={actionInfo.body.verificationRule} preserveLineBreaks={true} />
           </div>
         </div>
       )}
@@ -58,8 +59,16 @@ export default function BasicInfo({ actionInfo }: BasicInfoProps) {
           <ul className="list-disc pl-5">
             {actionInfo.body.verificationKeys.map((key, index) => (
               <li key={index} className="text-gray-700">
-                <div>{key} :</div>
-                <div>{actionInfo.body.verificationInfoGuides?.[index]}</div>
+                <div className="text-sm font-bold text-greyscale-900">
+                  <SafeText text={key} showWarning={true} /> :
+                </div>
+                <div>
+                  <SafeText
+                    text={actionInfo.body.verificationInfoGuides?.[index]}
+                    showWarning={true}
+                    preserveLineBreaks={true}
+                  />
+                </div>
               </li>
             ))}
           </ul>

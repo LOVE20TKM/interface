@@ -1,6 +1,3 @@
-/* Distinguish between zero (0) and uppercase letter O (O) */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Code+Pro:wght@400;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -20,12 +17,6 @@ a {
 
 * {
   box-sizing: border-box;
-}
-
-/* Distinguish between zero (0) and uppercase letter O (O) */
-.mono-font-stack {
-  font-family: 'JetBrains Mono', 'Source Code Pro', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas',
-    'Courier New', monospace;
 }
 
 @layer base {
