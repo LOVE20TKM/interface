@@ -161,7 +161,7 @@ const LaunchStatus: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = 
           <p>3. 治理激励：{formatTokenAmount(BigInt(TOKEN_CONFIG.govRewards))} (45%)</p>
           <p>4. 行动激励：{formatTokenAmount(BigInt(TOKEN_CONFIG.actionRewards))} (45%)</p>
           <p className="mt-3 font-medium">发射规则：</p>
-          <p>1. 代币发放：按申购数量占比平均发放</p>
+          <p>1. 代币发放：按申购数量占比发放</p>
           <p>2. 超过募集目标的父币，将按申购比例返还</p>
         </div>
       </div>
