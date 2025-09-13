@@ -90,7 +90,7 @@ export const formatPhaseText = (phases: number, onlyBlockTime = false): string =
 
   if (totalSeconds >= 24 * 60 * 60) {
     // 超过1天，显示天数
-    const days = Math.ceil(totalSeconds / (24 * 60 * 60));
+    const days = Math.round(totalSeconds / (24 * 60 * 60));
     timeDisplay = `${days}天`;
   } else if (totalSeconds >= 60 * 60) {
     // 超过1小时但不够1天，显示小时数
