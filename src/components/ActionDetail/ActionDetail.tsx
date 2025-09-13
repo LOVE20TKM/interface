@@ -116,7 +116,7 @@ const ActionDetail: React.FC<ActivityDetailProps> = ({
               <ul className="list-disc pl-5">
                 {actionInfo.body.verificationKeys.map((key: string, index: number) => (
                   <li key={index} className="text-greyscale-500">
-                    <div className="text-sm font-bold text-greyscale-900">
+                    <div className="text-sm font-bold text-greyscale-900 mb-1">
                       <SafeText text={key} showWarning={true} /> :
                     </div>
                     <div>
