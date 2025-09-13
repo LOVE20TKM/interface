@@ -83,7 +83,7 @@ export const formatPhaseText = (phases: number, onlyBlockTime = false): string =
   const totalBlocks = phases * PHASE_BLOCKS;
 
   // 计算总时间（秒）
-  const totalSeconds = Math.ceil((totalBlocks * BLOCK_TIME) / 100);
+  const totalSeconds = Math.ceil((totalBlocks * BLOCK_TIME) / 1000);
 
   // 计算时间显示
   let timeDisplay: string;
