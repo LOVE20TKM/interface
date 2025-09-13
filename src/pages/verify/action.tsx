@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import React, { useContext, useEffect, useState } from 'react';
 
 // my hooks
@@ -53,7 +54,15 @@ const VerifyPage = () => {
       <main className="flex-grow">
         {remainingVotes > 0 && (
           <div className="px-4 pt-4">
-            <LeftTitle title="请分配您的验证票：" />
+            <div className="flex justify-between items-center">
+              <LeftTitle title="请分配您的验证票：" />
+              <Link
+                href={`/action/info/?id=${actionId}&symbol=${token?.symbol}&tab=verify&tab2=current`}
+                className="text-blue-600 hover:text-blue-800 underline text-sm"
+              >
+                验证结果&gt;&gt;
+              </Link>
+            </div>
             <RoundLite currentRound={currentRound} roundType="verify" showCountdown={false} />
           </div>
         )}
