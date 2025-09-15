@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
 
@@ -23,6 +23,10 @@ const MyPage = () => {
   // const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { isConnected } = useAccount();
+
+  // 状态管理：追踪质押和行动状态
+  const [hasStake, setHasStake] = useState<boolean>(false);
+  const [hasActions, setHasActions] = useState<boolean>(false);
 
   return (
     <>
@@ -50,16 +54,39 @@ const MyPage = () => {
           // 正常显示个人资产内容
           <>
             <MyTokenPanel token={token} />
-            <div className="flex-col items-center p-4">
-              <div className="flex justify-between items-center mb-2">
-                <LeftTitle title="我的治理资产" />
-                <Button variant="link" className="text-secondary border-secondary" asChild>
-                  <Link href={`/gov/unstake?symbol=${token?.symbol}`}>取消质押</Link>
-                </Button>
-              </div>
-              <MyGovernanceAssetsPanel token={token} />
-            </div>
-            <MyJoinedActionList token={token} />
+
+            {/* 条件渲染：当没有质押但有行动时，优先显示行动 */}
+            {!hasStake && hasActions ? (
+              <>
+                <MyJoinedActionList token={token} onActionStatusChange={setHasActions} />
+                <div className="flex-col items-center p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <LeftTitle title="我的治理资产" />
+                    {hasStake && (
+                      <Button variant="link" className="text-secondary border-secondary" asChild>
+                        <Link href={`/gov/unstake?symbol=${token?.symbol}`}>取消质押</Link>
+                      </Button>
+                    )}
+                  </div>
+                  <MyGovernanceAssetsPanel token={token} onStakeStatusChange={setHasStake} />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex-col items-center p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <LeftTitle title="我的治理资产" />
+                    {hasStake && (
+                      <Button variant="link" className="text-secondary border-secondary" asChild>
+                        <Link href={`/gov/unstake?symbol=${token?.symbol}`}>取消质押</Link>
+                      </Button>
+                    )}
+                  </div>
+                  <MyGovernanceAssetsPanel token={token} onStakeStatusChange={setHasStake} />
+                </div>
+                <MyJoinedActionList token={token} onActionStatusChange={setHasActions} />
+              </>
+            )}
           </>
         )}
       </main>

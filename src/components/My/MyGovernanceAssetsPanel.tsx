@@ -28,9 +28,14 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 interface MyGovernanceAssetsPanelProps {
   token: Token | null | undefined;
   enableWithdraw?: boolean;
+  onStakeStatusChange?: (hasStake: boolean) => void;
 }
 
-const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({ token, enableWithdraw = false }) => {
+const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
+  token,
+  enableWithdraw = false,
+  onStakeStatusChange,
+}) => {
   const { address: account } = useAccount();
 
   // Hook：获取当前轮次
@@ -203,6 +208,14 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({ token
       }, 2000);
     }
   }, [isConfirmedWithdraw]);
+
+  // 通知父组件质押状态变化
+  useEffect(() => {
+    if (onStakeStatusChange && !isPendingAccountStakeStatus) {
+      const hasStake = Boolean(slAmount && slAmount > BigInt(0));
+      onStakeStatusChange(hasStake);
+    }
+  }, [slAmount, isPendingAccountStakeStatus, onStakeStatusChange]);
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -396,7 +409,9 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({ token
                 >
                   {!canWithdraw
                     ? '已取消,第' +
-                      (formatRoundForDisplay(requestedUnstakeRound, token) + (promisedWaitingPhases || BigInt(0)) + BigInt(1)) +
+                      (formatRoundForDisplay(requestedUnstakeRound, token) +
+                        (promisedWaitingPhases || BigInt(0)) +
+                        BigInt(1)) +
                       '轮才可取回'
                     : isPendingWithdraw
                     ? '提交中'
@@ -428,7 +443,9 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({ token
               <Link href={`/gov/unstake/?symbol=${token.symbol}`}>
                 {!canWithdraw
                   ? '已取消, 第' +
-                    (formatRoundForDisplay(requestedUnstakeRound, token) + (promisedWaitingPhases || BigInt(0)) + BigInt(1)) +
+                    (formatRoundForDisplay(requestedUnstakeRound, token) +
+                      (promisedWaitingPhases || BigInt(0)) +
+                      BigInt(1)) +
                     '轮可取回'
                   : '取回质押代币'}
               </Link>

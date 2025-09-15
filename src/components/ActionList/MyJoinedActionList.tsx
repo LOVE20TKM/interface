@@ -3,7 +3,7 @@ import { useAccount } from 'wagmi';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ChevronRight, UserPen } from 'lucide-react';
 import Link from 'next/link';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 // my hooks
 import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
@@ -26,9 +26,10 @@ import { Button } from '@/components/ui/button';
 
 interface MyJoinedActionListProps {
   token: Token | null | undefined;
+  onActionStatusChange?: (hasActions: boolean) => void;
 }
 
-const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token }) => {
+const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onActionStatusChange }) => {
   const { address: account } = useAccount();
   const { currentRound } = useCurrentRound();
   const {
@@ -36,6 +37,14 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token }) => {
     isPending: isPendingJoinedActions,
     error: errorJoinedActions,
   } = useJoinedActions((token?.address as `0x${string}`) || '', account as `0x${string}`);
+
+  // 通知父组件行动状态变化
+  useEffect(() => {
+    if (onActionStatusChange && !isPendingJoinedActions) {
+      const hasActions = Boolean(joinedActions && joinedActions.length > 0);
+      onActionStatusChange(hasActions);
+    }
+  }, [joinedActions, isPendingJoinedActions, onActionStatusChange]);
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
