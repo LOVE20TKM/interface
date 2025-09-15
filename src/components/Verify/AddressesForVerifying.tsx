@@ -223,8 +223,8 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                 <tr key={info.account} className="border-b border-gray-100">
                   <td className="py-1">
                     <div className="text-left">
-                      <div className="flex items-start gap-2">
-                        <span className="text-xs font-bold text-gray-500 mt-1 min-w-[4px]">{index + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-gray-500 min-w-[4px]">{index + 1}</span>
                         <div className="font-mono">
                           <AddressWithCopyButton address={info.account} />
                         </div>
