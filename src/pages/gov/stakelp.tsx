@@ -30,10 +30,11 @@ const StakePage = () => {
             <div className="text-base font-bold text-blue-700 pt-2 pb-1">治理激励：</div>
             <div className="text-sm text-blue-700 pb-1">1、当轮所得治理激励 = 验证激励 + 加速激励</div>
             <div className="text-sm text-blue-700 pb-1">
-              2、单个地址的验证激励：当轮治理总激励 * 50% * 该地址行使验证权的治理票数 / 行使验权的治理票总数
+              2、单个地址的验证激励：当轮治理总激励 * 50% * 当轮该地址参与验证的治理票数 / 当轮参与验证的治理票总数
             </div>
             <div className="text-sm text-blue-700 pb-1">
-              3、单个地址的加速激励：当轮治理总激励 * 50% * 该地址质押代币数量 / 质押代币总数量
+              3、单个地址的加速激励：当轮治理总激励 * 50% * 该地址加速质押代币数量 /
+              当轮所有参与验证地址的加速质押代币总数
             </div>
             <div className="text-sm text-blue-700">
               4、溢出：单个地址的加速激励 超过验证激励 2 倍以上的部分，为溢出激励，自动销毁，归入未来总激励
