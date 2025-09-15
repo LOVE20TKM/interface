@@ -137,6 +137,53 @@ function _parseTimeoutError(error: string): string {
 }
 
 /**
+ * 检查是否为RPC调用错误（通常因为链上状态变化导致）
+ */
+function _parseRpcError(error: string): string {
+  const rpcErrorPatterns = [
+    // 常见RPC错误模式
+    /Missing or invalid parameters/i,
+    /no input found/i,
+    /invalid input/i,
+    /call exception/i,
+    /invalid call data/i,
+    /execution reverted.*position.*out of bounds/i,
+    /position.*out of bounds/i,
+    /Invalid array length/i,
+    /index out of bounds/i,
+
+    // 流动性相关的RPC错误
+    /insufficient reserves/i,
+    /insufficient liquidity/i,
+    /zero liquidity/i,
+    /pair does not exist/i,
+
+    // 价格查询失败的常见模式
+    /amounts.*calculation.*failed/i,
+    /getAmountsOut.*failed/i,
+    /price.*query.*failed/i,
+  ];
+
+  for (const pattern of rpcErrorPatterns) {
+    if (pattern.test(error)) {
+      // 如果错误包含流动性相关关键词，给出更具体的提示
+      if (/insufficient.*liquidity|zero.*liquidity|insufficient.*reserves/i.test(error)) {
+        return '流动性不足，请尝试较小的交换数量或稍后重试';
+      }
+
+      // 如果错误包含position/bounds相关关键词，通常是价格变动导致
+      if (/position.*out of bounds|index out of bounds/i.test(error)) {
+        return '价格变动过快，超过滑点保护。请调整数量后重试~';
+      }
+
+      // 通用RPC错误提示
+      return '价格变动过快，超过滑点保护。请调整数量后重试~';
+    }
+  }
+  return '';
+}
+
+/**
  * 检查是否为 Gas 费不足错误
  */
 function _parseGasError(error: string): string {
@@ -238,6 +285,12 @@ export function getReadableRevertErrMsg(error: string, contractKey: string): Err
   const timeoutError = _parseTimeoutError(rawMessage);
   if (timeoutError) {
     return { name: '网络超时', message: timeoutError };
+  }
+
+  // 0.2.检查RPC调用错误（链上状态变化导致的错误）
+  const rpcError = _parseRpcError(rawMessage);
+  if (rpcError) {
+    return { name: '链上交易失败', message: rpcError };
   }
 
   // 0.5.检查TransactionExecutionError格式 (新增)
@@ -440,6 +493,17 @@ export const useHandleContractError = () => {
           const gasError = _parseGasError(source);
           if (gasError) {
             setError({ name: 'Gas费不足', message: gasError });
+            return;
+          }
+        }
+      }
+
+      // 检查是否为RPC调用错误
+      for (const source of sources) {
+        if (source && typeof source === 'string') {
+          const rpcError = _parseRpcError(source);
+          if (rpcError) {
+            setError({ name: '链上交易失败', message: rpcError });
             return;
           }
         }

@@ -539,32 +539,28 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
     canSwap && swapMethod !== 'WETH9' && fromAmount > BigInt(0) && swapPath.length >= 2,
   );
 
-  // 添加详细的错误日志
+  // --------------------------------------------------
+  // 6. 错误处理 Hook
+  // --------------------------------------------------
+  const { handleContractError } = useHandleContractError();
+
+  // 改进的价格查询错误处理
   useEffect(() => {
     if (amountsOutError) {
       console.error('🚨 getAmountsOut 详细错误:', {
         error: amountsOutError,
         errorMessage: amountsOutError.message,
+        errorCause: amountsOutError.cause?.message,
+        errorDetails: amountsOutError.details,
         fromAmount: fromAmount.toString(),
         swapPath,
         swapMethod,
-        isPositionError:
-          amountsOutError.message?.includes('Position') && amountsOutError.message?.includes('out of bounds'),
       });
 
-      // 具体错误处理
-      if (amountsOutError.message?.includes('Position') && amountsOutError.message?.includes('out of bounds')) {
-        console.warn('⚠️ 检测到 position out of bounds 错误');
-        toast.error('价格查询失败，可能是流动性池问题或网络异常');
-      } else if (amountsOutError.message?.includes('INVALID_PATH')) {
-        console.error('❌ 无效路径错误');
-        toast.error('交换路径无效，请检查代币配置');
-      } else if (amountsOutError.message?.includes('INSUFFICIENT_LIQUIDITY')) {
-        console.error('❌ 流动性不足错误');
-        toast.error('流动性不足，请尝试较小的交换金额');
-      }
+      // 使用统一的错误处理逻辑
+      handleContractError(amountsOutError, 'uniswapV2Router');
     }
-  }, [amountsOutError, fromAmount, swapPath, swapMethod]);
+  }, [amountsOutError, fromAmount, swapPath, swapMethod, handleContractError]);
 
   // 更新输出数量
   useEffect(() => {
@@ -616,7 +612,7 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
   }, [fromAmount, toAmount]);
 
   // --------------------------------------------------
-  // 6. 获取主要操作的 hook 函数
+  // 7. 获取主要操作的 hook 函数
   // --------------------------------------------------
   const needsApproval = !fromToken.isNative && swapMethod !== 'WETH9';
   const approvalTarget =
@@ -708,7 +704,7 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
   }, [isPendingFromBalance, isPendingToBalance, isApproved, isConfirmedApprove, needsApproval, isDisabled]);
 
   // --------------------------------------------------
-  // 7. 执行交易操作
+  // 8. 执行交易操作
   // --------------------------------------------------
   // 处理授权
   const handleApprove = form.handleSubmit(async () => {
@@ -841,18 +837,30 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
         errorDetails: error.details,
       });
 
-      // 更详细的错误处理
-      if (error.message?.includes('Position') && error.message?.includes('out of bounds')) {
-        toast.error('交易数据解析失败，请稍后重试或联系技术支持');
-      } else if (error.message?.includes('INVALID_PATH')) {
-        toast.error('交换路径无效，请检查代币配置');
-      } else if (error.message?.includes('INSUFFICIENT_OUTPUT_AMOUNT')) {
-        toast.error('输出金额不足，请调整滑点设置或减少交换金额');
-      } else if (error.message?.includes('INSUFFICIENT_LIQUIDITY')) {
-        toast.error('流动性不足，请尝试较小的交换金额');
-        // } else {
-        //   toast.error(error?.message || '兑换失败');
+      // 使用统一的错误处理逻辑，但为swap操作提供额外的上下文提示
+      console.error('🚨 交换执行错误详情:', {
+        errorMessage: error.message,
+        errorCause: error.cause?.message,
+        errorDetails: error.details,
+        swapMethod,
+        fromToken: fromToken.symbol,
+        toToken: toToken.symbol,
+        fromAmount: fromAmount.toString(),
+        toAmount: toAmount.toString(),
+      });
+
+      // 优先检查是否是滑点失败（这是最常见的情况）
+      if (
+        error.message?.includes('INSUFFICIENT_OUTPUT_AMOUNT') ||
+        error.cause?.message?.includes('INSUFFICIENT_OUTPUT_AMOUNT') ||
+        error.details?.includes('INSUFFICIENT_OUTPUT_AMOUNT')
+      ) {
+        toast.error('价格变动过快超过滑点保护，交易被保护性取消，请重试');
+        return;
       }
+
+      // 使用全局错误处理逻辑
+      handleContractError(error, 'uniswapV2Router');
     }
   });
 
@@ -870,10 +878,9 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
   }, [isSwapConfirmed, fromToken.symbol, toToken.symbol]);
 
   // --------------------------------------------------
-  // 8. 错误处理
+  // 9. 错误处理
   // --------------------------------------------------
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
+  // 错误处理（amountsOutError单独处理，不在这里重复处理）
   useEffect(() => {
     const errors = [
       errInitialStakeRound,
@@ -883,7 +890,6 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
       errTokenToToken,
       errETHToToken,
       errTokenToETH,
-      amountsOutError,
     ];
     errors.forEach((error) => {
       if (error) {
@@ -898,11 +904,11 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
     errTokenToToken,
     errETHToToken,
     errTokenToETH,
-    amountsOutError,
+    handleContractError,
   ]);
 
   // --------------------------------------------------
-  // 9. 加载状态
+  // 10. 加载状态
   // --------------------------------------------------
   if (!token) {
     return <LoadingIcon />;
@@ -1174,24 +1180,42 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
               <div className="text-sm text-green-600 mb-2">💡 这是 1:1 包装转换，无手续费，无滑点</div>
             )}
 
-            <div className="flex justify-between text-sm">
-              <span className="text-greyscale-400">兑换率: </span>
-              <span>
-                1 {fromToken.symbol} = {conversionRate} {toToken.symbol}
-              </span>
-            </div>
+            {/* 价格查询失败时的友好提示 */}
+            {amountsOutError && swapMethod !== 'WETH9' && (
+              <div className="text-sm text-amber-600 mb-2 bg-amber-50 p-2 rounded border-l-4 border-amber-400">
+                ⚠️ 价格信息更新中，请稍后重试。这通常是因为链上交易活跃导致的临时状态。
+              </div>
+            )}
 
-            <div className="flex justify-between text-sm">
-              <span className="text-greyscale-400">手续费 ({feeInfo.feePercentage}%)：</span>
-              <span>
-                {feeInfo.feeAmount} {fromToken.symbol}
-              </span>
-            </div>
+            {!amountsOutError && (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-greyscale-400">兑换率: </span>
+                  <span>
+                    1 {fromToken.symbol} = {conversionRate} {toToken.symbol}
+                  </span>
+                </div>
 
-            {swapMethod !== 'WETH9' && (
-              <div className="flex justify-between text-sm">
-                <span className="text-greyscale-400">滑点上限 (自动)：</span>
-                <span>0.5%</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-greyscale-400">手续费 ({feeInfo.feePercentage}%)：</span>
+                  <span>
+                    {feeInfo.feeAmount} {fromToken.symbol}
+                  </span>
+                </div>
+
+                {swapMethod !== 'WETH9' && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-greyscale-400">滑点上限 (自动)：</span>
+                    <span>0.5%</span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* 当价格查询失败且输出金额为0时，显示额外说明 */}
+            {amountsOutError && toAmount === BigInt(0) && swapMethod !== 'WETH9' && (
+              <div className="text-xs text-gray-500 mt-2">
+                💡 提示：同时进行相同交易可能会因MEV保护机制而失败，这是为了保护您的资金安全。
               </div>
             )}
 
