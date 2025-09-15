@@ -1,4 +1,5 @@
 import { NextRouter } from 'next/router';
+import { ExternalLinkHandler } from './externalLinkHandler';
 
 export class NavigationUtils {
   private static isTokenPocketEnvironment(): boolean {
@@ -14,6 +15,17 @@ export class NavigationUtils {
       // 检测是否在WebView中
       ((window.navigator as any).standalone === false && window.innerHeight < window.screen.height)
     );
+  }
+
+  private static isIOSDevice(): boolean {
+    if (typeof window === 'undefined') return false;
+
+    const userAgent = window.navigator.userAgent;
+    return /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
+  private static isIOSWalletEnvironment(): boolean {
+    return this.isIOSDevice() && this.isTokenPocketEnvironment();
   }
 
   /**
@@ -258,24 +270,316 @@ export class NavigationUtils {
   static handleExternalLink(url: string): void {
     if (typeof window === 'undefined') return;
 
-    if (this.isTokenPocketEnvironment()) {
-      // 尝试多种方式打开链接
-      try {
-        // 方法1：尝试新窗口
-        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-
-        // 方法2：如果新窗口失败，尝试当前窗口
-        if (!newWindow) {
-          window.location.href = url;
-        }
-      } catch (error) {
-        // 方法3：如果所有方法都失败，直接跳转
-        window.location.href = url;
-      }
+    // 检查是否为特殊域名（需要复制对话框处理的）
+    if (this.isIOSWalletEnvironment() && this.needsSpecialHandling(url)) {
+      // 对于小红书等特殊网站，使用复制对话框
+      ExternalLinkHandler.handleLink(url);
+    } else if (this.isIOSWalletEnvironment()) {
+      // iOS钱包环境特殊处理（使用原有的欺骗技术）
+      this.handleIOSWalletExternalLink(url);
+    } else if (this.isTokenPocketEnvironment()) {
+      // 其他钱包环境
+      this.handleGeneralWalletExternalLink(url);
     } else {
+      // 普通浏览器环境
       window.open(url, '_blank');
     }
   }
+
+  /**
+   * 检查URL是否需要特殊处理
+   */
+  private static needsSpecialHandling(url: string): boolean {
+    try {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname.toLowerCase();
+
+      // 需要特殊处理的域名列表
+      const specialDomains = [
+        'xiaohongshu.com',
+        'www.xiaohongshu.com',
+        'xhslink.com',
+        // 其他已知在TrustWallet中行为异常的域名
+        'douyin.com',
+        'www.douyin.com',
+        'tiktok.com',
+        'www.tiktok.com',
+      ];
+
+      return specialDomains.some((domain) => hostname === domain || hostname.endsWith('.' + domain));
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * iOS钱包环境下的外部链接处理
+   */
+  private static handleIOSWalletExternalLink(url: string): void {
+    try {
+      // 记录当前页面状态，以防返回时页面变白
+      this.saveCurrentPageState();
+
+      // 设置标记，表明即将跳转外部链接
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.setItem('love20_external_link_redirect', 'true');
+      }
+
+      // 使用Event Loop欺骗技术
+      this.useEventLoopDeceptionTechnique(url);
+    } catch (error) {
+      console.warn('iOS外部链接处理失败:', error);
+      // 回退到原有方式
+      this.handleGeneralWalletExternalLink(url);
+    }
+  }
+
+  /**
+   * 终极解决方案：导航完成欺骗技术
+   * 让WebView认为导航已经完成，同时打开外部浏览器
+   */
+  private static useEventLoopDeceptionTechnique(url: string): void {
+    // 核心策略：导航到外部链接 + 立即停止导航 + 重置状态
+    this.executeNavigationCompletionDeception(url);
+  }
+
+  /**
+   * 执行导航完成欺骗 - 让WebView认为导航已完成
+   * 这是解决TrustWallet加载状态的核心技术
+   */
+  private static executeNavigationCompletionDeception(url: string): void {
+    const currentUrl = window.location.href;
+
+    try {
+      // 第一阶段：启动导航到外部链接
+      window.location.href = url;
+
+      // 第二阶段：立即停止导航（关键！）
+      setTimeout(() => {
+        try {
+          // 使用window.stop()停止当前导航
+          if (window.stop) {
+            window.stop();
+          }
+
+          // 立即导航回当前页面，让WebView认为导航已完成
+          window.location.href = currentUrl;
+
+          // 额外保险：使用history API重置状态
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, document.title, currentUrl);
+          }
+        } catch (stopError) {
+          console.warn('导航停止失败:', stopError);
+          // 如果stop失败，尝试其他重置方法
+          this.attemptAlternativeReset(currentUrl);
+        }
+      }, 10); // 10ms足够触发导航但不足以完成加载
+
+      // 第三阶段：确保外部浏览器能打开（备用方案）
+      setTimeout(() => {
+        try {
+          // 创建隐藏链接作为备用方案
+          const link = document.createElement('a');
+          link.href = url;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.style.display = 'none';
+
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (backupError) {
+          console.warn('备用链接打开失败:', backupError);
+        }
+      }, 50);
+    } catch (error) {
+      console.warn('导航欺骗技术失败，使用传统方法:', error);
+      // 回退到传统方法
+      this.fallbackToWindowOpen(url);
+    }
+  }
+
+  /**
+   * 尝试替代重置方法
+   */
+  private static attemptAlternativeReset(currentUrl: string): void {
+    try {
+      // 方法1：使用location.replace（不留历史记录）
+      window.location.replace(currentUrl);
+    } catch (e1) {
+      try {
+        // 方法2：使用pushState然后立即back
+        if (window.history && window.history.pushState) {
+          window.history.pushState(null, document.title, currentUrl);
+          window.history.back();
+        }
+      } catch (e2) {
+        // 方法3：强制刷新（最后手段）
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    }
+  }
+
+  /**
+   * 回退到window.open方案
+   */
+  private static fallbackToWindowOpen(url: string): void {
+    try {
+      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+
+      if (!newWindow) {
+        // 如果被弹窗阻止，使用location.href
+        window.location.href = url;
+      }
+    } catch (error) {
+      // 最后手段
+      window.location.href = url;
+    }
+  }
+
+  /**
+   * 通用钱包环境下的外部链接处理
+   */
+  private static handleGeneralWalletExternalLink(url: string): void {
+    try {
+      // 尝试多种方式打开链接
+      // 方法1：尝试新窗口
+      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+
+      // 方法2：如果新窗口失败，尝试当前窗口
+      if (!newWindow) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      // 方法3：如果所有方法都失败，直接跳转
+      window.location.href = url;
+    }
+  }
+
+  /**
+   * 保存当前页面状态，以防WebView进程被终止
+   */
+  private static saveCurrentPageState(): void {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        const pageData = {
+          url: window.location.href,
+          timestamp: Date.now(),
+          scrollPosition: {
+            x: window.scrollX,
+            y: window.scrollY,
+          },
+        };
+        window.sessionStorage.setItem('love20_page_state', JSON.stringify(pageData));
+      }
+    } catch (error) {
+      console.warn('保存页面状态失败:', error);
+    }
+  }
+
+  /**
+   * 检测并处理页面白屏问题（iOS WebView特有）
+   */
+  static checkAndHandleBlankPage(): void {
+    if (!this.isIOSWalletEnvironment()) return;
+
+    try {
+      // 检查页面是否为空白
+      if (this.isPageBlank()) {
+        this.handleBlankPageRecovery();
+      }
+
+      // 监听页面可见性变化
+      this.setupVisibilityChangeHandler();
+    } catch (error) {
+      console.warn('页面白屏检测失败:', error);
+    }
+  }
+
+  /**
+   * 检测页面是否为白屏
+   */
+  private static isPageBlank(): boolean {
+    if (typeof document === 'undefined') return false;
+
+    // 检查body是否存在且有内容
+    const body = document.body;
+    if (!body) return true;
+
+    // 检查是否有可见内容
+    const hasVisibleContent = body.offsetHeight > 0 && body.offsetWidth > 0 && body.children.length > 0;
+
+    // 检查是否只有脚本标签（可能是白屏状态）
+    const onlyScripts = Array.from(body.children).every(
+      (child) => child.tagName === 'SCRIPT' || child.tagName === 'STYLE',
+    );
+
+    return !hasVisibleContent || onlyScripts;
+  }
+
+  /**
+   * 处理白屏页面恢复
+   */
+  private static handleBlankPageRecovery(): void {
+    try {
+      const savedState = window.sessionStorage?.getItem('love20_page_state');
+      if (savedState) {
+        const pageData = JSON.parse(savedState);
+        const timeDiff = Date.now() - pageData.timestamp;
+
+        // 如果保存的状态是最近的（5分钟内），提供恢复选项
+        if (timeDiff < 5 * 60 * 1000) {
+          const shouldRestore = confirm('检测到页面可能出现了显示问题。\n\n是否需要刷新页面来恢复正常显示？');
+
+          if (shouldRestore) {
+            window.location.reload();
+          }
+        }
+      } else {
+        // 没有保存状态，直接提供刷新选项
+        const shouldRefresh = confirm('页面显示出现问题。\n\n是否需要刷新页面？');
+
+        if (shouldRefresh) {
+          window.location.reload();
+        }
+      }
+    } catch (error) {
+      console.warn('页面恢复处理失败:', error);
+      // 静默处理，不影响用户体验
+    }
+  }
+
+  /**
+   * 设置页面可见性变化处理器
+   */
+  private static setupVisibilityChangeHandler(): void {
+    if (typeof document === 'undefined') return;
+
+    // 移除已存在的监听器，避免重复
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+
+    // 添加新的监听器
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+  }
+
+  /**
+   * 处理页面可见性变化
+   */
+  private static handleVisibilityChange = (): void => {
+    if (typeof document === 'undefined') return;
+
+    // 当页面重新可见时，检查是否为白屏
+    if (!document.hidden) {
+      setTimeout(() => {
+        if (this.isPageBlank()) {
+          this.handleBlankPageRecovery();
+        }
+      }, 1000); // 延迟1秒检查，给页面时间渲染
+    }
+  };
 
   /**
    * 检查并修复首页重定向问题

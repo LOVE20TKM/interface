@@ -38,10 +38,10 @@ export const renderTextWithLinks = (text: string, preserveLineBreaks: boolean = 
 
         // 验证URL安全性
         if (!isUrlSafe(url)) {
-          // 如果URL不安全，显示为普通文本
+          // 如果URL包含危险内容，显示警告信息
           return (
-            <span key={i} className="text-red-500">
-              [不安全的链接已被屏蔽]
+            <span key={i} className="text-red-500 font-semibold">
+              [危险链接已被拦截]
             </span>
           );
         }
@@ -51,20 +51,30 @@ export const renderTextWithLinks = (text: string, preserveLineBreaks: boolean = 
             key={i}
             href={url}
             onClick={(e) => {
+              // 必须先阻止默认行为！
               e.preventDefault();
-              // 再次确认URL安全性
-              if (isUrlSafe(url)) {
-                NavigationUtils.handleExternalLink(url);
-              } else {
-                alert('此链接已被识别为不安全链接，无法打开');
+              e.stopPropagation();
+
+              // 安全检查
+              const isSafe = isUrlSafe(url);
+              if (!isSafe) {
+                alert(`链接安全检查失败: ${url.substring(0, 50)}...`);
+                return false;
               }
+
+              // 调用我们的处理逻辑
+              NavigationUtils.handleExternalLink(url);
+
+              // 返回 false 确保不会触发默认行为
+              return false;
             }}
             className="text-blue-500 underline hover:text-blue-700 break-words break-all whitespace-normal"
-            target="_blank"
-            rel="noopener noreferrer"
             title={`外部链接: ${url}`}
+            // 添加这些属性防止默认行为
+            rel="noopener noreferrer"
+            target="_self"
           >
-            {url}
+            {url.length > 32 ? `${url.substring(0, 29)}...` : url}
           </a>
         );
       })}

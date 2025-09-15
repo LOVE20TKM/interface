@@ -150,9 +150,10 @@ export function hasLineBreaks(text: string): boolean {
 }
 
 /**
- * 验证URL是否安全
+ * 验证URL是否安全 - 使用黑名单机制
+ * 原则：默认允许所有正常网站在外部浏览器打开，只拦截真正危险的链接
  * @param url 需要验证的URL
- * @returns 是否为安全URL
+ * @returns 是否为安全URL（可以在外部浏览器打开）
  */
 export function isUrlSafe(url: string): boolean {
   if (!url) return false;
@@ -160,84 +161,71 @@ export function isUrlSafe(url: string): boolean {
   try {
     const urlObj = new URL(url);
 
-    // 只允许https和http协议
+    // 1. 协议安全检查 - 只允许安全的协议
     if (!['https:', 'http:'].includes(urlObj.protocol)) {
       return false;
     }
 
-    // 常见的安全域名白名单
-    const trustedDomains = [
-      // 社交媒体
-      'weibo.com',
-      'twitter.com',
-      'x.com',
-      'facebook.com',
-      'instagram.com',
-      'linkedin.com',
-      'youtube.com',
-      'tiktok.com',
-      'douyin.com',
-      // 代码和技术
-      'github.com',
-      'gitlab.com',
-      'stackoverflow.com',
-      'medium.com',
-      // 官方网站和文档
-      'wikipedia.org',
-      'reddit.com',
-      'discord.com',
-      'telegram.org',
-      // 区块链和加密
-      'etherscan.io',
-      'bscscan.com',
-      'coinmarketcap.com',
-      'coingecko.com',
-    ];
-
     const hostname = urlObj.hostname.toLowerCase();
+    const fullUrl = url.toLowerCase();
 
-    // 检查是否为已知的恶意域名（黑名单）
-    const maliciousDomains = [
-      'malicious-site.com',
-      'evil.com',
-      'phishing-site.com',
-      'bit.ly', // 短链接可能被滥用
-      'tinyurl.com',
-      't.co', // 可能被用于隐藏真实链接
-    ];
-
-    if (maliciousDomains.some((domain) => hostname.includes(domain))) {
+    // 2. 危险协议和特殊情况检查
+    if (fullUrl.includes('javascript:') ||
+        fullUrl.includes('data:') ||
+        fullUrl.includes('vbscript:') ||
+        fullUrl.includes('file:')) {
       return false;
     }
 
-    // 检查是否为信任的域名
-    const isTrustedDomain = trustedDomains.some((domain) => hostname === domain || hostname.endsWith('.' + domain));
+    // 3. 已知恶意域名黑名单（只包含确实危险的域名）
+    const maliciousDomains = [
+      // 已知钓鱼网站（示例，实际部署时应该维护真实的威胁情报）
+      'phishing-site.com',
+      'fake-bank.com',
+      'malware-host.net',
+      // 注意：不再将短链接服务列为恶意，因为很多正常网站使用它们
+    ];
 
-    // 如果是信任的域名，直接通过
-    if (isTrustedDomain) {
-      return true;
+    if (maliciousDomains.some((domain) => hostname === domain || hostname.endsWith('.' + domain))) {
+      return false;
     }
 
-    // 检查可疑的unicode字符（可能用于域名欺骗）
+    // 4. 明显的恶意关键词检查（只检查非常明显的）
+    const obviousMalwareKeywords = [
+      'phishing',
+      'malware',
+      'trojan',
+      'keylogger',
+      'ransomware',
+      'exploit-kit'
+    ];
+
+    if (obviousMalwareKeywords.some((keyword) => hostname.includes(keyword))) {
+      return false;
+    }
+
+    // 5. 检查可疑的unicode字符（域名欺骗防护）
     if (/[\u0000-\u001f\u007f-\u009f]/.test(hostname)) {
       return false;
     }
 
-    // 检查是否包含可疑的关键词
-    const suspiciousKeywords = ['phishing', 'malware', 'virus', 'hack'];
-    if (suspiciousKeywords.some((keyword) => hostname.includes(keyword))) {
-      return false;
-    }
-
-    // 检查域名格式是否正常
+    // 6. 基本域名格式检查
     if (!/^[a-zA-Z0-9.-]+$/.test(hostname)) {
       return false;
     }
 
-    // 对于不在白名单中的域名，进行更宽松的验证
-    // 只要没有明显的恶意特征就允许
+    // 7. 检查是否为明显的IP地址伪装（简单检查）
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+      // IP地址不一定是恶意的，但可能需要额外注意
+      // 这里我们允许，但实际部署时可以考虑更严格的策略
+    }
+
+    // 8. 默认允许 - 所有通过基本安全检查的URL都允许在外部浏览器打开
+    // 这是关键改变：不再需要白名单，默认信任所有正常格式的URL
     return true;
+
   } catch {
+    // URL格式无效
     return false;
   }
 }
@@ -296,12 +284,12 @@ export function validateVerificationRule(rule: string): {
     sanitizedRule = sanitizeUserInput(rule);
   }
 
-  // 检查URL安全性 - 更宽松的验证
+  // 检查URL安全性 - 使用新的黑名单机制
   const allUrls = rule.match(/(https?:\/\/[^\s]+)/g) || [];
   if (allUrls.length > 0) {
     const unsafeUrls = allUrls.filter((url) => !isUrlSafe(url));
     if (unsafeUrls.length > 0) {
-      errors.push(`包含不安全的链接: ${unsafeUrls.join(', ')}`);
+      errors.push(`包含危险的链接，已被安全过滤器拦截: ${unsafeUrls.join(', ')}`);
     }
   }
 

@@ -14,6 +14,7 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import ActionRewardNotifier from '@/src/components/Common/ActionRewardNotifier';
 import Footer from '@/src/components/Footer';
 import { BottomNavigation } from '@/src/components/Common/BottomNavigation';
+import { usePageRecovery } from '@/src/hooks/usePageRecovery';
 
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
@@ -56,6 +57,9 @@ function MyApp({ Component, pageProps }: AppProps) {
   const [mounted, setMounted] = useState(false);
   const [navLoading, setNavLoading] = useState(false);
 
+  // iOS钱包环境页面恢复功能
+  usePageRecovery();
+
   useEffect(() => {
     setMounted(true);
     initVConsole();
@@ -70,8 +74,25 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   // 路由切换时显示全局加载遮罩
   useEffect(() => {
-    const handleStart = () => setNavLoading(true);
-    const handleDone = () => setNavLoading(false);
+    const handleStart = (url: string) => {
+      // 检查是否是外部链接跳转
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        const isExternalRedirect = window.sessionStorage.getItem('love20_external_link_redirect');
+        if (isExternalRedirect) {
+          // 如果是外部链接跳转，不显示加载状态
+          return;
+        }
+      }
+      setNavLoading(true);
+    };
+
+    const handleDone = () => {
+      setNavLoading(false);
+      // 清除外部链接跳转标记
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.removeItem('love20_external_link_redirect');
+      }
+    };
 
     router.events.on('routeChangeStart', handleStart);
     router.events.on('routeChangeComplete', handleDone);
@@ -83,6 +104,30 @@ function MyApp({ Component, pageProps }: AppProps) {
       router.events.off('routeChangeError', handleDone);
     };
   }, [router.events]);
+
+  // 处理页面可见性变化，清理可能残留的加载状态
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // 页面重新可见时，检查并清理加载状态
+        setTimeout(() => {
+          if (typeof window !== 'undefined' && window.sessionStorage) {
+            const isExternalRedirect = window.sessionStorage.getItem('love20_external_link_redirect');
+            if (isExternalRedirect) {
+              setNavLoading(false);
+              window.sessionStorage.removeItem('love20_external_link_redirect');
+            }
+          }
+        }, 100);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // 在服务端或客户端未完成挂载时显示loading
   if (!mounted) {

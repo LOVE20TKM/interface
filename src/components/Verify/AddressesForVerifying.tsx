@@ -221,16 +221,22 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
             {verificationInfos && verificationInfos.length > 0 ? (
               verificationInfos.map((info, index) => (
                 <tr key={info.account} className="border-b border-gray-100">
-                  <td className="py-2">
+                  <td className="py-1">
                     <div className="text-left">
-                      <div className="font-mono">
-                        <AddressWithCopyButton address={info.account} />
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs font-bold text-gray-500 mt-1 min-w-[4px]">{index + 1}</span>
+                        <div className="font-mono">
+                          <AddressWithCopyButton address={info.account} />
+                        </div>
                       </div>
                       {actionInfo && (
-                        <div className="text-sm text-greyscale-800">
+                        <div className="text-sm text-greyscale-800 ml-3">
                           {actionInfo.body.verificationKeys.map((key, i) => (
-                            <div key={i}>
-                              {key}: <LinkIfUrl text={info.infos[i]} />
+                            <div key={i} className="mb-2">
+                              <div className="text-xs font-semibold text-gray-600 mb-1">{key}:</div>
+                              <div>
+                                <LinkIfUrl text={info.infos[i]} />
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -238,7 +244,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                     </div>
                   </td>
 
-                  <td className="py-2 w-20">
+                  <td className="py-1 w-20">
                     <div className="flex items-center text-left">
                       <input
                         type="number"
@@ -252,7 +258,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                       <span className="text-greyscale-500 text-sm">分</span>
                     </div>
                   </td>
-                  <td className="py-2 text-center w-16 whitespace-nowrap">
+                  <td className="py-1 text-center w-16 whitespace-nowrap">
                     <div className="text-greyscale-500 text-sm">
                       {formatPercentage(addressPercentages[info.account] || 0)}
                     </div>
