@@ -63,7 +63,7 @@ const MyLiquidityStakePanel: React.FC<MyLiquidityStakePanelProps> = ({ token: pr
             {isPendingAccountStakeStatus ? <LoadingIcon /> : formatTokenAmount(govVotes || BigInt(0))}
           </div>
         </div>
-        <div className="stat place-items-center pt-0">
+        <div className="stat place-items-center pt-0 pl-1">
           <div className="stat-title text-sm flex items-center">
             流动性质押凭证SL代币
             <AddressWithCopyButton address={token.slTokenAddress as `0x${string}`} showAddress={false} />
