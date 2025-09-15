@@ -33,7 +33,16 @@ export class ExternalLinkHandler {
   /**
    * 环境检测
    */
-  private static detectEnvironment() {
+  private static detectEnvironment(): {
+    isIOS: boolean;
+    isAndroid: boolean;
+    isTrustWallet: boolean;
+    isWallet: boolean;
+    isIOSTrustWallet: boolean;
+    isIOSWallet: boolean;
+    isAndroidWallet: boolean;
+    userAgent: string;
+  } {
     const ua = window.navigator.userAgent;
     const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isAndroid = /Android/.test(ua);
