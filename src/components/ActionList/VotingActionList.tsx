@@ -85,53 +85,55 @@ const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => 
       <div className="space-y-4">
         {votingActions.length > 0 ? (
           <>
-            {votingActions?.map((votingAction: VotingAction, index: number) => {
-              const action = votingAction.action;
-              // const submitter = votingAction.submitter;
+            {votingActions
+              .sort((a, b) => Number(b.votesNum - a.votesNum)) // 按投票数倒序排序
+              ?.map((votingAction: VotingAction, index: number) => {
+                const action = votingAction.action;
+                // const submitter = votingAction.submitter;
 
-              return (
-                <Card key={action.head.id} className="shadow-none flex items-center relative">
-                  <Link
-                    href={`/action/detail?id=${action.head.id}&type=vote&symbol=${token?.symbol}`}
-                    key={action.head.id}
-                    className="w-full"
-                  >
-                    <CardHeader className="px-3 pt-2 pb-1 flex-row justify-start items-baseline">
-                      <span className="text-greyscale-400 text-sm">No.</span>
-                      <span className="text-secondary text-xl font-bold mr-2">{String(action.head.id)}</span>
-                      <span className="font-bold text-greyscale-800">{`${action.body.title}`}</span>
-                    </CardHeader>
-                    <CardContent className="px-3 pt-1 pb-2">
-                      <div className="flex justify-between gap-0 mt-1 text-sm">
-                        <span className="flex items-center">
-                          <UserPen className="text-greyscale-400 mr-1 h-3 w-3 -translate-y-0.5" />
-                          <span className="text-greyscale-400">
-                            <AddressWithCopyButton
-                              address={action.head.author as `0x${string}`}
-                              showCopyButton={false}
-                              colorClassName2="text-secondary"
-                            />
+                return (
+                  <Card key={action.head.id} className="shadow-none flex items-center relative">
+                    <Link
+                      href={`/action/detail?id=${action.head.id}&type=vote&symbol=${token?.symbol}`}
+                      key={action.head.id}
+                      className="w-full"
+                    >
+                      <CardHeader className="px-3 pt-2 pb-1 flex-row justify-start items-baseline">
+                        <span className="text-greyscale-400 text-sm">No.</span>
+                        <span className="text-secondary text-xl font-bold mr-2">{String(action.head.id)}</span>
+                        <span className="font-bold text-greyscale-800">{`${action.body.title}`}</span>
+                      </CardHeader>
+                      <CardContent className="px-3 pt-1 pb-2">
+                        <div className="flex justify-between gap-0 mt-1 text-sm">
+                          <span className="flex items-center">
+                            <UserPen className="text-greyscale-400 mr-1 h-3 w-3 -translate-y-0.5" />
+                            <span className="text-greyscale-400">
+                              <AddressWithCopyButton
+                                address={action.head.author as `0x${string}`}
+                                showCopyButton={false}
+                                colorClassName2="text-secondary"
+                              />
+                            </span>
                           </span>
-                        </span>
-                        <span>
-                          <span className="text-greyscale-400 mr-1">投票数</span>
-                          <span className="text-secondary">{formatTokenAmount(votingAction.votesNum)}</span>
-                        </span>
-                        <span>
-                          <span className="text-greyscale-400 mr-1">占比</span>
-                          <span className="text-secondary">
-                            {totalVotes === BigInt(0)
-                              ? '-'
-                              : formatPercentage((Number(votingAction.votesNum) * 100) / Number(totalVotes))}
+                          <span>
+                            <span className="text-greyscale-400 mr-1">投票数</span>
+                            <span className="text-secondary">{formatTokenAmount(votingAction.votesNum)}</span>
                           </span>
-                        </span>
-                      </div>
-                    </CardContent>
-                    <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-greyscale-400 pointer-events-none" />
-                  </Link>
-                </Card>
-              );
-            })}
+                          <span>
+                            <span className="text-greyscale-400 mr-1">占比</span>
+                            <span className="text-secondary">
+                              {totalVotes === BigInt(0)
+                                ? '-'
+                                : formatPercentage((Number(votingAction.votesNum) * 100) / Number(totalVotes))}
+                            </span>
+                          </span>
+                        </div>
+                      </CardContent>
+                      <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-greyscale-400 pointer-events-none" />
+                    </Link>
+                  </Card>
+                );
+              })}
           </>
         ) : (
           <div className="text-center mt-8">
