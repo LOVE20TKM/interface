@@ -173,11 +173,11 @@ function _parseRpcError(error: string): string {
 
       // 如果错误包含position/bounds相关关键词，通常是价格变动导致
       if (/position.*out of bounds|index out of bounds/i.test(error)) {
-        return '价格变动过快，超过滑点保护。请调整数量后重试~';
+        return '价格变动过快，超过滑点保护。请稍后重试~';
       }
 
       // 通用RPC错误提示
-      return '价格变动过快，超过滑点保护。请调整数量后重试~';
+      return '价格变动过快，超过滑点保护。请稍后重试~';
     }
   }
   return '';

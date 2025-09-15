@@ -80,7 +80,11 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound }) =
         <div className="mt-2 space-y-4">
           {joinableActions
             ?.sort((a, b) => {
-              // 按照 votesNum 从大到小排序（票数大的显示在上面）
+              // 首先按有无激励排序，有激励的排在前面
+              if (a.hasReward && !b.hasReward) return -1;
+              if (!a.hasReward && b.hasReward) return 1;
+
+              // 然后按照 votesNum 从大到小排序（票数大的显示在上面）
               const votesA = Number(a.votesNum);
               const votesB = Number(b.votesNum);
               return votesB - votesA;
@@ -93,8 +97,11 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound }) =
               // 根据是否已加入，设置不同的链接
               const href = `/action/info?id=${actionDetail.action.head.id}&symbol=${token?.symbol}`;
 
+              // 根据是否有激励设置背景色
+              const cardClassName = actionDetail.hasReward ? 'shadow-none' : 'shadow-none bg-gray-50';
+
               return (
-                <Card key={actionDetail.action.head.id} className="shadow-none">
+                <Card key={actionDetail.action.head.id} className={cardClassName}>
                   <Link href={href} className="relative block">
                     <CardHeader className="px-3 pt-2 pb-1 flex-row justify-between items-baseline">
                       <div className="flex items-baseline">
@@ -102,7 +109,11 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound }) =
                         <span className="text-secondary text-xl font-bold mr-2">
                           {String(actionDetail.action.head.id)}
                         </span>
-                        <span className="font-bold text-greyscale-800">{`${actionDetail.action.body.title}`}</span>
+                        <span
+                          className={`font-bold ${
+                            actionDetail.hasReward ? 'text-greyscale-800' : 'text-greyscale-400'
+                          }`}
+                        >{`${actionDetail.action.body.title}`}</span>
                       </div>
                     </CardHeader>
                     <CardContent className="px-3 pt-1 pb-2">

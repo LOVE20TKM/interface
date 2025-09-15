@@ -15,6 +15,7 @@ import {
 } from '@/src/hooks/contracts/useLOVE20Join';
 import { useVerificationInfosByAccount } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useIsSubmitted } from '@/src/hooks/contracts/useLOVE20Submit';
+import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my contexts
@@ -58,6 +59,13 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
     error: errIsSubmitted,
     isPending: isPendingIsSubmitted,
   } = useIsSubmitted((token?.address as `0x${string}`) || '', currentRound, actionId);
+
+  // 获取是否已投票
+  const {
+    isActionIdVoted,
+    error: errIsActionIdVoted,
+    isPending: isPendingIsActionIdVoted,
+  } = useIsActionIdVoted((token?.address as `0x${string}`) || '', currentRound, actionId);
 
   // 获取我的行动代币数
   const {
@@ -155,6 +163,9 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
     if (errIsSubmitted) {
       handleContractError(errIsSubmitted, 'submit');
     }
+    if (errIsActionIdVoted) {
+      handleContractError(errIsActionIdVoted, 'vote');
+    }
   }, [
     errorJoinedAmountByAccount,
     errorJoinedAmount,
@@ -162,9 +173,10 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
     errCurrentRound,
     errorWithdraw,
     errIsSubmitted,
+    errIsActionIdVoted,
   ]);
 
-  if (isPendingJoinedAmountByAccount || isPendingJoinedAmount || isPendingIsSubmitted) {
+  if (isPendingJoinedAmountByAccount || isPendingJoinedAmount || isPendingIsSubmitted || isPendingIsActionIdVoted) {
     return '';
   }
 
@@ -226,9 +238,15 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
                 <Button variant="outline" className="w-1/3 text-secondary border-secondary" asChild>
                   <Link href={`/my/rewardsofaction?id=${actionId}&symbol=${token?.symbol}`}>查看激励</Link>
                 </Button>
-                <Button variant="outline" className="w-1/3 text-secondary border-secondary" asChild>
-                  <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol}`}>增加参与代币</Link>
-                </Button>
+                {!isActionIdVoted ? (
+                  <Button variant="outline" className="w-1/3" disabled>
+                    增加参与代币
+                  </Button>
+                ) : (
+                  <Button variant="outline" className="w-1/3 text-secondary border-secondary" asChild>
+                    <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol}`}>增加参与代币</Link>
+                  </Button>
+                )}
               </div>
               <div className="flex flex-col items-center my-4">
                 <div className="text-sm text-greyscale-600">
