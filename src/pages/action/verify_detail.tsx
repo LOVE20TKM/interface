@@ -196,20 +196,39 @@ const VerifyDetailPage = () => {
         <div className="w-full max-w-full overflow-hidden px-4">
           {/* 表格容器 - 仅此处允许横向滚动，WebView优化 */}
           <div className="overflow-x-auto bg-white max-w-full table-container-webview">
-            <table className="w-full min-w-[800px]" style={{ tableLayout: 'fixed' }}>
+            <table className="w-full min-w-[840px]" style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr>
                   <th
-                    className="border border-gray-300 p-2 bg-gray-50 sticky left-0 z-20"
+                    className="border border-gray-300 p-2 bg-gray-50 sticky left-0 z-30"
                     style={{
                       WebkitTextSizeAdjust: '100%',
                       width: '136px',
                       minWidth: '136px',
                       maxWidth: '136px',
+                      backgroundColor: '#f9fafb',
+                      boxShadow: '1px 0 0 0 #d1d5db',
                     }}
                   >
                     <div className="text-gray-600 mb-1 whitespace-nowrap" style={{ fontSize: '12px' }}>
-                      行动参与者&nbsp;&nbsp;\&nbsp;&nbsp;验证者
+                      行动参与者
+                    </div>
+                  </th>
+                  <th
+                    className="border border-gray-300 p-2 bg-gray-50 sticky left-[136px] z-30"
+                    style={{
+                      WebkitTextSizeAdjust: '100%',
+                      width: '46px',
+                      minWidth: '46px',
+                      maxWidth: '46px',
+                      backgroundColor: '#f9fafb',
+                      boxShadow: '1px 0 0 0 #d1d5db',
+                    }}
+                  >
+                    <div className="text-gray-600 mb-1 whitespace-nowrap" style={{ fontSize: '12px' }}>
+                      得票
+                      <br />
+                      占比
                     </div>
                   </th>
                   {verifiers.map((verifier, index) => (
@@ -238,7 +257,7 @@ const VerifyDetailPage = () => {
                       maxWidth: '148px',
                     }}
                   >
-                    <div className="text-gray-600 text-sm font-medium">总票数</div>
+                    <div className="text-gray-600 text-sm font-medium">得票总数(占比)</div>
                   </th>
                 </tr>
               </thead>
@@ -248,12 +267,14 @@ const VerifyDetailPage = () => {
                   return (
                     <tr key={`verifiee-${verifieeIndex}`}>
                       <td
-                        className="border border-gray-300 p-2 bg-gray-50 sticky left-0 z-10"
+                        className="border border-gray-300 p-2 bg-gray-50 sticky left-0 z-20"
                         style={{
                           WebkitTextSizeAdjust: '100%',
                           width: '136px',
                           minWidth: '136px',
                           maxWidth: '136px',
+                          backgroundColor: '#f9fafb',
+                          boxShadow: '1px 0 0 0 #d1d5db',
                         }}
                       >
                         <div style={{ fontSize: '12px' }}>
@@ -262,6 +283,24 @@ const VerifyDetailPage = () => {
                           ) : (
                             <AddressWithCopyButton address={verifiee} colorClassName="text-gray-700" />
                           )}
+                        </div>
+                      </td>
+                      <td
+                        className="border border-gray-300 p-1 bg-gray-50 sticky left-[136px] z-20"
+                        style={{
+                          WebkitTextSizeAdjust: '100%',
+                          width: '40px',
+                          minWidth: '40px',
+                          maxWidth: '40px',
+                          backgroundColor: '#f9fafb',
+                        }}
+                      >
+                        <div className="text-center">
+                          <span className="text-xs font-bold text-gray-700">
+                            {grandTotalVotes > 0
+                              ? formatPercentage((verifieeeTotalScores[verifieeIndex] / grandTotalVotes) * 100)
+                              : '0%'}
+                          </span>
                         </div>
                       </td>
                       {verifiers.map((_, verifierIndex) => (
@@ -296,9 +335,9 @@ const VerifyDetailPage = () => {
                         className="border border-gray-300 p-1 text-center bg-blue-50"
                         style={{
                           WebkitTextSizeAdjust: '100%',
-                          width: '136px',
-                          minWidth: '136px',
-                          maxWidth: '136px',
+                          width: '148px',
+                          minWidth: '148px',
+                          maxWidth: '148px',
                         }}
                       >
                         <div>
@@ -321,15 +360,30 @@ const VerifyDetailPage = () => {
                 {/* 汇总行 */}
                 <tr className="">
                   <td
-                    className="border border-gray-300 p-2 bg-blue-50 sticky left-0 z-10 font-bold"
+                    className="border border-gray-300 p-2 bg-blue-50 sticky left-0 z-20 font-bold"
                     style={{
                       WebkitTextSizeAdjust: '100%',
                       width: '136px',
                       minWidth: '136px',
                       maxWidth: '136px',
+                      backgroundColor: '#dbeafe',
+                      boxShadow: '1px 0 0 0 #d1d5db',
                     }}
                   >
                     <div className="text-center text-sm text-blue-600">汇总 ({verifiees.length} 个参与者)</div>
+                  </td>
+                  <td
+                    className="border border-gray-300 p-1 bg-blue-50 sticky left-[136px] z-20 font-bold"
+                    style={{
+                      WebkitTextSizeAdjust: '100%',
+                      width: '40px',
+                      minWidth: '40px',
+                      maxWidth: '40px',
+                      backgroundColor: '#dbeafe',
+                      boxShadow: '1px 0 0 0 #d1d5db',
+                    }}
+                  >
+                    <div className="text-center text-xs text-blue-600">100%</div>
                   </td>
                   {verifiers.map((verifier, verifierIndex) => {
                     // 使用预计算的验证者总票数
@@ -344,9 +398,9 @@ const VerifyDetailPage = () => {
                         className="border border-gray-300 p-1 text-center bg-blue-50"
                         style={{
                           WebkitTextSizeAdjust: '100%',
-                          width: '136px',
-                          minWidth: '136px',
-                          maxWidth: '136px',
+                          width: '148px',
+                          minWidth: '148px',
+                          maxWidth: '148px',
                         }}
                       >
                         <div>
@@ -363,9 +417,9 @@ const VerifyDetailPage = () => {
                     className="border border-gray-300 p-1 text-center bg-blue-50"
                     style={{
                       WebkitTextSizeAdjust: '100%',
-                      width: '136px',
-                      minWidth: '136px',
-                      maxWidth: '136px',
+                      width: '148px',
+                      minWidth: '148px',
+                      maxWidth: '148px',
                     }}
                   >
                     <div>
