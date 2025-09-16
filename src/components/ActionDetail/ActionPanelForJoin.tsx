@@ -94,7 +94,7 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
     : 0;
   const participationRatioStr = formatPercentage(participationRatio);
   const probabilityStr = isJoined
-    ? formatPercentage(Math.min(participationRatio * Number(actionInfo?.body.maxRandomAccounts), 100))
+    ? formatPercentage(Math.min(participationRatio * Number(actionInfo?.body?.maxRandomAccounts || 0), 100))
     : '0%';
 
   // 获取验证信息
@@ -183,22 +183,24 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
   return (
     <div className="flex flex-col items-center px-4 pt-1">
       {isJoined && (
-        <div className="stats w-full grid grid-cols-2 divide-x-0">
-          <div className="stat place-items-center">
+        <div className="stats w-full grid grid-cols-1 sm:grid-cols-2 divide-x-0 gap-2 sm:gap-0">
+          <div className="stat place-items-center min-h-[120px] flex flex-col justify-center">
             <div className="stat-title">我的参与</div>
             <div className="stat-value text-2xl text-secondary">
-              {isPendingJoinedAmount ? (
+              {isPendingJoinedAmountByAccount ? (
                 <LoadingIcon />
               ) : (
                 formatTokenAmount(joinedAmountByActionIdByAccount || BigInt(0), 0)
               )}
             </div>
-            <div className="stat-desc text-sm mt-2">参与本行动的代币</div>
+            <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">{token?.symbol}数量</div>
           </div>
-          <div className="stat place-items-center">
+          <div className="stat place-items-center min-h-[120px] flex flex-col justify-center">
             <div className="stat-title">我的占比</div>
             <div className="stat-value text-2xl text-secondary">{participationRatioStr}</div>
-            <div className="stat-desc text-sm mt-2">被抽中验证概率 {probabilityStr}</div>
+            <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
+              被抽中验证概率 {probabilityStr}
+            </div>
           </div>
         </div>
       )}
@@ -248,17 +250,20 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
                   </Button>
                 )}
               </div>
-              <div className="flex flex-col items-center my-4">
-                <div className="text-sm text-greyscale-600">
+              <div className="flex flex-col items-start my-4 w-full">
+                <div className="text-sm text-greyscale-600 w-full">
                   {isPendingVerificationInfo && '加载中...'}
                   {joinedAmountByActionIdByAccount != undefined &&
                     joinedAmountByActionIdByAccount > BigInt(2) &&
                     verificationKeys &&
                     verificationKeys.length > 0 && (
-                      <div>
+                      <div className="w-full text-left">
                         {verificationKeys.map((key, index) => (
-                          <div key={index}>
-                            {key}: <LinkIfUrl text={verificationInfos[index]} />
+                          <div key={index} className="mb-2">
+                            <div className="text-sm font-bold text-greyscale-600">{key}</div>
+                            <div className="text-base">
+                              <LinkIfUrl text={verificationInfos[index]} />
+                            </div>
                           </div>
                         ))}
                       </div>
