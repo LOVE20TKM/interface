@@ -130,7 +130,20 @@ const VerifyDetailPage = () => {
 
     const { verifiers, verifiees, scores } = verificationMatrix;
 
-    // 计算每个验证者给所有被验证者的总分
+    // 计算每个被验证者（行动参与者）获得的总票数
+    const verifieeeTotalScores = verifiees.map((_, verifieeIndex) => {
+      return verifiers.reduce((total, _, verifierIndex) => {
+        const score = scores[verifierIndex]?.[verifieeIndex];
+        return total + (score !== undefined ? Number(score) : 0);
+      }, 0);
+    });
+
+    // 创建被验证者索引数组并按总分从大到小排序
+    const sortedVerifieeIndices = verifiees
+      .map((_, index) => index)
+      .sort((a, b) => verifieeeTotalScores[b] - verifieeeTotalScores[a]);
+
+    // 计算每个验证者（列）的总票数
     const verifierTotalScores = verifiers.map((_, verifierIndex) => {
       return verifiees.reduce((total, _, verifieeIndex) => {
         const score = scores[verifierIndex]?.[verifieeIndex];
@@ -138,21 +151,19 @@ const VerifyDetailPage = () => {
       }, 0);
     });
 
-    // 创建验证者索引数组并按总分从大到小排序
-    const sortedVerifierIndices = verifiers
-      .map((_, index) => index)
-      .sort((a, b) => verifierTotalScores[b] - verifierTotalScores[a]);
+    // 计算总票数（所有参与者得票数之和）
+    const grandTotalVotes = verifieeeTotalScores.reduce((sum, score) => sum + score, 0);
 
     // 计算百分比的辅助函数
     const calculatePercentage = (verifierIndex: number, verifieeIndex: number): string => {
       const score = scores[verifierIndex]?.[verifieeIndex];
-      const totalScore = verifierTotalScores[verifierIndex];
+      const verifierTotalScore = verifierTotalScores[verifierIndex];
 
-      if (score === undefined || totalScore === 0) {
+      if (score === undefined || verifierTotalScore === 0) {
         return '0%';
       }
 
-      const percentage = (Number(score) / totalScore) * 100;
+      const percentage = (Number(score) / verifierTotalScore) * 100;
       return `${formatPercentage(percentage)}`;
     };
 
@@ -192,31 +203,28 @@ const VerifyDetailPage = () => {
                     className="border border-gray-300 p-2 bg-gray-50 sticky left-0 z-20"
                     style={{
                       WebkitTextSizeAdjust: '100%',
-                      width: '102px',
-                      minWidth: '102px',
+                      width: '136px',
+                      minWidth: '136px',
+                      maxWidth: '136px',
                     }}
                   >
                     <div className="text-gray-600 mb-1 whitespace-nowrap" style={{ fontSize: '12px' }}>
-                      验证者&nbsp;&nbsp;\&nbsp;&nbsp;行动参与者
+                      行动参与者&nbsp;&nbsp;\&nbsp;&nbsp;验证者
                     </div>
                   </th>
-                  {verifiees.map((verifiee, index) => (
+                  {verifiers.map((verifier, index) => (
                     <th
-                      key={`verifiee-${index}`}
+                      key={`verifier-${index}`}
                       className="border border-gray-300 p-1 bg-gray-50"
                       style={{
                         WebkitTextSizeAdjust: '100%',
-                        width: '100px',
-                        minWidth: '100px',
-                        maxWidth: '100px',
+                        width: '148px',
+                        minWidth: '148px',
+                        maxWidth: '148px',
                       }}
                     >
                       <div>
-                        {verifiee === ZERO_ADDRESS ? (
-                          <span className="text-sm text-gray-700 font-medium">弃权票</span>
-                        ) : (
-                          <AddressWithCopyButton address={verifiee} colorClassName="text-gray-700" />
-                        )}
+                        <AddressWithCopyButton address={verifier} colorClassName="text-gray-700" />
                       </div>
                     </th>
                   ))}
@@ -225,9 +233,9 @@ const VerifyDetailPage = () => {
                     className="border border-gray-300 p-1 bg-gray-50"
                     style={{
                       WebkitTextSizeAdjust: '100%',
-                      width: '102px',
-                      minWidth: '102px',
-                      maxWidth: '102px',
+                      width: '148px',
+                      minWidth: '148px',
+                      maxWidth: '148px',
                     }}
                   >
                     <div className="text-gray-600 text-sm font-medium">总票数</div>
@@ -235,30 +243,36 @@ const VerifyDetailPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {sortedVerifierIndices.map((verifierIndex, sortIndex) => {
-                  const verifier = verifiers[verifierIndex];
+                {sortedVerifieeIndices.map((verifieeIndex, sortIndex) => {
+                  const verifiee = verifiees[verifieeIndex];
                   return (
-                    <tr key={`verifier-${verifierIndex}`}>
+                    <tr key={`verifiee-${verifieeIndex}`}>
                       <td
                         className="border border-gray-300 p-2 bg-gray-50 sticky left-0 z-10"
                         style={{
                           WebkitTextSizeAdjust: '100%',
-                          width: '100px',
-                          minWidth: '100px',
+                          width: '136px',
+                          minWidth: '136px',
+                          maxWidth: '136px',
                         }}
                       >
                         <div style={{ fontSize: '12px' }}>
-                          <AddressWithCopyButton address={verifier} colorClassName="text-gray-700" />
+                          {verifiee === ZERO_ADDRESS ? (
+                            <span className="text-sm text-gray-700 font-medium">弃权票</span>
+                          ) : (
+                            <AddressWithCopyButton address={verifiee} colorClassName="text-gray-700" />
+                          )}
                         </div>
                       </td>
-                      {verifiees.map((_, verifieeIndex) => (
+                      {verifiers.map((_, verifierIndex) => (
                         <td
                           key={`score-${verifierIndex}-${verifieeIndex}`}
                           className="border border-gray-300 p-1 text-center"
                           style={{
                             WebkitTextSizeAdjust: '100%',
-                            width: '100px',
-                            minWidth: '100px',
+                            width: '148px',
+                            minWidth: '148px',
+                            maxWidth: '148px',
                           }}
                         >
                           {scores[verifierIndex]?.[verifieeIndex] !== undefined ? (
@@ -282,14 +296,23 @@ const VerifyDetailPage = () => {
                         className="border border-gray-300 p-1 text-center bg-blue-50"
                         style={{
                           WebkitTextSizeAdjust: '100%',
-                          width: '100px',
-                          minWidth: '100px',
-                          maxWidth: '100px',
+                          width: '136px',
+                          minWidth: '136px',
+                          maxWidth: '136px',
                         }}
                       >
-                        <span className="text-sm font-mono font-bold text-blue-600">
-                          {formatTokenAmount(BigInt(verifierTotalScores[verifierIndex]))}
-                        </span>
+                        <div>
+                          <span className="text-sm font-mono font-bold text-blue-600 whitespace-nowrap">
+                            {formatTokenAmount(BigInt(verifieeeTotalScores[verifieeIndex]))}
+                          </span>
+                          <span className="text-blue-500">
+                            (
+                            {grandTotalVotes > 0
+                              ? formatPercentage((verifieeeTotalScores[verifieeIndex] / grandTotalVotes) * 100)
+                              : '0%'}
+                            )
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -301,31 +324,29 @@ const VerifyDetailPage = () => {
                     className="border border-gray-300 p-2 bg-blue-50 sticky left-0 z-10 font-bold"
                     style={{
                       WebkitTextSizeAdjust: '100%',
-                      width: '100px',
-                      minWidth: '100px',
+                      width: '136px',
+                      minWidth: '136px',
+                      maxWidth: '136px',
                     }}
                   >
-                    <div className="text-center text-sm text-blue-600">汇总 ({verifiers.length} 个验证者)</div>
+                    <div className="text-center text-sm text-blue-600">汇总 ({verifiees.length} 个参与者)</div>
                   </td>
-                  {verifiees.map((verifiee, verifieeIndex) => {
-                    // 计算每列（每个被验证者）获得的总票数
-                    const columnTotal = verifiers.reduce((total, _, verifierIndex) => {
-                      const score = scores[verifierIndex]?.[verifieeIndex];
-                      return total + (score !== undefined ? Number(score) : 0);
-                    }, 0);
+                  {verifiers.map((verifier, verifierIndex) => {
+                    // 使用预计算的验证者总票数
+                    const columnTotal = verifierTotalScores[verifierIndex];
 
                     // 计算百分比
-                    const grandTotal = verifierTotalScores.reduce((sum, score) => sum + score, 0);
-                    const percentage = grandTotal > 0 ? (columnTotal / grandTotal) * 100 : 0;
+                    const percentage = grandTotalVotes > 0 ? (columnTotal / grandTotalVotes) * 100 : 0;
 
                     return (
                       <td
-                        key={`summary-${verifieeIndex}`}
+                        key={`summary-${verifierIndex}`}
                         className="border border-gray-300 p-1 text-center bg-blue-50"
                         style={{
                           WebkitTextSizeAdjust: '100%',
-                          width: '100px',
-                          minWidth: '100px',
+                          width: '136px',
+                          minWidth: '136px',
+                          maxWidth: '136px',
                         }}
                       >
                         <div>
@@ -342,14 +363,17 @@ const VerifyDetailPage = () => {
                     className="border border-gray-300 p-1 text-center bg-blue-50"
                     style={{
                       WebkitTextSizeAdjust: '100%',
-                      width: '100px',
-                      minWidth: '100px',
-                      maxWidth: '100px',
+                      width: '136px',
+                      minWidth: '136px',
+                      maxWidth: '136px',
                     }}
                   >
-                    <span className="text-sm font-mono font-bold text-blue-600">
-                      {formatTokenAmount(BigInt(verifierTotalScores.reduce((sum, score) => sum + score, 0)))}
-                    </span>
+                    <div>
+                      <span className="text-sm font-mono font-bold text-blue-600 whitespace-nowrap">
+                        {formatTokenAmount(BigInt(grandTotalVotes))}
+                      </span>
+                      <span className="text-blue-500">(100%)</span>
+                    </div>
                   </td>
                 </tr>
               </tbody>
