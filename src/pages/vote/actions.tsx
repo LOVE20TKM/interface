@@ -24,7 +24,7 @@ const VotePage = () => {
 
   return (
     <>
-      <Header title="投票中的行动" />
+      <Header title="投票中的行动" showBackButton={true} />
       <main className="flex-grow">
         {isPendingCurrentRound ? <LoadingIcon /> : <VotingActionList currentRound={currentRound} />}
       </main>

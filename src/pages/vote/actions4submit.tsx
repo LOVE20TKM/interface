@@ -41,7 +41,7 @@ const Actions4SubmitPage = () => {
 
   return (
     <>
-      <Header title="推举" />
+      <Header title="推举" showBackButton={true} />
       <main className="flex-grow">
         {isPending ? <LoadingIcon /> : <SubmitingActionList currentRound={currentRound} />}
       </main>

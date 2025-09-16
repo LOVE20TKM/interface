@@ -76,7 +76,7 @@ const RoundLite: React.FC<RoundProps> = ({ currentRound, roundType, showCountdow
   return (
     <div className="flex items-center mb-3">
       <span className="text-sm text-greyscale-400">
-        ( 第<span className="text-greyscale-400">{displayRound}</span>轮{roundName}阶段，
+        (第<span className="text-greyscale-400">{displayRound}</span>轮{roundName}阶段，
         <span className="text-greyscale-400">剩余</span>
         <span className="text-greyscale-400">{Math.ceil((currentTimeLeft * 1000) / BLOCK_TIME)}</span>
         <span className="text-greyscale-400 mr-1">块, 约</span>
@@ -95,7 +95,7 @@ const RoundLite: React.FC<RoundProps> = ({ currentRound, roundType, showCountdow
               : `${Math.floor(currentTimeLeft / 3600)}小时${Math.floor((currentTimeLeft % 3600) / 60)}分钟`}
           </span>
         )}
-        <span className="text-greyscale-400"> )</span>
+        <span className="text-greyscale-400">)</span>
       </span>
     </div>
   );
