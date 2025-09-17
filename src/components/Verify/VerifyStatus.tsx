@@ -97,10 +97,10 @@ const VerifyStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionId, 
     setExpandedRows(newExpanded);
   };
 
-  // 累计当前已验证票数
-  const verifiedVotesNum = verifiedAddresses?.reduce((acc, addr) => acc + addr.score, BigInt(0)) || BigInt(0);
-  const verifiedVotesPercent =
-    ((Number(verifiedVotesNum) + Number(abstainVotes || BigInt(0))) / Number(totalVotesNum || BigInt(0))) * 100;
+  // 累计当前已验证票数（包含弃权票）
+  const addressVotesNum = verifiedAddresses?.reduce((acc, addr) => acc + addr.score, BigInt(0)) || BigInt(0);
+  const verifiedVotesNum = addressVotesNum + (abstainVotes || BigInt(0));
+  const verifiedVotesPercent = (Number(verifiedVotesNum) / Number(totalVotesNum || BigInt(0))) * 100;
 
   return (
     <div className="relative pb-4">
@@ -180,7 +180,9 @@ const VerifyStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionId, 
                           word={info.account === account ? '(我)' : ''}
                         />
                       </td>
-                      <td className="px-1 text-right">{formatTokenAmountInteger(verifiedAddress?.score || BigInt(0))}</td>
+                      <td className="px-1 text-right">
+                        {formatTokenAmountInteger(verifiedAddress?.score || BigInt(0))}
+                      </td>
                       <td className="px-1 text-right">
                         {formatPercentage(
                           (Number(verifiedAddress?.score || BigInt(0)) / Number(verifiedVotesNum || BigInt(0))) * 100,

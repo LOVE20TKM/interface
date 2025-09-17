@@ -11,8 +11,8 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
-import { useVerificationInfosByAction } from '@/src/hooks/contracts/useLOVE20RoundViewer';
-import { useVerify } from '@/src/hooks/contracts/useLOVE20Verify';
+import { useVerificationInfosByAction, useVerifiedAddressesByAction } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { useVerify, useScoreByActionIdByAccount } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my components
@@ -49,6 +49,25 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
     error: errorVerificationInfosByAction,
   } = useVerificationInfosByAction(token?.address as `0x${string}`, currentRound, actionId);
 
+  // 获取已验证地址的投票结果
+  const {
+    verifiedAddresses,
+    isPending: isPendingVerifiedAddresses,
+    error: errorVerifiedAddresses,
+  } = useVerifiedAddressesByAction(token?.address as `0x${string}`, currentRound, actionId);
+
+  // 获取已有弃权票数
+  const {
+    scoreByActionIdByAccount: existingAbstainVotes,
+    isPending: isPendingAbstainVotes,
+    error: errorAbstainVotes,
+  } = useScoreByActionIdByAccount(
+    token?.address as `0x${string}`,
+    currentRound,
+    actionId,
+    '0x0000000000000000000000000000000000000000',
+  );
+
   // 表单状态
   const [scores, setScores] = useState<{ [address: string]: string }>({});
   const [abstainScore, setAbstainScore] = useState<string>('0');
@@ -84,6 +103,25 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
   };
 
   const { addressPercentages, abstainPercentage } = calculatePercentages();
+
+  // 计算已获得的验证票比例
+  const calculateVerificationPercentages = () => {
+    const verificationPercentages: { [address: string]: number } = {};
+    const addressVerifiedVotes = verifiedAddresses?.reduce((acc, addr) => acc + addr.score, BigInt(0)) || BigInt(0);
+    const totalVerifiedVotes = addressVerifiedVotes + (existingAbstainVotes || BigInt(0));
+
+    if (totalVerifiedVotes > BigInt(0)) {
+      verificationInfos?.forEach((info) => {
+        const verifiedAddress = verifiedAddresses?.find((addr) => addr.account === info.account);
+        const votes = verifiedAddress?.score || BigInt(0);
+        verificationPercentages[info.account] = (Number(votes) / Number(totalVerifiedVotes)) * 100;
+      });
+    }
+
+    return { verificationPercentages, totalVerifiedVotes };
+  };
+
+  const { verificationPercentages, totalVerifiedVotes } = calculateVerificationPercentages();
 
   // 处理分数变化
   const handleScoreChange = (address: string, value: string) => {
@@ -162,9 +200,9 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
 
     // if 有弃权票
     if (parseInt(abstainScore) > 0) {
-      const abstainVotes = remainingVotes > scoresArrayTotal ? remainingVotes - scoresArrayTotal : BigInt(0);
-      console.log('abstainVotes', abstainVotes);
-      verify(token?.address as `0x${string}`, actionId, abstainVotes, scoresArrayForSubmit);
+      const currentAbstainVotes = remainingVotes > scoresArrayTotal ? remainingVotes - scoresArrayTotal : BigInt(0);
+      console.log('currentAbstainVotes', currentAbstainVotes);
+      verify(token?.address as `0x${string}`, actionId, currentAbstainVotes, scoresArrayForSubmit);
     } else {
       // else 无弃权票
 
@@ -176,7 +214,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
         }
       }
 
-      console.log('abstainVotes', BigInt(0));
+      console.log('currentAbstainVotes', BigInt(0));
       verify(token?.address as `0x${string}`, actionId, BigInt(0), scoresArrayForSubmit);
     }
   };
@@ -202,18 +240,24 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
     if (errorVerificationInfosByAction) {
       handleContractError(errorVerificationInfosByAction, 'dataViewer');
     }
-  }, [submitError, errorVerificationInfosByAction]);
+    if (errorVerifiedAddresses) {
+      handleContractError(errorVerifiedAddresses, 'dataViewer');
+    }
+    if (errorAbstainVotes) {
+      handleContractError(errorAbstainVotes, 'verify');
+    }
+  }, [submitError, errorVerificationInfosByAction, errorVerifiedAddresses, errorAbstainVotes]);
 
   // 渲染
   return (
     <>
       <div className="w-full max-w-2xl">
-        <table className="w-full">
+        <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-gray-100">
               <th className="pb-3 text-left text-sm text-greyscale-500">被抽中的行动参与者</th>
-              <th className="pb-3 pl-2 text-left whitespace-nowrap w-20 text-sm text-greyscale-500">打分</th>
-              <th className="pb-3 text-center whitespace-nowrap w-16 text-sm text-greyscale-500">分配</th>
+              <th className="pb-3 text-left whitespace-nowrap w-16 text-sm text-greyscale-500">打分</th>
+              <th className="pb-3 text-center whitespace-nowrap w-14 text-sm text-greyscale-500">分配</th>
             </tr>
           </thead>
           <tbody>
@@ -244,7 +288,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                     </div>
                   </td>
 
-                  <td className="py-1 w-20">
+                  <td className="py-1 w-16 px-1">
                     <div className="flex items-center text-left">
                       <input
                         type="number"
@@ -252,15 +296,20 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                         value={scores[info.account] || ''}
                         placeholder="0"
                         onChange={(e) => handleScoreChange(info.account, e.target.value)}
-                        className="w-11 px-1 py-1 border rounded"
+                        className="w-10 px-1 py-1 border rounded text-xs"
                         disabled={isPending || isConfirmed}
                       />
-                      <span className="text-greyscale-500 text-sm">分</span>
+                      <span className="text-greyscale-500 text-xs">分</span>
                     </div>
                   </td>
-                  <td className="py-1 text-center w-16 whitespace-nowrap">
-                    <div className="text-greyscale-500 text-sm">
-                      {formatPercentage(addressPercentages[info.account] || 0)}
+                  <td className="py-1 text-center w-14 whitespace-nowrap px-1">
+                    <div className="leading-tight">
+                      <div className="text-sm text-greyscale-600 ">
+                        {formatPercentage(addressPercentages[info.account] || 0)}
+                      </div>
+                      <div className="text-xs text-greyscale-500 ">
+                        (当前{formatPercentage(verificationPercentages[info.account] || 0)})
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -281,7 +330,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                     </div>
                   </div>
                 </td>
-                <td className="py-2 w-20">
+                <td className="py-2 w-16 px-1">
                   <div className="flex items-center text-left">
                     <input
                       type="number"
@@ -289,14 +338,25 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                       value={abstainScore}
                       placeholder="0"
                       onChange={(e) => handleAbstainScoreChange(e.target.value)}
-                      className="w-11 px-1 py-1 border rounded"
+                      className="w-10 px-1 py-1 border rounded text-xs"
                       disabled={isPending || isConfirmed}
                     />
-                    <span className="text-greyscale-500 text-sm">分</span>
+                    <span className="text-greyscale-500 text-xs">分</span>
                   </div>
                 </td>
-                <td className="py-2 text-center w-16 whitespace-nowrap">
-                  <div className="text-greyscale-500 text-sm">{formatPercentage(abstainPercentage)}</div>
+                <td className="py-2 text-center w-14 whitespace-nowrap px-1">
+                  <div className="text-greyscale-500 text-xs leading-tight">
+                    <div>{formatPercentage(abstainPercentage)}</div>
+                    <div>
+                      (当前
+                      {formatPercentage(
+                        totalVerifiedVotes > BigInt(0)
+                          ? (Number(existingAbstainVotes || BigInt(0)) / Number(totalVerifiedVotes)) * 100
+                          : 0,
+                      )}
+                      )
+                    </div>
+                  </div>
                 </td>
               </tr>
             )}
