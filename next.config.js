@@ -58,6 +58,8 @@ const nextConfig = {
       '/action/info': { page: '/action/info' },
       '/action/verify_detail': { page: '/action/verify_detail' },
       '/articles': { page: '/articles' },
+      '/dex': { page: '/dex' },
+      '/dex/liquidity-query': { page: '/dex/liquidity-query' },
       '/dex/deposit': { page: '/dex/deposit' },
       '/dex/swap': { page: '/dex/swap' },
       '/dex/withdraw': { page: '/dex/withdraw' },
