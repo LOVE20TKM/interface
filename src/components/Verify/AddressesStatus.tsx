@@ -175,7 +175,7 @@ const AddressesStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionI
                     {actionInfo && isExpanded && (
                       <tr className="border-b border-gray-100 bg-gray-50">
                         <td></td>
-                        <td colSpan={2} className="px-1 py-3">
+                        <td colSpan={3} className="px-1 py-3">
                           <div className="text-sm text-greyscale-600">
                             <div className="text-xs text-greyscale-400 mb-2">验证信息:</div>
                             {actionInfo.body.verificationKeys.map((key, i) => (

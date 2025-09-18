@@ -139,6 +139,20 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
     }
   };
 
+  // 处理键盘导航
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, currentIndex: number) => {
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      const inputs = document.querySelectorAll('input[type="number"]:not([disabled])');
+      const nextIndex = (currentIndex + 1) % inputs.length;
+      const nextInput = inputs[nextIndex] as HTMLInputElement;
+      if (nextInput) {
+        nextInput.focus();
+        nextInput.select();
+      }
+    }
+  };
+
   // 提交验证
   const { verify, isPending, isConfirming, isConfirmed, writeError: submitError } = useVerify();
   const checkInput = () => {
@@ -296,7 +310,9 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                         value={scores[info.account] || ''}
                         placeholder="0"
                         onChange={(e) => handleScoreChange(info.account, e.target.value)}
-                        className="w-10 px-1 py-1 border rounded text-xs"
+                        onKeyDown={(e) => handleKeyDown(e, index)}
+                        tabIndex={index + 1}
+                        className="w-10 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         disabled={isPending || isConfirmed}
                       />
                       <span className="text-greyscale-500 text-xs">分</span>
@@ -338,7 +354,9 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                       value={abstainScore}
                       placeholder="0"
                       onChange={(e) => handleAbstainScoreChange(e.target.value)}
-                      className="w-10 px-1 py-1 border rounded text-xs"
+                      onKeyDown={(e) => handleKeyDown(e, verificationInfos?.length || 0)}
+                      tabIndex={(verificationInfos?.length || 0) + 1}
+                      className="w-10 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       disabled={isPending || isConfirmed}
                     />
                     <span className="text-greyscale-500 text-xs">分</span>
