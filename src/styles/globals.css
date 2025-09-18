@@ -309,6 +309,29 @@ a {
   .main-content {
     padding-bottom: 4rem;
   }
+
+  /* 移动端Tab组件优化 - 防止超出屏幕 */
+  .tabs-container {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* 确保TabsList在移动端不超出屏幕 */
+  [role='tablist'] {
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  /* 确保TabsTrigger在移动端正确显示 */
+  [role='tab'] {
+    min-width: 0;
+    flex-shrink: 1;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   input[type='text'],
   input[type='number'],
   textarea {

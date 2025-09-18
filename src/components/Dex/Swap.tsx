@@ -64,7 +64,7 @@ interface SwapPanelProps {
 const buildSupportedTokens = (token: any, showCurrentToken: boolean = true): TokenConfig[] => {
   const supportedTokens: TokenConfig[] = [];
 
-  // 1. 原生代币 - 确保symbol不为空
+  // 1. 原生代币
   const nativeSymbol = process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL;
   if (nativeSymbol) {
     supportedTokens.push({
@@ -75,7 +75,7 @@ const buildSupportedTokens = (token: any, showCurrentToken: boolean = true): Tok
     });
   }
 
-  // 2. WETH9 代币 - 确保symbol不为空
+  // 2. WETH9 代币
   const wethSymbol = process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
   const wethAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN;
   if (wethSymbol && wethAddress) {
@@ -88,15 +88,23 @@ const buildSupportedTokens = (token: any, showCurrentToken: boolean = true): Tok
     });
   }
 
-  // 3. 添加当前 token 和其 parentToken（如果不重复且允许显示当前token）
-  if (token) {
-    // 当前 token - 只有在 showCurrentToken 为 true 时才添加
-    if (
-      showCurrentToken &&
-      token.symbol &&
-      token.address &&
-      !supportedTokens.find((t) => t.address === token.address)
-    ) {
+  // 3. TUSDT 代币 - 强制添加
+  const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS;
+
+  if (usdtSymbol && usdtAddress && usdtAddress.length > 0) {
+    supportedTokens.push({
+      symbol: usdtSymbol,
+      address: usdtAddress as `0x${string}`,
+      decimals: 18,
+      isNative: false,
+    });
+  }
+
+  // 4. 添加当前 token（如果允许）
+  if (token && showCurrentToken && token.symbol && token.address) {
+    const exists = supportedTokens.find((t) => t.address === token.address);
+    if (!exists) {
       supportedTokens.push({
         symbol: token.symbol,
         address: token.address,
@@ -104,13 +112,12 @@ const buildSupportedTokens = (token: any, showCurrentToken: boolean = true): Tok
         isNative: false,
       });
     }
+  }
 
-    // parentToken (第一个token的parent是 WETH9) - 确保symbol和address有效
-    if (
-      token.parentTokenSymbol &&
-      token.parentTokenAddress &&
-      !supportedTokens.find((t) => t.address === token.parentTokenAddress)
-    ) {
+  // 5. 添加 parentToken
+  if (token && token.parentTokenSymbol && token.parentTokenAddress) {
+    const exists = supportedTokens.find((t) => t.address === token.parentTokenAddress);
+    if (!exists) {
       supportedTokens.push({
         symbol: token.parentTokenSymbol,
         address: token.parentTokenAddress,
@@ -121,7 +128,6 @@ const buildSupportedTokens = (token: any, showCurrentToken: boolean = true): Tok
     }
   }
 
-  console.log('buildSupportedTokens result:', supportedTokens);
   return supportedTokens;
 };
 
@@ -149,17 +155,317 @@ const determineSwapMethod = (fromToken: TokenConfig, toToken: TokenConfig): Swap
   return 'UniswapV2_TOKEN_TO_TOKEN';
 };
 
-// 构建交换路径
-const buildSwapPath = (fromToken: TokenConfig, toToken: TokenConfig): `0x${string}`[] => {
-  const wethAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as `0x${string}`;
+// 路由选择函数 - 选择最优的交换路径
+const selectOptimalRoute = (fromToken: TokenConfig, toToken: TokenConfig, token: any): `0x${string}`[] => {
+  // 注意：在这个系统中，TKM20 实际上是父代币，而不是真正的WETH
+  const tkm20Address = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as `0x${string}`;
+  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}`;
+  const currentTokenAddress = token?.address as `0x${string}`;
+
+  // 直接路由情况 (真实存在的流动性池)
+  // 重要：这里只定义实际存在的流动性池，不包括TKM20-TUSDT直接对
+  const directPairs = [
+    // 原生代币 <-> TKM20 (系统中的"父代币")
+    { token1: 'NATIVE', token2: tkm20Address },
+    // TKM20 <-> 当前代币 (LOVE20) - 真实存在的池
+    ...(tkm20Address && currentTokenAddress ? [{ token1: tkm20Address, token2: currentTokenAddress }] : []),
+    // TUSDT <-> 当前代币 (LOVE20) - 真实存在的池
+    ...(usdtAddress && currentTokenAddress ? [{ token1: usdtAddress, token2: currentTokenAddress }] : []),
+    // 确保parentToken也被包含（即使地址相同）
+    ...(token?.parentTokenAddress && currentTokenAddress
+      ? [{ token1: token.parentTokenAddress, token2: currentTokenAddress }]
+      : []),
+  ];
+
+  console.log('💡 Available liquidity pairs:', directPairs);
+  console.log('💰 Environment variables:', {
+    tkm20Address,
+    usdtAddress,
+    currentTokenAddress,
+    parentTokenAddress: token?.parentTokenAddress,
+  });
+
+  const fromAddr = fromToken.isNative ? 'NATIVE' : fromToken.address;
+  const toAddr = toToken.isNative ? 'NATIVE' : toToken.address;
+
+  console.log('🔍 Route analysis:', {
+    fromAddr,
+    toAddr,
+    fromSymbol: fromToken.symbol,
+    toSymbol: toToken.symbol,
+    fromIsNative: fromToken.isNative,
+    toIsNative: toToken.isNative,
+  });
+
+  // 检查是否存在直接交易对
+  const hasDirectPair = directPairs.some(
+    (pair) =>
+      (pair.token1 === fromAddr && pair.token2 === toAddr) || (pair.token1 === toAddr && pair.token2 === fromAddr),
+  );
+
+  console.log('🔍 Direct pair check:', {
+    hasDirectPair,
+    fromAddr,
+    toAddr,
+    matchingPairs: directPairs.filter(
+      (pair) =>
+        (pair.token1 === fromAddr && pair.token2 === toAddr) || (pair.token1 === toAddr && pair.token2 === fromAddr),
+    ),
+  });
+
+  if (hasDirectPair) {
+    // 直接路径
+    console.log('✅ Using direct pair routing');
+    if (fromToken.isNative) {
+      const directPath = [tkm20Address, toToken.address as `0x${string}`];
+      console.log('📍 Direct: NATIVE -> ERC20:', directPath);
+      return directPath;
+    }
+    if (toToken.isNative) {
+      const directPath = [fromToken.address as `0x${string}`, tkm20Address];
+      console.log('📍 Direct: ERC20 -> NATIVE:', directPath);
+      return directPath;
+    }
+    // ❌ 这里是问题！ERC20到ERC20的直接路径，但TKM20-TUSDT没有直接池！
+    const directPath = [fromToken.address as `0x${string}`, toToken.address as `0x${string}`];
+    console.log('❌ ERROR: Direct ERC20 -> ERC20 path (this should not happen for TKM20-TUSDT):', directPath);
+    return directPath;
+  }
+
+  // 如果没有直接交易对，则需要通过中介代币路由
+  // 特殊情况：原生代币需要通过TKM20作为中介
+  if (fromToken.isNative && !toToken.isNative && currentTokenAddress) {
+    // 原生TKM -> TKM20 -> LOVE20 -> 目标代币 的四地址路径
+    const hasTKM20ToLOVE20 = directPairs.some(
+      (pair) =>
+        (pair.token1 === tkm20Address && pair.token2 === currentTokenAddress) ||
+        (pair.token1 === currentTokenAddress && pair.token2 === tkm20Address),
+    );
+    const hasLOVE20ToTarget = directPairs.some(
+      (pair) =>
+        (pair.token1 === currentTokenAddress && pair.token2 === toAddr) ||
+        (pair.token1 === toAddr && pair.token2 === currentTokenAddress),
+    );
+
+    console.log('🔍 Checking NATIVE->TKM20->LOVE20->TARGET routing:', {
+      hasTKM20ToLOVE20,
+      hasLOVE20ToTarget,
+      tkm20Address,
+      currentTokenAddress,
+      toAddr,
+    });
+
+    if (hasTKM20ToLOVE20 && hasLOVE20ToTarget) {
+      // 原生TKM -> TKM20 -> LOVE20 -> 目标代币
+      const nativePath = [tkm20Address, currentTokenAddress, toToken.address as `0x${string}`];
+      console.log('✅ Using NATIVE->TKM20->LOVE20->TARGET routing:', {
+        from: fromToken.symbol,
+        to: toToken.symbol,
+        path: `${fromToken.symbol} -> TKM20 -> ${token?.symbol} -> ${toToken.symbol}`,
+        actualPath: nativePath,
+      });
+      return nativePath;
+    }
+  }
+
+  // 特殊情况：目标是原生代币
+  if (!fromToken.isNative && toToken.isNative && currentTokenAddress) {
+    // 源代币 -> LOVE20 -> TKM20 -> 原生TKM 的四地址路径
+    const hasSourceToLOVE20 = directPairs.some(
+      (pair) =>
+        (pair.token1 === fromAddr && pair.token2 === currentTokenAddress) ||
+        (pair.token1 === currentTokenAddress && pair.token2 === fromAddr),
+    );
+    const hasLOVE20ToTKM20 = directPairs.some(
+      (pair) =>
+        (pair.token1 === currentTokenAddress && pair.token2 === tkm20Address) ||
+        (pair.token1 === tkm20Address && pair.token2 === currentTokenAddress),
+    );
+
+    console.log('🔍 Checking SOURCE->LOVE20->TKM20->NATIVE routing:', {
+      hasSourceToLOVE20,
+      hasLOVE20ToTKM20,
+      fromAddr,
+      currentTokenAddress,
+      tkm20Address,
+    });
+
+    if (hasSourceToLOVE20 && hasLOVE20ToTKM20) {
+      // 源代币 -> LOVE20 -> TKM20 -> 原生TKM
+      const toNativePath = [fromToken.address as `0x${string}`, currentTokenAddress, tkm20Address];
+      console.log('✅ Using SOURCE->LOVE20->TKM20->NATIVE routing:', {
+        from: fromToken.symbol,
+        to: toToken.symbol,
+        path: `${fromToken.symbol} -> ${token?.symbol} -> TKM20 -> ${toToken.symbol}`,
+        actualPath: toNativePath,
+      });
+      return toNativePath;
+    }
+  }
+
+  // 检查是否可以通过 LOVE20 进行路由（ERC20 to ERC20）
+  if (currentTokenAddress && fromAddr !== currentTokenAddress && toAddr !== currentTokenAddress) {
+    console.log('🔍 Checking LOVE20 routing...');
+    console.log('🔍 Current token address:', currentTokenAddress);
+    console.log('🔍 From address:', fromAddr, 'To address:', toAddr);
+
+    const hasFromToCurrent = directPairs.some(
+      (pair) =>
+        (pair.token1 === fromAddr && pair.token2 === currentTokenAddress) ||
+        (pair.token1 === currentTokenAddress && pair.token2 === fromAddr),
+    );
+    const hasCurrentToTo = directPairs.some(
+      (pair) =>
+        (pair.token1 === currentTokenAddress && pair.token2 === toAddr) ||
+        (pair.token1 === toAddr && pair.token2 === currentTokenAddress),
+    );
+
+    console.log('🔍 LOVE20 routing check:', {
+      hasFromToCurrent,
+      hasCurrentToTo,
+      fromToCurrentPairs: directPairs.filter(
+        (pair) =>
+          (pair.token1 === fromAddr && pair.token2 === currentTokenAddress) ||
+          (pair.token1 === currentTokenAddress && pair.token2 === fromAddr),
+      ),
+      currentToToPairs: directPairs.filter(
+        (pair) =>
+          (pair.token1 === currentTokenAddress && pair.token2 === toAddr) ||
+          (pair.token1 === toAddr && pair.token2 === currentTokenAddress),
+      ),
+    });
+
+    if (hasFromToCurrent && hasCurrentToTo) {
+      // 通过 LOVE20 路由：From -> LOVE20 -> To (例如: TKM20 -> LOVE20 -> TUSDT)
+      console.log('✅ Using LOVE20 routing:', {
+        from: fromToken.symbol,
+        to: toToken.symbol,
+        intermediate: token?.symbol,
+        path: `${fromToken.symbol} -> ${token?.symbol} -> ${toToken.symbol}`,
+        actualPath: [fromToken.address, currentTokenAddress, toToken.address],
+      });
+      return [fromToken.address as `0x${string}`, currentTokenAddress, toToken.address as `0x${string}`];
+    } else {
+      console.log('❌ LOVE20 routing not available:', {
+        hasFromToCurrent,
+        hasCurrentToTo,
+        reason: !hasFromToCurrent ? 'No From->LOVE20 pair' : 'No LOVE20->To pair',
+      });
+    }
+  } else {
+    console.log('❌ LOVE20 routing skipped:', {
+      currentTokenAddress: !!currentTokenAddress,
+      fromIsCurrent: fromAddr === currentTokenAddress,
+      toIsCurrent: toAddr === currentTokenAddress,
+    });
+  }
+
+  // 检查是否需要通过 TKM20 进行路由（当 LOVE20 路由不可用时）
+  const hasFromToTKM20 = directPairs.some(
+    (pair) =>
+      (pair.token1 === fromAddr && pair.token2 === tkm20Address) ||
+      (pair.token1 === tkm20Address && pair.token2 === fromAddr),
+  );
+  const hasTKM20ToTo = directPairs.some(
+    (pair) =>
+      (pair.token1 === tkm20Address && pair.token2 === toAddr) ||
+      (pair.token1 === toAddr && pair.token2 === tkm20Address),
+  );
+
+  if (hasFromToTKM20 && hasTKM20ToTo) {
+    // 通过 TKM20 路由：From -> TKM20 -> To
+    if (fromToken.isNative) {
+      // 原生代币 -> TKM20 -> 目标代币
+      console.log('📍 Using NATIVE->TKM20 routing:', {
+        from: fromToken.symbol,
+        to: toToken.symbol,
+        path: `${fromToken.symbol} -> TKM20 -> ${toToken.symbol}`,
+        addresses: [tkm20Address, toToken.address],
+      });
+      return [tkm20Address, toToken.address as `0x${string}`];
+    }
+    if (toToken.isNative) {
+      // 源代币 -> TKM20 -> 原生代币
+      console.log('📍 Using ->TKM20->NATIVE routing:', {
+        from: fromToken.symbol,
+        to: toToken.symbol,
+        path: `${fromToken.symbol} -> TKM20 -> ${toToken.symbol}`,
+        addresses: [fromToken.address, tkm20Address],
+      });
+      return [fromToken.address as `0x${string}`, tkm20Address];
+    }
+    // ERC20 -> TKM20 -> ERC20
+    console.log('📍 Using TKM20 routing:', {
+      from: fromToken.symbol,
+      to: toToken.symbol,
+      path: `${fromToken.symbol} -> TKM20 -> ${toToken.symbol}`,
+      addresses: [fromToken.address, tkm20Address, toToken.address],
+    });
+    return [fromToken.address as `0x${string}`, tkm20Address, toToken.address as `0x${string}`];
+  }
+
+  // 回退到简单的路径构建
+  return buildSimpleSwapPath(fromToken, toToken);
+};
+
+// 构建交换路径 (保持原有逻辑作为回退)
+const buildSimpleSwapPath = (fromToken: TokenConfig, toToken: TokenConfig): `0x${string}`[] => {
+  const tkm20Address = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as `0x${string}`;
+
+  console.log('⚠️ Using fallback buildSimpleSwapPath:', {
+    from: fromToken.symbol,
+    to: toToken.symbol,
+    fromIsNative: fromToken.isNative,
+    toIsNative: toToken.isNative,
+    tkm20Address,
+  });
 
   if (fromToken.isNative) {
-    return [wethAddress, toToken.address as `0x${string}`];
+    // 原生代币 -> 目标代币，通过TKM20
+    const path = [tkm20Address, toToken.address as `0x${string}`];
+    console.log('📍 Fallback: NATIVE -> ERC20 path:', path);
+    return path;
   }
   if (toToken.isNative) {
-    return [fromToken.address as `0x${string}`, wethAddress];
+    // 源代币 -> 原生代币，通过TKM20
+    const path = [fromToken.address as `0x${string}`, tkm20Address];
+    console.log('📍 Fallback: ERC20 -> NATIVE path:', path);
+    return path;
   }
-  return [fromToken.address as `0x${string}`, toToken.address as `0x${string}`];
+  // ERC20 -> ERC20 直接路径 (这是错误的，应该报错!)
+  console.log('❌ Fallback: No valid routing path found!');
+  throw new Error(`No valid routing path found for ${fromToken.symbol} -> ${toToken.symbol}`);
+};
+
+// 构建交换路径 - 使用智能路由选择
+const buildSwapPath = (fromToken: TokenConfig, toToken: TokenConfig, token: any): `0x${string}`[] => {
+  console.log('🚀 buildSwapPath called with:', {
+    fromToken: {
+      symbol: fromToken.symbol,
+      address: fromToken.address,
+      isNative: fromToken.isNative,
+    },
+    toToken: {
+      symbol: toToken.symbol,
+      address: toToken.address,
+      isNative: toToken.isNative,
+    },
+    token: {
+      symbol: token?.symbol,
+      address: token?.address,
+      parentTokenAddress: token?.parentTokenAddress,
+    },
+  });
+
+  const result = selectOptimalRoute(fromToken, toToken, token);
+
+  console.log('🎯 buildSwapPath result:', {
+    path: result,
+    pathLength: result.length,
+    pathString: result.join(' -> '),
+  });
+
+  return result;
 };
 
 // 统一余额查询 Hook
@@ -222,10 +528,24 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
   const chainId = useChainId();
   const { token } = useTokenContext();
 
+  // 🔥 强制调试信息
+  console.log('🔥 SwapPanel 开始渲染');
+  console.log('🔥 环境变量检查:', {
+    TUSDT_SYMBOL: process.env.NEXT_PUBLIC_USDT_SYMBOL,
+    TUSDT_ADDRESS: process.env.NEXT_PUBLIC_USDT_ADDRESS,
+    showCurrentToken,
+    tokenLoaded: !!token,
+  });
+
   // --------------------------------------------------
   // 1. 构建支持的代币列表
   // --------------------------------------------------
-  const supportedTokens = useMemo(() => buildSupportedTokens(token, showCurrentToken), [token, showCurrentToken]);
+  const supportedTokens = useMemo(() => {
+    console.log('🔥 开始构建支持的代币列表:', { token, showCurrentToken });
+    const result = buildSupportedTokens(token, showCurrentToken);
+    console.log('🔥 最终构建结果:', result);
+    return result;
+  }, [token, showCurrentToken]);
 
   // 选中的代币状态 - 使用 useEffect 来正确初始化
   const [fromToken, setFromToken] = useState<TokenConfig>({
@@ -490,12 +810,12 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
     if (swapMethod === 'WETH9') {
       return [];
     }
-    return buildSwapPath(fromToken, toToken);
-  }, [fromToken, toToken, swapMethod]);
+    return buildSwapPath(fromToken, toToken, token);
+  }, [fromToken, toToken, swapMethod, token]);
 
   // 添加路径和地址验证
   useEffect(() => {
-    console.log('🔍 Swap Path Debug:', {
+    console.log('🔍 Swap Path Debug (Final Result):', {
       swapMethod,
       fromToken: {
         symbol: fromToken.symbol,
@@ -508,7 +828,16 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
         isNative: toToken.isNative,
       },
       swapPath,
-      wethAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN,
+      pathLength: swapPath.length,
+      pathString: swapPath.join(' -> '),
+      token: {
+        symbol: token?.symbol,
+        address: token?.address,
+        parentTokenAddress: token?.parentTokenAddress,
+        parentTokenSymbol: token?.parentTokenSymbol,
+      },
+      tkm20Address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN,
+      usdtAddress: process.env.NEXT_PUBLIC_USDT_ADDRESS,
       routerAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER,
     });
 
@@ -568,11 +897,20 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
       // WETH9 是 1:1 兑换
       setToAmount(fromAmount);
     } else if (amountsOut && amountsOut.length > 1) {
-      setToAmount(BigInt(amountsOut[1]));
+      const finalOutputAmount = amountsOut[amountsOut.length - 1];
+      setToAmount(BigInt(finalOutputAmount));
+
+      console.log('💰 AmountsOut details:', {
+        pathLength: swapPath.length,
+        amountsOut: amountsOut.map((amount) => amount.toString()),
+        selectedOutput: finalOutputAmount.toString(),
+        fromSymbol: fromToken.symbol,
+        toSymbol: toToken.symbol,
+      });
     } else {
       setToAmount(BigInt(0));
     }
-  }, [swapMethod, fromAmount, amountsOut]);
+  }, [swapMethod, fromAmount, amountsOut, swapPath.length, fromToken.symbol, toToken.symbol]);
 
   // 手续费计算
   const feeInfo = useMemo(() => {
@@ -750,20 +1088,65 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
 
       // 预检查2：验证交换路径
       if (swapMethod === 'UniswapV2_ETH_TO_TOKEN') {
-        if (swapPath.length !== 2) {
-          console.error('❌ Native to Token 路径长度错误:', swapPath);
+        // 支持2个地址（直接）或3个地址（通过中介）的路径
+        if (swapPath.length < 2 || swapPath.length > 3) {
+          console.error('❌ Native to Token 路径长度错误:', {
+            pathLength: swapPath.length,
+            path: swapPath,
+            expected: '2 或 3 个地址',
+          });
           toast.error('交换路径配置错误');
           return;
         }
 
+        // 对于原生代币兑换，第一个地址应该是TKM20地址（作为WETH的角色）
         if (swapPath[0] !== wethAddress) {
-          console.error('❌ 路径第一个地址不是 WETH:', {
+          console.error('❌ 路径第一个地址不是 TKM20/WETH:', {
             expected: wethAddress,
             actual: swapPath[0],
+            pathLength: swapPath.length,
+            fullPath: swapPath,
           });
-          toast.error('WETH 地址配置错误');
+          toast.error('TKM20/WETH 地址配置错误');
           return;
         }
+
+        console.log('✅ Native to Token 路径验证通过:', {
+          pathLength: swapPath.length,
+          path: swapPath,
+          routingType: swapPath.length === 2 ? 'Direct' : 'Via intermediary',
+        });
+      }
+
+      if (swapMethod === 'UniswapV2_TOKEN_TO_ETH') {
+        // 支持2个地址（直接）或3个地址（通过中介）的路径
+        if (swapPath.length < 2 || swapPath.length > 3) {
+          console.error('❌ Token to Native 路径长度错误:', {
+            pathLength: swapPath.length,
+            path: swapPath,
+            expected: '2 或 3 个地址',
+          });
+          toast.error('交换路径配置错误');
+          return;
+        }
+
+        // 对于代币到原生代币的兑换，最后一个地址应该是TKM20地址
+        if (swapPath[swapPath.length - 1] !== wethAddress) {
+          console.error('❌ 路径最后一个地址不是 TKM20/WETH:', {
+            expected: wethAddress,
+            actual: swapPath[swapPath.length - 1],
+            pathLength: swapPath.length,
+            fullPath: swapPath,
+          });
+          toast.error('TKM20/WETH 地址配置错误');
+          return;
+        }
+
+        console.log('✅ Token to Native 路径验证通过:', {
+          pathLength: swapPath.length,
+          path: swapPath,
+          routingType: swapPath.length === 2 ? 'Direct' : 'Via intermediary',
+        });
       }
 
       // 预检查3：验证金额合理性
@@ -807,23 +1190,36 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
           break;
 
         case 'UniswapV2_TOKEN_TO_ETH':
+          console.log('🔄 执行 Token to ETH 兑换:', {
+            swapPath,
+            pathLength: swapPath.length,
+            fromAmount: fromAmount.toString(),
+            minAmountOut: minAmountOut.toString(),
+          });
+
           await swapTokensForETH(
             fromAmount,
             minAmountOut,
-            [
-              fromToken.address as `0x${string}`,
-              process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as `0x${string}`,
-            ],
+            swapPath, // 使用动态路径而不是硬编码
             account as `0x${string}`,
             deadline,
           );
           break;
 
         case 'UniswapV2_TOKEN_TO_TOKEN':
+          console.log('📞 调用 swapTokensForTokens (包含多跳路径):', {
+            fromAmount: fromAmount.toString(),
+            minAmountOut: minAmountOut.toString(),
+            path: swapPath,
+            pathLength: swapPath.length,
+            to: account,
+            deadline: deadline.toString(),
+          });
+
           await swapTokensForTokens(
             fromAmount,
             minAmountOut,
-            [fromToken.address as `0x${string}`, toToken.address as `0x${string}`],
+            swapPath, // 使用计算出的完整路径，而不是简单的两跳路径
             account as `0x${string}`,
             deadline,
           );

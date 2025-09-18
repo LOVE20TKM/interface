@@ -49,7 +49,7 @@ export function BottomNavigation() {
       },
       {
         title: '兑换',
-        url: `/dex/swap?symbol=${token.symbol}&from=${process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL}`,
+        url: `/dex/?symbol=${token.symbol}&from=${process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL}`,
         icon: Repeat,
         isActive: router.pathname.startsWith('/dex'),
         isMain: false,
