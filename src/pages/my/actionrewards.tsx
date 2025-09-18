@@ -10,7 +10,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useActionRewardsByAccountOfLastRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
-import { useActionInfosByIds } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
@@ -30,12 +30,12 @@ import {
 } from '@/src/lib/actionRewardNotice';
 
 // types
-import { ActionInfo, ActionReward } from '@/src/types/love20types';
+import { JoinedAction, ActionReward } from '@/src/types/love20types';
 
 const LAST_ROUNDS = BigInt(30);
 
 type ActionRewardsGroup = {
-  action: ActionInfo;
+  action: JoinedAction;
   rewards: ActionReward[];
 };
 
@@ -50,25 +50,18 @@ const ActRewardsPage: React.FC = () => {
     isPending: isLoadingRewards,
     error: errorLoadingRewards,
   } = useActionRewardsByAccountOfLastRounds(token?.address as `0x${string}`, account as `0x${string}`, LAST_ROUNDS);
+  console.log('rewards', rewards);
 
-  // 获取唯一的行动 ID 列表
-  const actionIds = useMemo(() => {
-    if (!rewards) return [];
-    const uniqueIds = new Set<bigint>();
-    rewards.forEach((reward) => uniqueIds.add(reward.actionId));
-    return Array.from(uniqueIds);
-  }, [rewards]);
-
-  // 获取行动信息
+  // 获取所有参与的行动
   const {
-    actionInfos: actions,
+    joinedActions,
     isPending: isLoadingActions,
     error: errorLoadingActions,
-  } = useActionInfosByIds(token?.address as `0x${string}`, actionIds);
+  } = useJoinedActions(token?.address as `0x${string}`, account as `0x${string}`);
 
   // 将激励按行动分组（显示所有行动，没有激励的显示提示）
   const grouped = useMemo<ActionRewardsGroup[]>(() => {
-    if (!actions || !rewards) return [];
+    if (!joinedActions || !rewards) return [];
 
     // 创建激励映射
     const rewardsByAction = new Map<string, ActionReward[]>();
@@ -79,10 +72,10 @@ const ActRewardsPage: React.FC = () => {
       rewardsByAction.get(key)!.push(r);
     }
 
-    // 为所有行动创建分组，包括没有激励的行动
+    // 为所有参与的行动创建分组，包括没有激励的行动
     const list: ActionRewardsGroup[] = [];
-    for (const act of actions) {
-      const actionIdStr = String(act.head.id);
+    for (const joinedAction of joinedActions) {
+      const actionIdStr = String(joinedAction.action.head.id);
       const actionRewards = rewardsByAction.get(actionIdStr) || [];
 
       // 如果有激励，按轮次倒序排序
@@ -90,13 +83,13 @@ const ActRewardsPage: React.FC = () => {
         actionRewards.sort((a, b) => (a.round > b.round ? -1 : 1));
       }
 
-      list.push({ action: act, rewards: actionRewards });
+      list.push({ action: joinedAction, rewards: actionRewards });
     }
 
     // 按行动 id 倒序
-    list.sort((a, b) => (BigInt(a.action.head.id) > BigInt(b.action.head.id) ? -1 : 1));
+    list.sort((a, b) => (BigInt(a.action.action.head.id) > BigInt(b.action.action.head.id) ? -1 : 1));
     return list;
-  }, [actions, rewards]);
+  }, [joinedActions, rewards]);
 
   // 铸造行动激励
   const { mintActionReward, isPending, isConfirming, isConfirmed, writeError } = useMintActionReward();
@@ -158,7 +151,7 @@ const ActRewardsPage: React.FC = () => {
     return grouped.map((g) => ({
       ...g,
       rewards: g.rewards.map((r) => {
-        const key = `${BigInt(g.action.head.id).toString()}-${r.round.toString()}`;
+        const key = `${BigInt(g.action.action.head.id).toString()}-${r.round.toString()}`;
         return locallyMinted.has(key) || r.isMinted ? { ...r, isMinted: true } : r;
       }),
     }));
@@ -186,12 +179,14 @@ const ActRewardsPage: React.FC = () => {
               <LoadingIcon />
             ) : displayedGroups.length > 0 ? (
               displayedGroups.map((group) => (
-                <div key={group.action.head.id} className="border border-gray-100 rounded-lg p-4 shadow-sm">
+                <div key={group.action.action.head.id} className="border border-gray-100 rounded-lg p-4 shadow-sm">
                   <div className="flex items-center mb-3">
                     <div className="flex items-baseline  mr-2">
                       <span className="text-greyscale-500">No.</span>
-                      <span className="text-secondary text-xl font-bold mr-2">{String(group.action.head.id)}</span>
-                      <span className="font-bold text-greyscale-800">{`${group.action.body.title}`}</span>
+                      <span className="text-secondary text-xl font-bold mr-2">
+                        {String(group.action.action.head.id)}
+                      </span>
+                      <span className="font-bold text-greyscale-800">{`${group.action.action.body.title}`}</span>
                     </div>
                   </div>
 
@@ -208,7 +203,7 @@ const ActRewardsPage: React.FC = () => {
                         <tbody>
                           {group.rewards.map((item, index) => (
                             <tr
-                              key={`${group.action.head.id}-${item.round.toString()}`}
+                              key={`${group.action.action.head.id}-${item.round.toString()}`}
                               className={
                                 index === group.rewards.length - 1 ? 'border-none' : 'border-b border-gray-100'
                               }
@@ -221,7 +216,7 @@ const ActRewardsPage: React.FC = () => {
                                     variant="outline"
                                     size="sm"
                                     className="text-secondary border-secondary"
-                                    onClick={() => handleClaim(item.round, BigInt(group.action.head.id))}
+                                    onClick={() => handleClaim(item.round, BigInt(group.action.action.head.id))}
                                     disabled={isPending || isConfirming}
                                   >
                                     铸造
@@ -245,7 +240,7 @@ const ActRewardsPage: React.FC = () => {
 
                   <div className="text-center">
                     <button
-                      onClick={() => router.push(`/my/rewardsofaction?id=${group.action.head.id}`)}
+                      onClick={() => router.push(`/my/rewardsofaction?id=${group.action.action.head.id}`)}
                       className="text-secondary hover:text-secondary/80 underline text-sm bg-transparent border-none cursor-pointer"
                     >
                       查看更多激励 &gt;&gt;
@@ -254,7 +249,7 @@ const ActRewardsPage: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div className="text-center text-greyscale-500 py-8">最近 {LAST_ROUNDS.toString()} 轮没有获得激励</div>
+              <div className="text-center text-greyscale-500 py-8">没有参与任何行动</div>
             )}
           </div>
         )}
