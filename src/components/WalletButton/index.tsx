@@ -152,18 +152,6 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // 格式化余额显示
-  const formatBalance = (bal: bigint | undefined) => {
-    if (!bal) return '0';
-    const value = formatEther(bal);
-    const num = parseFloat(value);
-    if (num === 0) return '0';
-    if (num < 0.0001) return '<0.0001';
-    if (num < 1) return num.toFixed(4);
-    if (num < 100) return num.toFixed(2);
-    return num.toFixed(0);
-  };
-
   const handleConnect = async () => {
     try {
       // 安全检查：确保在客户端环境

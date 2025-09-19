@@ -535,7 +535,7 @@ const LiquidityPanel = () => {
           </div>
           {(lpBalance || BigInt(0)) > BigInt(0) && (
             <Link
-              href="/dex/withdraw"
+              href={`/dex/withdraw?baseToken=${encodeURIComponent(baseToken.symbol)}`}
               className="inline-flex items-center gap-1 text-sm text-secondary hover:text-blue-800 transition-colors"
               title="撤出流动性"
             >

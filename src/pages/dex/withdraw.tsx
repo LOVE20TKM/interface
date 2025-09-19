@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { useRouter } from 'next/router';
 import { z } from 'zod';
-import { HelpCircle } from 'lucide-react';
 
 // UI components
 import { Card, CardContent } from '@/components/ui/card';
 
 // my funcs
-import { formatTokenAmount, parseUnits } from '@/src/lib/format';
+import { parseUnits } from '@/src/lib/format';
 
 // my hooks
 import { useLiquidityPageData } from '@/src/hooks/composite/useLiquidityPageData';
@@ -96,6 +96,7 @@ type WithdrawFormValues = z.infer<ReturnType<typeof getWithdrawFormSchema>>;
 const WithdrawPage = () => {
   const { address: account } = useAccount();
   const { token } = useTokenContext();
+  const router = useRouter();
 
   // --------------------------------------------------
   // 1. 构建支持的代币列表
@@ -118,6 +119,20 @@ const WithdrawPage = () => {
     );
   });
 
+  // --------------------------------------------------
+  // 2. 处理 URL 参数，设置默认币对儿
+  // --------------------------------------------------
+  useEffect(() => {
+    const { baseToken: baseTokenSymbol } = router.query;
+
+    if (baseTokenSymbol && typeof baseTokenSymbol === 'string' && baseTokens.length > 0) {
+      const foundToken = baseTokens.find((t) => t.symbol === baseTokenSymbol);
+      if (foundToken) {
+        setBaseToken(foundToken);
+      }
+    }
+  }, [router.query, baseTokens]);
+
   // 目标代币 (当前token)
   const targetToken = useMemo(() => {
     if (!token) return null;
@@ -130,7 +145,7 @@ const WithdrawPage = () => {
   }, [token]);
 
   // --------------------------------------------------
-  // 2. 使用流动性页面数据查询hook
+  // 3. 使用流动性页面数据查询hook
   // --------------------------------------------------
   const {
     lpBalance,
@@ -148,7 +163,7 @@ const WithdrawPage = () => {
   });
 
   // --------------------------------------------------
-  // 3. 加载状态
+  // 4. 加载状态
   // --------------------------------------------------
   if (!token || !targetToken || isLoadingLiquidityData) {
     return (
