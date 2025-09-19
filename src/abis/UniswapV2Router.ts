@@ -279,4 +279,107 @@ export const UniswapV2RouterAbi = [
     ],
     stateMutability: 'view',
   },
+  {
+    type: 'function',
+    name: 'removeLiquidity',
+    inputs: [
+      {
+        name: 'tokenA',
+        type: 'address',
+        internalType: 'address',
+      },
+      {
+        name: 'tokenB',
+        type: 'address',
+        internalType: 'address',
+      },
+      {
+        name: 'liquidity',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'amountAMin',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'amountBMin',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'to',
+        type: 'address',
+        internalType: 'address',
+      },
+      {
+        name: 'deadline',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
+    outputs: [
+      {
+        name: 'amountA',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'amountB',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'removeLiquidityETH',
+    inputs: [
+      {
+        name: 'token',
+        type: 'address',
+        internalType: 'address',
+      },
+      {
+        name: 'liquidity',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'amountTokenMin',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'amountETHMin',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'to',
+        type: 'address',
+        internalType: 'address',
+      },
+      {
+        name: 'deadline',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
+    outputs: [
+      {
+        name: 'amountToken',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'amountETH',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
 ] as const satisfies Abi;

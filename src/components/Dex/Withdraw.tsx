@@ -155,7 +155,7 @@ const Withdraw: React.FC = () => {
 
   return (
     <>
-      <div className="p-6 pt-0">
+      <div className="py-6 px-2">
         <div className="mb-4 flex items-center space-x-2">
           <LeftTitle title={`${process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL} 兑换 ${balance?.symbol}`} />
         </div>

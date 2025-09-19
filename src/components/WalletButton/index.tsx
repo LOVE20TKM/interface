@@ -17,6 +17,7 @@ import toast from 'react-hot-toast';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { config } from '@/src/wagmi';
 import { isTukeWallet } from '@/src/lib/tukeWalletUtils';
+import { formatTokenAmount } from '@/src/lib/format';
 
 interface WalletButtonProps {
   className?: string;
@@ -399,7 +400,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               </div>
               <div className="flex items-center text-xs text-gray-600">
                 <span className="font-semibold">
-                  {balance ? formatBalance(balance.value) : '0'} {balance?.symbol || 'ETH'}
+                  {balance ? formatTokenAmount(balance.value) : '0'} {balance?.symbol || 'ETH'}
                 </span>
               </div>
             </div>

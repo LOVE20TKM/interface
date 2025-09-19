@@ -210,7 +210,7 @@ export function useAddLiquidity() {
       amountBMin,
       to,
       deadline,
-      isTukeMode
+      isTukeMode,
     });
     return await execute([tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin, to, deadline]);
   };
@@ -265,7 +265,7 @@ export function useAddLiquidityETH() {
       to,
       deadline,
       ethValue,
-      isTukeMode
+      isTukeMode,
     });
     return await execute([token, amountTokenDesired, amountTokenMin, amountETHMin, to, deadline], ethValue);
   };
@@ -284,6 +284,114 @@ export function useAddLiquidityETH() {
 
   return {
     addLiquidityETH,
+    writeData: hash,
+    isWriting: isPending,
+    writeError: error,
+    isConfirming,
+    isConfirmed,
+    isTukeMode,
+  };
+}
+
+/**
+ * Hook for removeLiquidity
+ */
+export function useRemoveLiquidity() {
+  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
+    UniswapV2RouterAbi,
+    CONTRACT_ADDRESS,
+    'removeLiquidity',
+  );
+
+  const removeLiquidity = async (
+    tokenA: `0x${string}`,
+    tokenB: `0x${string}`,
+    liquidity: bigint,
+    amountAMin: bigint,
+    amountBMin: bigint,
+    to: `0x${string}`,
+    deadline: bigint,
+  ) => {
+    console.log('提交removeLiquidity交易:', {
+      tokenA,
+      tokenB,
+      liquidity,
+      amountAMin,
+      amountBMin,
+      to,
+      deadline,
+      isTukeMode,
+    });
+    return await execute([tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline]);
+  };
+
+  // 错误日志记录
+  useEffect(() => {
+    if (hash) {
+      console.log('removeLiquidity tx hash:', hash);
+    }
+    if (error) {
+      console.log('提交removeLiquidity交易错误:');
+      logWeb3Error(error);
+      logError(error);
+    }
+  }, [hash, error]);
+
+  return {
+    removeLiquidity,
+    writeData: hash,
+    isWriting: isPending,
+    writeError: error,
+    isConfirming,
+    isConfirmed,
+    isTukeMode,
+  };
+}
+
+/**
+ * Hook for removeLiquidityETH
+ */
+export function useRemoveLiquidityETH() {
+  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
+    UniswapV2RouterAbi,
+    CONTRACT_ADDRESS,
+    'removeLiquidityETH',
+  );
+
+  const removeLiquidityETH = async (
+    token: `0x${string}`,
+    liquidity: bigint,
+    amountTokenMin: bigint,
+    amountETHMin: bigint,
+    to: `0x${string}`,
+    deadline: bigint,
+  ) => {
+    console.log('提交removeLiquidityETH交易:', {
+      token,
+      liquidity,
+      amountTokenMin,
+      amountETHMin,
+      to,
+      deadline,
+      isTukeMode,
+    });
+    return await execute([token, liquidity, amountTokenMin, amountETHMin, to, deadline]);
+  };
+
+  // 错误日志记录
+  useEffect(() => {
+    if (hash) {
+      console.log('removeLiquidityETH tx hash:', hash);
+    }
+    if (error) {
+      console.log('提交removeLiquidityETH交易错误:');
+      logWeb3Error(error);
+      logError(error);
+    }
+  }, [hash, error]);
+
+  return {
+    removeLiquidityETH,
     writeData: hash,
     isWriting: isPending,
     writeError: error,

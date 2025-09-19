@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { ArrowUpDown, HelpCircle, Settings, Zap, RefreshCw, Search } from 'lucide-react';
+import { ArrowUpDown, HelpCircle, Settings, Zap, RefreshCw, Search, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 // UI components
@@ -522,15 +522,31 @@ const LiquidityPanel = () => {
   const isDisabled = isLoadingLiquidityData;
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <LeftTitle title="存入代币" />
+    <div className="py-6 px-2">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="text-sm">
+          <span className="text-gray-600">底池LP供应量:</span>
+          <span className="text-secondary">{formatTokenAmount(lpTotalSupply || BigInt(0))}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="text-sm">
+            <span className="text-gray-600">我的LP余额:</span>
+            <span className="text-secondary">{formatTokenAmount(lpBalance || BigInt(0))}</span>
+          </div>
+          {(lpBalance || BigInt(0)) > BigInt(0) && (
+            <Link
+              href="/dex/withdraw"
+              className="inline-flex items-center gap-1 text-sm text-secondary hover:text-blue-800 transition-colors"
+              title="撤出流动性"
+            >
+              撤出
+            </Link>
+          )}
+        </div>
       </div>
 
-      {/* LP余额显示 */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm text-gray-600">我的LP余额：{formatTokenAmount(lpBalance || BigInt(0))}</div>
-        <div className="text-sm text-gray-600">底池LP供应总量：{formatTokenAmount(lpTotalSupply || BigInt(0))}</div>
+      <div className="flex justify-between items-center mb-4">
+        <LeftTitle title="流动性添加" />
       </div>
 
       <div className="w-full max-w-md">

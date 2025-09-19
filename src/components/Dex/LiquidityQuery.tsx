@@ -178,7 +178,7 @@ const LiquidityQueryPanel: React.FC = () => {
   const hasLiquidity = showResults && pairExists && userLPBalance > BigInt(0);
 
   return (
-    <div className="p-6">
+    <div className="py-6 px-2">
       <div className="flex justify-between items-center mb-6">
         <LeftTitle title="流动性查询" />
       </div>
