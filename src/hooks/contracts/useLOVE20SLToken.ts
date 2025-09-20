@@ -165,15 +165,20 @@ export const useTokenAmountsBySlAmount = (address: `0x${string}`, slAmount: bigi
     functionName: 'tokenAmountsBySlAmount',
     args: [slAmount],
     query: {
-      enabled: !!address && slAmount !== BigInt(0),
+      enabled: !!address && slAmount !== undefined,
     },
   });
 
   return {
     tokenAmountsBySlAmount: data
       ? {
-          tokenAmount: safeToBigInt((data as any)?.tokenAmount),
-          parentTokenAmount: safeToBigInt((data as any)?.parentTokenAmount),
+          tokenAmount: safeToBigInt((data as any)[0]),
+          parentTokenAmount: safeToBigInt((data as any)[1]),
+        }
+      : slAmount === BigInt(0)
+      ? {
+          tokenAmount: BigInt(0),
+          parentTokenAmount: BigInt(0),
         }
       : undefined,
     isPending,

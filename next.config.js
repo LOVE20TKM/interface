@@ -72,6 +72,7 @@ const nextConfig = {
       '/launch/deploy': { page: '/launch/deploy' },
       '/my': { page: '/my' },
       '/my/myaction': { page: '/my/myaction' },
+      '/my/liquid': { page: '/my/liquid' },
       '/my/actionrewards': { page: '/my/actionrewards' },
       '/my/govrewards': { page: '/my/govrewards' },
       '/my/rewardsofaction': { page: '/my/rewardsofaction' },
