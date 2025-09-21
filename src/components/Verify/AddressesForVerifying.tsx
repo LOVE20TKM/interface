@@ -275,7 +275,13 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
             </tr>
           </thead>
           <tbody>
-            {isPendingVerificationInfosByAction && <LoadingIcon />}
+            {isPendingVerificationInfosByAction && (
+              <tr>
+                <td colSpan={3} className="text-center py-4">
+                  <LoadingIcon />
+                </td>
+              </tr>
+            )}
             {verificationInfos && verificationInfos.length > 0 ? (
               verificationInfos.map((info, index) => (
                 <tr key={info.account} className="border-b border-gray-100">
