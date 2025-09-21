@@ -129,41 +129,38 @@ export default function JoinDetails({ actionId }: JoinDetailsProps) {
               <AlertBox type="error" message={`查询失败：${error.message}`} />
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm text-gray-600">查询地址</Label>
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="space-y-1">
-                        <code className="text-sm font-mono break-all">{queryAddress}</code>
-                        {searchAddress !== queryAddress && (
-                          <div className="text-xs text-gray-500">原始输入：{searchAddress}</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm text-gray-600">参与代币数量</Label>
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="text-lg font-semibold">
-                        {joinedAmountByActionIdByAccount !== undefined ? (
-                          <>
-                            {formatTokenAmount(joinedAmountByActionIdByAccount)} {token?.symbol || ''}
-                          </>
-                        ) : (
-                          '0 ' + (token?.symbol || '')
-                        )}
-                      </div>
+                {/* 查询地址信息 */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600">查询地址</Label>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="space-y-1">
+                      <code className="text-sm font-mono break-all">{queryAddress}</code>
+                      {searchAddress !== queryAddress && (
+                        <div className="text-xs text-gray-500">原始输入：{searchAddress}</div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {joinedAmountByActionIdByAccount === BigInt(0) && (
-                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                {/* 参与情况显示 */}
+                {joinedAmountByActionIdByAccount !== undefined && joinedAmountByActionIdByAccount > BigInt(0) ? (
+                  /* 有参与：显示参与数量 */
+                  <div className="space-y-2">
+                    <Label className="text-sm text-gray-600">参与代币数量</Label>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="text-lg font-semibold">
+                        {formatTokenAmount(joinedAmountByActionIdByAccount)} {token?.symbol || ''}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* 未参与：显示提示信息 */
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <div className="flex items-center gap-2 text-yellow-800">
                       <AlertCircle className="h-5 w-5" />
-                      <span className="font-medium">该地址尚未参与此行动</span>
+                      <span className="font-medium">该地址未参与此行动</span>
                     </div>
-                    <p className="text-sm text-yellow-700 mt-1">该地址在此行动中的参与代币数量为 0</p>
+                    <p className="text-sm text-yellow-700 mt-1">参与代币数量为 0</p>
                   </div>
                 )}
               </div>
