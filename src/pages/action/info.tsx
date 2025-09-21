@@ -13,11 +13,12 @@ import ActionHeader from '@/src/components/Action/ActionHeader';
 import BasicInfo from '@/src/components/Action/ActionTabs/BasicInfo';
 import VotingDetails from '@/src/components/Action/ActionTabs/VotingDetails';
 import VerificationTabs from '@/src/components/Action/ActionTabs/VerificationTabs';
+import JoinDetails from '@/src/components/Action/ActionTabs/JoinDetails';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AlertBox from '@/src/components/Common/AlertBox';
 import Header from '@/src/components/Header';
 
-type TabType = 'basic' | 'vote' | 'verify';
+type TabType = 'basic' | 'vote' | 'verify' | 'join';
 
 export default function ActionInfoPage() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function ActionInfoPage() {
 
   // 初始化tab状态
   useEffect(() => {
-    if (tab && ['basic', 'vote', 'verify'].includes(tab as string)) {
+    if (tab && ['basic', 'vote', 'verify', 'join'].includes(tab as string)) {
       setActiveTab(tab as TabType);
     }
   }, [tab]);
@@ -77,6 +78,7 @@ export default function ActionInfoPage() {
   const tabs: { key: TabType; label: string }[] = [
     { key: 'basic', label: '行动详情' },
     { key: 'vote', label: '投票公示' },
+    { key: 'join', label: '参与公示' },
     { key: 'verify', label: '验证公示' },
   ];
 
@@ -129,6 +131,8 @@ export default function ActionInfoPage() {
     switch (activeTab) {
       case 'basic':
         return <BasicInfo actionInfo={actionInfo} />;
+      case 'join':
+        return <JoinDetails actionId={actionId} />;
       case 'vote':
         return <VotingDetails actionId={actionId} currentRound={currentRound} />;
       case 'verify':
@@ -163,7 +167,7 @@ export default function ActionInfoPage() {
               <button
                 key={tab.key}
                 onClick={() => handleTabChange(tab.key)}
-                className={`flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-1 px-2 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.key
                     ? 'border-primary text-primary'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
