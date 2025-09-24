@@ -16,6 +16,7 @@ import ActionHeader from '@/src/components/Action/ActionHeader';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import ChangeRound from '@/src/components/Common/ChangeRound';
 import LeftTitle from '@/src/components/Common/LeftTitle';
+import InfoTooltip from '@/src/components/Common/InfoTooltip';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -422,7 +423,21 @@ const VerifyDetailPage = () => {
                       boxShadow: '1px 0 0 0 #d1d5db',
                     }}
                   >
-                    <div className="text-center text-sm text-blue-600">汇总 ({verifiees.length - 1} 个参与者)</div>
+                    <div className="flex items-center justify-center gap-1 text-sm text-blue-600">
+                      汇总 ({verifiees.length - 1} 个地址)
+                      <InfoTooltip
+                        title="最大激励地址数说明"
+                        content={
+                          <p className="leading-relaxed text-base">
+                            每轮从所有参与行动的代币中，随机抽取
+                            <span className="font-mono font-bold text-blue-600 mx-1 text-base">
+                              {actionInfo?.body.maxRandomAccounts.toString()}
+                            </span>
+                            份代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。
+                          </p>
+                        }
+                      />
+                    </div>
                   </td>
                   <td
                     className="border border-gray-300 p-1 bg-blue-50 sticky left-[156px] z-20 font-bold"

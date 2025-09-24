@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import InfoTooltip from '@/src/components/Common/InfoTooltip';
 
 // my types & funcs
 import { ActionInfo } from '@/src/types/love20types';
@@ -139,7 +140,23 @@ const VerifyStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionId, 
           <thead>
             <tr className="border-b border-gray-100">
               <th></th>
-              <th>被抽中地址</th>
+              <th>
+                <div className="flex items-center gap-1">
+                  被抽中地址
+                  <InfoTooltip
+                    title="最大激励地址数说明"
+                    content={
+                      <p className="leading-relaxed text-base">
+                        每轮从所有参与行动的代币中，随机抽取
+                        <span className="font-mono font-bold text-blue-600 mx-1 text-base">
+                          {actionInfo?.body.maxRandomAccounts.toString()}
+                        </span>
+                        份代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。
+                      </p>
+                    }
+                  />
+                </div>
+              </th>
               <th className="px-1 text-right">获得验证票</th>
               <th className="px-1 text-right">验证票占比</th>
             </tr>
