@@ -20,7 +20,6 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 // utils
 import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
@@ -97,9 +96,6 @@ const ActRewardsPage: React.FC = () => {
   const [mintingTarget, setMintingTarget] = useState<{ actionId: bigint; round: bigint } | null>(null);
   const [locallyMinted, setLocallyMinted] = useState<Set<string>>(new Set());
 
-  // 行动ID输入状态
-  const [actionIdInput, setActionIdInput] = useState<string>('');
-
   useEffect(() => {
     if (isConfirmed) {
       toast.success('铸造成功');
@@ -149,23 +145,6 @@ const ActRewardsPage: React.FC = () => {
     }
   };
 
-  // 处理行动ID输入跳转
-  const handleActionIdNavigation = () => {
-    if (!actionIdInput.trim()) {
-      toast.error('请输入行动ID');
-      return;
-    }
-
-    // 验证输入是否为有效数字
-    const actionId = actionIdInput.trim();
-    if (!/^\d+$/.test(actionId)) {
-      toast.error('请输入有效的行动ID');
-      return;
-    }
-
-    router.push(`/my/rewardsofaction?id=${actionId}`);
-  };
-
   // 结合本地已铸造集合覆盖 UI 展示
   const displayedGroups = useMemo(() => {
     if (!grouped) return [];
@@ -194,30 +173,14 @@ const ActRewardsPage: React.FC = () => {
           <LoadingIcon />
         ) : (
           <div className="flex flex-col space-y-6 p-4">
-            <LeftTitle title="铸造行动激励" />
-
-            {/* 行动ID输入框 */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <div className="flex flex-col space-y-3">
-                <label className="text-sm font-medium text-greyscale-700">查看某个行动的激励：</label>
-                <div className="flex space-x-3">
-                  <Input
-                    type="text"
-                    placeholder="请输入行动ID"
-                    value={actionIdInput}
-                    onChange={(e) => setActionIdInput(e.target.value)}
-                    className="flex-1"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleActionIdNavigation();
-                      }
-                    }}
-                  />
-                  <Button onClick={handleActionIdNavigation} className="text-white px-6">
-                    确认
-                  </Button>
-                </div>
-              </div>
+            <div className="flex justify-between items-center">
+              <LeftTitle title="铸造行动激励" />
+              <button
+                onClick={() => router.push(`/my/queryaction?symbol=${token?.symbol}`)}
+                className="text-secondary hover:text-secondary/80 text-sm bg-transparent border-none cursor-pointer"
+              >
+                查看已退出行动激励&nbsp;&gt;&gt;
+              </button>
             </div>
 
             {isLoadingRewards || isLoadingActions ? (
