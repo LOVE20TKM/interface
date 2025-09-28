@@ -6,13 +6,22 @@ import { ActionInfo } from '@/src/types/love20types';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 import SafeText from '@/src/components/Common/SafeText';
 import InfoTooltip from '@/src/components/Common/InfoTooltip';
+import { useSubmitInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 
 interface BasicInfoProps {
   actionInfo: ActionInfo;
+  currentRound?: bigint;
 }
 
-export default function BasicInfo({ actionInfo }: BasicInfoProps) {
+export default function BasicInfo({ actionInfo, currentRound }: BasicInfoProps) {
   const { token } = useContext(TokenContext) || {};
+
+  // 获取推举人信息
+  const { submitInfo, isPending: isSubmitPending } = useSubmitInfo(
+    token?.address || '0x0000000000000000000000000000000000000000',
+    currentRound || BigInt(0),
+    actionInfo.head.id,
+  );
 
   if (!token) {
     return <div>Token信息加载中...</div>;
@@ -20,11 +29,6 @@ export default function BasicInfo({ actionInfo }: BasicInfoProps) {
 
   const formatStakeAmount = (amount: bigint) => {
     return formatTokenAmount(amount);
-  };
-
-  const formatTimestamp = (blockNumber: bigint) => {
-    // 这里可以根据区块号计算大概时间，或者直接显示区块号
-    return `区块 #${blockNumber.toString()}`;
   };
 
   return (
@@ -108,6 +112,19 @@ export default function BasicInfo({ actionInfo }: BasicInfoProps) {
       <div className="flex items-center justify-between mt-4 md:max-w-md">
         <span className="font-bold text-sm">创建人:</span>
         <AddressWithCopyButton address={actionInfo.head.author} showCopyButton={true} colorClassName="text-sm" />
+      </div>
+
+      <div className="flex items-center justify-between mt-4 md:max-w-md">
+        <span className="font-bold text-sm">推举人:</span>
+        <div>
+          {isSubmitPending ? (
+            <span className="text-gray-400 text-sm">加载中...</span>
+          ) : submitInfo?.submitter && submitInfo.submitter !== '0x0000000000000000000000000000000000000000' ? (
+            <AddressWithCopyButton address={submitInfo.submitter} showCopyButton={true} colorClassName="text-sm" />
+          ) : (
+            <span className="text-gray-400 text-sm">当前行动轮未被推举</span>
+          )}
+        </div>
       </div>
     </div>
   );

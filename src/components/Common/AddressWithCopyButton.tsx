@@ -11,6 +11,7 @@ interface AddressWithCopyButtonProps {
   address: `0x${string}`;
   word?: string;
   showCopyButton?: boolean;
+  showCopyLast4Button?: boolean;
   showAddress?: boolean;
   colorClassName?: string;
   colorClassName2?: string;
@@ -20,15 +21,18 @@ const AddressWithCopyButton: React.FC<AddressWithCopyButtonProps> = ({
   address,
   word,
   showCopyButton = true,
+  showCopyLast4Button = false,
   showAddress = true,
   colorClassName = '',
   colorClassName2 = '',
 }) => {
   const [copied, setCopied] = useState(false);
+  const [copiedLast4, setCopiedLast4] = useState(false);
 
   // 当地址变化时重置复制状态
   useEffect(() => {
     setCopied(false);
+    setCopiedLast4(false);
   }, [address]);
 
   const handleCopy = (text: string, result: boolean) => {
@@ -36,6 +40,17 @@ const AddressWithCopyButton: React.FC<AddressWithCopyButtonProps> = ({
       setCopied(true);
       // 2秒后自动重置状态
       setTimeout(() => setCopied(false), 2000);
+    } else {
+      toast.error('复制失败');
+    }
+  };
+
+  const handleCopyLast4 = (text: string, result: boolean) => {
+    if (result) {
+      setCopiedLast4(true);
+      toast.success('已复制后4位');
+      // 2秒后自动重置状态
+      setTimeout(() => setCopiedLast4(false), 2000);
     } else {
       toast.error('复制失败');
     }
@@ -84,6 +99,25 @@ const AddressWithCopyButton: React.FC<AddressWithCopyButtonProps> = ({
               <Check className={`h-4 w-4 ${colorClassName ?? 'text-greyscale-500'}`} />
             ) : (
               <Copy className={`h-4 w-4 ${colorClassName ?? 'text-greyscale-500'}`} />
+            )}
+          </button>
+        </CopyToClipboard>
+      )}
+      {showCopyLast4Button && (
+        // @ts-ignore
+        <CopyToClipboard text={address.substring(address.length - 4)} onCopy={handleCopyLast4}>
+          <button
+            className="text-xs px-2 py-1 rounded border border-gray-300 focus:outline-none active:bg-gray-200 md:hover:bg-gray-100 transition-colors"
+            onClick={handleClick}
+            aria-label="复制地址后4位"
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            {copiedLast4 ? (
+              <span className={`${colorClassName ?? 'text-greyscale-500'}`}>已复制</span>
+            ) : (
+              <span className={`${colorClassName ?? 'text-greyscale-500'}`}>后4位</span>
             )}
           </button>
         </CopyToClipboard>

@@ -307,7 +307,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-gray-500 min-w-[4px]">{index + 1}</span>
                         <div className="font-mono">
-                          <AddressWithCopyButton address={info.account} />
+                          <AddressWithCopyButton address={info.account} showCopyLast4Button={true} />
                         </div>
                       </div>
                       {actionInfo && (

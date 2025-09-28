@@ -130,7 +130,7 @@ export default function ActionInfoPage() {
 
     switch (activeTab) {
       case 'basic':
-        return <BasicInfo actionInfo={actionInfo} />;
+        return <BasicInfo actionInfo={actionInfo} currentRound={currentRound} />;
       case 'join':
         return <JoinDetails actionId={actionId} />;
       case 'vote':
