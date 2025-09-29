@@ -173,7 +173,15 @@ const ActRewardsPage: React.FC = () => {
           <LoadingIcon />
         ) : (
           <div className="flex flex-col space-y-6 p-4">
-            <LeftTitle title="铸造行动激励" />
+            <div className="flex justify-between items-center">
+              <LeftTitle title="铸造行动激励" />
+              <button
+                onClick={() => router.push(`/my/queryaction?symbol=${token?.symbol}`)}
+                className="text-secondary hover:text-secondary/80 text-sm bg-transparent border-none cursor-pointer"
+              >
+                查看已退出行动激励&nbsp;&gt;&gt;
+              </button>
+            </div>
 
             {isLoadingRewards || isLoadingActions ? (
               <LoadingIcon />

@@ -250,6 +250,14 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
                   </Button>
                 )}
               </div>
+
+              <div className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-3 mt-3 mb-3 w-full">
+                <div className="font-medium text-gray-600 mb-2">💡 小贴士：</div>
+                <div className="ml-4 text-gray-600">
+                  当前验证的是上一轮的行动结果，所以取回代币，不会影响正在进行的验证，也不会影响上一轮行动的激励。
+                </div>
+              </div>
+
               <div className="flex flex-col items-start my-4 w-full">
                 <div className="text-sm text-greyscale-600 w-full">
                   {isPendingVerificationInfo && '加载中...'}
@@ -257,16 +265,21 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
                     joinedAmountByActionIdByAccount > BigInt(2) &&
                     verificationKeys &&
                     verificationKeys.length > 0 && (
-                      <div className="w-full text-left">
-                        {verificationKeys.map((key, index) => (
-                          <div key={index} className="mb-2">
-                            <div className="text-sm font-bold text-greyscale-600">{key}</div>
-                            <div className="text-base">
-                              <LinkIfUrl text={verificationInfos[index]} />
-                            </div>
+                      <>
+                        <h3 className="text-base font-medium text-gray-700 mb-3">我提供的验证信息：</h3>
+                        <div className="w-full bg-gray-50 rounded-lg p-4 border border-gray-100">
+                          <div className="w-full text-left">
+                            {verificationKeys.map((key, index) => (
+                              <div key={index} className="mb-2">
+                                <div className="text-sm font-bold text-greyscale-600">{key}</div>
+                                <div className="text-base">
+                                  <LinkIfUrl text={verificationInfos[index]} />
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      </>
                     )}
                 </div>
               </div>

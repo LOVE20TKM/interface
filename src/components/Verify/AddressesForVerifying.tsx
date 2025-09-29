@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { useChainId } from 'wagmi';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect, useContext } from 'react';
+import InfoTooltip from '@/src/components/Common/InfoTooltip';
 
 // my types & funcs
 import { ActionInfo } from '@/src/types/love20types';
@@ -269,13 +270,35 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="pb-3 text-left text-sm text-greyscale-500">被抽中的行动参与者</th>
+              <th className="pb-3 text-left text-sm text-greyscale-500">
+                <div className="flex items-center gap-1">
+                  被抽中的行动参与者
+                  <InfoTooltip
+                    title="最大激励地址数说明"
+                    content={
+                      <p className="leading-relaxed text-base">
+                        每轮从所有参与行动的代币中，随机抽取
+                        <span className="font-mono font-bold text-blue-600 mx-1 text-base">
+                          {actionInfo?.body.maxRandomAccounts.toString()}
+                        </span>
+                        份代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。
+                      </p>
+                    }
+                  />
+                </div>
+              </th>
               <th className="pb-3 text-left whitespace-nowrap w-16 text-sm text-greyscale-500">打分</th>
               <th className="pb-3 text-center whitespace-nowrap w-14 text-sm text-greyscale-500">分配</th>
             </tr>
           </thead>
           <tbody>
-            {isPendingVerificationInfosByAction && <LoadingIcon />}
+            {isPendingVerificationInfosByAction && (
+              <tr>
+                <td colSpan={3} className="text-center py-4">
+                  <LoadingIcon />
+                </td>
+              </tr>
+            )}
             {verificationInfos && verificationInfos.length > 0 ? (
               verificationInfos.map((info, index) => (
                 <tr key={info.account} className="border-b border-gray-100">
@@ -284,7 +307,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-gray-500 min-w-[4px]">{index + 1}</span>
                         <div className="font-mono">
-                          <AddressWithCopyButton address={info.account} />
+                          <AddressWithCopyButton address={info.account} showCopyLast4Button={true} />
                         </div>
                       </div>
                       {actionInfo && (

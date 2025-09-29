@@ -99,6 +99,23 @@ export const useStakedAmountByAccount = (tokenAddress: `0x${string}`, account: `
 };
 
 /**
+ * Hook for indexToAccount - 根据索引获取参与地址
+ */
+export const useIndexToAccount = (tokenAddress: `0x${string}`, actionId: bigint, index: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20JoinAbi,
+    functionName: 'indexToAccount',
+    args: [tokenAddress, actionId, index],
+    query: {
+      enabled: !!tokenAddress && actionId !== undefined && index !== undefined,
+    },
+  });
+
+  return { indexToAccount: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
  * Hook for numOfAccounts - 参与地址数
  */
 export const useNumOfAccounts = (tokenAddress: `0x${string}`, actionId: bigint) => {

@@ -13,6 +13,7 @@ import { ActionInfo } from '@/src/types/love20types';
 import { formatTokenAmount } from '@/src/lib/format';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 import SafeText from '@/src/components/Common/SafeText';
+import InfoTooltip from '@/src/components/Common/InfoTooltip';
 
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -100,7 +101,21 @@ const ActionDetail: React.FC<ActivityDetailProps> = ({
           </div>
 
           <div className="mb-4">
-            <h3 className="text-sm font-bold">最大激励地址数</h3>
+            <div className="flex items-center gap-1 mb-1">
+              <h3 className="text-sm font-bold">最大激励地址数</h3>
+              <InfoTooltip
+                title="最大激励地址数说明"
+                content={
+                  <p className="leading-relaxed text-base">
+                    每轮从所有参与行动的代币中，随机抽取
+                    <span className="font-mono font-bold text-blue-600 mx-1 text-base">
+                      {actionInfo?.body.maxRandomAccounts.toString()}
+                    </span>
+                    份代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。
+                  </p>
+                }
+              />
+            </div>
             <p className="text-greyscale-500">{actionInfo?.body.maxRandomAccounts.toString() || '-'}</p>
           </div>
 

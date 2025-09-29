@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { useAccount, useChainId } from 'wagmi';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Info } from 'lucide-react';
 
 // my funcs
 import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
@@ -312,7 +313,14 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
             />
           </div>
           <div className="stat-value text-xl text-gray-600">
-            {isPendingAccountStakeStatus ? <LoadingIcon /> : formatTokenAmount(slAmount || BigInt(0))}
+            {isPendingAccountStakeStatus ? (
+              <LoadingIcon />
+            ) : (
+              <Link href={`/my/liquid?symbol=${token.symbol}`} className="flex items-center hover:text-secondary-focus">
+                <span className="cursor-pointer">{formatTokenAmount(slAmount || BigInt(0))}</span>
+                <Info size={16} className="ml-1 text-secondary cursor-pointer" />
+              </Link>
+            )}
           </div>
           <div className="stat-desc text-xs">
             <Button variant="link" className="text-secondary font-normal border-secondary" asChild>

@@ -87,9 +87,12 @@ const GovPage = () => {
         ) : (
           <>
             <Tabs defaultValue="my-assets" className="w-full px-4">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="my-assets">我的</TabsTrigger>
                 <TabsTrigger value="community-assets">社区</TabsTrigger>
+                <TabsTrigger value="address-query" asChild>
+                  <Link href={`/gov/query?symbol=${currentToken?.symbol}`}>查询</Link>
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="my-assets">
                 <div className="border rounded-lg px-2 py-4 mt-2">
@@ -122,6 +125,22 @@ const GovPage = () => {
                 <Button className="w-1/2" asChild>
                   <Link href={`/gov/stakelp/?symbol=${currentToken?.symbol}`}>质押获取治理票</Link>
                 </Button>
+
+                {/* 添加两个并排的链接 */}
+                <div className="flex space-x-8 mt-4 justify-center text-sm">
+                  <Link
+                    href={`/vote/actions/?symbol=${currentToken?.symbol}`}
+                    className="text-secondary hover:text-blue-800"
+                  >
+                    投票中的行动 &gt;&gt;
+                  </Link>
+                  <Link
+                    href={`/verify/actions/?symbol=${currentToken?.symbol}`}
+                    className="text-secondary hover:text-blue-800"
+                  >
+                    验证中的行动 &gt;&gt;
+                  </Link>
+                </div>
               </div>
             )}
           </>

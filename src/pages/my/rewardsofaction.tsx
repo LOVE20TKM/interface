@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useContext, useEffect, useState, useRef, useCallback } from 'react';
-import { useAccount, useChainId } from 'wagmi';
+import React, { useContext, useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useAccount } from 'wagmi';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 
@@ -31,11 +31,13 @@ const REWARDS_PER_PAGE = BigInt(20);
 const ActRewardsPage: React.FC = () => {
   const router = useRouter();
   const { id } = router.query;
-  const actionId = id && typeof id === 'string' ? BigInt(id) : undefined;
+
+  // 修复：等待路由准备完成后再解析参数
+  // 这解决了页面刷新时路由参数未准备好的问题
+  const actionId = router.isReady && typeof id === 'string' && id.trim() !== '' ? BigInt(id) : undefined;
 
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
-  const chainId = useChainId();
 
   // 获取当前轮次
   const { currentRound, isPending: isLoadingCurrentRound, error: errorCurrentRound } = useCurrentRound();
@@ -44,6 +46,7 @@ const ActRewardsPage: React.FC = () => {
   const [startRound, setStartRound] = useState<bigint>(BigInt(0));
   const [endRound, setEndRound] = useState<bigint>(BigInt(0));
   const [hasMoreRewards, setHasMoreRewards] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // 引入参考元素，用于无限滚动加载
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -55,18 +58,23 @@ const ActRewardsPage: React.FC = () => {
     error: errorActionInfo,
   } = useActionInfo(token?.address as `0x${string}`, actionId);
 
-  // 获取行动激励数据
+  // 获取行动激励数据 - 只在初始化完成后调用
   const {
-    rewards,
+    rewards: rawRewards,
     isPending: isLoadingRewards,
     error: errorLoadingRewards,
   } = useActionRewardsByAccountByActionIdByRounds(
-    token?.address as `0x${string}`,
-    account as `0x${string}`,
-    actionId || BigInt(0),
-    startRound,
-    endRound,
+    isInitialized && token?.address ? (token.address as `0x${string}`) : ('0x0' as `0x${string}`),
+    isInitialized && account ? (account as `0x${string}`) : ('0x0' as `0x${string}`),
+    isInitialized ? actionId || BigInt(0) : BigInt(0),
+    isInitialized ? startRound : BigInt(0),
+    isInitialized ? endRound : BigInt(0),
   );
+
+  // 使用 useMemo 稳定 rewards 引用，避免无限重新渲染
+  const rewards = useMemo(() => {
+    return rawRewards || [];
+  }, [rawRewards]);
 
   // 铸造行动激励
   const { mintActionReward, isPending, isConfirming, isConfirmed, writeError } = useMintActionReward();
@@ -75,30 +83,35 @@ const ActRewardsPage: React.FC = () => {
   // 本地状态缓存激励数据，避免翻页时数据闪烁
   const [rewardList, setRewardList] = useState<typeof rewards>([]);
 
-  // 初始化分页范围
+  // 初始化分页范围（只执行一次）
   useEffect(() => {
-    if (actionInfo && token && currentRound !== undefined) {
+    if (actionInfo && token && currentRound !== undefined && !isInitialized) {
       const actionEndRound = currentRound > 2 ? currentRound - BigInt(2) : BigInt(0);
       const actionStartRound = actionEndRound > BigInt(20) ? actionEndRound - BigInt(20) : BigInt(0);
       setStartRound(actionStartRound);
       setEndRound(actionEndRound);
+      setIsInitialized(true);
     }
-  }, [actionInfo, token, currentRound]);
+  }, [actionInfo, token, currentRound, isInitialized]);
 
   // 根据当前起始轮次判断是否还有更多可以加载（按轮次边界判断）
   useEffect(() => {
-    if (!token) return;
+    if (!token || !isInitialized) return;
     const minRound = BigInt(0);
     setHasMoreRewards(startRound > minRound);
-  }, [startRound, token]);
+  }, [startRound, token, isInitialized]);
 
   // 更新本地激励列表
   useEffect(() => {
-    if (rewards) {
+    if (!isInitialized) return;
+
+    if (rewards && rewards.length > 0) {
       const sortedRewards = [...rewards].sort((a, b) => (a.round < b.round ? 1 : a.round > b.round ? -1 : 0));
       setRewardList(sortedRewards);
+    } else {
+      setRewardList([]);
     }
-  }, [rewards]);
+  }, [rewards, isInitialized]);
 
   // 铸造成功处理
   useEffect(() => {
@@ -140,7 +153,7 @@ const ActRewardsPage: React.FC = () => {
 
   // 使用 IntersectionObserver 监控底部 sentinel 元素
   useEffect(() => {
-    if (!loadMoreRef.current) return;
+    if (!loadMoreRef.current || !isInitialized) return;
     const target = loadMoreRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
@@ -159,7 +172,7 @@ const ActRewardsPage: React.FC = () => {
       observer.unobserve(target);
       observer.disconnect();
     };
-  }, [loadMoreRewards, isLoadingRewards, hasMoreRewards]);
+  }, [loadMoreRewards, isLoadingRewards, hasMoreRewards, isInitialized]);
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -170,7 +183,19 @@ const ActRewardsPage: React.FC = () => {
     if (writeError) handleContractError(writeError, 'mint');
   }, [errorActionInfo, errorCurrentRound, errorLoadingRewards, writeError, handleContractError]);
 
-  // 如果没有 actionId，显示错误
+  // 如果路由未准备好，显示加载状态
+  if (!router.isReady) {
+    return (
+      <>
+        <Header title="行动激励" showBackButton={true} />
+        <main className="flex-grow">
+          <LoadingIcon />
+        </main>
+      </>
+    );
+  }
+
+  // 如果路由已准备好但没有有效的 actionId，显示错误
   if (actionId === undefined) {
     return (
       <>

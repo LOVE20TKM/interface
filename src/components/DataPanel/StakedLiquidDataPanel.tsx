@@ -53,7 +53,7 @@ const StakedLiquidDataPanel: React.FC<StakedLiquidDataPanelProps> = ({}) => {
       <div className="border rounded-lg my-4">
         <div className="stats w-full">
           <div className="stat place-items-center pb-0">
-            <div className="stat-title">流动性质押 sl{token?.symbol} 总数</div>
+            <div className="stat-title">流动性质押凭证 sl{token?.symbol} 总数</div>
             <div className="stat-value text-secondary text-2xl">
               {isPendingGovData ? <LoadingIcon /> : formatTokenAmount(govData?.slAmount || BigInt(0))}
             </div>
@@ -84,7 +84,7 @@ const StakedLiquidDataPanel: React.FC<StakedLiquidDataPanelProps> = ({}) => {
       </div>
       <div className="flex justify-center">
         <Button variant="outline" className="w-1/2 text-secondary border-secondary" asChild>
-          <Link href={`/gov/stakelp/?symbol=${token?.symbol}`}>质押获取治理票</Link>
+          <Link href={`/gov/stakelp/?symbol=${token?.symbol}`}>质押获取治理票 &gt;&gt;</Link>
         </Button>
       </div>
     </div>

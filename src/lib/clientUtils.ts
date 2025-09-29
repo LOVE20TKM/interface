@@ -43,6 +43,14 @@ export const isMetaMaskAvailable = (): boolean => {
 };
 
 /**
+ * 检查是否为TokenPocket钱包
+ */
+export const isTokenPocket = (): boolean => {
+  const provider = getEthereumProvider();
+  return !!(provider && provider.isTokenPocket);
+};
+
+/**
  * 延迟执行函数，确保在客户端挂载后执行
  */
 export const onClientReady = (callback: () => void): void => {
