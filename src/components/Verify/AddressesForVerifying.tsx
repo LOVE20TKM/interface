@@ -1,11 +1,13 @@
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { toast } from 'react-hot-toast';
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import InfoTooltip from '@/src/components/Common/InfoTooltip';
 import ManualPasteDialog from '@/src/components/Common/ManualPasteDialog';
 import ManualCopyDialog from '@/src/components/Common/ManualCopyDialog';
 import { copyWithToast } from '@/src/lib/clipboardUtils';
-import { Clipboard, Copy } from 'lucide-react';
+import { Clipboard, Copy, UserCheck } from 'lucide-react';
 
 // my types & funcs
 import { ActionInfo } from '@/src/types/love20types';
@@ -16,6 +18,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // my hooks
 import { useVerificationInfosByAction, useVerifiedAddressesByAction } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useVerify, useScoreByActionIdByAccount } from '@/src/hooks/contracts/useLOVE20Verify';
+import { useVerifierScores } from '@/src/hooks/composite/useVerifierScores';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my components
@@ -27,6 +30,12 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 import { NavigationUtils } from '@/src/lib/navigationUtils';
 import { formatPercentage } from '@/src/lib/format';
+import {
+  scaleScoresToPercentage,
+  addAbstentionAddress,
+  extractAbstentionScore,
+  removeAbstentionFromScores,
+} from '@/src/lib/scoreUtils';
 
 interface VerifyAddressesProps {
   currentRound: bigint;
@@ -76,6 +85,35 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
   const [showManualCopyDialog, setShowManualCopyDialog] = useState(false);
   const [copyText, setCopyText] = useState('');
 
+  // 验证者打分弹窗状态
+  const [showVerifierDialog, setShowVerifierDialog] = useState(false);
+  const [verifierAddress, setVerifierAddress] = useState<string>('');
+  const [isLoadingVerifierScores, setIsLoadingVerifierScores] = useState(false);
+
+  // 验证者打分数据 - 使用真正的批量合约调用
+  const [enableVerifierScores, setEnableVerifierScores] = useState(false);
+
+  // 稳定的账户数组，避免重复渲染
+  // 对于验证者打分，需要包含0地址来获取弃权票
+  const stableAccounts = useMemo(
+    () => verificationInfos?.map((info) => info.account as `0x${string}`) || [],
+    [verificationInfos],
+  );
+
+  // 为验证者打分功能添加0地址（弃权票）
+  const accountsWithAbstention = useMemo(() => {
+    return enableVerifierScores ? addAbstentionAddress(stableAccounts) : stableAccounts;
+  }, [stableAccounts, enableVerifierScores]);
+
+  const verifierScoresData = useVerifierScores({
+    verifier: verifierAddress as `0x${string}`,
+    round: currentRound,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
+    accounts: accountsWithAbstention,
+    enabled: enableVerifierScores && !!verifierAddress && accountsWithAbstention.length > 0,
+  });
+
   // 初始化打分值
   useEffect(() => {
     if (verificationInfos && verificationInfos.length > 0) {
@@ -87,6 +125,65 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
       setAbstainScore('');
     }
   }, [verificationInfos]);
+
+  // 监听验证者打分数据变化
+  useEffect(() => {
+    if (enableVerifierScores && verifierScoresData.allLoaded && !verifierScoresData.isLoading) {
+      setIsLoadingVerifierScores(false);
+
+      if (verifierScoresData.hasError) {
+        toast.error('获取验证者打分失败，请检查地址是否正确');
+        setEnableVerifierScores(false);
+        return;
+      }
+
+      // 应用获取到的真实分数
+      const rawScoresMap = verifierScoresData.getScoresMap();
+
+      // 将 bigint 转换为字符串格式的映射，用于缩放处理
+      const bigintScoresMap: { [address: string]: bigint } = {};
+      Object.entries(rawScoresMap).forEach(([address, score]) => {
+        bigintScoresMap[address] = score;
+      });
+
+      // 对验证者打分进行等比例缩放到0-100
+      const scaledScoresMap = scaleScoresToPercentage(bigintScoresMap);
+
+      // 提取弃权票分数
+      const scaledAbstainScore = extractAbstentionScore(scaledScoresMap);
+
+      // 移除弃权票，只保留真实地址的分数
+      const addressOnlyScores = removeAbstentionFromScores(scaledScoresMap);
+
+      const newScores: { [address: string]: string } = { ...scores };
+
+      // 为每个地址设置缩放后的分数
+      if (verificationInfos) {
+        verificationInfos.forEach((info) => {
+          const score = addressOnlyScores[info.account];
+          newScores[info.account] = score || '0';
+        });
+      }
+
+      setScores(newScores);
+      setAbstainScore(scaledAbstainScore);
+      setShowVerifierDialog(false);
+      setEnableVerifierScores(false); // 重置状态
+
+      toast.success(
+        `已应用验证者 ${verifierAddress.slice(0, 6)}...${verifierAddress.slice(-4)} 的打分（已缩放到0-1000）`,
+      );
+    }
+  }, [
+    enableVerifierScores,
+    verifierScoresData.allLoaded,
+    verifierScoresData.isLoading,
+    verifierScoresData.hasError,
+    verifierScoresData,
+    scores,
+    verificationInfos,
+    verifierAddress,
+  ]);
 
   // 计算百分比
   const calculatePercentages = () => {
@@ -272,6 +369,42 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
       console.error('复制功能出错:', error);
       toast.error('复制功能暂时不可用，请手动记录分数');
     }
+  };
+
+  // 处理验证者地址输入
+  const handleVerifierAddressChange = (value: string) => {
+    setVerifierAddress(value);
+  };
+
+  // 获取验证者打分并填入表单 - 使用真正的批量合约调用
+  const handleApplyVerifierScores = async () => {
+    if (!verifierAddress) {
+      toast.error('请输入验证者地址');
+      return;
+    }
+
+    // 验证地址格式
+    if (!/^0x[a-fA-F0-9]{40}$/.test(verifierAddress)) {
+      toast.error('请输入有效的以太坊地址');
+      return;
+    }
+
+    if (!verificationInfos || verificationInfos.length === 0) {
+      toast.error('没有可验证的地址');
+      return;
+    }
+
+    setIsLoadingVerifierScores(true);
+    setEnableVerifierScores(true); // 启用真正的批量合约调用
+
+    console.log('开始获取验证者真实打分 (批量RPC调用):', {
+      verifier: verifierAddress,
+      round: currentRound.toString(),
+      tokenAddress: token?.address,
+      actionId: actionId.toString(),
+      accounts: verificationInfos.map((info) => info.account),
+      message: '将获取所有账户分数和弃权票，并缩放到0-1000范围',
+    });
   };
 
   // 处理键盘导航和快捷键
@@ -535,7 +668,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                     </div>
                   </td>
 
-                  <td className="py-1 w-16 px-1">
+                  <td className="py-1 w-18 px-1">
                     <div className="flex items-center text-left">
                       <input
                         type="number"
@@ -545,7 +678,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                         onChange={(e) => handleScoreChange(info.account, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(e, index)}
                         tabIndex={index + 1}
-                        className="w-10 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-12 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         disabled={isPending || isConfirmed}
                       />
                       <span className="text-greyscale-500 text-xs">分</span>
@@ -615,8 +748,8 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
         </table>
       </div>
 
-      {/* 复制分数按钮 */}
-      <div className="mt-4 flex justify-center">
+      {/* 复制分数按钮和采用其他验证者打分按钮 */}
+      <div className="mt-4 flex justify-center gap-3">
         <button
           onClick={handleCopyScores}
           disabled={isPending || isConfirmed}
@@ -625,6 +758,16 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
         >
           <Copy size={16} />
           复制当前分数
+        </button>
+
+        <button
+          onClick={() => setShowVerifierDialog(true)}
+          disabled={isPending || isConfirmed || !verificationInfos || verificationInfos.length === 0}
+          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg border border-gray-200 hover:border-green-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+          title="输入验证者地址，自动获取其打分并填入表单"
+        >
+          <UserCheck size={16} />
+          采用其他验证者打分
         </button>
       </div>
 
@@ -655,6 +798,62 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
         title="请手动复制分数"
         description="自动复制功能不可用，请选择以下文本并手动复制（每行一个分数）："
       />
+
+      {/* 验证者地址输入弹窗 */}
+      <Dialog open={showVerifierDialog} onOpenChange={setShowVerifierDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>选择他验证者</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="verifier-address" className="text-sm font-medium text-gray-700">
+                验证者地址
+              </label>
+              <Input
+                id="verifier-address"
+                type="text"
+                placeholder="请输入验证者的以太坊地址 (0x...)"
+                value={verifierAddress}
+                onChange={(e) => handleVerifierAddressChange(e.target.value)}
+                className="font-mono text-sm"
+                disabled={isLoadingVerifierScores}
+              />
+              <p className="text-xs text-gray-500 mt-1">验证者打分，会等比例缩放到区间 0~1000</p>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowVerifierDialog(false);
+                setVerifierAddress('');
+                setIsLoadingVerifierScores(false);
+                setEnableVerifierScores(false);
+              }}
+              disabled={isLoadingVerifierScores}
+            >
+              取消
+            </Button>
+            <Button
+              onClick={handleApplyVerifierScores}
+              disabled={!verifierAddress || isLoadingVerifierScores}
+              className="min-w-[100px]"
+            >
+              {isLoadingVerifierScores ? (
+                <div className="flex items-center gap-2">
+                  <LoadingIcon />
+                  获取中...
+                </div>
+              ) : (
+                '确认'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

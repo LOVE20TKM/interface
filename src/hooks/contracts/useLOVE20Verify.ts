@@ -149,6 +149,30 @@ export const useScoreByVerifierByActionId = (
 };
 
 /**
+ * Hook for scoreByVerifierByActionIdByAccount
+ */
+export const useScoreByVerifierByActionIdByAccount = (
+  verifier: `0x${string}`,
+  round: bigint,
+  tokenAddress: `0x${string}`,
+  actionId: bigint,
+  account: `0x${string}`,
+  enabled: boolean = true,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20VerifyAbi,
+    functionName: 'scoreByVerifierByActionIdByAccount',
+    args: [verifier, round, tokenAddress, actionId, account],
+    query: {
+      enabled: enabled && !!verifier && round !== undefined && !!tokenAddress && actionId !== undefined && !!account,
+    },
+  });
+
+  return { scoreByVerifierByActionIdByAccount: safeToBigInt(data), isPending, error };
+};
+
+/**
  * Hook for scoreWithReward
  */
 export const useScoreWithReward = (account: `0x${string}`, someNumber: bigint) => {
