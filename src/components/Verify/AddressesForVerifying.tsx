@@ -126,7 +126,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
     }
   }, [verificationInfos]);
 
-  // 监听验证者打分数据变化
+  // 获取到跟踪验证者打分后，处理赋值
   useEffect(() => {
     if (enableVerifierScores && verifierScoresData.allLoaded && !verifierScoresData.isLoading) {
       setIsLoadingVerifierScores(false);
