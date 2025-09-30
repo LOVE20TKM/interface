@@ -22,7 +22,7 @@ const VerifyPage = () => {
 
   return (
     <>
-      <Header title="验证" />
+      <Header title="验证" showBackButton={true} />
       <main className="flex-grow">
         <ActionListToVerify currentRound={currentRound} />
       </main>
