@@ -296,7 +296,7 @@ const LiquidityQueryPanel: React.FC = () => {
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-600">1 {targetToken.symbol} =</span>
                             <span className="font-medium">
-                              {formatTokenAmount(targetToBasePrice)} {baseToken.symbol}
+                              {formatTokenAmount(targetToBasePrice, 5)} {baseToken.symbol}
                             </span>
                           </div>
                         </div>
