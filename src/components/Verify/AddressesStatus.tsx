@@ -101,7 +101,7 @@ const AddressesStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionI
   const verifiedVotesPercent = (Number(verifiedVotesNum) / Number(totalVotesNum || BigInt(0))) * 100;
 
   return (
-    <div className="relative px-4 pb-4 w-full">
+    <div className="relative px-2 pb-4 w-full">
       <div className="flex items-center">
         <LeftTitle title="当前轮最新验证结果" />
         <span className="text-sm text-greyscale-500 ml-2">(验证进度：{formatPercentage(verifiedVotesPercent)})</span>

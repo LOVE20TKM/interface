@@ -53,7 +53,7 @@ const VerifyPage = () => {
       <Header title="验证" backUrl={`/verify/?symbol=${token?.symbol}`} />
       <main className="flex-grow">
         {remainingVotes > 0 && (
-          <div className="px-4 pt-4">
+          <div className="px-2 pt-4">
             <div className="flex justify-between items-center">
               <LeftTitle title="请分配您的验证票：" />
               <Link
@@ -73,7 +73,7 @@ const VerifyPage = () => {
           onRemainingVotesChange={onRemainingVotesChange}
         />
 
-        <div className="flex flex-col items-center p-4">
+        <div className="flex flex-col items-center px-2 py-4">
           {remainingVotes > BigInt(1) && (
             <AddressesForVerifying
               currentRound={currentRound}
