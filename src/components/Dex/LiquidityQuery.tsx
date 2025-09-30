@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Search } from 'lucide-react';
+import { Search, HelpCircle } from 'lucide-react';
 
 // UI components
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 
 // my hooks
 import { useLiquidityQuery } from '@/src/hooks/composite/useLiquidityQuery';
+import { usePairStats } from '@/src/hooks/composite/usePairStats';
 
 // my context
 import useTokenContext from '@/src/hooks/context/useTokenContext';
@@ -147,6 +148,20 @@ const LiquidityQueryPanel: React.FC = () => {
     return watchedQueryAddress as `0x${string}`;
   }, [watchedQueryAddress, hasQueried]);
 
+  // 币对统计数据查询
+  const {
+    pairExists: pairStatsExists,
+    poolTotalSupply: statsTotalSupply,
+    poolBaseReserve: statsBaseReserve,
+    poolTargetReserve: statsTargetReserve,
+    baseToTargetPrice,
+    targetToBasePrice,
+    isLoading: isLoadingStats,
+  } = usePairStats({
+    baseToken,
+    targetToken,
+  });
+
   // 流动性查询
   const {
     pairExists,
@@ -230,6 +245,67 @@ const LiquidityQueryPanel: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* 币对统计数据 */}
+            {targetToken && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-sm font-medium text-gray-700 mb-3">
+                    {baseToken.symbol}-{targetToken.symbol} 交易对统计
+                  </div>
+
+                  {isLoadingStats ? (
+                    <div className="text-center py-4">
+                      <LoadingIcon />
+                      <p className="text-xs text-gray-500 mt-1">加载中...</p>
+                    </div>
+                  ) : !pairStatsExists ? (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-gray-500">交易对不存在</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* 池子基础信息 */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">LP总数量：</span>
+                          <span className="font-medium">{formatTokenAmount(statsTotalSupply)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">{baseToken.symbol} 总数量：</span>
+                          <span className="font-medium">{formatTokenAmount(statsBaseReserve)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">{targetToken.symbol} 总数量：</span>
+                          <span className="font-medium">{formatTokenAmount(statsTargetReserve)}</span>
+                        </div>
+                      </div>
+
+                      {/* 价格信息 */}
+                      <div className="border-t pt-4">
+                        <div className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+                          当前兑换价格
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">1 {baseToken.symbol} =</span>
+                            <span className="font-medium">
+                              {formatTokenAmount(baseToTargetPrice)} {targetToken.symbol}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">1 {targetToken.symbol} =</span>
+                            <span className="font-medium">
+                              {formatTokenAmount(targetToBasePrice)} {baseToken.symbol}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* 地址输入 */}
             <Card>

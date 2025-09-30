@@ -525,7 +525,7 @@ const LiquidityPanel = () => {
     <div className="py-6 px-2">
       <div className="mb-6 flex items-center justify-between">
         <div className="text-sm">
-          <span className="text-gray-600">底池LP供应量:</span>
+          <span className="text-gray-600">底池LP总数量:</span>
           <span className="text-secondary">{formatTokenAmount(lpTotalSupply || BigInt(0))}</span>
         </div>
         <div className="flex items-center gap-2">
