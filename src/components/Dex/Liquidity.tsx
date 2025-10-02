@@ -18,7 +18,13 @@ import { Form, FormField, FormItem, FormControl, FormMessage } from '@/component
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 // my funcs
-import { formatIntegerStringWithCommas, formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
+import {
+  formatIntegerStringWithCommas,
+  formatTokenAmount,
+  formatUnits,
+  parseUnits,
+  formatPercentage,
+} from '@/src/lib/format';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my hooks
@@ -525,18 +531,25 @@ const LiquidityPanel = () => {
     <div className="py-6 px-2">
       <div className="mb-6 flex items-center justify-between">
         <div className="text-sm">
-          <span className="text-gray-600">底池LP总数量:</span>
+          <span className="text-gray-600">底池LP总数：</span>
           <span className="text-secondary">{formatTokenAmount(lpTotalSupply || BigInt(0))}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="text-sm">
-            <span className="text-gray-600">我的LP余额:</span>
-            <span className="text-secondary">{formatTokenAmount(lpBalance || BigInt(0))}</span>
+            <span className="text-gray-600">我的LP：</span>
+            <span className="text-secondary">
+              {formatTokenAmount(lpBalance || BigInt(0))}
+              {lpTotalSupply && lpTotalSupply > BigInt(0) && lpBalance && lpBalance > BigInt(0) && (
+                <span className="text-gray-500 ml-1">
+                  ({formatPercentage((Number(lpBalance) / Number(lpTotalSupply)) * 100)})
+                </span>
+              )}
+            </span>
           </div>
           {(lpBalance || BigInt(0)) > BigInt(0) && (
             <Link
               href={`/dex/withdraw?baseToken=${encodeURIComponent(baseToken.symbol)}`}
-              className="inline-flex items-center gap-1 text-sm text-secondary hover:text-blue-800 transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-secondary hover:text-blue-800 transition-colors underline"
               title="撤出流动性"
             >
               撤出

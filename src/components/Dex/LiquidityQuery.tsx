@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { useAccount } from 'wagmi';
 import { Search, HelpCircle } from 'lucide-react';
 
 // UI components
@@ -86,7 +87,9 @@ type QueryFormValues = z.infer<typeof queryFormSchema>;
 // ================================================
 const LiquidityQueryPanel: React.FC = () => {
   const { token } = useTokenContext();
+  const { address: account, isConnected } = useAccount();
   const [hasQueried, setHasQueried] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // 构建基础代币列表
   const baseTokens = useMemo(() => buildBaseTokens(), []);
@@ -122,7 +125,7 @@ const LiquidityQueryPanel: React.FC = () => {
   const form = useForm<QueryFormValues>({
     resolver: zodResolver(queryFormSchema),
     defaultValues: {
-      queryAddress: '',
+      queryAddress: account || '',
       baseTokenAddress: baseToken.address,
     },
     mode: 'onChange',
@@ -132,6 +135,35 @@ const LiquidityQueryPanel: React.FC = () => {
   const watchedBaseTokenAddress = form.watch('baseTokenAddress');
   const watchedQueryAddress = form.watch('queryAddress');
 
+  // 初始化时自动填入钱包地址并自动查询
+  useEffect(() => {
+    if (!isInitialized && account) {
+      form.setValue('queryAddress', account);
+      setIsInitialized(true);
+      // 自动触发第一次查询
+      setHasQueried(true);
+    }
+  }, [account, form, isInitialized]);
+
+  // 检测用户是否手动修改了地址（与当前钱包地址不同）
+  const isManualInput = watchedQueryAddress !== account;
+
+  // 自动查询：只对当前钱包地址自动查询，手动输入的地址需要点击按钮
+  useEffect(() => {
+    const isValidAddress = watchedQueryAddress && watchedQueryAddress.match(/^0x[a-fA-F0-9]{40}$/);
+    const isFormValid = form.formState.isValid;
+    const isCurrentAccount = watchedQueryAddress === account;
+
+    // 只有当地址是当前钱包地址且表单有效时才自动查询
+    if (isValidAddress && isFormValid && !hasQueried && isCurrentAccount && account) {
+      const timer = setTimeout(() => {
+        setHasQueried(true);
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [watchedQueryAddress, form.formState.isValid, hasQueried, account]);
+
   // 更新选中的基础代币
   useMemo(() => {
     const selectedToken = baseTokens.find((t) => t.address === watchedBaseTokenAddress);
@@ -139,6 +171,13 @@ const LiquidityQueryPanel: React.FC = () => {
       setBaseToken(selectedToken);
     }
   }, [watchedBaseTokenAddress, baseTokens]);
+
+  // 当基础代币变化时，重置查询状态（但不自动查询）
+  useEffect(() => {
+    if (hasQueried) {
+      setHasQueried(false);
+    }
+  }, [watchedBaseTokenAddress]);
 
   // 查询地址（只有在表单有效且已查询时才传递）
   const queryAddress = useMemo(() => {
@@ -185,6 +224,17 @@ const LiquidityQueryPanel: React.FC = () => {
     setHasQueried(true);
   });
 
+  // 重置查询
+  const handleReset = () => {
+    // 重置表单，清空地址输入框
+    form.reset({
+      queryAddress: '',
+      baseTokenAddress: baseToken.address,
+    });
+    // 重置查询状态
+    setHasQueried(false);
+  };
+
   if (!token || !targetToken) {
     return <LoadingIcon />;
   }
@@ -193,11 +243,7 @@ const LiquidityQueryPanel: React.FC = () => {
   const hasLiquidity = showResults && pairExists && userLPBalance > BigInt(0);
 
   return (
-    <div className="py-6 px-2">
-      <div className="flex justify-between items-center mb-6">
-        <LeftTitle title="流动性查询" />
-      </div>
-
+    <div className="py-2 px-0">
       <div className="w-full max-w-md">
         <Form {...form}>
           <form onSubmit={handleQuery} className="space-y-4">
@@ -205,7 +251,7 @@ const LiquidityQueryPanel: React.FC = () => {
             <Card>
               <CardContent className="p-4">
                 <div className="space-y-4">
-                  <div className="text-sm font-medium text-gray-700 mb-3">选择交易对</div>
+                  <div className="text-sm font-medium text-gray-700 mb-3 font-bold">选择交易对：</div>
 
                   <div className="grid grid-cols-2 gap-3">
                     {/* 基础代币选择 */}
@@ -214,7 +260,7 @@ const LiquidityQueryPanel: React.FC = () => {
                       name="baseTokenAddress"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs text-gray-500">基础代币</FormLabel>
+                          {/* <FormLabel className="text-xs text-gray-500">基础代币</FormLabel> */}
                           <FormControl>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <SelectTrigger className="w-full">
@@ -236,7 +282,7 @@ const LiquidityQueryPanel: React.FC = () => {
 
                     {/* 目标代币显示 */}
                     <FormItem>
-                      <FormLabel className="text-xs text-gray-500">目标代币</FormLabel>
+                      {/* <FormLabel className="text-xs text-gray-500">目标代币</FormLabel> */}
                       <div className="h-10 px-3 py-2 border border-gray-200 rounded-md bg-gray-50 flex items-center text-sm text-gray-700">
                         {targetToken.symbol}
                       </div>
@@ -250,9 +296,7 @@ const LiquidityQueryPanel: React.FC = () => {
             {targetToken && (
               <Card>
                 <CardContent className="p-4">
-                  <div className="text-sm font-medium text-gray-700 mb-3">
-                    {baseToken.symbol}-{targetToken.symbol} 交易对统计
-                  </div>
+                  <div className="text-sm font-medium text-gray-700 mb-3 text-center">交易对统计</div>
 
                   {isLoadingStats ? (
                     <div className="text-center py-4">
@@ -269,34 +313,33 @@ const LiquidityQueryPanel: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">LP总数量：</span>
-                          <span className="font-medium">{formatTokenAmount(statsTotalSupply)}</span>
+                          <span className="font-medium text-secondary">{formatTokenAmount(statsTotalSupply)}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">{baseToken.symbol} 总数量：</span>
-                          <span className="font-medium">{formatTokenAmount(statsBaseReserve)}</span>
+                          <span className="font-medium text-secondary">{formatTokenAmount(statsBaseReserve)}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">{targetToken.symbol} 总数量：</span>
-                          <span className="font-medium">{formatTokenAmount(statsTargetReserve)}</span>
+                          <span className="font-medium text-secondary">{formatTokenAmount(statsTargetReserve)}</span>
                         </div>
                       </div>
 
                       {/* 价格信息 */}
                       <div className="border-t pt-4">
-                        <div className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
-                          当前兑换价格
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">1 {baseToken.symbol} =</span>
+                        <div className="flex justify-between items-center">
+                          <div className="text-sm">
+                            <span className="text-gray-600">1 {baseToken.symbol} = </span>
                             <span className="font-medium">
-                              {formatTokenAmount(baseToTargetPrice)} {targetToken.symbol}
+                              <span className="text-secondary">{formatTokenAmount(baseToTargetPrice)}</span>{' '}
+                              {targetToken.symbol}
                             </span>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">1 {targetToken.symbol} =</span>
+                          <div className="text-sm">
+                            <span className="text-gray-600">1 {targetToken.symbol} = </span>
                             <span className="font-medium">
-                              {formatTokenAmount(targetToBasePrice, 5)} {baseToken.symbol}
+                              <span className="text-secondary">{formatTokenAmount(targetToBasePrice, 5)}</span>{' '}
+                              {baseToken.symbol}
                             </span>
                           </div>
                         </div>
@@ -315,9 +358,33 @@ const LiquidityQueryPanel: React.FC = () => {
                   name="queryAddress"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>查询地址</FormLabel>
+                      <FormLabel className="text-base font-semibold text-gray-800 mb-4">查询地址：</FormLabel>
                       <FormControl>
-                        <Input placeholder="请输入要查询的地址 (0x...)" {...field} className="font-mono text-sm" />
+                        <div className="space-y-2">
+                          <div className="flex space-x-2">
+                            <Input
+                              placeholder={'请输入要查询的地址 (0x...)'}
+                              {...field}
+                              className="flex-1 font-mono text-sm"
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleQuery();
+                                }
+                              }}
+                            />
+                            <Button type="submit" disabled={!form.formState.isValid || (hasQueried && isLoading)}>
+                              {hasQueried && isLoading ? '查询中...' : isManualInput ? '查询' : '重新查询'}
+                            </Button>
+                            {hasQueried && (
+                              <Button variant="outline" onClick={handleReset}>
+                                重置
+                              </Button>
+                            )}
+                          </div>
+                          {!isConnected && (
+                            <div className="text-xs text-orange-600">⚠️ 未连接钱包，请手动输入要查询的地址</div>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -325,12 +392,6 @@ const LiquidityQueryPanel: React.FC = () => {
                 />
               </CardContent>
             </Card>
-
-            {/* 查询按钮 */}
-            <Button type="submit" className="w-full" disabled={!form.formState.isValid}>
-              <Search className="w-4 h-4 mr-2" />
-              查询流动性
-            </Button>
           </form>
         </Form>
 
@@ -367,7 +428,7 @@ const LiquidityQueryPanel: React.FC = () => {
               <Card>
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    <div className="text-lg font-semibold text-gray-800 mb-4">该地址情况：</div>
+                    <div className="text-sm font-medium text-gray-700 mb-3">该地址LP情况：</div>
 
                     {/* LP代币数量 */}
                     <div className="space-y-3">
@@ -383,7 +444,7 @@ const LiquidityQueryPanel: React.FC = () => {
                     </div>
 
                     <div className="border-t pt-4">
-                      <div className="text-sm font-medium text-gray-700 mb-3">可兑换代币数量</div>
+                      <div className="text-sm font-medium text-gray-700 mb-3">可兑换代币数量：</div>
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">{baseToken.symbol}</span>
@@ -392,25 +453,6 @@ const LiquidityQueryPanel: React.FC = () => {
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">{targetToken.symbol}</span>
                           <span className="font-medium">{formatTokenAmount(userTargetTokenAmount)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 池子信息 */}
-                    <div className="border-t pt-4">
-                      <div className="text-lg font-medium text-gray-700 mb-3">底池信息</div>
-                      <div className="text-xs text-gray-500 space-y-1">
-                        <div className="flex justify-between">
-                          <span>总LP供应量</span>
-                          <span>{formatTokenAmount(poolTotalSupply || BigInt(0))}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>总{baseToken.symbol}储备</span>
-                          <span>{formatTokenAmount(poolBaseReserve || BigInt(0))}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>总{targetToken.symbol}储备</span>
-                          <span>{formatTokenAmount(poolTargetReserve || BigInt(0))}</span>
                         </div>
                       </div>
                     </div>
