@@ -107,13 +107,13 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
       </div>
 
       {selectedRound > 0 && actionVoters && (
-        <div className="grid grid-cols-2 gap-4 mt-4 mb-4">
+        <div className="grid grid-cols-2 gap-0 mt-4 mb-4">
           <div className="">
             <span className="text-gray-500 mr-3">投票地址数:</span>
             <span className="font-mono text-secondary">{actionVoters.length}</span>
           </div>
           <div className="">
-            <span className="text-gray-500 mr-3">总投票数:</span>
+            <span className="text-gray-500 mr-3">总投票:</span>
             <span className="font-mono text-secondary">{formatTokenAmount(totalVotes)}</span>
           </div>
         </div>
