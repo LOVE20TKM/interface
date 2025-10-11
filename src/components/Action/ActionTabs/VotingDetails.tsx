@@ -35,7 +35,7 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
     if (urlRound && !isNaN(Number(urlRound))) {
       setSelectedRound(BigInt(urlRound as string));
     } else if (currentRound) {
-      setSelectedRound(currentRound);
+      setSelectedRound(currentRound + BigInt(1));
     }
   }, [urlRound, currentRound]);
 
@@ -98,7 +98,7 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
             <LeftTitle title={`第 ${selectedRound.toString()} 轮投票详情`} />
             <span className="text-sm text-greyscale-500 ml-2">(</span>
             <ChangeRound
-              currentRound={currentRound ? formatRoundForDisplay(currentRound, token) : BigInt(0)}
+              currentRound={currentRound ? formatRoundForDisplay(currentRound + BigInt(1), token) : BigInt(0)}
               handleChangedRound={handleChangedRound}
             />
             <span className="text-sm text-greyscale-500">)</span>
