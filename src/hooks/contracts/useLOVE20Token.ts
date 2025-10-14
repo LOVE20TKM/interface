@@ -41,7 +41,7 @@ export const useAllowance = (
  * @param account - Address of the account
  */
 export const useBalanceOf = (token: `0x${string}`, account: `0x${string}`, flag: boolean = true) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error, refetch } = useReadContract({
     address: token,
     abi: LOVE20TokenAbi,
     functionName: 'balanceOf',
@@ -51,7 +51,7 @@ export const useBalanceOf = (token: `0x${string}`, account: `0x${string}`, flag:
     },
   });
 
-  return { balance: data ? safeToBigInt(data) : undefined, isPending, error };
+  return { balance: data ? safeToBigInt(data) : undefined, isPending, error, refetch };
 };
 
 /**

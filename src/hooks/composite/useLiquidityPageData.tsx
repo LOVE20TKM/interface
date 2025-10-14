@@ -38,23 +38,32 @@ export const useLiquidityPageData = ({ baseToken, targetToken, account }: Liquid
   );
 
   // 2. 基础代币余额查询
-  const { data: baseNativeBalance, isLoading: isLoadingBaseNative } = useBalance({
+  const {
+    data: baseNativeBalance,
+    isLoading: isLoadingBaseNative,
+    refetch: refetchBaseNative,
+  } = useBalance({
     address: account,
     query: {
       enabled: !!account && baseToken.isNative,
     },
   });
 
-  const { balance: baseERC20Balance, isPending: isPendingBaseERC20 } = useBalanceOf(
+  const {
+    balance: baseERC20Balance,
+    isPending: isPendingBaseERC20,
+    refetch: refetchBaseERC20,
+  } = useBalanceOf(
     baseToken.isNative ? '0x0000000000000000000000000000000000000000' : baseToken.address,
     account as `0x${string}`,
   );
 
   // 3. 目标代币余额查询
-  const { balance: targetBalance, isPending: isPendingTarget } = useBalanceOf(
-    targetToken?.address || '0x0000000000000000000000000000000000000000',
-    account as `0x${string}`,
-  );
+  const {
+    balance: targetBalance,
+    isPending: isPendingTarget,
+    refetch: refetchTargetBalance,
+  } = useBalanceOf(targetToken?.address || '0x0000000000000000000000000000000000000000', account as `0x${string}`);
 
   // 4. 授权额度查询
   const { allowance: baseAllowance, isPending: isPendingBaseAllowance } = useAllowance(
@@ -124,14 +133,25 @@ export const useLiquidityPageData = ({ baseToken, targetToken, account }: Liquid
     isLoadingToken1 ||
     isLoadingTotalSupply;
 
-  // 综合刷新函数
+  // 综合刷新函数 - 刷新所有关键数据
   const refreshLiquidityData = useCallback(async () => {
     try {
-      await Promise.all([refetchLPBalance(), refetchReserves(), refetchTotalSupply()]);
+      await Promise.all([refetchLPBalance(), refetchReserves(), refetchTotalSupply(), refetchTargetBalance()]);
+
+      // 单独刷新基础代币余额（类型不兼容，需分开处理）
+      await (baseToken.isNative ? refetchBaseNative() : refetchBaseERC20());
     } catch (error) {
       console.error('刷新流动性数据失败:', error);
     }
-  }, [refetchLPBalance, refetchReserves, refetchTotalSupply]);
+  }, [
+    refetchLPBalance,
+    refetchReserves,
+    refetchTotalSupply,
+    refetchTargetBalance,
+    refetchBaseNative,
+    refetchBaseERC20,
+    baseToken.isNative,
+  ]);
 
   return {
     // 基础数据

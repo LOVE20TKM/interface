@@ -21,9 +21,10 @@ export const useLPBalance = (
     args: [account!],
     query: {
       enabled: !!pairAddress && !!account && pairAddress !== '0x0000000000000000000000000000000000000000',
-      // 设置较短的缓存时间，确保数据及时更新
-      staleTime: 5000, // 5秒后数据被认为是过时的
-      // 添加refetch间隔支持
+      // staleTime: 缓存策略，3秒内重复访问使用缓存数据，不发RPC请求
+      // 只有主动调用 refetch() 时才会忽略缓存强制刷新
+      staleTime: 3000,
+      // 可选的自动轮询间隔（默认不启用，避免频繁RPC请求）
       refetchInterval: refetchInterval || false,
     },
   });
@@ -46,8 +47,9 @@ export const useGetReserves = (pairAddress: `0x${string}` | undefined, refetchIn
     functionName: 'getReserves',
     query: {
       enabled: !!pairAddress && pairAddress !== '0x0000000000000000000000000000000000000000',
-      // 设置较短的缓存时间，确保储备量及时更新
-      staleTime: 5000, // 5秒后数据被认为是过时的
+      // staleTime: 缓存策略，3秒内重复访问使用缓存数据，不发RPC请求
+      // 只有主动调用 refetch() 时才会忽略缓存强制刷新
+      staleTime: 3000,
       refetchInterval: refetchInterval || false,
     },
   });
@@ -80,8 +82,9 @@ export const useTotalSupply = (pairAddress: `0x${string}` | undefined) => {
     functionName: 'totalSupply',
     query: {
       enabled: !!pairAddress && pairAddress !== '0x0000000000000000000000000000000000000000',
-      // 设置较短的缓存时间，确保数据及时更新
-      staleTime: 5000, // 5秒后数据被认为是过时的
+      // staleTime: 缓存策略，3秒内重复访问使用缓存数据，不发RPC请求
+      // 只有主动调用 refetch() 时才会忽略缓存强制刷新
+      staleTime: 3000,
     },
   });
 

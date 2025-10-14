@@ -477,10 +477,13 @@ const LiquidityPanel = () => {
       setIsBaseTokenApproved(false);
       setIsTokenApproved(false);
 
+      // 立即刷新一次
+      refreshLiquidityData();
+
       // 延迟刷新数据，等待区块确认
-      setTimeout(() => {
+      const timeout1 = setTimeout(() => {
         refreshLiquidityData();
-      }, 2000); // 2秒后刷新，确保区块已确认
+      }, 2000); // 2秒后刷新
 
       // 立即启动轮询刷新，确保数据最终一致性
       const refreshInterval = setInterval(() => {
@@ -488,9 +491,16 @@ const LiquidityPanel = () => {
       }, 3000); // 每3秒刷新一次
 
       // 10秒后停止轮询
-      setTimeout(() => {
+      const timeout2 = setTimeout(() => {
         clearInterval(refreshInterval);
       }, 10000);
+
+      // 清理函数，避免内存泄漏
+      return () => {
+        clearTimeout(timeout1);
+        clearTimeout(timeout2);
+        clearInterval(refreshInterval);
+      };
     }
   }, [isConfirmedAddLiquidity, isConfirmedAddLiquidityETH, form, baseToken.address, refreshLiquidityData]);
 
