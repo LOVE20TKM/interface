@@ -196,10 +196,10 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
             <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">{token?.symbol}数量</div>
           </div>
           <div className="stat place-items-center min-h-[120px] flex flex-col justify-center">
-            <div className="stat-title">我的占比</div>
-            <div className="stat-value text-2xl text-secondary">{participationRatioStr}</div>
+            <div className="stat-title">被抽中验证概率</div>
+            <div className="stat-value text-2xl text-secondary">{probabilityStr}</div>
             <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
-              被抽中验证概率 {probabilityStr}
+              我的占比：{participationRatioStr}
             </div>
           </div>
         </div>
