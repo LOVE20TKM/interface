@@ -748,7 +748,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
         </table>
       </div>
 
-      {/* 复制分数按钮和采用其他验证者打分按钮 */}
+      {/* 复制分数按钮、粘贴分数按钮和采用其他验证者打分按钮 */}
       <div className="mt-4 flex justify-center gap-3">
         <button
           onClick={handleCopyScores}
@@ -756,8 +756,16 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
           className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
           title="复制当前所有分数到剪贴板（每行一个分数）"
         >
-          <Copy size={16} />
-          复制当前分数
+          复制分数
+        </button>
+
+        <button
+          onClick={handlePasteScores}
+          disabled={isPending || isConfirmed}
+          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+          title="粘贴分数数据（自动检测剪贴板或手动输入，每行一个数字）"
+        >
+          从剪贴板粘贴
         </button>
 
         <button
