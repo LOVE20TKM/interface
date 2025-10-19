@@ -97,6 +97,11 @@
   ],
   "resolutions": {
     "viem": "2.9.0",
-    "next": "14.2.32"
+    "next": "14.2.32",
+    "ws": "^8.18.0",
+    "@coinbase/wallet-sdk": "^4.3.0",
+    "@metamask/sdk": "^0.33.1",
+    "@metamask/sdk-communication-layer": "^0.33.1",
+    "fast-redact": "^3.5.0"
   }
 }
