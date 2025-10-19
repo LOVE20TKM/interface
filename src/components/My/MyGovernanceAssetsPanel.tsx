@@ -348,11 +348,16 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
           </div>
         </div>
       </div>
-      {validGovVotes <= BigInt(0) && govVotes && govVotes > BigInt(0) && (
-        <div className="text-sm mb-4 text-greyscale-500 text-center">
-          <div className="text-red-500">当前 sl 或 st 代币余额不足，导致有效治理票为0，请及时补足</div>
-        </div>
-      )}
+      {!isPendingValidGovVotes &&
+        !isPendingAccountStakeStatus &&
+        validGovVotes !== undefined &&
+        govVotes !== undefined &&
+        validGovVotes <= BigInt(0) &&
+        govVotes > BigInt(0) && (
+          <div className="text-sm mb-4 text-greyscale-500 text-center">
+            <div className="text-red-500">当前 sl 或 st 代币余额不足，导致有效治理票为0，请及时补足</div>
+          </div>
+        )}
 
       {enableWithdraw && (
         <>
