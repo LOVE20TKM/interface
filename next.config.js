@@ -36,6 +36,8 @@ const nextConfig = {
         fs: false,
         net: false,
         tls: false,
+        // 忽略 MetaMask SDK 的 React Native 依赖
+        '@react-native-async-storage/async-storage': false,
       };
     }
     return config;
