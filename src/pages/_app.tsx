@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import dynamic from 'next/dynamic';
@@ -166,6 +167,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <ClientWrapper>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
       <LoadingOverlay isLoading={navLoading} text="网络加载中..." />
       <WagmiProvider config={config}>
         <QueryClientProvider client={client}>
