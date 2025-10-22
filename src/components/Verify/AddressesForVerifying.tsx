@@ -371,6 +371,45 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
     }
   };
 
+  // 复制被抽中的地址信息（地址、后4位、验证信息）
+  const handleCopySelectedAddresses = async () => {
+    try {
+      if (!verificationInfos || verificationInfos.length === 0) {
+        toast.error('没有可复制的地址');
+        return;
+      }
+
+      const lines: string[] = [];
+
+      // 第一行：标题行
+      const verificationKeys = actionInfo?.body.verificationKeys || [];
+      const headerParts = ['地址', '后4位', ...verificationKeys];
+      lines.push(headerParts.join('\t'));
+
+      // 数据行：每个地址及其验证信息
+      verificationInfos.forEach((info) => {
+        const address = info.account;
+        const last4 = address.slice(-4);
+        const verificationValues = info.infos || [];
+
+        const rowParts = [address, last4, ...verificationValues];
+        lines.push(rowParts.join('\t'));
+      });
+
+      const textToCopy = lines.join('\n');
+
+      // 使用封装的复制工具函数
+      await copyWithToast(textToCopy, `已复制 ${verificationInfos.length} 个地址信息到剪贴板`, (text) => {
+        // 当需要手动复制时，显示手动复制对话框
+        setCopyText(text);
+        setShowManualCopyDialog(true);
+      });
+    } catch (error) {
+      console.error('复制功能出错:', error);
+      toast.error('复制功能暂时不可用，请手动记录地址');
+    }
+  };
+
   // 处理验证者地址输入
   const handleVerifierAddressChange = (value: string) => {
     setVerifierAddress(value);
@@ -570,6 +609,19 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
   return (
     <>
       <div className="w-full max-w-2xl">
+        {/* 复制被抽中地址按钮 */}
+        <div className="mb-4 flex justify-center">
+          <button
+            onClick={handleCopySelectedAddresses}
+            disabled={isPending || isConfirmed || !verificationInfos || verificationInfos.length === 0}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            title="复制被抽中的地址及验证信息（包含地址、后4位、验证信息）"
+          >
+            <Copy size={16} />
+            复制被抽中地址
+          </button>
+        </div>
+
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-gray-100">
