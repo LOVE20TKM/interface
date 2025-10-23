@@ -84,8 +84,21 @@ const buildSupportedTokens = (token: any): TokenConfig[] => {
     });
   }
 
+  // 3. 增加 TUSDT 代币
+  const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS;
+  if (usdtSymbol && usdtAddress) {
+    addToken({
+      symbol: usdtSymbol,
+      address: usdtAddress as `0x${string}`,
+      decimals: 18,
+      isNative: false,
+      name: `TUSDT 代币 (${usdtSymbol})`,
+    });
+  }
+
   if (token) {
-    // 3. 当前代币
+    // 4. 当前代币
     if (token.symbol && token.address) {
       addToken({
         symbol: token.symbol,
@@ -96,7 +109,7 @@ const buildSupportedTokens = (token: any): TokenConfig[] => {
       });
     }
 
-    // 4. 父币（避免与WETH9重复）
+    // 5. 父币（避免与WETH9重复）
     if (token.parentTokenSymbol && token.parentTokenAddress) {
       addToken({
         symbol: token.parentTokenSymbol,
@@ -107,7 +120,7 @@ const buildSupportedTokens = (token: any): TokenConfig[] => {
       });
     }
 
-    // 5. SL代币
+    // 6. SL代币
     if (token.slTokenAddress && token.symbol) {
       addToken({
         symbol: `sl${token.symbol}`,
@@ -118,7 +131,7 @@ const buildSupportedTokens = (token: any): TokenConfig[] => {
       });
     }
 
-    // 6. ST代币
+    // 7. ST代币
     if (token.stTokenAddress && token.symbol) {
       addToken({
         symbol: `st${token.symbol}`,
