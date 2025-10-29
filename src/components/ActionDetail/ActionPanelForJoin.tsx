@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useContext } from 'react';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { toast } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -46,7 +46,6 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
   showJoinButton = true,
 }) => {
   const { address: account } = useAccount();
-  const chainId = useChainId();
   const { token } = useContext(TokenContext) || {};
   const router = useRouter();
 

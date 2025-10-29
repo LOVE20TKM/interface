@@ -423,3 +423,43 @@ export const useActionVerificationMatrix = (tokenAddress: `0x${string}`, round: 
 
   return { verificationMatrix: data as VerificationMatrix | undefined, isPending, error };
 };
+
+/**
+ * Hook for votesNums - 获取某轮所有被投票的行动及其投票数
+ *
+ * @param tokenAddress 代币地址
+ * @param round 轮次
+ * @returns 行动ID列表、投票数列表、加载状态和错误信息
+ */
+export const useVotesNums = (tokenAddress: `0x${string}`, round: bigint) => {
+  const enableRead = !!tokenAddress && round !== undefined && round > BigInt(0);
+
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20RoundViewerAbi,
+    functionName: 'votesNums',
+    args: [tokenAddress, round],
+    query: {
+      enabled: enableRead,
+    },
+  });
+
+  const votesData = useMemo(() => {
+    if (!data) return undefined;
+
+    const [actionIds, votes] = data as readonly [readonly bigint[], readonly bigint[]];
+
+    return {
+      actionIds: [...(actionIds || [])],
+      votes: [...(votes || [])],
+    };
+  }, [data]);
+
+  return {
+    votesData,
+    actionIds: votesData?.actionIds,
+    votes: votesData?.votes,
+    isPending,
+    error,
+  };
+};

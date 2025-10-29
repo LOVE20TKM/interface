@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 
 // my hooks
-import { useActionPageData } from '@/src/hooks/composite/useActionPageData';
+import { useActionCoreData } from '@/src/hooks/composite/useActionCoreData';
 import { useActionVerificationMatrix } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
@@ -36,7 +36,7 @@ const VerifyDetailPage = () => {
 
   // 获取页面数据
   const { actionInfo, participantCount, totalAmount, userJoinedAmount, isJoined, isPending, error, currentRound } =
-    useActionPageData({
+    useActionCoreData({
       tokenAddress: token?.address,
       actionId,
       account,

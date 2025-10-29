@@ -18,6 +18,7 @@ import TokenTab from '@/src/components/Token/TokenTab';
 // my hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useActingPageData } from '@/src/hooks/composite/useActingPageData';
 
 const ActingPage = () => {
   const { isConnected } = useAccount();
@@ -26,13 +27,28 @@ const ActingPage = () => {
   const shouldCall = isConnected && currentToken?.hasEnded === true && currentToken?.hasEnded;
   const { currentRound, error: errorCurrentRound, isPending: isPendingCurrentRound } = useCurrentRound(shouldCall);
 
+  // 获取页面所有数据（统一获取，避免子组件重复调用）
+  const actingPageData = useActingPageData({
+    tokenAddress: currentToken?.address as `0x${string}`,
+    currentRound: currentRound || BigInt(0),
+  });
+
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
     if (errorCurrentRound) {
       handleContractError(errorCurrentRound, 'join');
     }
-  }, [errorCurrentRound]);
+    if (actingPageData.errorActions) {
+      handleContractError(actingPageData.errorActions, 'dataViewer');
+    }
+    if (actingPageData.errorJoinedAmount) {
+      handleContractError(actingPageData.errorJoinedAmount, 'extension');
+    }
+    if (actingPageData.errorReward) {
+      handleContractError(actingPageData.errorReward, 'dataViewer');
+    }
+  }, [errorCurrentRound, actingPageData.errorActions, actingPageData.errorJoinedAmount, actingPageData.errorReward]);
 
   if (shouldCall && isPendingCurrentRound) {
     return (
@@ -68,8 +84,18 @@ const ActingPage = () => {
           // 正常显示社区内容
           <>
             {/* <TokenTab /> */}
-            <ActDataPanel currentRound={currentRound} />
-            <JoiningActionList currentRound={currentRound} />
+            <ActDataPanel
+              totalJoinedAmount={actingPageData.totalJoinedAmount}
+              expectedReward={actingPageData.expectedReward}
+              isPendingJoinedAmount={actingPageData.isPendingJoinedAmount}
+              isPendingReward={actingPageData.isPendingReward}
+            />
+            <JoiningActionList
+              currentRound={currentRound}
+              joinableActions={actingPageData.joinableActions}
+              getJoinedAmount={actingPageData.getJoinedAmount}
+              isPendingActions={actingPageData.isPendingActions}
+            />
           </>
         )}
       </main>

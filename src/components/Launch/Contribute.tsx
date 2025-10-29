@@ -106,7 +106,7 @@ const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: Launch
   // 是否为“首个父币”（原生代币参与申购场景）
   const isLimitActive = hasTestPrefix && isNativeContribute;
   // 测试环境上限（0.001 父币）
-  const maxAllowedForFirstParentETH = 0.001;
+  const maxAllowedForFirstParentETH = 0.5;
   const maxAllowedForFirstParent = parseUnits(maxAllowedForFirstParentETH.toString());
 
   // 2. 初始化 React Hook Form，传入动态的 FormSchema

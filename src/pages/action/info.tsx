@@ -6,19 +6,17 @@ import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
-import { useActionPageData } from '@/src/hooks/composite/useActionPageData';
+import { useActionCoreData } from '@/src/hooks/composite/useActionCoreData';
 
 // my components
 import ActionHeader from '@/src/components/Action/ActionHeader';
 import BasicInfo from '@/src/components/Action/ActionTabs/BasicInfo';
-import VotingDetails from '@/src/components/Action/ActionTabs/VotingDetails';
-import VerificationTabs from '@/src/components/Action/ActionTabs/VerificationTabs';
-import JoinDetails from '@/src/components/Action/ActionTabs/JoinDetails';
+import GovTabs from '@/src/components/Action/ActionTabs/GovTabs';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AlertBox from '@/src/components/Common/AlertBox';
 import Header from '@/src/components/Header';
 
-type TabType = 'basic' | 'vote' | 'verify' | 'join';
+type TabType = 'basic' | 'gov';
 
 export default function ActionInfoPage() {
   const router = useRouter();
@@ -30,17 +28,27 @@ export default function ActionInfoPage() {
   const { symbol, id, tab } = router.query;
   const actionId = id ? BigInt(id as string) : undefined;
 
-  // 获取页面数据
-  const { actionInfo, participantCount, totalAmount, userJoinedAmount, isJoined, currentRound, isPending, error } =
-    useActionPageData({
-      tokenAddress: token?.address,
-      actionId,
-      account,
-    });
+  // 获取页面数据（自动支持扩展行动）
+  const {
+    actionInfo,
+    participantCount,
+    totalAmount,
+    userJoinedAmount,
+    isJoined,
+    currentRound,
+    isExtensionAction,
+    extensionAddress,
+    isPending,
+    error,
+  } = useActionCoreData({
+    tokenAddress: token?.address,
+    actionId,
+    account,
+  });
 
   // 初始化tab状态
   useEffect(() => {
-    if (tab && ['basic', 'vote', 'verify', 'join'].includes(tab as string)) {
+    if (tab && ['basic', 'gov'].includes(tab as string)) {
       setActiveTab(tab as TabType);
     }
   }, [tab]);
@@ -76,10 +84,8 @@ export default function ActionInfoPage() {
 
   // Tab配置
   const tabs: { key: TabType; label: string }[] = [
-    { key: 'basic', label: '行动详情' },
-    { key: 'vote', label: '投票公示' },
-    { key: 'join', label: '参与公示' },
-    { key: 'verify', label: '验证公示' },
+    { key: 'basic', label: '行动信息' },
+    { key: 'gov', label: '治理公示' },
   ];
 
   // 处理tab切换
@@ -88,6 +94,11 @@ export default function ActionInfoPage() {
     // 更新URL参数并添加到历史记录
     const currentQuery = { ...router.query };
     currentQuery.tab = tabKey;
+
+    // 如果切换到非gov标签，清理tab2参数
+    if (tabKey !== 'gov') {
+      delete currentQuery.tab2;
+    }
 
     router.push(
       {
@@ -131,14 +142,8 @@ export default function ActionInfoPage() {
     switch (activeTab) {
       case 'basic':
         return <BasicInfo actionInfo={actionInfo} currentRound={currentRound} />;
-      case 'join':
-        return <JoinDetails actionId={actionId} />;
-      case 'vote':
-        return <VotingDetails actionId={actionId} currentRound={currentRound} />;
-      case 'verify':
-        return (
-          <VerificationTabs actionId={actionId} currentRound={currentRound || BigInt(0)} actionInfo={actionInfo} />
-        );
+      case 'gov':
+        return <GovTabs actionId={actionId} currentRound={currentRound || BigInt(0)} actionInfo={actionInfo} />;
       default:
         return null;
     }

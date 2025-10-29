@@ -1,7 +1,6 @@
 import { useContext } from 'react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/router';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 import { TokenContext } from '@/src/contexts/TokenContext';

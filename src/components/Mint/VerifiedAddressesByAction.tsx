@@ -6,6 +6,8 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 // my hooks
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useVerificationInfosByAction, useVerifiedAddressesByAction } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { useScoreByActionIdByAccount } from '@/src/hooks/contracts/useLOVE20Verify';
+import { useVotesNumByActionId } from '@/src/hooks/contracts/useLOVE20Vote';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -18,10 +20,12 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import ChangeRound from '@/src/components/Common/ChangeRound';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import InfoTooltip from '@/src/components/Common/InfoTooltip';
 
 // my funcs
-import { formatRoundForDisplay, formatTokenAmountInteger } from '@/src/lib/format';
+import { formatRoundForDisplay, formatTokenAmountInteger, formatPercentage } from '@/src/lib/format';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
+import RoundLite from '../Common/RoundLite';
 
 const VerifiedAddressesByAction: React.FC<{
   currentJoinRound: bigint;
@@ -41,8 +45,8 @@ const VerifiedAddressesByAction: React.FC<{
   useEffect(() => {
     if (urlRound && !isNaN(Number(urlRound))) {
       setSelectedRound(BigInt(urlRound as string));
-    } else if (token && currentJoinRound - BigInt(token.initialStakeRound) >= BigInt(2)) {
-      setSelectedRound(currentJoinRound - BigInt(2));
+    } else if (token && currentJoinRound - BigInt(token.initialStakeRound) >= BigInt(1)) {
+      setSelectedRound(currentJoinRound - BigInt(1));
     }
   }, [urlRound, currentJoinRound, token]);
 
@@ -67,6 +71,25 @@ const VerifiedAddressesByAction: React.FC<{
     token && selectedRound ? selectedRound : BigInt(0),
     actionId,
   );
+
+  // 获取弃权票数
+  const {
+    scoreByActionIdByAccount: abstainVotes,
+    isPending: isPendingAbstainVotes,
+    error: errorAbstainVotes,
+  } = useScoreByActionIdByAccount(
+    token?.address as `0x${string}`,
+    selectedRound,
+    actionId,
+    '0x0000000000000000000000000000000000000000',
+  );
+
+  // 总验证票数
+  const {
+    votesNumByActionId: totalVotesNum,
+    isPending: isPendingTotalVotesNum,
+    error: errorTotalVotesNum,
+  } = useVotesNumByActionId(token?.address as `0x${string}`, selectedRound, actionId);
 
   const [addresses, setAddresses] = useState<VerifiedAddress[]>([]);
   useEffect(() => {
@@ -102,7 +125,13 @@ const VerifiedAddressesByAction: React.FC<{
     if (errorVerificationInfosByAction) {
       handleContractError(errorVerificationInfosByAction, 'dataViewer');
     }
-  }, [errorVerifiedAddresses, errorVerificationInfosByAction]);
+    if (errorAbstainVotes) {
+      handleContractError(errorAbstainVotes, 'verify');
+    }
+    if (errorTotalVotesNum) {
+      handleContractError(errorTotalVotesNum, 'vote');
+    }
+  }, [errorVerifiedAddresses, errorVerificationInfosByAction, errorAbstainVotes, errorTotalVotesNum]);
 
   // 当地址数据加载完成后，展开获得验证票最多的地址
   useEffect(() => {
@@ -134,8 +163,13 @@ const VerifiedAddressesByAction: React.FC<{
     setExpandedRows(newExpanded);
   };
 
+  // 累计当前已验证票数（包含弃权票）
+  const addressVotesNum = addresses.reduce((acc, addr) => acc + addr.score, BigInt(0));
+  const verifiedVotesNum = addressVotesNum + (abstainVotes || BigInt(0));
+  const verifiedVotesPercent = (Number(verifiedVotesNum) / Number(totalVotesNum || BigInt(0))) * 100;
+
   return (
-    <div className="relative ">
+    <div className="relative pb-4">
       {selectedRound === BigInt(0) && (
         <div className="flex items-center justify-center">
           <div className="text-center text-sm text-greyscale-500">暂无验证结果</div>
@@ -145,41 +179,68 @@ const VerifiedAddressesByAction: React.FC<{
         <div className="flex items-center">
           {selectedRound > 0 && (
             <>
-              <LeftTitle title={`第 ${selectedRound.toString()} 轮验证结果`} />
+              <LeftTitle title={`第 ${selectedRound.toString()} 轮验证`} />
+              {verifiedVotesPercent > 0 && (
+                <span className="text-sm text-greyscale-500 ml-2">
+                  (当前进度：{formatPercentage(verifiedVotesPercent)})
+                </span>
+              )}
               <span className="text-sm text-greyscale-500 ml-2">(</span>
               <ChangeRound
-                currentRound={token && currentJoinRound ? formatRoundForDisplay(currentJoinRound - BigInt(2), token) : BigInt(0)}
+                currentRound={
+                  token && currentJoinRound ? formatRoundForDisplay(currentJoinRound - BigInt(1), token) : BigInt(0)
+                }
                 handleChangedRound={handleChangedRound}
               />
               <span className="text-sm text-greyscale-500">)</span>
             </>
           )}
         </div>
-        {selectedRound > 0 && addresses.length > 0 && (
+        {selectedRound > 0 && verificationInfos && verificationInfos.length > 0 && (
           <button
             onClick={() =>
               router.push(`/action/verify_detail?symbol=${token?.symbol}&id=${actionId}&round=${selectedRound}`)
             }
-            className="text-sm text-secondary hover:text-secondary-600 transition-colors"
+            className="text-sm text-secondary hover:text-secondary-600"
           >
             查看明细 &gt;&gt;
           </button>
         )}
       </div>
-      {isPendingVerifiedAddresses || isPendingVerificationInfosByAction ? (
+      <div className="flex justify-left mt-2">
+        {selectedRound > 0 && <RoundLite currentRound={selectedRound} roundType="verify" />}
+      </div>
+
+      {isPendingVerifiedAddresses || isPendingVerificationInfosByAction || isPendingAbstainVotes ? (
         <div className="flex justify-center items-center h-full">
           <LoadingIcon />
         </div>
-      ) : addresses.length === 0 ? (
+      ) : !verificationInfos || verificationInfos.length === 0 ? (
         selectedRound > BigInt(0) && <div className="text-center text-sm text-greyscale-400 p-4">没有验证地址</div>
       ) : (
         <table className="table w-full">
           <thead>
             <tr className="border-b border-gray-100">
               <th></th>
-              <th>被抽中地址</th>
+              <th>
+                <div className="flex items-center gap-1">
+                  被抽中地址
+                  <InfoTooltip
+                    title="最大激励地址数说明"
+                    content={
+                      <p className="leading-relaxed text-base">
+                        每轮从所有参与行动的代币中，随机抽取
+                        <span className="font-mono font-bold text-blue-600 mx-1 text-base">
+                          {actionInfo?.body.maxRandomAccounts.toString()}
+                        </span>
+                        份代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。
+                      </p>
+                    }
+                  />
+                </div>
+              </th>
               <th className="px-1 text-right">获得验证票</th>
-              <th className="px-1 text-right">可铸造激励</th>
+              <th className="px-1 text-right">验证票占比</th>
             </tr>
           </thead>
           <tbody>
@@ -191,16 +252,14 @@ const VerifiedAddressesByAction: React.FC<{
                 <React.Fragment key={item.account}>
                   <tr className={`border-b border-gray-100 ${item.account === account ? 'text-secondary' : ''}`}>
                     <td className="px-1 w-8">
-                      {verificationInfo && (
-                        <button
-                          onClick={() => toggleRow(item.account)}
-                          className="text-greyscale-400 hover:text-greyscale-600"
-                        >
-                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        </button>
-                      )}
+                      <button
+                        onClick={() => toggleRow(item.account)}
+                        className="text-greyscale-400 hover:text-greyscale-600"
+                      >
+                        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                      </button>
                     </td>
-                    <td className="px-1 ">
+                    <td className="px-1">
                       <AddressWithCopyButton
                         address={item.account}
                         showCopyButton={true}
@@ -208,7 +267,9 @@ const VerifiedAddressesByAction: React.FC<{
                       />
                     </td>
                     <td className="px-1 text-right">{formatTokenAmountInteger(item.score)}</td>
-                    <td className="px-1 text-right">{formatTokenAmountInteger(item.reward || BigInt(0))}</td>
+                    <td className="px-1 text-right">
+                      {formatPercentage((Number(item.score) / Number(verifiedVotesNum || BigInt(0))) * 100)}
+                    </td>
                   </tr>
 
                   {verificationInfo && actionInfo && isExpanded && (
@@ -230,6 +291,20 @@ const VerifiedAddressesByAction: React.FC<{
                 </React.Fragment>
               );
             })}
+            <tr>
+              <td className="px-1"></td>
+              <td className="px-1 text-greyscale-500">弃权票</td>
+              <td className="px-1 text-right">{formatTokenAmountInteger(abstainVotes || BigInt(0))}</td>
+              <td className="px-1 text-right">
+                {formatPercentage((Number(abstainVotes || BigInt(0)) / Number(verifiedVotesNum || BigInt(0))) * 100)}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-1"></td>
+              <td className="px-1 text-greyscale-500">汇总</td>
+              <td className="px-1 text-right">{formatTokenAmountInteger(verifiedVotesNum || BigInt(0))}</td>
+              <td className="px-1 text-right">100%</td>
+            </tr>
           </tbody>
         </table>
       )}

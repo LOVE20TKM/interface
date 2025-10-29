@@ -16,7 +16,6 @@ import { useHandleContractError } from '@/src/lib/errorUtils';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
-import { useJoinableActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useRewardAvailable } from '@/src/hooks/contracts/useLOVE20Mint';
 
 // my components
@@ -27,18 +26,21 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 
 interface JoiningActionListProps {
   currentRound: bigint;
+  joinableActions: JoinableAction[] | undefined;
+  getJoinedAmount: (index: number) => bigint;
+  isPendingActions: boolean;
 }
 
-const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound }) => {
+const JoiningActionList: React.FC<JoiningActionListProps> = ({
+  currentRound,
+  joinableActions,
+  getJoinedAmount,
+  isPendingActions,
+}) => {
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
-  // 获取行动参与相关数据
-  const { joinableActions, isPending, error } = useJoinableActions(
-    (token?.address as `0x${string}`) || '',
-    currentRound ? currentRound : BigInt(0),
-    account as `0x${string}`,
-  );
+  // 获取奖励可用额度
   const {
     rewardAvailable,
     isPending: isPendingRewardAvailable,
@@ -55,28 +57,25 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound }) =
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
-    if (error) {
-      handleContractError(error, 'dataViewer');
-    }
     if (errorRewardAvailable) {
       handleContractError(errorRewardAvailable, 'mint');
     }
-  }, [error, errorRewardAvailable]);
+  }, [errorRewardAvailable]);
 
   return (
     <div className="px-4 py-6">
       <LeftTitle title="本轮可参与的行动：" />
       <RoundLite currentRound={currentRound} roundType="act" />
       {!account && <div className="text-sm mt-4 text-greyscale-500 text-center">请先连接钱包</div>}
-      {account && isPending && (
+      {account && isPendingActions && (
         <div className="p-4 flex justify-center items-center">
           <LoadingIcon />
         </div>
       )}
-      {account && !isPending && !joinableActions?.length && (
+      {account && !isPendingActions && !joinableActions?.length && (
         <div className="text-sm mt-4 text-greyscale-500 text-center">本轮暂无行动</div>
       )}
-      {!isPending && joinableActions && joinableActions.length > 0 && (
+      {!isPendingActions && joinableActions && joinableActions.length > 0 && (
         <div className="mt-2 space-y-4">
           {joinableActions
             ?.sort((a, b) => {
@@ -90,6 +89,9 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound }) =
               return votesB - votesA;
             })
             .map((actionDetail: JoinableAction, index: number) => {
+              // 获取参与代币数（考虑扩展协议）
+              const joinedAmount = getJoinedAmount(index);
+
               // 计算投票占比
               const voteRatio =
                 Number(totalVotes) > 0 ? Number(joinableActions[index].votesNum || BigInt(0)) / Number(totalVotes) : 0;
@@ -137,7 +139,7 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound }) =
                         </span>
                         <span>
                           <span className="text-greyscale-400 text-xs mr-1">参与代币</span>
-                          <span className="text-secondary text-xs">{formatTokenAmount(actionDetail.joinedAmount)}</span>
+                          <span className="text-secondary text-xs">{formatTokenAmount(joinedAmount)}</span>
                         </span>
                         {!actionDetail.hasReward ? (
                           <span className="flex justify-between text-error text-sm">无铸币激励</span>
@@ -150,7 +152,7 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound }) =
                               ) : (
                                 calculateActionAPY(
                                   BigInt(Math.floor(Number(expectedReward || BigInt(0)) * voteRatio)),
-                                  joinableActions[index].joinedAmount,
+                                  joinedAmount,
                                 )
                               )}
                             </span>

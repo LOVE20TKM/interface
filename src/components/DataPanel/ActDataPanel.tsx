@@ -1,13 +1,5 @@
 'use client';
-import React, { useContext, useEffect } from 'react';
-
-// my hooks
-import { useHandleContractError } from '@/src/lib/errorUtils';
-import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
-import { useEstimatedActionRewardOfCurrentRound } from '@/src/hooks/contracts/useLOVE20MintViewer';
-
-// my contexts
-import { TokenContext } from '@/src/contexts/TokenContext';
+import React from 'react';
 
 // my components
 import { formatTokenAmount } from '@/src/lib/format';
@@ -16,39 +8,19 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 // my utils
 import { calculateActionAPY } from '@/src/lib/domainUtils';
 
-const JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`;
-
 interface ActDataPanelProps {
-  currentRound: bigint;
+  totalJoinedAmount: bigint;
+  expectedReward: bigint | undefined;
+  isPendingJoinedAmount: boolean;
+  isPendingReward: boolean;
 }
 
-const ActDataPanel: React.FC<ActDataPanelProps> = ({ currentRound }) => {
-  const { token } = useContext(TokenContext) || {};
-
-  // 获取数据
-  const {
-    balance: joinedAmount,
-    isPending: isPendingJoinedAmount,
-    error: errorJoinedAmount,
-  } = useBalanceOf((token?.address as `0x${string}`) || '', JOIN_CONTRACT_ADDRESS);
-
-  const {
-    reward: expectedReward,
-    isPending: isPendingEstimatedActionReward,
-    error: errorEstimatedActionReward,
-  } = useEstimatedActionRewardOfCurrentRound((token?.address as `0x${string}`) || '');
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorJoinedAmount) {
-      handleContractError(errorJoinedAmount, 'join');
-    }
-    if (errorEstimatedActionReward) {
-      handleContractError(errorEstimatedActionReward, 'dataViewer');
-    }
-  }, [errorJoinedAmount, errorEstimatedActionReward]);
-
+const ActDataPanel: React.FC<ActDataPanelProps> = ({
+  totalJoinedAmount,
+  expectedReward,
+  isPendingJoinedAmount,
+  isPendingReward,
+}) => {
   return (
     <div className="px-4">
       <div className="w-full border rounded-lg p-0">
@@ -56,22 +28,22 @@ const ActDataPanel: React.FC<ActDataPanelProps> = ({ currentRound }) => {
           <div className="stat place-items-center pb-2">
             <div className="stat-title text-sm pb-1">参与行动代币总数</div>
             <div className="stat-value text-xl text-secondary">
-              {isPendingJoinedAmount ? <LoadingIcon /> : formatTokenAmount(joinedAmount ?? BigInt(0))}
+              {isPendingJoinedAmount ? <LoadingIcon /> : formatTokenAmount(totalJoinedAmount)}
             </div>
           </div>
           <div className="stat place-items-center pb-2">
             <div className="stat-title text-sm pb-1">预计新增铸币</div>
             <div className="stat-value text-xl text-secondary">
-              {isPendingEstimatedActionReward ? <LoadingIcon /> : formatTokenAmount(expectedReward ?? BigInt(0))}
+              {isPendingReward ? <LoadingIcon /> : formatTokenAmount(expectedReward ?? BigInt(0))}
             </div>
           </div>
         </div>
         <div className="text-center text-xs mb-2 text-greyscale-500">
           预估年化收益率（APY）：
-          {isPendingJoinedAmount || isPendingEstimatedActionReward ? (
+          {isPendingJoinedAmount || isPendingReward ? (
             <LoadingIcon />
           ) : (
-            calculateActionAPY(expectedReward, joinedAmount)
+            calculateActionAPY(expectedReward, totalJoinedAmount)
           )}
         </div>
       </div>

@@ -1,14 +1,13 @@
 'use client';
-import { useAccount } from 'wagmi';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ChevronRight, UserPen } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect } from 'react';
 
 // my hooks
-import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
+import { useMyJoinedActionsData } from '@/src/hooks/composite/useMyJoinedActionsData';
 
 // my contexts
 import { Token } from '@/src/contexts/TokenContext';
@@ -30,13 +29,16 @@ interface MyJoinedActionListProps {
 }
 
 const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onActionStatusChange }) => {
-  const { address: account } = useAccount();
   const { currentRound } = useCurrentRound();
+
+  // 获取我参加的所有行动（包括core协议和扩展协议）
   const {
     joinedActions,
     isPending: isPendingJoinedActions,
     error: errorJoinedActions,
-  } = useJoinedActions((token?.address as `0x${string}`) || '', account as `0x${string}`);
+  } = useMyJoinedActionsData({
+    tokenAddress: token?.address as `0x${string}`,
+  });
 
   // 通知父组件行动状态变化
   useEffect(() => {
@@ -48,9 +50,11 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
-  if (errorJoinedActions) {
-    handleContractError(errorJoinedActions, 'dataViewer');
-  }
+  useEffect(() => {
+    if (errorJoinedActions) {
+      handleContractError(errorJoinedActions, 'extension');
+    }
+  }, [errorJoinedActions, handleContractError]);
 
   if (isPendingJoinedActions) {
     return (

@@ -1,39 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { ActionInfo } from '@/src/types/love20types';
-import VerifyStatus from '@/src/components/Verify/VerifyStatus';
+import VotingDetails from '@/src/components/Action/ActionTabs/VotingDetails';
+import JoinDetails from '@/src/components/Action/ActionTabs/JoinDetails';
 import VerifiedAddressesByAction from '@/src/components/Mint/VerifiedAddressesByAction';
 
-interface VerificationTabsProps {
+interface GovTabsProps {
   actionId: bigint;
   currentRound: bigint;
   actionInfo: ActionInfo;
 }
 
-type VerificationSubTab = 'current' | 'history';
+type GovSubTab = 'vote' | 'join' | 'verify';
 
-const VerificationTabs: React.FC<VerificationTabsProps> = ({ actionId, currentRound, actionInfo }) => {
+const GovTabs: React.FC<GovTabsProps> = ({ actionId, currentRound, actionInfo }) => {
   const router = useRouter();
-  const [activeSubTab, setActiveSubTab] = useState<VerificationSubTab>('current');
+  const [activeSubTab, setActiveSubTab] = useState<GovSubTab>('vote');
 
   // 从URL获取tab2参数
   const { tab2 } = router.query;
 
   // 初始化子tab状态
   useEffect(() => {
-    if (tab2 && ['current', 'history'].includes(tab2 as string)) {
-      setActiveSubTab(tab2 as VerificationSubTab);
+    if (tab2 && ['vote', 'join', 'verify'].includes(tab2 as string)) {
+      setActiveSubTab(tab2 as GovSubTab);
     }
   }, [tab2]);
 
   // 子Tab配置
-  const subTabs: { key: VerificationSubTab; label: string }[] = [
-    { key: 'current', label: '当前验证' },
-    { key: 'history', label: '历史验证' },
+  const subTabs: { key: GovSubTab; label: string }[] = [
+    { key: 'vote', label: '投票公示' },
+    { key: 'join', label: '参与公示' },
+    { key: 'verify', label: '验证公示' },
   ];
 
   // 处理子tab切换
-  const handleSubTabChange = (subTabKey: VerificationSubTab) => {
+  const handleSubTabChange = (subTabKey: GovSubTab) => {
     setActiveSubTab(subTabKey);
     // 更新URL参数并添加到历史记录
     const currentQuery = { ...router.query };
@@ -52,15 +54,11 @@ const VerificationTabs: React.FC<VerificationTabsProps> = ({ actionId, currentRo
   // 渲染子Tab内容
   const renderSubTabContent = () => {
     switch (activeSubTab) {
-      case 'current':
-        return (
-          <VerifyStatus
-            actionId={actionId}
-            currentRound={currentRound && currentRound > BigInt(0) ? currentRound - BigInt(1) : BigInt(0)}
-            actionInfo={actionInfo}
-          />
-        );
-      case 'history':
+      case 'vote':
+        return <VotingDetails actionId={actionId} currentRound={currentRound} />;
+      case 'join':
+        return <JoinDetails actionId={actionId} />;
+      case 'verify':
         return (
           <VerifiedAddressesByAction currentJoinRound={currentRound} actionId={actionId} actionInfo={actionInfo} />
         );
@@ -94,4 +92,4 @@ const VerificationTabs: React.FC<VerificationTabsProps> = ({ actionId, currentRo
   );
 };
 
-export default VerificationTabs;
+export default GovTabs;

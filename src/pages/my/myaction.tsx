@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 
 // my hooks
-import { useActionPageData } from '@/src/hooks/composite/useActionPageData';
+import { useActionCoreData } from '@/src/hooks/composite/useActionCoreData';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my components
@@ -16,8 +16,8 @@ import ActionHeader from '@/src/components/Action/ActionHeader';
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
-// my components
-import ActionPanelForJoin from '@/src/components/ActionDetail/ActionPanelForJoin';
+// my components - 使用扩展路由组件统一处理
+import ActionExtensionPanel from '@/src/components/ActionExtension/ActionExtensionPanel';
 
 const ActRewardsPage = () => {
   const router = useRouter();
@@ -27,7 +27,7 @@ const ActRewardsPage = () => {
   const { token } = useContext(TokenContext) || {};
 
   // 获取页面数据
-  const { actionInfo, participantCount, totalAmount, userJoinedAmount, isJoined, isPending, error } = useActionPageData(
+  const { actionInfo, participantCount, totalAmount, userJoinedAmount, isJoined, isPending, error } = useActionCoreData(
     {
       tokenAddress: token?.address,
       actionId,
@@ -91,7 +91,11 @@ const ActRewardsPage = () => {
               </div>
             </div>
           ) : actionInfo ? (
-            <ActionPanelForJoin actionId={actionId} actionInfo={actionInfo} />
+            <ActionExtensionPanel
+              actionId={actionId}
+              actionInfo={actionInfo}
+              tokenAddress={token?.address as `0x${string}`}
+            />
           ) : (
             <div className="bg-white rounded-lg p-8">
               <div className="text-center text-yellow-600">行动不存在：找不到指定的行动信息</div>

@@ -10,7 +10,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useActionRewardsByAccountOfLastRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
-import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { useMyJoinedActionsData } from '@/src/hooks/composite/useMyJoinedActionsData';
 import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
@@ -52,12 +52,14 @@ const ActRewardsPage: React.FC = () => {
   } = useActionRewardsByAccountOfLastRounds(token?.address as `0x${string}`, account as `0x${string}`, LAST_ROUNDS);
   console.log('rewards', rewards);
 
-  // 获取所有参与的行动
+  // 获取所有参与的行动（包括core和扩展协议）
   const {
     joinedActions,
     isPending: isLoadingActions,
     error: errorLoadingActions,
-  } = useJoinedActions(token?.address as `0x${string}`, account as `0x${string}`);
+  } = useMyJoinedActionsData({
+    tokenAddress: token?.address as `0x${string}`,
+  });
 
   // 将激励按行动分组（显示所有行动，没有激励的显示提示）
   const grouped = useMemo<ActionRewardsGroup[]>(() => {
