@@ -156,10 +156,10 @@ const LaunchStatus: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = 
         </div>
         <div className="bg-gray-100 text-greyscale-500 rounded-lg p-4 mt-4 text-sm">
           <p className="mt-1 font-medium">经济模型：</p>
-          <p>1. 代币总量：{formatTokenAmount(BigInt(TOKEN_CONFIG.totalSupply))}</p>
-          <p>2. 发射数量：{formatTokenAmount(BigInt(TOKEN_CONFIG.fairLaunch))} (10%)</p>
-          <p>3. 治理激励：{formatTokenAmount(BigInt(TOKEN_CONFIG.govRewards))} (45%)</p>
-          <p>4. 行动激励：{formatTokenAmount(BigInt(TOKEN_CONFIG.actionRewards))} (45%)</p>
+          <p>1. 代币总量：{formatTokenAmount(BigInt(TOKEN_CONFIG.totalSupply), 4, 'round')}</p>
+          <p>2. 发射数量：{formatTokenAmount(BigInt(TOKEN_CONFIG.fairLaunch), 4, 'round')} (10%)</p>
+          <p>3. 治理激励：{formatTokenAmount(BigInt(TOKEN_CONFIG.govRewards), 4, 'round')} (45%)</p>
+          <p>4. 行动激励：{formatTokenAmount(BigInt(TOKEN_CONFIG.actionRewards), 4, 'round')} (45%)</p>
           <p className="mt-3 font-medium">发射规则：</p>
           <p>1. 代币发放：按申购数量占比发放</p>
           <p>2. 超过募集目标的父币，将按申购比例返还</p>
