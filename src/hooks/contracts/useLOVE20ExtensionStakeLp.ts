@@ -220,38 +220,6 @@ export const useIsJoinedValueCalculated = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for isTokenAddressTheFirstToken - 检查代币地址是否为第一个代币
- */
-export const useIsTokenAddressTheFirstToken = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionStakeLpAbi,
-    functionName: 'isTokenAddressTheFirstToken',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { isTokenAddressTheFirstToken: data as boolean | undefined, isPending, error };
-};
-
-/**
- * Hook for join - 获取 Join 合约地址
- */
-export const useJoin = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionStakeLpAbi,
-    functionName: 'join',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { joinAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
  * Hook for joinedValue - 获取加入值
  */
 export const useJoinedValue = (contractAddress: `0x${string}`) => {
@@ -301,22 +269,6 @@ export const useLpTokenAddress = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for mint - 获取 Mint 合约地址
- */
-export const useMint = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionStakeLpAbi,
-    functionName: 'mint',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { mintAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
  * Hook for minGovVotes - 获取最小治理投票数
  */
 export const useMinGovVotes = (contractAddress: `0x${string}`) => {
@@ -330,23 +282,6 @@ export const useMinGovVotes = (contractAddress: `0x${string}`) => {
   });
 
   return { minGovVotes: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for pair - 获取交易对地址（即 LP Token 地址）
- * @deprecated 使用 useLpTokenAddress 替代，pair 和 lpTokenAddress 是同一个地址
- */
-export const usePair = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionStakeLpAbi,
-    functionName: 'lpTokenAddress',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { pairAddress: data as `0x${string}` | undefined, isPending, error };
 };
 
 /**
@@ -437,22 +372,6 @@ export const useScoresCount = (contractAddress: `0x${string}`, round: bigint) =>
   });
 
   return { scoresCount: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for stake - 获取 Stake 合约地址
- */
-export const useStake = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionStakeLpAbi,
-    functionName: 'stake',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { stakeAddress: data as `0x${string}` | undefined, isPending, error };
 };
 
 /**
@@ -673,22 +592,6 @@ export const useVerifiedAccountsCount = (contractAddress: `0x${string}`, round: 
   });
 
   return { verifiedAccountsCount: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for verify - 获取 Verify 合约地址
- */
-export const useVerify = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionStakeLpAbi,
-    functionName: 'verify',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { verifyAddress: data as `0x${string}` | undefined, isPending, error };
 };
 
 /**

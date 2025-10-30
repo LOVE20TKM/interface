@@ -156,6 +156,8 @@ const TokenPage = () => {
     RoundViewer: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_ROUNDVIEWER,
     MintViewer: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_MINTVIEWER,
     Hub: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB,
+    ExtensionCenter: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER,
+    StakeLpExtensionFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_STAKELP,
   } as const;
 
   // 当前代币相关地址
@@ -437,6 +439,27 @@ const TokenPage = () => {
                       <AddressItem name="RoundViewer" address={constantsAddresses.RoundViewer} />
                       <AddressItem name="MintViewer" address={constantsAddresses.MintViewer} />
                       <AddressItem name="Hub" address={constantsAddresses.Hub} />
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="px-4 pt-4 pb-2">
+                      <CardTitle className="flex items-center justify-between text-lg">
+                        <span>LOVE20 扩展合约地址：</span>
+                        <Link
+                          href="/extension/center"
+                          className="text-sm text-secondary hover:text-secondary/80 transition-colors"
+                        >
+                          查看 &gt;&gt;
+                        </Link>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-3 px-4 pt-2 pb-4">
+                      <AddressItem name="ExtensionCenter" address={constantsAddresses.ExtensionCenter} />
+                      <AddressItem
+                        name="StakeLpExtensionFactory"
+                        address={constantsAddresses.StakeLpExtensionFactory}
+                      />
                     </CardContent>
                   </Card>
                 </div>

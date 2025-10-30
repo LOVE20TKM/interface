@@ -68,7 +68,7 @@ export function useActionParticipationData(
   // ==========================================
   const { extensionAddress, isPending: isExtensionCheckPending } = useExtension(
     tokenAddress || '0x0000000000000000000000000000000000000000',
-    actionId ?? 0n,
+    actionId ?? BigInt(0),
   );
 
   // 判断是否为扩展行动（扩展地址非零地址）
