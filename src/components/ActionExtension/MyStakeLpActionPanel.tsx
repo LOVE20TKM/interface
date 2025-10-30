@@ -241,7 +241,7 @@ const MyStakeLpActionPanel: React.FC<MyStakeLpActionPanelProps> = ({ actionId, a
               <div>• LP占比：你质押的LP / LP Token总供应量</div>
               <div>• 治理票占比：你的治理票 / 总治理票</div>
               <div>
-                • 实际激励占比：通过合约算法计算（LP占比 和 治理票占比 × {Number(govRatioMultiplier) / 100}% 的最小值）
+                • 实际激励占比：通过合约算法计算（LP占比 和 治理票占比 × {Number(govRatioMultiplier)} 的最小值）
               </div>
               <div>• 解锁LP时，当时验证轮不会产生激励</div>
             </div>
