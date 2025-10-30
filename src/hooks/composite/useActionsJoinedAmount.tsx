@@ -105,7 +105,7 @@ export const useActionsJoinedAmount = ({
 
   return {
     getJoinedAmount,
-    isPending: isPendingExtension || isPendingJoinedValues,
+    isPending: isPendingExtension || (extensionContracts.length > 0 && isPendingJoinedValues),
     error: errorExtension || errorJoinedValues,
   };
 };

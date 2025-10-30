@@ -8,7 +8,7 @@ const CACHE_KEY_PREFIX = 'love20:extension:';
 const CACHE_EXPIRY_MS = 1000 * 60 * 60; // 1小时缓存
 
 // 清除指定行动的缓存
-function clearCachedExtensionInfo(tokenAddress: string, actionId: bigint): void {
+export function clearCachedExtensionInfo(tokenAddress: string, actionId: bigint): void {
   if (typeof window === 'undefined') return;
 
   try {
@@ -336,7 +336,8 @@ export const useActionsExtensionInfo = ({
     return results;
   }, [actionIds, cachedData, uncachedActionIds, extensionAddressesData, factoryAddressesData]);
 
-  const isPending = isPending1 || isPending2;
+  // 当contracts为空时，不应该pending；当factoryContracts为空时，factory查询也不应该pending
+  const isPending = (contracts.length > 0 && isPending1) || (factoryContracts.length > 0 && isPending2);
   const error = error1 || error2;
 
   return {

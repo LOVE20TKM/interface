@@ -103,49 +103,42 @@ export const useStakeLpActionData = ({
         functionName: 'joinedValue',
         args: [],
       },
-      // 4. 获取 LP Token 地址
+      // 4. 获取 LP Token 地址（即 Pair 地址）
       {
         address: extensionAddress,
         abi: LOVE20ExtensionStakeLpAbi,
         functionName: 'lpTokenAddress',
         args: [],
       },
-      // 5. 获取 Pair 地址
-      {
-        address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
-        functionName: 'pair',
-        args: [],
-      },
-      // 6. 获取用户的有效治理票数
+      // 5. 获取用户的有效治理票数
       {
         address: STAKE_CONTRACT_ADDRESS,
         abi: LOVE20StakeAbi,
         functionName: 'validGovVotes',
         args: [tokenAddress, account],
       },
-      // 7. 获取总治理票数
+      // 6. 获取总治理票数
       {
         address: STAKE_CONTRACT_ADDRESS,
         abi: LOVE20StakeAbi,
         functionName: 'govVotesNum',
         args: [tokenAddress],
       },
-      // 8. 获取用户得分和总得分（用于计算实际激励占比）
+      // 7. 获取用户得分和总得分（用于计算实际激励占比）
       {
         address: extensionAddress,
         abi: LOVE20ExtensionStakeLpAbi,
         functionName: 'calculateScore',
         args: [account],
       },
-      // 9. 获取需要等待的阶段数
+      // 8. 获取需要等待的阶段数
       {
         address: extensionAddress,
         abi: LOVE20ExtensionStakeLpAbi,
         functionName: 'waitingPhases',
         args: [],
       },
-      // 10. 获取当前轮次
+      // 9. 获取当前轮次
       {
         address: JOIN_CONTRACT_ADDRESS,
         abi: LOVE20JoinAbi,
@@ -163,24 +156,24 @@ export const useStakeLpActionData = ({
     },
   });
 
-  // 从第一批数据中获取 pair 地址
-  const pairAddress = useMemo(() => {
-    if (!data || !data[5]?.result) return undefined;
-    return data[5].result as `0x${string}`;
+  // 从第一批数据中获取 lpTokenAddress（即 pair 地址）
+  const lpTokenAddress = useMemo(() => {
+    if (!data || !data[4]?.result) return undefined;
+    return data[4].result as `0x${string}`;
   }, [data]);
 
-  // 构建第二批调用：获取 pair.totalSupply()
+  // 构建第二批调用：获取 LP Token 的 totalSupply
   const pairContracts = useMemo(() => {
-    if (!pairAddress) return [];
+    if (!lpTokenAddress) return [];
     return [
       {
-        address: pairAddress,
+        address: lpTokenAddress,
         abi: UniswapV2PairAbi,
         functionName: 'totalSupply',
         args: [],
       },
     ];
-  }, [pairAddress]);
+  }, [lpTokenAddress]);
 
   // 批量读取数据（第二批）
   const {
@@ -190,7 +183,7 @@ export const useStakeLpActionData = ({
   } = useReadContracts({
     contracts: pairContracts as any,
     query: {
-      enabled: !!pairAddress && pairContracts.length > 0,
+      enabled: !!lpTokenAddress && pairContracts.length > 0,
     },
   });
 
@@ -222,29 +215,24 @@ export const useStakeLpActionData = ({
     return BigInt(data[3].result.toString());
   }, [data]);
 
-  const lpTokenAddress = useMemo(() => {
-    if (!data || !data[4]?.result) return undefined;
-    return data[4].result as `0x${string}`;
+  const userGovVotes = useMemo(() => {
+    if (!data || !data[5]?.result) return BigInt(0);
+    return BigInt(data[5].result.toString());
   }, [data]);
 
-  const userGovVotes = useMemo(() => {
+  const totalGovVotes = useMemo(() => {
     if (!data || !data[6]?.result) return BigInt(0);
     return BigInt(data[6].result.toString());
   }, [data]);
 
-  const totalGovVotes = useMemo(() => {
-    if (!data || !data[7]?.result) return BigInt(0);
-    return BigInt(data[7].result.toString());
-  }, [data]);
-
   const waitingPhases = useMemo(() => {
-    if (!data || !data[9]?.result) return BigInt(0);
-    return BigInt(data[9].result.toString());
+    if (!data || !data[8]?.result) return BigInt(0);
+    return BigInt(data[8].result.toString());
   }, [data]);
 
   const currentRound = useMemo(() => {
-    if (!data || !data[10]?.result) return BigInt(0);
-    return BigInt(data[10].result.toString());
+    if (!data || !data[9]?.result) return BigInt(0);
+    return BigInt(data[9].result.toString());
   }, [data]);
 
   const lpTotalSupply = useMemo(() => {
@@ -254,14 +242,14 @@ export const useStakeLpActionData = ({
 
   // 获取用户得分和总得分（calculateScore 返回 [total, score]）
   const userScore = useMemo(() => {
-    if (!data || !data[8]?.result) return BigInt(0);
-    const scoreResult = data[8].result as [bigint, bigint];
+    if (!data || !data[7]?.result) return BigInt(0);
+    const scoreResult = data[7].result as [bigint, bigint];
     return scoreResult[1]; // score 是第二个值
   }, [data]);
 
   const totalScore = useMemo(() => {
-    if (!data || !data[8]?.result) return BigInt(0);
-    const scoreResult = data[8].result as [bigint, bigint];
+    if (!data || !data[7]?.result) return BigInt(0);
+    const scoreResult = data[7].result as [bigint, bigint];
     return scoreResult[0]; // total 是第一个值
   }, [data]);
 
@@ -298,6 +286,10 @@ export const useStakeLpActionData = ({
     return canWithdrawAtRound - currentRound;
   }, [requestedUnstakeRound, canWithdrawNow, canWithdrawAtRound, currentRound]);
 
+  // 只有当 lpTokenAddress 存在时，才需要等待第二批数据加载
+  const shouldWaitForPairData = !!lpTokenAddress;
+  const finalIsPending = isPending || (shouldWaitForPairData && isPendingPair);
+
   return {
     stakedAmount,
     totalStakedAmount,
@@ -314,10 +306,10 @@ export const useStakeLpActionData = ({
     totalGovVotes,
     lpRatio,
     lpTokenAddress,
-    pairAddress,
+    pairAddress: lpTokenAddress, // pairAddress 就是 lpTokenAddress
     govRatioMultiplier,
     joinedValue,
-    isPending: isPending || isPendingPair,
+    isPending: finalIsPending,
     error: error || errorPair,
   };
 };

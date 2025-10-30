@@ -14,6 +14,8 @@ import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
 import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useActionsExtensionInfo } from '@/src/hooks/composite/useActionsExtensionInfo';
+import { useExtensionActionRewardsByRounds } from '@/src/hooks/composite/useExtensionActionRewardsByRounds';
 
 // my components
 import Header from '@/src/components/Header';
@@ -21,6 +23,7 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { Button } from '@/components/ui/button';
+import { ExtensionRewardsList } from '@/src/components/My/ExtensionRewardsList';
 
 // utils
 import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
@@ -58,30 +61,68 @@ const ActRewardsPage: React.FC = () => {
     error: errorActionInfo,
   } = useActionInfo(token?.address as `0x${string}`, actionId);
 
-  // 获取行动激励数据 - 只在初始化完成后调用
+  // 获取行动扩展信息
   const {
-    rewards: rawRewards,
-    isPending: isLoadingRewards,
-    error: errorLoadingRewards,
+    extensionInfos,
+    isPending: isLoadingExtension,
+    error: errorExtension,
+  } = useActionsExtensionInfo({
+    tokenAddress: token?.address as `0x${string}`,
+    actionIds: actionId !== undefined ? [actionId] : [],
+  });
+
+  const extensionInfo = useMemo(() => {
+    return extensionInfos.length > 0 ? extensionInfos[0] : undefined;
+  }, [extensionInfos]);
+
+  const isExtensionAction = extensionInfo?.isExtension || false;
+
+  // 获取普通行动激励数据 - 只在初始化完成后且非扩展行动时调用
+  const {
+    rewards: rawCoreRewards,
+    isPending: isLoadingCoreRewards,
+    error: errorLoadingCoreRewards,
   } = useActionRewardsByAccountByActionIdByRounds(
-    isInitialized && token?.address ? (token.address as `0x${string}`) : ('0x0' as `0x${string}`),
-    isInitialized && account ? (account as `0x${string}`) : ('0x0' as `0x${string}`),
-    isInitialized ? actionId || BigInt(0) : BigInt(0),
-    isInitialized ? startRound : BigInt(0),
-    isInitialized ? endRound : BigInt(0),
+    isInitialized && token?.address && !isExtensionAction ? (token.address as `0x${string}`) : ('0x0' as `0x${string}`),
+    isInitialized && account && !isExtensionAction ? (account as `0x${string}`) : ('0x0' as `0x${string}`),
+    isInitialized && !isExtensionAction ? actionId || BigInt(0) : BigInt(0),
+    isInitialized && !isExtensionAction ? startRound : BigInt(0),
+    isInitialized && !isExtensionAction ? endRound : BigInt(0),
   );
 
+  // 获取扩展行动激励数据 - 只在初始化完成后且是扩展行动时调用
+  const {
+    rewards: rawExtensionRewards,
+    isPending: isLoadingExtensionRewards,
+    error: errorLoadingExtensionRewards,
+  } = useExtensionActionRewardsByRounds({
+    extensionAddress: extensionInfo?.extensionAddress,
+    factoryAddress: extensionInfo?.factoryAddress,
+    startRound: isInitialized ? startRound : BigInt(0),
+    endRound: isInitialized ? endRound : BigInt(0),
+    enabled: isInitialized && isExtensionAction,
+  });
+
   // 使用 useMemo 稳定 rewards 引用，避免无限重新渲染
-  const rewards = useMemo(() => {
-    return rawRewards || [];
-  }, [rawRewards]);
+  const coreRewards = useMemo(() => {
+    return rawCoreRewards || [];
+  }, [rawCoreRewards]);
+
+  const extensionRewards = useMemo(() => {
+    return rawExtensionRewards || [];
+  }, [rawExtensionRewards]);
+
+  // 合并加载状态和错误
+  const isLoadingRewards = isExtensionAction ? isLoadingExtensionRewards : isLoadingCoreRewards;
+  const errorLoadingRewards = isExtensionAction ? errorLoadingExtensionRewards : errorLoadingCoreRewards;
 
   // 铸造行动激励
   const { mintActionReward, isPending, isConfirming, isConfirmed, writeError } = useMintActionReward();
   const [mintingTarget, setMintingTarget] = useState<{ actionId: bigint; round: bigint } | null>(null);
 
   // 本地状态缓存激励数据，避免翻页时数据闪烁
-  const [rewardList, setRewardList] = useState<typeof rewards>([]);
+  const [coreRewardList, setCoreRewardList] = useState<typeof coreRewards>([]);
+  const [extensionRewardList, setExtensionRewardList] = useState<typeof extensionRewards>([]);
 
   // 初始化分页范围（只执行一次）
   useEffect(() => {
@@ -101,24 +142,36 @@ const ActRewardsPage: React.FC = () => {
     setHasMoreRewards(startRound > minRound);
   }, [startRound, token, isInitialized]);
 
-  // 更新本地激励列表
+  // 更新本地普通激励列表
   useEffect(() => {
-    if (!isInitialized) return;
+    if (!isInitialized || isExtensionAction) return;
 
-    if (rewards && rewards.length > 0) {
-      const sortedRewards = [...rewards].sort((a, b) => (a.round < b.round ? 1 : a.round > b.round ? -1 : 0));
-      setRewardList(sortedRewards);
+    if (coreRewards && coreRewards.length > 0) {
+      const sortedRewards = [...coreRewards].sort((a, b) => (a.round < b.round ? 1 : a.round > b.round ? -1 : 0));
+      setCoreRewardList(sortedRewards);
     } else {
-      setRewardList([]);
+      setCoreRewardList([]);
     }
-  }, [rewards, isInitialized]);
+  }, [coreRewards, isInitialized, isExtensionAction]);
 
-  // 铸造成功处理
+  // 更新本地扩展激励列表
   useEffect(() => {
-    if (isConfirmed) {
+    if (!isInitialized || !isExtensionAction) return;
+
+    if (extensionRewards && extensionRewards.length > 0) {
+      const sortedRewards = [...extensionRewards].sort((a, b) => (a.round < b.round ? 1 : a.round > b.round ? -1 : 0));
+      setExtensionRewardList(sortedRewards);
+    } else {
+      setExtensionRewardList([]);
+    }
+  }, [extensionRewards, isInitialized, isExtensionAction]);
+
+  // 铸造成功处理（仅用于普通行动）
+  useEffect(() => {
+    if (isConfirmed && !isExtensionAction) {
       // 更新本地状态中对应的铸造状态
       if (mintingTarget) {
-        setRewardList((prev) =>
+        setCoreRewardList((prev) =>
           prev.map((item) => (item.round === mintingTarget.round ? { ...item, isMinted: true } : item)),
         );
       }
@@ -127,15 +180,26 @@ const ActRewardsPage: React.FC = () => {
         setActionRewardNeedMinted(account, token.address, false);
       }
     }
-  }, [isConfirmed, token, account, mintingTarget]);
+  }, [isConfirmed, token, account, mintingTarget, isExtensionAction]);
 
-  // 处理铸造
+  // 处理普通行动铸造
   const handleClaim = async (round: bigint, actionId: bigint) => {
     if (token?.address && account) {
       setMintingTarget({ actionId, round });
       await mintActionReward(token.address, round, actionId);
     }
   };
+
+  // 处理扩展行动铸造成功（由子组件回调）
+  const handleExtensionMintSuccess = useCallback(
+    (round: bigint) => {
+      setExtensionRewardList((prev) => prev.map((item) => (item.round === round ? { ...item, isMinted: true } : item)));
+      if (typeof window !== 'undefined' && token?.address && account) {
+        setActionRewardNeedMinted(account, token.address, false);
+      }
+    },
+    [token, account],
+  );
 
   // 无限滚动加载更多激励：当滚动到底部时更新 startRound
   const loadMoreRewards = useCallback(() => {
@@ -179,9 +243,10 @@ const ActRewardsPage: React.FC = () => {
   useEffect(() => {
     if (errorActionInfo) handleContractError(errorActionInfo, 'actionInfo');
     if (errorCurrentRound) handleContractError(errorCurrentRound, 'currentRound');
+    if (errorExtension) handleContractError(errorExtension, 'extensionCenter');
     if (errorLoadingRewards) handleContractError(errorLoadingRewards, 'dataViewer');
     if (writeError) handleContractError(writeError, 'mint');
-  }, [errorActionInfo, errorCurrentRound, errorLoadingRewards, writeError, handleContractError]);
+  }, [errorActionInfo, errorCurrentRound, errorExtension, errorLoadingRewards, writeError, handleContractError]);
 
   // 如果路由未准备好，显示加载状态
   if (!router.isReady) {
@@ -209,11 +274,22 @@ const ActRewardsPage: React.FC = () => {
     );
   }
 
+  // 获取扩展行动的类型名称
+  const getExtensionTypeName = (): string => {
+    if (!extensionInfo?.isExtension || !extensionInfo.factoryAddress) return '';
+    const EXTENSION_FACTORY_STAKELP = process.env
+      .NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_STAKELP as `0x${string}`;
+    if (extensionInfo.factoryAddress.toLowerCase() === EXTENSION_FACTORY_STAKELP?.toLowerCase()) {
+      return '质押LP行动';
+    }
+    return '扩展行动';
+  };
+
   return (
     <>
       <Header title="行动激励" showBackButton={true} />
       <main className="flex-grow">
-        {!token || isLoadingActionInfo || isLoadingCurrentRound ? (
+        {!token || isLoadingActionInfo || isLoadingCurrentRound || isLoadingExtension ? (
           <LoadingIcon />
         ) : (
           <div className="flex flex-col space-y-6 p-4">
@@ -227,57 +303,78 @@ const ActRewardsPage: React.FC = () => {
                     <span className="text-greyscale-500">No.</span>
                     <span className="text-secondary text-xl font-bold mr-2">{String(actionInfo.head.id)}</span>
                     <span className="font-bold text-greyscale-800">{actionInfo.body.title}</span>
+                    {isExtensionAction && (
+                      <span className="ml-2 text-xs bg-secondary/10 text-secondary px-2 py-1 rounded">
+                        {getExtensionTypeName()}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
             )}
 
             {/* 激励列表 */}
-            <table className="table w-full table-auto">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th>轮次</th>
-                  <th className="text-center">可铸造激励</th>
-                  <th className="text-center">结果</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rewardList.length === 0 && !isLoadingRewards ? (
-                  <tr>
-                    <td colSpan={3} className="text-center text-sm text-gray-500 py-4">
-                      该行动在指定轮次范围内没有获得激励
-                    </td>
+            {isExtensionAction ? (
+              // 扩展行动激励列表
+              extensionInfo?.extensionAddress && extensionInfo?.factoryAddress ? (
+                <ExtensionRewardsList
+                  extensionAddress={extensionInfo.extensionAddress}
+                  factoryAddress={extensionInfo.factoryAddress}
+                  rewards={extensionRewardList}
+                  tokenData={token}
+                  onMintSuccess={handleExtensionMintSuccess}
+                />
+              ) : (
+                <div className="text-center text-sm text-gray-500 py-4">无法加载扩展行动信息</div>
+              )
+            ) : (
+              // 普通行动激励列表
+              <table className="table w-full table-auto">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th>轮次</th>
+                    <th className="text-center">可铸造激励</th>
+                    <th className="text-center">结果</th>
                   </tr>
-                ) : (
-                  rewardList.map((item, index) => (
-                    <tr
-                      key={`${actionId}-${item.round.toString()}`}
-                      className={index === rewardList.length - 1 ? 'border-none' : 'border-b border-gray-100'}
-                    >
-                      <td>{formatRoundForDisplay(item.round, token).toString()}</td>
-                      <td className="text-center">{formatTokenAmount(item.reward || BigInt(0))}</td>
-                      <td className="text-center">
-                        {item.reward > BigInt(0) && !item.isMinted ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-secondary border-secondary"
-                            onClick={() => handleClaim(item.round, BigInt(actionId))}
-                            disabled={isPending || isConfirming}
-                          >
-                            铸造
-                          </Button>
-                        ) : item.isMinted ? (
-                          <span className="text-greyscale-500">已铸造</span>
-                        ) : (
-                          <span className="text-greyscale-500">-</span>
-                        )}
+                </thead>
+                <tbody>
+                  {coreRewardList.length === 0 && !isLoadingRewards ? (
+                    <tr>
+                      <td colSpan={3} className="text-center text-sm text-gray-500 py-4">
+                        该行动在指定轮次范围内没有获得激励
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    coreRewardList.map((item, index) => (
+                      <tr
+                        key={`${actionId}-${item.round.toString()}`}
+                        className={index === coreRewardList.length - 1 ? 'border-none' : 'border-b border-gray-100'}
+                      >
+                        <td>{formatRoundForDisplay(item.round, token).toString()}</td>
+                        <td className="text-center">{formatTokenAmount(item.reward || BigInt(0))}</td>
+                        <td className="text-center">
+                          {item.reward > BigInt(0) && !item.isMinted ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-secondary border-secondary"
+                              onClick={() => handleClaim(item.round, BigInt(actionId))}
+                              disabled={isPending || isConfirming}
+                            >
+                              铸造
+                            </Button>
+                          ) : item.isMinted ? (
+                            <span className="text-greyscale-500">已铸造</span>
+                          ) : (
+                            <span className="text-greyscale-500">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            )}
 
             {/* 加载更多指示器 */}
             <div ref={loadMoreRef} className="h-12 flex justify-center items-center">

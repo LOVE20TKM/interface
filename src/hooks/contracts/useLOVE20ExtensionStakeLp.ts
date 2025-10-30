@@ -333,13 +333,14 @@ export const useMinGovVotes = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for pair - 获取交易对地址
+ * Hook for pair - 获取交易对地址（即 LP Token 地址）
+ * @deprecated 使用 useLpTokenAddress 替代，pair 和 lpTokenAddress 是同一个地址
  */
 export const usePair = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: LOVE20ExtensionStakeLpAbi,
-    functionName: 'pair',
+    functionName: 'lpTokenAddress',
     query: {
       enabled: !!contractAddress,
     },

@@ -375,6 +375,16 @@ export const LOVE20ExtensionCenterAbi = [
         "name": "extensionAddress",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],

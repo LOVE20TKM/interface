@@ -11,16 +11,6 @@ export const LOVE20ExtensionStakeLpAbi = [
         "internalType": "address"
       },
       {
-        "name": "tokenAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "actionId_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
         "name": "anotherTokenAddress_",
         "type": "address",
         "internalType": "address"
@@ -217,7 +207,18 @@ export const LOVE20ExtensionStakeLpAbi = [
   {
     "type": "function",
     "name": "initialize",
-    "inputs": [],
+    "inputs": [
+      {
+        "name": "tokenAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "actionId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -246,32 +247,6 @@ export const LOVE20ExtensionStakeLpAbi = [
       }
     ],
     "stateMutability": "pure"
-  },
-  {
-    "type": "function",
-    "name": "isTokenAddressTheFirstToken",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "join",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract ILOVE20Join"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -327,32 +302,6 @@ export const LOVE20ExtensionStakeLpAbi = [
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "mint",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract ILOVE20Mint"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "pair",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IUniswapV2Pair"
       }
     ],
     "stateMutability": "view"
@@ -468,19 +417,6 @@ export const LOVE20ExtensionStakeLpAbi = [
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "stake",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract ILOVE20Stake"
       }
     ],
     "stateMutability": "view"
@@ -741,19 +677,6 @@ export const LOVE20ExtensionStakeLpAbi = [
   },
   {
     "type": "function",
-    "name": "verify",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract ILOVE20Verify"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "waitingPhases",
     "inputs": [],
     "outputs": [
@@ -867,6 +790,11 @@ export const LOVE20ExtensionStakeLpAbi = [
   {
     "type": "error",
     "name": "InsufficientGovVotes",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidTokenAddress",
     "inputs": []
   },
   {

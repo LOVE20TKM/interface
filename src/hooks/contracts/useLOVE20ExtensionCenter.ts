@@ -447,9 +447,13 @@ export function useInitializeExtension() {
     'initializeExtension',
   );
 
-  const initializeExtension = async (extensionAddress: `0x${string}`) => {
-    console.log('提交 initializeExtension 交易:', { extensionAddress, isTukeMode });
-    return await execute([extensionAddress]);
+  const initializeExtension = async (
+    extensionAddress: `0x${string}`,
+    tokenAddress: `0x${string}`,
+    actionId: bigint,
+  ) => {
+    console.log('提交 initializeExtension 交易:', { extensionAddress, tokenAddress, actionId, isTukeMode });
+    return await execute([extensionAddress, tokenAddress, actionId]);
   };
 
   // 错误日志记录

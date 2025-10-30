@@ -59,7 +59,7 @@ const peripheralFilesToConvert = ['LOVE20TokenViewer', 'LOVE20RoundViewer', 'LOV
 
 const extensionsCenterFilesToConvert = ['LOVE20ExtensionCenter'];
 
-const extensionsStakelpFilesToConvert = ['LOVE20ExtensionStakeLp'];
+const extensionsStakelpFilesToConvert = ['LOVE20ExtensionFactoryStakeLp', 'LOVE20ExtensionStakeLp'];
 
 // 用于生成 TypeScript 文件的函数
 const generateTsFiles = (abiDirPath: string, filesToConvert: string[]) => {
