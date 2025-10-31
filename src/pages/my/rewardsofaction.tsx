@@ -124,6 +124,18 @@ const ActRewardsPage: React.FC = () => {
   const [coreRewardList, setCoreRewardList] = useState<typeof coreRewards>([]);
   const [extensionRewardList, setExtensionRewardList] = useState<typeof extensionRewards>([]);
 
+  // 当 actionId 改变时，重置所有状态
+  useEffect(() => {
+    if (actionId !== undefined) {
+      setIsInitialized(false);
+      setStartRound(BigInt(0));
+      setEndRound(BigInt(0));
+      setHasMoreRewards(true);
+      setCoreRewardList([]);
+      setExtensionRewardList([]);
+    }
+  }, [actionId]);
+
   // 初始化分页范围（只执行一次）
   useEffect(() => {
     if (actionInfo && token && currentRound !== undefined && !isInitialized) {
@@ -148,9 +160,17 @@ const ActRewardsPage: React.FC = () => {
 
     if (coreRewards && coreRewards.length > 0) {
       const sortedRewards = [...coreRewards].sort((a, b) => (a.round < b.round ? 1 : a.round > b.round ? -1 : 0));
-      setCoreRewardList(sortedRewards);
-    } else {
-      setCoreRewardList([]);
+
+      // 追加新数据，避免重复
+      setCoreRewardList((prev) => {
+        // 创建已存在的轮次集合
+        const existingRounds = new Set(prev.map((item) => item.round.toString()));
+        // 过滤出新的激励数据
+        const newRewards = sortedRewards.filter((item) => !existingRounds.has(item.round.toString()));
+        // 合并并重新排序
+        const merged = [...prev, ...newRewards];
+        return merged.sort((a, b) => (a.round < b.round ? 1 : a.round > b.round ? -1 : 0));
+      });
     }
   }, [coreRewards, isInitialized, isExtensionAction]);
 
@@ -160,9 +180,17 @@ const ActRewardsPage: React.FC = () => {
 
     if (extensionRewards && extensionRewards.length > 0) {
       const sortedRewards = [...extensionRewards].sort((a, b) => (a.round < b.round ? 1 : a.round > b.round ? -1 : 0));
-      setExtensionRewardList(sortedRewards);
-    } else {
-      setExtensionRewardList([]);
+
+      // 追加新数据，避免重复
+      setExtensionRewardList((prev) => {
+        // 创建已存在的轮次集合
+        const existingRounds = new Set(prev.map((item) => item.round.toString()));
+        // 过滤出新的激励数据
+        const newRewards = sortedRewards.filter((item) => !existingRounds.has(item.round.toString()));
+        // 合并并重新排序
+        const merged = [...prev, ...newRewards];
+        return merged.sort((a, b) => (a.round < b.round ? 1 : a.round > b.round ? -1 : 0));
+      });
     }
   }, [extensionRewards, isInitialized, isExtensionAction]);
 
@@ -323,6 +351,7 @@ const ActRewardsPage: React.FC = () => {
                   rewards={extensionRewardList}
                   tokenData={token}
                   onMintSuccess={handleExtensionMintSuccess}
+                  isLoading={isLoadingExtensionRewards}
                 />
               ) : (
                 <div className="text-center text-sm text-gray-500 py-4">无法加载扩展行动信息</div>

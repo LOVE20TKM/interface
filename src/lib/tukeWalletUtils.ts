@@ -2,11 +2,13 @@
 import { ethers } from 'ethers';
 
 export const isTukeWallet = (): boolean => {
+  return false;
   if (typeof window === 'undefined') return false;
   if (!window.ethereum) return false;
 
+  console.log('window.ethereum:', window.ethereum);
   const ethereum = window.ethereum as any;
-
+  console.log('ethereum.isTrust:', ethereum.isTrust);
   if (ethereum.isTuke) {
     console.log('检测到TUKE钱包：isTuke标识');
     return true;

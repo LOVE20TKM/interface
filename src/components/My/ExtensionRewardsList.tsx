@@ -13,6 +13,7 @@ export interface ExtensionRewardsListProps {
   rewards: ExtensionActionReward[];
   tokenData: any;
   onMintSuccess?: (round: bigint) => void;
+  isLoading?: boolean;
 }
 
 /**
@@ -29,6 +30,7 @@ export const ExtensionRewardsList: React.FC<ExtensionRewardsListProps> = ({
   rewards,
   tokenData,
   onMintSuccess,
+  isLoading = false,
 }) => {
   // 判断扩展类型
   const extensionType = React.useMemo(() => {
@@ -48,6 +50,7 @@ export const ExtensionRewardsList: React.FC<ExtensionRewardsListProps> = ({
           rewards={rewards}
           tokenData={tokenData}
           onMintSuccess={onMintSuccess}
+          isLoading={isLoading}
         />
       );
 
@@ -68,6 +71,7 @@ interface StakeLpExtensionRewardsListProps {
   rewards: ExtensionActionReward[];
   tokenData: any;
   onMintSuccess?: (round: bigint) => void;
+  isLoading?: boolean;
 }
 
 const StakeLpExtensionRewardsList: React.FC<StakeLpExtensionRewardsListProps> = ({
@@ -75,6 +79,7 @@ const StakeLpExtensionRewardsList: React.FC<StakeLpExtensionRewardsListProps> = 
   rewards,
   tokenData,
   onMintSuccess,
+  isLoading = false,
 }) => {
   const { claimReward, isPending, isConfirming, isConfirmed, writeError } = useClaimReward(extensionAddress);
 
@@ -110,7 +115,7 @@ const StakeLpExtensionRewardsList: React.FC<StakeLpExtensionRewardsListProps> = 
         </tr>
       </thead>
       <tbody>
-        {rewards.length === 0 ? (
+        {rewards.length === 0 && !isLoading ? (
           <tr>
             <td colSpan={3} className="text-center text-sm text-gray-500 py-4">
               该行动在指定轮次范围内没有获得激励

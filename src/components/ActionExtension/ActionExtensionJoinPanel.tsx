@@ -65,6 +65,7 @@ const ActionExtensionJoinPanel: React.FC<ActionExtensionJoinPanelProps> = ({
     totalScore,
     userGovVotes,
     totalGovVotes,
+    minGovVotes,
     lpRatio,
     isPending: isPendingData,
     error: errorData,
@@ -274,6 +275,18 @@ const ActionExtensionJoinPanel: React.FC<ActionExtensionJoinPanelProps> = ({
             userGovVotes={userGovVotes}
             totalGovVotes={totalGovVotes}
           />
+
+          {/* 治理票数不足的警告 */}
+          {userGovVotes < minGovVotes && (
+            <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-3 w-full">
+              <div className="font-medium">⚠️ 治理票数不足</div>
+              <div className="mt-1">
+                你的治理票数 <span className="font-semibold">{userGovVotes.toString()}</span> 低于最小门槛{' '}
+                <span className="font-semibold">{minGovVotes.toString()}</span>，无法获得得分和激励。
+              </div>
+              <div className="text-xs text-amber-600 mt-1">请质押更多代币以增加治理票数。</div>
+            </div>
+          )}
         </div>
       )}
 

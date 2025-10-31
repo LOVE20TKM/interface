@@ -35,6 +35,7 @@ export interface UseStakeLpActionDataResult {
   // 治理票信息（用于显示）
   userGovVotes: bigint;
   totalGovVotes: bigint;
+  minGovVotes: bigint; // 最小治理票数门槛
 
   // LP占比（用于显示）
   lpRatio: number; // LP占比百分比
@@ -145,6 +146,13 @@ export const useStakeLpActionData = ({
         functionName: 'currentRound',
         args: [],
       },
+      // 10. 获取最小治理票数门槛
+      {
+        address: extensionAddress,
+        abi: LOVE20ExtensionStakeLpAbi,
+        functionName: 'minGovVotes',
+        args: [],
+      },
     ];
   }, [extensionAddress, tokenAddress, account]);
 
@@ -235,6 +243,11 @@ export const useStakeLpActionData = ({
     return BigInt(data[9].result.toString());
   }, [data]);
 
+  const minGovVotes = useMemo(() => {
+    if (!data || !data[10]?.result) return BigInt(0);
+    return BigInt(data[10].result.toString());
+  }, [data]);
+
   const lpTotalSupply = useMemo(() => {
     if (!pairData || !pairData[0]?.result) return BigInt(0);
     return BigInt(pairData[0].result.toString());
@@ -242,8 +255,31 @@ export const useStakeLpActionData = ({
 
   // 获取用户得分和总得分（calculateScore 返回 [total, score]）
   const userScore = useMemo(() => {
-    if (!data || !data[7]?.result) return BigInt(0);
+    if (!data || !data[7]?.result) {
+      console.log('🔍 userScore - data[7] 不存在或无结果:', {
+        hasData: !!data,
+        dataLength: data?.length,
+        hasResult: !!data?.[7]?.result,
+        data7: data?.[7],
+      });
+      return BigInt(0);
+    }
     const scoreResult = data[7].result as [bigint, bigint];
+    console.log('🔍 calculateScore 返回值:', {
+      total: scoreResult[0]?.toString(),
+      score: scoreResult[1]?.toString(),
+      rawResult: data[7].result,
+    });
+
+    // 同时打印相关的其他数据
+    console.log('🔍 相关数据:', {
+      stakedAmount: (data[0]?.result as any)?.[0]?.toString(),
+      totalStakedAmount: data[1]?.result?.toString(),
+      userGovVotes: data[5]?.result?.toString(),
+      totalGovVotes: data[6]?.result?.toString(),
+      minGovVotes: data[10]?.result?.toString(),
+    });
+
     return scoreResult[1]; // score 是第二个值
   }, [data]);
 
@@ -304,6 +340,7 @@ export const useStakeLpActionData = ({
     totalScore,
     userGovVotes,
     totalGovVotes,
+    minGovVotes,
     lpRatio,
     lpTokenAddress,
     pairAddress: lpTokenAddress, // pairAddress 就是 lpTokenAddress

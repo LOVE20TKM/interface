@@ -177,7 +177,7 @@ function _parseRpcError(error: string): string {
       }
 
       // 通用RPC错误提示
-      return '链上状态变化，导致操作失败。可能有人先发起了同样的交易。请刷新重试~';
+      return '链上状态变化，导致操作失败。请刷新重试~';
     }
   }
   return '';
