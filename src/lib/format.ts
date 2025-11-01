@@ -329,7 +329,7 @@ const removeTrailingZeros = (num: number, digits: number): string => {
   return num.toFixed(digits).replace(/\.?0+$/, '');
 };
 
-// 格式化百分比显示
+// 格式化百分比显示（向下取整）
 export const formatPercentage = (value: number | string): string => {
   if (value === undefined || value === null || isNaN(Number(value))) return '-%';
 
@@ -337,10 +337,45 @@ export const formatPercentage = (value: number | string): string => {
   const absNum = Math.abs(num);
 
   if (absNum === 0) return '0%';
-  if (absNum >= 100) return num.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '%';
-  if (absNum >= 10) return removeTrailingZeros(num, 1) + '%';
-  if (absNum >= 1) return removeTrailingZeros(num, 2) + '%';
-  if (absNum >= 0.1) return removeTrailingZeros(num, 3) + '%';
-  if (absNum >= 0.01) return removeTrailingZeros(num, 4) + '%';
-  return removeTrailingZeros(num, 6) + '%';
+
+  // 向下取整的辅助函数
+  const floorToDecimals = (n: number, digits: number): string => {
+    const isNegative = n < 0;
+    const absN = Math.abs(n);
+    const str = absN.toString();
+    const parts = str.split('.');
+
+    if (parts.length === 1 || digits === 0) {
+      // 没有小数部分或者截断到整数
+      const flooredNum = isNegative ? -Math.floor(absN) : Math.floor(absN);
+      return flooredNum.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+
+    const integerPart = parts[0];
+    const fractionalPart = parts[1];
+
+    // 截断小数部分到指定位数
+    const truncatedFractional = fractionalPart.substring(0, digits);
+    let reconstructed = parseFloat(`${integerPart}.${truncatedFractional || '0'}`);
+
+    // 恢复符号
+    if (isNegative) {
+      reconstructed = -reconstructed;
+    }
+
+    // 格式化并去除末尾的0
+    return reconstructed
+      .toLocaleString(undefined, {
+        maximumFractionDigits: digits,
+        minimumFractionDigits: 0,
+      })
+      .replace(/\.?0+$/, '');
+  };
+
+  if (absNum >= 100) return floorToDecimals(num, 0) + '%';
+  if (absNum >= 10) return floorToDecimals(num, 1) + '%';
+  if (absNum >= 1) return floorToDecimals(num, 2) + '%';
+  if (absNum >= 0.1) return floorToDecimals(num, 3) + '%';
+  if (absNum >= 0.01) return floorToDecimals(num, 4) + '%';
+  return floorToDecimals(num, 6) + '%';
 };
