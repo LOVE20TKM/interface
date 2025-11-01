@@ -24,6 +24,7 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import { useTokenStatistics } from '@/src/hooks/contracts/useLOVE20TokenViewer';
 import { useLaunchInfo } from '@/src/hooks/contracts/useLOVE20Launch';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
+import { useUSDTPairTokenBalance } from '@/src/hooks/composite/useUSDTPairTokenBalance';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatPercentage } from '@/src/lib/format';
 
@@ -106,6 +107,14 @@ const TokenPage = () => {
     isPending: isPendingLaunchInfo,
   } = useLaunchInfo((currentToken?.address as `0x${string}`) || '0x0000000000000000000000000000000000000000');
 
+  // 获取 USDT-Token pair 中当前代币的质押量
+  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}` | undefined;
+  const { tokenBalanceInUSDTPair, isPending: isPendingUSDTPair } = useUSDTPairTokenBalance(
+    currentToken?.address as `0x${string}` | undefined,
+    usdtAddress,
+    launchEnded, // 只有在发射完成后才查询
+  );
+
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
@@ -134,7 +143,8 @@ const TokenPage = () => {
   const launchingChildTokensCount = tokenStatistics?.launchingChildTokensCount ?? BigInt(0);
   const launchedChildTokensCount = tokenStatistics?.launchedChildTokensCount ?? BigInt(0);
   const unminted = maxSupply > totalSupply ? maxSupply - totalSupply : BigInt(0);
-  const otherBalance = totalSupply - joinedTokenAmount - tokenAmountForSl - stakedTokenAmountForSt;
+  const usdtPairBalance = tokenBalanceInUSDTPair ?? BigInt(0);
+  const otherBalance = totalSupply - joinedTokenAmount - tokenAmountForSl - stakedTokenAmountForSt - usdtPairBalance;
 
   // 发射区块
   const startBlock = launchInfo?.startBlock;
@@ -264,7 +274,7 @@ const TokenPage = () => {
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
                           <Field label="最大铸造量" value={formatAmount(maxSupply, decimals)} />
                           <Field
-                            label="已铸造量（流通量）"
+                            label="已铸造（总流通量）"
                             value={formatAmount(totalSupply, decimals)}
                             percentage={formatPercentage((Number(totalSupply) / Number(maxSupply)) * 100)}
                           />
@@ -295,8 +305,8 @@ const TokenPage = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="px-4 pt-2 pb-4">
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-                          <Field label="已铸代币量（流通量）" value={formatAmount(totalSupply, decimals)} />
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+                          <Field label="已铸造（总流通量）" value={formatAmount(totalSupply, decimals)} />
                           <Field
                             label="行动参与量"
                             value={formatAmount(joinedTokenAmount, decimals)}
@@ -311,6 +321,11 @@ const TokenPage = () => {
                             label="加速激励质押量"
                             value={formatAmount(stakedTokenAmountForSt, decimals)}
                             percentage={formatPercentage((Number(stakedTokenAmountForSt) / Number(totalSupply)) * 100)}
+                          />
+                          <Field
+                            label="U池质押量"
+                            value={formatAmount(usdtPairBalance, decimals)}
+                            percentage={formatPercentage((Number(usdtPairBalance) / Number(totalSupply)) * 100)}
                           />
                           <Field
                             label="其他"
