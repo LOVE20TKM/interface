@@ -377,5 +377,5 @@ export const formatPercentage = (value: number | string): string => {
   if (absNum >= 1) return floorToDecimals(num, 2) + '%';
   if (absNum >= 0.1) return floorToDecimals(num, 3) + '%';
   if (absNum >= 0.01) return floorToDecimals(num, 4) + '%';
-  return floorToDecimals(num, 6) + '%';
+  return floorToDecimals(num, 4) + '%';
 };

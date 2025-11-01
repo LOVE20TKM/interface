@@ -683,7 +683,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                   )}
                 </div>
               </th>
-              <th className="pb-3 text-center whitespace-nowrap w-14 text-sm text-greyscale-500">分配</th>
+              <th className="pb-3 text-center whitespace-nowrap w-12 text-sm text-greyscale-500">分配</th>
             </tr>
           </thead>
           <tbody>
@@ -730,13 +730,13 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                         onChange={(e) => handleScoreChange(info.account, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(e, index)}
                         tabIndex={index + 1}
-                        className="w-12 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-16 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         disabled={isPending || isConfirmed}
                       />
                       <span className="text-greyscale-500 text-xs">分</span>
                     </div>
                   </td>
-                  <td className="py-1 text-center w-14 whitespace-nowrap px-1">
+                  <td className="py-1 text-center w-12 whitespace-nowrap px-0">
                     <div className="leading-tight">
                       <div className="text-sm text-greyscale-600 ">
                         {formatPercentage(addressPercentages[info.account] || 0)}
@@ -774,13 +774,13 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                       onChange={(e) => handleAbstainScoreChange(e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, verificationInfos?.length || 0)}
                       tabIndex={(verificationInfos?.length || 0) + 1}
-                      className="w-10 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-14 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       disabled={isPending || isConfirmed}
                     />
                     <span className="text-greyscale-500 text-xs">分</span>
                   </div>
                 </td>
-                <td className="py-2 text-center w-14 whitespace-nowrap px-1">
+                <td className="py-2 text-center w-14 whitespace-nowrap px-0">
                   <div className="text-greyscale-500 text-xs leading-tight">
                     <div>{formatPercentage(abstainPercentage)}</div>
                     <div>
