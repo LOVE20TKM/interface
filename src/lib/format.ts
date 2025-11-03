@@ -369,7 +369,8 @@ export const formatPercentage = (value: number | string): string => {
         maximumFractionDigits: digits,
         minimumFractionDigits: 0,
       })
-      .replace(/\.?0+$/, '');
+      .replace(/(\.\d*?)0+$/, '$1') // 删除小数部分末尾的0
+      .replace(/\.$/, ''); // 删除末尾的小数点（如果有）
   };
 
   if (absNum >= 100) return floorToDecimals(num, 0) + '%';
