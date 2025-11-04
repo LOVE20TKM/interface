@@ -1,6 +1,6 @@
 // hooks/contracts/useLOVE20RoundViewer.ts
 
-import { useMemo } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useReadContract } from 'wagmi';
 import { LOVE20RoundViewerAbi } from '@/src/abis/LOVE20RoundViewer';
 import {
@@ -422,4 +422,170 @@ export const useActionVerificationMatrix = (tokenAddress: `0x${string}`, round: 
   });
 
   return { verificationMatrix: data as VerificationMatrix | undefined, isPending, error };
+};
+
+/**
+ * Hook for actionVerificationMatrixPaged - 分页查询验证矩阵
+ * 自动处理分页逻辑，合并所有分页结果
+ */
+export const useActionVerificationMatrixPaged = (
+  tokenAddress: `0x${string}`,
+  round: bigint,
+  actionId: bigint,
+  pageSize: number = 30, // 每页验证者数量
+) => {
+  const [finalData, setFinalData] = useState<VerificationMatrix | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+
+  // 使用 useRef 存储临时数据，避免触发重新渲染
+  const tempDataRef = useRef<{
+    verifiers: `0x${string}`[];
+    verifiees: `0x${string}`[];
+    scores: bigint[][];
+  } | null>(null);
+
+  // 参数验证
+  const isValidTokenAddress = tokenAddress && tokenAddress !== '0x' && tokenAddress.length === 42;
+  const isValidRound = round !== undefined && round > BigInt(0);
+  const isValidActionId = actionId !== undefined && actionId > BigInt(0);
+  const enableRead = isValidTokenAddress && isValidRound && isValidActionId;
+
+  // 单次分页查询
+  const verifierStart = currentPage * pageSize;
+  const verifierEnd = verifierStart + pageSize;
+
+  const { data: pageData, isPending: isPagePending } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20RoundViewerAbi,
+    functionName: 'actionVerificationMatrixPaged',
+    args: [tokenAddress, round, actionId, BigInt(verifierStart), BigInt(verifierEnd)],
+    query: {
+      enabled: enableRead && hasMore,
+      gcTime: 0,
+      staleTime: 0,
+      retry: 2,
+    },
+  });
+
+  // 处理分页数据
+  useEffect(() => {
+    if (!enableRead) {
+      setFinalData(undefined);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
+    if (isPagePending) {
+      setIsLoading(true);
+      return;
+    }
+
+    // 如果不在 pending 状态，但 pageData 为 undefined
+    // 可能是查询超出范围或失败，应该停止查询
+    if (!pageData && !isPagePending && currentPage > 0) {
+      console.log('⚠️ 查询返回空数据，停止分页查询');
+      setHasMore(false);
+      setIsLoading(false);
+
+      // 设置最终数据
+      if (tempDataRef.current) {
+        console.log(`✅ 分页查询完成，总验证者数: ${tempDataRef.current.verifiers.length}`);
+        setFinalData({
+          verifiers: tempDataRef.current.verifiers,
+          verifiees: tempDataRef.current.verifiees,
+          scores: tempDataRef.current.scores,
+        });
+      }
+      return;
+    }
+
+    if (pageData) {
+      const matrix = pageData as VerificationMatrix;
+
+      console.log(`📄 分页查询结果 (${verifierStart}-${verifierEnd}):`, {
+        verifiers: matrix.verifiers?.length || 0,
+        verifiees: matrix.verifiees?.length || 0,
+        scores: matrix.scores?.length || 0,
+      });
+
+      // 如果返回的验证者为空，说明已经查询完所有数据
+      if (!matrix.verifiers || matrix.verifiers.length === 0) {
+        setHasMore(false);
+        setIsLoading(false);
+
+        // 设置最终数据
+        if (tempDataRef.current) {
+          console.log('✅ 分页查询完成（返回空数组），总验证者数:', tempDataRef.current.verifiers.length);
+          setFinalData({
+            verifiers: tempDataRef.current.verifiers,
+            verifiees: tempDataRef.current.verifiees,
+            scores: tempDataRef.current.scores,
+          });
+        }
+        return;
+      }
+
+      // 合并数据到 ref（不触发重新渲染）
+      if (!tempDataRef.current) {
+        // 第一页数据
+        tempDataRef.current = {
+          verifiers: [...matrix.verifiers],
+          verifiees: [...matrix.verifiees],
+          scores: [...matrix.scores],
+        };
+      } else {
+        // 合并后续页数据
+        tempDataRef.current.verifiers = [...tempDataRef.current.verifiers, ...matrix.verifiers];
+        tempDataRef.current.scores = [...tempDataRef.current.scores, ...matrix.scores];
+      }
+
+      // 如果返回的验证者数量小于 pageSize，说明这是最后一页
+      if (matrix.verifiers.length < pageSize) {
+        setHasMore(false);
+        setIsLoading(false);
+        console.log('✅ 分页查询完成（最后一页），总验证者数:', tempDataRef.current.verifiers.length);
+
+        // 所有数据加载完成，设置最终数据
+        setFinalData({
+          verifiers: tempDataRef.current.verifiers,
+          verifiees: tempDataRef.current.verifiees,
+          scores: tempDataRef.current.scores,
+        });
+      } else {
+        // 继续查询下一页
+        setCurrentPage((prev) => prev + 1);
+      }
+    }
+  }, [pageData, isPagePending, enableRead, currentPage, pageSize]);
+
+  // 重置状态（当查询参数变化时）
+  useEffect(() => {
+    setFinalData(undefined);
+    setCurrentPage(0);
+    setHasMore(true);
+    setError(null);
+    setIsLoading(enableRead);
+    tempDataRef.current = null;
+
+    console.log('🔄 重置分页查询状态:', {
+      tokenAddress,
+      round: round.toString(),
+      actionId: actionId.toString(),
+    });
+  }, [tokenAddress, round.toString(), actionId.toString(), enableRead]);
+
+  return {
+    verificationMatrix: finalData,
+    isPending: isLoading || isPagePending,
+    error,
+    progress: {
+      currentPage,
+      loadedVerifiers: tempDataRef.current?.verifiers.length || 0,
+      hasMore,
+    },
+  };
 };

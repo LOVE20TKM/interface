@@ -403,6 +403,62 @@ export const LOVE20RoundViewerAbi = [
   },
   {
     "type": "function",
+    "name": "actionVerificationMatrixPaged",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifierStart",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifierEnd",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "matrix",
+        "type": "tuple",
+        "internalType": "struct VerificationMatrix",
+        "components": [
+          {
+            "name": "verifiers",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "verifiees",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "scores",
+            "type": "uint256[][]",
+            "internalType": "uint256[][]"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "actionVoters",
     "inputs": [
       {

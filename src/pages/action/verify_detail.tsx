@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useContext, useState } from 'react';
+import { useEffect, useContext, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 
 // my hooks
 import { useActionPageData } from '@/src/hooks/composite/useActionPageData';
-import { useActionVerificationMatrix } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { useActionVerificationMatrixPaged } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my components
@@ -53,12 +53,18 @@ const VerifyDetailPage = () => {
     }
   }, [roundNum, currentRound, token]);
 
-  // 获取验证矩阵数据
+  // 获取验证矩阵数据（使用分页查询）
   const {
     verificationMatrix,
     isPending: isMatrixPending,
     error: matrixError,
-  } = useActionVerificationMatrix(token?.address || '0x', selectedRound || BigInt(0), actionId || BigInt(0));
+    progress,
+  } = useActionVerificationMatrixPaged(
+    token?.address || ('0x' as `0x${string}`),
+    selectedRound || BigInt(0),
+    actionId || BigInt(0),
+    30, // 每页30个验证者
+  );
 
   // 处理轮次切换
   const handleChangedRound = (round: number) => {
@@ -85,48 +91,10 @@ const VerifyDetailPage = () => {
     }
   }, [error, matrixError]);
 
-  // 如果没有actionId，显示错误
-  if (actionId === undefined) {
-    return (
-      <>
-        <Header title="验证详情" showBackButton={true} />
-        <main className="flex-grow">
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center text-red-500">参数错误：缺少行动ID参数</div>
-          </div>
-        </main>
-      </>
-    );
-  }
-
-  const renderVerificationMatrix = () => {
-    if (isMatrixPending) {
-      return (
-        <div className="bg-white rounded-lg p-8">
-          <div className="text-center">
-            <LoadingIcon />
-            <p className="mt-4 text-gray-600">加载验证矩阵中...</p>
-          </div>
-        </div>
-      );
-    }
-
-    if (matrixError) {
-      return (
-        <div className="bg-white rounded-lg p-8">
-          <div className="text-center text-red-500">
-            加载验证矩阵失败：{matrixError.message || '获取验证矩阵失败，请稍后重试'}
-          </div>
-        </div>
-      );
-    }
-
-    if (!verificationMatrix || verificationMatrix.verifiers.length === 0) {
-      return (
-        <div className="bg-white rounded-lg p-8">
-          <div className="text-center text-gray-600">暂无验证数据</div>
-        </div>
-      );
+  // 提前计算验证矩阵数据（必须在组件顶层使用 useMemo）
+  const matrixCalculations = useMemo(() => {
+    if (!verificationMatrix || !verificationMatrix.verifiers || verificationMatrix.verifiers.length === 0) {
+      return null;
     }
 
     const { verifiers, verifiees, scores } = verificationMatrix;
@@ -167,6 +135,80 @@ const VerifyDetailPage = () => {
       const percentage = (Number(score) / verifierTotalScore) * 100;
       return `${formatPercentage(percentage)}`;
     };
+
+    return {
+      verifiers,
+      verifiees,
+      scores,
+      verifieeeTotalScores,
+      sortedVerifieeIndices,
+      verifierTotalScores,
+      grandTotalVotes,
+      calculatePercentage,
+    };
+  }, [verificationMatrix]);
+
+  // 如果没有actionId，显示错误
+  if (actionId === undefined) {
+    return (
+      <>
+        <Header title="验证详情" showBackButton={true} />
+        <main className="flex-grow">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center text-red-500">参数错误：缺少行动ID参数</div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  const renderVerificationMatrix = () => {
+    if (isMatrixPending) {
+      return (
+        <div className="bg-white rounded-lg p-8">
+          <div className="text-center">
+            <LoadingIcon />
+            <p className="mt-4 text-gray-600">正在加载验证矩阵数据...</p>
+            {progress && progress.loadedVerifiers > 0 && (
+              <div className="mt-2 text-sm text-gray-500">
+                <p>已加载 {progress.loadedVerifiers} 个验证者，请稍候...</p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (matrixError) {
+      return (
+        <div className="bg-white rounded-lg p-8">
+          <div className="text-center text-red-500">
+            加载验证矩阵失败：{matrixError.message || '获取验证矩阵失败，请稍后重试'}
+          </div>
+        </div>
+      );
+    }
+
+    // 如果没有计算结果，显示暂无数据
+    if (!matrixCalculations) {
+      return (
+        <div className="bg-white rounded-lg p-8">
+          <div className="text-center text-gray-600">暂无验证数据</div>
+        </div>
+      );
+    }
+
+    // 从预计算的结果中获取数据
+    const {
+      verifiers,
+      verifiees,
+      scores,
+      verifieeeTotalScores,
+      sortedVerifieeIndices,
+      verifierTotalScores,
+      grandTotalVotes,
+      calculatePercentage,
+    } = matrixCalculations;
 
     return (
       <>
