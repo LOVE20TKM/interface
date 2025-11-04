@@ -323,7 +323,7 @@ const TokenPage = () => {
                             percentage={formatPercentage((Number(stakedTokenAmountForSt) / Number(totalSupply)) * 100)}
                           />
                           <Field
-                            label="U池质押量"
+                            label="U池质"
                             value={formatAmount(usdtPairBalance, decimals)}
                             percentage={formatPercentage((Number(usdtPairBalance) / Number(totalSupply)) * 100)}
                           />

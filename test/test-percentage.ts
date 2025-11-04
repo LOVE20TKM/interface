@@ -102,6 +102,33 @@ const testCases: TestCase[] = [
   { input: 0.0, expected: '0%', description: '0.00' },
   { input: 10.0, expected: '10%', description: '10.00' },
   { input: 100.0, expected: '100%', description: '100.00' },
+
+  // 科学计数法测试（非常小的数字）
+  { input: 3.363750418411959e-8, expected: '0%', description: '科学计数法: 3.363750418411959e-8' },
+  { input: 1e-10, expected: '0%', description: '科学计数法: 1e-10' },
+  { input: 5e-9, expected: '0%', description: '科学计数法: 5e-9' },
+  { input: 1e-5, expected: '0%', description: '科学计数法: 1e-5 (0.00001)' },
+  { input: 1.5e-5, expected: '0%', description: '科学计数法: 1.5e-5' },
+  { input: 1e-4, expected: '0.0001%', description: '科学计数法: 1e-4 (0.0001)' },
+  { input: 5e-4, expected: '0.0005%', description: '科学计数法: 5e-4 (0.0005)' },
+  { input: 1e-3, expected: '0.001%', description: '科学计数法: 1e-3 (0.001)' },
+  { input: 5.5e-3, expected: '0.0055%', description: '科学计数法: 5.5e-3 (0.0055)' },
+  { input: 1e-2, expected: '0.01%', description: '科学计数法: 1e-2 (0.01)' },
+  { input: 5e-2, expected: '0.05%', description: '科学计数法: 5e-2 (0.05)' },
+  { input: 1e-1, expected: '0.1%', description: '科学计数法: 1e-1 (0.1)' },
+  { input: 1.23456e-3, expected: '0.0012%', description: '科学计数法: 1.23456e-3 (向下取整)' },
+  { input: 9.99999e-4, expected: '0.0009%', description: '科学计数法: 9.99999e-4 (向下取整)' },
+
+  // 科学计数法测试（大数字）
+  { input: 1e2, expected: '100%', description: '科学计数法: 1e2 (100)' },
+  { input: 1.5e2, expected: '150%', description: '科学计数法: 1.5e2 (150)' },
+  { input: 1e3, expected: '1,000%', description: '科学计数法: 1e3 (1000)' },
+  { input: 1.234e3, expected: '1,234%', description: '科学计数法: 1.234e3 (1234)' },
+
+  // 负数科学计数法
+  { input: -1e-8, expected: '0%', description: '负数科学计数法: -1e-8' },
+  { input: -5e-4, expected: '-0.0005%', description: '负数科学计数法: -5e-4' },
+  { input: -1.5e-3, expected: '-0.0015%', description: '负数科学计数法: -1.5e-3' },
 ];
 
 // 运行测试
