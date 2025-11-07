@@ -63,7 +63,7 @@ const VerifyDetailPage = () => {
     token?.address || ('0x' as `0x${string}`),
     selectedRound || BigInt(0),
     actionId || BigInt(0),
-    30, // 每页30个验证者
+    20, // 每页20个验证者
   );
 
   // 处理轮次切换
