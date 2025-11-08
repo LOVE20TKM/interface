@@ -13,6 +13,7 @@ import { TokenProvider } from '@/src/contexts/TokenContext';
 import { AppSidebar } from '@/src/components/Common/AppSidebar';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import ActionRewardNotifier from '@/src/components/Common/ActionRewardNotifier';
+import GasBalanceNotifier from '@/src/components/Common/GasBalanceNotifier';
 import Footer from '@/src/components/Footer';
 import { BottomNavigation } from '@/src/components/Common/BottomNavigation';
 import { usePageRecovery } from '@/src/hooks/usePageRecovery';
@@ -188,6 +189,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                         },
                       }}
                     />
+                    <GasBalanceNotifier />
                     <ActionRewardNotifier />
                     <Component {...pageProps} />
                     <Footer />

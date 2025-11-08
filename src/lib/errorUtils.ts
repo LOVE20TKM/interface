@@ -189,6 +189,7 @@ function _parseRpcError(error: string): string {
 function _parseGasError(error: string): string {
   const gasErrorPatterns = [
     // Gas 估算失败
+    /Failed to estimate gas/i,
     /cannot estimate gas/i,
     /transaction may fail or may require manual gas limit/i,
 
