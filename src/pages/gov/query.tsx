@@ -59,11 +59,6 @@ const GovQueryPage = () => {
       ? (Number(validGovVotes) / Number(govData.govVotes)) * 100
       : 0;
 
-  // 格式化百分比为固定2位小数
-  const formatPercentageFixed2 = (value: number): string => {
-    return value.toFixed(2) + '%';
-  };
-
   // 处理查询
   const handleQuery = () => {
     console.log('handleQuery called with:', inputAddress);
@@ -226,11 +221,11 @@ const GovQueryPage = () => {
                           <div className="text-sm text-gray-600 mb-3">占总治理票比例</div>
                           <div className="flex items-center justify-between">
                             <div className="text-2xl font-bold text-gray-900">
-                              {formatPercentageFixed2(governancePercentage)}
+                              {formatPercentage(governancePercentage)}
                             </div>
                             {/* @ts-ignore */}
                             <CopyToClipboard
-                              text={formatPercentageFixed2(governancePercentage)}
+                              text={formatPercentage(governancePercentage)}
                               onCopy={handleCopyPercentage}
                             >
                               <button
