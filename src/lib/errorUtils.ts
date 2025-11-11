@@ -140,6 +140,15 @@ function _parseTimeoutError(error: string): string {
  * 检查是否为RPC调用错误（通常因为链上状态变化导致）
  */
 function _parseRpcError(error: string): string {
+  // 优先检查 RPC 节点内部错误（错误码 -32603）
+  // 这种错误通常是临时性的 RPC 节点问题，不是前端或合约问题
+  if (/InternalRpcError/i.test(error) || /code.*-32603/i.test(error) || /Internal error/i.test(error)) {
+    // 检查是否同时包含具体的交易信息，如果有则更可能是节点问题
+    if (/An internal error was received/i.test(error)) {
+      return 'RPC节点临时故障，请稍后重试或刷新页面';
+    }
+  }
+
   const rpcErrorPatterns = [
     // 常见RPC错误模式
     /Missing or invalid parameters/i,
@@ -177,7 +186,7 @@ function _parseRpcError(error: string): string {
       }
 
       // 通用RPC错误提示
-      return '链上状态变化，导致操作失败。可能有人先发起了同样的交易。请刷新重试~';
+      return '网络返回错误，请刷新或稍后重试~';
     }
   }
   return '';

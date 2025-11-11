@@ -1,10 +1,11 @@
 'use client';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 
 // my hooks
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
 import { useEstimatedActionRewardOfCurrentRound } from '@/src/hooks/contracts/useLOVE20MintViewer';
+import { useAction19PoolValue } from '@/src/hooks/composite/useAction19PoolValue';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -38,6 +39,21 @@ const ActDataPanel: React.FC<ActDataPanelProps> = ({ currentRound }) => {
     error: errorEstimatedActionReward,
   } = useEstimatedActionRewardOfCurrentRound((token?.address as `0x${string}`) || '');
 
+  // 获取19号行动的u池资产价值
+  const {
+    totalPoolValue: action19PoolValue,
+    isLoading: isLoadingAction19Pool,
+    error: errorAction19Pool,
+  } = useAction19PoolValue({
+    tokenAddress: token?.address as `0x${string}`,
+    enabled: !!token?.address,
+  });
+
+  // 计算总成本：参与代币 + 19号行动的u池资产
+  const totalCost = useMemo(() => {
+    return (joinedAmount ?? BigInt(0)) + action19PoolValue;
+  }, [joinedAmount, action19PoolValue]);
+
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
@@ -47,7 +63,10 @@ const ActDataPanel: React.FC<ActDataPanelProps> = ({ currentRound }) => {
     if (errorEstimatedActionReward) {
       handleContractError(errorEstimatedActionReward, 'dataViewer');
     }
-  }, [errorJoinedAmount, errorEstimatedActionReward]);
+    if (errorAction19Pool) {
+      handleContractError(errorAction19Pool, 'join');
+    }
+  }, [errorJoinedAmount, errorEstimatedActionReward, errorAction19Pool]);
 
   return (
     <div className="px-4">
@@ -68,10 +87,10 @@ const ActDataPanel: React.FC<ActDataPanelProps> = ({ currentRound }) => {
         </div>
         <div className="text-center text-xs mb-2 text-greyscale-500">
           预估年化收益率（APY）：
-          {isPendingJoinedAmount || isPendingEstimatedActionReward ? (
+          {isPendingJoinedAmount || isPendingEstimatedActionReward || isLoadingAction19Pool ? (
             <LoadingIcon />
           ) : (
-            calculateActionAPY(expectedReward, joinedAmount)
+            calculateActionAPY(expectedReward, totalCost)
           )}
         </div>
       </div>
