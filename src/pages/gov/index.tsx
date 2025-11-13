@@ -20,6 +20,7 @@ import MyVerifingPanel from '@/src/components/My/MyVerifingPanel';
 import Todeploy from '@/src/components/Launch/Todeploy';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import MyGovInfoPanel from '@/src/components/My/MyGovInfoPanel';
+import GovQueryPanel from '@/src/components/My/GovQueryPanel';
 
 const GovPage = () => {
   // 当前token
@@ -87,62 +88,61 @@ const GovPage = () => {
         ) : (
           <>
             <Tabs defaultValue="my-assets" className="w-full px-4">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="my-assets">我的</TabsTrigger>
                 <TabsTrigger value="community-assets">社区</TabsTrigger>
-                <TabsTrigger value="address-query" asChild>
-                  <Link href={`/gov/query?symbol=${currentToken?.symbol}`}>查询</Link>
-                </TabsTrigger>
               </TabsList>
               <TabsContent value="my-assets">
-                <div className="border rounded-lg px-2 py-4 mt-2">
+                <div className="border rounded-lg px-0 py-4 mt-2">
                   <MyGovInfoPanel token={currentToken} enableWithdraw={false} />
                 </div>
+                {isPendingValidGovVotes ? (
+                  <div className="flex justify-center p-4">
+                    <LoadingIcon />
+                  </div>
+                ) : shouldShowGovComponents ? (
+                  // 有治理票时显示三个治理组件
+                  <>
+                    <MyVotingPanel
+                      currentRound={currentVoteRound ? currentVoteRound : BigInt(0)}
+                      validGovVotes={validGovVotes}
+                      isPendingValidGovVotes={isPendingValidGovVotes}
+                    />
+                    <MyVerifingPanel currentRound={currentVoteRound > 2 ? currentVoteRound - BigInt(2) : BigInt(0)} />
+                    <Todeploy token={currentToken} />
+                  </>
+                ) : (
+                  <>
+                    {/* 无治理票时显示质押按钮 */}
+                    <div className="flex flex-col items-center p-4 mt-4">
+                      <div className="text-center mb-4 text-greyscale-500">您当前没有治理票，获取治理票后才能治理</div>
+                      <Button className="w-1/2" asChild>
+                        <Link href={`/gov/stakelp/?symbol=${currentToken?.symbol}`}>质押获取治理票</Link>
+                      </Button>
+                    </div>
+                    <div className="flex space-x-8 mt-4 justify-center text-sm pb-4">
+                      <Link
+                        href={`/vote/actions/?symbol=${currentToken?.symbol}`}
+                        className="text-secondary hover:text-blue-800"
+                      >
+                        投票中的行动 &gt;&gt;
+                      </Link>
+                      <Link
+                        href={`/verify/actions/?symbol=${currentToken?.symbol}`}
+                        className="text-secondary hover:text-blue-800"
+                      >
+                        验证中的行动 &gt;&gt;
+                      </Link>
+                    </div>
+                  </>
+                )}
               </TabsContent>
               <TabsContent value="community-assets">
                 <GovernanceDataPanel />
+                {/* 查询组件放在社区tab的最下面 */}
+                <GovQueryPanel />
               </TabsContent>
             </Tabs>
-            {isPendingValidGovVotes ? (
-              <div className="flex justify-center p-4">
-                <LoadingIcon />
-              </div>
-            ) : shouldShowGovComponents ? (
-              // 有治理票时显示三个治理组件
-              <>
-                <MyVotingPanel
-                  currentRound={currentVoteRound ? currentVoteRound : BigInt(0)}
-                  validGovVotes={validGovVotes}
-                  isPendingValidGovVotes={isPendingValidGovVotes}
-                />
-                <MyVerifingPanel currentRound={currentVoteRound > 2 ? currentVoteRound - BigInt(2) : BigInt(0)} />
-                <Todeploy token={currentToken} />
-              </>
-            ) : (
-              // 无治理票时显示质押按钮
-              <div className="flex flex-col items-center p-4 mt-4">
-                <div className="text-center mb-4 text-greyscale-500">您当前没有治理票，获取治理票后才能治理</div>
-                <Button className="w-1/2" asChild>
-                  <Link href={`/gov/stakelp/?symbol=${currentToken?.symbol}`}>质押获取治理票</Link>
-                </Button>
-
-                {/* 添加两个并排的链接 */}
-                <div className="flex space-x-8 mt-4 justify-center text-sm">
-                  <Link
-                    href={`/vote/actions/?symbol=${currentToken?.symbol}`}
-                    className="text-secondary hover:text-blue-800"
-                  >
-                    投票中的行动 &gt;&gt;
-                  </Link>
-                  <Link
-                    href={`/verify/actions/?symbol=${currentToken?.symbol}`}
-                    className="text-secondary hover:text-blue-800"
-                  >
-                    验证中的行动 &gt;&gt;
-                  </Link>
-                </div>
-              </div>
-            )}
           </>
         )}
       </main>

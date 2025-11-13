@@ -61,7 +61,6 @@ const nextConfig = {
       '/articles': { page: '/articles' },
       '/dex': { page: '/dex' },
       '/dex/deposit': { page: '/dex/deposit' },
-      '/dex/query': { page: '/dex/query' },
       '/dex/swap': { page: '/dex/swap' },
       '/dex/withdraw': { page: '/dex/withdraw' },
       '/gov': { page: '/gov' },
