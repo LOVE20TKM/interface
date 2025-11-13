@@ -172,6 +172,7 @@ const TokenPage = () => {
   const currentAddresses = {
     token: currentToken?.address,
     parent: currentToken?.parentTokenAddress,
+    usdt: process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}`,
     sl: currentToken?.slTokenAddress,
     st: currentToken?.stTokenAddress,
     pair: currentToken?.uniswapV2PairAddress,
@@ -427,6 +428,10 @@ const TokenPage = () => {
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
                       <AddressItem name={`${currentToken.symbol}(当前代币)`} address={currentAddresses.token} />
                       <AddressItem name={`${currentToken.parentTokenSymbol}(父币)`} address={currentAddresses.parent} />
+                      <AddressItem
+                        name={`${process.env.NEXT_PUBLIC_USDT_SYMBOL}(稳定币)`}
+                        address={currentAddresses.usdt}
+                      />
                       <AddressItem name="流动性质押凭证SL代币" address={currentAddresses.sl} />
                       <AddressItem name="代币质押凭证ST代币" address={currentAddresses.st} />
                     </CardContent>
