@@ -52,9 +52,9 @@ export default function BasicInfo({ actionInfo, currentRound }: BasicInfoProps) 
             <Lightbulb className="w-4 h-4 md:w-5 md:h-5 text-amber-500 flex-shrink-0 mt-0.5" />
             <div>
               <span className="font-medium text-amber-700">小贴士：</span>
-              每轮验证阶段，会从所有参与行动的代币中，随机抽取{' '}
+              每轮验证阶段，会从所有参与行动的代币中，随机选中{' '}
               <span className="font-mono font-semibold">{actionInfo.body.maxRandomAccounts.toString()}</span>{' '}
-              份代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。
+              份代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。被抽中的地址，经社群验证后，会获得行动铸币激励。
             </div>
           </div>
         </div>
