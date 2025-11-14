@@ -340,7 +340,7 @@ const removeTrailingZeros = (num: number, digits: number): string => {
   return num.toFixed(digits).replace(/\.?0+$/, '');
 };
 
-// 格式化百分比显示
+// 格式化百分比显示（向下取整）
 export const formatPercentage = (value: number | string): string => {
   if (value === undefined || value === null || isNaN(Number(value))) return '-%';
 
@@ -348,10 +348,62 @@ export const formatPercentage = (value: number | string): string => {
   const absNum = Math.abs(num);
 
   if (absNum === 0) return '0%';
-  if (absNum >= 100) return num.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '%';
-  if (absNum >= 10) return removeTrailingZeros(num, 1) + '%';
-  if (absNum >= 1) return removeTrailingZeros(num, 2) + '%';
-  if (absNum >= 0.1) return removeTrailingZeros(num, 3) + '%';
-  if (absNum >= 0.01) return removeTrailingZeros(num, 4) + '%';
-  return removeTrailingZeros(num, 6) + '%';
+
+  // 向下取整的辅助函数
+  const floorToDecimals = (n: number, digits: number): string => {
+    const isNegative = n < 0;
+    const absN = Math.abs(n);
+
+    if (digits === 0) {
+      // 截断到整数
+      const flooredNum = isNegative ? -Math.floor(absN) : Math.floor(absN);
+      return flooredNum.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+
+    // 使用 toFixed 增加精度，然后手动截断，避免浮点数精度问题
+    // toFixed 会返回字符串，我们用它来确保有足够的小数位
+    const fixedStr = absN.toFixed(digits + 5); // 额外增加5位精度
+    const dotIndex = fixedStr.indexOf('.');
+
+    if (dotIndex === -1) {
+      // 没有小数点，说明是整数
+      const result = isNegative ? -absN : absN;
+      return result.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+
+    // 截取到指定的小数位数
+    const integerPart = fixedStr.substring(0, dotIndex);
+    const decimalPart = fixedStr.substring(dotIndex + 1, dotIndex + 1 + digits);
+
+    // 重新组合
+    let floored = parseFloat(`${integerPart}.${decimalPart}`);
+
+    // 检查结果是否为 0（包括 -0）
+    if (floored === 0) {
+      return '0';
+    }
+
+    // 恢复符号
+    const result = isNegative ? -floored : floored;
+
+    // 格式化并去除末尾的0
+    return result
+      .toLocaleString(undefined, {
+        maximumFractionDigits: digits,
+        minimumFractionDigits: 0,
+      })
+      .replace(/(\.\d*?)0+$/, '$1') // 删除小数部分末尾的0
+      .replace(/\.$/, ''); // 删除末尾的小数点（如果有）
+  };
+
+  if (absNum >= 100) return floorToDecimals(num, 0) + '%';
+  if (absNum >= 10) return floorToDecimals(num, 1) + '%';
+  if (absNum >= 1) return floorToDecimals(num, 2) + '%';
+  if (absNum >= 0.1) return floorToDecimals(num, 3) + '%';
+  if (absNum >= 0.01) return floorToDecimals(num, 4) + '%';
+
+  // 对于非常小的数字（< 0.01），也使用4位小数
+  // 如果结果为0，则返回0%
+  const result = floorToDecimals(num, 4);
+  return result === '0' ? '0%' : result + '%';
 };

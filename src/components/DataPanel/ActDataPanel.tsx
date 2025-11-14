@@ -1,5 +1,12 @@
 'use client';
-import React from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
+
+// my hooks
+import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useAction19PoolValue } from '@/src/hooks/composite/useAction19PoolValue';
+
+// my contexts
+import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my components
 import { formatTokenAmount } from '@/src/lib/format';
@@ -21,6 +28,31 @@ const ActDataPanel: React.FC<ActDataPanelProps> = ({
   isPendingJoinedAmount,
   isPendingReward,
 }) => {
+  const { token } = useContext(TokenContext) || {};
+
+  // 获取19号行动的u池资产价值
+  const {
+    totalPoolValue: action19PoolValue,
+    isLoading: isLoadingAction19Pool,
+    error: errorAction19Pool,
+  } = useAction19PoolValue({
+    tokenAddress: token?.address as `0x${string}`,
+    enabled: !!token?.address,
+  });
+
+  // 计算总成本：参与代币 + 19号行动的u池资产
+  const totalCost = useMemo(() => {
+    return (totalJoinedAmount ?? BigInt(0)) + action19PoolValue;
+  }, [totalJoinedAmount, action19PoolValue]);
+
+  // 错误处理
+  const { handleContractError } = useHandleContractError();
+  useEffect(() => {
+    if (errorAction19Pool) {
+      handleContractError(errorAction19Pool, 'join');
+    }
+  }, [errorAction19Pool]);
+
   return (
     <div className="px-4">
       <div className="w-full border rounded-lg p-0">
@@ -40,10 +72,10 @@ const ActDataPanel: React.FC<ActDataPanelProps> = ({
         </div>
         <div className="text-center text-xs mb-2 text-greyscale-500">
           预估年化收益率（APY）：
-          {isPendingJoinedAmount || isPendingReward ? (
+          {isPendingJoinedAmount || isPendingReward || isLoadingAction19Pool ? (
             <LoadingIcon />
           ) : (
-            calculateActionAPY(expectedReward, totalJoinedAmount)
+            calculateActionAPY(expectedReward, totalCost)
           )}
         </div>
       </div>

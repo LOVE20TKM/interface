@@ -86,7 +86,7 @@ const MyVerifingPanel: React.FC<MyVerifingPanelProps> = ({ currentRound, showBtn
   }
 
   return (
-    <div className="flex-col items-center px-4 pb-2">
+    <div className="flex-col items-center px-0 pb-2">
       <div className="flex justify-between items-center mb-2">
         <LeftTitle title="我的验证" />
         {showBtn && currentRound >= BigInt(1) && (

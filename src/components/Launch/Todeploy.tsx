@@ -55,7 +55,7 @@ const Todeploy: React.FC<{ token: Token }> = ({ token }) => {
     Number(MIN_GOV_REWARD_MINTS) - (Number(numOfMintGovRewardByAccount ?? 0) % Number(MIN_GOV_REWARD_MINTS));
 
   return (
-    <div className="p-4">
+    <div className="py-4">
       <div className="flex justify-between items-center mb-2">
         <LeftTitle title="子币发射" />
         {remainingLaunchCount && remainingLaunchCount && (

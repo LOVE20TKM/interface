@@ -90,6 +90,14 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
   const [verifierAddress, setVerifierAddress] = useState<string>('');
   const [isLoadingVerifierScores, setIsLoadingVerifierScores] = useState(false);
 
+  // 二次确认对话框状态
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [confirmDialogMessage, setConfirmDialogMessage] = useState('');
+  const [pendingSubmitData, setPendingSubmitData] = useState<{
+    currentAbstainVotes: bigint;
+    scoresArrayForSubmit: bigint[];
+  } | null>(null);
+
   // 验证者打分数据 - 使用真正的批量合约调用
   const [enableVerifierScores, setEnableVerifierScores] = useState(false);
 
@@ -485,6 +493,88 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
     return true;
   };
 
+  // 检查是否有异常高分或过多0分
+  const checkAbnormalScores = (): { hasAbnormal: boolean; message: string } => {
+    // 地址少于3个时不检查
+    if (!verificationInfos || verificationInfos.length < 3) {
+      return { hasAbnormal: false, message: '' };
+    }
+
+    const warnings: string[] = [];
+    const totalAddresses = verificationInfos.length;
+
+    // 收集所有地址的分数（不包括弃权票）
+    const addressScores: { address: string; score: number; index: number }[] = [];
+    const zeroScoreAddresses: { address: string; index: number }[] = [];
+
+    verificationInfos.forEach((info, index) => {
+      const score = parseInt(scores[info.account]) || 0;
+      if (score > 0) {
+        // 收集有分数的地址
+        addressScores.push({ address: info.account, score, index });
+      } else {
+        // 收集0分的地址
+        zeroScoreAddresses.push({ address: info.account, index });
+      }
+    });
+
+    //todo: 去掉19号行动的特殊检查
+    // 检查1: 0分地址是否超过1/10
+    if (zeroScoreAddresses.length > totalAddresses / 10 && actionId !== BigInt(19)) {
+      warnings.push(`有 ${zeroScoreAddresses.length} 个地址被打了0分`);
+    }
+
+    // 检查2: 异常高分
+    // 如果有效分数少于2个，不检查异常高分
+    if (addressScores.length >= 2) {
+      // 按分数降序排序
+      addressScores.sort((a, b) => b.score - a.score);
+
+      const maxScore = addressScores[0].score;
+
+      // 找到第一个与最大分数不同的分数（合并相同得分）
+      let secondMaxScore = 0;
+      for (let i = 1; i < addressScores.length; i++) {
+        if (addressScores[i].score < maxScore) {
+          secondMaxScore = addressScores[i].score;
+          break;
+        }
+      }
+
+      // 如果最大得分大于第2大不同得分的5倍
+      if (secondMaxScore > 0 && maxScore > secondMaxScore * 5) {
+        // 收集所有最大得分的地址
+        const maxScoreAddresses = addressScores.filter((item) => item.score === maxScore);
+
+        if (maxScoreAddresses.length === 1) {
+          const row = maxScoreAddresses[0].index + 1;
+          const last4 = maxScoreAddresses[0].address.slice(-4);
+          warnings.push(`第 ${row} 行地址 ${last4} 得分 ${maxScore} 比其他得分大很多`);
+        } else {
+          // 多个地址有相同的最高分
+          const rowsAndLast4 = maxScoreAddresses
+            .map((item) => `${item.index + 1}(${item.address.slice(-4)})`)
+            .join('、');
+          warnings.push(`第 ${rowsAndLast4} 行地址得分都是 ${maxScore}，比其他得分大很多`);
+        }
+      }
+    }
+
+    // 返回结果
+    if (warnings.length > 0) {
+      const message = warnings.join('，') + '，请确认是否提交？';
+      return { hasAbnormal: true, message };
+    }
+
+    return { hasAbnormal: false, message: '' };
+  };
+
+  // 实际执行提交的函数
+  const executeSubmit = (currentAbstainVotes: bigint, scoresArrayForSubmit: bigint[]) => {
+    console.log('currentAbstainVotes', currentAbstainVotes);
+    verify(token?.address as `0x${string}`, actionId, currentAbstainVotes, scoresArrayForSubmit);
+  };
+
   const handleSubmit = () => {
     if (!checkInput()) {
       return;
@@ -572,8 +662,33 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
       return;
     }
 
-    console.log('currentAbstainVotes', currentAbstainVotes);
-    verify(token?.address as `0x${string}`, actionId, currentAbstainVotes, scoresArrayForSubmit);
+    // 检查是否有异常高分
+    const abnormalCheck = checkAbnormalScores();
+    if (abnormalCheck.hasAbnormal) {
+      // 保存提交数据，等待用户确认
+      setPendingSubmitData({ currentAbstainVotes, scoresArrayForSubmit });
+      setConfirmDialogMessage(abnormalCheck.message);
+      setShowConfirmDialog(true);
+      return;
+    }
+
+    // 没有异常，直接提交
+    executeSubmit(currentAbstainVotes, scoresArrayForSubmit);
+  };
+
+  // 处理确认对话框的确认操作
+  const handleConfirmSubmit = () => {
+    if (pendingSubmitData) {
+      executeSubmit(pendingSubmitData.currentAbstainVotes, pendingSubmitData.scoresArrayForSubmit);
+      setPendingSubmitData(null);
+    }
+    setShowConfirmDialog(false);
+  };
+
+  // 处理确认对话框的取消操作
+  const handleCancelSubmit = () => {
+    setPendingSubmitData(null);
+    setShowConfirmDialog(false);
   };
 
   // 提交成功
@@ -683,7 +798,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                   )}
                 </div>
               </th>
-              <th className="pb-3 text-center whitespace-nowrap w-14 text-sm text-greyscale-500">分配</th>
+              <th className="pb-3 text-center whitespace-nowrap w-12 text-sm text-greyscale-500">分配</th>
             </tr>
           </thead>
           <tbody>
@@ -730,13 +845,13 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                         onChange={(e) => handleScoreChange(info.account, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(e, index)}
                         tabIndex={index + 1}
-                        className="w-12 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-16 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         disabled={isPending || isConfirmed}
                       />
                       <span className="text-greyscale-500 text-xs">分</span>
                     </div>
                   </td>
-                  <td className="py-1 text-center w-14 whitespace-nowrap px-1">
+                  <td className="py-1 text-center w-12 whitespace-nowrap px-0">
                     <div className="leading-tight">
                       <div className="text-sm text-greyscale-600 ">
                         {formatPercentage(addressPercentages[info.account] || 0)}
@@ -774,13 +889,13 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                       onChange={(e) => handleAbstainScoreChange(e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, verificationInfos?.length || 0)}
                       tabIndex={(verificationInfos?.length || 0) + 1}
-                      className="w-10 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-14 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       disabled={isPending || isConfirmed}
                     />
                     <span className="text-greyscale-500 text-xs">分</span>
                   </div>
                 </td>
-                <td className="py-2 text-center w-14 whitespace-nowrap px-1">
+                <td className="py-2 text-center w-14 whitespace-nowrap px-0">
                   <div className="text-greyscale-500 text-xs leading-tight">
                     <div>{formatPercentage(abstainPercentage)}</div>
                     <div>
@@ -910,6 +1025,30 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
               ) : (
                 '确认'
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 异常分数确认对话框 */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span>友情提醒</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <p className="text-base text-gray-700 leading-relaxed">{confirmDialogMessage}</p>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={handleCancelSubmit} className="flex-1">
+              取消提交
+            </Button>
+            <Button onClick={handleConfirmSubmit} className="flex-1 ">
+              确认提交
             </Button>
           </DialogFooter>
         </DialogContent>

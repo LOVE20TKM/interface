@@ -64,7 +64,7 @@ const MyVotingPanel: React.FC<MyVotingPanelProps> = ({
   const validGovVotes = externalValidGovVotes || BigInt(0);
 
   return (
-    <div className="flex-col items-center px-4 py-2">
+    <div className="flex-col items-center px-0 py-2">
       <div className="flex justify-between items-center mb-2">
         <LeftTitle title="我的投票" />
         <Button variant="link" className="text-secondary border-secondary" asChild>

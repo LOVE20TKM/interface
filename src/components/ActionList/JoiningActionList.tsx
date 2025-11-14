@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { ChevronRight, UserPen } from 'lucide-react';
@@ -17,6 +17,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useRewardAvailable } from '@/src/hooks/contracts/useLOVE20Mint';
+import { useAction19PoolValue } from '@/src/hooks/composite/useAction19PoolValue';
 
 // my components
 import RoundLite from '@/src/components/Common/RoundLite';
@@ -47,6 +48,16 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
     error: errorRewardAvailable,
   } = useRewardAvailable((token?.address as `0x${string}`) || '');
 
+  // 获取19号行动的u池资产价值
+  const {
+    totalPoolValue: action19PoolValue,
+    isLoading: isLoadingAction19Pool,
+    error: errorAction19Pool,
+  } = useAction19PoolValue({
+    tokenAddress: token?.address as `0x${string}`,
+    enabled: !!token?.address,
+  });
+
   // 计算所有 joinableActions 的总票数，用于计算投票占比
   const totalVotes = joinableActions?.reduce((acc, action) => acc + action.votesNum, BigInt(0)) || BigInt(0);
 
@@ -60,7 +71,11 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
     if (errorRewardAvailable) {
       handleContractError(errorRewardAvailable, 'mint');
     }
-  }, [errorRewardAvailable]);
+
+    if (errorAction19Pool) {
+      handleContractError(errorAction19Pool, 'join');
+    }
+  }, [errorRewardAvailable, errorAction19Pool]);
 
   return (
     <div className="px-4 py-6">
@@ -101,6 +116,12 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
 
               // 根据是否有激励设置背景色
               const cardClassName = actionDetail.hasReward ? 'shadow-none' : 'shadow-none bg-gray-50';
+
+              // 计算成本：对于19号行动，需要加上u池资产价值
+              const isAction19 = actionDetail.action.head.id === BigInt(19);
+              const actionCost = isAction19
+                ? joinableActions[index].joinedAmount + action19PoolValue
+                : joinableActions[index].joinedAmount;
 
               return (
                 <Card key={actionDetail.action.head.id} className={cardClassName}>
@@ -147,12 +168,12 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
                           <span>
                             <span className="text-greyscale-400 text-xs mr-1">APY</span>
                             <span className="text-secondary text-xs">
-                              {isPendingRewardAvailable ? (
+                              {isPendingRewardAvailable || (isAction19 && isLoadingAction19Pool) ? (
                                 <LoadingIcon />
                               ) : (
                                 calculateActionAPY(
                                   BigInt(Math.floor(Number(expectedReward || BigInt(0)) * voteRatio)),
-                                  joinedAmount,
+                                  actionCost,
                                 )
                               )}
                             </span>

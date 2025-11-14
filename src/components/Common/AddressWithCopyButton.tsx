@@ -62,7 +62,7 @@ const AddressWithCopyButton: React.FC<AddressWithCopyButtonProps> = ({
   };
 
   return (
-    <span className="inline-flex items-center space-x-2">
+    <span className="inline-flex items-center space-x-1">
       {word && <span className="text-xs">{word}</span>}
       {showAddress && !colorClassName2 && (
         <span className={`font-mono text-xs ${colorClassName ?? 'text-greyscale-500'}`}>

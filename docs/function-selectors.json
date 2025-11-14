@@ -1,0 +1,2420 @@
+[
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "votesNum",
+    "signature": "votesNum(address,uint256)",
+    "selector": "0x00afdbae"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "submitInfo",
+    "signature": "submitInfo(address,uint256,uint256)",
+    "selector": "0x01759ece"
+  },
+  {
+    "contract": "UniswapV2Factory",
+    "functionName": "feeTo",
+    "signature": "feeTo()",
+    "selector": "0x017e7e58"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "swap",
+    "signature": "swap(uint256,uint256,address,bytes)",
+    "selector": "0x022c0d9f"
+  },
+  {
+    "contract": "UniswapV2Router",
+    "functionName": "removeLiquidityETH",
+    "signature": "removeLiquidityETH(address,uint256,uint256,uint256,address,uint256)",
+    "selector": "0x02751cec"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "tokenDetails",
+    "signature": "tokenDetails(address[])",
+    "selector": "0x02e9c4c1"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "votesNumsByAccount",
+    "signature": "votesNumsByAccount(address,uint256,address)",
+    "selector": "0x032c889b"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "hasUnmintedActionRewardOfLastRounds",
+    "signature": "hasUnmintedActionRewardOfLastRounds(address,address,uint256)",
+    "selector": "0x062798eb"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "init",
+    "signature": "init(address,address,address,address)",
+    "selector": "0x06552ff3"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "parentPool",
+    "signature": "parentPool()",
+    "selector": "0x0661a25e"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "name",
+    "signature": "name()",
+    "selector": "0x06fdde03"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "name",
+    "signature": "name()",
+    "selector": "0x06fdde03"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "name",
+    "signature": "name()",
+    "selector": "0x06fdde03"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "name",
+    "signature": "name()",
+    "selector": "0x06fdde03"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "name",
+    "signature": "name()",
+    "selector": "0x06fdde03"
+  },
+  {
+    "contract": "WETH9",
+    "functionName": "name",
+    "signature": "name()",
+    "selector": "0x06fdde03"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "minter",
+    "signature": "minter()",
+    "selector": "0x07546172"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "minter",
+    "signature": "minter()",
+    "selector": "0x07546172"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "minter",
+    "signature": "minter()",
+    "selector": "0x07546172"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "getReserves",
+    "signature": "getReserves()",
+    "selector": "0x0902f1ac"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "joinedActions",
+    "signature": "joinedActions(address,address)",
+    "selector": "0x0941940a"
+  },
+  {
+    "contract": "UniswapV2Factory",
+    "functionName": "feeToSetter",
+    "signature": "feeToSetter()",
+    "selector": "0x094b7415"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "approve",
+    "signature": "approve(address,uint256)",
+    "selector": "0x095ea7b3"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "approve",
+    "signature": "approve(address,uint256)",
+    "selector": "0x095ea7b3"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "approve",
+    "signature": "approve(address,uint256)",
+    "selector": "0x095ea7b3"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "approve",
+    "signature": "approve(address,uint256)",
+    "selector": "0x095ea7b3"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "approve",
+    "signature": "approve(address,uint256)",
+    "selector": "0x095ea7b3"
+  },
+  {
+    "contract": "WETH9",
+    "functionName": "approve",
+    "signature": "approve(address,uint256)",
+    "selector": "0x095ea7b3"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "WETHAddress",
+    "signature": "WETHAddress()",
+    "selector": "0x0af88b24"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "actionRewardMintedByAccount",
+    "signature": "actionRewardMintedByAccount(address,uint256,uint256,address)",
+    "selector": "0x0beaac04"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "launchingTokensCount",
+    "signature": "launchingTokensCount()",
+    "selector": "0x0dfa1345"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "token0",
+    "signature": "token0()",
+    "selector": "0x0dfe1681"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "tokenPairInfoWithAccount",
+    "signature": "tokenPairInfoWithAccount(address,address)",
+    "selector": "0x0f8d2120"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "contributed",
+    "signature": "contributed(address,address)",
+    "selector": "0x108ec44e"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "stakedAmountOfVerifiers",
+    "signature": "stakedAmountOfVerifiers(address,uint256)",
+    "selector": "0x13232bb6"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "initialize",
+    "signature": "initialize(address,address,address,address,address,address,uint256)",
+    "selector": "0x1460e390"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "govVotesNum",
+    "signature": "govVotesNum(address)",
+    "selector": "0x15664f8d"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "initialized",
+    "signature": "initialized()",
+    "selector": "0x158ef93e"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "contributeFirstTokenWithETH",
+    "signature": "contributeFirstTokenWithETH(address,address)",
+    "selector": "0x176c4edc"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "totalSupply",
+    "signature": "totalSupply()",
+    "selector": "0x18160ddd"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "totalSupply",
+    "signature": "totalSupply()",
+    "selector": "0x18160ddd"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "totalSupply",
+    "signature": "totalSupply()",
+    "selector": "0x18160ddd"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "totalSupply",
+    "signature": "totalSupply()",
+    "selector": "0x18160ddd"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "totalSupply",
+    "signature": "totalSupply()",
+    "selector": "0x18160ddd"
+  },
+  {
+    "contract": "WETH9",
+    "functionName": "totalSupply",
+    "signature": "totalSupply()",
+    "selector": "0x18160ddd"
+  },
+  {
+    "contract": "UniswapV2Router",
+    "functionName": "swapExactTokensForETH",
+    "signature": "swapExactTokensForETH(uint256,uint256,address[],address,uint256)",
+    "selector": "0x18cbafe5"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "withdrawFee",
+    "signature": "withdrawFee(address)",
+    "selector": "0x1ac3ddeb"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "amountByActionId",
+    "signature": "amountByActionId(address,uint256)",
+    "selector": "0x1dc10886"
+  },
+  {
+    "contract": "UniswapV2Factory",
+    "functionName": "allPairs",
+    "signature": "allPairs(uint256)",
+    "selector": "0x1e3dd18b"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "claim",
+    "signature": "claim(address)",
+    "selector": "0x1e83409a"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "launchingTokensAtIndex",
+    "signature": "launchingTokensAtIndex(uint256)",
+    "selector": "0x1ec06d47"
+  },
+  {
+    "contract": "UniswapV2Router",
+    "functionName": "getAmountsIn",
+    "signature": "getAmountsIn(uint256,address[])",
+    "selector": "0x1f00ca74"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "MAX_WITHDRAWABLE_TO_FEE_RATIO",
+    "signature": "MAX_WITHDRAWABLE_TO_FEE_RATIO()",
+    "selector": "0x1fb91389"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "submit",
+    "signature": "submit(address,uint256)",
+    "selector": "0x203dd666"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "authorActionIdsAtIndex",
+    "signature": "authorActionIdsAtIndex(address,address,uint256)",
+    "selector": "0x2078afff"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "launchToken",
+    "signature": "launchToken(string,address)",
+    "selector": "0x20fe512e"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "vote",
+    "signature": "vote(address,uint256[],uint256[])",
+    "selector": "0x22ad487f"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "stakeLiquidity",
+    "signature": "stakeLiquidity(address,uint256,uint256,uint256,address)",
+    "selector": "0x231cc991"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "transferFrom",
+    "signature": "transferFrom(address,address,uint256)",
+    "selector": "0x23b872dd"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "transferFrom",
+    "signature": "transferFrom(address,address,uint256)",
+    "selector": "0x23b872dd"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "transferFrom",
+    "signature": "transferFrom(address,address,uint256)",
+    "selector": "0x23b872dd"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "transferFrom",
+    "signature": "transferFrom(address,address,uint256)",
+    "selector": "0x23b872dd"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "transferFrom",
+    "signature": "transferFrom(address,address,uint256)",
+    "selector": "0x23b872dd"
+  },
+  {
+    "contract": "WETH9",
+    "functionName": "transferFrom",
+    "signature": "transferFrom(address,address,uint256)",
+    "selector": "0x23b872dd"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "MAX_VERIFICATION_KEY_LENGTH",
+    "signature": "MAX_VERIFICATION_KEY_LENGTH()",
+    "selector": "0x25704b8d"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "joinAddress",
+    "signature": "joinAddress()",
+    "selector": "0x258cd1e4"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "joinAddress",
+    "signature": "joinAddress()",
+    "selector": "0x258cd1e4"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "joinAddress",
+    "signature": "joinAddress()",
+    "selector": "0x258cd1e4"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "joinAddress",
+    "signature": "joinAddress()",
+    "selector": "0x258cd1e4"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "joinAddress",
+    "signature": "joinAddress()",
+    "selector": "0x258cd1e4"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "childTokensAtIndex",
+    "signature": "childTokensAtIndex(address,uint256)",
+    "selector": "0x269d1f56"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "canSubmit",
+    "signature": "canSubmit(address,address)",
+    "selector": "0x27347970"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "RANDOM_SEED_UPDATE_MIN_PER_TEN_THOUSAND",
+    "signature": "RANDOM_SEED_UPDATE_MIN_PER_TEN_THOUSAND()",
+    "selector": "0x27e92918"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "actionRewardBurnChecked",
+    "signature": "actionRewardBurnChecked(address,uint256)",
+    "selector": "0x283c897e"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "stakeTokenUpdatedRoundsAtIndex",
+    "signature": "stakeTokenUpdatedRoundsAtIndex(address,uint256)",
+    "selector": "0x291f5a78"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "initialize",
+    "signature": "initialize(address,address,address,uint256,uint256,uint256,uint256)",
+    "selector": "0x2b4656c8"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "isSubmitted",
+    "signature": "isSubmitted(address,uint256,uint256)",
+    "selector": "0x2bed3c29"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "isLOVE20Token",
+    "signature": "isLOVE20Token(address)",
+    "selector": "0x2e03e22a"
+  },
+  {
+    "contract": "WETH9",
+    "functionName": "withdraw",
+    "signature": "withdraw(uint256)",
+    "selector": "0x2e1a7d4d"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "calculateRoundActionReward",
+    "signature": "calculateRoundActionReward(address)",
+    "selector": "0x2efa0375"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "FIRST_PARENT_TOKEN_FUNDRAISING_GOAL",
+    "signature": "FIRST_PARENT_TOKEN_FUNDRAISING_GOAL()",
+    "selector": "0x30364e01"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "actionInfosByIds",
+    "signature": "actionInfosByIds(address,uint256[])",
+    "selector": "0x303f8611"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "PERMIT_TYPEHASH",
+    "signature": "PERMIT_TYPEHASH()",
+    "selector": "0x30adf81f"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "PERMIT_TYPEHASH",
+    "signature": "PERMIT_TYPEHASH()",
+    "selector": "0x30adf81f"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "decimals",
+    "signature": "decimals()",
+    "selector": "0x313ce567"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "decimals",
+    "signature": "decimals()",
+    "selector": "0x313ce567"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "decimals",
+    "signature": "decimals()",
+    "selector": "0x313ce567"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "decimals",
+    "signature": "decimals()",
+    "selector": "0x313ce567"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "decimals",
+    "signature": "decimals()",
+    "selector": "0x313ce567"
+  },
+  {
+    "contract": "WETH9",
+    "functionName": "decimals",
+    "signature": "decimals()",
+    "selector": "0x313ce567"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "votesNums",
+    "signature": "votesNums(address,uint256)",
+    "selector": "0x31445e87"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "DOMAIN_SEPARATOR",
+    "signature": "DOMAIN_SEPARATOR()",
+    "selector": "0x3644e515"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "DOMAIN_SEPARATOR",
+    "signature": "DOMAIN_SEPARATOR()",
+    "selector": "0x3644e515"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "govRewardsByAccountByRounds",
+    "signature": "govRewardsByAccountByRounds(address,address,uint256,uint256)",
+    "selector": "0x37160bf2"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "votesNumByAccountByActionId",
+    "signature": "votesNumByAccountByActionId(address,uint256,address,uint256)",
+    "selector": "0x38d76f4c"
+  },
+  {
+    "contract": "UniswapV2Router",
+    "functionName": "swapExactTokensForTokens",
+    "signature": "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+    "selector": "0x38ed1739"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "verifiedAddressesByAction",
+    "signature": "verifiedAddressesByAction(address,uint256,uint256)",
+    "selector": "0x3945105f"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "increaseAllowance",
+    "signature": "increaseAllowance(address,uint256)",
+    "selector": "0x39509351"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "increaseAllowance",
+    "signature": "increaseAllowance(address,uint256)",
+    "selector": "0x39509351"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "increaseAllowance",
+    "signature": "increaseAllowance(address,uint256)",
+    "selector": "0x39509351"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "actionRewardsByAccountByActionIdByRounds",
+    "signature": "actionRewardsByAccountByActionIdByRounds(address,address,uint256,uint256,uint256)",
+    "selector": "0x3a6bec66"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "actionSubmitsAtIndex",
+    "signature": "actionSubmitsAtIndex(address,uint256,uint256)",
+    "selector": "0x3a6cf3d6"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "rewardBurned",
+    "signature": "rewardBurned(address)",
+    "selector": "0x3b2b378d"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "roundByBlockNumber",
+    "signature": "roundByBlockNumber(uint256)",
+    "selector": "0x3bdf9f13"
+  },
+  {
+    "contract": "LOVE20Random",
+    "functionName": "roundByBlockNumber",
+    "signature": "roundByBlockNumber(uint256)",
+    "selector": "0x3bdf9f13"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "roundByBlockNumber",
+    "signature": "roundByBlockNumber(uint256)",
+    "selector": "0x3bdf9f13"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "roundByBlockNumber",
+    "signature": "roundByBlockNumber(uint256)",
+    "selector": "0x3bdf9f13"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "roundByBlockNumber",
+    "signature": "roundByBlockNumber(uint256)",
+    "selector": "0x3bdf9f13"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "roundByBlockNumber",
+    "signature": "roundByBlockNumber(uint256)",
+    "selector": "0x3bdf9f13"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "uniswapV2PairReserves",
+    "signature": "uniswapV2PairReserves()",
+    "selector": "0x3c18f6b8"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "voteAddress",
+    "signature": "voteAddress()",
+    "selector": "0x3d6dc928"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "voteAddress",
+    "signature": "voteAddress()",
+    "selector": "0x3d6dc928"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "voteAddress",
+    "signature": "voteAddress()",
+    "selector": "0x3d6dc928"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "voteAddress",
+    "signature": "voteAddress()",
+    "selector": "0x3d6dc928"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "voteAddress",
+    "signature": "voteAddress()",
+    "selector": "0x3d6dc928"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "voteAddress",
+    "signature": "voteAddress()",
+    "selector": "0x3d6dc928"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "voteAddress",
+    "signature": "voteAddress()",
+    "selector": "0x3d6dc928"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "randomAccounts",
+    "signature": "randomAccounts(address,uint256,uint256)",
+    "selector": "0x409d2dc1"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "mint",
+    "signature": "mint(address,uint256)",
+    "selector": "0x40c10f19"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "claimInfo",
+    "signature": "claimInfo(address,address)",
+    "selector": "0x41377d10"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "numOfMintGovRewardByAccount",
+    "signature": "numOfMintGovRewardByAccount(address,address)",
+    "selector": "0x41cb94ca"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "childTokensCount",
+    "signature": "childTokensCount(address)",
+    "selector": "0x41f65001"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "lastContributedBlock",
+    "signature": "lastContributedBlock(address,address)",
+    "selector": "0x424218bc"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "mintAddress",
+    "signature": "mintAddress()",
+    "selector": "0x425d4980"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "mintAddress",
+    "signature": "mintAddress()",
+    "selector": "0x425d4980"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "mintAddress",
+    "signature": "mintAddress()",
+    "selector": "0x425d4980"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "mintAddress",
+    "signature": "mintAddress()",
+    "selector": "0x425d4980"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "mintAddress",
+    "signature": "mintAddress()",
+    "selector": "0x425d4980"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "mintAddress",
+    "signature": "mintAddress()",
+    "selector": "0x425d4980"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "burn",
+    "signature": "burn(uint256)",
+    "selector": "0x42966c68"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "tokenDetailBySymbol",
+    "signature": "tokenDetailBySymbol(string)",
+    "selector": "0x432ae384"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "launchedChildTokensByPage",
+    "signature": "launchedChildTokensByPage(address,uint256,uint256)",
+    "selector": "0x43e10458"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "randomAccountsByActionIdCount",
+    "signature": "randomAccountsByActionIdCount(address,uint256,uint256)",
+    "selector": "0x45be6ae9"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "parentTokenAddress",
+    "signature": "parentTokenAddress()",
+    "selector": "0x47502b53"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "parentTokenAddress",
+    "signature": "parentTokenAddress()",
+    "selector": "0x47502b53"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "calculateRoundGovReward",
+    "signature": "calculateRoundGovReward(address)",
+    "selector": "0x4779b135"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "initialize",
+    "signature": "initialize(address,address)",
+    "selector": "0x485cc955"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "initialize",
+    "signature": "initialize(address,address)",
+    "selector": "0x485cc955"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "canVote",
+    "signature": "canVote(address,address)",
+    "selector": "0x4873d68d"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "uniswapV2Pair",
+    "signature": "uniswapV2Pair()",
+    "selector": "0x49bd5a5e"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "submitNewAction",
+    "signature": "submitNewAction(address,tuple)",
+    "selector": "0x4acb477f"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "govVerifyReward",
+    "signature": "govVerifyReward(address,uint256)",
+    "selector": "0x4c51ea59"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "contribute",
+    "signature": "contribute(address,uint256,address)",
+    "selector": "0x4cbc1553"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "actionsCount",
+    "signature": "actionsCount(address)",
+    "selector": "0x4f2de952"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "withdraw",
+    "signature": "withdraw(address)",
+    "selector": "0x51cff8d9"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "withdraw",
+    "signature": "withdraw(address)",
+    "selector": "0x51cff8d9"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "init",
+    "signature": "init(address,address,address,address,address,address,address,address)",
+    "selector": "0x525240c0"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "accountVotingHistory",
+    "signature": "accountVotingHistory(address,address,uint256,uint256)",
+    "selector": "0x531438fc"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "TOKEN_SYMBOL_LENGTH",
+    "signature": "TOKEN_SYMBOL_LENGTH()",
+    "selector": "0x5337eaab"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "launchedTokensAtIndex",
+    "signature": "launchedTokensAtIndex(uint256)",
+    "selector": "0x546147e4"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "launchingChildTokensByPage",
+    "signature": "launchingChildTokensByPage(address,uint256,uint256)",
+    "selector": "0x54cc9270"
+  },
+  {
+    "contract": "UniswapV2Factory",
+    "functionName": "allPairsLength",
+    "signature": "allPairsLength()",
+    "selector": "0x574f2ba3"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "price0CumulativeLast",
+    "signature": "price0CumulativeLast()",
+    "selector": "0x5909c0d5"
+  },
+  {
+    "contract": "LOVE20Random",
+    "functionName": "updateRandomSeed",
+    "signature": "updateRandomSeed(address)",
+    "selector": "0x5939ccd7"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "reservedAvailable",
+    "signature": "reservedAvailable(address)",
+    "selector": "0x5943f2ca"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "MIN_GOV_REWARD_MINTS_TO_LAUNCH",
+    "signature": "MIN_GOV_REWARD_MINTS_TO_LAUNCH()",
+    "selector": "0x5979190b"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "launchingTokensByPage",
+    "signature": "launchingTokensByPage(uint256,uint256)",
+    "selector": "0x599d57d1"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "childTokensByLauncherCount",
+    "signature": "childTokensByLauncherCount(address,address)",
+    "selector": "0x5a173c19"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "price1CumulativeLast",
+    "signature": "price1CumulativeLast()",
+    "selector": "0x5a3d5493"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "govBoostReward",
+    "signature": "govBoostReward(address,uint256)",
+    "selector": "0x5ae37b8e"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "phaseBlocks",
+    "signature": "phaseBlocks()",
+    "selector": "0x60a918b7"
+  },
+  {
+    "contract": "LOVE20Random",
+    "functionName": "phaseBlocks",
+    "signature": "phaseBlocks()",
+    "selector": "0x60a918b7"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "phaseBlocks",
+    "signature": "phaseBlocks()",
+    "selector": "0x60a918b7"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "phaseBlocks",
+    "signature": "phaseBlocks()",
+    "selector": "0x60a918b7"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "phaseBlocks",
+    "signature": "phaseBlocks()",
+    "selector": "0x60a918b7"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "phaseBlocks",
+    "signature": "phaseBlocks()",
+    "selector": "0x60a918b7"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "votesNumByActionId",
+    "signature": "votesNumByActionId(address,uint256,uint256)",
+    "selector": "0x62dd9129"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "scoreWithReward",
+    "signature": "scoreWithReward(address,uint256)",
+    "selector": "0x64a85573"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "verifyAddress",
+    "signature": "verifyAddress()",
+    "selector": "0x65925b90"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "verifyAddress",
+    "signature": "verifyAddress()",
+    "selector": "0x65925b90"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "verifyAddress",
+    "signature": "verifyAddress()",
+    "selector": "0x65925b90"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "verifyAddress",
+    "signature": "verifyAddress()",
+    "selector": "0x65925b90"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "remainingLaunchCount",
+    "signature": "remainingLaunchCount(address,address)",
+    "selector": "0x6667076c"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "authorActionIdsCount",
+    "signature": "authorActionIdsCount(address,address)",
+    "selector": "0x678eb4ed"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "verificationInfoUpdateRoundsAtIndex",
+    "signature": "verificationInfoUpdateRoundsAtIndex(address,address,uint256,string,uint256)",
+    "selector": "0x680a8c9a"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "actionIdsByAccountAtIndex",
+    "signature": "actionIdsByAccountAtIndex(address,address,uint256)",
+    "selector": "0x695796d3"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "prepareRewardIfNeeded",
+    "signature": "prepareRewardIfNeeded(address)",
+    "selector": "0x69808e1b"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "mint",
+    "signature": "mint(address)",
+    "selector": "0x6a627842"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "mint",
+    "signature": "mint(address)",
+    "selector": "0x6a627842"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "mint",
+    "signature": "mint(address)",
+    "selector": "0x6a627842"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "verificationInfoByRound",
+    "signature": "verificationInfoByRound(address,address,uint256,string,uint256)",
+    "selector": "0x6a8989c6"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "verifyingActions",
+    "signature": "verifyingActions(address,uint256,address)",
+    "selector": "0x6b52a03d"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "actionIdsByAccount",
+    "signature": "actionIdsByAccount(address,address)",
+    "selector": "0x6c6ef62c"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "govData",
+    "signature": "govData(address)",
+    "selector": "0x6c83d205"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "rewardMinted",
+    "signature": "rewardMinted(address)",
+    "selector": "0x6d597ba3"
+  },
+  {
+    "contract": "LOVE20Random",
+    "functionName": "randomSeed",
+    "signature": "randomSeed(uint256)",
+    "selector": "0x6fc5a2d6"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "balanceOf",
+    "signature": "balanceOf(address)",
+    "selector": "0x70a08231"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "balanceOf",
+    "signature": "balanceOf(address)",
+    "selector": "0x70a08231"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "balanceOf",
+    "signature": "balanceOf(address)",
+    "selector": "0x70a08231"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "balanceOf",
+    "signature": "balanceOf(address)",
+    "selector": "0x70a08231"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "balanceOf",
+    "signature": "balanceOf(address)",
+    "selector": "0x70a08231"
+  },
+  {
+    "contract": "WETH9",
+    "functionName": "balanceOf",
+    "signature": "balanceOf(address)",
+    "selector": "0x70a08231"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "actionReward",
+    "signature": "actionReward(address,uint256)",
+    "selector": "0x73c3041c"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "score",
+    "signature": "score(address,uint256)",
+    "selector": "0x7401edba"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "firstTokenAddress",
+    "signature": "firstTokenAddress()",
+    "selector": "0x742583c8"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "ACTION_REWARD_MIN_VOTE_PER_THOUSAND",
+    "signature": "ACTION_REWARD_MIN_VOTE_PER_THOUSAND()",
+    "selector": "0x74474ebe"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "kLast",
+    "signature": "kLast()",
+    "selector": "0x7464fc3d"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "actionSubmitsCount",
+    "signature": "actionSubmitsCount(address,uint256)",
+    "selector": "0x74f6114a"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "actionVoters",
+    "signature": "actionVoters(address,uint256,uint256)",
+    "selector": "0x750102a0"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "initialize",
+    "signature": "initialize(address,uint256,uint256)",
+    "selector": "0x7a1ac61e"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "verifyingActionsByAccount",
+    "signature": "verifyingActionsByAccount(address,uint256,address)",
+    "selector": "0x7b986254"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "verificationInfosByAccount",
+    "signature": "verificationInfosByAccount(address,uint256,address)",
+    "selector": "0x7e1ddfd6"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "actionVerificationMatrix",
+    "signature": "actionVerificationMatrix(address,uint256,uint256)",
+    "selector": "0x7ea704c0"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "nonces",
+    "signature": "nonces(address)",
+    "selector": "0x7ecebe00"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "nonces",
+    "signature": "nonces(address)",
+    "selector": "0x7ecebe00"
+  },
+  {
+    "contract": "LOVE20Random",
+    "functionName": "prevRandomSeed",
+    "signature": "prevRandomSeed()",
+    "selector": "0x7f1c4794"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "join",
+    "signature": "join(address,uint256,uint256,string[])",
+    "selector": "0x7fc34362"
+  },
+  {
+    "contract": "UniswapV2Router",
+    "functionName": "swapExactETHForTokens",
+    "signature": "swapExactETHForTokens(uint256,address[],address,uint256)",
+    "selector": "0x7ff36ab5"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "launchInfo",
+    "signature": "launchInfo(address)",
+    "selector": "0x8025bf9a"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "launchingChildTokensAtIndex",
+    "signature": "launchingChildTokensAtIndex(address,uint256)",
+    "selector": "0x80456e3c"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "indexToAccount",
+    "signature": "indexToAccount(address,uint256,uint256)",
+    "selector": "0x804fe20a"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "submitInfoBySubmitter",
+    "signature": "submitInfoBySubmitter(address,uint256,address)",
+    "selector": "0x812af51f"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "isRewardPrepared",
+    "signature": "isRewardPrepared(address,uint256)",
+    "selector": "0x81a2596f"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "mintActionReward",
+    "signature": "mintActionReward(address,uint256,uint256)",
+    "selector": "0x823ed39d"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "scoreByVerifierByActionId",
+    "signature": "scoreByVerifierByActionId(address,uint256,address,uint256)",
+    "selector": "0x8388a65a"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "PROMISED_WAITING_PHASES_MIN",
+    "signature": "PROMISED_WAITING_PHASES_MIN()",
+    "selector": "0x838ac582"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "isActionIdWithReward",
+    "signature": "isActionIdWithReward(address,uint256,uint256)",
+    "selector": "0x84e2f068"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "stakeAddress",
+    "signature": "stakeAddress()",
+    "selector": "0x85107367"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "stakeAddress",
+    "signature": "stakeAddress()",
+    "selector": "0x85107367"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "stakeAddress",
+    "signature": "stakeAddress()",
+    "selector": "0x85107367"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "stakeAddress",
+    "signature": "stakeAddress()",
+    "selector": "0x85107367"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "stakeAddress",
+    "signature": "stakeAddress()",
+    "selector": "0x85107367"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "stakeAddress",
+    "signature": "stakeAddress()",
+    "selector": "0x85107367"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "stakeAddress",
+    "signature": "stakeAddress()",
+    "selector": "0x85107367"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "stakeAddress",
+    "signature": "stakeAddress()",
+    "selector": "0x85107367"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "estimatedGovRewardOfCurrentRound",
+    "signature": "estimatedGovRewardOfCurrentRound(address)",
+    "selector": "0x856c41ed"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "accountStakeStatus",
+    "signature": "accountStakeStatus(address,address)",
+    "selector": "0x863ed5b6"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "actionInfosByPage",
+    "signature": "actionInfosByPage(address,uint256,uint256)",
+    "selector": "0x8790d725"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "actionSubmits",
+    "signature": "actionSubmits(address,uint256)",
+    "selector": "0x879e49c9"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "stakeTokenUpdatedRoundsByAccountAtIndex",
+    "signature": "stakeTokenUpdatedRoundsByAccountAtIndex(address,address,uint256)",
+    "selector": "0x896467d4"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "burn",
+    "signature": "burn(address)",
+    "selector": "0x89afcb44"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "burn",
+    "signature": "burn(address)",
+    "selector": "0x89afcb44"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "burn",
+    "signature": "burn(address)",
+    "selector": "0x89afcb44"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "currentRound",
+    "signature": "currentRound()",
+    "selector": "0x8a19c8bc"
+  },
+  {
+    "contract": "LOVE20Random",
+    "functionName": "currentRound",
+    "signature": "currentRound()",
+    "selector": "0x8a19c8bc"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "currentRound",
+    "signature": "currentRound()",
+    "selector": "0x8a19c8bc"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "currentRound",
+    "signature": "currentRound()",
+    "selector": "0x8a19c8bc"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "currentRound",
+    "signature": "currentRound()",
+    "selector": "0x8a19c8bc"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "currentRound",
+    "signature": "currentRound()",
+    "selector": "0x8a19c8bc"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "govReward",
+    "signature": "govReward(address,uint256)",
+    "selector": "0x8ad778af"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "cumulatedTokenAmountByAccount",
+    "signature": "cumulatedTokenAmountByAccount(address,uint256,address)",
+    "selector": "0x8bf1fecc"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "hasTriggeredRandomUpdate",
+    "signature": "hasTriggeredRandomUpdate(address,uint256,address)",
+    "selector": "0x8c6b5d82"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "ROUND_REWARD_ACTION_PER_THOUSAND",
+    "signature": "ROUND_REWARD_ACTION_PER_THOUSAND()",
+    "selector": "0x8ce4c792"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "actionRewardsByAccountOfLastRounds",
+    "signature": "actionRewardsByAccountOfLastRounds(address,address,uint256)",
+    "selector": "0x8d2887b4"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "participatedTokensCount",
+    "signature": "participatedTokensCount(address)",
+    "selector": "0x8e283c93"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "tokensByPage",
+    "signature": "tokensByPage(uint256,uint256)",
+    "selector": "0x8e3ff1dc"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "PROMISED_WAITING_PHASES_MAX",
+    "signature": "PROMISED_WAITING_PHASES_MAX()",
+    "selector": "0x90510c34"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "WITHDRAW_WAITING_BLOCKS",
+    "signature": "WITHDRAW_WAITING_BLOCKS()",
+    "selector": "0x91c394b9"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "symbol",
+    "signature": "symbol()",
+    "selector": "0x95d89b41"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "symbol",
+    "signature": "symbol()",
+    "selector": "0x95d89b41"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "symbol",
+    "signature": "symbol()",
+    "selector": "0x95d89b41"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "symbol",
+    "signature": "symbol()",
+    "selector": "0x95d89b41"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "symbol",
+    "signature": "symbol()",
+    "selector": "0x95d89b41"
+  },
+  {
+    "contract": "WETH9",
+    "functionName": "symbol",
+    "signature": "symbol()",
+    "selector": "0x95d89b41"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "canJoin",
+    "signature": "canJoin(address,uint256,address)",
+    "selector": "0x96061e16"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "scoreByVerifier",
+    "signature": "scoreByVerifier(address,uint256,address)",
+    "selector": "0x965aa9d0"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "scoreByActionId",
+    "signature": "scoreByActionId(address,uint256,uint256)",
+    "selector": "0x986fd1d8"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "accountsByActionIdCount",
+    "signature": "accountsByActionIdCount(address,uint256,uint256)",
+    "selector": "0x98b9fd35"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "prepareRandomAccountsIfNeeded",
+    "signature": "prepareRandomAccountsIfNeeded(address,uint256)",
+    "selector": "0x9ae295bd"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "cumulatedTokenAmount",
+    "signature": "cumulatedTokenAmount(address,uint256)",
+    "selector": "0x9be48b06"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "launchedChildTokensAtIndex",
+    "signature": "launchedChildTokensAtIndex(address,uint256)",
+    "selector": "0x9cd5edb0"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "burnForParentToken",
+    "signature": "burnForParentToken(uint256)",
+    "selector": "0x9d01272e"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "tokenAddress",
+    "signature": "tokenAddress()",
+    "selector": "0x9d76ea58"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "tokenAddress",
+    "signature": "tokenAddress()",
+    "selector": "0x9d76ea58"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "isActionIdVoted",
+    "signature": "isActionIdVoted(address,uint256,uint256)",
+    "selector": "0x9e857852"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "validGovVotes",
+    "signature": "validGovVotes(address,address)",
+    "selector": "0xa1c9e604"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "stakeToken",
+    "signature": "stakeToken(address,uint256,uint256,address)",
+    "selector": "0xa1d43e1d"
+  },
+  {
+    "contract": "UniswapV2Factory",
+    "functionName": "setFeeToSetter",
+    "signature": "setFeeToSetter(address)",
+    "selector": "0xa2e74af6"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "actionInfo",
+    "signature": "actionInfo(address,uint256)",
+    "selector": "0xa3770fcb"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "amountByActionIdByAccount",
+    "signature": "amountByActionIdByAccount(address,uint256,address)",
+    "selector": "0xa3782c23"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "rewardReserved",
+    "signature": "rewardReserved(address)",
+    "selector": "0xa3eb87e8"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "decreaseAllowance",
+    "signature": "decreaseAllowance(address,uint256)",
+    "selector": "0xa457c2d7"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "decreaseAllowance",
+    "signature": "decreaseAllowance(address,uint256)",
+    "selector": "0xa457c2d7"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "decreaseAllowance",
+    "signature": "decreaseAllowance(address,uint256)",
+    "selector": "0xa457c2d7"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "participatedTokensByPage",
+    "signature": "participatedTokensByPage(address,uint256,uint256)",
+    "selector": "0xa539761b"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "joinableActions",
+    "signature": "joinableActions(address,uint256,address)",
+    "selector": "0xa5635ca8"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "tokenDetail",
+    "signature": "tokenDetail(address)",
+    "selector": "0xa5d0e8de"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "tokensCount",
+    "signature": "tokensCount()",
+    "selector": "0xa64ed8ba"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "transfer",
+    "signature": "transfer(address,uint256)",
+    "selector": "0xa9059cbb"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "transfer",
+    "signature": "transfer(address,uint256)",
+    "selector": "0xa9059cbb"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "transfer",
+    "signature": "transfer(address,uint256)",
+    "selector": "0xa9059cbb"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "transfer",
+    "signature": "transfer(address,uint256)",
+    "selector": "0xa9059cbb"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "transfer",
+    "signature": "transfer(address,uint256)",
+    "selector": "0xa9059cbb"
+  },
+  {
+    "contract": "WETH9",
+    "functionName": "transfer",
+    "signature": "transfer(address,uint256)",
+    "selector": "0xa9059cbb"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "stakeTokenUpdatedRoundsByAccountCount",
+    "signature": "stakeTokenUpdatedRoundsByAccountCount(address,address)",
+    "selector": "0xa9a248db"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "rewardAvailable",
+    "signature": "rewardAvailable(address)",
+    "selector": "0xaaea8533"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "amountByAccount",
+    "signature": "amountByAccount(address,address)",
+    "selector": "0xaba73f93"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "boostRewardBurnCheckeded",
+    "signature": "boostRewardBurnCheckeded(address,uint256)",
+    "selector": "0xac796f2f"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "slAddress",
+    "signature": "slAddress()",
+    "selector": "0xad225491"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "launchedChildTokensCount",
+    "signature": "launchedChildTokensCount(address)",
+    "selector": "0xaf3fefe5"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "ROUND_REWARD_GOV_PER_THOUSAND",
+    "signature": "ROUND_REWARD_GOV_PER_THOUSAND()",
+    "selector": "0xaf8e6cbb"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "verificationInfoUpdateRoundsCount",
+    "signature": "verificationInfoUpdateRoundsCount(address,address,uint256,string)",
+    "selector": "0xb0c21cdc"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "MAX_GOV_BOOST_REWARD_MULTIPLIER",
+    "signature": "MAX_GOV_BOOST_REWARD_MULTIPLIER()",
+    "selector": "0xb2398720"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "originBlocks",
+    "signature": "originBlocks()",
+    "selector": "0xb2ad3730"
+  },
+  {
+    "contract": "LOVE20Random",
+    "functionName": "originBlocks",
+    "signature": "originBlocks()",
+    "selector": "0xb2ad3730"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "originBlocks",
+    "signature": "originBlocks()",
+    "selector": "0xb2ad3730"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "originBlocks",
+    "signature": "originBlocks()",
+    "selector": "0xb2ad3730"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "originBlocks",
+    "signature": "originBlocks()",
+    "selector": "0xb2ad3730"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "originBlocks",
+    "signature": "originBlocks()",
+    "selector": "0xb2ad3730"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "JOIN_END_PHASE_BLOCKS",
+    "signature": "JOIN_END_PHASE_BLOCKS()",
+    "selector": "0xb6f3ed6b"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "govRewardByAccount",
+    "signature": "govRewardByAccount(address,uint256,address)",
+    "selector": "0xb717e040"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "votingActions",
+    "signature": "votingActions(address,uint256,address)",
+    "selector": "0xb8aff382"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "randomAccountsByRandomSeed",
+    "signature": "randomAccountsByRandomSeed(address,uint256,uint256,uint256)",
+    "selector": "0xb94d9128"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "numOfAccounts",
+    "signature": "numOfAccounts(address,uint256)",
+    "selector": "0xba51c7a6"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "MINIMUM_LIQUIDITY",
+    "signature": "MINIMUM_LIQUIDITY()",
+    "selector": "0xba9a7a56"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "tokenAmountsBySlAmount",
+    "signature": "tokenAmountsBySlAmount(uint256)",
+    "selector": "0xba9ea66b"
+  },
+  {
+    "contract": "UniswapV2Router",
+    "functionName": "removeLiquidity",
+    "signature": "removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)",
+    "selector": "0xbaa2abde"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "initialize",
+    "signature": "initialize(address,address,address,uint256,uint256,uint256,uint256,uint256,uint256)",
+    "selector": "0xbb4a2509"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "tokenStatistics",
+    "signature": "tokenStatistics(address)",
+    "selector": "0xbbd82f0c"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "skim",
+    "signature": "skim(address)",
+    "selector": "0xbc25cf77"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "stakeTokenUpdatedRoundsCount",
+    "signature": "stakeTokenUpdatedRoundsCount(address)",
+    "selector": "0xbcf78a9f"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "tokenFactoryAddress",
+    "signature": "tokenFactoryAddress()",
+    "selector": "0xbe19f0a7"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "votedActionIdsAtIndex",
+    "signature": "votedActionIdsAtIndex(address,uint256,uint256)",
+    "selector": "0xbe1e34c5"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "scoreByActionIdByAccount",
+    "signature": "scoreByActionIdByAccount(address,uint256,uint256,address)",
+    "selector": "0xc0df7d59"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "launchAddress",
+    "signature": "launchAddress()",
+    "selector": "0xc457230a"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "launchAddress",
+    "signature": "launchAddress()",
+    "selector": "0xc457230a"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "launchAddress",
+    "signature": "launchAddress()",
+    "selector": "0xc457230a"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "factory",
+    "signature": "factory()",
+    "selector": "0xc45a0155"
+  },
+  {
+    "contract": "LOVE20Random",
+    "functionName": "initialize",
+    "signature": "initialize(address)",
+    "selector": "0xc4d66de8"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "randomAccountsByActionIdAtIndex",
+    "signature": "randomAccountsByActionIdAtIndex(address,uint256,uint256,uint256)",
+    "selector": "0xc6140a1c"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "stakeLiquidity",
+    "signature": "stakeLiquidity(address,uint256,uint256,uint256,uint256,uint256,address)",
+    "selector": "0xc6ef3bd3"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "verificationInfosByAction",
+    "signature": "verificationInfosByAction(address,uint256,uint256)",
+    "selector": "0xc710843a"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "actionRewardByActionIdByAccount",
+    "signature": "actionRewardByActionIdByAccount(address,uint256,uint256,address)",
+    "selector": "0xc7ef6560"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "abstentionScoreWithReward",
+    "signature": "abstentionScoreWithReward(address,uint256)",
+    "selector": "0xc8829af9"
+  },
+  {
+    "contract": "UniswapV2Factory",
+    "functionName": "createPair",
+    "signature": "createPair(address,address)",
+    "selector": "0xc9c65396"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "accountVotedActionIdsCount",
+    "signature": "accountVotedActionIdsCount(address,uint256,address)",
+    "selector": "0xcac59c38"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "stAddress",
+    "signature": "stAddress()",
+    "selector": "0xcbd4bac5"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "tokensAtIndex",
+    "signature": "tokensAtIndex(uint256)",
+    "selector": "0xcc86d17c"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "reserve",
+    "signature": "reserve()",
+    "selector": "0xcd3293de"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "mintGovReward",
+    "signature": "mintGovReward(address,uint256)",
+    "selector": "0xce5a66bb"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "initialize",
+    "signature": "initialize(address,address,address,uint256)",
+    "selector": "0xcf756fdf"
+  },
+  {
+    "contract": "UniswapV2Router",
+    "functionName": "getAmountsOut",
+    "signature": "getAmountsOut(uint256,address[])",
+    "selector": "0xd06ca61f"
+  },
+  {
+    "contract": "WETH9",
+    "functionName": "deposit",
+    "signature": "deposit()",
+    "selector": "0xd0e30db0"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "token1",
+    "signature": "token1()",
+    "selector": "0xd21220a7"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "accountToIndex",
+    "signature": "accountToIndex(address,uint256,address)",
+    "selector": "0xd34567be"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "permit",
+    "signature": "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)",
+    "selector": "0xd505accf"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "permit",
+    "signature": "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)",
+    "selector": "0xd505accf"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "maxSupply",
+    "signature": "maxSupply()",
+    "selector": "0xd5abeb01"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "randomAddress",
+    "signature": "randomAddress()",
+    "selector": "0xd5bee9f5"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "randomAddress",
+    "signature": "randomAddress()",
+    "selector": "0xd5bee9f5"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "SUBMIT_MIN_PER_THOUSAND",
+    "signature": "SUBMIT_MIN_PER_THOUSAND()",
+    "selector": "0xd6d15727"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "prefixSum",
+    "signature": "prefixSum(address,uint256,uint256)",
+    "selector": "0xd7a973ca"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "tokenAddressBySymbol",
+    "signature": "tokenAddressBySymbol(string)",
+    "selector": "0xd80989ed"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "verificationInfo",
+    "signature": "verificationInfo(address,address,uint256,string)",
+    "selector": "0xd8a23262"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "SECOND_HALF_MIN_BLOCKS",
+    "signature": "SECOND_HALF_MIN_BLOCKS()",
+    "selector": "0xdd38ea93"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "allowance",
+    "signature": "allowance(address,address)",
+    "selector": "0xdd62ed3e"
+  },
+  {
+    "contract": "LOVE20STToken",
+    "functionName": "allowance",
+    "signature": "allowance(address,address)",
+    "selector": "0xdd62ed3e"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "allowance",
+    "signature": "allowance(address,address)",
+    "selector": "0xdd62ed3e"
+  },
+  {
+    "contract": "UniswapV2ERC20",
+    "functionName": "allowance",
+    "signature": "allowance(address,address)",
+    "selector": "0xdd62ed3e"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "allowance",
+    "signature": "allowance(address,address)",
+    "selector": "0xdd62ed3e"
+  },
+  {
+    "contract": "WETH9",
+    "functionName": "allowance",
+    "signature": "allowance(address,address)",
+    "selector": "0xdd62ed3e"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "accountVotedActionIdsAtIndex",
+    "signature": "accountVotedActionIdsAtIndex(address,uint256,address,uint256)",
+    "selector": "0xde6a3408"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "launchingChildTokensCount",
+    "signature": "launchingChildTokensCount(address)",
+    "selector": "0xe02f08c7"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "updateVerificationInfo",
+    "signature": "updateVerificationInfo(address,uint256,string[],string[])",
+    "selector": "0xe04bb128"
+  },
+  {
+    "contract": "LOVE20SLToken",
+    "functionName": "tokenAmounts",
+    "signature": "tokenAmounts()",
+    "selector": "0xe1a9e331"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "caculateGovVotes",
+    "signature": "caculateGovVotes(uint256,uint256)",
+    "selector": "0xe1f1c387"
+  },
+  {
+    "contract": "LOVE20Mint",
+    "functionName": "govRewardMintedByAccount",
+    "signature": "govRewardMintedByAccount(address,uint256,address)",
+    "selector": "0xe26f8c17"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "childTokensByLauncherAtIndex",
+    "signature": "childTokensByLauncherAtIndex(address,address,uint256)",
+    "selector": "0xe32fa43a"
+  },
+  {
+    "contract": "LOVE20Hub",
+    "functionName": "submitAddress",
+    "signature": "submitAddress()",
+    "selector": "0xe388878f"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "submitAddress",
+    "signature": "submitAddress()",
+    "selector": "0xe388878f"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "submitAddress",
+    "signature": "submitAddress()",
+    "selector": "0xe388878f"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "submitAddress",
+    "signature": "submitAddress()",
+    "selector": "0xe388878f"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "submitAddress",
+    "signature": "submitAddress()",
+    "selector": "0xe388878f"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "submitAddress",
+    "signature": "submitAddress()",
+    "selector": "0xe388878f"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "initialize",
+    "signature": "initialize(uint256,uint256)",
+    "selector": "0xe4a30116"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "maxVotesNum",
+    "signature": "maxVotesNum(address,address)",
+    "selector": "0xe5229267"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "actionIdsByAccountCount",
+    "signature": "actionIdsByAccountCount(address,address)",
+    "selector": "0xe5add031"
+  },
+  {
+    "contract": "UniswapV2Factory",
+    "functionName": "getPair",
+    "signature": "getPair(address,address)",
+    "selector": "0xe6a43905"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "votedActionIdsCount",
+    "signature": "votedActionIdsCount(address,uint256)",
+    "selector": "0xe89a7c51"
+  },
+  {
+    "contract": "UniswapV2Router",
+    "functionName": "addLiquidity",
+    "signature": "addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)",
+    "selector": "0xe8e33700"
+  },
+  {
+    "contract": "LOVE20Submit",
+    "functionName": "actionsAtIndex",
+    "signature": "actionsAtIndex(address,uint256)",
+    "selector": "0xea215d30"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "childTokensByPage",
+    "signature": "childTokensByPage(address,uint256,uint256)",
+    "selector": "0xeb359e24"
+  },
+  {
+    "contract": "LOVE20MintViewer",
+    "functionName": "estimatedActionRewardOfCurrentRound",
+    "signature": "estimatedActionRewardOfCurrentRound(address)",
+    "selector": "0xeb66f7d2"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "scoreByVerifierByActionIdByAccount",
+    "signature": "scoreByVerifierByActionIdByAccount(address,uint256,address,uint256,address)",
+    "selector": "0xeefda394"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "launchedTokensByPage",
+    "signature": "launchedTokensByPage(uint256,uint256)",
+    "selector": "0xef57c543"
+  },
+  {
+    "contract": "LOVE20Random",
+    "functionName": "modifierAddress",
+    "signature": "modifierAddress()",
+    "selector": "0xf0342335"
+  },
+  {
+    "contract": "LOVE20RoundViewer",
+    "functionName": "init",
+    "signature": "init(address,address,address,address,address,address,address)",
+    "selector": "0xf0d4d592"
+  },
+  {
+    "contract": "LOVE20TokenViewer",
+    "functionName": "init",
+    "signature": "init(address,address,address,address,address,address,address)",
+    "selector": "0xf0d4d592"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "initialStakeRound",
+    "signature": "initialStakeRound(address)",
+    "selector": "0xf26fc94a"
+  },
+  {
+    "contract": "LOVE20Stake",
+    "functionName": "unstake",
+    "signature": "unstake(address)",
+    "selector": "0xf2888dbb"
+  },
+  {
+    "contract": "UniswapV2Router",
+    "functionName": "addLiquidityETH",
+    "signature": "addLiquidityETH(address,uint256,uint256,uint256,address,uint256)",
+    "selector": "0xf305d719"
+  },
+  {
+    "contract": "LOVE20Join",
+    "functionName": "withdraw",
+    "signature": "withdraw(address,uint256)",
+    "selector": "0xf3fef3a3"
+  },
+  {
+    "contract": "UniswapV2Factory",
+    "functionName": "setFeeTo",
+    "signature": "setFeeTo(address)",
+    "selector": "0xf46901ed"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "votesNumByAccount",
+    "signature": "votesNumByAccount(address,uint256,address)",
+    "selector": "0xf46d6fa8"
+  },
+  {
+    "contract": "LOVE20Token",
+    "functionName": "initialize",
+    "signature": "initialize(address,address,address,address)",
+    "selector": "0xf8c8765e"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "participatedTokensAtIndex",
+    "signature": "participatedTokensAtIndex(address,uint256)",
+    "selector": "0xfa20b63b"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "launchedTokensCount",
+    "signature": "launchedTokensCount()",
+    "selector": "0xfa9e0e92"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "accountsByActionIdAtIndex",
+    "signature": "accountsByActionIdAtIndex(address,uint256,uint256,uint256)",
+    "selector": "0xfadbda6f"
+  },
+  {
+    "contract": "LOVE20Vote",
+    "functionName": "votesNumsByAccountByActionIds",
+    "signature": "votesNumsByAccountByActionIds(address,uint256,address,uint256[])",
+    "selector": "0xfcc998a7"
+  },
+  {
+    "contract": "LOVE20Verify",
+    "functionName": "verify",
+    "signature": "verify(address,uint256,uint256,uint256[])",
+    "selector": "0xfe43a47e"
+  },
+  {
+    "contract": "LOVE20Launch",
+    "functionName": "PARENT_TOKEN_FUNDRAISING_GOAL",
+    "signature": "PARENT_TOKEN_FUNDRAISING_GOAL()",
+    "selector": "0xffd53ab6"
+  },
+  {
+    "contract": "UniswapV2Pair",
+    "functionName": "sync",
+    "signature": "sync()",
+    "selector": "0xfff6cae9"
+  }
+]
