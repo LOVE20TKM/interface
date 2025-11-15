@@ -27,6 +27,7 @@ import useTokenContext from '@/src/hooks/context/useTokenContext';
 // my components
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 // ================================================
 // Token 配置接口定义
@@ -189,6 +190,7 @@ const LiquidityQueryPanel: React.FC = () => {
 
   // 币对统计数据查询
   const {
+    pairAddress,
     pairExists: pairStatsExists,
     poolTotalSupply: statsTotalSupply,
     poolBaseReserve: statsBaseReserve,
@@ -249,8 +251,8 @@ const LiquidityQueryPanel: React.FC = () => {
           <form onSubmit={handleQuery} className="space-y-4">
             {/* 币对选择 */}
             <Card>
-              <CardContent className="p-4">
-                <div className="space-y-4">
+              <CardContent className="px-4 pt-4 pb-1">
+                <div className="space-y-1">
                   <div className="text-sm font-medium text-gray-700 mb-3 font-bold">选择交易对：</div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -288,6 +290,16 @@ const LiquidityQueryPanel: React.FC = () => {
                       </div>
                     </FormItem>
                   </div>
+
+                  {/* LP代币地址显示 */}
+                  {pairAddress && pairAddress !== '0x0000000000000000000000000000000000000000' && (
+                    <div className="">
+                      <div className="text-center justify-between">
+                        <span className="text-xs text-gray-600">LP代币地址：</span>
+                        <AddressWithCopyButton address={pairAddress} />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
