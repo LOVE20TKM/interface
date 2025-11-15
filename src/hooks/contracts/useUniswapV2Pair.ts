@@ -143,3 +143,27 @@ export const useToken1 = (pairAddress: `0x${string}` | undefined) => {
     error,
   };
 };
+
+/**
+ * 获取LP代币的symbol
+ */
+export const useLPSymbol = (pairAddress: `0x${string}` | undefined) => {
+  const {
+    data: symbol,
+    isLoading,
+    error,
+  } = useReadContract({
+    address: pairAddress,
+    abi: UniswapV2PairAbi,
+    functionName: 'symbol',
+    query: {
+      enabled: !!pairAddress && pairAddress !== '0x0000000000000000000000000000000000000000',
+    },
+  });
+
+  return {
+    lpSymbol: symbol as string | undefined,
+    isLoading,
+    error,
+  };
+};

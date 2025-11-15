@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useAccount } from 'wagmi';
-import { Search, HelpCircle } from 'lucide-react';
 
 // UI components
 import { Button } from '@/components/ui/button';
@@ -20,14 +19,15 @@ import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 // my hooks
 import { useLiquidityQuery } from '@/src/hooks/composite/useLiquidityQuery';
 import { usePairStats } from '@/src/hooks/composite/usePairStats';
+import { useLPSymbol } from '@/src/hooks/contracts/useUniswapV2Pair';
 
 // my context
 import useTokenContext from '@/src/hooks/context/useTokenContext';
 
 // my components
-import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import AddToMetamask from '@/src/components/Common/AddToMetamask';
 
 // ================================================
 // Token 配置接口定义
@@ -203,6 +203,9 @@ const LiquidityQueryPanel: React.FC = () => {
     targetToken,
   });
 
+  // 获取LP代币的symbol
+  const { lpSymbol } = useLPSymbol(pairAddress);
+
   // 流动性查询
   const {
     pairExists,
@@ -293,10 +296,15 @@ const LiquidityQueryPanel: React.FC = () => {
 
                   {/* LP代币地址显示 */}
                   {pairAddress && pairAddress !== '0x0000000000000000000000000000000000000000' && (
-                    <div className="">
-                      <div className="text-center justify-between">
-                        <span className="text-xs text-gray-600">LP代币地址：</span>
+                    <div className="mt-3 pb-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="text-xs text-gray-600 whitespace-nowrap">LP代币地址：</span>
                         <AddressWithCopyButton address={pairAddress} />
+                        <AddToMetamask
+                          tokenAddress={pairAddress as `0x${string}`}
+                          tokenSymbol={lpSymbol || 'LP' + baseToken.symbol + '-' + targetToken.symbol}
+                          tokenDecimals={token.decimals}
+                        />
                       </div>
                     </div>
                   )}
