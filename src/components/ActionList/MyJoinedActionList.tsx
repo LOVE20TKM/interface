@@ -108,7 +108,7 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
                         </div>
                         {action.votesNum > 0 ? (
                           action.hasReward ? (
-                            <span className="text-secondary text-xs">进行中</span>
+                            <></>
                           ) : (
                             <span className="text-error text-xs">无铸币激励</span>
                           )
