@@ -251,7 +251,7 @@ const LiquidityQueryPanel: React.FC = () => {
           <form onSubmit={handleQuery} className="space-y-4">
             {/* 币对选择 */}
             <Card>
-              <CardContent className="px-4 pt-4 pb-1">
+              <CardContent className="px-4 pt-4 pb-2">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-gray-700 mb-3 font-bold">选择交易对：</div>
 
