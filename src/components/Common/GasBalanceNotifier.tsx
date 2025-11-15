@@ -10,7 +10,7 @@ import AlertBox from '@/src/components/Common/AlertBox';
 import { formatTokenAmount } from '@/src/lib/format';
 
 // Gas 余额阈值（TKM）
-const GAS_THRESHOLD = BigInt(3e18); // 1 TKM
+const GAS_THRESHOLD = BigInt(10e18); // 1 TKM
 
 /**
  * 全局 Gas 余额提示器
