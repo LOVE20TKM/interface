@@ -1,5 +1,7 @@
 'use client';
-
+/**
+ * @description 查询当前地址的投票历史
+ */
 import React, { useContext, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/router';

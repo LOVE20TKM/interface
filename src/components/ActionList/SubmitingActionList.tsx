@@ -73,6 +73,7 @@ const SubmitingActionList: React.FC<SubmitingActionListProps> = ({ currentRound 
                 const isSubmitted = actionSubmits?.some((submit) => submit.actionId === action.head.id);
                 return !isSubmitted; // 只显示未推举的行动
               })
+              ?.sort((a, b) => Number(b.head.id - a.head.id)) // 按id倒序排序，最新的在前
               ?.map((action: ActionInfo, index: number) => {
                 return (
                   <Card key={action.head.id} className="shadow-none">
