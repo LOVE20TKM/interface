@@ -347,7 +347,7 @@ const LiquidityQueryPanel: React.FC = () => {
 
                       {/* 价格信息 */}
                       <div className="border-t pt-4">
-                        <div className="flex justify-between items-center">
+                        <div className="">
                           <div className="text-sm">
                             <span className="text-gray-600">1 {baseToken.symbol} = </span>
                             <span className="font-medium">
