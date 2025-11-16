@@ -541,12 +541,12 @@ const LiquidityPanel = () => {
     <div className="py-6 px-2">
       <div className="mb-6 flex items-center justify-between">
         <div className="text-sm">
-          <span className="text-gray-600">底池LP总数：</span>
+          <span className="text-gray-600">底池总LP:&nbsp;</span>
           <span className="text-secondary">{formatTokenAmount(lpTotalSupply || BigInt(0))}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="text-sm">
-            <span className="text-gray-600">我的LP：</span>
+            <span className="text-gray-600">我的LP:&nbsp;</span>
             <span className="text-secondary">
               {formatTokenAmount(lpBalance || BigInt(0))}
               {lpTotalSupply && lpTotalSupply > BigInt(0) && lpBalance && lpBalance > BigInt(0) && (
@@ -572,7 +572,7 @@ const LiquidityPanel = () => {
         <LeftTitle title="流动性添加" />
       </div>
 
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md md:max-w-2xl lg:max-w-4xl mx-auto">
         <Form {...form}>
           <form>
             {/* 基础代币输入框 */}

@@ -249,7 +249,7 @@ const LiquidityQueryPanel: React.FC = () => {
 
   return (
     <div className="py-2 px-0">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md md:max-w-2xl lg:max-w-4xl mx-auto">
         <Form {...form}>
           <form onSubmit={handleQuery} className="space-y-4">
             {/* 币对选择 */}

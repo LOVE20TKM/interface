@@ -46,7 +46,7 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
   return (
     <div className="py-6 px-2">
       <LeftTitle title="兑换代币" />
-      <div className="w-full max-w-md mt-4">
+      <div className="w-full max-w-md mt-4 md:max-w-2xl lg:max-w-4xl mx-auto">
         <SwapForm
           fromToken={fromToken}
           toToken={toToken}
