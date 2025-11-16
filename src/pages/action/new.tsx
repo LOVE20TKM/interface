@@ -211,7 +211,7 @@ export default function NewAction() {
   const router = useRouter();
   useEffect(() => {
     if (isSubmitted) {
-      router.push(`/vote/?symbol=${token?.symbol}`);
+      router.push(`/vote/batch?symbol=${token?.symbol}`);
     }
   }, [isSubmitted, router, token?.symbol]);
 

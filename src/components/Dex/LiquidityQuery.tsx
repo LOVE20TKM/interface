@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useAccount } from 'wagmi';
-import { Search, HelpCircle } from 'lucide-react';
 
 // UI components
 import { Button } from '@/components/ui/button';
@@ -20,13 +19,15 @@ import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 // my hooks
 import { useLiquidityQuery } from '@/src/hooks/composite/useLiquidityQuery';
 import { usePairStats } from '@/src/hooks/composite/usePairStats';
+import { useLPSymbol } from '@/src/hooks/contracts/useUniswapV2Pair';
 
 // my context
 import useTokenContext from '@/src/hooks/context/useTokenContext';
 
 // my components
-import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import AddToMetamask from '@/src/components/Common/AddToMetamask';
 
 // ================================================
 // Token 配置接口定义
@@ -189,6 +190,7 @@ const LiquidityQueryPanel: React.FC = () => {
 
   // 币对统计数据查询
   const {
+    pairAddress,
     pairExists: pairStatsExists,
     poolTotalSupply: statsTotalSupply,
     poolBaseReserve: statsBaseReserve,
@@ -200,6 +202,9 @@ const LiquidityQueryPanel: React.FC = () => {
     baseToken,
     targetToken,
   });
+
+  // 获取LP代币的symbol
+  const { lpSymbol } = useLPSymbol(pairAddress);
 
   // 流动性查询
   const {
@@ -244,13 +249,13 @@ const LiquidityQueryPanel: React.FC = () => {
 
   return (
     <div className="py-2 px-0">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md md:max-w-2xl lg:max-w-4xl mx-auto">
         <Form {...form}>
           <form onSubmit={handleQuery} className="space-y-4">
             {/* 币对选择 */}
             <Card>
-              <CardContent className="p-4">
-                <div className="space-y-4">
+              <CardContent className="px-4 pt-4 pb-2">
+                <div className="space-y-1">
                   <div className="text-sm font-medium text-gray-700 mb-3 font-bold">选择交易对：</div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -288,6 +293,21 @@ const LiquidityQueryPanel: React.FC = () => {
                       </div>
                     </FormItem>
                   </div>
+
+                  {/* LP代币地址显示 */}
+                  {pairAddress && pairAddress !== '0x0000000000000000000000000000000000000000' && (
+                    <div className="mt-3 pb-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="text-xs text-gray-600 whitespace-nowrap">LP代币地址：</span>
+                        <AddressWithCopyButton address={pairAddress} />
+                        <AddToMetamask
+                          tokenAddress={pairAddress as `0x${string}`}
+                          tokenSymbol={lpSymbol || 'LP' + baseToken.symbol + '-' + targetToken.symbol}
+                          tokenDecimals={token.decimals}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -327,7 +347,7 @@ const LiquidityQueryPanel: React.FC = () => {
 
                       {/* 价格信息 */}
                       <div className="border-t pt-4">
-                        <div className="flex justify-between items-center">
+                        <div className="">
                           <div className="text-sm">
                             <span className="text-gray-600">1 {baseToken.symbol} = </span>
                             <span className="font-medium">

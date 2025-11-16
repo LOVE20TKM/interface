@@ -118,7 +118,8 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
               const cardClassName = actionDetail.hasReward ? 'shadow-none' : 'shadow-none bg-gray-50';
 
               // 计算成本：对于19号行动，需要加上u池资产价值
-              const isAction19 = actionDetail.action.head.id === BigInt(19);
+              const isAction19 =
+                actionDetail.action.head.id === BigInt(19) || actionDetail.action.head.id === BigInt(15);
               const actionCost = isAction19
                 ? joinableActions[index].joinedAmount + action19PoolValue
                 : joinableActions[index].joinedAmount;

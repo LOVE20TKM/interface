@@ -28,7 +28,7 @@ export const formatTokenAmountInteger = (balance: bigint): string => {
 };
 
 // 取整方式枚举
-export type RoundingMode = 'round' | 'floor';
+export type RoundingMode = 'round' | 'floor' | 'ceil';
 
 // 【显示函数-自动选择小数位数】从wei到eth 并带有逗号分隔 例如从 1000000000000000000 转换为 1.0000
 export const formatTokenAmount = (
@@ -63,8 +63,17 @@ export const formatTokenAmount = (
         return new Intl.NumberFormat('en-US', {
           maximumFractionDigits: 0,
         }).format(Math.floor(intNum));
+      } else if (rounding === 'ceil') {
+        // 向上取整：如果有任何小数部分，就向上进位
+        let intNum = parseFloat(integerPart);
+        if (fractionalPart && fractionalPart !== '' && parseInt(fractionalPart) > 0) {
+          intNum += 1;
+        }
+        return new Intl.NumberFormat('en-US', {
+          maximumFractionDigits: 0,
+        }).format(intNum);
       } else {
-        // 需要根据小数部分判断是否进位
+        // round: 需要根据小数部分判断是否进位
         const firstDecimal = fractionalPart.charAt(0);
         let intNum = parseFloat(integerPart);
         if (firstDecimal && parseInt(firstDecimal) >= 5) {
@@ -82,6 +91,25 @@ export const formatTokenAmount = (
         const nextDigit = fractionalPart.charAt(digits);
         if (nextDigit && parseInt(nextDigit) >= 5) {
           // 需要进位
+          const fractionalNum = parseInt(processedFractional || '0') + 1;
+          const maxVal = Math.pow(10, digits);
+          if (fractionalNum >= maxVal) {
+            // 进位到整数部分
+            const newIntegerPart = (parseInt(integerPart) + 1).toString();
+            processedFractional = '0'.repeat(digits);
+            const result = parseFloat(`${newIntegerPart}.${processedFractional}`);
+            return new Intl.NumberFormat('en-US', {
+              maximumFractionDigits: digits,
+              minimumFractionDigits: 0,
+            }).format(result);
+          } else {
+            processedFractional = fractionalNum.toString().padStart(digits, '0');
+          }
+        }
+      } else if (rounding === 'ceil' && fractionalPart.length > digits) {
+        // 向上取整：只要后面还有数字（不全为0），就向上进位
+        const remainingPart = fractionalPart.substring(digits);
+        if (remainingPart && parseInt(remainingPart) > 0) {
           const fractionalNum = parseInt(processedFractional || '0') + 1;
           const maxVal = Math.pow(10, digits);
           if (fractionalNum >= maxVal) {
@@ -153,11 +181,69 @@ export const formatTokenAmount = (
     }).format(num);
   };
 
+  // 向上取整的辅助函数
+  const formatWithCeil = (num: number, digits: number): string => {
+    if (digits === 0) {
+      // 对于整数，直接向上取整
+      return new Intl.NumberFormat('en-US', {
+        maximumFractionDigits: 0,
+      }).format(Math.ceil(num));
+    } else {
+      // 对于小数，需要特别处理精度问题
+      const str = num.toString();
+      const parts = str.split('.');
+
+      if (parts.length === 1) {
+        // 整数部分
+        return new Intl.NumberFormat('en-US', {
+          maximumFractionDigits: digits,
+          minimumFractionDigits: 0,
+        }).format(num);
+      } else {
+        // 有小数部分，向上取整到指定位数
+        const integerPart = parts[0];
+        const fractionalPart = parts[1];
+        const truncatedFractional = fractionalPart.substring(0, digits);
+        const remainingPart = fractionalPart.substring(digits);
+
+        // 如果后面还有非零数字，需要向上进位
+        if (remainingPart && parseInt(remainingPart) > 0) {
+          const fractionalNum = parseInt(truncatedFractional || '0') + 1;
+          const maxVal = Math.pow(10, digits);
+          if (fractionalNum >= maxVal) {
+            // 进位到整数部分
+            const newInteger = parseInt(integerPart) + 1;
+            return new Intl.NumberFormat('en-US', {
+              maximumFractionDigits: digits,
+              minimumFractionDigits: 0,
+            }).format(newInteger);
+          } else {
+            const newFractional = fractionalNum.toString().padStart(digits, '0');
+            const reconstructed = parseFloat(`${integerPart}.${newFractional}`);
+            return new Intl.NumberFormat('en-US', {
+              maximumFractionDigits: digits,
+              minimumFractionDigits: 0,
+            }).format(reconstructed);
+          }
+        } else {
+          // 没有需要进位的部分
+          const reconstructed = parseFloat(`${integerPart}.${truncatedFractional || '0'}`);
+          return new Intl.NumberFormat('en-US', {
+            maximumFractionDigits: digits,
+            minimumFractionDigits: 0,
+          }).format(reconstructed);
+        }
+      }
+    }
+  };
+
   // 选择格式化函数
   const formatFunction = hasLostPrecision
     ? (num: number, digits: number) => formatWithStringPrecision(formatted, digits, roundingMode)
     : roundingMode === 'floor'
     ? formatWithFloor
+    : roundingMode === 'ceil'
+    ? formatWithCeil
     : formatWithRound;
 
   // 如果指定了小数位数，直接使用指定的位数

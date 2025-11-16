@@ -66,7 +66,7 @@ const ActionPanelForSubmit: React.FC<ActionPanelForJoinProps> = ({ actionId, sub
         duration: 2000, // 2秒
       });
       setTimeout(() => {
-        router.push(`/vote/?symbol=${token?.symbol}`);
+        router.push(`/vote/batch?symbol=${token?.symbol}`);
       }, 2000);
     }
   }, [isConfirmed, errSubmit]);
@@ -110,7 +110,7 @@ const ActionPanelForSubmit: React.FC<ActionPanelForJoinProps> = ({ actionId, sub
                 已推举
               </Button>
               {submitted && !isConfirmed && (
-                <Button onClick={() => router.push(`/vote/?symbol=${token?.symbol}`)} className="w-1/2">
+                <Button onClick={() => router.push(`/vote/batch?symbol=${token?.symbol}`)} className="w-1/2">
                   去投票
                 </Button>
               )}

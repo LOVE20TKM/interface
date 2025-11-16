@@ -1,5 +1,7 @@
 'use client';
-
+/*
+ * @description 查询投票中的行动
+ */
 import { useEffect } from 'react';
 
 // my hooks

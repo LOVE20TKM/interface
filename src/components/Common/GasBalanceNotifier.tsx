@@ -2,13 +2,15 @@
 
 import React, { useMemo } from 'react';
 import { useAccount, useBalance } from 'wagmi';
-import { formatUnits } from 'viem';
 
 // my components
 import AlertBox from '@/src/components/Common/AlertBox';
 
+// my lib
+import { formatTokenAmount } from '@/src/lib/format';
+
 // Gas 余额阈值（TKM）
-const GAS_THRESHOLD = BigInt(1e18); // 1 TKM
+const GAS_THRESHOLD = BigInt(10e18); // 1 TKM
 
 /**
  * 全局 Gas 余额提示器
@@ -30,14 +32,14 @@ const GasBalanceNotifier: React.FC = () => {
 
   // 判断是否需要显示提示
   const shouldShowWarning = useMemo(() => {
-    if (!balance || !balance.value) return false;
+    if (!balance || typeof balance.value !== 'bigint') return false;
     return balance.value < GAS_THRESHOLD;
   }, [balance]);
 
   // 格式化余额显示
   const formattedBalance = useMemo(() => {
-    if (!balance || !balance.value) return '0';
-    return formatUnits(balance.value, balance.decimals);
+    if (!balance || typeof balance.value !== 'bigint') return '0';
+    return formatTokenAmount(balance.value);
   }, [balance]);
 
   // 未连接钱包或余额充足时不显示
@@ -51,10 +53,9 @@ const GasBalanceNotifier: React.FC = () => {
         className="w-full"
         message={
           <span>
-            ⚠️ Gas 不足，请充值！当前余额：
-            <span className="font-semibold ml-1">
-              {parseFloat(formattedBalance).toFixed(4)} {balance?.symbol || 'TKM'}
-            </span>
+            ⚠️ 当前 <span className="font-semibold">TKM</span> 余额
+            <span className="font-semibold ml-1">{formattedBalance}</span>
+            &nbsp;过低，为避免交易失败，请及时充值！
           </span>
         }
       />

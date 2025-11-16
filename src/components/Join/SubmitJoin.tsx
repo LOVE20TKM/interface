@@ -19,8 +19,9 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
-import { useJoin } from '@/src/hooks/contracts/useLOVE20Join';
+import { useJoin, useJoinedAmountByActionId } from '@/src/hooks/contracts/useLOVE20Join';
 import { useVerificationInfosByAccount } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { calculateTokensFor100Percent } from '@/src/lib/probabilityUtils';
 
 // contexts / types / etc
 import { ActionInfo } from '@/src/types/love20types';
@@ -80,8 +81,20 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
     account as `0x${string}`,
   );
 
+  // 获取总代币数，用于计算100%概率所需代币
+  const { joinedAmountByActionId, error: errorJoinedAmount } = useJoinedAmountByActionId(
+    (token?.address as `0x${string}`) || '',
+    BigInt(actionInfo.head.id),
+  );
+
   // 定义授权状态变量：是否已完成代币授权
   const [isTokenApproved, setIsTokenApproved] = useState(false);
+
+  // 计算达到100%概率所需的代币数
+  const tokensFor100Percent =
+    joinedAmountByActionId && joinedAmountByActionId > BigInt(0)
+      ? calculateTokensFor100Percent(joinedAmountByActionId, Number(actionInfo.body.maxRandomAccounts || 0))
+      : BigInt(0);
 
   // 动态构造 zod schema
   const formSchema = z.object({
@@ -308,7 +321,10 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
     if (errAllowanceToken) {
       handleContractError(errAllowanceToken, 'token');
     }
-  }, [errorTokenBalance, errorVerificationInfo, errApprove, errorJoin, errAllowanceToken]);
+    if (errorJoinedAmount) {
+      handleContractError(errorJoinedAmount, 'join');
+    }
+  }, [errorTokenBalance, errorVerificationInfo, errApprove, errorJoin, errAllowanceToken, errorJoinedAmount]);
 
   // ------------------------------
   //  组件渲染
@@ -320,7 +336,15 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
   return (
     <>
       <div className="px-6 pt-6 pb-2">
-        <LeftTitle title={myStakedAmount ? '增加参与代币' : '参与行动'} />
+        <div className="flex items-center gap-2 mb-4">
+          <LeftTitle title={myStakedAmount ? '增加参与代币' : '参与行动'} />
+          {tokensFor100Percent > BigInt(0) && !myStakedAmount && (
+            <span className="text-sm text-gray-500">
+              （要100%概率被抽中，需{' '}
+              <span className="text-secondary"> {formatTokenAmount(tokensFor100Percent, 4, 'ceil')}</span> 代币）
+            </span>
+          )}
+        </div>
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
             {/* 参与代币数 */}

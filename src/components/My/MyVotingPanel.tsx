@@ -96,7 +96,7 @@ const MyVotingPanel: React.FC<MyVotingPanelProps> = ({
           <LoadingIcon />
         ) : validGovVotes > votesNumByAccount + BigInt(10) ? (
           <Button className="w-1/2" asChild>
-            <Link href={`/vote?symbol=${token.symbol}`}>去投票</Link>
+            <Link href={`/vote/batch/?symbol=${token.symbol}`}>去投票</Link>
           </Button>
         ) : (
           <Button disabled className="w-1/2">

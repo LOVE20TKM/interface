@@ -31,6 +31,7 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 
 // my utils
 import { LinkIfUrl } from '@/src/lib/stringUtils';
+import { calculateTokensNeededFor100Percent, calculateProbability } from '@/src/lib/probabilityUtils';
 
 interface ActionPanelForJoinProps {
   actionId: bigint;
@@ -88,13 +89,33 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
     joinedAmountByActionIdByAccount > 0 &&
     joinedAmountByActionId &&
     joinedAmountByActionId > 0;
+
+  // 计算参与占比
   const participationRatio = isJoined
     ? (Number(joinedAmountByActionIdByAccount) / Number(joinedAmountByActionId)) * 100
     : 0;
   const participationRatioStr = formatPercentage(participationRatio);
-  const probabilityStr = isJoined
-    ? formatPercentage(Math.min(participationRatio * Number(actionInfo?.body?.maxRandomAccounts || 0), 100))
-    : '0%';
+
+  // 计算被抽中概率
+  const probability =
+    isJoined && actionInfo
+      ? calculateProbability(
+          joinedAmountByActionIdByAccount || BigInt(0),
+          joinedAmountByActionId || BigInt(0),
+          Number(actionInfo.body.maxRandomAccounts || 0),
+        )
+      : 0;
+  const probabilityStr = formatPercentage(probability);
+
+  // 计算达到100%概率还需要的代币数
+  const tokensNeededFor100 =
+    isJoined && actionInfo
+      ? calculateTokensNeededFor100Percent(
+          joinedAmountByActionIdByAccount || BigInt(0),
+          joinedAmountByActionId || BigInt(0),
+          Number(actionInfo.body.maxRandomAccounts || 0),
+        )
+      : BigInt(0);
 
   // 获取验证信息
   const {
@@ -180,9 +201,9 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
   }
 
   return (
-    <div className="flex flex-col items-center px-4 pt-1">
+    <div className="flex flex-col items-center px-0 pt-1">
       {isJoined && (
-        <div className="stats w-full grid grid-cols-1 sm:grid-cols-2 divide-x-0 gap-2 sm:gap-0">
+        <div className="stats w-full grid grid-cols-2 divide-x-0 gap-4">
           <div className="stat place-items-center min-h-[120px] flex flex-col justify-center">
             <div className="stat-title">我的参与</div>
             <div className="stat-value text-2xl text-secondary">
@@ -194,7 +215,7 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
             </div>
             <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">{token?.symbol}数量</div>
           </div>
-          <div className="stat place-items-center min-h-[120px] flex flex-col justify-center">
+          <div className="stat place-items-center min-h-[120px] flex flex-col justify-center p-0">
             <div className="stat-title">被抽中验证概率</div>
             <div className="stat-value text-2xl text-secondary">{probabilityStr}</div>
             <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
@@ -203,7 +224,12 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
           </div>
         </div>
       )}
-
+      {probability < 100 && tokensNeededFor100 > BigInt(0) && (
+        <div className="text-sm mb-2 text-gray-500 whitespace-normal break-words text-center">
+          （要100%概率被抽中，还需{' '}
+          <span className="text-secondary"> {formatTokenAmount(tokensNeededFor100, 4, 'ceil')}</span> 代币）
+        </div>
+      )}
       {showJoinButton && (
         <>
           {!isJoined ? (
