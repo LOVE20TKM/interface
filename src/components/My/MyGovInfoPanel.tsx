@@ -143,7 +143,7 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
           </div>
           <div className="stat-desc text-xs">
             <Button variant="link" className="text-secondary font-normal border-secondary" asChild>
-              <Link href={`/gov/stakelp/?symbol=${token.symbol}`}>质押 获取治理票&nbsp;&gt;&gt;</Link>
+              <Link href={`/stake/stakelp/?symbol=${token.symbol}`}>质押 获取治理票&nbsp;&gt;&gt;</Link>
             </Button>
           </div>
         </div>
@@ -160,7 +160,7 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
           </div>
           <div className="stat-desc text-xs">
             <Button variant="link" className="text-secondary font-normal border-secondary" asChild>
-              <Link href={`/gov/staketoken?symbol=${token.symbol}`}>质押 增加治理收益&nbsp;&gt;&gt;</Link>
+              <Link href={`/stake/staketoken?symbol=${token.symbol}`}>质押 增加治理收益&nbsp;&gt;&gt;</Link>
             </Button>
           </div>
         </div>

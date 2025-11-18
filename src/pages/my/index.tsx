@@ -64,7 +64,7 @@ const MyPage = () => {
                     <LeftTitle title="我的治理资产" />
                     {hasStake && (
                       <Button variant="link" className="text-secondary border-secondary" asChild>
-                        <Link href={`/gov/unstake?symbol=${token?.symbol}`}>取消质押</Link>
+                        <Link href={`/stake/unstake?symbol=${token?.symbol}`}>取消质押</Link>
                       </Button>
                     )}
                   </div>
@@ -78,7 +78,7 @@ const MyPage = () => {
                     <LeftTitle title="我的治理资产" />
                     {hasStake && (
                       <Button variant="link" className="text-secondary border-secondary" asChild>
-                        <Link href={`/gov/unstake?symbol=${token?.symbol}`}>取消质押</Link>
+                        <Link href={`/stake/unstake?symbol=${token?.symbol}`}>取消质押</Link>
                       </Button>
                     )}
                   </div>

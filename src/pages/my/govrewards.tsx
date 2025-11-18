@@ -177,7 +177,7 @@ const GovRewardsPage: React.FC = () => {
                         <div className="inline-flex items-center justify-center">
                           <span>验证激励</span>
                           <Link
-                            href={`/gov/stakelp/?symbol=${token?.symbol || ''}`}
+                            href={`/stake/stakelp/?symbol=${token?.symbol || ''}`}
                             className="ml-1 text-greyscale-500 hover:text-secondary"
                             aria-label="验证激励说明"
                             title="验证激励说明"
@@ -190,7 +190,7 @@ const GovRewardsPage: React.FC = () => {
                         <div className="inline-flex items-center justify-center">
                           <span>加速激励</span>
                           <Link
-                            href={`/gov/staketoken/?symbol=${token?.symbol || ''}`}
+                            href={`/stake/staketoken/?symbol=${token?.symbol || ''}`}
                             className="ml-1 text-greyscale-500 hover:text-secondary"
                             aria-label="加速激励说明"
                             title="加速激励说明"

@@ -7,6 +7,10 @@ import Header from '@/src/components/Header';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import MyGovernanceAssetsPanel from '@/src/components/My/MyGovernanceAssetsPanel';
 
+/**
+ * 取消质押页面
+ * 用户可以取消质押SL代币和ST代币
+ */
 const UnstakePage = () => {
   const { token } = useContext(TokenContext) || {};
 
@@ -26,3 +30,4 @@ const UnstakePage = () => {
 };
 
 export default UnstakePage;
+

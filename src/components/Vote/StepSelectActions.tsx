@@ -97,7 +97,7 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
               <Link href={`/action/new/?symbol=${token?.symbol}`}>推举新行动</Link>
             </Button>
             <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
-              <Link href={`/vote/actions4submit?symbol=${token?.symbol}`}>推举历史行动</Link>
+              <Link href={`/submit/actions?symbol=${token?.symbol}`}>推举历史行动</Link>
             </Button>
           </div>
         )}
@@ -118,7 +118,7 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
                       onChange={() => handleCheckboxChange(BigInt(action.head.id))}
                     />
                     <Link
-                      href={`/action/detail?id=${action.head.id}&type=vote&symbol=${token?.symbol}`}
+                      href={`/vote/single?id=${action.head.id}&symbol=${token?.symbol}`}
                       key={action.head.id}
                       className="w-full"
                     >
@@ -129,7 +129,7 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
                       </CardHeader>
                       <CardContent className="px-3 pt-1 pb-2">
                         <div className="flex justify-between mt-1 text-sm">
-                          <span className="flex items-center">
+                          {/* <span className="flex items-center">
                             <UserPen className="text-greyscale-400 mr-1 h-3 w-3" />
                             <span className="text-greyscale-400">
                               <AddressWithCopyButton
@@ -137,7 +137,7 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
                                 showCopyButton={false}
                               />
                             </span>
-                          </span>
+                          </span> */}
                           <span>
                             <span className="text-greyscale-400 mr-1">投票数</span>
                             <span className="text-secondary">{formatTokenAmount(votingAction.votesNum)}</span>
@@ -167,7 +167,7 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
           <div className="text-center mt-8">
             <div className="text-base text-greyscale-500 mb-4">还没有推举行动，请先推举！</div>
             <Button asChild>
-              <Link href={`/vote/actions4submit?symbol=${token?.symbol}`}>去推举行动</Link>
+              <Link href={`/submit/actions?symbol=${token?.symbol}`}>去推举行动</Link>
             </Button>
           </div>
         )}

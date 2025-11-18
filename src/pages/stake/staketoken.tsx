@@ -18,7 +18,11 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import StakeTokenPanel from '@/src/components/Stake/StakeTokenPanel';
 import StTokenTab from '@/src/components/Token/StTokenTab';
 
-const StakePage = () => {
+/**
+ * 质押代币页面
+ * 用户可以质押代币获取ST代币和加速激励
+ */
+const StakeTokenPage = () => {
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
   const { balance: tokenBalance } = useBalanceOf(token?.address as `0x${string}`, account as `0x${string}`);
@@ -77,4 +81,5 @@ const StakePage = () => {
   );
 };
 
-export default StakePage;
+export default StakeTokenPage;
+

@@ -163,7 +163,7 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
                 <tr key={voter.account} className="border-b border-gray-100">
                   <td className="px-1 text-greyscale-400">{index + 1}</td>
                   <td className="px-1">
-                    <Link href={`/vote/history?account=${voter.account}`}>
+                    <Link href={`/vote/my_history?account=${voter.account}`}>
                       <div className="inline-flex items-center bg-gray-50 hover:bg-gray-100 rounded-md px-2 py-1 transition-colors duration-150 active:bg-gray-200">
                         <AddressWithCopyButton address={voter.account} showCopyButton={true} />
                         <svg

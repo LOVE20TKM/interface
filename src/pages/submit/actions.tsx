@@ -15,7 +15,11 @@ import Header from '@/src/components/Header';
 import SubmitingActionList from '@/src/components/ActionList/SubmitingActionList';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
-const Actions4SubmitPage = () => {
+/**
+ * 推举行动列表页面
+ * 显示所有可以推举的行动列表
+ */
+const SubmitActionsPage = () => {
   const { currentRound, isPending, error: errorCurrentRound } = useCurrentRound();
 
   // 错误处理
@@ -35,7 +39,7 @@ const Actions4SubmitPage = () => {
       router.push(`/launch?symbol=${currentToken.symbol}`);
     } else if (currentToken && !currentToken.initialStakeRound) {
       // 如果还没有人质押，跳转到质押页面
-      router.push(`/gov/stakelp/?symbol=${currentToken.symbol}&first=true`);
+      router.push(`/stake/stakelp/?symbol=${currentToken.symbol}&first=true`);
     }
   }, [currentToken]);
 
@@ -49,4 +53,4 @@ const Actions4SubmitPage = () => {
   );
 };
 
-export default Actions4SubmitPage;
+export default SubmitActionsPage;

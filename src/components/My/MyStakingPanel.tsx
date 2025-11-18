@@ -62,7 +62,7 @@ const MyStakingPanel: React.FC = () => {
           </div>
           <div className="stat-actions w-full my-0">
             <Button variant="link" size="sm" className="w-full text-secondary" asChild>
-              <Link href={`/gov/stakelp/?symbol=${token.symbol}`}>去获取</Link>
+              <Link href={`/stake/stakelp/?symbol=${token.symbol}`}>去获取</Link>
             </Button>
           </div>
         </div>
@@ -73,7 +73,7 @@ const MyStakingPanel: React.FC = () => {
           </div>
           <div className="stat-actions w-full my-0">
             <Button variant="link" size="sm" className="w-full text-secondary" asChild>
-              <Link href={`/gov/staketoken?symbol=${token.symbol}`}>去质押</Link>
+              <Link href={`/stake/staketoken?symbol=${token.symbol}`}>去质押</Link>
             </Button>
           </div>
         </div>

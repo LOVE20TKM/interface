@@ -127,7 +127,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             },
             // {
             //   title: '推举行动',
-            //   url: `/vote/actions4submit?symbol=${token.symbol}`,
+            //   url: `/submit/actions?symbol=${token.symbol}`,
             //   isActive: false,
             //   icon: SatelliteDish,
             // },

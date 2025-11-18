@@ -7,7 +7,11 @@ import MyLiquidityStakePanel from '@/src/components/My/MyLiquidityStakePanel';
 import StakeLiquidityPanel from '@/src/components/Stake/StakeLiquidityPanel';
 import { HelpCircle } from 'lucide-react';
 
-const StakePage = () => {
+/**
+ * 质押LP页面
+ * 用户可以质押流动性LP代币获取SL代币和治理票
+ */
+const StakeLPPage = () => {
   return (
     <>
       <Header title="质押LP" />
@@ -46,4 +50,4 @@ const StakePage = () => {
   );
 };
 
-export default StakePage;
+export default StakeLPPage;

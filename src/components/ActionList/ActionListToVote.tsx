@@ -107,7 +107,7 @@
 //               <Link href={`/action/new/?symbol=${token?.symbol}`}>推举新行动</Link>
 //             </Button>
 //             <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
-//               <Link href={`/vote/actions4submit?symbol=${token?.symbol}`}>推举历史行动</Link>
+//               <Link href={`/submit/actions?symbol=${token?.symbol}`}>推举历史行动</Link>
 //             </Button>
 //           </div>
 //         )}
@@ -179,7 +179,7 @@
 //           <div className="text-center mt-8">
 //             <div className="text-base text-greyscale-500 mb-4">还没有推举行动，请先推举！</div>
 //             <Button asChild>
-//               <Link href={`/vote/actions4submit?symbol=${token?.symbol}`}>去推举行动</Link>
+//               <Link href={`/submit/actions?symbol=${token?.symbol}`}>去推举行动</Link>
 //             </Button>
 //           </div>
 //         )}
