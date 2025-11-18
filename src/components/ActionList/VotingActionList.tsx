@@ -74,7 +74,7 @@ const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => 
         {token && (
           <div className="flex space-x-2">
             <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
-              <Link href={`/vote/actions4submit?symbol=${token?.symbol}`}>推举其他行动</Link>
+              <Link href={`/submit/actions?symbol=${token?.symbol}`}>推举其他行动</Link>
             </Button>
             <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
               <Link href={`/gov?symbol=${token?.symbol}`}>返回治理</Link>
@@ -94,7 +94,7 @@ const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => 
                 return (
                   <Card key={action.head.id} className="shadow-none flex items-center relative">
                     <Link
-                      href={`/action/detail?id=${action.head.id}&type=vote&symbol=${token?.symbol}`}
+                      href={`/vote/single?id=${action.head.id}&symbol=${token?.symbol}`}
                       key={action.head.id}
                       className="w-full"
                     >
@@ -139,7 +139,7 @@ const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => 
           <div className="text-center mt-8">
             <div className="text-base text-greyscale-500 mb-4">还没有推举行动，请先推举！</div>
             <Button asChild>
-              <Link href={`/vote/actions4submit?symbol=${token?.symbol}`}>去推举行动</Link>
+              <Link href={`/submit/actions?symbol=${token?.symbol}`}>去推举行动</Link>
             </Button>
           </div>
         )}

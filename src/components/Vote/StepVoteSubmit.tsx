@@ -209,10 +209,7 @@ const StepVoteSubmit: React.FC<StepVoteSubmitProps> = ({ selectedIds, currentRou
 
             return (
               <div key={action.head.id} className="p-4 rounded-lg mb-4 flex justify-between items-center">
-                <Link
-                  href={`/action/detail?id=${action.head.id}&type=vote&symbol=${token?.symbol}`}
-                  className="flex-grow"
-                >
+                <Link href={`/vote/single?id=${action.head.id}&symbol=${token?.symbol}`} className="flex-grow">
                   <div className="font-semibold mb-2">
                     <span className="text-greyscale-400 text-sm mr-1">{`No.${action.head.id}`}</span>
                     <span className="text-greyscale-900">{`${action.body.title}`}</span>

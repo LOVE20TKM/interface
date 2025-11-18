@@ -35,7 +35,7 @@ const RemainingVotesDisplay: React.FC<RemainingVotesDisplayProps> = ({
         </div>
         <div className="stat-desc text-sm mt-2">
           如需更多票数，请先{' '}
-          <Link href={`/gov/stakelp/?symbol=${tokenSymbol}`} className="text-secondary">
+          <Link href={`/stake/stakelp/?symbol=${tokenSymbol}`} className="text-secondary">
             获取治理票
           </Link>
         </div>

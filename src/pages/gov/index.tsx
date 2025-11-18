@@ -117,7 +117,7 @@ const GovPage = () => {
                     <div className="flex flex-col items-center p-4 mt-4">
                       <div className="text-center mb-4 text-greyscale-500">您当前没有治理票，获取治理票后才能治理</div>
                       <Button className="w-1/2" asChild>
-                        <Link href={`/gov/stakelp/?symbol=${currentToken?.symbol}`}>质押获取治理票</Link>
+                        <Link href={`/stake/stakelp/?symbol=${currentToken?.symbol}`}>质押获取治理票</Link>
                       </Button>
                     </div>
                     <div className="flex space-x-8 mt-4 justify-center text-sm pb-4">

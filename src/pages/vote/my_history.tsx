@@ -309,7 +309,7 @@ const VoteHistoryPage: React.FC = () => {
         {!token || !targetAccount ? (
           <LoadingIcon />
         ) : (
-          <div className="flex flex-col space-y-2 p-4">
+          <div className="flex flex-col space-y-4 p-4">
             <LeftTitle
               title={`${targetAccount !== account ? ` 投票记录（${formatAddress(targetAccount)}）` : '我的投票记录'}`}
             />
@@ -323,7 +323,7 @@ const VoteHistoryPage: React.FC = () => {
                 {allRoundsData.map((roundData) => (
                   <div
                     key={roundData.round.toString()}
-                    className={`border border-gray-100 rounded-lg py-2 px-4 shadow-sm ${
+                    className={`border border-gray-100 rounded-lg py-2 px-2 shadow-sm ${
                       !roundData.hasVoting ? 'bg-gray-50' : 'bg-white'
                     }`}
                   >
@@ -350,7 +350,7 @@ const VoteHistoryPage: React.FC = () => {
                             {/* 第二行：数据 */}
                             <div className="flex items-center space-x-6 text-sm text-greyscale-600">
                               <div className="flex items-center">
-                                <span className="mr-1">投票数:</span>
+                                <span className="mr-1">我的投票:</span>
                                 <span className="font-semibold text-secondary">
                                   {formatTokenAmount(item.votingAction.myVoteCount)}
                                 </span>
@@ -359,10 +359,6 @@ const VoteHistoryPage: React.FC = () => {
                                 <span className="mr-1">占比:</span>
                                 <span className="font-semibold text-primary">
                                   {formatPercentage(item.votePercentage)}
-                                </span>
-                                <span className="ml-2">(总投票:</span>
-                                <span className="font-semibold">
-                                  {formatTokenAmount(item.votingAction.totalVoteCount)})
                                 </span>
                               </div>
                             </div>

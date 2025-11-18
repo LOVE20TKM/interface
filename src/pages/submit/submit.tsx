@@ -8,13 +8,17 @@ import { ActionInfo } from '@/src/types/love20types';
 import Header from '@/src/components/Header';
 import ActionDetail from '@/src/components/ActionDetail/ActionDetail';
 import ActionPanelForSubmit from '@/src/components/ActionDetail/ActionPanelForSubmit';
-import ActionPanelForVoting from '@/src/components/ActionDetail/ActionPanelForVoting';
 
-const ActionPage = () => {
+/**
+ * 推举行动页面
+ * URL参数:
+ * - id: 行动ID
+ * - submitted: 是否已推举 ('true' | 'false')
+ */
+const SubmitActionPage = () => {
   const router = useRouter();
-  const { id, type, submitted } = router.query;
+  const { id, submitted } = router.query;
   const idParam = id as string;
-  const typeParam = type as string;
   const submittedParam = submitted as string;
 
   const [round, setRound] = useState<bigint | null>(null);
@@ -29,20 +33,15 @@ const ActionPage = () => {
     <>
       <Header title="行动详情" showBackButton={true} />
       <main className="flex-grow">
-        {typeParam === 'submit' && (
-          <ActionPanelForSubmit
-            actionId={BigInt(idParam || 0)}
-            submitted={submittedParam === 'true'}
-            onRoundChange={handleRoundChange}
-          />
-        )}
-        {typeParam === 'vote' && (
-          <ActionPanelForVoting actionId={BigInt(idParam || 0)} onRoundChange={handleRoundChange} />
-        )}
+        <ActionPanelForSubmit
+          actionId={BigInt(idParam || 0)}
+          submitted={submittedParam === 'true'}
+          onRoundChange={handleRoundChange}
+        />
         <ActionDetail
           actionId={BigInt(idParam || 0)}
           round={BigInt(round || 0)}
-          showSubmitter={typeParam !== 'submit'}
+          showSubmitter={false}
           onActionInfo={setActionInfo}
         />
       </main>
@@ -50,4 +49,4 @@ const ActionPage = () => {
   );
 };
 
-export default ActionPage;
+export default SubmitActionPage;

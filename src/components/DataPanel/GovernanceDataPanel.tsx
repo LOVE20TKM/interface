@@ -79,7 +79,7 @@ const GovernanceDataPanel: React.FC = () => {
                 <LoadingIcon />
               ) : (
                 <Link
-                  href={`/gov/liquid?symbol=${token?.symbol}`}
+                  href={`/stake/liquid?symbol=${token?.symbol}`}
                   className="flex items-center hover:text-secondary-focus"
                 >
                   <span className="cursor-pointer">{formatTokenAmount(govData?.slAmount ?? BigInt(0))}</span>
@@ -89,7 +89,7 @@ const GovernanceDataPanel: React.FC = () => {
             </div>
             <div className="stat-desc text-xs">
               <Button variant="link" className="text-secondary font-normal border-secondary pt-0" asChild>
-                <Link href={`/gov/stakelp/?symbol=${token.symbol}`}>质押 获取治理票&nbsp;&gt;&gt;</Link>
+                <Link href={`/stake/stakelp/?symbol=${token.symbol}`}>质押 获取治理票&nbsp;&gt;&gt;</Link>
               </Button>
             </div>
           </div>
@@ -100,7 +100,7 @@ const GovernanceDataPanel: React.FC = () => {
             </div>
             <div className="stat-desc text-xs">
               <Button variant="link" className="text-secondary font-normal border-secondary pt-0" asChild>
-                <Link href={`/gov/staketoken?symbol=${token.symbol}`}>质押 增加治理收益&nbsp;&gt;&gt;</Link>
+                <Link href={`/stake/staketoken?symbol=${token.symbol}`}>质押 增加治理收益&nbsp;&gt;&gt;</Link>
               </Button>
             </div>
           </div>
