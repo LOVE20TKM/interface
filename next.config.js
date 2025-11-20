@@ -11,12 +11,7 @@ const nextConfig = {
 
   // Android 10 兼容性配置
   compiler: {
-    removeConsole:
-      process.env.NODE_ENV === 'production'
-        ? {
-            exclude: ['error', 'warn', 'info', 'debug'], // 保留必要日志，方便 VConsole 调试
-          }
-        : false,
+    removeConsole: false, // 保留所有日志，方便 VConsole 调试
   },
 
   // 实验性功能，提高兼容性
