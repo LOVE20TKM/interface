@@ -78,7 +78,7 @@ const VerifyingActionList: React.FC<VerifingActionListProps> = ({ currentRound }
               <Card key={verifyingAction.action.head.id} className="shadow-none">
                 <Link
                   className="relative block"
-                  href={`/verify/action?id=${verifyingAction.action.head.id}&symbol=${token?.symbol}`}
+                  href={`/action/info/?id=${verifyingAction.action.head.id}&symbol=${token?.symbol}&tab=verify`}
                 >
                   <CardHeader className="px-3 pt-2 pb-1 flex-row justify-start items-baseline">
                     <span className="text-greyscale-400 text-sm mr-1">{`No.`}</span>

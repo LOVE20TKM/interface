@@ -94,7 +94,7 @@ const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => 
                 return (
                   <Card key={action.head.id} className="shadow-none flex items-center relative">
                     <Link
-                      href={`/vote/single?id=${action.head.id}&symbol=${token?.symbol}`}
+                      href={`/action/info/?id=${action.head.id}&symbol=${token?.symbol}&tab=vote`}
                       key={action.head.id}
                       className="w-full"
                     >

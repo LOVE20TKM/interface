@@ -21,6 +21,8 @@ import Todeploy from '@/src/components/Launch/Todeploy';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import MyGovInfoPanel from '@/src/components/My/MyGovInfoPanel';
 import GovQueryPanel from '@/src/components/My/GovQueryPanel';
+import LeftTitle from '@/src/components/Common/LeftTitle';
+import { Card, CardTitle, CardHeader, CardContent } from '@/components/ui/card';
 
 const GovPage = () => {
   // 当前token
@@ -141,6 +143,23 @@ const GovPage = () => {
                 <GovernanceDataPanel />
                 {/* 查询组件放在社区tab的最下面 */}
                 <GovQueryPanel />
+                <div className="mt-4">
+                  <Card className="w-full">
+                    <CardHeader>
+                      <CardTitle className="text-lg">治理公示</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex space-x-8 justify-center text-sm">
+                        <Button className="w-1/2 text-secondary border-secondary" asChild variant="outline">
+                          <Link href={`/vote/actions/?symbol=${currentToken?.symbol}`}>投票中的行动 &gt;&gt;</Link>
+                        </Button>
+                        <Button className="w-1/2 text-secondary border-secondary" asChild variant="outline">
+                          <Link href={`/verify/actions/?symbol=${currentToken?.symbol}`}>验证中的行动 &gt;&gt;</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
             </Tabs>
           </>
