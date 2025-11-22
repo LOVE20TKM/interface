@@ -148,7 +148,9 @@ const VerifiedAddressesByAction: React.FC<{
               <LeftTitle title={`第 ${selectedRound.toString()} 轮验证结果`} />
               <span className="text-sm text-greyscale-500 ml-2">(</span>
               <ChangeRound
-                currentRound={token && currentJoinRound ? formatRoundForDisplay(currentJoinRound - BigInt(2), token) : BigInt(0)}
+                currentRound={
+                  token && currentJoinRound ? formatRoundForDisplay(currentJoinRound - BigInt(2), token) : BigInt(0)
+                }
                 handleChangedRound={handleChangedRound}
               />
               <span className="text-sm text-greyscale-500">)</span>
@@ -157,9 +159,7 @@ const VerifiedAddressesByAction: React.FC<{
         </div>
         {selectedRound > 0 && addresses.length > 0 && (
           <button
-            onClick={() =>
-              router.push(`/action/verify_detail?symbol=${token?.symbol}&id=${actionId}&round=${selectedRound}`)
-            }
+            onClick={() => router.push(`/verify/detail?symbol=${token?.symbol}&id=${actionId}&round=${selectedRound}`)}
             className="text-sm text-secondary hover:text-secondary-600 transition-colors"
           >
             查看明细 &gt;&gt;

@@ -109,11 +109,11 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
       {selectedRound > 0 && actionVoters && (
         <div className="grid grid-cols-2 gap-0 mt-4 mb-4">
           <div className="">
-            <span className="text-gray-500 mr-3">投票地址数:</span>
+            <span className="text-gray-500 mr-1">投票地址数:</span>
             <span className="font-mono text-secondary">{actionVoters.length}</span>
           </div>
           <div className="">
-            <span className="text-gray-500 mr-3">票数:</span>
+            <span className="text-gray-500 mr-1">票数:</span>
             <span className="font-mono text-secondary">{formatTokenAmount(totalVotes)}</span>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
                 <tr key={voter.account} className="border-b border-gray-100">
                   <td className="px-1 text-greyscale-400">{index + 1}</td>
                   <td className="px-1">
-                    <Link href={`/vote/my_history?account=${voter.account}`}>
+                    <Link href={`/vote/records?account=${voter.account}`}>
                       <div className="inline-flex items-center bg-gray-50 hover:bg-gray-100 rounded-md px-2 py-1 transition-colors duration-150 active:bg-gray-200">
                         <AddressWithCopyButton address={voter.account} showCopyButton={true} />
                         <svg

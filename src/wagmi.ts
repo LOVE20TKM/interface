@@ -100,10 +100,21 @@ export const config = createConfig({
   transports:
     selectedChain.id === sepolia.id
       ? {
-          [sepolia.id]: http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://eth-sepolia.api.onfinality.io/public'),
+          [sepolia.id]: http(
+            process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://eth-sepolia.api.onfinality.io/public',
+            {
+              batch: {
+                wait: 50, // 等待50ms收集请求后批量发送
+              },
+            },
+          ),
         }
       : {
-          [selectedChain.id]: http(selectedChain.rpcUrls.default.http[0]),
+          [selectedChain.id]: http(selectedChain.rpcUrls.default.http[0], {
+            batch: {
+              wait: 50, // 等待50ms收集请求后批量发送
+            },
+          }),
         },
   ssr: false, // 静态导出模式下禁用 SSR
 });
