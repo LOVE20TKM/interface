@@ -57,7 +57,7 @@ const coreFilesToConvert = [
 
 const peripheralFilesToConvert = ['LOVE20TokenViewer', 'LOVE20RoundViewer', 'LOVE20MintViewer', 'LOVE20Hub'];
 
-const extensionsCenterFilesToConvert = ['LOVE20ExtensionCenter'];
+const extensionsCenterFilesToConvert = ['LOVE20ExtensionCenter', 'ILOVE20Extension'];
 
 const extensionsStakelpFilesToConvert = ['LOVE20ExtensionFactoryStakeLp', 'LOVE20ExtensionStakeLp'];
 

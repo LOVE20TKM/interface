@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
  * 当添加新的扩展类型时，在这里添加映射关系
  */
 const FACTORY_COMPONENTS: Record<string, React.ComponentType<{ factoryAddress: `0x${string}` }>> = {
-  [process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_STAKELP?.toLowerCase() || '']: StakeLpExtensionForm,
+  [process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP?.toLowerCase() || '']: StakeLpExtensionForm,
   // 未来添加新的扩展类型示例：
   // [process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_XXX?.toLowerCase() || '']: XxxExtensionForm,
 };

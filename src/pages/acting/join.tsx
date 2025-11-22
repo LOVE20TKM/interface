@@ -6,7 +6,7 @@ import { HelpCircle } from 'lucide-react';
 
 // my hooks
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useExtension } from '@/src/hooks/contracts/useLOVE20ExtensionCenter';
+import { useExtension } from '@/src/hooks/extension/base/contracts';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatPercentage, formatSeconds } from '@/src/lib/format';
 

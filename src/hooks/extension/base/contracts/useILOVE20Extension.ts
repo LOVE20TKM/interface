@@ -1,0 +1,251 @@
+// hooks/useILOVE20Extension.ts
+// 通用的 ILOVE20Extension 接口 Hook
+// 可用于任何继承 ILOVE20Extension 接口的扩展合约
+
+import { useEffect } from 'react';
+import { useReadContract } from 'wagmi';
+import { useUniversalTransaction } from '@/src/lib/universalTransaction';
+import { logError, logWeb3Error } from '@/src/lib/debugUtils';
+
+import { ILOVE20ExtensionAbi } from '@/src/abis/ILOVE20Extension';
+import { safeToBigInt } from '@/src/lib/clientUtils';
+
+// =====================
+// === 读取 Hook ===
+// =====================
+
+/**
+ * Hook for center - 获取 center 地址
+ */
+export const useExtensionCenter = (extensionAddress: `0x${string}` | undefined) => {
+  const { data, isPending, error } = useReadContract({
+    address: extensionAddress,
+    abi: ILOVE20ExtensionAbi,
+    functionName: 'center',
+    query: {
+      enabled: !!extensionAddress,
+    },
+  });
+
+  return { center: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for factory - 获取 factory 地址
+ */
+export const useExtensionFactory = (extensionAddress: `0x${string}` | undefined) => {
+  const { data, isPending, error } = useReadContract({
+    address: extensionAddress,
+    abi: ILOVE20ExtensionAbi,
+    functionName: 'factory',
+    query: {
+      enabled: !!extensionAddress,
+    },
+  });
+
+  return { factory: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for tokenAddress - 获取 token 地址
+ */
+export const useExtensionTokenAddress = (extensionAddress: `0x${string}` | undefined) => {
+  const { data, isPending, error } = useReadContract({
+    address: extensionAddress,
+    abi: ILOVE20ExtensionAbi,
+    functionName: 'tokenAddress',
+    query: {
+      enabled: !!extensionAddress,
+    },
+  });
+
+  return { tokenAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for actionId - 获取 action ID
+ */
+export const useExtensionActionId = (extensionAddress: `0x${string}` | undefined) => {
+  const { data, isPending, error } = useReadContract({
+    address: extensionAddress,
+    abi: ILOVE20ExtensionAbi,
+    functionName: 'actionId',
+    query: {
+      enabled: !!extensionAddress,
+    },
+  });
+
+  return { actionId: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for isJoinedValueCalculated - 检查是否已计算参与价值
+ */
+export const useIsJoinedValueCalculated = (extensionAddress: `0x${string}` | undefined) => {
+  const { data, isPending, error } = useReadContract({
+    address: extensionAddress,
+    abi: ILOVE20ExtensionAbi,
+    functionName: 'isJoinedValueCalculated',
+    query: {
+      enabled: !!extensionAddress,
+    },
+  });
+
+  return { isJoinedValueCalculated: data as boolean | undefined, isPending, error };
+};
+
+/**
+ * Hook for joinedValue - 获取总参与价值
+ */
+export const useJoinedValue = (extensionAddress: `0x${string}` | undefined) => {
+  const { data, isPending, error } = useReadContract({
+    address: extensionAddress,
+    abi: ILOVE20ExtensionAbi,
+    functionName: 'joinedValue',
+    query: {
+      enabled: !!extensionAddress,
+    },
+  });
+
+  return { joinedValue: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for joinedValueByAccount - 获取账户的参与价值
+ */
+export const useJoinedValueByAccount = (
+  extensionAddress: `0x${string}` | undefined,
+  account: `0x${string}` | undefined,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: extensionAddress,
+    abi: ILOVE20ExtensionAbi,
+    functionName: 'joinedValueByAccount',
+    args: account ? [account] : undefined,
+    query: {
+      enabled: !!extensionAddress && !!account,
+    },
+  });
+
+  return { joinedValueByAccount: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for accounts - 获取所有参与账户
+ */
+export const useExtensionAccounts = (extensionAddress: `0x${string}` | undefined) => {
+  const { data, isPending, error } = useReadContract({
+    address: extensionAddress,
+    abi: ILOVE20ExtensionAbi,
+    functionName: 'accounts',
+    query: {
+      enabled: !!extensionAddress,
+    },
+  });
+
+  return { accounts: data as `0x${string}`[] | undefined, isPending, error };
+};
+
+/**
+ * Hook for accountsCount - 获取参与账户数量
+ */
+export const useExtensionAccountsCount = (extensionAddress: `0x${string}` | undefined) => {
+  const { data, isPending, error } = useReadContract({
+    address: extensionAddress,
+    abi: ILOVE20ExtensionAbi,
+    functionName: 'accountsCount',
+    query: {
+      enabled: !!extensionAddress,
+    },
+  });
+
+  return { accountsCount: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for accountAtIndex - 根据索引获取账户
+ */
+export const useAccountAtIndex = (extensionAddress: `0x${string}` | undefined, index: bigint | undefined) => {
+  const { data, isPending, error } = useReadContract({
+    address: extensionAddress,
+    abi: ILOVE20ExtensionAbi,
+    functionName: 'accountAtIndex',
+    args: index !== undefined ? [index] : undefined,
+    query: {
+      enabled: !!extensionAddress && index !== undefined,
+    },
+  });
+
+  return { account: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for rewardByAccount - 获取账户在指定轮次的奖励
+ */
+export const useRewardByAccount = (
+  extensionAddress: `0x${string}` | undefined,
+  round: bigint | undefined,
+  account: `0x${string}` | undefined,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: extensionAddress,
+    abi: ILOVE20ExtensionAbi,
+    functionName: 'rewardByAccount',
+    args: round !== undefined && account ? [round, account] : undefined,
+    query: {
+      enabled: !!extensionAddress && round !== undefined && !!account,
+    },
+  });
+
+  const typedData = data as [bigint, boolean] | undefined;
+
+  return {
+    reward: typedData?.[0],
+    isMinted: typedData?.[1],
+    isPending,
+    error,
+  };
+};
+
+// =====================
+// === 写入 Hook ===
+// =====================
+
+/**
+ * Hook for claimReward - 领取指定轮次的奖励
+ */
+export const useClaimRewardFromExtension = (extensionAddress: `0x${string}` | undefined) => {
+  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
+    ILOVE20ExtensionAbi,
+    extensionAddress!,
+    'claimReward',
+  );
+
+  const claimReward = async (round: bigint) => {
+    if (!extensionAddress) {
+      logError('Extension address is required');
+      return;
+    }
+
+    try {
+      console.log('领取扩展奖励:', { extensionAddress, round, isTukeMode });
+      return await execute([round]);
+    } catch (err) {
+      logWeb3Error(err, 'claimReward');
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    if (hash) {
+      console.log('claimReward tx hash:', hash);
+    }
+    if (error) {
+      console.log('领取扩展奖励错误:');
+      logWeb3Error(error);
+      logError(error);
+    }
+  }, [hash, error]);
+
+  return { claimReward, isPending, isConfirming, isConfirmed, error, hash };
+};

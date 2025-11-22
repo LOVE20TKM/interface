@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAddFactory } from '@/src/hooks/contracts/useLOVE20ExtensionCenter';
+import { useAddFactory } from '@/src/hooks/extension/base/contracts';
 import { useCanSubmit } from '@/src/hooks/contracts/useLOVE20Submit';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import toast from 'react-hot-toast';

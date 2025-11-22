@@ -5,14 +5,14 @@ import { useRouter } from 'next/router';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
-import { useFactory } from '@/src/hooks/contracts/useLOVE20ExtensionStakeLp';
+import { useFactory } from '@/src/hooks/extension/plugins/lp/contracts';
 
 // my components
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import StakeLpCurrentTab from '@/src/components/ActionExtension/StakeLpCurrentTab';
 import StakeLpHistoryTab from '@/src/components/ActionExtension/StakeLpHistoryTab';
 
-const EXTENSION_FACTORY_STAKELP = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_STAKELP as `0x${string}`;
+const EXTENSION_FACTORY_STAKELP = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP as `0x${string}`;
 
 type SubTabType = 'current' | 'history';
 

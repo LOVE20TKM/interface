@@ -3,7 +3,7 @@
 import { useContext } from 'react';
 import Header from '@/src/components/Header';
 import { TokenContext } from '@/src/contexts/TokenContext';
-import { useFactories } from '@/src/hooks/contracts/useLOVE20ExtensionCenter';
+import { useFactories } from '@/src/hooks/extension/base/contracts';
 import { useExtensionActionsFullData } from '@/src/hooks/composite/useExtensionActionsData';
 import FactoryList from '@/src/components/Extension/FactoryList';
 import ExtensionActionsList from '@/src/components/Extension/ExtensionActionsList';

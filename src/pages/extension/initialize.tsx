@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useInitializeExtension } from '@/src/hooks/contracts/useLOVE20ExtensionCenter';
+import { useInitializeExtension } from '@/src/hooks/extension/base/contracts';
 import { clearCachedExtensionInfo } from '@/src/hooks/composite/useActionsExtensionInfo';
 import toast from 'react-hot-toast';
 import { isAddress } from 'viem';

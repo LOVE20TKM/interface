@@ -28,16 +28,10 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 interface JoiningActionListProps {
   currentRound: bigint;
   joinableActions: JoinableAction[] | undefined;
-  getJoinedAmount: (index: number) => bigint;
   isPendingActions: boolean;
 }
 
-const JoiningActionList: React.FC<JoiningActionListProps> = ({
-  currentRound,
-  joinableActions,
-  getJoinedAmount,
-  isPendingActions,
-}) => {
+const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound, joinableActions, isPendingActions }) => {
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
@@ -104,12 +98,12 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
               return votesB - votesA;
             })
             .map((actionDetail: JoinableAction, index: number) => {
-              // 获取参与代币数（考虑扩展协议）
-              const joinedAmount = getJoinedAmount(index);
+              // 参与代币数（已包含扩展数据）
+              const joinedAmount = actionDetail.joinedAmount;
 
               // 计算投票占比
               const voteRatio =
-                Number(totalVotes) > 0 ? Number(joinableActions[index].votesNum || BigInt(0)) / Number(totalVotes) : 0;
+                Number(totalVotes) > 0 ? Number(actionDetail.votesNum || BigInt(0)) / Number(totalVotes) : 0;
 
               // 根据是否已加入，设置不同的链接
               const href = `/action/info?id=${actionDetail.action.head.id}&symbol=${token?.symbol}`;
@@ -120,9 +114,7 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
               // 计算成本：对于19号行动，需要加上u池资产价值
               const isAction19 =
                 actionDetail.action.head.id === BigInt(19) || actionDetail.action.head.id === BigInt(15);
-              const actionCost = isAction19
-                ? joinableActions[index].joinedAmount + action19PoolValue
-                : joinableActions[index].joinedAmount;
+              const actionCost = isAction19 ? actionDetail.joinedAmount + action19PoolValue : actionDetail.joinedAmount;
 
               return (
                 <Card key={actionDetail.action.head.id} className={cardClassName}>
@@ -147,7 +139,7 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
                           {/* <span className="text-greyscale-400 text-xs mr-1">创建人</span> */}
                           <span className="text-greyscale-400">
                             <AddressWithCopyButton
-                              address={joinableActions[index].action.head.author as `0x${string}`}
+                              address={actionDetail.action.head.author as `0x${string}`}
                               showCopyButton={false}
                               // colorClassName2="text-secondary"
                             />

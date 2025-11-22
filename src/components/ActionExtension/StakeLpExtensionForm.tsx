@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useCreateExtension } from '@/src/hooks/contracts/useLOVE20ExtensionFactoryStakeLp';
+import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts';
 import { LOVE20ExtensionFactoryStakeLpAbi } from '@/src/abis/LOVE20ExtensionFactoryStakeLp';
 import { useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
 import { clearCachedExtensionInfo } from '@/src/hooks/composite/useActionsExtensionInfo';

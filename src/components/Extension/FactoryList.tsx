@@ -13,7 +13,7 @@ interface FactoryListProps {
 
 // 扩展类型名称配置
 const FACTORY_NAMES: Record<string, string> = {
-  [process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_STAKELP?.toLowerCase() || '']: '质押LP行动',
+  [process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP?.toLowerCase() || '']: '质押LP行动',
   // 未来添加新的扩展类型示例：
   // [process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_XXX?.toLowerCase() || '']: 'XXX行动',
 };

@@ -19,7 +19,7 @@ import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 import { useStakeLpActionData } from '@/src/hooks/composite/useStakeLpActionData';
-import { useStakeLp, useLpTokenAddress } from '@/src/hooks/contracts/useLOVE20ExtensionStakeLp';
+import { useStakeLp, useLpTokenAddress } from '@/src/hooks/extension/plugins/lp/contracts';
 
 // contexts / types / etc
 import { ActionInfo } from '@/src/types/love20types';

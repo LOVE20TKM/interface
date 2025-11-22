@@ -2,12 +2,14 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ChevronRight, UserPen } from 'lucide-react';
 import Link from 'next/link';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { useAccount } from 'wagmi';
 
 // my hooks
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
-import { useMyJoinedActionsData } from '@/src/hooks/composite/useMyJoinedActionsData';
+import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite';
 
 // my contexts
 import { Token } from '@/src/contexts/TokenContext';
@@ -30,15 +32,50 @@ interface MyJoinedActionListProps {
 
 const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onActionStatusChange }) => {
   const { currentRound } = useCurrentRound();
+  const { address: account } = useAccount();
 
-  // 获取我参加的所有行动（包括core协议和扩展协议）
+  // 获取 core 协议中的参与行动
   const {
-    joinedActions,
-    isPending: isPendingJoinedActions,
-    error: errorJoinedActions,
-  } = useMyJoinedActionsData({
+    joinedActions: coreActions,
+    isPending: isPendingCore,
+    error: errorCore,
+  } = useJoinedActions(token?.address as `0x${string}`, account as `0x${string}`);
+
+  // 获取扩展协议中的参与行动
+  const {
+    joinedExtensionActions: extensionActions,
+    isPending: isPendingExtension,
+    error: errorExtension,
+  } = useMyJoinedExtensionActions({
     tokenAddress: token?.address as `0x${string}`,
+    account: account as `0x${string}`,
+    currentRound, // 传入已获取的 currentRound，避免重复查询
   });
+
+  // 合并 core 和扩展行动，过滤掉重复的行动
+  const joinedActions = useMemo(() => {
+    // 确保两个数组都存在，避免 undefined 问题
+    const safeCore = coreActions || [];
+    const safeExtension = extensionActions || [];
+
+    if (safeCore.length === 0 && safeExtension.length === 0) {
+      return [];
+    }
+
+    // 创建 core 行动 ID 的 Set，用于去重
+    const coreActionIds = new Set(safeCore.map((action) => action.action.head.id.toString()));
+
+    // 过滤掉在 core 中已存在的扩展行动
+    const uniqueExtensionActions = safeExtension.filter(
+      (action) => !coreActionIds.has(action.action.head.id.toString()),
+    );
+
+    // 合并结果
+    return [...safeCore, ...uniqueExtensionActions];
+  }, [coreActions, extensionActions]);
+
+  // 计算总的加载状态
+  const isPendingJoinedActions = isPendingCore || isPendingExtension;
 
   // 通知父组件行动状态变化
   useEffect(() => {
@@ -51,10 +88,13 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
-    if (errorJoinedActions) {
-      handleContractError(errorJoinedActions, 'extension');
+    if (errorCore) {
+      handleContractError(errorCore, 'dataViewer');
     }
-  }, [errorJoinedActions, handleContractError]);
+    if (errorExtension) {
+      handleContractError(errorExtension, 'extension');
+    }
+  }, [errorCore, errorExtension, handleContractError]);
 
   if (isPendingJoinedActions) {
     return (

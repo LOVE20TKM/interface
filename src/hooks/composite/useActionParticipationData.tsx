@@ -1,7 +1,7 @@
 // hooks/composite/useActionParticipationData.tsx
 // 统一获取行动参与数据（自动判断普通行动 vs 扩展行动）
 
-import { useExtension } from '@/src/hooks/contracts/useLOVE20ExtensionCenter';
+import { useExtension } from '@/src/hooks/extension/base/contracts';
 import { useActionExtensionStats } from './useActionExtensionStats';
 import { useActionExtensionUserStatus } from './useActionExtensionUserStatus';
 

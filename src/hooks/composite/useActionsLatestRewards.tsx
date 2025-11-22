@@ -2,25 +2,26 @@ import { useMemo, useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import toast from 'react-hot-toast';
 import { useActionRewardsByAccountOfLastRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
-import { useMyJoinedActionsData } from '@/src/hooks/composite/useMyJoinedActionsData';
+import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite';
 import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
-import { useStakeLpRewardsByLastRounds } from '@/src/hooks/composite/useStakeLpRewardsByLastRounds';
+import {
+  useExtensionActionsLatestRewards,
+  ExtensionActionReward,
+} from '@/src/hooks/extension/base/composite';
 import { useActionsExtensionInfo, ActionExtensionInfo } from '@/src/hooks/composite/useActionsExtensionInfo';
 import { JoinedAction, ActionReward } from '@/src/types/love20types';
-import { StakeLpReward } from '@/src/hooks/composite/useStakeLpRewardsByLastRounds';
 import {
   setActionRewardNeedMinted,
   loadActionRewardNotice,
   buildActionRewardNoticeKey,
 } from '@/src/lib/actionRewardNotice';
 
-const EXTENSION_FACTORY_STAKELP = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_STAKELP as `0x${string}`;
-
 export interface ActionRewardsGroup {
   action: JoinedAction;
   coreRewards: ActionReward[];
   extensionInfo?: ActionExtensionInfo;
-  stakeLpRewards?: StakeLpReward[];
+  extensionRewards?: ExtensionActionReward[];
 }
 
 export interface UseActionRewardsDataParams {
@@ -49,7 +50,7 @@ export interface UseActionRewardsDataResult {
     coreRewards?: any;
     actions?: any;
     extensionInfo?: any;
-    stakeLpRewards?: any;
+    extensionRewards?: any;
     mint?: any;
   };
 }
@@ -62,69 +63,83 @@ export interface UseActionRewardsDataResult {
  * 2. 管理铸造状态和本地已铸造集合
  * 3. 处理缓存清理逻辑
  */
-export const useActionRewardsData = ({
+export const useActionsLatestRewards = ({
   tokenAddress,
   lastRounds,
 }: UseActionRewardsDataParams): UseActionRewardsDataResult => {
   const { address: account } = useAccount();
 
-  // 获取最近 N 轮的普通行动激励
+  // 第1步：获取 core 协议最近 N 轮的普通行动激励
   const {
     rewards: coreRewards,
     isPending: isLoadingCoreRewards,
     error: errorLoadingCoreRewards,
-  } = useActionRewardsByAccountOfLastRounds(tokenAddress as `0x${string}`, account as `0x${string}`, lastRounds);
+  } = useActionRewardsByAccountOfLastRounds(
+    tokenAddress || ('' as `0x${string}`),
+    account || ('' as `0x${string}`),
+    lastRounds,
+  );
 
-  // 获取所有参与的行动（包括core和扩展协议）
+  // 第2步：获取 core 协议中的参与行动
   const {
-    joinedActions,
-    isPending: isLoadingActions,
-    error: errorLoadingActions,
-  } = useMyJoinedActionsData({
+    joinedActions: coreActions,
+    isPending: isLoadingCoreActions,
+    error: errorLoadingCoreActions,
+  } = useJoinedActions(tokenAddress || ('' as `0x${string}`), account || ('' as `0x${string}`));
+
+  // 第3步：获取扩展协议中的参与行动
+  const {
+    joinedExtensionActions: extensionActions,
+    isPending: isLoadingExtensionActions,
+    error: errorLoadingExtensionActions,
+  } = useMyJoinedExtensionActions({
     tokenAddress,
+    account: account as `0x${string}`,
+    currentRound: undefined, // actionrewards 页面不需要投票信息
   });
 
-  // 获取所有行动的扩展信息
-  const actionIds = useMemo(() => {
-    return (joinedActions || []).map((ja) => ja.action.head.id);
-  }, [joinedActions]);
+  // 提取扩展行动的 actionIds，用于查询扩展信息
+  const extensionActionIds = useMemo(() => {
+    return (extensionActions || []).map((ja) => ja.action.head.id);
+  }, [extensionActions]);
 
+  // 获取扩展行动的扩展信息（合约地址、工厂地址等）
   const {
     extensionInfos,
     isPending: isLoadingExtensionInfo,
     error: errorLoadingExtensionInfo,
   } = useActionsExtensionInfo({
     tokenAddress,
-    actionIds,
+    actionIds: extensionActionIds,
   });
 
-  // 提取质押LP扩展行动的地址列表
-  const stakeLpExtensionAddresses = useMemo(() => {
+  // 第4步：提取扩展地址，获取扩展协议最近 N 轮的行动激励
+  const extensionAddresses = useMemo(() => {
     return extensionInfos
-      .filter(
-        (info) =>
-          info.isExtension &&
-          info.extensionAddress &&
-          info.factoryAddress?.toLowerCase() === EXTENSION_FACTORY_STAKELP?.toLowerCase(),
-      )
+      .filter((info) => info.isExtension && info.extensionAddress)
       .map((info) => info.extensionAddress!);
   }, [extensionInfos]);
 
-  // 获取质押LP扩展行动的激励数据
   const {
-    rewardsMap: stakeLpRewardsMap,
-    isPending: isLoadingStakeLpRewards,
-    error: errorLoadingStakeLpRewards,
-  } = useStakeLpRewardsByLastRounds({
-    extensionAddresses: stakeLpExtensionAddresses,
+    rewardsMap: extensionRewardsMap,
+    isPending: isLoadingExtensionRewards,
+    error: errorLoadingExtensionRewards,
+  } = useExtensionActionsLatestRewards({
+    extensionAddresses,
     lastRounds,
+    account: account as `0x${string}`,
   });
 
-  // 将激励按行动分组
+  // 第5步：将激励按行动分组，拼接所有数据
   const grouped = useMemo<ActionRewardsGroup[]>(() => {
-    if (!joinedActions) return [];
+    const safeCore = coreActions || [];
+    const safeExtension = extensionActions || [];
 
-    // 创建普通激励映射
+    if (safeCore.length === 0 && safeExtension.length === 0) {
+      return [];
+    }
+
+    // 创建 core 激励映射
     const coreRewardsByAction = new Map<string, ActionReward[]>();
     if (coreRewards) {
       for (const r of coreRewards) {
@@ -141,32 +156,64 @@ export const useActionRewardsData = ({
       extensionInfoMap.set(extInfo.actionId.toString(), extInfo);
     }
 
-    // 为所有参与的行动创建分组
+    // 创建扩展行动 Set，用于判断是否有扩展
+    const extensionActionIds = new Set(safeExtension.map((action) => action.action.head.id.toString()));
+
     const list: ActionRewardsGroup[] = [];
-    for (const joinedAction of joinedActions) {
+
+    // 处理 core 行动
+    for (const joinedAction of safeCore) {
       const actionIdStr = String(joinedAction.action.head.id);
       const actionCoreRewards = coreRewardsByAction.get(actionIdStr) || [];
 
-      // 如果有激励，按轮次倒序排序
       if (actionCoreRewards.length > 0) {
         actionCoreRewards.sort((a, b) => (a.round > b.round ? -1 : 1));
       }
 
-      const extInfo = extensionInfoMap.get(actionIdStr);
-      const stakeLpRewards = extInfo?.extensionAddress ? stakeLpRewardsMap.get(extInfo.extensionAddress) : undefined;
+      // 如果该行动也在扩展中，添加扩展信息和扩展激励
+      const extInfo = extensionActionIds.has(actionIdStr) ? extensionInfoMap.get(actionIdStr) : undefined;
+      const extensionRewards = extInfo?.extensionAddress
+        ? extensionRewardsMap.get(extInfo.extensionAddress)
+        : undefined;
 
       list.push({
         action: joinedAction,
         coreRewards: actionCoreRewards,
         extensionInfo: extInfo,
-        stakeLpRewards,
+        extensionRewards,
       });
     }
 
-    // 按行动 id 倒序
+    // 处理仅在扩展中的行动（不在 core 中）
+    const coreActionIds = new Set(safeCore.map((action) => action.action.head.id.toString()));
+    for (const joinedAction of safeExtension) {
+      const actionIdStr = String(joinedAction.action.head.id);
+
+      if (coreActionIds.has(actionIdStr)) {
+        continue;
+      }
+
+      const actionCoreRewards = coreRewardsByAction.get(actionIdStr) || [];
+      if (actionCoreRewards.length > 0) {
+        actionCoreRewards.sort((a, b) => (a.round > b.round ? -1 : 1));
+      }
+
+      const extInfo = extensionInfoMap.get(actionIdStr);
+      const extensionRewards = extInfo?.extensionAddress
+        ? extensionRewardsMap.get(extInfo.extensionAddress)
+        : undefined;
+
+      list.push({
+        action: joinedAction,
+        coreRewards: actionCoreRewards,
+        extensionInfo: extInfo,
+        extensionRewards,
+      });
+    }
+
     list.sort((a, b) => (BigInt(a.action.action.head.id) > BigInt(b.action.action.head.id) ? -1 : 1));
     return list;
-  }, [joinedActions, coreRewards, extensionInfos, stakeLpRewardsMap]);
+  }, [coreActions, extensionActions, coreRewards, extensionInfos, extensionRewardsMap]);
 
   // 铸造普通行动激励
   const { mintActionReward, isPending, isConfirming, isConfirmed, writeError } = useMintActionReward();
@@ -204,7 +251,7 @@ export const useActionRewardsData = ({
 
     // 检查是否存在未铸造的扩展激励
     let hasUnmintedExtensionRewards = false;
-    for (const rewards of stakeLpRewardsMap.values()) {
+    for (const rewards of extensionRewardsMap.values()) {
       if (rewards.some((r) => r.reward > BigInt(0) && !r.isMinted)) {
         hasUnmintedExtensionRewards = true;
         break;
@@ -222,7 +269,7 @@ export const useActionRewardsData = ({
         setActionRewardNeedMinted(account, tokenAddress, false);
       }
     }
-  }, [tokenAddress, account, isLoadingCoreRewards, coreRewards, stakeLpRewardsMap]);
+  }, [tokenAddress, account, isLoadingCoreRewards, coreRewards, extensionRewardsMap]);
 
   const handleClaimCoreReward = async (round: bigint, actionId: bigint) => {
     if (tokenAddress && account) {
@@ -255,7 +302,12 @@ export const useActionRewardsData = ({
     }));
   }, [grouped, locallyMinted]);
 
-  const isLoading = isLoadingCoreRewards || isLoadingActions || isLoadingExtensionInfo || isLoadingStakeLpRewards;
+  const isLoading =
+    isLoadingCoreRewards ||
+    isLoadingCoreActions ||
+    isLoadingExtensionActions ||
+    isLoadingExtensionInfo ||
+    isLoadingExtensionRewards;
 
   return {
     displayedGroups,
@@ -267,9 +319,9 @@ export const useActionRewardsData = ({
     handleExtensionMintSuccess,
     errors: {
       coreRewards: errorLoadingCoreRewards,
-      actions: errorLoadingActions,
+      actions: errorLoadingCoreActions || errorLoadingExtensionActions,
       extensionInfo: errorLoadingExtensionInfo,
-      stakeLpRewards: errorLoadingStakeLpRewards,
+      extensionRewards: errorLoadingExtensionRewards,
       mint: writeError,
     },
   };

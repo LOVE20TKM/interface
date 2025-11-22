@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { useExtensions } from '@/src/hooks/contracts/useLOVE20ExtensionCenter';
+import { useExtensions } from '@/src/hooks/extension/base/contracts';
 import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
 import { LOVE20RoundViewerAbi } from '@/src/abis/LOVE20RoundViewer';
 import { ActionInfo } from '@/src/types/love20types';

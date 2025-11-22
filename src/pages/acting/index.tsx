@@ -42,13 +42,13 @@ const ActingPage = () => {
     if (actingPageData.errorActions) {
       handleContractError(actingPageData.errorActions, 'dataViewer');
     }
-    if (actingPageData.errorJoinedAmount) {
-      handleContractError(actingPageData.errorJoinedAmount, 'extension');
+    if (actingPageData.errorExtension) {
+      handleContractError(actingPageData.errorExtension, 'extension');
     }
     if (actingPageData.errorReward) {
       handleContractError(actingPageData.errorReward, 'dataViewer');
     }
-  }, [errorCurrentRound, actingPageData.errorActions, actingPageData.errorJoinedAmount, actingPageData.errorReward]);
+  }, [errorCurrentRound, actingPageData.errorActions, actingPageData.errorExtension, actingPageData.errorReward]);
 
   if (shouldCall && isPendingCurrentRound) {
     return (
@@ -87,13 +87,12 @@ const ActingPage = () => {
             <ActDataPanel
               totalJoinedAmount={actingPageData.totalJoinedAmount}
               expectedReward={actingPageData.expectedReward}
-              isPendingJoinedAmount={actingPageData.isPendingJoinedAmount}
+              isPendingJoinedAmount={actingPageData.isPendingExtension}
               isPendingReward={actingPageData.isPendingReward}
             />
             <JoiningActionList
               currentRound={currentRound}
               joinableActions={actingPageData.joinableActions}
-              getJoinedAmount={actingPageData.getJoinedAmount}
               isPendingActions={actingPageData.isPendingActions}
             />
           </>

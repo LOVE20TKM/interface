@@ -12,7 +12,7 @@ import ActionPanelForJoin from '@/src/components/ActionDetail/ActionPanelForJoin
 import { useActionsExtensionInfo } from '@/src/hooks/composite/useActionsExtensionInfo';
 
 // 扩展工厂地址常量
-const EXTENSION_FACTORY_STAKELP = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_STAKELP as `0x${string}`;
+const EXTENSION_FACTORY_STAKELP = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP as `0x${string}`;
 
 interface ActionExtensionPanelProps {
   actionId: bigint;

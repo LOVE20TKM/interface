@@ -8,7 +8,7 @@ import { useRouter } from 'next/router';
 
 // my hooks
 import { useStakeLpActionData } from '@/src/hooks/composite/useStakeLpActionData';
-import { useUnstakeLp, useWithdrawLp } from '@/src/hooks/contracts/useLOVE20ExtensionStakeLp';
+import { useUnstakeLp, useWithdrawLp } from '@/src/hooks/extension/plugins/lp/contracts';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my contexts

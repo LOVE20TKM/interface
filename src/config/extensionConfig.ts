@@ -1,0 +1,97 @@
+/**
+ * 扩展类型枚举
+ */
+export enum ExtensionType {
+  STAKE_LP = 'STAKE_LP',
+}
+
+/**
+ * 扩展配置信息接口
+ */
+export interface ExtensionConfig {
+  type: ExtensionType;
+  name: string;
+  factoryAddress: `0x${string}`;
+}
+
+/**
+ * 获取所有扩展配置列表
+ */
+export const getExtensionConfigs = (): ExtensionConfig[] => {
+  const configs: ExtensionConfig[] = [];
+
+  // StakeLP 扩展配置
+  const stakeLpFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP;
+  if (stakeLpFactory) {
+    configs.push({
+      type: ExtensionType.STAKE_LP,
+      name: '质押LP行动',
+      factoryAddress: stakeLpFactory as `0x${string}`,
+    });
+  }
+
+  return configs;
+};
+
+/**
+ * Factory地址到扩展配置的映射（小写地址作为key）
+ */
+const getFactoryConfigMap = (): Map<string, ExtensionConfig> => {
+  const map = new Map<string, ExtensionConfig>();
+  const configs = getExtensionConfigs();
+
+  configs.forEach((config) => {
+    map.set(config.factoryAddress.toLowerCase(), config);
+  });
+
+  return map;
+};
+
+/**
+ * 根据Factory地址获取扩展配置
+ * @param factoryAddress - Factory合约地址
+ * @returns 扩展配置信息，如果未找到则返回null
+ */
+export const getExtensionConfigByFactory = (factoryAddress: string): ExtensionConfig | null => {
+  const map = getFactoryConfigMap();
+  return map.get(factoryAddress.toLowerCase()) || null;
+};
+
+/**
+ * 根据扩展类型获取配置
+ * @param type - 扩展类型
+ * @returns 扩展配置信息，如果未找到则返回null
+ */
+export const getExtensionConfigByType = (type: ExtensionType): ExtensionConfig | null => {
+  const configs = getExtensionConfigs();
+  return configs.find((config) => config.type === type) || null;
+};
+
+/**
+ * 检查给定的Factory地址是否是已知的扩展
+ * @param factoryAddress - Factory合约地址
+ * @returns 如果是已知扩展返回true，否则返回false
+ */
+export const isKnownFactory = (factoryAddress: string): boolean => {
+  return getExtensionConfigByFactory(factoryAddress) !== null;
+};
+
+/**
+ * 获取Factory地址对应的扩展名称
+ * @param factoryAddress - Factory合约地址
+ * @returns 扩展名称，如果未找到返回默认值
+ */
+export const getFactoryName = (factoryAddress: string, defaultName: string = '未知类型'): string => {
+  const config = getExtensionConfigByFactory(factoryAddress);
+  return config?.name || defaultName;
+};
+
+/**
+ * 获取Factory地址对应的扩展类型
+ * @param factoryAddress - Factory合约地址
+ * @returns 扩展类型，如果未找到返回null
+ */
+export const getFactoryType = (factoryAddress: string): ExtensionType | null => {
+  const config = getExtensionConfigByFactory(factoryAddress);
+  return config?.type || null;
+};

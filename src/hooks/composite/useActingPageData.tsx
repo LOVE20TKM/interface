@@ -1,7 +1,7 @@
 import { useAccount } from 'wagmi';
 import { useJoinableActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useEstimatedActionRewardOfCurrentRound } from '@/src/hooks/contracts/useLOVE20MintViewer';
-import { useActionsJoinedAmount } from './useActionsJoinedAmount';
+import { useExtensionsBaseData } from '@/src/hooks/extension';
 import { useMemo } from 'react';
 
 export interface UseActingPageDataParams {
@@ -10,9 +10,8 @@ export interface UseActingPageDataParams {
 }
 
 export interface UseActingPageDataResult {
-  // 行动列表相关
+  // 行动列表相关（已增强扩展数据）
   joinableActions: any[] | undefined;
-  getJoinedAmount: (index: number) => bigint;
 
   // 统计数据相关
   totalJoinedAmount: bigint;
@@ -21,13 +20,13 @@ export interface UseActingPageDataResult {
   // 加载状态
   isPending: boolean;
   isPendingActions: boolean;
-  isPendingJoinedAmount: boolean;
+  isPendingExtension: boolean;
   isPendingReward: boolean;
 
   // 错误信息
   error: any;
   errorActions: any;
-  errorJoinedAmount: any;
+  errorExtension: any;
   errorReward: any;
 }
 
@@ -35,33 +34,66 @@ export interface UseActingPageDataResult {
  * 行动页面数据聚合Hook
  *
  * 功能：
- * 1. 统一获取页面所需的所有数据
- * 2. 避免子组件重复调用相同的 hooks
- * 3. 提供统一的加载状态和错误处理
+ * 1. 获取用户可参与的行动列表
+ * 2. 自动查询扩展行动的基础数据（accountsCount, joinedValue）
+ * 3. 用扩展数据增强行动列表（覆盖 joinedAmount）
+ * 4. 提供统一的加载状态和错误处理
  *
  * @param tokenAddress 代币地址
  * @param currentRound 当前轮次
- * @returns 页面所需的所有数据、加载状态和错误信息
+ * @returns 增强后的行动列表、统计数据、加载状态和错误信息
  */
 export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageDataParams): UseActingPageDataResult => {
   const { address: account } = useAccount();
 
   // 获取用户可参与的行动列表
   const {
-    joinableActions,
+    joinableActions: rawActions,
     isPending: isPendingActions,
     error: errorActions,
   } = useJoinableActions(tokenAddress || ('' as `0x${string}`), currentRound || BigInt(0), account as `0x${string}`);
 
-  // 获取每个行动的参与代币数（自动处理扩展协议）
+  // 提取 actionIds
+  const actionIds = useMemo(() => {
+    return rawActions?.map((action) => action.action.head.id) || [];
+  }, [rawActions]);
+
+  // 获取扩展行动的基础数据（accountsCount, joinedValue）
   const {
-    getJoinedAmount,
-    isPending: isPendingJoinedAmount,
-    error: errorJoinedAmount,
-  } = useActionsJoinedAmount({
+    baseData: extensionData,
+    isPending: isPendingExtension,
+    error: errorExtension,
+  } = useExtensionsBaseData({
     tokenAddress,
-    joinableActions,
+    actionIds,
   });
+
+  // 增强 joinableActions 数据：用扩展的 joinedValue 覆盖原始 joinedAmount
+  const joinableActions = useMemo(() => {
+    if (!rawActions) return undefined;
+    if (!extensionData || extensionData.length === 0) return rawActions;
+
+    return rawActions.map((action, index) => {
+      const extension = extensionData[index];
+
+      // 如果是扩展行动且有 joinedValue 数据，使用扩展数据覆盖
+      if (extension?.isExtension && extension.joinedValue !== undefined) {
+        return {
+          ...action,
+          joinedAmount: extension.joinedValue, // 使用扩展的参与值
+          accountsCount: extension.accountsCount, // 添加参与人数
+          isExtension: true,
+          extensionAddress: extension.extension,
+        };
+      }
+
+      // 非扩展行动，返回原始数据
+      return {
+        ...action,
+        isExtension: false,
+      };
+    });
+  }, [rawActions, extensionData]);
 
   // 计算所有行动的参与代币数总和
   const totalJoinedAmount = useMemo(() => {
@@ -69,10 +101,10 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
       return BigInt(0);
     }
 
-    return joinableActions.reduce((total, _, index) => {
-      return total + getJoinedAmount(index);
+    return joinableActions.reduce((total, action) => {
+      return total + action.joinedAmount;
     }, BigInt(0));
-  }, [joinableActions, getJoinedAmount]);
+  }, [joinableActions]);
 
   // 获取预计新增铸币
   const {
@@ -82,24 +114,23 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
   } = useEstimatedActionRewardOfCurrentRound(tokenAddress || ('' as `0x${string}`));
 
   return {
-    // 行动列表相关
+    // 行动列表相关（已增强扩展数据）
     joinableActions,
-    getJoinedAmount,
 
     // 统计数据相关
     totalJoinedAmount,
     expectedReward,
 
     // 加载状态
-    isPending: isPendingActions || isPendingJoinedAmount || isPendingReward,
+    isPending: isPendingActions || isPendingExtension || isPendingReward,
     isPendingActions,
-    isPendingJoinedAmount,
+    isPendingExtension,
     isPendingReward,
 
     // 错误信息
-    error: errorActions || errorJoinedAmount || errorReward,
+    error: errorActions || errorExtension || errorReward,
     errorActions,
-    errorJoinedAmount,
+    errorExtension,
     errorReward,
   };
 };

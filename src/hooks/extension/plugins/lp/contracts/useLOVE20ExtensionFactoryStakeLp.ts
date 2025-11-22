@@ -8,8 +8,8 @@ import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 import { LOVE20ExtensionFactoryStakeLpAbi } from '@/src/abis/LOVE20ExtensionFactoryStakeLp';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
-// TODO: 需要在环境变量中配置这个合约地址
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_STAKELP as `0x${string}`;
+// 需要在环境变量中配置这个合约地址
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP as `0x${string}`;
 
 // =====================
 // === 读取 Hook ===
