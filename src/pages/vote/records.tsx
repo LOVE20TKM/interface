@@ -37,7 +37,7 @@ type RoundVotingData = {
   hasVoting: boolean;
 };
 
-const VoteHistoryPage: React.FC = () => {
+const VoteRecordsPage: React.FC = () => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
@@ -416,4 +416,4 @@ const VoteHistoryPage: React.FC = () => {
   );
 };
 
-export default VoteHistoryPage;
+export default VoteRecordsPage;

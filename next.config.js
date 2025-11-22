@@ -11,8 +11,7 @@ const nextConfig = {
 
   // Android 10 兼容性配置
   compiler: {
-    // 移除 console.log 在生产环境中
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: false, // 保留所有日志，方便 VConsole 调试
   },
 
   // 实验性功能，提高兼容性
@@ -49,17 +48,11 @@ const nextConfig = {
   async exportPathMap() {
     return {
       '/': { page: '/' },
+      '/articles': { page: '/articles' },
       '/acting': { page: '/acting' },
-      '/token': { page: '/token' },
-      '/token/intro': { page: '/token/intro' },
-      '/token/transfer': { page: '/token/transfer' },
       '/acting/join': { page: '/acting/join' },
-      '/submit/submit': { page: '/submit/submit' },
-      '/vote/single': { page: '/vote/single' },
       '/action/new': { page: '/action/new' },
       '/action/info': { page: '/action/info' },
-      '/action/verify_detail': { page: '/action/verify_detail' },
-      '/articles': { page: '/articles' },
       '/dex': { page: '/dex' },
       '/dex/deposit': { page: '/dex/deposit' },
       '/dex/swap': { page: '/dex/swap' },
@@ -69,10 +62,6 @@ const nextConfig = {
       '/extension/deployExtension': { page: '/extension/deployExtension' },
       '/extension/initialize': { page: '/extension/initialize' },
       '/gov': { page: '/gov' },
-      '/stake/liquid': { page: '/stake/liquid' },
-      '/stake/stakelp': { page: '/stake/stakelp' },
-      '/stake/staketoken': { page: '/stake/staketoken' },
-      '/stake/unstake': { page: '/stake/unstake' },
       '/launch': { page: '/launch' },
       '/launch/burn': { page: '/launch/burn' },
       '/launch/contribute': { page: '/launch/contribute' },
@@ -83,16 +72,26 @@ const nextConfig = {
       '/my/actionrewards': { page: '/my/actionrewards' },
       '/my/govrewards': { page: '/my/govrewards' },
       '/my/rewardsofaction': { page: '/my/rewardsofaction' },
+      '/stake/liquid': { page: '/stake/liquid' },
+      '/stake/stakelp': { page: '/stake/stakelp' },
+      '/stake/staketoken': { page: '/stake/staketoken' },
+      '/stake/unstake': { page: '/stake/unstake' },
+      '/submit/submit': { page: '/submit/submit' },
+      '/submit/actions': { page: '/submit/actions' },
+      '/token': { page: '/token' },
+      '/token/intro': { page: '/token/intro' },
+      '/token/transfer': { page: '/token/transfer' },
       '/tokens': { page: '/tokens' },
       '/tokens/children': { page: '/tokens/children' },
       '/verify': { page: '/verify' },
       '/verify/action': { page: '/verify/action' },
       '/verify/actions': { page: '/verify/actions' },
+      '/verify/detail': { page: '/verify/detail' },
       '/vote': { page: '/vote' },
       '/vote/actions': { page: '/vote/actions' },
-      '/submit/actions': { page: '/submit/actions' },
-      '/vote/my_history': { page: '/vote/my_history' },
       '/vote/batch': { page: '/vote/batch' },
+      '/vote/records': { page: '/vote/records' },
+      '/vote/single': { page: '/vote/single' },
     };
   },
   images: {

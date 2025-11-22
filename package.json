@@ -103,6 +103,7 @@
     "@coinbase/wallet-sdk": "^4.3.0",
     "@metamask/sdk": "^0.33.1",
     "@metamask/sdk-communication-layer": "^0.33.1",
-    "fast-redact": "^3.5.0"
+    "fast-redact": "^3.5.0",
+    "glob": "^11.1.0"
   }
 }

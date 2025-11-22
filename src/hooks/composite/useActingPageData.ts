@@ -10,7 +10,7 @@ export interface UseActingPageDataParams {
 }
 
 export interface UseActingPageDataResult {
-  // 行动列表相关（已增强扩展数据）
+  // 行动列表相关
   joinableActions: any[] | undefined;
 
   // 统计数据相关
@@ -114,7 +114,7 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
   } = useEstimatedActionRewardOfCurrentRound(tokenAddress || ('' as `0x${string}`));
 
   return {
-    // 行动列表相关（已增强扩展数据）
+    // 行动列表相关
     joinableActions,
 
     // 统计数据相关
