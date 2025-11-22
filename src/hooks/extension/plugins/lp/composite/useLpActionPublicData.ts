@@ -1,5 +1,5 @@
-// hooks/composite/useStakeLpActionPublicData.tsx
-// 获取质押LP行动的实时数据（当前参与标签）
+// hooks/extension/plugins/lp/composite/useLpActionPublicData.tsx
+// 获取LP行动的实时公开数据（所有参与者）
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
@@ -20,12 +20,12 @@ export interface StakeLpParticipant {
   rewardRatio: number;
 }
 
-export interface UseStakeLpActionPublicDataParams {
+export interface UseLpActionPublicDataParams {
   extensionAddress: `0x${string}` | undefined;
   tokenAddress: `0x${string}` | undefined;
 }
 
-export interface UseStakeLpActionPublicDataResult {
+export interface UseLpActionPublicDataResult {
   participants: StakeLpParticipant[];
   totalScore: bigint;
   totalLp: bigint;
@@ -35,14 +35,21 @@ export interface UseStakeLpActionPublicDataResult {
 }
 
 /**
- * Hook: 获取质押LP行动的实时公示数据
+ * Hook: 获取 LP 行动的公开数据
  *
- * 用于"当前参与"标签，实时显示所有参与者的状态
+ * 功能：
+ * 1. 获取所有参与者的质押信息
+ * 2. 计算每个参与者的得分和激励占比
+ * 3. 用于"当前参与"标签，实时显示所有参与者的状态
+ *
+ * @param extensionAddress LP 扩展合约地址
+ * @param tokenAddress 代币地址
+ * @returns 所有参与者数据、加载状态和错误信息
  */
-export const useStakeLpActionPublicData = ({
+export const useLpActionPublicData = ({
   extensionAddress,
   tokenAddress,
-}: UseStakeLpActionPublicDataParams): UseStakeLpActionPublicDataResult => {
+}: UseLpActionPublicDataParams): UseLpActionPublicDataResult => {
   // ==========================================
   // 步骤 1: 批量获取基础数据
   // ==========================================

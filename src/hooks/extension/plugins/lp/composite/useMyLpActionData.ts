@@ -8,13 +8,13 @@ import { UniswapV2PairAbi } from '@/src/abis/UniswapV2Pair';
 const STAKE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`;
 const JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`;
 
-export interface UseStakeLpActionDataParams {
+export interface UseMyLpActionDataParams {
   extensionAddress: `0x${string}` | undefined;
   tokenAddress: `0x${string}` | undefined;
   account: `0x${string}` | undefined;
 }
 
-export interface UseStakeLpActionDataResult {
+export interface UseMyLpActionDataResult {
   // LP质押信息
   stakedAmount: bigint;
   totalStakedAmount: bigint;
@@ -54,23 +54,23 @@ export interface UseStakeLpActionDataResult {
 }
 
 /**
- * StakeLp 行动扩展的数据聚合Hook
+ * LP 行动扩展 - 我的数据聚合 Hook
  *
  * 功能：
- * 1. 批量获取 StakeLp 扩展的所有数据
+ * 1. 批量获取当前用户在 LP 扩展行动中的所有数据
  * 2. 包括用户质押数量、总质押数量、治理票数量、激励占比等信息
  * 3. 使用批量 RPC 调用优化性能
  *
- * @param extensionAddress StakeLp 扩展合约地址
+ * @param extensionAddress LP 扩展合约地址
  * @param tokenAddress 代币地址
  * @param account 用户账户地址
- * @returns StakeLp 扩展的所有数据、加载状态和错误信息
+ * @returns 用户的 LP 扩展数据、加载状态和错误信息
  */
-export const useStakeLpActionData = ({
+export const useMyLpActionData = ({
   extensionAddress,
   tokenAddress,
   account,
-}: UseStakeLpActionDataParams): UseStakeLpActionDataResult => {
+}: UseMyLpActionDataParams): UseMyLpActionDataResult => {
   // 构建批量合约调用
   const contracts = useMemo(() => {
     if (!extensionAddress || !tokenAddress || !account) return [];

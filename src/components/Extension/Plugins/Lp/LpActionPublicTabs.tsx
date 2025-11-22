@@ -1,48 +1,34 @@
+// components/Extension/plugins/lp/LpActionPublicTabs.tsx
+
 import React, { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
-// my hooks
-import { useFactory } from '@/src/hooks/extension/plugins/lp/contracts';
-
 // my components
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import StakeLpCurrentTab from '@/src/components/ActionExtension/StakeLpCurrentTab';
-import StakeLpHistoryTab from '@/src/components/ActionExtension/StakeLpHistoryTab';
-
-const EXTENSION_FACTORY_STAKELP = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP as `0x${string}`;
+import LpCurrentTab from '@/src/components/Extension/Plugins/Lp/_LpCurrentTab';
+import LpHistoryTab from '@/src/components/Extension/Plugins/Lp/_LpHistoryTab';
 
 type SubTabType = 'current' | 'history';
 
-interface ActionPublicTabsProps {
+interface LpActionPublicTabsProps {
   extensionAddress: `0x${string}`;
   currentRound: bigint;
 }
 
 /**
- * 行动公示标签组件
+ * LP行动公开信息标签组件
  *
- * 根据扩展类型显示不同的公示内容
- * 当前支持：质押LP行动
+ * 显示LP扩展行动的当前参与和激励公示信息
  */
-const ActionPublicTabs: React.FC<ActionPublicTabsProps> = ({ extensionAddress, currentRound }) => {
+const LpActionPublicTabs: React.FC<LpActionPublicTabsProps> = ({ extensionAddress, currentRound }) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>('current');
 
   // 从URL获取二级标签参数
   const { tab2 } = router.query;
-
-  // 获取扩展合约的 factory 地址，判断类型
-  const { factoryAddress, isPending: isFactoryPending } = useFactory(extensionAddress);
-
-  // 判断是否为质押LP行动
-  const isStakeLpAction =
-    factoryAddress &&
-    EXTENSION_FACTORY_STAKELP &&
-    factoryAddress.toLowerCase() === EXTENSION_FACTORY_STAKELP.toLowerCase();
 
   // 初始化二级标签状态
   useEffect(() => {
@@ -67,29 +53,6 @@ const ActionPublicTabs: React.FC<ActionPublicTabsProps> = ({ extensionAddress, c
       { shallow: true },
     );
   };
-
-  // 如果正在加载工厂地址
-  if (isFactoryPending) {
-    return (
-      <div className="bg-white rounded-lg p-8">
-        <div className="text-center">
-          <LoadingIcon />
-          <p className="mt-4 text-gray-600">加载扩展信息中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 如果不是质押LP行动，显示暂不支持
-  if (!isStakeLpAction) {
-    return (
-      <div className="bg-white rounded-lg p-8">
-        <div className="text-center text-gray-500">
-          <p>该扩展类型暂不支持行动公示</p>
-        </div>
-      </div>
-    );
-  }
 
   // 二级标签配置
   const subTabs: { key: SubTabType; label: string }[] = [
@@ -118,12 +81,12 @@ const ActionPublicTabs: React.FC<ActionPublicTabsProps> = ({ extensionAddress, c
 
       {/* 二级标签内容 */}
       {activeSubTab === 'current' ? (
-        <StakeLpCurrentTab extensionAddress={extensionAddress} tokenAddress={token?.address} />
+        <LpCurrentTab extensionAddress={extensionAddress} tokenAddress={token?.address} />
       ) : (
-        <StakeLpHistoryTab extensionAddress={extensionAddress} currentRound={currentRound} />
+        <LpHistoryTab extensionAddress={extensionAddress} currentRound={currentRound} />
       )}
     </div>
   );
 };
 
-export default ActionPublicTabs;
+export default LpActionPublicTabs;

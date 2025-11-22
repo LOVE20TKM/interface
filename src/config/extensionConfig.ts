@@ -2,7 +2,7 @@
  * 扩展类型枚举
  */
 export enum ExtensionType {
-  STAKE_LP = 'STAKE_LP',
+  LP = 'LP',
 }
 
 /**
@@ -20,12 +20,12 @@ export interface ExtensionConfig {
 export const getExtensionConfigs = (): ExtensionConfig[] => {
   const configs: ExtensionConfig[] = [];
 
-  // StakeLP 扩展配置
+  // LP 扩展配置
   const stakeLpFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP;
   if (stakeLpFactory) {
     configs.push({
-      type: ExtensionType.STAKE_LP,
-      name: '质押LP行动',
+      type: ExtensionType.LP,
+      name: 'LP行动',
       factoryAddress: stakeLpFactory as `0x${string}`,
     });
   }

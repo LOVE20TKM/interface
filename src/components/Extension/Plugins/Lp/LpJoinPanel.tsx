@@ -18,7 +18,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/src/lib/format';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
-import { useStakeLpActionData } from '@/src/hooks/composite/useStakeLpActionData';
+import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
 import { useStakeLp, useLpTokenAddress } from '@/src/hooks/extension/plugins/lp/contracts';
 
 // contexts / types / etc
@@ -29,7 +29,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import StakeLpStatsCard from './StakeLpStatsCard';
+import LpStatsCard from './_LpStatsCard';
 
 // ------------------------------
 //  这里开始：定义表单校验
@@ -39,17 +39,13 @@ interface FormValues {
   stakeAmount: string; // 参与数量
 }
 
-interface ActionExtensionJoinPanelProps {
+interface LpJoinPanelProps {
   actionId: bigint;
   actionInfo: ActionInfo;
   extensionAddress: `0x${string}`;
 }
 
-const ActionExtensionJoinPanel: React.FC<ActionExtensionJoinPanelProps> = ({
-  actionId,
-  actionInfo,
-  extensionAddress,
-}) => {
+const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensionAddress }) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
@@ -69,7 +65,7 @@ const ActionExtensionJoinPanel: React.FC<ActionExtensionJoinPanelProps> = ({
     lpRatio,
     isPending: isPendingData,
     error: errorData,
-  } = useStakeLpActionData({
+  } = useMyLpActionData({
     extensionAddress,
     tokenAddress: token?.address as `0x${string}`,
     account: account as `0x${string}`,
@@ -267,7 +263,7 @@ const ActionExtensionJoinPanel: React.FC<ActionExtensionJoinPanelProps> = ({
       {/* 如果已质押，显示参与信息 */}
       {isStaked && (
         <div className="flex flex-col items-center px-4 pt-1">
-          <StakeLpStatsCard
+          <LpStatsCard
             stakedAmount={stakedAmount || BigInt(0)}
             lpRatioStr={lpRatioStr}
             userScore={userScore}
@@ -397,4 +393,4 @@ const ActionExtensionJoinPanel: React.FC<ActionExtensionJoinPanelProps> = ({
   );
 };
 
-export default ActionExtensionJoinPanel;
+export default LpJoinPanel;

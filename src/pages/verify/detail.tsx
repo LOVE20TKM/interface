@@ -6,7 +6,7 @@ import { useAccount } from 'wagmi';
 
 // my hooks
 
-import { useActionCoreData } from '@/src/hooks/composite/useActionCoreData';
+import { useActionDetailData } from '@/src/hooks/composite/useActionDetailData';
 import { useActionVerificationMatrixPaged } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
@@ -37,7 +37,7 @@ const VerifyDetailPage = () => {
 
   // 获取页面数据
   const { actionInfo, participantCount, totalAmount, userJoinedAmount, isJoined, isPending, error, currentRound } =
-    useActionCoreData({
+    useActionDetailData({
       tokenAddress: token?.address,
       actionId,
       account,

@@ -467,10 +467,10 @@ const TokenPage = () => {
                       <CardTitle className="flex items-center justify-between text-lg">
                         <span>LOVE20 扩展合约地址：</span>
                         <Link
-                          href="/extension/center"
+                          href="/extension/addfactory"
                           className="text-sm text-secondary hover:text-secondary/80 transition-colors"
                         >
-                          查看 &gt;&gt;
+                          注册工厂合约 &gt;&gt;
                         </Link>
                       </CardTitle>
                     </CardHeader>

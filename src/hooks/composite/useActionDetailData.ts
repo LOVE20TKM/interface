@@ -4,18 +4,18 @@ import { LOVE20SubmitAbi } from '@/src/abis/LOVE20Submit';
 import { LOVE20JoinAbi } from '@/src/abis/LOVE20Join';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { ActionInfo } from '@/src/types/love20types';
-import { useActionParticipationData } from './useActionParticipationData';
+import { useActionParticipationWithExtension } from './useActionParticipationWithExtension';
 
 const SUBMIT_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_SUBMIT as `0x${string}`;
 const JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`;
 
-export interface UseActionCoreDataParams {
+export interface UseActionDetailDataParams {
   tokenAddress: `0x${string}` | undefined;
   actionId: bigint | undefined;
   account?: `0x${string}`;
 }
 
-export interface ActionCoreData {
+export interface ActionDetailData {
   // 行动基本信息
   actionInfo: ActionInfo | undefined;
 
@@ -39,7 +39,11 @@ export interface ActionCoreData {
   error: any;
 }
 
-export const useActionCoreData = ({ tokenAddress, actionId, account }: UseActionCoreDataParams): ActionCoreData => {
+export const useActionDetailData = ({
+  tokenAddress,
+  actionId,
+  account,
+}: UseActionDetailDataParams): ActionDetailData => {
   const contracts = useMemo(() => {
     if (!tokenAddress || actionId === undefined) return [];
 
@@ -89,8 +93,8 @@ export const useActionCoreData = ({ tokenAddress, actionId, account }: UseAction
 
   const {
     data,
-    isPending: isCorePending,
-    error: coreError,
+    isPending: isBasicDataPending,
+    error: basicDataError,
   } = useReadContracts({
     contracts: contracts as any,
     query: {
@@ -99,9 +103,9 @@ export const useActionCoreData = ({ tokenAddress, actionId, account }: UseAction
   });
 
   // ==========================================
-  // 步骤 1: 解析 Core 数据
+  // 步骤 1: 解析基础数据
   // ==========================================
-  const coreData = useMemo(() => {
+  const basicData = useMemo(() => {
     if (!data || !tokenAddress || actionId === undefined) {
       return {
         actionInfo: undefined,
@@ -139,23 +143,23 @@ export const useActionCoreData = ({ tokenAddress, actionId, account }: UseAction
   // ==========================================
   // 步骤 2: 获取参与数据（自动判断扩展行动）
   // ==========================================
-  const participationData = useActionParticipationData(tokenAddress, actionId, account, {
-    participantCount: coreData.participantCount,
-    totalAmount: coreData.totalAmount,
-    userJoinedAmount: coreData.userJoinedAmount,
-    isJoined: coreData.isJoined,
+  const participationData = useActionParticipationWithExtension(tokenAddress, actionId, account, {
+    participantCount: basicData.participantCount,
+    totalAmount: basicData.totalAmount,
+    userJoinedAmount: basicData.userJoinedAmount,
+    isJoined: basicData.isJoined,
   });
 
   // ==========================================
   // 步骤 3: 整合所有数据
   // ==========================================
-  const finalData: ActionCoreData = useMemo(() => {
+  const finalData: ActionDetailData = useMemo(() => {
     return {
-      // 基本信息（始终从 core 获取）
-      actionInfo: coreData.actionInfo,
-      currentRound: coreData.currentRound,
+      // 基本信息（始终从基础合约获取）
+      actionInfo: basicData.actionInfo,
+      currentRound: basicData.currentRound,
 
-      // 参与统计（自动使用扩展数据或 core 数据）
+      // 参与统计（自动使用扩展数据或基础数据）
       participantCount: participationData.participantCount,
       totalAmount: participationData.totalAmount,
       userJoinedAmount: participationData.userJoinedAmount,
@@ -166,10 +170,10 @@ export const useActionCoreData = ({ tokenAddress, actionId, account }: UseAction
       extensionAddress: participationData.extensionAddress,
 
       // 加载状态（合并）
-      isPending: isCorePending || participationData.isPending,
-      error: coreError || participationData.error,
+      isPending: isBasicDataPending || participationData.isPending,
+      error: basicDataError || participationData.error,
     };
-  }, [coreData, participationData, isCorePending, coreError]);
+  }, [basicData, participationData, isBasicDataPending, basicDataError]);
 
   return finalData;
 };

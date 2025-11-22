@@ -29,7 +29,7 @@
 import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { useActionRewardsByAccountByActionIdByRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
-import { useActionsExtensionInfo, ActionExtensionInfo } from '@/src/hooks/composite/useActionsExtensionInfo';
+import { useExtensionContractInfo, ExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import { useExtensionActionRewardsByRounds } from '@/src/hooks/extension/base/composite';
 
 /**
@@ -62,7 +62,7 @@ export interface UseActionRewardsByRoundsParams {
  */
 export interface UseActionRewardsByRoundsResult {
   /** 扩展信息 */
-  extensionInfo?: ActionExtensionInfo;
+  extensionInfo?: ExtensionContractInfo;
   /** 是否正在加载扩展信息 */
   isLoadingExtensionInfo: boolean;
   /** 扩展信息查询错误 */
@@ -100,20 +100,15 @@ export const useActionRewardsByRounds = ({
 }: UseActionRewardsByRoundsParams): UseActionRewardsByRoundsResult => {
   const { address: account } = useAccount();
 
-  // 第1步：查询扩展信息（判断行动类型）
+  // 第1步：查询扩展合约信息（判断行动类型）
   const {
-    extensionInfos,
+    contractInfo: extensionInfo,
     isPending: isLoadingExtensionInfo,
     error: errorExtensionInfo,
-  } = useActionsExtensionInfo({
+  } = useExtensionContractInfo({
     tokenAddress,
-    actionIds: actionId !== undefined ? [actionId] : [],
+    actionId,
   });
-
-  // 第2步：提取扩展信息
-  const extensionInfo = useMemo(() => {
-    return extensionInfos.length > 0 ? extensionInfos[0] : undefined;
-  }, [extensionInfos]);
 
   const isExtensionAction = extensionInfo?.isExtension || false;
 
@@ -136,7 +131,7 @@ export const useActionRewardsByRounds = ({
     isPending: isLoadingExtensionRewards,
     error: errorLoadingExtensionRewards,
   } = useExtensionActionRewardsByRounds({
-    extensionAddress: extensionInfo?.extensionAddress,
+    extensionAddress: extensionInfo?.extension,
     startRound,
     endRound,
     enabled: isExtensionAction && enabled,

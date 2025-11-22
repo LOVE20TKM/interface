@@ -2,7 +2,7 @@
 import React from 'react';
 import { formatTokenAmount } from '@/src/lib/format';
 
-interface StakeLpStatsCardProps {
+interface LpStatsCardProps {
   stakedAmount: bigint;
   lpRatioStr: string;
   userScore: bigint;
@@ -22,7 +22,7 @@ interface StakeLpStatsCardProps {
  * - 在"我的行动"页面显示质押统计
  * - 在"参与行动"页面显示当前质押信息
  */
-const StakeLpStatsCard: React.FC<StakeLpStatsCardProps> = ({
+const LpStatsCard: React.FC<LpStatsCardProps> = ({
   stakedAmount,
   lpRatioStr,
   userScore,
@@ -87,4 +87,4 @@ const StakeLpStatsCard: React.FC<StakeLpStatsCardProps> = ({
   );
 };
 
-export default StakeLpStatsCard;
+export default LpStatsCard;

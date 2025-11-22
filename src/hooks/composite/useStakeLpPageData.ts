@@ -1,3 +1,4 @@
+// TODO： 自动的LP扩展行动上线后，这个可能要去掉？
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { LOVE20TokenViewerAbi } from '@/src/abis/LOVE20TokenViewer';

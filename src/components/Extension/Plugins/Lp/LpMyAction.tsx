@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 // my hooks
-import { useStakeLpActionData } from '@/src/hooks/composite/useStakeLpActionData';
+import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
 import { useUnstakeLp, useWithdrawLp } from '@/src/hooks/extension/plugins/lp/contracts';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
@@ -21,28 +21,28 @@ import { ActionInfo } from '@/src/types/love20types';
 import { formatPercentage } from '@/src/lib/format';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import StakeLpStatsCard from './StakeLpStatsCard';
+import LpStatsCard from '@/src/components/Extension/Plugins/Lp/_LpStatsCard';
 
-interface MyStakeLpActionPanelProps {
+interface LpMyActionProps {
   actionId: bigint;
   actionInfo: ActionInfo | undefined;
   extensionAddress: `0x${string}`;
 }
 
 /**
- * 我的 StakeLp 行动面板组件
+ * LP 我的行动参与组件
  *
  * 功能：
  * 1. 显示用户的 LP 质押数量
  * 2. 显示激励占比（LP部分 + SL部分）
  * 3. 提供取回LP、增加LP、查看激励的操作入口
  */
-const MyStakeLpActionPanel: React.FC<MyStakeLpActionPanelProps> = ({ actionId, actionInfo, extensionAddress }) => {
+const LpMyAction: React.FC<LpMyActionProps> = ({ actionId, actionInfo, extensionAddress }) => {
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
   const router = useRouter();
 
-  // 获取 StakeLp 扩展数据
+  // 获取我的 LP 扩展数据
   const {
     stakedAmount,
     totalStakedAmount,
@@ -61,7 +61,7 @@ const MyStakeLpActionPanel: React.FC<MyStakeLpActionPanelProps> = ({ actionId, a
     remainingRounds,
     isPending: isPendingData,
     error: errorData,
-  } = useStakeLpActionData({
+  } = useMyLpActionData({
     extensionAddress,
     tokenAddress: token?.address as `0x${string}`,
     account: account as `0x${string}`,
@@ -154,7 +154,7 @@ const MyStakeLpActionPanel: React.FC<MyStakeLpActionPanelProps> = ({ actionId, a
     <div className="flex flex-col items-center pt-1">
       {isStaked && (
         <>
-          <StakeLpStatsCard
+          <LpStatsCard
             stakedAmount={stakedAmount || BigInt(0)}
             lpRatioStr={lpRatioStr}
             userScore={userScore}
@@ -280,4 +280,4 @@ const MyStakeLpActionPanel: React.FC<MyStakeLpActionPanelProps> = ({ actionId, a
   );
 };
 
-export default MyStakeLpActionPanel;
+export default LpMyAction;

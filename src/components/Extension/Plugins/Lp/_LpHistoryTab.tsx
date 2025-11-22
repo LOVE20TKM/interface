@@ -1,4 +1,4 @@
-// components/ActionExtension/StakeLpHistoryTab.tsx
+// components/Extension/Plugins/Lp/_LpHistoryTab.tsx
 // 质押LP扩展行动 - 激励公示标签
 
 import React, { useState, useEffect, useContext } from 'react';
@@ -8,7 +8,7 @@ import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
-import { useStakeLpActionHistoryData } from '@/src/hooks/composite/useStakeLpActionHistoryData';
+import { useLpVerifyHistoryData } from '@/src/hooks/extension/plugins/lp/composite';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 
 // my components
@@ -20,7 +20,7 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 // my funcs
 import { formatPercentage, formatRoundForDisplay, formatNumber } from '@/src/lib/format';
 
-interface StakeLpHistoryTabProps {
+interface LpHistoryTabProps {
   extensionAddress: `0x${string}`;
   currentRound: bigint; // 行动轮次
 }
@@ -30,7 +30,7 @@ interface StakeLpHistoryTabProps {
  *
  * 显示历史激励分配结果
  */
-const StakeLpHistoryTab: React.FC<StakeLpHistoryTabProps> = ({
+const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
   extensionAddress,
   currentRound, // 行动轮次
 }) => {
@@ -52,7 +52,7 @@ const StakeLpHistoryTab: React.FC<StakeLpHistoryTabProps> = ({
     setSelectedRound(BigInt(round));
   };
 
-  const { participants, totalScore, isEmpty, isPending, error } = useStakeLpActionHistoryData({
+  const { participants, totalScore, isEmpty, isPending, error } = useLpVerifyHistoryData({
     extensionAddress,
     round: selectedRound,
   });
@@ -151,4 +151,4 @@ const StakeLpHistoryTab: React.FC<StakeLpHistoryTabProps> = ({
   );
 };
 
-export default StakeLpHistoryTab;
+export default LpHistoryTab;

@@ -26,15 +26,9 @@ export interface ExtensionActionData {
  * 2. 批量获取每个扩展的actionId和tokenAddress
  * 3. 批量获取行动详细信息
  */
-export const useExtensionActionsFullData = (tokenAddress: `0x${string}`) => {
+export const useExtensionActions = (tokenAddress: `0x${string}`) => {
   // 步骤1: 获取所有扩展地址
   const { extensions, isPending: extensionsPending, error: extensionsError } = useExtensions(tokenAddress);
-
-  // 调试日志
-  console.log('useExtensionActionsFullData - tokenAddress:', tokenAddress);
-  console.log('useExtensionActionsFullData - extensions:', extensions);
-  console.log('useExtensionActionsFullData - extensionsPending:', extensionsPending);
-  console.log('useExtensionActionsFullData - extensionsError:', extensionsError);
 
   // 步骤2: 构建批量调用 - 获取每个扩展的extensionInfo
   const extensionInfoContracts = useMemo(() => {
@@ -134,19 +128,10 @@ export const useExtensionActionsFullData = (tokenAddress: `0x${string}`) => {
   const isPending = hasNoExtensions ? false : extensionsPending || isPendingExtensionInfo || isPendingActionInfos;
   const error = extensionsError || errorExtensionInfo || errorActionInfos;
 
-  // 调试日志
-  console.log('useExtensionActionsFullData - final state:', {
-    hasNoExtensions,
-    isPending,
-    extensionsPending,
-    isPendingExtensionInfo,
-    isPendingActionInfos,
-    extensionActionsData: extensionActionsData.length,
-  });
-
   return {
     extensionActionsData,
     isPending,
     error,
   };
 };
+

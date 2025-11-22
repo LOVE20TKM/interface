@@ -1,11 +1,11 @@
-// components/ActionExtension/StakeLpCurrentTab.tsx
-// 质押LP扩展行动 - 当前参与标签
+// components/Extension/Plugins/Lp/_LpCurrentTab.tsx
+// LP扩展行动 - 当前参与标签
 
 import React from 'react';
 import { useAccount } from 'wagmi';
 
 // my hooks
-import { useStakeLpActionPublicData } from '@/src/hooks/composite/useStakeLpActionPublicData';
+import { useLpActionPublicData } from '@/src/hooks/extension/plugins/lp/composite';
 
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -14,20 +14,20 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 // my funcs
 import { formatPercentage, formatNumber } from '@/src/lib/format';
 
-interface StakeLpCurrentTabProps {
+interface LpCurrentTabProps {
   extensionAddress: `0x${string}`;
   tokenAddress: `0x${string}` | undefined;
 }
 
 /**
- * 质押LP扩展 - 当前参与标签
+ * LP扩展 - 当前参与标签
  *
  * 实时显示所有参与者的质押状态
  */
-const StakeLpCurrentTab: React.FC<StakeLpCurrentTabProps> = ({ extensionAddress, tokenAddress }) => {
+const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddress }) => {
   const { address: account } = useAccount();
 
-  const { participants, totalScore, totalLp, totalGovVotes, isPending, error } = useStakeLpActionPublicData({
+  const { participants, totalScore, totalLp, totalGovVotes, isPending, error } = useLpActionPublicData({
     extensionAddress,
     tokenAddress,
   });
@@ -104,4 +104,4 @@ const StakeLpCurrentTab: React.FC<StakeLpCurrentTabProps> = ({ extensionAddress,
   );
 };
 
-export default StakeLpCurrentTab;
+export default LpCurrentTab;

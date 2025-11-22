@@ -4,10 +4,15 @@ import { useContext } from 'react';
 import Header from '@/src/components/Header';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useFactories } from '@/src/hooks/extension/base/contracts';
-import { useExtensionActionsFullData } from '@/src/hooks/composite/useExtensionActionsData';
-import FactoryList from '@/src/components/Extension/FactoryList';
-import ExtensionActionsList from '@/src/components/Extension/ExtensionActionsList';
+import { useExtensionActions } from '@/src/hooks/extension/base/composite/useExtensionActions';
+import FactoryList from '@/src/components/Extension/Base/Center/FactoryList';
+import ExtensionActionsList from '@/src/components/Extension/Base/Center/ExtensionActionsList';
 
+/**
+ * 扩展中心页面
+ *
+ * 展示工厂列表和扩展行动列表的综合页面
+ */
 export default function ExtensionCenter() {
   const context = useContext(TokenContext);
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
@@ -20,20 +25,7 @@ export default function ExtensionCenter() {
     extensionActionsData,
     isPending: extensionsPending,
     error: extensionsError,
-  } = useExtensionActionsFullData(tokenAddress);
-
-  // 调试日志
-  console.log('ExtensionCenter - context:', context);
-  console.log('ExtensionCenter - tokenAddress:', tokenAddress);
-  console.log('ExtensionCenter - factories:', factories, 'pending:', factoriesPending, 'error:', factoriesError);
-  console.log(
-    'ExtensionCenter - extensionActionsData:',
-    extensionActionsData,
-    'pending:',
-    extensionsPending,
-    'error:',
-    extensionsError,
-  );
+  } = useExtensionActions(tokenAddress);
 
   return (
     <>
@@ -42,6 +34,11 @@ export default function ExtensionCenter() {
         <div className="space-y-6">
           {/* 扩展类型列表 */}
           <FactoryList tokenAddress={tokenAddress} factories={factories} isPending={factoriesPending} />
+          {factoriesError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              工厂列表加载失败: {factoriesError.message}
+            </div>
+          )}
 
           {/* 扩展行动列表 */}
           <ExtensionActionsList
@@ -49,6 +46,11 @@ export default function ExtensionCenter() {
             extensionActionsData={extensionActionsData}
             isPending={extensionsPending}
           />
+          {extensionsError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              扩展行动加载失败: {extensionsError.message}
+            </div>
+          )}
         </div>
       </main>
     </>

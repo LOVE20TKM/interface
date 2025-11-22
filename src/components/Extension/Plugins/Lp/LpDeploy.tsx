@@ -9,20 +9,20 @@ import { Label } from '@/components/ui/label';
 import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts';
 import { LOVE20ExtensionFactoryStakeLpAbi } from '@/src/abis/LOVE20ExtensionFactoryStakeLp';
 import { useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
-import { clearCachedExtensionInfo } from '@/src/hooks/composite/useActionsExtensionInfo';
+import { clearContractInfoCache } from "@/src/hooks/extension/base/composite/useExtensionBaseData";
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import toast from 'react-hot-toast';
 import { isAddress, parseEther, parseEventLogs } from 'viem';
 import { useWaitForTransactionReceipt } from 'wagmi';
 
-interface StakeLpExtensionFormProps {
+interface LpDeployProps {
   factoryAddress: `0x${string}`;
 }
 
 /**
- * 质押LP扩展部署表单
+ * LP扩展部署组件
  */
-export default function StakeLpExtensionForm({ factoryAddress }: StakeLpExtensionFormProps) {
+export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   const context = useContext(TokenContext);
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
 
@@ -86,7 +86,7 @@ export default function StakeLpExtensionForm({ factoryAddress }: StakeLpExtensio
   useEffect(() => {
     if (isTransferConfirmed && actionId && tokenAddress) {
       // 清除该行动的缓存，以便重新查询最新的扩展信息
-      clearCachedExtensionInfo(tokenAddress, BigInt(actionId));
+      clearContractInfoCache(tokenAddress, BigInt(actionId));
       console.log(`✅ 已清除 ActionId ${actionId} 的扩展信息缓存`);
 
       toast.success('代币转移成功！扩展部署流程已完成');

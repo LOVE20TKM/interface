@@ -5,7 +5,7 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { ExtensionActionData } from '@/src/hooks/composite/useExtensionActionsData';
+import { ExtensionActionData } from '@/src/hooks/extension/base/composite/useExtensionActions';
 
 interface ExtensionActionsListProps {
   tokenAddress: `0x${string}`;

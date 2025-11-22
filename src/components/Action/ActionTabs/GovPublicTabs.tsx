@@ -5,7 +5,7 @@ import VotingDetails from '@/src/components/Action/ActionTabs/VotingDetails';
 import JoinDetails from '@/src/components/Action/ActionTabs/JoinDetails';
 import VerifiedAddressesByAction from '@/src/components/Mint/VerifiedAddressesByAction';
 
-interface GovTabsProps {
+interface GovPublicTabsProps {
   actionId: bigint;
   currentRound: bigint;
   actionInfo: ActionInfo;
@@ -13,7 +13,7 @@ interface GovTabsProps {
 
 type GovSubTab = 'vote' | 'join' | 'verify';
 
-const GovTabs: React.FC<GovTabsProps> = ({ actionId, currentRound, actionInfo }) => {
+const GovPublicTabs: React.FC<GovPublicTabsProps> = ({ actionId, currentRound, actionInfo }) => {
   const router = useRouter();
   const [activeSubTab, setActiveSubTab] = useState<GovSubTab>('vote');
 
@@ -92,4 +92,5 @@ const GovTabs: React.FC<GovTabsProps> = ({ actionId, currentRound, actionInfo })
   );
 };
 
-export default GovTabs;
+export default GovPublicTabs;
+

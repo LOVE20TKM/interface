@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 
 // my hooks
-import { useActionCoreData } from '@/src/hooks/composite/useActionCoreData';
+import { useActionDetailData } from '@/src/hooks/composite/useActionDetailData';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my components
@@ -16,8 +16,9 @@ import ActionHeader from '@/src/components/Action/ActionHeader';
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
-// my components - 使用扩展路由组件统一处理
-import ActionExtensionPanel from '@/src/components/ActionExtension/ActionExtensionPanel';
+// my components
+import ExtensionMyParticipation from '@/src/components/Extension/Base/Action/ExtensionMyParticipation';
+import ActionPanelForJoin from '@/src/components/ActionDetail/ActionPanelForJoin';
 
 const ActRewardsPage = () => {
   const router = useRouter();
@@ -27,13 +28,21 @@ const ActRewardsPage = () => {
   const { token } = useContext(TokenContext) || {};
 
   // 获取页面数据
-  const { actionInfo, participantCount, totalAmount, userJoinedAmount, isJoined, isPending, error } = useActionCoreData(
-    {
-      tokenAddress: token?.address,
-      actionId,
-      account,
-    },
-  );
+  const {
+    actionInfo,
+    participantCount,
+    totalAmount,
+    userJoinedAmount,
+    isJoined,
+    isExtensionAction,
+    extensionAddress,
+    isPending,
+    error,
+  } = useActionDetailData({
+    tokenAddress: token?.address,
+    actionId,
+    account,
+  });
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -91,11 +100,15 @@ const ActRewardsPage = () => {
               </div>
             </div>
           ) : actionInfo ? (
-            <ActionExtensionPanel
-              actionId={actionId}
-              actionInfo={actionInfo}
-              tokenAddress={token?.address as `0x${string}`}
-            />
+            isExtensionAction ? (
+              <ExtensionMyParticipation
+                actionId={actionId}
+                actionInfo={actionInfo}
+                tokenAddress={token?.address as `0x${string}`}
+              />
+            ) : (
+              <ActionPanelForJoin actionId={actionId} actionInfo={actionInfo} />
+            )
           ) : (
             <div className="bg-white rounded-lg p-8">
               <div className="text-center text-yellow-600">行动不存在：找不到指定的行动信息</div>

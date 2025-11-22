@@ -1,5 +1,5 @@
 /**
- * 扩展行动激励数据 Hook
+ * Hook：获得多个扩展行动的最近 N 轮激励数据
  *
  * 功能：
  * 1. 根据扩展地址数组获取最近 N 轮的激励数据
@@ -25,9 +25,9 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 const JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`;
 
 /**
- * 扩展激励数据结构
+ * 扩展激励数据结构（包含扩展地址）
  */
-export interface ExtensionActionReward {
+export interface ExtensionActionRewardWithAddress {
   extensionAddress: `0x${string}`;
   round: bigint;
   reward: bigint;
@@ -51,7 +51,7 @@ export interface UseExtensionActionsLatestRewardsParams {
  */
 export interface UseExtensionActionsLatestRewardsResult {
   /** 按扩展地址分组的激励数据 Map */
-  rewardsMap: Map<`0x${string}`, ExtensionActionReward[]>;
+  rewardsMap: Map<`0x${string}`, ExtensionActionRewardWithAddress[]>;
   /** 加载状态 */
   isPending: boolean;
   /** 错误信息 */
@@ -140,7 +140,7 @@ export const useExtensionActionsLatestRewards = ({
 
   // 步骤4: 解析数据并按扩展地址分组
   const rewardsMap = useMemo(() => {
-    const map = new Map<`0x${string}`, ExtensionActionReward[]>();
+    const map = new Map<`0x${string}`, ExtensionActionRewardWithAddress[]>();
 
     if (!rewardsData || !currentRound || currentRound === BigInt(0)) {
       return map;
@@ -148,7 +148,7 @@ export const useExtensionActionsLatestRewards = ({
 
     let dataIndex = 0;
     for (const extensionAddress of extensionAddresses) {
-      const rewards: ExtensionActionReward[] = [];
+      const rewards: ExtensionActionRewardWithAddress[] = [];
 
       // 计算起始轮次
       const startRound = currentRound > lastRounds ? currentRound - lastRounds + BigInt(1) : BigInt(1);

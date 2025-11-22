@@ -6,13 +6,13 @@ import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
-import { useActionCoreData } from '@/src/hooks/composite/useActionCoreData';
+import { useActionDetailData } from '@/src/hooks/composite/useActionDetailData';
 
 // my components
 import ActionHeader from '@/src/components/Action/ActionHeader';
 import BasicInfo from '@/src/components/Action/ActionTabs/BasicInfo';
-import GovTabs from '@/src/components/Action/ActionTabs/GovTabs';
-import ActionPublicTabs from '@/src/components/Action/ActionTabs/ActionPublicTabs';
+import GovPublicTabs from '@/src/components/Action/ActionTabs/GovPublicTabs';
+import ExtensionPublicTabs from '@/src/components/Extension/Base/Action/ExtensionPublicTabs';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AlertBox from '@/src/components/Common/AlertBox';
 import Header from '@/src/components/Header';
@@ -29,7 +29,7 @@ export default function ActionInfoPage() {
   const { symbol, id, tab } = router.query;
   const actionId = id ? BigInt(id as string) : undefined;
 
-  // 获取页面数据（自动支持扩展行动）
+  // 获取页面数据
   const {
     actionInfo,
     participantCount,
@@ -41,7 +41,7 @@ export default function ActionInfoPage() {
     extensionAddress,
     isPending,
     error,
-  } = useActionCoreData({
+  } = useActionDetailData({
     tokenAddress: token?.address,
     actionId,
     account,
@@ -154,10 +154,10 @@ export default function ActionInfoPage() {
       case 'basic':
         return <BasicInfo actionInfo={actionInfo} currentRound={currentRound} />;
       case 'gov':
-        return <GovTabs actionId={actionId} currentRound={currentRound || BigInt(0)} actionInfo={actionInfo} />;
+        return <GovPublicTabs actionId={actionId} currentRound={currentRound || BigInt(0)} actionInfo={actionInfo} />;
       case 'public':
         return isExtensionAction && extensionAddress ? (
-          <ActionPublicTabs extensionAddress={extensionAddress} currentRound={currentRound || BigInt(0)} />
+          <ExtensionPublicTabs extensionAddress={extensionAddress} currentRound={currentRound || BigInt(0)} />
         ) : null;
       default:
         return null;

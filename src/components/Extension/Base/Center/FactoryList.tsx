@@ -1,4 +1,4 @@
-'use client';
+// components/Extension/Base/Center/FactoryList.tsx
 
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -13,7 +13,7 @@ interface FactoryListProps {
 
 // 扩展类型名称配置
 const FACTORY_NAMES: Record<string, string> = {
-  [process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP?.toLowerCase() || '']: '质押LP行动',
+  [process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP?.toLowerCase() || '']: 'LP行动',
   // 未来添加新的扩展类型示例：
   // [process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_XXX?.toLowerCase() || '']: 'XXX行动',
 };
@@ -22,6 +22,11 @@ const getFactoryName = (factoryAddress: string): string => {
   return FACTORY_NAMES[factoryAddress.toLowerCase()] || '未知类型';
 };
 
+/**
+ * 工厂列表组件
+ *
+ * 显示当前代币支持的扩展工厂列表
+ */
 export default function FactoryList({ tokenAddress, factories, isPending }: FactoryListProps) {
   if (isPending) {
     return (

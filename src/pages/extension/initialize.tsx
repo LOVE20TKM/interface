@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useInitializeExtension } from '@/src/hooks/extension/base/contracts';
-import { clearCachedExtensionInfo } from '@/src/hooks/composite/useActionsExtensionInfo';
+import { clearContractInfoCache } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import toast from 'react-hot-toast';
 import { isAddress } from 'viem';
 
@@ -56,8 +56,8 @@ export default function InitializeExtension() {
       await initializeExtension(extensionAddress as `0x${string}`, tokenAddress, BigInt(actionIdNum));
 
       // 清除该行动的缓存，以便重新查询最新的扩展信息
-      clearCachedExtensionInfo(tokenAddress, BigInt(actionIdNum));
-      console.log(`✅ 已清除 ActionId ${actionIdNum} 的扩展信息缓存`);
+      clearContractInfoCache(tokenAddress, BigInt(actionIdNum));
+      console.log(`✅ 已清除 ActionId ${actionIdNum} 的扩展合约信息缓存`);
 
       toast.success('初始化扩展提交成功！');
       // 清空输入

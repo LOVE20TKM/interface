@@ -7,9 +7,12 @@ import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composit
 import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
 import {
   useExtensionActionsLatestRewards,
-  ExtensionActionReward,
+  ExtensionActionRewardWithAddress,
 } from '@/src/hooks/extension/base/composite';
-import { useActionsExtensionInfo, ActionExtensionInfo } from '@/src/hooks/composite/useActionsExtensionInfo';
+import {
+  useExtensionsContractInfo,
+  ExtensionContractInfo,
+} from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import { JoinedAction, ActionReward } from '@/src/types/love20types';
 import {
   setActionRewardNeedMinted,
@@ -20,8 +23,8 @@ import {
 export interface ActionRewardsGroup {
   action: JoinedAction;
   coreRewards: ActionReward[];
-  extensionInfo?: ActionExtensionInfo;
-  extensionRewards?: ExtensionActionReward[];
+  extensionInfo?: ExtensionContractInfo;
+  extensionRewards?: ExtensionActionRewardWithAddress[];
 }
 
 export interface UseActionRewardsDataParams {
@@ -103,22 +106,20 @@ export const useActionsLatestRewards = ({
     return (extensionActions || []).map((ja) => ja.action.head.id);
   }, [extensionActions]);
 
-  // 获取扩展行动的扩展信息（合约地址、工厂地址等）
+  // 获取扩展行动的扩展合约信息
   const {
-    extensionInfos,
+    contractInfos,
     isPending: isLoadingExtensionInfo,
     error: errorLoadingExtensionInfo,
-  } = useActionsExtensionInfo({
+  } = useExtensionsContractInfo({
     tokenAddress,
     actionIds: extensionActionIds,
   });
 
   // 第4步：提取扩展地址，获取扩展协议最近 N 轮的行动激励
   const extensionAddresses = useMemo(() => {
-    return extensionInfos
-      .filter((info) => info.isExtension && info.extensionAddress)
-      .map((info) => info.extensionAddress!);
-  }, [extensionInfos]);
+    return contractInfos.filter((info) => info.isExtension && info.extension).map((info) => info.extension!);
+  }, [contractInfos]);
 
   const {
     rewardsMap: extensionRewardsMap,
@@ -151,8 +152,8 @@ export const useActionsLatestRewards = ({
     }
 
     // 创建扩展信息映射
-    const extensionInfoMap = new Map<string, ActionExtensionInfo>();
-    for (const extInfo of extensionInfos) {
+    const extensionInfoMap = new Map<string, ExtensionContractInfo>();
+    for (const extInfo of contractInfos) {
       extensionInfoMap.set(extInfo.actionId.toString(), extInfo);
     }
 
@@ -172,9 +173,7 @@ export const useActionsLatestRewards = ({
 
       // 如果该行动也在扩展中，添加扩展信息和扩展激励
       const extInfo = extensionActionIds.has(actionIdStr) ? extensionInfoMap.get(actionIdStr) : undefined;
-      const extensionRewards = extInfo?.extensionAddress
-        ? extensionRewardsMap.get(extInfo.extensionAddress)
-        : undefined;
+      const extensionRewards = extInfo?.extension ? extensionRewardsMap.get(extInfo.extension) : undefined;
 
       list.push({
         action: joinedAction,
@@ -199,9 +198,7 @@ export const useActionsLatestRewards = ({
       }
 
       const extInfo = extensionInfoMap.get(actionIdStr);
-      const extensionRewards = extInfo?.extensionAddress
-        ? extensionRewardsMap.get(extInfo.extensionAddress)
-        : undefined;
+      const extensionRewards = extInfo?.extension ? extensionRewardsMap.get(extInfo.extension) : undefined;
 
       list.push({
         action: joinedAction,
@@ -213,7 +210,7 @@ export const useActionsLatestRewards = ({
 
     list.sort((a, b) => (BigInt(a.action.action.head.id) > BigInt(b.action.action.head.id) ? -1 : 1));
     return list;
-  }, [coreActions, extensionActions, coreRewards, extensionInfos, extensionRewardsMap]);
+  }, [coreActions, extensionActions, coreRewards, contractInfos, extensionRewardsMap]);
 
   // 铸造普通行动激励
   const { mintActionReward, isPending, isConfirming, isConfirmed, writeError } = useMintActionReward();

@@ -18,7 +18,7 @@ import Header from '@/src/components/Header';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import ActionPanelForJoin from '@/src/components/ActionDetail/ActionPanelForJoin';
 import SubmitJoin from '@/src/components/Join/SubmitJoin';
-import ActionExtensionJoinPanel from '@/src/components/ActionExtension/ActionExtensionJoinPanel';
+import LpJoinPanel from '@/src/components/Extension/Plugins/Lp/LpJoinPanel';
 
 const JoinPage = () => {
   const router = useRouter();
@@ -72,8 +72,8 @@ const JoinPage = () => {
             {/* 根据是否是扩展行动，显示不同的组件 */}
             {isExtensionAction && extensionAddress ? (
               <>
-                {/* 扩展行动：显示 ActionExtensionJoinPanel */}
-                <ActionExtensionJoinPanel
+                {/* 扩展行动：显示 LpJoinPanel */}
+                <LpJoinPanel
                   actionId={BigInt(actionId)}
                   actionInfo={actionInfo}
                   extensionAddress={extensionAddress as `0x${string}`}
