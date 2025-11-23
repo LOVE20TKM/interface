@@ -15,6 +15,7 @@ const coreAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_CORE_ABI_PATH;
 const peripheralAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_PERIPHERAL_ABI_PATH;
 const extensionsCenterAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_CENTER_ABI_PATH;
 const extensionsStakelpAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_STAKELP_ABI_PATH;
+const extensionsGroupAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_GROUP_ABI_PATH;
 
 if (!coreAbiDirPath) {
   console.error('Error: NEXT_PUBLIC_FOUNDRY_CORE_ABI_PATH is not defined in .env file.');
@@ -33,6 +34,11 @@ if (!extensionsCenterAbiDirPath) {
 
 if (!extensionsStakelpAbiDirPath) {
   console.error('Error: NEXT_PUBLIC_FOUNDRY_EXTENSIONS_STAKELP_ABI_PATH is not defined in .env file.');
+  process.exit(1);
+}
+
+if (!extensionsGroupAbiDirPath) {
+  console.error('Error: NEXT_PUBLIC_FOUNDRY_EXTENSIONS_GROUP_ABI_PATH is not defined in .env file.');
   process.exit(1);
 }
 
@@ -60,6 +66,8 @@ const peripheralFilesToConvert = ['LOVE20TokenViewer', 'LOVE20RoundViewer', 'LOV
 const extensionsCenterFilesToConvert = ['LOVE20ExtensionCenter', 'ILOVE20Extension'];
 
 const extensionsStakelpFilesToConvert = ['LOVE20ExtensionFactoryStakeLp', 'LOVE20ExtensionStakeLp'];
+
+const extensionsGroupFilesToConvert = ['LOVE20Group'];
 
 // 用于生成 TypeScript 文件的函数
 const generateTsFiles = (abiDirPath: string, filesToConvert: string[]) => {
@@ -101,3 +109,6 @@ generateTsFiles(extensionsCenterAbiDirPath, extensionsCenterFilesToConvert);
 
 // 处理扩展质押 LP ABI 文件
 generateTsFiles(extensionsStakelpAbiDirPath, extensionsStakelpFilesToConvert);
+
+// 处理链群 NFT ABI 文件
+generateTsFiles(extensionsGroupAbiDirPath, extensionsGroupFilesToConvert);
