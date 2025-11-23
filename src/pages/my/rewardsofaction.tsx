@@ -221,10 +221,10 @@ const ActRewardsPage: React.FC = () => {
             {/* 激励列表 - 统一使用 ActionRewardsList 组件 */}
             {isExtensionAction ? (
               // 扩展行动激励列表
-              extensionInfo?.extensionAddress ? (
+              extensionInfo?.extension ? (
                 <ActionRewardsList
                   rewards={rewardList}
-                  extensionAddress={extensionInfo.extensionAddress}
+                  extensionAddress={extensionInfo.extension}
                   tokenData={token}
                   isExtension={true}
                   onMintSuccess={handleMintSuccess}

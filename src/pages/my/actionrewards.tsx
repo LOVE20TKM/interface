@@ -100,22 +100,19 @@ const ActRewardsPage: React.FC = () => {
                         )}
 
                         {/* 扩展激励 */}
-                        {isExtension &&
-                          extensionInfo?.extensionAddress &&
-                          extensionRewards &&
-                          extensionRewards.length > 0 && (
-                            <ActionRewardsList
-                              rewards={extensionRewards}
-                              extensionAddress={extensionInfo.extensionAddress}
-                              tokenData={token}
-                              isExtension={true}
-                              showTitle={coreRewards.length > 0}
-                              title="扩展激励"
-                              onMintSuccess={(round) =>
-                                handleExtensionMintSuccess(extensionInfo.extensionAddress!, round.toString())
-                              }
-                            />
-                          )}
+                        {isExtension && extensionInfo?.extension && extensionRewards && extensionRewards.length > 0 && (
+                          <ActionRewardsList
+                            rewards={extensionRewards}
+                            extensionAddress={extensionInfo.extension}
+                            tokenData={token}
+                            isExtension={true}
+                            showTitle={coreRewards.length > 0}
+                            title="扩展激励"
+                            onMintSuccess={(round) =>
+                              handleExtensionMintSuccess(extensionInfo.extension!, round.toString())
+                            }
+                          />
+                        )}
                       </>
                     ) : (
                       <div className="text-center text-greyscale-500 py-4">

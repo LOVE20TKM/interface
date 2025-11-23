@@ -58,7 +58,7 @@ export const ILOVE20ExtensionAbi = [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -208,7 +208,7 @@ export const ILOVE20ExtensionAbi = [
         "internalType": "address"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
   },
   {
     "type": "error",
