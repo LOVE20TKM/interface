@@ -13,6 +13,7 @@ dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 // 源目录
 const coreAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_CORE_ABI_PATH;
 const peripheralAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_PERIPHERAL_ABI_PATH;
+const extensionsGroupAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_GROUP_ABI_PATH;
 
 if (!coreAbiDirPath) {
   console.error('Error: NEXT_PUBLIC_FOUNDRY_CORE_ABI_PATH is not defined in .env file.');
@@ -21,6 +22,11 @@ if (!coreAbiDirPath) {
 
 if (!peripheralAbiDirPath) {
   console.error('Error: NEXT_PUBLIC_FOUNDRY_PERIPHERAL_ABI_PATH is not defined in .env file.');
+  process.exit(1);
+}
+
+if (!extensionsGroupAbiDirPath) {
+  console.error('Error: NEXT_PUBLIC_FOUNDRY_EXTENSIONS_GROUP_ABI_PATH is not defined in .env file.');
   process.exit(1);
 }
 
@@ -44,6 +50,8 @@ const coreFilesToConvert = [
 ];
 
 const peripheralFilesToConvert = ['LOVE20TokenViewer', 'LOVE20RoundViewer', 'LOVE20MintViewer', 'LOVE20Hub'];
+
+const extensionsGroupFilesToConvert = ['LOVE20Group'];
 
 // 用于生成 TypeScript 文件的函数
 const generateTsFiles = (abiDirPath: string, filesToConvert: string[]) => {
@@ -79,3 +87,6 @@ generateTsFiles(coreAbiDirPath, coreFilesToConvert);
 
 // 处理外围 ABI 文件
 generateTsFiles(peripheralAbiDirPath, peripheralFilesToConvert);
+
+// 处理链群 NFT ABI 文件
+generateTsFiles(extensionsGroupAbiDirPath, extensionsGroupFilesToConvert);
