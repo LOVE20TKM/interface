@@ -6,7 +6,7 @@ import { HelpCircle } from 'lucide-react';
 
 // my hooks
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useExtension } from '@/src/hooks/extension/base/contracts';
+import { useActionParticipationWithExtension } from '@/src/hooks/composite/useActionParticipationWithExtension';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatPercentage, formatSeconds } from '@/src/lib/format';
 
@@ -39,16 +39,19 @@ const JoinPage = () => {
     error: errorActionInfo,
   } = useActionInfo(token?.address as `0x${string}`, actionId === undefined ? undefined : BigInt(actionId));
 
-  // 检查是否是扩展行动
+  // 检查是否是扩展行动（自动支持未注册的扩展行动）
   const {
+    isExtensionAction,
     extensionAddress,
     isPending: isPendingExtension,
     error: errorExtension,
-  } = useExtension((token?.address as `0x${string}`) || '', actionId === undefined ? BigInt(0) : BigInt(actionId));
-
-  // 判断是否是扩展行动（扩展地址不为零地址）
-  const isExtensionAction =
-    extensionAddress && extensionAddress !== '0x0000000000000000000000000000000000000000' ? true : false;
+  } = useActionParticipationWithExtension(
+    token?.address as `0x${string}`,
+    actionId === undefined ? undefined : BigInt(actionId),
+    undefined, // account 不需要，因为只是检查是否是扩展行动
+    actionInfo, // 传入 actionInfo 用于检查白名单地址
+    undefined, // coreData 不需要
+  );
 
   // 错误处理
   const { handleContractError } = useHandleContractError();

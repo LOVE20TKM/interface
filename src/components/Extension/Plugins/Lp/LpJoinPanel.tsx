@@ -19,7 +19,7 @@ import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
-import { useStakeLp, useLpTokenAddress } from '@/src/hooks/extension/plugins/lp/contracts';
+import { useJoin, useJoinTokenAddress } from '@/src/hooks/extension/plugins/lp/contracts';
 
 // contexts / types / etc
 import { ActionInfo } from '@/src/types/love20types';
@@ -36,7 +36,7 @@ import LpStatsCard from './_LpStatsCard';
 // ------------------------------
 
 interface FormValues {
-  stakeAmount: string; // 参与数量
+  joinAmount: string; // 参与数量
 }
 
 interface LpJoinPanelProps {
@@ -50,13 +50,13 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
-  // 获取 LP Token 地址
-  const { lpTokenAddress, isPending: isPendingLpToken, error: errorLpToken } = useLpTokenAddress(extensionAddress);
+  // 获取 Join Token 地址（即 LP Token 地址）
+  const { joinTokenAddress, isPending: isPendingJoinToken, error: errorJoinToken } = useJoinTokenAddress(extensionAddress);
 
-  // 获取 StakeLp 扩展数据（用于显示已参与信息）
+  // 获取 Lp 扩展数据（用于显示已参与信息）
   const {
-    stakedAmount,
-    totalStakedAmount,
+    joinedAmount,
+    totalJoinedAmount,
     userScore,
     totalScore,
     userGovVotes,
@@ -71,17 +71,17 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     account: account as `0x${string}`,
   });
 
-  // 计算是否已质押
-  const isStaked = stakedAmount && stakedAmount > BigInt(0);
+  // 计算是否已加入
+  const isJoined = joinedAmount && joinedAmount > BigInt(0);
 
   // 格式化 LP 占比
   const lpRatioStr = formatPercentage(lpRatio);
 
   // 获取 LP Token 余额
   const { balance: lpBalance, error: errorLpBalance } = useBalanceOf(
-    lpTokenAddress as `0x${string}`,
+    joinTokenAddress as `0x${string}`,
     account as `0x${string}`,
-    !!lpTokenAddress,
+    !!joinTokenAddress,
   );
 
   // 获取已授权数量
@@ -89,7 +89,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     allowance: allowanceLp,
     isPending: isPendingAllowanceLp,
     error: errAllowanceLp,
-  } = useAllowance(lpTokenAddress as `0x${string}`, account as `0x${string}`, extensionAddress, !!lpTokenAddress);
+  } = useAllowance(joinTokenAddress as `0x${string}`, account as `0x${string}`, extensionAddress, !!joinTokenAddress);
 
   // 定义授权状态变量：是否已完成LP授权
   const [isLpApproved, setIsLpApproved] = useState(false);
@@ -97,7 +97,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   // 动态构造 zod schema
   const formSchema = z.object({
     // 参与数量
-    stakeAmount: z
+    joinAmount: z
       .string()
       // 第一步：验证输入的格式（允许纯数字、带千分位逗号、或带小数的数字）
       .refine((val) => val.trim() === '' || /^[0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?$/.test(val.trim()), {
@@ -113,7 +113,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
           }
           return true;
         },
-        { message: 'LP质押数不能为 0' },
+        { message: 'LP加入数不能为 0' },
       )
       // 检查输入的数值不能超过持有LP数
       .refine(
@@ -131,7 +131,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      stakeAmount: '',
+      joinAmount: '',
     },
     mode: 'onChange',
   });
@@ -145,7 +145,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     isConfirming: isConfirmingApproveLp,
     isConfirmed: isConfirmedApproveLp,
     writeError: errApproveLp,
-  } = useApprove(lpTokenAddress as `0x${string}`);
+  } = useApprove(joinTokenAddress as `0x${string}`);
 
   // 新增：为授权按钮设置 ref ，用于在授权等待状态结束后调用 blur() 取消 hover 效果
   const approveButtonRef = useRef<HTMLButtonElement>(null);
@@ -159,15 +159,15 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   }, [isPendingAllowanceLp]);
 
   async function handleApprove(values: FormValues) {
-    // 确保 stakeAmount 始终为 bigint，避免 null
-    const stakeAmount = parseUnits(values.stakeAmount) ?? BigInt(0);
-    if (stakeAmount === BigInt(0)) {
+    // 确保 joinAmount 始终为 bigint，避免 null
+    const joinAmount = parseUnits(values.joinAmount) ?? BigInt(0);
+    if (joinAmount === BigInt(0)) {
       toast.error('当前无需授权。');
       return;
     }
 
     try {
-      await approveLp(extensionAddress, stakeAmount);
+      await approveLp(extensionAddress, joinAmount);
     } catch (error) {
       console.error('Approve failed', error);
     }
@@ -181,42 +181,43 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     }
   }, [isConfirmedApproveLp]);
 
-  // 监听用户输入的质押数量及链上返回的授权额度判断是否已授权
-  const stakeAmount = form.watch('stakeAmount');
-  const parsedStakeAmount = parseUnits(stakeAmount || '0') ?? BigInt(0);
+  // 监听用户输入的加入数量及链上返回的授权额度判断是否已授权
+  const joinAmount = form.watch('joinAmount');
+  const parsedJoinAmount = parseUnits(joinAmount || '0') ?? BigInt(0);
   useEffect(() => {
-    if (parsedStakeAmount > BigInt(0) && allowanceLp && allowanceLp > BigInt(0) && allowanceLp >= parsedStakeAmount) {
+    if (parsedJoinAmount > BigInt(0) && allowanceLp && allowanceLp > BigInt(0) && allowanceLp >= parsedJoinAmount) {
       setIsLpApproved(true);
     } else {
       setIsLpApproved(false);
     }
-  }, [parsedStakeAmount, isPendingAllowanceLp, allowanceLp]);
+  }, [parsedJoinAmount, isPendingAllowanceLp, allowanceLp]);
 
   // ------------------------------
-  //  质押提交
+  //  加入提交
   // ------------------------------
   const {
-    stakeLp,
-    isPending: isPendingStake,
-    isConfirming: isConfirmingStake,
-    isConfirmed: isConfirmedStake,
-    writeError: errorStake,
-  } = useStakeLp(extensionAddress);
+    join,
+    isPending: isPendingJoin,
+    isConfirming: isConfirmingJoin,
+    isConfirmed: isConfirmedJoin,
+    writeError: errorJoin,
+  } = useJoin(extensionAddress);
 
-  async function handleStake(values: FormValues) {
+  async function handleJoin(values: FormValues) {
     try {
-      await stakeLp(parseUnits(values.stakeAmount) ?? BigInt(0));
+      // verificationInfos 传空数组（如果不需要验证信息的话）
+      await join(parseUnits(values.joinAmount) ?? BigInt(0), []);
     } catch (error) {
-      console.error('Stake failed', error);
+      console.error('Join failed', error);
     }
   }
 
   // ------------------------------
-  //  质押成功后的处理
+  //  加入成功后的处理
   // ------------------------------
   useEffect(() => {
-    if (isConfirmedStake) {
-      toast.success('质押LP成功');
+    if (isConfirmedJoin) {
+      toast.success('加入LP成功');
       // 重置表单
       form.reset();
       // 2秒后返回
@@ -224,15 +225,15 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
         router.push(`/my/myaction?id=${actionInfo.head.id}&symbol=${token?.symbol}`);
       }, 2000);
     }
-  }, [isConfirmedStake]);
+  }, [isConfirmedJoin]);
 
   // ------------------------------
   //  错误处理
   // ------------------------------
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
-    if (errorLpToken) {
-      handleContractError(errorLpToken, 'extension');
+    if (errorJoinToken) {
+      handleContractError(errorJoinToken, 'extension');
     }
     if (errorLpBalance) {
       handleContractError(errorLpBalance, 'token');
@@ -240,8 +241,8 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     if (errApproveLp) {
       handleContractError(errApproveLp, 'token');
     }
-    if (errorStake) {
-      handleContractError(errorStake, 'extension');
+    if (errorJoin) {
+      handleContractError(errorJoin, 'extension');
     }
     if (errAllowanceLp) {
       handleContractError(errAllowanceLp, 'token');
@@ -249,22 +250,22 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     if (errorData) {
       handleContractError(errorData, 'extension');
     }
-  }, [errorLpToken, errorLpBalance, errApproveLp, errorStake, errAllowanceLp, errorData]);
+  }, [errorJoinToken, errorLpBalance, errApproveLp, errorJoin, errAllowanceLp, errorData]);
 
   // ------------------------------
   //  组件渲染
   // ------------------------------
-  if (isPendingLpToken || isPendingData) {
+  if (isPendingJoinToken || isPendingData) {
     return <LoadingIcon />;
   }
 
   return (
     <>
-      {/* 如果已质押，显示参与信息 */}
-      {isStaked && (
+      {/* 如果已加入，显示参与信息 */}
+      {isJoined && (
         <div className="flex flex-col items-center px-4 pt-1">
           <LpStatsCard
-            stakedAmount={stakedAmount || BigInt(0)}
+            stakedAmount={joinedAmount || BigInt(0)}
             lpRatioStr={lpRatioStr}
             userScore={userScore}
             totalScore={totalScore}
@@ -286,22 +287,22 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
         </div>
       )}
 
-      {/* 质押表单 */}
+      {/* 加入表单 */}
       <div className="px-6 pt-6 pb-2">
-        <LeftTitle title={isStaked ? '增加LP质押' : '质押LP参与'} />
+        <LeftTitle title={isJoined ? '增加LP加入' : '加入LP参与'} />
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4 pt-2">
-            {/* LP质押数 */}
+            {/* LP加入数 */}
             <FormField
               control={form.control}
-              name="stakeAmount"
+              name="joinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-greyscale-500 font-normal">{isStaked ? '' : 'LP质押数：'}</FormLabel>
+                  <FormLabel className="text-greyscale-500 font-normal">{isJoined ? '' : 'LP加入数：'}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={
-                        isStaked ? `最大可追加 ${formatTokenAmount(lpBalance || BigInt(0), 4)}` : `请输入LP质押数量`
+                        isJoined ? `最大可追加 ${formatTokenAmount(lpBalance || BigInt(0), 4)}` : `请输入LP加入数量`
                       }
                       type="number"
                       disabled={!lpBalance || lpBalance <= BigInt(0)}
@@ -320,7 +321,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                       size="sm"
                       onClick={() => {
                         if (lpBalance && lpBalance > BigInt(0)) {
-                          form.setValue('stakeAmount', formatUnits(lpBalance));
+                          form.setValue('joinAmount', formatUnits(lpBalance));
                         }
                       }}
                       className="text-secondary p-0 ml-6"
@@ -359,19 +360,19 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
 
               <Button
                 className="w-1/2"
-                disabled={!isLpApproved || isPendingStake || isConfirmingStake || isConfirmedStake}
+                disabled={!isLpApproved || isPendingJoin || isConfirmingJoin || isConfirmedJoin}
                 type="button"
                 onClick={() => {
-                  form.handleSubmit((values) => handleStake(values))();
+                  form.handleSubmit((values) => handleJoin(values))();
                 }}
               >
-                {isPendingStake
+                {isPendingJoin
                   ? '2.提交中...'
-                  : isConfirmingStake
+                  : isConfirmingJoin
                   ? '2.确认中...'
-                  : isConfirmedStake
-                  ? '2.已质押'
-                  : '2.质押'}
+                  : isConfirmedJoin
+                  ? '2.已加入'
+                  : '2.加入'}
               </Button>
             </div>
           </form>
@@ -381,13 +382,13 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
       {/* 增加一个帮助信息 */}
       <div className="px-6 pt-0 pb-4">
         <div className="text-greyscale-500 text-sm">
-          提示：质押LP参与扩展行动后，可以随时取回LP，取回不会影响已产生的激励
+          提示：加入LP参与扩展行动后，等待一定区块数后可以直接取回LP，取回不会影响已产生的激励
         </div>
       </div>
 
       <LoadingOverlay
-        isLoading={isPendingApproveLp || isConfirmingApproveLp || isPendingStake || isConfirmingStake}
-        text={isPendingApproveLp || isPendingStake ? '提交交易...' : '确认交易...'}
+        isLoading={isPendingApproveLp || isConfirmingApproveLp || isPendingJoin || isConfirmingJoin}
+        text={isPendingApproveLp || isPendingJoin ? '提交交易...' : '确认交易...'}
       />
     </>
   );

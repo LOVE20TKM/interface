@@ -14,7 +14,7 @@ dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 const coreAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_CORE_ABI_PATH;
 const peripheralAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_PERIPHERAL_ABI_PATH;
 const extensionsCenterAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_CENTER_ABI_PATH;
-const extensionsStakelpAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_STAKELP_ABI_PATH;
+const extensionsStakelpAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_LP_ABI_PATH;
 const extensionsGroupAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_GROUP_ABI_PATH;
 
 if (!coreAbiDirPath) {
@@ -33,7 +33,7 @@ if (!extensionsCenterAbiDirPath) {
 }
 
 if (!extensionsStakelpAbiDirPath) {
-  console.error('Error: NEXT_PUBLIC_FOUNDRY_EXTENSIONS_STAKELP_ABI_PATH is not defined in .env file.');
+  console.error('Error: NEXT_PUBLIC_FOUNDRY_EXTENSIONS_LP_ABI_PATH is not defined in .env file.');
   process.exit(1);
 }
 
@@ -65,7 +65,7 @@ const peripheralFilesToConvert = ['LOVE20TokenViewer', 'LOVE20RoundViewer', 'LOV
 
 const extensionsCenterFilesToConvert = ['LOVE20ExtensionCenter', 'ILOVE20Extension'];
 
-const extensionsStakelpFilesToConvert = ['LOVE20ExtensionFactoryStakeLp', 'LOVE20ExtensionStakeLp'];
+const extensionsStakelpFilesToConvert = ['LOVE20ExtensionFactoryLp', 'LOVE20ExtensionLp'];
 
 const extensionsGroupFilesToConvert = ['LOVE20Group'];
 

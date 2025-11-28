@@ -21,7 +21,7 @@ import { useReadContracts } from 'wagmi';
 import { useActionIdsByAccount } from '@/src/hooks/extension/base/contracts/useLOVE20ExtensionCenter';
 import { useExtensionsContractInfo } from './useExtensionBaseData';
 import { LOVE20RoundViewerAbi } from '@/src/abis/LOVE20RoundViewer';
-import { LOVE20ExtensionStakeLpAbi } from '@/src/abis/LOVE20ExtensionStakeLp';
+import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
 import { JoinedAction } from '@/src/types/love20types';
 
 const ROUND_VIEWER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_ROUNDVIEWER as `0x${string}`;
@@ -138,7 +138,7 @@ export const useMyJoinedExtensionActions = ({
       .filter((info) => info.isExtension && info.extension)
       .map((info) => ({
         address: info.extension!,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'joinedValueByAccount',
         args: [account],
       }));

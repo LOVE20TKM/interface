@@ -15,7 +15,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionStakeLpAbi } from '@/src/abis/LOVE20ExtensionStakeLp';
+import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
 import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -73,19 +73,19 @@ export function useExtensionParticipationData(
       // 1. 查询参与者数量（公共数据，始终查询）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'accountsCount' as const,
       },
       // 2. 查询总参与金额（公共数据，始终查询）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'joinedValue' as const,
       },
       // 3. 查询用户参与金额（需要 account）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'joinedValueByAccount' as const,
         args: account ? [account] : undefined,
       },

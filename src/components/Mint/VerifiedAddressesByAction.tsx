@@ -180,15 +180,11 @@ const VerifiedAddressesByAction: React.FC<{
           {selectedRound > 0 && (
             <>
               <LeftTitle title={`第 ${selectedRound.toString()} 轮验证`} />
-              {verifiedVotesPercent > 0 && (
-                <span className="text-sm text-greyscale-500 ml-2">
-                  (当前进度：{formatPercentage(verifiedVotesPercent)})
-                </span>
-              )}
+
               <span className="text-sm text-greyscale-500 ml-2">(</span>
               <ChangeRound
                 currentRound={
-                  token && currentJoinRound ? formatRoundForDisplay(currentJoinRound - BigInt(2), token) : BigInt(0)
+                  token && currentJoinRound ? formatRoundForDisplay(currentJoinRound - BigInt(1), token) : BigInt(0)
                 }
                 handleChangedRound={handleChangedRound}
               />
@@ -205,8 +201,10 @@ const VerifiedAddressesByAction: React.FC<{
           </button>
         )}
       </div>
-      <div className="flex justify-left mt-2">
-        {selectedRound > 0 && <RoundLite currentRound={selectedRound} roundType="verify" />}
+      <div className="flex justify-left mb-2">
+        {selectedRound === currentJoinRound - BigInt(1) && verifiedVotesPercent > 0 && (
+          <span className="text-sm text-greyscale-500">(当前验证进度：{formatPercentage(verifiedVotesPercent)})</span>
+        )}
       </div>
 
       {isPendingVerifiedAddresses || isPendingVerificationInfosByAction || isPendingAbstainVotes ? (

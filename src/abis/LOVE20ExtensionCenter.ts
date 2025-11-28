@@ -369,29 +369,6 @@ export const LOVE20ExtensionCenterAbi = [
   },
   {
     "type": "function",
-    "name": "initializeExtension",
-    "inputs": [
-      {
-        "name": "extensionAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "isAccountJoined",
     "inputs": [
       {
@@ -470,6 +447,13 @@ export const LOVE20ExtensionCenterAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "registerExtension",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -675,22 +659,17 @@ export const LOVE20ExtensionCenterAbi = [
   },
   {
     "type": "error",
-    "name": "ExtensionNotFound",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "ExtensionNotFoundInFactory",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "ExtensionNotJoinedAction",
+    "name": "ExtensionNotInitialized",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InitializeFailed",
+    "name": "ExtensionNotJoinedAction",
     "inputs": []
   },
   {

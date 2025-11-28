@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useInitializeExtension } from '@/src/hooks/extension/base/contracts';
+import { useRegisterExtension } from '@/src/hooks/extension/base/contracts';
 import { clearContractInfoCache } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import toast from 'react-hot-toast';
 import { isAddress } from 'viem';
@@ -17,9 +17,8 @@ export default function InitializeExtension() {
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
 
   const [extensionAddress, setExtensionAddress] = useState<string>('');
-  const [actionId, setActionId] = useState<string>('');
 
-  const { initializeExtension, isPending, isConfirming, isConfirmed, writeError, hash } = useInitializeExtension();
+  const { registerExtension, isPending, isConfirming, isConfirmed, writeError, hash } = useRegisterExtension();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,11 +26,6 @@ export default function InitializeExtension() {
     // 验证输入
     if (!extensionAddress) {
       toast.error('请输入扩展合约地址');
-      return;
-    }
-
-    if (!actionId) {
-      toast.error('请输入行动ID');
       return;
     }
 
@@ -45,32 +39,21 @@ export default function InitializeExtension() {
       return;
     }
 
-    // 验证 actionId 是否为有效数字
-    const actionIdNum = parseInt(actionId);
-    if (isNaN(actionIdNum) || actionIdNum < 0) {
-      toast.error('请输入有效的行动ID（非负整数）');
-      return;
-    }
-
     try {
-      await initializeExtension(extensionAddress as `0x${string}`, tokenAddress, BigInt(actionIdNum));
+      // 注意：新版本中 registerExtension 不需要参数
+      await registerExtension();
 
-      // 清除该行动的缓存，以便重新查询最新的扩展信息
-      clearContractInfoCache(tokenAddress, BigInt(actionIdNum));
-      console.log(`✅ 已清除 ActionId ${actionIdNum} 的扩展合约信息缓存`);
-
-      toast.success('初始化扩展提交成功！');
+      toast.success('注册扩展提交成功！');
       // 清空输入
       setExtensionAddress('');
-      setActionId('');
 
-      // 2秒钟后，跳转到 /extension/center/
+      // 2秒钟后，跳转到 /extension/actions
       setTimeout(() => {
-        window.location.href = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/extension/center`;
+        window.location.href = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/extension/actions`;
       }, 2000);
     } catch (error: any) {
-      console.error('初始化扩展失败:', error);
-      toast.error(error?.message || '初始化扩展失败');
+      console.error('注册扩展失败:', error);
+      toast.error(error?.message || '注册扩展失败');
     }
   };
 
@@ -80,9 +63,24 @@ export default function InitializeExtension() {
       <main className="flex-grow container mx-auto px-4 py-6 max-w-2xl">
         <Card>
           <CardHeader>
-            <CardTitle>初始化扩展合约</CardTitle>
+            <CardTitle>注册扩展合约（已废弃）</CardTitle>
+            <CardDescription>
+              ⚠️ 此功能已废弃，extension 会在第一个用户 join 时自动注册到 center
+            </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* 警告信息 */}
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg space-y-2">
+              <p className="text-sm font-semibold text-yellow-800">⚠️ 重要提示：</p>
+              <p className="text-sm text-yellow-700">
+                在新版扩展协议中，扩展会在第一个用户 join 行动时自动完成初始化和注册到 center，
+                <strong>无需手动调用此页面的功能</strong>。
+              </p>
+              <p className="text-sm text-yellow-700">
+                此页面保留仅用于特殊情况下的手动注册。正常情况下，请直接让用户 join 即可。
+              </p>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="extensionAddress">扩展合约地址</Label>
@@ -94,19 +92,9 @@ export default function InitializeExtension() {
                   onChange={(e) => setExtensionAddress(e.target.value)}
                   disabled={isPending || isConfirming}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="actionId">行动ID</Label>
-                <Input
-                  id="actionId"
-                  type="number"
-                  placeholder="输入行动ID"
-                  value={actionId}
-                  onChange={(e) => setActionId(e.target.value)}
-                  disabled={isPending || isConfirming}
-                  min="0"
-                />
+                <p className="text-xs text-greyscale-500">
+                  注意：registerExtension 会从 extension 合约自动读取 tokenAddress 和 actionId
+                </p>
               </div>
 
               {writeError && (
@@ -117,9 +105,9 @@ export default function InitializeExtension() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isPending || isConfirming || !extensionAddress || !actionId}
+                disabled={isPending || isConfirming || !extensionAddress}
               >
-                {isPending || isConfirming ? '处理中...' : '初始化扩展'}
+                {isPending || isConfirming ? '处理中...' : '手动注册扩展（不推荐）'}
               </Button>
             </form>
           </CardContent>

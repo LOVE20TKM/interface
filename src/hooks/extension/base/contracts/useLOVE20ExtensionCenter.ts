@@ -438,38 +438,39 @@ export function useAddFactory() {
 }
 
 /**
- * Hook for initializeExtension - 初始化扩展合约
+ * Hook for registerExtension - 注册扩展合约到 Center
+ *
+ * 注意：新版协议中，extension 会在第一个用户 join 时自动调用 registerExtension()，
+ * 无需手动调用。此 hook 保留仅用于特殊情况下的手动注册。
+ *
+ * @deprecated 不再需要手动初始化，extension 会在第一个用户 join 时自动注册
  */
-export function useInitializeExtension() {
+export function useRegisterExtension() {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
     LOVE20ExtensionCenterAbi,
     CONTRACT_ADDRESS,
-    'initializeExtension',
+    'registerExtension',
   );
 
-  const initializeExtension = async (
-    extensionAddress: `0x${string}`,
-    tokenAddress: `0x${string}`,
-    actionId: bigint,
-  ) => {
-    console.log('提交 initializeExtension 交易:', { extensionAddress, tokenAddress, actionId, isTukeMode });
-    return await execute([extensionAddress, tokenAddress, actionId]);
+  const registerExtension = async () => {
+    console.log('提交 registerExtension 交易 (已废弃，建议让用户 join 时自动注册):', { isTukeMode });
+    return await execute([]);
   };
 
   // 错误日志记录
   useEffect(() => {
     if (hash) {
-      console.log('initializeExtension tx hash:', hash);
+      console.log('registerExtension tx hash:', hash);
     }
     if (error) {
-      console.log('提交 initializeExtension 交易错误:');
+      console.log('提交 registerExtension 交易错误:');
       logWeb3Error(error);
       logError(error);
     }
   }, [hash, error]);
 
   return {
-    initializeExtension,
+    registerExtension,
     isPending,
     isConfirming,
     writeError: error,
@@ -478,6 +479,12 @@ export function useInitializeExtension() {
     isTukeMode,
   };
 }
+
+/**
+ * @deprecated 使用 useRegisterExtension 代替
+ * 旧版本的初始化函数，已废弃
+ */
+export const useInitializeExtension = useRegisterExtension;
 
 /**
  * Hook for removeAccount - 移除账户

@@ -1,12 +1,10 @@
 import { useMemo } from 'react';
-import { useReadContracts, useAccount } from 'wagmi';
-import { LOVE20ExtensionStakeLpAbi } from '@/src/abis/LOVE20ExtensionStakeLp';
+import { useReadContracts, useBlockNumber } from 'wagmi';
+import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
 import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
-import { LOVE20JoinAbi } from '@/src/abis/LOVE20Join';
 import { UniswapV2PairAbi } from '@/src/abis/UniswapV2Pair';
 
 const STAKE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`;
-const JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`;
 
 export interface UseMyLpActionDataParams {
   extensionAddress: `0x${string}` | undefined;
@@ -15,18 +13,18 @@ export interface UseMyLpActionDataParams {
 }
 
 export interface UseMyLpActionDataResult {
-  // LP质押信息
-  stakedAmount: bigint;
-  totalStakedAmount: bigint;
+  // LP加入信息
+  joinedAmount: bigint;
+  totalJoinedAmount: bigint;
   lpTotalSupply: bigint; // LP Token 总供应量
 
-  // Unstake 状态信息
-  requestedUnstakeRound: bigint; // 请求解除质押的轮次（0表示未请求）
-  currentRound: bigint; // 当前轮次
-  waitingPhases: bigint; // 需要等待的阶段数
-  canWithdrawAtRound: bigint; // 可以取回LP的轮次
-  canWithdrawNow: boolean; // 是否可以立即取回
-  remainingRounds: bigint; // 还需要等待的轮次数
+  // Exit 状态信息
+  joinedBlock: bigint; // 加入时的区块
+  exitableBlock: bigint; // 可以退出的区块
+  currentBlock: bigint; // 当前区块
+  waitingBlocks: bigint; // 需要等待的区块数
+  canExitNow: boolean; // 是否可以立即退出
+  remainingBlocks: bigint; // 还需要等待的区块数
 
   // 激励占比相关 - 通过 calculateScore 计算
   userScore: bigint; // 用户得分
@@ -41,8 +39,7 @@ export interface UseMyLpActionDataResult {
   lpRatio: number; // LP占比百分比
 
   // 其他信息
-  lpTokenAddress: `0x${string}` | undefined;
-  pairAddress: `0x${string}` | undefined;
+  joinTokenAddress: `0x${string}` | undefined;
   govRatioMultiplier: bigint;
   joinedValue: bigint;
 
@@ -58,7 +55,7 @@ export interface UseMyLpActionDataResult {
  *
  * 功能：
  * 1. 批量获取当前用户在 LP 扩展行动中的所有数据
- * 2. 包括用户质押数量、总质押数量、治理票数量、激励占比等信息
+ * 2. 包括用户加入数量、总加入数量、治理票数量、激励占比等信息
  * 3. 使用批量 RPC 调用优化性能
  *
  * @param extensionAddress LP 扩展合约地址
@@ -71,44 +68,49 @@ export const useMyLpActionData = ({
   tokenAddress,
   account,
 }: UseMyLpActionDataParams): UseMyLpActionDataResult => {
+  // 获取当前区块号
+  const { data: currentBlockData, isPending: isPendingBlock } = useBlockNumber({
+    watch: true,
+  });
+
   // 构建批量合约调用
   const contracts = useMemo(() => {
     if (!extensionAddress || !tokenAddress || !account) return [];
 
     return [
-      // 0. 获取用户质押信息（包含质押数量和请求取消质押的轮次）
+      // 0. 获取用户加入信息（包含数量、加入区块、可退出区块）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
-        functionName: 'stakeInfo',
+        abi: LOVE20ExtensionLpAbi,
+        functionName: 'joinInfo',
         args: [account],
       },
-      // 1. 获取总质押数量
+      // 1. 获取总加入数量
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
-        functionName: 'totalStakedAmount',
+        abi: LOVE20ExtensionLpAbi,
+        functionName: 'totalJoinedAmount',
         args: [],
       },
       // 2. 获取治理比率乘数
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'govRatioMultiplier',
         args: [],
       },
       // 3. 获取加入值（用于计算激励占比）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'joinedValue',
         args: [],
       },
-      // 4. 获取 LP Token 地址（即 Pair 地址）
+      // 4. 获取 Join Token 地址（即 LP Pair 地址）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
-        functionName: 'lpTokenAddress',
+        abi: LOVE20ExtensionLpAbi,
+        functionName: 'joinTokenAddress',
         args: [],
       },
       // 5. 获取用户的有效治理票数
@@ -128,30 +130,30 @@ export const useMyLpActionData = ({
       // 7. 获取用户得分和总得分（用于计算实际激励占比）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'calculateScore',
         args: [account],
       },
-      // 8. 获取需要等待的阶段数
+      // 8. 获取需要等待的区块数
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
-        functionName: 'waitingPhases',
+        abi: LOVE20ExtensionLpAbi,
+        functionName: 'waitingBlocks',
         args: [],
       },
-      // 9. 获取当前轮次
-      {
-        address: JOIN_CONTRACT_ADDRESS,
-        abi: LOVE20JoinAbi,
-        functionName: 'currentRound',
-        args: [],
-      },
-      // 10. 获取最小治理票数门槛
+      // 9. 获取最小治理票数门槛
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'minGovVotes',
         args: [],
+      },
+      // 10. 获取是否可以退出
+      {
+        address: extensionAddress,
+        abi: LOVE20ExtensionLpAbi,
+        functionName: 'canExit',
+        args: [account],
       },
     ];
   }, [extensionAddress, tokenAddress, account]);
@@ -164,24 +166,24 @@ export const useMyLpActionData = ({
     },
   });
 
-  // 从第一批数据中获取 lpTokenAddress（即 pair 地址）
-  const lpTokenAddress = useMemo(() => {
+  // 从第一批数据中获取 joinTokenAddress（即 LP pair 地址）
+  const joinTokenAddress = useMemo(() => {
     if (!data || !data[4]?.result) return undefined;
     return data[4].result as `0x${string}`;
   }, [data]);
 
   // 构建第二批调用：获取 LP Token 的 totalSupply
   const pairContracts = useMemo(() => {
-    if (!lpTokenAddress) return [];
+    if (!joinTokenAddress) return [];
     return [
       {
-        address: lpTokenAddress,
+        address: joinTokenAddress,
         abi: UniswapV2PairAbi,
         functionName: 'totalSupply',
         args: [],
       },
     ];
-  }, [lpTokenAddress]);
+  }, [joinTokenAddress]);
 
   // 批量读取数据（第二批）
   const {
@@ -191,24 +193,30 @@ export const useMyLpActionData = ({
   } = useReadContracts({
     contracts: pairContracts as any,
     query: {
-      enabled: !!lpTokenAddress && pairContracts.length > 0,
+      enabled: !!joinTokenAddress && pairContracts.length > 0,
     },
   });
 
   // 解析数据
-  const stakedAmount = useMemo(() => {
+  const joinedAmount = useMemo(() => {
     if (!data || !data[0]?.result) return BigInt(0);
-    const stakeInfo = data[0].result as [bigint, bigint];
-    return stakeInfo[0];
+    const joinInfo = data[0].result as [bigint, bigint, bigint];
+    return joinInfo[0];
   }, [data]);
 
-  const requestedUnstakeRound = useMemo(() => {
+  const joinedBlock = useMemo(() => {
     if (!data || !data[0]?.result) return BigInt(0);
-    const stakeInfo = data[0].result as [bigint, bigint];
-    return stakeInfo[1];
+    const joinInfo = data[0].result as [bigint, bigint, bigint];
+    return joinInfo[1];
   }, [data]);
 
-  const totalStakedAmount = useMemo(() => {
+  const exitableBlock = useMemo(() => {
+    if (!data || !data[0]?.result) return BigInt(0);
+    const joinInfo = data[0].result as [bigint, bigint, bigint];
+    return joinInfo[2];
+  }, [data]);
+
+  const totalJoinedAmount = useMemo(() => {
     if (!data || !data[1]?.result) return BigInt(0);
     return BigInt(data[1].result.toString());
   }, [data]);
@@ -233,19 +241,19 @@ export const useMyLpActionData = ({
     return BigInt(data[6].result.toString());
   }, [data]);
 
-  const waitingPhases = useMemo(() => {
+  const waitingBlocks = useMemo(() => {
     if (!data || !data[8]?.result) return BigInt(0);
     return BigInt(data[8].result.toString());
   }, [data]);
 
-  const currentRound = useMemo(() => {
+  const minGovVotes = useMemo(() => {
     if (!data || !data[9]?.result) return BigInt(0);
     return BigInt(data[9].result.toString());
   }, [data]);
 
-  const minGovVotes = useMemo(() => {
-    if (!data || !data[10]?.result) return BigInt(0);
-    return BigInt(data[10].result.toString());
+  const canExitFromContract = useMemo(() => {
+    if (!data || !data[10]?.result) return false;
+    return data[10].result as boolean;
   }, [data]);
 
   const lpTotalSupply = useMemo(() => {
@@ -256,29 +264,24 @@ export const useMyLpActionData = ({
   // 获取用户得分和总得分（calculateScore 返回 [total, score]）
   const userScore = useMemo(() => {
     if (!data || !data[7]?.result) {
-      console.log('🔍 userScore - data[7] 不存在或无结果:', {
-        hasData: !!data,
-        dataLength: data?.length,
-        hasResult: !!data?.[7]?.result,
-        data7: data?.[7],
-      });
       return BigInt(0);
     }
     const scoreResult = data[7].result as [bigint, bigint];
-    console.log('🔍 calculateScore 返回值:', {
-      total: scoreResult[0]?.toString(),
-      score: scoreResult[1]?.toString(),
-      rawResult: data[7].result,
-    });
 
-    // 同时打印相关的其他数据
-    console.log('🔍 相关数据:', {
-      stakedAmount: (data[0]?.result as any)?.[0]?.toString(),
-      totalStakedAmount: data[1]?.result?.toString(),
-      userGovVotes: data[5]?.result?.toString(),
-      totalGovVotes: data[6]?.result?.toString(),
-      minGovVotes: data[10]?.result?.toString(),
-    });
+    // console.log('🔍 calculateScore 返回值:', {
+    //   total: scoreResult[0]?.toString(),
+    //   score: scoreResult[1]?.toString(),
+    //   rawResult: data[7].result,
+    // });
+
+    // // 同时打印相关的其他数据
+    // console.log('🔍 相关数据:', {
+    //   joinedAmount: (data[0]?.result as any)?.[0]?.toString(),
+    //   totalJoinedAmount: data[1]?.result?.toString(),
+    //   userGovVotes: data[5]?.result?.toString(),
+    //   totalGovVotes: data[6]?.result?.toString(),
+    //   minGovVotes: data[9]?.result?.toString(),
+    // });
 
     return scoreResult[1]; // score 是第二个值
   }, [data]);
@@ -291,59 +294,62 @@ export const useMyLpActionData = ({
 
   // 计算 LP 占比（用于显示）
   const lpRatio = useMemo(() => {
-    if (!stakedAmount || stakedAmount === BigInt(0) || !lpTotalSupply || lpTotalSupply === BigInt(0)) {
+    if (!joinedAmount || joinedAmount === BigInt(0) || !lpTotalSupply || lpTotalSupply === BigInt(0)) {
       return 0;
     }
-    return (Number(stakedAmount) / Number(lpTotalSupply)) * 100;
-  }, [stakedAmount, lpTotalSupply]);
+    return (Number(joinedAmount) / Number(lpTotalSupply)) * 100;
+  }, [joinedAmount, lpTotalSupply]);
 
-  // 计算可以取回LP的轮次和状态
-  const canWithdrawAtRound = useMemo(() => {
-    if (!requestedUnstakeRound || requestedUnstakeRound === BigInt(0)) {
-      return BigInt(0);
-    }
-    return requestedUnstakeRound + waitingPhases + BigInt(1);
-  }, [requestedUnstakeRound, waitingPhases]);
+  // 获取当前区块
+  const currentBlock = currentBlockData || BigInt(0);
 
-  const canWithdrawNow = useMemo(() => {
-    if (!requestedUnstakeRound || requestedUnstakeRound === BigInt(0)) {
+  // 计算是否可以退出和剩余区块数
+  const canExitNow = useMemo(() => {
+    // 如果没有加入，则不能退出
+    if (!joinedAmount || joinedAmount === BigInt(0)) {
       return false;
     }
-    return currentRound >= canWithdrawAtRound;
-  }, [requestedUnstakeRound, currentRound, canWithdrawAtRound]);
+    // 优先使用合约返回的 canExit 结果
+    return canExitFromContract;
+  }, [joinedAmount, canExitFromContract]);
 
-  const remainingRounds = useMemo(() => {
-    if (!requestedUnstakeRound || requestedUnstakeRound === BigInt(0)) {
+  const remainingBlocks = useMemo(() => {
+    // 如果没有加入，返回0
+    if (!joinedAmount || joinedAmount === BigInt(0)) {
       return BigInt(0);
     }
-    if (canWithdrawNow) {
+    // 如果已经可以退出，返回0
+    if (canExitNow) {
       return BigInt(0);
     }
-    return canWithdrawAtRound - currentRound;
-  }, [requestedUnstakeRound, canWithdrawNow, canWithdrawAtRound, currentRound]);
+    // 计算还需要等待的区块数
+    if (currentBlock >= exitableBlock) {
+      return BigInt(0);
+    }
+    return exitableBlock - currentBlock;
+  }, [joinedAmount, canExitNow, currentBlock, exitableBlock]);
 
-  // 只有当 lpTokenAddress 存在时，才需要等待第二批数据加载
-  const shouldWaitForPairData = !!lpTokenAddress;
-  const finalIsPending = isPending || (shouldWaitForPairData && isPendingPair);
+  // 只有当 joinTokenAddress 存在时，才需要等待第二批数据加载
+  const shouldWaitForPairData = !!joinTokenAddress;
+  const finalIsPending = isPending || isPendingBlock || (shouldWaitForPairData && isPendingPair);
 
   return {
-    stakedAmount,
-    totalStakedAmount,
+    joinedAmount,
+    totalJoinedAmount,
     lpTotalSupply,
-    requestedUnstakeRound,
-    currentRound,
-    waitingPhases,
-    canWithdrawAtRound,
-    canWithdrawNow,
-    remainingRounds,
+    joinedBlock,
+    exitableBlock,
+    currentBlock,
+    waitingBlocks,
+    canExitNow,
+    remainingBlocks,
     userScore,
     totalScore,
     userGovVotes,
     totalGovVotes,
     minGovVotes,
     lpRatio,
-    lpTokenAddress,
-    pairAddress: lpTokenAddress, // pairAddress 就是 lpTokenAddress
+    joinTokenAddress,
     govRatioMultiplier,
     joinedValue,
     isPending: finalIsPending,

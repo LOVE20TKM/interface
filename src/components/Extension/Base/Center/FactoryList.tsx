@@ -78,7 +78,7 @@ export default function FactoryList({ tokenAddress, factories, isPending }: Fact
                 <AddressWithCopyButton address={factory} showAddress={true} />
                 <span className="text-sm text-greyscale-900 font-medium">{factoryName}</span>
               </div>
-              <Link href={`/extension/deployExtension?factory=${factory}`}>
+              <Link href={`/extension/deploy?factory=${factory}`}>
                 <Button
                   variant="link"
                   size="sm"

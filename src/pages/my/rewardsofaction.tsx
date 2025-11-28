@@ -65,7 +65,9 @@ const ActRewardsPage: React.FC = () => {
     endRound,
     enabled: isInitialized,
   });
-
+  console.log('rewards', rewards);
+  console.log('extensionInfo', extensionInfo);
+  console.log('isExtensionAction', isExtensionAction);
   // 本地状态缓存激励数据，避免翻页时数据闪烁
   const [rewardList, setRewardList] = useState<typeof rewards>([]);
 

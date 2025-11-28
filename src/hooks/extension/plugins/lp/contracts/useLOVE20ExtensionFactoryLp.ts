@@ -1,11 +1,11 @@
-// hooks/contracts/useLOVE20ExtensionFactoryStakeLp.ts
+// hooks/contracts/useLOVE20ExtensionFactoryLp.ts
 
 import { useEffect } from 'react';
 import { useReadContract } from 'wagmi';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
-import { LOVE20ExtensionFactoryStakeLpAbi } from '@/src/abis/LOVE20ExtensionFactoryStakeLp';
+import { LOVE20ExtensionFactoryLpAbi } from '@/src/abis/LOVE20ExtensionFactoryLp';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // 需要在环境变量中配置这个合约地址
@@ -21,7 +21,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACT
 export const useFactoryCenter = (factoryAddress?: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress || CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionFactoryStakeLpAbi,
+    abi: LOVE20ExtensionFactoryLpAbi,
     functionName: 'center',
     query: {
       enabled: !!(factoryAddress || CONTRACT_ADDRESS),
@@ -37,7 +37,7 @@ export const useFactoryCenter = (factoryAddress?: `0x${string}`) => {
 export const useExtensionExists = (factoryAddress: `0x${string}`, extensionAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: LOVE20ExtensionFactoryStakeLpAbi,
+    abi: LOVE20ExtensionFactoryLpAbi,
     functionName: 'exists',
     args: [extensionAddress],
     query: {
@@ -54,7 +54,7 @@ export const useExtensionExists = (factoryAddress: `0x${string}`, extensionAddre
 export const useExtensionParams = (factoryAddress: `0x${string}`, extensionAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: LOVE20ExtensionFactoryStakeLpAbi,
+    abi: LOVE20ExtensionFactoryLpAbi,
     functionName: 'extensionParams',
     args: [extensionAddress],
     query: {
@@ -64,27 +64,26 @@ export const useExtensionParams = (factoryAddress: `0x${string}`, extensionAddre
 
   return {
     tokenAddress: data ? (data[0] as `0x${string}`) : undefined,
-    actionId: data ? safeToBigInt(data[1]) : undefined,
-    anotherTokenAddress: data ? (data[2] as `0x${string}`) : undefined,
-    waitingPhases: data ? safeToBigInt(data[3]) : undefined,
-    govRatioMultiplier: data ? safeToBigInt(data[4]) : undefined,
-    minGovVotes: data ? safeToBigInt(data[5]) : undefined,
+    joinTokenAddress: data ? (data[1] as `0x${string}`) : undefined,
+    waitingBlocks: data ? safeToBigInt(data[2]) : undefined,
+    govRatioMultiplier: data ? safeToBigInt(data[3]) : undefined,
+    minGovVotes: data ? safeToBigInt(data[4]) : undefined,
+    lpRatioPrecision: data ? safeToBigInt(data[5]) : undefined,
     isPending,
     error,
   };
 };
 
 /**
- * Hook for extensions - 获取指定代币的所有扩展地址
+ * Hook for extensions - 获取所有扩展地址
  */
-export const useFactoryExtensions = (factoryAddress: `0x${string}`, tokenAddress: `0x${string}`) => {
+export const useFactoryExtensions = (factoryAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: LOVE20ExtensionFactoryStakeLpAbi,
+    abi: LOVE20ExtensionFactoryLpAbi,
     functionName: 'extensions',
-    args: [tokenAddress],
     query: {
-      enabled: !!factoryAddress && !!tokenAddress,
+      enabled: !!factoryAddress,
     },
   });
 
@@ -94,18 +93,14 @@ export const useFactoryExtensions = (factoryAddress: `0x${string}`, tokenAddress
 /**
  * Hook for extensionsAtIndex - 根据索引获取扩展地址
  */
-export const useFactoryExtensionsAtIndex = (
-  factoryAddress: `0x${string}`,
-  tokenAddress: `0x${string}`,
-  index: bigint,
-) => {
+export const useFactoryExtensionsAtIndex = (factoryAddress: `0x${string}`, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: LOVE20ExtensionFactoryStakeLpAbi,
+    abi: LOVE20ExtensionFactoryLpAbi,
     functionName: 'extensionsAtIndex',
-    args: [tokenAddress, index],
+    args: [index],
     query: {
-      enabled: !!factoryAddress && !!tokenAddress && index !== undefined,
+      enabled: !!factoryAddress && index !== undefined,
     },
   });
 
@@ -113,16 +108,15 @@ export const useFactoryExtensionsAtIndex = (
 };
 
 /**
- * Hook for extensionsCount - 获取指定代币的扩展数量
+ * Hook for extensionsCount - 获取扩展数量
  */
-export const useFactoryExtensionsCount = (factoryAddress: `0x${string}`, tokenAddress: `0x${string}`) => {
+export const useFactoryExtensionsCount = (factoryAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: LOVE20ExtensionFactoryStakeLpAbi,
+    abi: LOVE20ExtensionFactoryLpAbi,
     functionName: 'extensionsCount',
-    args: [tokenAddress],
     query: {
-      enabled: !!factoryAddress && !!tokenAddress,
+      enabled: !!factoryAddress,
     },
   });
 
@@ -134,34 +128,36 @@ export const useFactoryExtensionsCount = (factoryAddress: `0x${string}`, tokenAd
 // =====================
 
 /**
- * Hook for createExtension - 创建新的 StakeLp 扩展
+ * Hook for createExtension - 创建新的 Lp 扩展
  * @param factoryAddress 工厂合约地址，如果不提供则使用环境变量中的默认地址
+ * 
+ * 注意：在调用 createExtension 之前，需要先授权 1 个代币给 factory
  */
 export function useCreateExtension(factoryAddress?: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionFactoryStakeLpAbi,
+    LOVE20ExtensionFactoryLpAbi,
     factoryAddress || CONTRACT_ADDRESS,
     'createExtension',
   );
 
   const createExtension = async (
     tokenAddress: `0x${string}`,
-    actionId: bigint,
-    anotherTokenAddress: `0x${string}`,
-    waitingPhases: bigint,
+    joinTokenAddress: `0x${string}`,
+    waitingBlocks: bigint,
     govRatioMultiplier: bigint,
     minGovVotes: bigint,
+    lpRatioPrecision: bigint,
   ) => {
     console.log('提交 createExtension 交易:', {
       tokenAddress,
-      actionId,
-      anotherTokenAddress,
-      waitingPhases,
+      joinTokenAddress,
+      waitingBlocks,
       govRatioMultiplier,
       minGovVotes,
+      lpRatioPrecision,
       isTukeMode,
     });
-    return await execute([tokenAddress, actionId, anotherTokenAddress, waitingPhases, govRatioMultiplier, minGovVotes]);
+    return await execute([tokenAddress, joinTokenAddress, waitingBlocks, govRatioMultiplier, minGovVotes, lpRatioPrecision]);
   };
 
   // 错误日志记录
@@ -186,3 +182,5 @@ export function useCreateExtension(factoryAddress?: `0x${string}`) {
     isTukeMode,
   };
 }
+
+

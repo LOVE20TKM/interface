@@ -13,12 +13,14 @@ import { useCanSubmit } from '@/src/hooks/contracts/useLOVE20Submit';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import toast from 'react-hot-toast';
 import { isAddress } from 'viem';
+import { useRouter } from 'next/navigation';
 
 export default function AddFactory() {
   const context = useContext(TokenContext);
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
   const { address: account } = useAccount();
   const [factoryAddress, setFactoryAddress] = useState<string>('');
+  const router = useRouter();
 
   // 检查当前用户是否有推举权
   const {
@@ -54,7 +56,9 @@ export default function AddFactory() {
 
     try {
       await addFactory(tokenAddress, factoryAddress as `0x${string}`);
-      toast.success('添加工厂提交成功！');
+      setTimeout(() => {
+        router.push(`/extension/factories`);
+      }, 2000);
     } catch (error: any) {
       console.error('添加工厂失败:', error);
       toast.error(error?.message || '添加工厂失败');

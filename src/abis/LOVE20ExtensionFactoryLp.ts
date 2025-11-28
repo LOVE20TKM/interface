@@ -1,7 +1,7 @@
 
 import { Abi } from 'abitype';
 
-export const LOVE20ExtensionFactoryStakeLpAbi = [
+export const LOVE20ExtensionFactoryLpAbi = [
   {
     "type": "constructor",
     "inputs": [
@@ -36,17 +36,12 @@ export const LOVE20ExtensionFactoryStakeLpAbi = [
         "internalType": "address"
       },
       {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "anotherTokenAddress",
+        "name": "joinTokenAddress",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "waitingPhases",
+        "name": "waitingBlocks",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -57,6 +52,11 @@ export const LOVE20ExtensionFactoryStakeLpAbi = [
       },
       {
         "name": "minGovVotes",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "lpRatioPrecision",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -106,17 +106,12 @@ export const LOVE20ExtensionFactoryStakeLpAbi = [
         "internalType": "address"
       },
       {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "anotherTokenAddress",
+        "name": "joinTokenAddress",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "waitingPhases",
+        "name": "waitingBlocks",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -129,6 +124,11 @@ export const LOVE20ExtensionFactoryStakeLpAbi = [
         "name": "minGovVotes",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "lpRatioPrecision",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -136,13 +136,7 @@ export const LOVE20ExtensionFactoryStakeLpAbi = [
   {
     "type": "function",
     "name": "extensions",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
+    "inputs": [],
     "outputs": [
       {
         "name": "",
@@ -156,11 +150,6 @@ export const LOVE20ExtensionFactoryStakeLpAbi = [
     "type": "function",
     "name": "extensionsAtIndex",
     "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
       {
         "name": "index",
         "type": "uint256",
@@ -179,13 +168,7 @@ export const LOVE20ExtensionFactoryStakeLpAbi = [
   {
     "type": "function",
     "name": "extensionsCount",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
+    "inputs": [],
     "outputs": [
       {
         "name": "",
@@ -208,23 +191,17 @@ export const LOVE20ExtensionFactoryStakeLpAbi = [
       {
         "name": "tokenAddress",
         "type": "address",
-        "indexed": true,
+        "indexed": false,
         "internalType": "address"
       },
       {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "anotherTokenAddress",
+        "name": "joinTokenAddress",
         "type": "address",
         "indexed": false,
         "internalType": "address"
       },
       {
-        "name": "waitingPhases",
+        "name": "waitingBlocks",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -240,23 +217,19 @@ export const LOVE20ExtensionFactoryStakeLpAbi = [
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
+      },
+      {
+        "name": "lpRatioPrecision",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
   },
   {
     "type": "error",
-    "name": "InvalidAnotherTokenAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidTokenAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "SameTokenAddresses",
+    "name": "InvalidJoinTokenAddress",
     "inputs": []
   }
 ] as const satisfies Abi;

@@ -143,12 +143,18 @@ export const useActionDetailData = ({
   // ==========================================
   // 步骤 2: 获取参与数据（自动判断扩展行动）
   // ==========================================
-  const participationData = useActionParticipationWithExtension(tokenAddress, actionId, account, {
-    participantCount: basicData.participantCount,
-    totalAmount: basicData.totalAmount,
-    userJoinedAmount: basicData.userJoinedAmount,
-    isJoined: basicData.isJoined,
-  });
+  const participationData = useActionParticipationWithExtension(
+    tokenAddress,
+    actionId,
+    account,
+    basicData.actionInfo, // 传入 actionInfo 用于判断白名单地址
+    {
+      participantCount: basicData.participantCount,
+      totalAmount: basicData.totalAmount,
+      userJoinedAmount: basicData.userJoinedAmount,
+      isJoined: basicData.isJoined,
+    },
+  );
 
   // ==========================================
   // 步骤 3: 整合所有数据

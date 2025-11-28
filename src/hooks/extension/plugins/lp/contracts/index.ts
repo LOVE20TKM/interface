@@ -1,9 +1,9 @@
 /**
- * LP 质押扩展合约 Hooks
+ * LP 扩展合约 Hooks
  * 
- * 提供 LP 质押扩展的合约调用方法
+ * 提供 LP 扩展的合约调用方法
  */
 
-export * from './useLOVE20ExtensionFactoryStakeLp';
-export * from './useLOVE20ExtensionStakeLp';
+export * from './useLOVE20ExtensionFactoryLp';
+export * from './useLOVE20ExtensionLp';
 

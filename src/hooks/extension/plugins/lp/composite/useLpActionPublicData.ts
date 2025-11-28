@@ -3,14 +3,14 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionStakeLpAbi } from '@/src/abis/LOVE20ExtensionStakeLp';
+import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
 import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
 import { UniswapV2ERC20Abi } from '@/src/abis/UniswapV2ERC20';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 const STAKE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`;
 
-export interface StakeLpParticipant {
+export interface LpParticipant {
   address: `0x${string}`;
   lpAmount: bigint;
   govVotes: bigint;
@@ -26,7 +26,7 @@ export interface UseLpActionPublicDataParams {
 }
 
 export interface UseLpActionPublicDataResult {
-  participants: StakeLpParticipant[];
+  participants: LpParticipant[];
   totalScore: bigint;
   totalLp: bigint;
   totalGovVotes: bigint;
@@ -57,22 +57,22 @@ export const useLpActionPublicData = ({
     if (!extensionAddress || !tokenAddress) return [];
 
     return [
-      // 获取所有质押者地址
+      // 获取所有参与者地址
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
-        functionName: 'stakers',
+        abi: LOVE20ExtensionLpAbi,
+        functionName: 'accounts',
       },
-      // 获取 LP Token 地址（即 pair 地址）
+      // 获取 Join Token 地址（即 LP pair 地址）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
-        functionName: 'lpTokenAddress',
+        abi: LOVE20ExtensionLpAbi,
+        functionName: 'joinTokenAddress',
       },
       // 获取 govRatioMultiplier
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'govRatioMultiplier',
       },
       // 获取总治理票数
@@ -97,19 +97,19 @@ export const useLpActionPublicData = ({
   });
 
   // 解析基础数据
-  const { stakers, pairAddress, govRatioMultiplier, totalGovVotes } = useMemo(() => {
+  const { accounts, joinTokenAddress, govRatioMultiplier, totalGovVotes } = useMemo(() => {
     if (!basicData || basicData.length < 4) {
       return {
-        stakers: [] as `0x${string}`[],
-        pairAddress: undefined,
+        accounts: [] as `0x${string}`[],
+        joinTokenAddress: undefined,
         govRatioMultiplier: undefined,
         totalGovVotes: undefined,
       };
     }
 
     return {
-      stakers: (basicData[0]?.result as `0x${string}`[]) || [],
-      pairAddress: basicData[1]?.result as `0x${string}` | undefined,
+      accounts: (basicData[0]?.result as `0x${string}`[]) || [],
+      joinTokenAddress: basicData[1]?.result as `0x${string}` | undefined,
       govRatioMultiplier: safeToBigInt(basicData[2]?.result),
       totalGovVotes: safeToBigInt(basicData[3]?.result),
     };
@@ -119,25 +119,25 @@ export const useLpActionPublicData = ({
   // 步骤 2: 批量获取每个参与者的详细数据
   // ==========================================
   const detailContracts = useMemo(() => {
-    if (!extensionAddress || !tokenAddress || !stakers || stakers.length === 0 || !pairAddress) return [];
+    if (!extensionAddress || !tokenAddress || !accounts || accounts.length === 0 || !joinTokenAddress) return [];
 
     const contracts = [];
 
-    // 获取 LP 总供应量
+    // 获取 LP Token 总供应量
     contracts.push({
-      address: pairAddress,
+      address: joinTokenAddress,
       abi: UniswapV2ERC20Abi,
       functionName: 'totalSupply',
     });
 
     // 为每个参与者获取数据
-    for (const staker of stakers) {
-      // 获取质押信息（LP数量）
+    for (const account of accounts) {
+      // 获取加入信息（LP数量）
       contracts.push({
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
-        functionName: 'stakeInfo',
-        args: [staker],
+        abi: LOVE20ExtensionLpAbi,
+        functionName: 'joinInfo',
+        args: [account],
       });
 
       // 获取治理票数
@@ -145,12 +145,12 @@ export const useLpActionPublicData = ({
         address: STAKE_CONTRACT_ADDRESS,
         abi: LOVE20StakeAbi,
         functionName: 'validGovVotes',
-        args: [tokenAddress, staker],
+        args: [tokenAddress, account],
       });
     }
 
     return contracts;
-  }, [extensionAddress, tokenAddress, stakers, pairAddress]);
+  }, [extensionAddress, tokenAddress, accounts, joinTokenAddress]);
 
   const {
     data: detailData,
@@ -169,45 +169,45 @@ export const useLpActionPublicData = ({
   const result = useMemo(() => {
     if (
       !detailData ||
-      !stakers ||
-      stakers.length === 0 ||
+      !accounts ||
+      accounts.length === 0 ||
       !govRatioMultiplier ||
       !totalGovVotes ||
       totalGovVotes === BigInt(0)
     ) {
       return {
-        participants: [] as StakeLpParticipant[],
+        participants: [] as LpParticipant[],
         totalScore: BigInt(0),
         totalLp: BigInt(0),
         totalGovVotes: totalGovVotes || BigInt(0),
       };
     }
 
-    // 获取 LP 总供应量
+    // 获取 LP Token 总供应量
     const totalLp = safeToBigInt(detailData[0]?.result) || BigInt(0);
 
     if (totalLp === BigInt(0)) {
       return {
-        participants: [] as StakeLpParticipant[],
+        participants: [] as LpParticipant[],
         totalScore: BigInt(0),
         totalLp: BigInt(0),
         totalGovVotes: totalGovVotes || BigInt(0),
       };
     }
 
-    const participants: StakeLpParticipant[] = [];
+    const participants: LpParticipant[] = [];
     let totalScore = BigInt(0);
 
     // 处理每个参与者
-    for (let i = 0; i < stakers.length; i++) {
-      const stakerAddress = stakers[i];
-      const stakeInfoIndex = 1 + i * 2;
-      const govVotesIndex = stakeInfoIndex + 1;
+    for (let i = 0; i < accounts.length; i++) {
+      const accountAddress = accounts[i];
+      const joinInfoIndex = 1 + i * 2;
+      const govVotesIndex = joinInfoIndex + 1;
 
-      const stakeInfoResult = detailData[stakeInfoIndex]?.result as [bigint, bigint] | undefined;
+      const joinInfoResult = detailData[joinInfoIndex]?.result as [bigint, bigint, bigint] | undefined;
       const govVotesResult = detailData[govVotesIndex]?.result;
 
-      const lpAmount = stakeInfoResult ? safeToBigInt(stakeInfoResult[0]) : BigInt(0);
+      const lpAmount = joinInfoResult ? safeToBigInt(joinInfoResult[0]) : BigInt(0);
       const govVotes = safeToBigInt(govVotesResult);
 
       if (!lpAmount || lpAmount === BigInt(0)) continue;
@@ -222,7 +222,7 @@ export const useLpActionPublicData = ({
       totalScore += score;
 
       participants.push({
-        address: stakerAddress,
+        address: accountAddress,
         lpAmount,
         govVotes,
         score,
@@ -243,10 +243,10 @@ export const useLpActionPublicData = ({
       totalLp,
       totalGovVotes,
     };
-  }, [detailData, stakers, govRatioMultiplier, totalGovVotes]);
+  }, [detailData, accounts, govRatioMultiplier, totalGovVotes]);
 
-  // 如果基础数据已加载完成，且没有 stakers，则不需要等待详细数据
-  const shouldWaitForDetail = stakers && stakers.length > 0;
+  // 如果基础数据已加载完成，且没有参与者，则不需要等待详细数据
+  const shouldWaitForDetail = accounts && accounts.length > 0;
   const isPending = isBasicPending || (shouldWaitForDetail && isDetailPending);
 
   return {

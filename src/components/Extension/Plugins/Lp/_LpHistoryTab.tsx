@@ -18,7 +18,7 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 
 // my funcs
-import { formatPercentage, formatRoundForDisplay, formatNumber } from '@/src/lib/format';
+import { formatPercentage, formatRoundForDisplay, formatNumber, formatTokenAmount } from '@/src/lib/format';
 
 interface LpHistoryTabProps {
   extensionAddress: `0x${string}`;
@@ -123,7 +123,7 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
               <tr className="border-b border-gray-100">
                 <th className="px-2 text-left">地址</th>
                 <th className="px-2 text-right">得分</th>
-                <th className="px-2 text-right">激励占比</th>
+                <th className="px-2 text-right">可铸造激励</th>
               </tr>
             </thead>
             <tbody>
@@ -140,7 +140,7 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
                     />
                   </td>
                   <td className="px-2 text-right">{formatNumber(participant.score)}</td>
-                  <td className="px-2 text-right">{formatPercentage(participant.rewardRatio * 100)}</td>
+                  <td className="px-2 text-right">{formatTokenAmount(participant.reward)}</td>
                 </tr>
               ))}
             </tbody>

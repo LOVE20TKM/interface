@@ -5,10 +5,11 @@ import { toast } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { HelpCircle } from 'lucide-react';
 
 // my hooks
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
-import { useUnstakeLp, useWithdrawLp } from '@/src/hooks/extension/plugins/lp/contracts';
+import { useExit } from '@/src/hooks/extension/plugins/lp/contracts';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my contexts
@@ -18,7 +19,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { ActionInfo } from '@/src/types/love20types';
 
 // my components
-import { formatPercentage } from '@/src/lib/format';
+import { formatPercentage, formatSeconds } from '@/src/lib/format';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import LpStatsCard from '@/src/components/Extension/Plugins/Lp/_LpStatsCard';
@@ -33,9 +34,9 @@ interface LpMyActionProps {
  * LP 我的行动参与组件
  *
  * 功能：
- * 1. 显示用户的 LP 质押数量
- * 2. 显示激励占比（LP部分 + SL部分）
- * 3. 提供取回LP、增加LP、查看激励的操作入口
+ * 1. 显示用户的 LP 加入数量
+ * 2. 显示激励占比（LP部分）
+ * 3. 提供退出LP、增加LP、查看激励的操作入口
  */
 const LpMyAction: React.FC<LpMyActionProps> = ({ actionId, actionInfo, extensionAddress }) => {
   const { address: account } = useAccount();
@@ -44,8 +45,8 @@ const LpMyAction: React.FC<LpMyActionProps> = ({ actionId, actionInfo, extension
 
   // 获取我的 LP 扩展数据
   const {
-    stakedAmount,
-    totalStakedAmount,
+    joinedAmount,
+    totalJoinedAmount,
     userScore,
     totalScore,
     userGovVotes,
@@ -53,12 +54,12 @@ const LpMyAction: React.FC<LpMyActionProps> = ({ actionId, actionInfo, extension
     minGovVotes,
     lpRatio,
     govRatioMultiplier,
-    requestedUnstakeRound,
-    currentRound,
-    waitingPhases,
-    canWithdrawAtRound,
-    canWithdrawNow,
-    remainingRounds,
+    joinedBlock,
+    exitableBlock,
+    currentBlock,
+    waitingBlocks,
+    canExitNow,
+    remainingBlocks,
     isPending: isPendingData,
     error: errorData,
   } = useMyLpActionData({
@@ -67,63 +68,42 @@ const LpMyAction: React.FC<LpMyActionProps> = ({ actionId, actionInfo, extension
     account: account as `0x${string}`,
   });
 
-  // 计算是否已质押
-  const isStaked = stakedAmount && stakedAmount > BigInt(0);
+  // 计算是否已加入
+  const isJoined = joinedAmount && joinedAmount > BigInt(0);
 
   // 格式化 LP 占比
   const lpRatioStr = formatPercentage(lpRatio);
 
-  // 判断是否已经请求解除质押
-  const hasRequestedUnstake = requestedUnstakeRound && requestedUnstakeRound > BigInt(0);
-
-  // 解除 LP 质押（第一步）
+  // 退出 LP（直接退出）
   const {
-    unstakeLp,
-    isPending: isPendingUnstake,
-    isConfirming: isConfirmingUnstake,
-    isConfirmed: isConfirmedUnstake,
-    writeError: errorUnstake,
-  } = useUnstakeLp(extensionAddress);
+    exit,
+    isPending: isPendingExit,
+    isConfirming: isConfirmingExit,
+    isConfirmed: isConfirmedExit,
+    writeError: errorExit,
+  } = useExit(extensionAddress);
 
-  const handleUnstakeLp = async () => {
-    // 如果质押数量为0, toast
-    if (!stakedAmount || stakedAmount <= BigInt(0)) {
-      toast.error('你还没有质押LP，无需解除');
+  const handleExit = async () => {
+    // 如果加入数量为0, toast
+    if (!joinedAmount || joinedAmount <= BigInt(0)) {
+      toast.error('你还没有加入LP，无需退出');
       return;
     }
-    await unstakeLp();
+    // 如果还不能退出
+    if (!canExitNow) {
+      toast.error(`还需等待 ${remainingBlocks} 个区块才能退出`);
+      return;
+    }
+    await exit();
   };
 
   useEffect(() => {
-    if (isConfirmedUnstake) {
-      toast.success(`解除LP质押成功，等待 ${waitingPhases} 个阶段后可取回LP`);
-    }
-  }, [isConfirmedUnstake, waitingPhases]);
-
-  // 取回 LP（第二步）
-  const {
-    withdrawLp,
-    isPending: isPendingWithdraw,
-    isConfirming: isConfirmingWithdraw,
-    isConfirmed: isConfirmedWithdraw,
-    writeError: errorWithdraw,
-  } = useWithdrawLp(extensionAddress);
-
-  const handleWithdrawLp = async () => {
-    if (!canWithdrawNow) {
-      toast.error(`还需等待 ${remainingRounds} 个阶段才能取回LP`);
-      return;
-    }
-    await withdrawLp();
-  };
-
-  useEffect(() => {
-    if (isConfirmedWithdraw) {
-      toast.success('取回LP成功');
+    if (isConfirmedExit) {
+      toast.success('退出LP成功');
       // 跳转到个人首页
       router.push('/my');
     }
-  }, [isConfirmedWithdraw, router]);
+  }, [isConfirmedExit, router]);
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -131,13 +111,10 @@ const LpMyAction: React.FC<LpMyActionProps> = ({ actionId, actionInfo, extension
     if (errorData) {
       handleContractError(errorData, 'extension');
     }
-    if (errorUnstake) {
-      handleContractError(errorUnstake, 'extension');
+    if (errorExit) {
+      handleContractError(errorExit, 'extension');
     }
-    if (errorWithdraw) {
-      handleContractError(errorWithdraw, 'extension');
-    }
-  }, [errorData, errorUnstake, errorWithdraw, handleContractError]);
+  }, [errorData, errorExit, handleContractError]);
 
   if (isPendingData) {
     return (
@@ -152,10 +129,10 @@ const LpMyAction: React.FC<LpMyActionProps> = ({ actionId, actionInfo, extension
 
   return (
     <div className="flex flex-col items-center pt-1">
-      {isStaked && (
+      {isJoined && (
         <>
           <LpStatsCard
-            stakedAmount={stakedAmount || BigInt(0)}
+            stakedAmount={joinedAmount || BigInt(0)}
             lpRatioStr={lpRatioStr}
             userScore={userScore}
             totalScore={totalScore}
@@ -178,51 +155,26 @@ const LpMyAction: React.FC<LpMyActionProps> = ({ actionId, actionInfo, extension
       )}
 
       {/* 操作按钮 */}
-      {!isStaked ? (
+      {!isJoined ? (
         <Button variant="outline" className="w-1/2 text-secondary border-secondary" asChild>
-          <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol}`}>质押LP参与</Link>
+          <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol}`}>加入LP参与</Link>
         </Button>
       ) : (
         <>
           <div className="flex justify-center space-x-2 mt-6 w-full">
-            {/* 解除LP质押/取回LP按钮 */}
-            {!stakedAmount || stakedAmount <= BigInt(0) ? (
+            {/* 退出LP按钮 */}
+            {!joinedAmount || joinedAmount <= BigInt(0) ? (
               <Button variant="outline" className="w-1/3 text-secondary border-secondary" disabled>
-                解除质押
-              </Button>
-            ) : !hasRequestedUnstake ? (
-              // 第一步：解除LP质押
-              <Button
-                variant="outline"
-                className="w-1/3 text-secondary border-secondary"
-                onClick={handleUnstakeLp}
-                disabled={isPendingUnstake || isConfirmingUnstake || isConfirmedUnstake}
-              >
-                {isPendingUnstake
-                  ? '提交中'
-                  : isConfirmingUnstake
-                  ? '确认中'
-                  : isConfirmedUnstake
-                  ? '已解除'
-                  : '解除质押'}
+                退出
               </Button>
             ) : (
-              // 第二步：取回LP
               <Button
                 variant="outline"
                 className="w-1/3 text-secondary border-secondary"
-                onClick={handleWithdrawLp}
-                disabled={!canWithdrawNow || isPendingWithdraw || isConfirmingWithdraw || isConfirmedWithdraw}
+                onClick={handleExit}
+                disabled={!canExitNow || isPendingExit || isConfirmingExit || isConfirmedExit}
               >
-                {isPendingWithdraw
-                  ? '提交中'
-                  : isConfirmingWithdraw
-                  ? '确认中'
-                  : isConfirmedWithdraw
-                  ? '已取回'
-                  : canWithdrawNow
-                  ? '取回LP'
-                  : `等待中...`}
+                {isPendingExit ? '提交中' : isConfirmingExit ? '确认中' : isConfirmedExit ? '已退出' : '退出'}
               </Button>
             )}
 
@@ -237,44 +189,39 @@ const LpMyAction: React.FC<LpMyActionProps> = ({ actionId, actionInfo, extension
             </Button>
           </div>
 
-          {/* 等待取回LP的提示 */}
-          {hasRequestedUnstake && !canWithdrawNow && (
+          {/* 等待退出的提示 */}
+          {isJoined && !canExitNow && (
             <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-3 w-full">
-              <div className="font-medium">⏳ 等待解除质押</div>
-              <div className="mt-1">
-                已请求解除质押，还需等待 <span className="font-semibold">{remainingRounds.toString()}</span> 个阶段
+              <div className="flex items-center gap-2 text-sm font-bold text-amber-800 pb-2">
+                <HelpCircle className="w-4 h-4" />
+                小贴士
               </div>
-              <div className="text-xs text-amber-600 mt-1">
-                第 {canWithdrawAtRound.toString()} 轮可取回LP（当前第 {currentRound.toString()} 轮）
+              <div className="mt-1">
+                加入后需要等待 <span className="font-semibold">{waitingBlocks.toString()}</span> 个区块后才能退出
+                <span className="text-sm text-amber-600 mt-1">
+                  （你在区块 <span className="font-semibold">{joinedBlock.toString()}</span> 加入，当前区块{' '}
+                  {currentBlock.toString()}，还需等待 {remainingBlocks.toString()} 个区块，大约需要{' '}
+                  {formatSeconds((Number(remainingBlocks) * Number(process.env.NEXT_PUBLIC_BLOCK_TIME_MS)) / 1000)}）
+                </span>
               </div>
             </div>
           )}
 
           <div className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-3 mt-6 mb-3 w-full">
-            <div className="font-medium text-gray-600 mb-2">💡 激励占比说明：</div>
+            <div className="font-medium text-gray-600 mb-2">💡 计算说明：</div>
             <div className="ml-4 text-gray-600 space-y-1">
-              <div>• LP占比：你质押的LP / LP Token总供应量</div>
-              <div>• 治理票占比：你的治理票 / 总治理票</div>
-              <div>
-                • 实际激励占比：通过合约算法计算（LP占比 和 治理票占比 × {Number(govRatioMultiplier)} 的最小值）
-              </div>
-              <div>• 解锁LP时，当时验证轮不会产生激励</div>
+              <div>• LP占比 = 您加入的LP / LP Token总供应量</div>
+              <div>• 治理票占比 = 您的治理票 / 总治理票</div>
+              <div>• 激励得分 = LP占比 和 治理票占比 × {Number(govRatioMultiplier)} 的最小值</div>
+              <div>• 实际激励占比 = 您的激励得分 / 参加本行动的激励得分总和</div>
             </div>
           </div>
         </>
       )}
 
       <LoadingOverlay
-        isLoading={isPendingUnstake || isConfirmingUnstake || isPendingWithdraw || isConfirmingWithdraw}
-        text={
-          isPendingUnstake
-            ? '提交解除质押交易...'
-            : isConfirmingUnstake
-            ? '确认解除质押交易...'
-            : isPendingWithdraw
-            ? '提交取回LP交易...'
-            : '确认取回LP交易...'
-        }
+        isLoading={isPendingExit || isConfirmingExit}
+        text={isPendingExit ? '提交退出交易...' : '确认退出交易...'}
       />
     </div>
   );

@@ -3,13 +3,15 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionStakeLpAbi } from '@/src/abis/LOVE20ExtensionStakeLp';
+import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 export interface LpVerifyHistoryParticipant {
   address: `0x${string}`;
   score: bigint;
   rewardRatio: number;
+  reward: bigint;
+  isMinted: boolean;
 }
 
 export interface UseLpVerifyHistoryDataParams {
@@ -42,48 +44,83 @@ export const useLpVerifyHistoryData = ({
   round,
 }: UseLpVerifyHistoryDataParams): UseLpVerifyHistoryDataResult => {
   // ==========================================
-  // 步骤 1: 批量获取历史数据
+  // 步骤 1: 获取基础数据（账户列表、得分、总得分）
   // ==========================================
-  const contracts = useMemo(() => {
+  const baseContracts = useMemo(() => {
     if (!extensionAddress || round === undefined) return [];
 
     return [
-      // 获取已验证账户列表
+      // 获取指定轮次的账户列表
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
-        functionName: 'verifiedAccounts',
+        abi: LOVE20ExtensionLpAbi,
+        functionName: 'accountsByRound',
         args: [round],
       },
       // 获取所有得分
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'scores',
         args: [round],
       },
       // 获取总得分
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'totalScore',
         args: [round],
       },
     ];
   }, [extensionAddress, round]);
 
-  const { data, isPending, error } = useReadContracts({
-    contracts: contracts as any,
+  const {
+    data: baseData,
+    isPending: isPendingBase,
+    error: errorBase,
+  } = useReadContracts({
+    contracts: baseContracts as any,
     query: {
-      enabled: !!extensionAddress && round !== undefined && contracts.length > 0,
+      enabled: !!extensionAddress && round !== undefined && baseContracts.length > 0,
+    },
+  });
+
+  // 解析基础数据，获取账户列表
+  const accountsByRound = useMemo(() => {
+    if (!baseData || baseData.length < 1) return [];
+    return (baseData[0]?.result as `0x${string}`[]) || [];
+  }, [baseData]);
+
+  // ==========================================
+  // 步骤 2: 为每个账户获取实际激励金额
+  // ==========================================
+  const rewardContracts = useMemo(() => {
+    if (!extensionAddress || round === undefined || accountsByRound.length === 0) return [];
+
+    return accountsByRound.map((account) => ({
+      address: extensionAddress,
+      abi: LOVE20ExtensionLpAbi,
+      functionName: 'rewardByAccount',
+      args: [round, account],
+    }));
+  }, [extensionAddress, round, accountsByRound]);
+
+  const {
+    data: rewardData,
+    isPending: isPendingRewards,
+    error: errorRewards,
+  } = useReadContracts({
+    contracts: rewardContracts as any,
+    query: {
+      enabled: rewardContracts.length > 0,
     },
   });
 
   // ==========================================
-  // 步骤 2: 解析和计算数据
+  // 步骤 3: 解析和整合数据
   // ==========================================
   const result = useMemo(() => {
-    if (!data || data.length < 3) {
+    if (!baseData || baseData.length < 3) {
       return {
         participants: [] as LpVerifyHistoryParticipant[],
         totalScore: BigInt(0),
@@ -91,12 +128,12 @@ export const useLpVerifyHistoryData = ({
       };
     }
 
-    const verifiedAccounts = (data[0]?.result as `0x${string}`[]) || [];
-    const scores = (data[1]?.result as bigint[]) || [];
-    const totalScore = safeToBigInt(data[2]?.result) || BigInt(0);
+    const accounts = (baseData[0]?.result as `0x${string}`[]) || [];
+    const scores = (baseData[1]?.result as bigint[]) || [];
+    const totalScore = safeToBigInt(baseData[2]?.result) || BigInt(0);
 
     // 如果没有数据，返回空
-    if (verifiedAccounts.length === 0) {
+    if (accounts.length === 0) {
       return {
         participants: [] as LpVerifyHistoryParticipant[],
         totalScore: BigInt(0),
@@ -105,14 +142,25 @@ export const useLpVerifyHistoryData = ({
     }
 
     // 组合数据并计算比例
-    const participants: LpVerifyHistoryParticipant[] = verifiedAccounts.map((address, index) => {
+    const participants: LpVerifyHistoryParticipant[] = accounts.map((address, index) => {
       const score = scores[index] || BigInt(0);
       const rewardRatio = totalScore > BigInt(0) ? Number(score) / Number(totalScore) : 0;
+
+      // 获取实际激励金额
+      let reward = BigInt(0);
+      let isMinted = false;
+      if (rewardData && rewardData[index]?.result) {
+        const rewardResult = rewardData[index].result as [bigint, boolean];
+        reward = safeToBigInt(rewardResult[0]);
+        isMinted = rewardResult[1];
+      }
 
       return {
         address,
         score,
         rewardRatio,
+        reward,
+        isMinted,
       };
     });
 
@@ -121,11 +169,11 @@ export const useLpVerifyHistoryData = ({
       totalScore,
       isEmpty: false,
     };
-  }, [data]);
+  }, [baseData, rewardData]);
 
   return {
     ...result,
-    isPending,
-    error,
+    isPending: isPendingBase || isPendingRewards,
+    error: errorBase || errorRewards,
   };
 };

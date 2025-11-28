@@ -38,7 +38,7 @@
 import { useMemo, useEffect, useState } from 'react';
 import { useReadContracts } from 'wagmi';
 import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
-import { LOVE20ExtensionStakeLpAbi } from '@/src/abis/LOVE20ExtensionStakeLp';
+import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
 import { getExtensionConfigByFactory, ExtensionType } from '@/src/config/extensionConfig';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -209,8 +209,9 @@ export const useExtensionsContractInfo = ({
       if (cacheItem) {
         const isExtensionZero = cacheItem.data.extensionAddress === '0x0000000000000000000000000000000000000000';
 
-        // 验证缓存完整性：如果有扩展地址但没有 factory 信息，认为缓存无效
-        if (!isExtensionZero && (!cacheItem.data.factoryAddress || !cacheItem.data.factoryType)) {
+        // 验证缓存完整性：如果有扩展地址但没有 factory 地址，认为缓存无效
+        // 注意：factoryType 可以为空（未在配置中注册的工厂），这不影响扩展功能
+        if (!isExtensionZero && !cacheItem.data.factoryAddress) {
           console.log(`⚠️ ActionId ${actionId} 合约信息缓存不完整，清除缓存重新查询`);
           clearContractInfoCache(tokenAddress, actionId);
           uncached.push(actionId);
@@ -222,8 +223,8 @@ export const useExtensionsContractInfo = ({
           isExtension: !isExtensionZero,
           factory: !isExtensionZero
             ? {
-                type: cacheItem.data.factoryType as ExtensionType,
-                name: cacheItem.data.factoryName,
+                type: (cacheItem.data.factoryType || ExtensionType.LP) as ExtensionType,
+                name: cacheItem.data.factoryName || 'LP行动',
                 address: cacheItem.data.factoryAddress as `0x${string}`,
               }
             : undefined,
@@ -275,7 +276,7 @@ export const useExtensionsContractInfo = ({
       if (extensionAddress && extensionAddress !== '0x0000000000000000000000000000000000000000') {
         calls.push({
           address: extensionAddress,
-          abi: LOVE20ExtensionStakeLpAbi,
+          abi: LOVE20ExtensionLpAbi,
           functionName: 'factory' as const,
           args: [],
         });
@@ -332,13 +333,11 @@ export const useExtensionsContractInfo = ({
         if (factoryAddressesData && factoryAddressesData[factoryIndex]) {
           factoryAddress = factoryAddressesData[factoryIndex]?.result as `0x${string}` | undefined;
 
-          // 根据 factory 地址获取配置信息
+          // 根据 factory 地址获取配置信息，如果找不到配置则使用默认值
           if (factoryAddress) {
             const config = getExtensionConfigByFactory(factoryAddress);
-            if (config) {
-              factoryName = config.name;
-              factoryType = config.type;
-            }
+            factoryName = config?.name || 'LP行动';
+            factoryType = config?.type || ExtensionType.LP;
           }
         }
         factoryIndex++;
@@ -395,13 +394,12 @@ export const useExtensionsContractInfo = ({
           const factoryAddress = factoryAddressesData[factoryIndex]?.result as `0x${string}` | undefined;
           if (factoryAddress) {
             const config = getExtensionConfigByFactory(factoryAddress);
-            if (config) {
-              factoryInfo = {
-                type: config.type,
-                name: config.name,
-                address: factoryAddress,
-              };
-            }
+            // 如果找到配置则使用配置，否则使用默认值
+            factoryInfo = {
+              type: config?.type || ExtensionType.LP,
+              name: config?.name || 'LP行动',
+              address: factoryAddress,
+            };
           }
         }
 
@@ -552,7 +550,7 @@ export const useExtensionsBaseData = ({
       // 添加 accountsCount 查询
       contracts.push({
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'accountsCount' as const,
         args: [],
       });
@@ -560,7 +558,7 @@ export const useExtensionsBaseData = ({
       // 添加 joinedValue 查询
       contracts.push({
         address: extensionAddress,
-        abi: LOVE20ExtensionStakeLpAbi,
+        abi: LOVE20ExtensionLpAbi,
         functionName: 'joinedValue' as const,
         args: [],
       });

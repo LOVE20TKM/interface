@@ -69,7 +69,7 @@ const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddr
         <thead>
           <tr className="border-b border-gray-100">
             <th className="px-2 text-left">地址</th>
-            <th className="px-2 text-right">得分详情</th>
+            <th className="px-2 text-right">得分</th>
             <th className="px-2 text-right">激励占比</th>
           </tr>
         </thead>

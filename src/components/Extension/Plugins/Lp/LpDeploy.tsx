@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts';
-import { LOVE20ExtensionFactoryStakeLpAbi } from '@/src/abis/LOVE20ExtensionFactoryStakeLp';
-import { useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
-import { clearContractInfoCache } from "@/src/hooks/extension/base/composite/useExtensionBaseData";
+import { LOVE20ExtensionFactoryLpAbi } from '@/src/abis/LOVE20ExtensionFactoryLp';
+import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import { clearContractInfoCache } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import toast from 'react-hot-toast';
 import { isAddress, parseEther, parseEventLogs } from 'viem';
@@ -27,33 +27,38 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
 
   // 表单状态
-  const [actionId, setActionId] = useState('');
-  const [anotherTokenAddress, setAnotherTokenAddress] = useState('');
-  const [waitingPhases, setWaitingPhases] = useState('');
+  const [joinTokenAddress, setJoinTokenAddress] = useState(''); // LP Token地址
+  const [waitingBlocks, setWaitingBlocks] = useState(''); // 等待区块数
   const [govRatioMultiplier, setGovRatioMultiplier] = useState('');
   const [minGovVotes, setMinGovVotes] = useState('');
+  const [lpRatioPrecision, setLpRatioPrecision] = useState(''); // LP比率精度
 
   const { createExtension, isPending, isConfirming, isConfirmed, writeError, hash } =
     useCreateExtension(factoryAddress);
 
-  // 转移代币的hook
+  // 授权代币的hook - 需要授权1个代币给factory
   const {
-    transfer,
-    isPending: isTransferPending,
-    isConfirming: isTransferConfirming,
-    isConfirmed: isTransferConfirmed,
-    writeError: transferError,
-    hash: transferHash,
-  } = useTransfer(tokenAddress);
+    approve,
+    isPending: isApprovePending,
+    isConfirming: isApproveConfirming,
+    isConfirmed: isApproveConfirmed,
+    writeError: approveError,
+    hash: approveHash,
+  } = useApprove(tokenAddress);
+
+  // 部署状态管理
+  const [approvalStep, setApprovalStep] = useState<'idle' | 'approving' | 'approved' | 'deploying' | 'deployed'>(
+    'idle',
+  );
 
   // 等待交易回执并解析事件获取扩展地址
   const { data: receipt } = useWaitForTransactionReceipt({
     hash,
   });
 
-  // 等待转移代币的交易回执
-  const { data: transferReceipt } = useWaitForTransactionReceipt({
-    hash: transferHash,
+  // 等待授权的交易回执
+  const { data: approveReceipt } = useWaitForTransactionReceipt({
+    hash: approveHash,
   });
 
   // 存储部署的扩展地址
@@ -65,7 +70,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
       try {
         // 解析 ExtensionCreated 事件
         const logs = parseEventLogs({
-          abi: LOVE20ExtensionFactoryStakeLpAbi,
+          abi: LOVE20ExtensionFactoryLpAbi,
           eventName: 'ExtensionCreated',
           logs: receipt.logs,
         });
@@ -74,7 +79,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
           const extensionAddress = logs[0].args.extension as `0x${string}`;
           setDeployedExtensionAddress(extensionAddress);
           console.log('扩展合约已部署，地址:', extensionAddress);
-          toast.success('扩展部署成功！现在需要转移1个代币给扩展合约');
+          toast.success('扩展部署成功！');
         }
       } catch (error) {
         console.error('解析扩展地址失败:', error);
@@ -82,45 +87,46 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
     }
   }, [receipt]);
 
-  // 监听转移代币成功
+  // 监听授权完成
   useEffect(() => {
-    if (isTransferConfirmed && actionId && tokenAddress) {
-      // 清除该行动的缓存，以便重新查询最新的扩展信息
-      clearContractInfoCache(tokenAddress, BigInt(actionId));
-      console.log(`✅ 已清除 ActionId ${actionId} 的扩展信息缓存`);
-
-      toast.success('代币转移成功！扩展部署流程已完成');
+    if (isApproveConfirmed && approvalStep === 'approving') {
+      setApprovalStep('approved');
+      toast.success('授权成功！');
     }
-  }, [isTransferConfirmed, actionId, tokenAddress]);
+  }, [isApproveConfirmed, approvalStep]);
 
-  // 监听转移代币错误
+  // 监听部署成功
   useEffect(() => {
-    if (transferError) {
-      toast.error(`转移代币失败: ${transferError.message}`);
+    if (isConfirmed && deployedExtensionAddress) {
+      setApprovalStep('deployed');
+      toast.success('扩展部署成功！');
     }
-  }, [transferError]);
+  }, [isConfirmed, deployedExtensionAddress]);
+
+  // 监听授权错误
+  useEffect(() => {
+    if (approveError) {
+      toast.error(`授权失败: ${approveError.message}`);
+      setApprovalStep('idle');
+    }
+  }, [approveError]);
 
   /**
    * 验证表单数据
    */
   const validateForm = (): boolean => {
-    if (!actionId) {
-      toast.error('请输入行动ID');
+    if (!joinTokenAddress) {
+      toast.error('请输入LP Token地址');
       return false;
     }
 
-    if (!anotherTokenAddress) {
-      toast.error('请输入LP配对代币地址');
+    if (!isAddress(joinTokenAddress)) {
+      toast.error('LP Token地址格式无效');
       return false;
     }
 
-    if (!isAddress(anotherTokenAddress)) {
-      toast.error('LP配对代币地址格式无效');
-      return false;
-    }
-
-    if (!waitingPhases) {
-      toast.error('请输入等待阶段数');
+    if (!waitingBlocks) {
+      toast.error('请输入等待区块数');
       return false;
     }
 
@@ -134,19 +140,19 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
       return false;
     }
 
-    // 验证数字有效性
-    const actionIdNum = parseFloat(actionId);
-    const waitingPhasesNum = parseFloat(waitingPhases);
-    const govRatioMultiplierNum = parseFloat(govRatioMultiplier);
-    const minGovVotesNum = parseFloat(minGovVotes);
-
-    if (isNaN(actionIdNum) || actionIdNum < 0) {
-      toast.error('行动ID必须是非负整数');
+    if (!lpRatioPrecision) {
+      toast.error('请输入LP比率精度');
       return false;
     }
 
-    if (isNaN(waitingPhasesNum) || waitingPhasesNum < 0) {
-      toast.error('等待阶段数必须是非负整数');
+    // 验证数字有效性
+    const waitingBlocksNum = parseFloat(waitingBlocks);
+    const govRatioMultiplierNum = parseFloat(govRatioMultiplier);
+    const minGovVotesNum = parseFloat(minGovVotes);
+    const lpRatioPrecisionNum = parseFloat(lpRatioPrecision);
+
+    if (isNaN(waitingBlocksNum) || waitingBlocksNum < 0) {
+      toast.error('等待区块数必须是非负整数');
       return false;
     }
 
@@ -160,115 +166,101 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
       return false;
     }
 
+    if (isNaN(lpRatioPrecisionNum) || lpRatioPrecisionNum < 0) {
+      toast.error('LP比率精度必须是非负整数');
+      return false;
+    }
+
     return true;
   };
 
   /**
-   * 提交表单
+   * 步骤1: 授权代币
    */
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleApprove = async () => {
+    if (!tokenAddress) {
+      toast.error('未选择代币');
+      return;
+    }
 
+    try {
+      setApprovalStep('approving');
+      // 授权 1 个代币给 factory
+      await approve(factoryAddress, parseEther('1'));
+    } catch (error: any) {
+      console.error('授权失败:', error);
+      toast.error(error?.message || '授权失败');
+      setApprovalStep('idle');
+    }
+  };
+
+  /**
+   * 步骤2: 部署扩展
+   */
+  const handleDeploy = async () => {
     if (!validateForm()) {
       return;
     }
 
     try {
+      setApprovalStep('deploying');
       // 将 minGovVotes 从 eth 转换为 wei
       const minGovVotesWei = parseEther(minGovVotes);
 
       await createExtension(
         tokenAddress,
-        BigInt(actionId),
-        anotherTokenAddress as `0x${string}`,
-        BigInt(waitingPhases),
+        joinTokenAddress as `0x${string}`,
+        BigInt(waitingBlocks),
         BigInt(govRatioMultiplier),
         minGovVotesWei,
+        BigInt(lpRatioPrecision),
       );
-
-      toast.success('部署扩展交易已提交！');
     } catch (error: any) {
       console.error('部署扩展失败:', error);
       toast.error(error?.message || '部署扩展失败');
-    }
-  };
-
-  /**
-   * 转移1个代币给扩展合约
-   */
-  const handleTransferToken = async () => {
-    if (!deployedExtensionAddress) {
-      toast.error('扩展地址不存在');
-      return;
-    }
-
-    try {
-      // 转移1个代币（1 token = 1e18 wei）
-      const amount = parseEther('1');
-      await transfer(deployedExtensionAddress, amount);
-      toast.success('代币转移交易已提交！');
-    } catch (error: any) {
-      console.error('转移代币失败:', error);
-      toast.error(error?.message || '转移代币失败');
+      setApprovalStep('approved');
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>部署质押LP扩展</CardTitle>
-        <CardDescription>创建一个新的质押LP代币的扩展行动</CardDescription>
+        <CardTitle>部署LP扩展</CardTitle>
+        <CardDescription>创建一个新的LP代币扩展行动</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 行动ID */}
+        <form className="space-y-6">
+          {/* LP Token地址 */}
           <div className="space-y-2">
-            <Label htmlFor="actionId">
-              行动ID<span className="text-red-500 ml-1">*</span>
+            <Label htmlFor="joinTokenAddress">
+              LP Token地址<span className="text-red-500 ml-1">*</span>
             </Label>
             <Input
-              id="actionId"
-              type="number"
-              placeholder="输入行动ID"
-              value={actionId}
-              onChange={(e) => setActionId(e.target.value)}
-              disabled={isPending || isConfirming || !!deployedExtensionAddress}
-              min="0"
-            />
-            <p className="text-sm text-greyscale-500">该扩展关联的行动ID</p>
-          </div>
-
-          {/* LP配对代币地址 */}
-          <div className="space-y-2">
-            <Label htmlFor="anotherTokenAddress">
-              LP配对代币地址<span className="text-red-500 ml-1">*</span>
-            </Label>
-            <Input
-              id="anotherTokenAddress"
+              id="joinTokenAddress"
               type="text"
               placeholder="0x..."
-              value={anotherTokenAddress}
-              onChange={(e) => setAnotherTokenAddress(e.target.value)}
-              disabled={isPending || isConfirming || !!deployedExtensionAddress}
+              value={joinTokenAddress}
+              onChange={(e) => setJoinTokenAddress(e.target.value)}
+              disabled={approvalStep !== 'idle'}
             />
-            <p className="text-sm text-greyscale-500">用于组成LP的另一个代币地址</p>
+            <p className="text-sm text-greyscale-500">用户需要加入的LP Token地址（Uniswap V2 Pair地址）</p>
           </div>
 
-          {/* 等待阶段数 */}
+          {/* 等待区块数 */}
           <div className="space-y-2">
-            <Label htmlFor="waitingPhases">
-              等待阶段数<span className="text-red-500 ml-1">*</span>
+            <Label htmlFor="waitingBlocks">
+              等待区块数<span className="text-red-500 ml-1">*</span>
             </Label>
             <Input
-              id="waitingPhases"
+              id="waitingBlocks"
               type="number"
-              placeholder="输入等待阶段数"
-              value={waitingPhases}
-              onChange={(e) => setWaitingPhases(e.target.value)}
-              disabled={isPending || isConfirming || !!deployedExtensionAddress}
+              placeholder="输入等待区块数"
+              value={waitingBlocks}
+              onChange={(e) => setWaitingBlocks(e.target.value)}
+              disabled={approvalStep !== 'idle'}
               min="0"
             />
-            <p className="text-sm text-greyscale-500">质押后需要等待的阶段数</p>
+            <p className="text-sm text-greyscale-500">加入后需要等待的区块数才能退出</p>
           </div>
 
           {/* 治理比率乘数 */}
@@ -282,16 +274,16 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
               placeholder="输入治理比率乘数"
               value={govRatioMultiplier}
               onChange={(e) => setGovRatioMultiplier(e.target.value)}
-              disabled={isPending || isConfirming || !!deployedExtensionAddress}
+              disabled={approvalStep !== 'idle'}
               min="0"
             />
-            <p className="text-sm text-greyscale-500">治理权重的乘数（1 = 100%）</p>
+            <p className="text-sm text-greyscale-500">"治理票占比" 是 "LP占比" 的多少倍</p>
           </div>
 
           {/* 最小治理票数 */}
           <div className="space-y-2">
             <Label htmlFor="minGovVotes">
-              最小治理票数 (ETH)<span className="text-red-500 ml-1">*</span>
+              最小治理票数<span className="text-red-500 ml-1">*</span>
             </Label>
             <Input
               id="minGovVotes"
@@ -299,11 +291,27 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
               placeholder="输入最小治理票数"
               value={minGovVotes}
               onChange={(e) => setMinGovVotes(e.target.value)}
-              disabled={isPending || isConfirming || !!deployedExtensionAddress}
+              disabled={approvalStep !== 'idle'}
               min="0"
               step="0.000001"
             />
-            <p className="text-sm text-greyscale-500">参与治理所需的最小票数（单位：ETH）</p>
+          </div>
+
+          {/* LP比率精度 */}
+          <div className="space-y-2">
+            <Label htmlFor="lpRatioPrecision">
+              LP比率精度<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              id="lpRatioPrecision"
+              type="number"
+              placeholder="输入LP比率精度"
+              value={lpRatioPrecision}
+              onChange={(e) => setLpRatioPrecision(e.target.value)}
+              disabled={approvalStep !== 'idle'}
+              min="0"
+            />
+            <p className="text-sm text-greyscale-500">LP比率计算的精度（通常设置为1000000）</p>
           </div>
 
           {/* 错误信息 */}
@@ -313,58 +321,55 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
             </div>
           )}
 
-          {/* 部署成功 - 显示扩展地址和步骤提示 */}
+          {/* 部署成功 - 显示扩展地址 */}
           {deployedExtensionAddress && (
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🎉</span>
-                <p className="text-base font-semibold text-green-700">
-                  {isTransferConfirmed ? '扩展部署完成！' : '扩展部署成功！'}
-                </p>
+                <p className="text-base font-semibold text-green-700">扩展部署完成！</p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-greyscale-600">扩展合约地址:</p>
                 <AddressWithCopyButton address={deployedExtensionAddress} showAddress={true} />
               </div>
-              {!isTransferConfirmed && (
-                <p className="text-sm text-amber-600 font-medium">⚠️ 下一步：请转移1个代币给扩展合约以完成部署流程</p>
-              )}
-              {isTransferConfirmed && <p className="text-sm text-green-600">✅ 代币已转移，扩展可以使用了！</p>}
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+                <p className="text-sm text-blue-700">✨ 扩展已部署！请复制合约地址，在创建行动时设置为扩展地址。</p>
+              </div>
             </div>
           )}
 
-          {/* 转移代币错误信息 */}
-          {transferError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">转移代币错误: {transferError.message}</p>
-            </div>
-          )}
-
-          {/* 部署扩展按钮 - 部署成功后隐藏 */}
+          {/* 授权和部署按钮 */}
           {!deployedExtensionAddress && (
-            <Button type="submit" className="w-full" disabled={isPending || isConfirming}>
-              {isPending || isConfirming ? '处理中...' : '部署扩展'}
-            </Button>
-          )}
+            <div className="flex space-x-4 w-full">
+              <Button
+                type="button"
+                onClick={handleApprove}
+                className="w-1/2"
+                disabled={
+                  isApprovePending ||
+                  isApproveConfirming ||
+                  approvalStep === 'approved' ||
+                  approvalStep === 'deploying' ||
+                  approvalStep === 'deployed'
+                }
+              >
+                {isApprovePending
+                  ? '1.提交中...'
+                  : isApproveConfirming
+                  ? '1.确认中...'
+                  : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
+                  ? '1.代币已授权'
+                  : '1.授权代币'}
+              </Button>
 
-          {/* 转移代币按钮 - 部署成功后显示 */}
-          {deployedExtensionAddress && !isTransferConfirmed && (
-            <Button
-              type="button"
-              className="w-full"
-              onClick={handleTransferToken}
-              disabled={isTransferPending || isTransferConfirming}
-            >
-              {isTransferPending || isTransferConfirming ? '转移中...' : '转移1个代币给扩展合约'}
-            </Button>
-          )}
-
-          {/* 已完成提示 */}
-          {isTransferConfirmed && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-700 text-center">
-                ✨ 扩展部署已部署！请一定先复制合约地址，创建行动时将此地址设置为白名单！
-              </p>
+              <Button
+                type="button"
+                onClick={handleDeploy}
+                className="w-1/2"
+                disabled={(approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming}
+              >
+                {isPending ? '2.部署中...' : isConfirming ? '2.确认中...' : '2.部署扩展'}
+              </Button>
             </div>
           )}
         </form>
