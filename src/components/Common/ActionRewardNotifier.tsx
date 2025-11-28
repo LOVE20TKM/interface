@@ -12,6 +12,9 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // my hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useHasUnmintedActionRewardOfLastRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
+import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite';
+import { useExtensionActionsLatestRewards } from '@/src/hooks/extension/base/composite/useExtensionActionsLatestRewards';
+import { useExtensionsContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 
 // my components
 import AlertBox from '@/src/components/Common/AlertBox';
@@ -37,7 +40,7 @@ const ActionRewardNotifier: React.FC = () => {
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
-  // 当前轮次（用于“每轮检查一次”）
+  // 当前轮次（用于"每轮检查一次"）
   const { currentRound } = useCurrentRound(!!token && token.hasEnded);
 
   // UI 展示用的 needMinted
@@ -68,7 +71,7 @@ const ActionRewardNotifier: React.FC = () => {
     };
   }, [token?.address, account]);
 
-  // 计算本轮是否需要触发读取链上“是否有未铸造激励”
+  // 计算本轮是否需要触发读取链上"是否有未铸造激励"
   const shouldTriggerCheck = useMemo(() => {
     if (isOnActionRewardsPage) return false;
     if (!token?.address || !account || currentRound === undefined || currentRound === null) return false;
@@ -79,13 +82,56 @@ const ActionRewardNotifier: React.FC = () => {
     return BigInt(cached.round) < currentRound;
   }, [isOnActionRewardsPage, token?.address, account, currentRound]);
 
-  // 读取：最近 LAST_ROUNDS 轮是否存在未铸造
-  const gateRounds = shouldTriggerCheck ? LAST_ROUNDS : BigInt(0); // 通过 latestRounds 是否为 BigInt(0) 控制内部启用
+  // 检查普通行动激励：最近 LAST_ROUNDS 轮是否存在未铸造
+  const gateRounds = shouldTriggerCheck ? LAST_ROUNDS : BigInt(0);
   const { hasUnmintedActionRewardOfLastRounds } = useHasUnmintedActionRewardOfLastRounds(
     (token?.address || '0x') as `0x${string}`,
     (account || '0x') as `0x${string}`,
     gateRounds,
   );
+
+  // 获取扩展行动列表（用于检查扩展激励）
+  const { joinedExtensionActions, isPending: isPendingExtensionActions } = useMyJoinedExtensionActions({
+    tokenAddress: token?.address,
+    account: account as `0x${string}`,
+    currentRound: undefined,
+  });
+
+  // 提取扩展行动的 actionIds，用于查询扩展信息
+  const extensionActionIds = useMemo(() => {
+    if (!shouldTriggerCheck || !joinedExtensionActions) return [];
+    return joinedExtensionActions.map((ja) => ja.action.head.id);
+  }, [shouldTriggerCheck, joinedExtensionActions]);
+
+  // 获取扩展行动的扩展合约信息
+  const { contractInfos, isPending: isPendingExtensionInfo } = useExtensionsContractInfo({
+    tokenAddress: token?.address,
+    actionIds: extensionActionIds,
+  });
+
+  // 提取扩展地址
+  const extensionAddresses = useMemo(() => {
+    if (!shouldTriggerCheck) return [];
+    return contractInfos.filter((info) => info.isExtension && info.extension).map((info) => info.extension!);
+  }, [shouldTriggerCheck, contractInfos]);
+
+  // 检查扩展行动激励
+  const { rewardsMap: extensionRewardsMap, isPending: isPendingExtensionRewards } = useExtensionActionsLatestRewards({
+    extensionAddresses: extensionAddresses,
+    lastRounds: LAST_ROUNDS,
+    account: account as `0x${string}`,
+  });
+
+  // 判断扩展行动是否有未铸造的激励
+  const hasUnmintedExtensionReward = useMemo(() => {
+    if (!shouldTriggerCheck || extensionRewardsMap.size === 0) return false;
+
+    for (const rewards of extensionRewardsMap.values()) {
+      const hasUnminted = rewards.some((r) => !r.isMinted && r.reward > BigInt(0));
+      if (hasUnminted) return true;
+    }
+    return false;
+  }, [shouldTriggerCheck, extensionRewardsMap]);
 
   // 根据读取结果更新缓存与展示状态
   useEffect(() => {
@@ -99,25 +145,42 @@ const ActionRewardNotifier: React.FC = () => {
     if (cached) setNeedMinted(!!cached.needMinted);
   }, [token?.address, account]);
 
-  // 触发读取后的回写
+  // 触发读取后的回写（包括普通和扩展激励）
   useEffect(() => {
     if (!token?.address || !account) return;
     if (!shouldTriggerCheck) return;
     if (currentRound === undefined || currentRound === null || currentRound <= BigInt(0)) return;
 
-    // 只有当 hook 被启用时才会返回布尔值
+    // 只有当 hook 被启用时才会返回结果
     if (gateRounds === BigInt(0)) return;
 
+    // 等待所有数据加载完成
+    if (isPendingExtensionActions || isPendingExtensionInfo || isPendingExtensionRewards) return;
+
+    // 组合普通激励和扩展激励的结果
     if (typeof hasUnmintedActionRewardOfLastRounds === 'boolean') {
+      const needMinted = hasUnmintedActionRewardOfLastRounds || hasUnmintedExtensionReward;
+
       const nextState: RewardNoticeState = {
         round: Number(currentRound),
-        needMinted: hasUnmintedActionRewardOfLastRounds,
+        needMinted,
         updatedAt: Date.now(),
       };
       saveActionRewardNotice(account, token.address, nextState);
       setNeedMinted(nextState.needMinted);
     }
-  }, [hasUnmintedActionRewardOfLastRounds, shouldTriggerCheck, token?.address, account, currentRound, gateRounds]);
+  }, [
+    hasUnmintedActionRewardOfLastRounds,
+    hasUnmintedExtensionReward,
+    shouldTriggerCheck,
+    token?.address,
+    account,
+    currentRound,
+    gateRounds,
+    isPendingExtensionActions,
+    isPendingExtensionInfo,
+    isPendingExtensionRewards,
+  ]);
 
   if (isOnActionRewardsPage) return null;
   if (!token?.address || !account) return null;
