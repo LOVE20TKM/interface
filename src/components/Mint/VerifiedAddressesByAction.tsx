@@ -124,6 +124,9 @@ const VerifiedAddressesByAction: React.FC<{
     return 0;
   });
 
+  // 计算汇总数据
+  const totalReward = sortedAddresses.reduce((sum, item) => sum + (item.reward || BigInt(0)), BigInt(0));
+
   const toggleRow = (address: string) => {
     const newExpanded = new Set(expandedRows);
     if (newExpanded.has(address)) {
@@ -230,6 +233,14 @@ const VerifiedAddressesByAction: React.FC<{
                 </React.Fragment>
               );
             })}
+            {/* 汇总行 */}
+            <tr className="border-t-2 border-gray-300 bg-gray-50 font-semibold">
+              <td></td>
+              <td colSpan={2} className="px-1">
+                汇总激励
+              </td>
+              <td className="px-1 text-right">{formatTokenAmountInteger(totalReward)}</td>
+            </tr>
           </tbody>
         </table>
       )}
