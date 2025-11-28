@@ -23,9 +23,8 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import InfoTooltip from '@/src/components/Common/InfoTooltip';
 
 // my funcs
-import { formatRoundForDisplay, formatTokenAmountInteger, formatPercentage } from '@/src/lib/format';
+import { formatRoundForDisplay, formatTokenAmount, formatPercentage } from '@/src/lib/format';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
-import RoundLite from '../Common/RoundLite';
 
 const VerifiedAddressesByAction: React.FC<{
   currentJoinRound: bigint;
@@ -153,6 +152,9 @@ const VerifiedAddressesByAction: React.FC<{
     return 0;
   });
 
+  // 计算汇总数据
+  const totalReward = sortedAddresses.reduce((sum, item) => sum + (item.reward || BigInt(0)), BigInt(0));
+
   const toggleRow = (address: string) => {
     const newExpanded = new Set(expandedRows);
     if (newExpanded.has(address)) {
@@ -262,7 +264,8 @@ const VerifiedAddressesByAction: React.FC<{
                         word={item.account === account ? '(我)' : ''}
                       />
                     </td>
-                    <td className="px-1 text-right">{formatTokenAmountInteger(item.score)}</td>
+
+                    <td className="px-1 text-right">{formatTokenAmount(item.score)}</td>
                     <td className="px-1 text-right">
                       {formatPercentage((Number(item.score) / Number(verifiedVotesNum || BigInt(0))) * 100)}
                     </td>
@@ -287,10 +290,11 @@ const VerifiedAddressesByAction: React.FC<{
                 </React.Fragment>
               );
             })}
+
             <tr>
               <td className="px-1"></td>
               <td className="px-1 text-greyscale-500">弃权票</td>
-              <td className="px-1 text-right">{formatTokenAmountInteger(abstainVotes || BigInt(0))}</td>
+              <td className="px-1 text-right">{formatTokenAmount(abstainVotes || BigInt(0))}</td>
               <td className="px-1 text-right">
                 {formatPercentage((Number(abstainVotes || BigInt(0)) / Number(verifiedVotesNum || BigInt(0))) * 100)}
               </td>
@@ -298,7 +302,7 @@ const VerifiedAddressesByAction: React.FC<{
             <tr>
               <td className="px-1"></td>
               <td className="px-1 text-greyscale-500">汇总</td>
-              <td className="px-1 text-right">{formatTokenAmountInteger(verifiedVotesNum || BigInt(0))}</td>
+              <td className="px-1 text-right">{formatTokenAmount(verifiedVotesNum || BigInt(0))}</td>
               <td className="px-1 text-right">100%</td>
             </tr>
           </tbody>

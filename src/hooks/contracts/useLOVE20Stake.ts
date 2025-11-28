@@ -125,15 +125,16 @@ export const useOriginBlocks = () => {
  * 获取有效的治理投票数
  * @param tokenAddress 代币地址
  * @param account 账户地址
+ * @param enabled 是否启用查询（可选，默认为 true）
  */
-export const useValidGovVotes = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
+export const useValidGovVotes = (tokenAddress: `0x${string}`, account: `0x${string}`, enabled: boolean = true) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20StakeAbi,
     functionName: 'validGovVotes',
     args: [tokenAddress, account],
     query: {
-      enabled: !!tokenAddress && !!account,
+      enabled: enabled && !!tokenAddress && !!account,
     },
   });
 
