@@ -20,7 +20,7 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 // my funcs
-import { formatRoundForDisplay, formatTokenAmountInteger } from '@/src/lib/format';
+import { formatRoundForDisplay, formatTokenAmount } from '@/src/lib/format';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 
 const VerifiedAddressesByAction: React.FC<{
@@ -210,8 +210,8 @@ const VerifiedAddressesByAction: React.FC<{
                         word={item.account === account ? '(我)' : ''}
                       />
                     </td>
-                    <td className="px-1 text-right">{formatTokenAmountInteger(item.score)}</td>
-                    <td className="px-1 text-right">{formatTokenAmountInteger(item.reward || BigInt(0))}</td>
+                    <td className="px-1 text-right">{formatTokenAmount(item.score)}</td>
+                    <td className="px-1 text-right">{formatTokenAmount(item.reward || BigInt(0))}</td>
                   </tr>
 
                   {verificationInfo && actionInfo && isExpanded && (
@@ -239,7 +239,7 @@ const VerifiedAddressesByAction: React.FC<{
               <td colSpan={2} className="px-1">
                 汇总激励
               </td>
-              <td className="px-1 text-right">{formatTokenAmountInteger(totalReward)}</td>
+              <td className="px-1 text-right">{formatTokenAmount(totalReward)}</td>
             </tr>
           </tbody>
         </table>

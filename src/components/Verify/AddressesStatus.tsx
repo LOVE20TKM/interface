@@ -21,7 +21,7 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 
 // my utils
 import { LinkIfUrl } from '@/src/lib/stringUtils';
-import { formatPercentage, formatTokenAmountInteger } from '@/src/lib/format';
+import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 import RoundLite from '../Common/RoundLite';
 
 interface VerifyAddressesProps {
@@ -162,9 +162,7 @@ const AddressesStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionI
                           word={info.account === account ? '(我)' : ''}
                         />
                       </td>
-                      <td className="px-1 text-right">
-                        {formatTokenAmountInteger(verifiedAddress?.score || BigInt(0))}
-                      </td>
+                      <td className="px-1 text-right">{formatTokenAmount(verifiedAddress?.score || BigInt(0))}</td>
                       <td className="px-1 text-right">
                         {formatPercentage(
                           (Number(verifiedAddress?.score || BigInt(0)) / Number(verifiedVotesNum || BigInt(0))) * 100,
@@ -193,7 +191,7 @@ const AddressesStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionI
             <tr>
               <td className="px-1"></td>
               <td className="px-1 text-greyscale-500">弃权票</td>
-              <td className="px-1 text-right">{formatTokenAmountInteger(abstainVotes || BigInt(0))}</td>
+              <td className="px-1 text-right">{formatTokenAmount(abstainVotes || BigInt(0))}</td>
               <td className="px-1 text-right">
                 {formatPercentage((Number(abstainVotes || BigInt(0)) / Number(verifiedVotesNum || BigInt(0))) * 100)}
               </td>
@@ -201,7 +199,7 @@ const AddressesStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionI
             <tr>
               <td className="px-1"></td>
               <td className="px-1 text-greyscale-500">汇总 </td>
-              <td className="px-1 text-right">{formatTokenAmountInteger(verifiedVotesNum || BigInt(0))}</td>
+              <td className="px-1 text-right">{formatTokenAmount(verifiedVotesNum || BigInt(0))}</td>
               <td className="px-1 text-right">100%</td>
             </tr>
           </tbody>
