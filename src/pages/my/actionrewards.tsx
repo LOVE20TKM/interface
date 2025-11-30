@@ -32,7 +32,7 @@ import {
 // types
 import { JoinedAction, ActionReward } from '@/src/types/love20types';
 
-const LAST_ROUNDS = BigInt(30);
+const LAST_ROUNDS = BigInt(15);
 
 type ActionRewardsGroup = {
   action: JoinedAction;
