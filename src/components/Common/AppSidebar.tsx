@@ -15,6 +15,7 @@ import {
   User,
   Bitcoin,
   UserCog,
+  Layers,
 } from 'lucide-react';
 
 import {
@@ -106,6 +107,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               url: `/token/intro?symbol=${token.symbol}`,
               isActive: isActiveUrl(`${basePath}/token/intro`),
               icon: SatelliteDish,
+            },
+            {
+              title: '应用列表',
+              url: '/apps',
+              isActive: isActiveUrl(`${basePath}/apps`),
+              icon: Layers,
             },
           ],
         },

@@ -33,7 +33,7 @@ function Field({
   label,
   value,
   percentage,
-  font,
+  font = '',
 }: {
   label: string;
   value: string;

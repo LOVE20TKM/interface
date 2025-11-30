@@ -223,18 +223,16 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>部署LP扩展</CardTitle>
-        <CardDescription>创建一个新的LP代币扩展行动</CardDescription>
+    <Card className="border-0 shadow-none">
+      <CardHeader className="px-4 md:px-6 pb-4 md:pb-6 pt-4 md:pt-6">
+        <CardTitle className="text-xl md:text-2xl">部署LP池行动扩展合约</CardTitle>
+        <CardDescription className="text-sm">每1个新的LP池行动，都对应1个专属扩展合约</CardDescription>
       </CardHeader>
-      <CardContent>
-        <form className="space-y-6">
+      <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
+        <form className="space-y-4 md:space-y-6">
           {/* LP Token地址 */}
           <div className="space-y-2">
-            <Label htmlFor="joinTokenAddress">
-              LP Token地址<span className="text-red-500 ml-1">*</span>
-            </Label>
+            <Label htmlFor="joinTokenAddress">1. LP代币地址</Label>
             <Input
               id="joinTokenAddress"
               type="text"
@@ -243,75 +241,71 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
               onChange={(e) => setJoinTokenAddress(e.target.value)}
               disabled={approvalStep !== 'idle'}
             />
-            <p className="text-sm text-greyscale-500">用户需要加入的LP Token地址（Uniswap V2 Pair地址）</p>
+            <p className="text-sm text-greyscale-500">即 Uniswap V2 Pair 合约地址</p>
           </div>
 
           {/* 等待区块数 */}
           <div className="space-y-2">
-            <Label htmlFor="waitingBlocks">
-              等待区块数<span className="text-red-500 ml-1">*</span>
-            </Label>
+            <Label htmlFor="waitingBlocks">2.等待区块数</Label>
             <Input
               id="waitingBlocks"
               type="number"
-              placeholder="输入等待区块数"
+              placeholder="比如 10"
               value={waitingBlocks}
               onChange={(e) => setWaitingBlocks(e.target.value)}
               disabled={approvalStep !== 'idle'}
               min="0"
+              className="max-w-40 md:max-w-xs"
             />
-            <p className="text-sm text-greyscale-500">加入后需要等待的区块数才能退出</p>
+            <p className="text-sm text-greyscale-500">加入行动后，需等多少区块才能退出</p>
           </div>
 
           {/* 治理比率乘数 */}
           <div className="space-y-2">
-            <Label htmlFor="govRatioMultiplier">
-              治理比率乘数<span className="text-red-500 ml-1">*</span>
-            </Label>
+            <Label htmlFor="govRatioMultiplier">3.治理比率乘数</Label>
             <Input
               id="govRatioMultiplier"
               type="number"
-              placeholder="输入治理比率乘数"
+              placeholder="比如 2"
               value={govRatioMultiplier}
               onChange={(e) => setGovRatioMultiplier(e.target.value)}
               disabled={approvalStep !== 'idle'}
               min="0"
+              className="max-w-40 md:max-w-xs"
             />
             <p className="text-sm text-greyscale-500">"治理票占比" 是 "LP占比" 的多少倍</p>
           </div>
 
           {/* 最小治理票数 */}
           <div className="space-y-2">
-            <Label htmlFor="minGovVotes">
-              最小治理票数<span className="text-red-500 ml-1">*</span>
-            </Label>
+            <Label htmlFor="minGovVotes">4.最小治理票数</Label>
             <Input
               id="minGovVotes"
               type="number"
-              placeholder="输入最小治理票数"
+              placeholder="比如 10,000"
               value={minGovVotes}
               onChange={(e) => setMinGovVotes(e.target.value)}
               disabled={approvalStep !== 'idle'}
               min="0"
               step="0.000001"
+              className="max-w-40 md:max-w-xs"
             />
           </div>
 
           {/* LP比率精度 */}
           <div className="space-y-2">
-            <Label htmlFor="lpRatioPrecision">
-              LP比率精度<span className="text-red-500 ml-1">*</span>
-            </Label>
+            <Label htmlFor="lpRatioPrecision">5.LP比率精度</Label>
             <Input
               id="lpRatioPrecision"
               type="number"
-              placeholder="输入LP比率精度"
+              placeholder="比如 10,000"
               value={lpRatioPrecision}
               onChange={(e) => setLpRatioPrecision(e.target.value)}
               disabled={approvalStep !== 'idle'}
               min="0"
+              className="max-w-40 md:max-w-xs"
             />
-            <p className="text-sm text-greyscale-500">LP比率计算的精度（通常设置为1000000）</p>
+            {/* <p className="text-sm text-greyscale-500">LP比率计算的精度（通常设置为1000000）</p> */}
           </div>
 
           {/* 错误信息 */}

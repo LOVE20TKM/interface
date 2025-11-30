@@ -70,7 +70,7 @@ export default function GroupPage() {
 
   return (
     <>
-      <Header title="链群ID管理" />
+      <Header title="链群ID管理" showBackButton={true} />
       <main className="flex-grow px-3 sm:px-0">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-2xl mx-auto">
           <TabsList className="grid w-full grid-cols-2 mt-2 min-w-0">

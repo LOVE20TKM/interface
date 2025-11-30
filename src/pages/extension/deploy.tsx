@@ -18,7 +18,7 @@ export default function DeployExtension() {
   return (
     <>
       <Header title="部署扩展行动" showBackButton={true} />
-      <main className="flex-grow container mx-auto px-4 py-6 max-w-2xl">
+      <main className="flex-grow container mx-auto px-2 py-6 max-w-2xl">
         <ExtensionDeploy factoryAddress={(factory as string) || ''} />
       </main>
     </>

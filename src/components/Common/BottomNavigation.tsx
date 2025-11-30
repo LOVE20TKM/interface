@@ -3,7 +3,7 @@ import { useContext, useMemo, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { cn } from '@/lib/utils';
-import { CircleDollarSign, Users, Vote, User, Repeat } from 'lucide-react';
+import { CircleDollarSign, Users, Vote, User, Layers } from 'lucide-react';
 import { isTukeWallet } from '@/src/lib/tukeWalletUtils';
 
 export function BottomNavigation() {
@@ -48,10 +48,10 @@ export function BottomNavigation() {
         isMain: false,
       },
       {
-        title: '兑换',
-        url: `/dex/?symbol=${token.symbol}&from=${process.env.NEXT_PUBLIC_USDT_SYMBOL}`,
-        icon: Repeat,
-        isActive: router.pathname.startsWith('/dex'),
+        title: '应用',
+        url: '/apps',
+        icon: Layers,
+        isActive: router.pathname.startsWith('/apps'),
         isMain: false,
       },
       {

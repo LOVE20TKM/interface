@@ -224,7 +224,7 @@ export const useExtensionsContractInfo = ({
           factory: !isExtensionZero
             ? {
                 type: (cacheItem.data.factoryType || ExtensionType.LP) as ExtensionType,
-                name: cacheItem.data.factoryName || 'LP行动',
+                name: cacheItem.data.factoryName || '未知类型',
                 address: cacheItem.data.factoryAddress as `0x${string}`,
               }
             : undefined,
@@ -336,7 +336,7 @@ export const useExtensionsContractInfo = ({
           // 根据 factory 地址获取配置信息，如果找不到配置则使用默认值
           if (factoryAddress) {
             const config = getExtensionConfigByFactory(factoryAddress);
-            factoryName = config?.name || 'LP行动';
+            factoryName = config?.name || '未知类型';
             factoryType = config?.type || ExtensionType.LP;
           }
         }
@@ -397,7 +397,7 @@ export const useExtensionsContractInfo = ({
             // 如果找到配置则使用配置，否则使用默认值
             factoryInfo = {
               type: config?.type || ExtensionType.LP,
-              name: config?.name || 'LP行动',
+              name: config?.name || '未知类型',
               address: factoryAddress,
             };
           }

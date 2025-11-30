@@ -40,7 +40,7 @@ const ActionRewardNotifier: React.FC = () => {
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
-  // 当前轮次（用于"每轮检查一次"）
+  // 当前轮次（用于“每轮检查一次”）
   const { currentRound } = useCurrentRound(!!token && token.hasEnded);
 
   // UI 展示用的 needMinted
@@ -71,7 +71,7 @@ const ActionRewardNotifier: React.FC = () => {
     };
   }, [token?.address, account]);
 
-  // 计算本轮是否需要触发读取链上"是否有未铸造激励"
+  // 计算本轮是否需要触发读取链上“是否有未铸造激励”
   const shouldTriggerCheck = useMemo(() => {
     if (isOnActionRewardsPage) return false;
     if (!token?.address || !account || currentRound === undefined || currentRound === null) return false;

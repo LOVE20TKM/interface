@@ -25,7 +25,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
   if (stakeLpFactory) {
     configs.push({
       type: ExtensionType.LP,
-      name: 'LP行动',
+      name: 'LP池行动',
       factoryAddress: stakeLpFactory as `0x${string}`,
     });
   }

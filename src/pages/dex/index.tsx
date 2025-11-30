@@ -52,7 +52,7 @@ export default function DexPage() {
 
   return (
     <>
-      <Header title="交易中心" />
+      <Header title="交易中心" showBackButton={true} />
       <main className="flex-grow px-3 sm:px-0">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-2xl mx-auto">
           <TabsList className="grid w-full grid-cols-3 mt-2 min-w-0">
@@ -60,7 +60,7 @@ export default function DexPage() {
               兑换
             </TabsTrigger>
             <TabsTrigger value="liquidity" className="min-w-0 truncate">
-              流动性管理
+              添加流动性
             </TabsTrigger>
             <TabsTrigger value="liquidity-query" className="min-w-0 truncate">
               流动性查询
