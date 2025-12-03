@@ -318,7 +318,11 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
     // 检查数字数量是否匹配地址数量
     const totalInputs = (verificationInfos?.length || 0) + 1; // +1 for abstain vote
     if (numbers.length !== totalInputs) {
-      toast.error(`数字数量不匹配，需要 ${totalInputs} 个数字，实际有 ${numbers.length} 个数字`);
+      if (numbers.length === totalInputs - 1) {
+        toast.error('打分行数不一致。如果不需要弃权票，请在最后添加一行数字0后再复制即可~');
+      } else {
+        toast.error(`数字数量不匹配，需要 ${totalInputs} 个数字，实际有 ${numbers.length} 个数字`);
+      }
       return;
     }
 
