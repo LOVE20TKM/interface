@@ -316,9 +316,9 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
     }
 
     // 检查数字数量是否匹配地址数量
-    const totalInputs = (verificationInfos?.length || 0) + 1; // +1 for abstain vote
-    if (numbers.length > totalInputs) {
-      toast.error(`数字过多，最多支持 ${totalInputs} 个数字`);
+    const totalInputs = verificationInfos?.length || 0;
+    if (numbers.length !== totalInputs) {
+      toast.error(`数字数量不匹配，需要 ${totalInputs} 个数字，实际有 ${numbers.length} 个数字`);
       return;
     }
 
