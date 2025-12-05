@@ -349,17 +349,17 @@ const LiquidityQueryPanel: React.FC = () => {
                       <div className="border-t pt-4">
                         <div className="">
                           <div className="text-sm">
-                            <span className="text-gray-600">1 {baseToken.symbol} = </span>
-                            <span className="font-medium">
-                              <span className="text-secondary">{formatTokenAmount(baseToTargetPrice)}</span>{' '}
-                              {targetToken.symbol}
-                            </span>
-                          </div>
-                          <div className="text-sm">
                             <span className="text-gray-600">1 {targetToken.symbol} = </span>
                             <span className="font-medium">
                               <span className="text-secondary">{formatTokenAmount(targetToBasePrice, 5)}</span>{' '}
                               {baseToken.symbol}
+                            </span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-gray-600">1 {baseToken.symbol} = </span>
+                            <span className="font-medium">
+                              <span className="text-secondary">{formatTokenAmount(baseToTargetPrice)}</span>{' '}
+                              {targetToken.symbol}
                             </span>
                           </div>
                         </div>
