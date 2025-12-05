@@ -336,14 +336,8 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
   return (
     <>
       <div className="px-6 pt-6 pb-2">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-1 mb-4">
           <LeftTitle title={myStakedAmount ? '增加参与代币' : '参与行动'} />
-          {tokensFor100Percent > BigInt(0) && !myStakedAmount && (
-            <span className="text-sm text-gray-500">
-              （要100%概率被抽中，需{' '}
-              <span className="text-secondary"> {formatTokenAmount(tokensFor100Percent, 4, 'ceil')}</span> 代币）
-            </span>
-          )}
         </div>
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
@@ -354,7 +348,14 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-greyscale-500 font-normal">
-                    {myStakedAmount ? '' : '参与代币数：'}
+                    {myStakedAmount ? '' : '参与代币数:'}{' '}
+                    {tokensFor100Percent > BigInt(0) && !myStakedAmount && (
+                      <span className="text-sm text-gray-500">
+                        (100%概率被抽中，需{' '}
+                        <span className="text-secondary">{formatTokenAmount(tokensFor100Percent, 4, 'ceil')}</span>
+                        代币)
+                      </span>
+                    )}
                   </FormLabel>
                   <FormControl>
                     <Input
