@@ -1,7 +1,7 @@
 
 import { Abi } from 'abitype';
 
-export const LOVE20ExtensionLpAbi = [
+export const LOVE20ExtensionGroupServiceAbi = [
   {
     "type": "constructor",
     "inputs": [
@@ -16,32 +16,56 @@ export const LOVE20ExtensionLpAbi = [
         "internalType": "address"
       },
       {
-        "name": "joinTokenAddress_",
+        "name": "groupActionAddress_",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "waitingBlocks_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "govRatioMultiplier_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "minGovVotes_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "lpRatioPrecision_",
+        "name": "maxRecipients_",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "BASIS_POINTS_BASE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "GROUP_ACTION_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_RECIPIENTS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -77,68 +101,6 @@ export const LOVE20ExtensionLpAbi = [
   },
   {
     "type": "function",
-    "name": "accountsByRound",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "result",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "accountsByRoundAtIndex",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "accountsByRoundCount",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "accountsCount",
     "inputs": [],
     "outputs": [
@@ -159,48 +121,6 @@ export const LOVE20ExtensionLpAbi = [
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "calculateScore",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "total",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "score",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "calculateScores",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "totalCalculated",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "scoresCalculated",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
       }
     ],
     "stateMutability": "view"
@@ -230,7 +150,7 @@ export const LOVE20ExtensionLpAbi = [
     ],
     "outputs": [
       {
-        "name": "reward",
+        "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -253,19 +173,6 @@ export const LOVE20ExtensionLpAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "govRatioMultiplier",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -301,11 +208,6 @@ export const LOVE20ExtensionLpAbi = [
     "name": "join",
     "inputs": [
       {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
         "name": "verificationInfos",
         "type": "string[]",
         "internalType": "string[]"
@@ -329,34 +231,6 @@ export const LOVE20ExtensionLpAbi = [
         "name": "joinedRound",
         "type": "uint256",
         "internalType": "uint256"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "joinedBlock",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "exitableBlock",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "joinTokenAddress",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -395,26 +269,53 @@ export const LOVE20ExtensionLpAbi = [
   },
   {
     "type": "function",
-    "name": "lpRatioPrecision",
-    "inputs": [],
-    "outputs": [
+    "name": "recipients",
+    "inputs": [
       {
-        "name": "",
+        "name": "groupOwner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "round",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "addrs",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "basisPoints",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
       }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "minGovVotes",
-    "inputs": [],
+    "name": "recipientsLatest",
+    "inputs": [
+      {
+        "name": "groupOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
     "outputs": [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "addrs",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "basisPoints",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
       }
     ],
     "stateMutability": "view"
@@ -469,7 +370,7 @@ export const LOVE20ExtensionLpAbi = [
   },
   {
     "type": "function",
-    "name": "scoreByAccount",
+    "name": "rewardByRecipient",
     "inputs": [
       {
         "name": "round",
@@ -477,7 +378,12 @@ export const LOVE20ExtensionLpAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "account",
+        "name": "groupOwner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "recipient",
         "type": "address",
         "internalType": "address"
       }
@@ -493,26 +399,7 @@ export const LOVE20ExtensionLpAbi = [
   },
   {
     "type": "function",
-    "name": "scores",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "scoresAtIndex",
+    "name": "rewardDistribution",
     "inputs": [
       {
         "name": "round",
@@ -520,14 +407,29 @@ export const LOVE20ExtensionLpAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "groupOwner",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "addrs",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "basisPoints",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "amounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "ownerAmount",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -536,22 +438,21 @@ export const LOVE20ExtensionLpAbi = [
   },
   {
     "type": "function",
-    "name": "scoresCount",
+    "name": "setRecipients",
     "inputs": [
       {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
+        "name": "addrs",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "basisPoints",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
       }
     ],
-    "stateMutability": "view"
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -562,38 +463,6 @@ export const LOVE20ExtensionLpAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "totalJoinedAmount",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "totalScore",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -718,19 +587,6 @@ export const LOVE20ExtensionLpAbi = [
     "stateMutability": "view"
   },
   {
-    "type": "function",
-    "name": "waitingBlocks",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
     "type": "event",
     "name": "ClaimReward",
     "inputs": [
@@ -794,12 +650,6 @@ export const LOVE20ExtensionLpAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -831,25 +681,13 @@ export const LOVE20ExtensionLpAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "joinedBlock",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "SnapshotCreate",
+    "name": "RecipientsUpdate",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -868,6 +706,24 @@ export const LOVE20ExtensionLpAbi = [
         "type": "uint256",
         "indexed": true,
         "internalType": "uint256"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "recipients",
+        "type": "address[]",
+        "indexed": false,
+        "internalType": "address[]"
+      },
+      {
+        "name": "basisPoints",
+        "type": "uint256[]",
+        "indexed": false,
+        "internalType": "uint256[]"
       }
     ],
     "anonymous": false
@@ -937,17 +793,17 @@ export const LOVE20ExtensionLpAbi = [
   },
   {
     "type": "error",
-    "name": "InsufficientGovVotes",
+    "name": "AlreadyJoined",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InsufficientLpRatio",
+    "name": "ArrayLengthMismatch",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidJoinTokenAddress",
+    "name": "InvalidBasisPoints",
     "inputs": []
   },
   {
@@ -957,27 +813,17 @@ export const LOVE20ExtensionLpAbi = [
   },
   {
     "type": "error",
-    "name": "JoinAmountZero",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "MultipleActionIdsFound",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "NoJoinedAmount",
+    "name": "NoActiveGroups",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "NoSnapshotForFutureRound",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "NotEnoughWaitingBlocks",
+    "name": "NotJoined",
     "inputs": []
   },
   {
@@ -987,7 +833,22 @@ export const LOVE20ExtensionLpAbi = [
   },
   {
     "type": "error",
+    "name": "TooManyRecipients",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "VerificationInfoLengthMismatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroBasisPoints",
     "inputs": []
   }
 ] as const satisfies Abi;

@@ -148,13 +148,6 @@ export const useMyLpActionData = ({
         functionName: 'minGovVotes',
         args: [],
       },
-      // 10. 获取是否可以退出
-      {
-        address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
-        functionName: 'canExit',
-        args: [account],
-      },
     ];
   }, [extensionAddress, tokenAddress, account]);
 
@@ -210,11 +203,16 @@ export const useMyLpActionData = ({
     return joinInfo[1];
   }, [data]);
 
-  const exitableBlock = useMemo(() => {
-    if (!data || !data[0]?.result) return BigInt(0);
-    const joinInfo = data[0].result as [bigint, bigint, bigint];
-    return joinInfo[2];
+  const waitingBlocks = useMemo(() => {
+    if (!data || !data[8]?.result) return BigInt(0);
+    return BigInt(data[8].result.toString());
   }, [data]);
+
+  const exitableBlock = useMemo(() => {
+    // exitableBlock = joinedBlock + waitingBlocks
+    if (!joinedBlock || joinedBlock === BigInt(0) || !waitingBlocks) return BigInt(0);
+    return joinedBlock + waitingBlocks;
+  }, [joinedBlock, waitingBlocks]);
 
   const totalJoinedAmount = useMemo(() => {
     if (!data || !data[1]?.result) return BigInt(0);
@@ -241,19 +239,9 @@ export const useMyLpActionData = ({
     return BigInt(data[6].result.toString());
   }, [data]);
 
-  const waitingBlocks = useMemo(() => {
-    if (!data || !data[8]?.result) return BigInt(0);
-    return BigInt(data[8].result.toString());
-  }, [data]);
-
   const minGovVotes = useMemo(() => {
     if (!data || !data[9]?.result) return BigInt(0);
     return BigInt(data[9].result.toString());
-  }, [data]);
-
-  const canExitFromContract = useMemo(() => {
-    if (!data || !data[10]?.result) return false;
-    return data[10].result as boolean;
   }, [data]);
 
   const lpTotalSupply = useMemo(() => {
@@ -309,25 +297,21 @@ export const useMyLpActionData = ({
     if (!joinedAmount || joinedAmount === BigInt(0)) {
       return false;
     }
-    // 优先使用合约返回的 canExit 结果
-    return canExitFromContract;
-  }, [joinedAmount, canExitFromContract]);
-
+    // 判断当前区块高度是否大于等于 exitableBlock
+    return currentBlock >= exitableBlock;
+  }, [joinedAmount, currentBlock, exitableBlock]);
   const remainingBlocks = useMemo(() => {
     // 如果没有加入，返回0
     if (!joinedAmount || joinedAmount === BigInt(0)) {
       return BigInt(0);
     }
-    // 如果已经可以退出，返回0
-    if (canExitNow) {
-      return BigInt(0);
-    }
+
     // 计算还需要等待的区块数
     if (currentBlock >= exitableBlock) {
       return BigInt(0);
     }
     return exitableBlock - currentBlock;
-  }, [joinedAmount, canExitNow, currentBlock, exitableBlock]);
+  }, [joinedAmount, currentBlock, exitableBlock]);
 
   // 只有当 joinTokenAddress 存在时，才需要等待第二批数据加载
   const shouldWaitForPairData = !!joinTokenAddress;

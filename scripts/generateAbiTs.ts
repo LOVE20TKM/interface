@@ -13,8 +13,9 @@ dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 // 源目录
 const coreAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_CORE_ABI_PATH;
 const peripheralAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_PERIPHERAL_ABI_PATH;
+const groupAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_GROUP_ABI_PATH;
 const extensionsCenterAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_CENTER_ABI_PATH;
-const extensionsStakelpAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_LP_ABI_PATH;
+const extensionslpAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_LP_ABI_PATH;
 const extensionsGroupAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_GROUP_ABI_PATH;
 
 if (!coreAbiDirPath) {
@@ -27,12 +28,17 @@ if (!peripheralAbiDirPath) {
   process.exit(1);
 }
 
+if (!groupAbiDirPath) {
+  console.error('Error: NEXT_PUBLIC_FOUNDRY_GROUP_ABI_PATH is not defined in .env file.');
+  process.exit(1);
+}
+
 if (!extensionsCenterAbiDirPath) {
   console.error('Error: NEXT_PUBLIC_FOUNDRY_EXTENSIONS_CENTER_ABI_PATH is not defined in .env file.');
   process.exit(1);
 }
 
-if (!extensionsStakelpAbiDirPath) {
+if (!extensionslpAbiDirPath) {
   console.error('Error: NEXT_PUBLIC_FOUNDRY_EXTENSIONS_LP_ABI_PATH is not defined in .env file.');
   process.exit(1);
 }
@@ -63,11 +69,13 @@ const coreFilesToConvert = [
 
 const peripheralFilesToConvert = ['LOVE20TokenViewer', 'LOVE20RoundViewer', 'LOVE20MintViewer', 'LOVE20Hub'];
 
+const groupFilesToConvert = ['LOVE20Group'];
+
 const extensionsCenterFilesToConvert = ['LOVE20ExtensionCenter', 'ILOVE20Extension'];
 
-const extensionsStakelpFilesToConvert = ['LOVE20ExtensionFactoryLp', 'LOVE20ExtensionLp'];
+const extensionslpFilesToConvert = ['LOVE20ExtensionFactoryLp', 'LOVE20ExtensionLp'];
 
-const extensionsGroupFilesToConvert = ['LOVE20Group'];
+const extensionsGroupFilesToConvert = ['LOVE20ExtensionGroupAction', 'LOVE20ExtensionGroupService'];
 
 // 用于生成 TypeScript 文件的函数
 const generateTsFiles = (abiDirPath: string, filesToConvert: string[]) => {
@@ -108,7 +116,10 @@ generateTsFiles(peripheralAbiDirPath, peripheralFilesToConvert);
 generateTsFiles(extensionsCenterAbiDirPath, extensionsCenterFilesToConvert);
 
 // 处理扩展质押 LP ABI 文件
-generateTsFiles(extensionsStakelpAbiDirPath, extensionsStakelpFilesToConvert);
+generateTsFiles(extensionslpAbiDirPath, extensionslpFilesToConvert);
+
+// 处理扩展链群 ABI 文件
+generateTsFiles(extensionsGroupAbiDirPath, extensionsGroupFilesToConvert);
 
 // 处理链群 NFT ABI 文件
-generateTsFiles(extensionsGroupAbiDirPath, extensionsGroupFilesToConvert);
+generateTsFiles(groupAbiDirPath, groupFilesToConvert);

@@ -63,6 +63,8 @@ const nextConfig = {
       '/extension/initialize': { page: '/extension/initialize' },
       '/extension/factories': { page: '/extension/factories' },
       '/extension/actions': { page: '/extension/actions' },
+      '/extension/groups': { page: '/extension/groups' },
+      '/extension/group': { page: '/extension/group' },
       '/gov': { page: '/gov' },
       '/launch': { page: '/launch' },
       '/launch/burn': { page: '/launch/burn' },

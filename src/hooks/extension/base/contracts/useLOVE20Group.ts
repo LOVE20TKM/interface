@@ -331,6 +331,42 @@ export const useIsApprovedForAll = (owner: `0x${string}`, operator: `0x${string}
   return { isApprovedForAll: data as boolean | undefined, isPending, error };
 };
 
+/**
+ * Hook for normalizedNameOf
+ * 获取标准化后的组名
+ */
+export const useNormalizedNameOf = (groupName: string) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupAbi,
+    functionName: 'normalizedNameOf',
+    args: [groupName],
+    query: {
+      enabled: !!groupName,
+    },
+  });
+
+  return { normalizedName: data as string | undefined, isPending, error };
+};
+
+/**
+ * Hook for supportsInterface
+ * 检查合约是否支持指定的接口
+ */
+export const useSupportsInterface = (interfaceId: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupAbi,
+    functionName: 'supportsInterface',
+    args: [interfaceId],
+    query: {
+      enabled: !!interfaceId,
+    },
+  });
+
+  return { supportsInterface: data as boolean | undefined, isPending, error };
+};
+
 // =======================
 // ===== Write Hooks =====
 // =======================

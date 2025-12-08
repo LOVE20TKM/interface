@@ -1,14 +1,14 @@
-// hooks/useLOVE20ExtensionLp.ts
+// hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupService.ts
 
 import { useEffect } from 'react';
 import { useReadContract } from 'wagmi';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
-import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
+import { LOVE20ExtensionGroupServiceAbi } from '@/src/abis/LOVE20ExtensionGroupService';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
-// 注意：ExtensionLp 是动态部署的合约，需要传入合约地址
+// 注意：ExtensionGroupService 是动态部署的合约，需要传入合约地址
 // 与其他固定地址的合约不同
 
 // =====================
@@ -16,12 +16,60 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 // =====================
 
 /**
+ * Hook for BASIS_POINTS_BASE - 获取基点基数
+ */
+export const useBasisPointsBase = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupServiceAbi,
+    functionName: 'BASIS_POINTS_BASE',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { basisPointsBase: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for GROUP_ACTION_ADDRESS - 获取组行动地址
+ */
+export const useGroupActionAddress = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupServiceAbi,
+    functionName: 'GROUP_ACTION_ADDRESS',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { groupActionAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for MAX_RECIPIENTS - 获取最大接收者数量
+ */
+export const useMaxRecipients = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupServiceAbi,
+    functionName: 'MAX_RECIPIENTS',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { maxRecipients: safeToBigInt(data), isPending, error };
+};
+
+/**
  * Hook for accountAtIndex - 根据索引获取账户地址
  */
 export const useAccountAtIndex = (contractAddress: `0x${string}`, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'accountAtIndex',
     args: [index],
     query: {
@@ -38,7 +86,7 @@ export const useAccountAtIndex = (contractAddress: `0x${string}`, index: bigint)
 export const useAccounts = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'accounts',
     query: {
       enabled: !!contractAddress,
@@ -49,63 +97,12 @@ export const useAccounts = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for accountsByRound - 获取指定轮次的账户列表
- */
-export const useAccountsByRound = (contractAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'accountsByRound',
-    args: [round],
-    query: {
-      enabled: !!contractAddress && round !== undefined,
-    },
-  });
-
-  return { accounts: data as `0x${string}`[] | undefined, isPending, error };
-};
-
-/**
- * Hook for accountsByRoundAtIndex - 根据索引获取指定轮次的账户
- */
-export const useAccountsByRoundAtIndex = (contractAddress: `0x${string}`, round: bigint, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'accountsByRoundAtIndex',
-    args: [round, index],
-    query: {
-      enabled: !!contractAddress && round !== undefined && index !== undefined,
-    },
-  });
-
-  return { accountAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for accountsByRoundCount - 获取指定轮次的账户数量
- */
-export const useAccountsByRoundCount = (contractAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'accountsByRoundCount',
-    args: [round],
-    query: {
-      enabled: !!contractAddress && round !== undefined,
-    },
-  });
-
-  return { count: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for accountsCount - 获取账户数量
  */
 export const useAccountsCount = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'accountsCount',
     query: {
       enabled: !!contractAddress,
@@ -121,7 +118,7 @@ export const useAccountsCount = (contractAddress: `0x${string}`) => {
 export const useActionId = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'actionId',
     query: {
       enabled: !!contractAddress,
@@ -132,55 +129,12 @@ export const useActionId = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for calculateScore - 计算账户的积分
- */
-export const useCalculateScore = (contractAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'calculateScore',
-    args: [account],
-    query: {
-      enabled: !!contractAddress && !!account,
-    },
-  });
-
-  return {
-    total: data ? safeToBigInt(data[0]) : undefined,
-    score: data ? safeToBigInt(data[1]) : undefined,
-    isPending,
-    error,
-  };
-};
-
-/**
- * Hook for calculateScores - 计算所有积分
- */
-export const useCalculateScores = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'calculateScores',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return {
-    totalCalculated: data ? safeToBigInt(data[0]) : undefined,
-    scoresCalculated: data ? (data[1] as bigint[]) : undefined,
-    isPending,
-    error,
-  };
-};
-
-/**
  * Hook for center - 获取 center 合约地址
  */
 export const useCenter = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'center',
     query: {
       enabled: !!contractAddress,
@@ -196,7 +150,7 @@ export const useCenter = (contractAddress: `0x${string}`) => {
 export const useFactory = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'factory',
     query: {
       enabled: !!contractAddress,
@@ -207,28 +161,12 @@ export const useFactory = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for govRatioMultiplier - 获取治理比率乘数
- */
-export const useGovRatioMultiplier = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'govRatioMultiplier',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { govRatioMultiplier: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for initialized - 检查是否已初始化
  */
 export const useInitialized = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'initialized',
     query: {
       enabled: !!contractAddress,
@@ -244,7 +182,7 @@ export const useInitialized = (contractAddress: `0x${string}`) => {
 export const useIsJoinedValueCalculated = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'isJoinedValueCalculated',
     query: {
       enabled: !!contractAddress,
@@ -255,54 +193,12 @@ export const useIsJoinedValueCalculated = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for joinInfo - 获取账户的加入信息
- */
-export const useJoinInfo = (contractAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'joinInfo',
-    args: [account],
-    query: {
-      enabled: !!contractAddress && !!account,
-    },
-  });
-
-  const typedData = data as [bigint, bigint, bigint, bigint] | undefined;
-
-  return {
-    joinedRound: typedData ? safeToBigInt(typedData[0]) : undefined,
-    amount: typedData ? safeToBigInt(typedData[1]) : undefined,
-    joinedBlock: typedData ? safeToBigInt(typedData[2]) : undefined,
-    exitableBlock: typedData ? safeToBigInt(typedData[3]) : undefined,
-    isPending,
-    error,
-  };
-};
-
-/**
- * Hook for joinTokenAddress - 获取加入代币地址
- */
-export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'joinTokenAddress',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { joinTokenAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
  * Hook for joinedValue - 获取加入值
  */
 export const useJoinedValue = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'joinedValue',
     query: {
       enabled: !!contractAddress,
@@ -318,7 +214,7 @@ export const useJoinedValue = (contractAddress: `0x${string}`) => {
 export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'joinedValueByAccount',
     args: [account],
     query: {
@@ -330,35 +226,68 @@ export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account:
 };
 
 /**
- * Hook for lpRatioPrecision - 获取 LP 比率精度
+ * Hook for joinInfo - 获取账户的加入信息
  */
-export const useLpRatioPrecision = (contractAddress: `0x${string}`) => {
+export const useJoinInfo = (contractAddress: `0x${string}`, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'lpRatioPrecision',
+    abi: LOVE20ExtensionGroupServiceAbi,
+    functionName: 'joinInfo',
+    args: [account],
     query: {
-      enabled: !!contractAddress,
+      enabled: !!contractAddress && !!account,
     },
   });
 
-  return { lpRatioPrecision: safeToBigInt(data), isPending, error };
+  return { joinedRound: safeToBigInt(data), isPending, error };
 };
 
 /**
- * Hook for minGovVotes - 获取最小治理投票数
+ * Hook for recipients - 获取指定组所有者和轮次的接收者信息
  */
-export const useMinGovVotes = (contractAddress: `0x${string}`) => {
+export const useRecipients = (
+  contractAddress: `0x${string}`,
+  groupOwner: `0x${string}`,
+  round: bigint,
+) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'minGovVotes',
+    abi: LOVE20ExtensionGroupServiceAbi,
+    functionName: 'recipients',
+    args: [groupOwner, round],
     query: {
-      enabled: !!contractAddress,
+      enabled: !!contractAddress && !!groupOwner && round !== undefined,
     },
   });
 
-  return { minGovVotes: safeToBigInt(data), isPending, error };
+  return {
+    addrs: data ? (data[0] as `0x${string}`[]) : undefined,
+    basisPoints: data ? (data[1] as bigint[]) : undefined,
+    isPending,
+    error,
+  };
+};
+
+/**
+ * Hook for recipientsLatest - 获取指定组所有者的最新接收者信息
+ */
+export const useRecipientsLatest = (contractAddress: `0x${string}`, groupOwner: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupServiceAbi,
+    functionName: 'recipientsLatest',
+    args: [groupOwner],
+    query: {
+      enabled: !!contractAddress && !!groupOwner,
+    },
+  });
+
+  return {
+    addrs: data ? (data[0] as `0x${string}`[]) : undefined,
+    basisPoints: data ? (data[1] as bigint[]) : undefined,
+    isPending,
+    error,
+  };
 };
 
 /**
@@ -367,7 +296,7 @@ export const useMinGovVotes = (contractAddress: `0x${string}`) => {
 export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'reward',
     args: [round],
     query: {
@@ -381,10 +310,14 @@ export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
 /**
  * Hook for rewardByAccount - 获取账户的奖励信息
  */
-export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
+export const useRewardByAccount = (
+  contractAddress: `0x${string}`,
+  round: bigint,
+  account: `0x${string}`,
+) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'rewardByAccount',
     args: [round, account],
     query: {
@@ -401,71 +334,53 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
 };
 
 /**
- * Hook for scoreByAccount - 获取账户的积分
+ * Hook for rewardByRecipient - 获取指定接收者的奖励
  */
-export const useScoreByAccount = (contractAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
+export const useRewardByRecipient = (
+  contractAddress: `0x${string}`,
+  round: bigint,
+  groupOwner: `0x${string}`,
+  recipient: `0x${string}`,
+) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'scoreByAccount',
-    args: [round, account],
+    abi: LOVE20ExtensionGroupServiceAbi,
+    functionName: 'rewardByRecipient',
+    args: [round, groupOwner, recipient],
     query: {
-      enabled: !!contractAddress && round !== undefined && !!account,
+      enabled: !!contractAddress && round !== undefined && !!groupOwner && !!recipient,
     },
   });
 
-  return { score: safeToBigInt(data), isPending, error };
+  return { reward: safeToBigInt(data), isPending, error };
 };
 
 /**
- * Hook for scores - 获取所有积分
+ * Hook for rewardDistribution - 获取奖励分配信息
  */
-export const useScores = (contractAddress: `0x${string}`, round: bigint) => {
+export const useRewardDistribution = (
+  contractAddress: `0x${string}`,
+  round: bigint,
+  groupOwner: `0x${string}`,
+) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'scores',
-    args: [round],
+    abi: LOVE20ExtensionGroupServiceAbi,
+    functionName: 'rewardDistribution',
+    args: [round, groupOwner],
     query: {
-      enabled: !!contractAddress && round !== undefined,
+      enabled: !!contractAddress && round !== undefined && !!groupOwner,
     },
   });
 
-  return { scores: data as bigint[] | undefined, isPending, error };
-};
-
-/**
- * Hook for scoresAtIndex - 根据索引获取积分
- */
-export const useScoresAtIndex = (contractAddress: `0x${string}`, round: bigint, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'scoresAtIndex',
-    args: [round, index],
-    query: {
-      enabled: !!contractAddress && round !== undefined && index !== undefined,
-    },
-  });
-
-  return { score: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for scoresCount - 获取积分数量
- */
-export const useScoresCount = (contractAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'scoresCount',
-    args: [round],
-    query: {
-      enabled: !!contractAddress && round !== undefined,
-    },
-  });
-
-  return { scoresCount: safeToBigInt(data), isPending, error };
+  return {
+    addrs: data ? (data[0] as `0x${string}`[]) : undefined,
+    basisPoints: data ? (data[1] as bigint[]) : undefined,
+    amounts: data ? (data[2] as bigint[]) : undefined,
+    ownerAmount: data ? safeToBigInt(data[3]) : undefined,
+    isPending,
+    error,
+  };
 };
 
 /**
@@ -474,7 +389,7 @@ export const useScoresCount = (contractAddress: `0x${string}`, round: bigint) =>
 export const useTokenAddress = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'tokenAddress',
     query: {
       enabled: !!contractAddress,
@@ -482,39 +397,6 @@ export const useTokenAddress = (contractAddress: `0x${string}`) => {
   });
 
   return { tokenAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for totalJoinedAmount - 获取总加入数量
- */
-export const useTotalJoinedAmount = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'totalJoinedAmount',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { totalJoinedAmount: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for totalScore - 获取总积分
- */
-export const useTotalScore = (contractAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'totalScore',
-    args: [round],
-    query: {
-      enabled: !!contractAddress && round !== undefined,
-    },
-  });
-
-  return { totalScore: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -527,7 +409,7 @@ export const useVerificationInfo = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'verificationInfo',
     args: [account, verificationKey],
     query: {
@@ -549,7 +431,7 @@ export const useVerificationInfoByRound = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'verificationInfoByRound',
     args: [account, verificationKey, round],
     query: {
@@ -571,7 +453,7 @@ export const useVerificationInfoUpdateRoundsAtIndex = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'verificationInfoUpdateRoundsAtIndex',
     args: [account, verificationKey, index],
     query: {
@@ -592,7 +474,7 @@ export const useVerificationInfoUpdateRoundsCount = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: LOVE20ExtensionGroupServiceAbi,
     functionName: 'verificationInfoUpdateRoundsCount',
     args: [account, verificationKey],
     query: {
@@ -601,22 +483,6 @@ export const useVerificationInfoUpdateRoundsCount = (
   });
 
   return { count: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for waitingBlocks - 获取等待区块数
- */
-export const useWaitingBlocks = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'waitingBlocks',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { waitingBlocks: safeToBigInt(data), isPending, error };
 };
 
 // =====================
@@ -628,7 +494,7 @@ export const useWaitingBlocks = (contractAddress: `0x${string}`) => {
  */
 export function useClaimReward(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionLpAbi,
+    LOVE20ExtensionGroupServiceAbi,
     contractAddress,
     'claimReward',
   );
@@ -662,11 +528,11 @@ export function useClaimReward(contractAddress: `0x${string}`) {
 }
 
 /**
- * Hook for exit - 退出（取回LP代币）
+ * Hook for exit - 退出
  */
 export function useExit(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionLpAbi,
+    LOVE20ExtensionGroupServiceAbi,
     contractAddress,
     'exit',
   );
@@ -700,18 +566,18 @@ export function useExit(contractAddress: `0x${string}`) {
 }
 
 /**
- * Hook for join - 加入（质押LP代币）
+ * Hook for join - 加入
  */
 export function useJoin(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionLpAbi,
+    LOVE20ExtensionGroupServiceAbi,
     contractAddress,
     'join',
   );
 
-  const join = async (amount: bigint, verificationInfos: string[]) => {
-    console.log('提交 join 交易:', { contractAddress, amount, verificationInfos, isTukeMode });
-    return await execute([amount, verificationInfos]);
+  const join = async (verificationInfos: string[]) => {
+    console.log('提交 join 交易:', { contractAddress, verificationInfos, isTukeMode });
+    return await execute([verificationInfos]);
   };
 
   // 错误日志记录
@@ -738,11 +604,49 @@ export function useJoin(contractAddress: `0x${string}`) {
 }
 
 /**
+ * Hook for setRecipients - 设置接收者
+ */
+export function useSetRecipients(contractAddress: `0x${string}`) {
+  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
+    LOVE20ExtensionGroupServiceAbi,
+    contractAddress,
+    'setRecipients',
+  );
+
+  const setRecipients = async (addrs: `0x${string}`[], basisPoints: bigint[]) => {
+    console.log('提交 setRecipients 交易:', { contractAddress, addrs, basisPoints, isTukeMode });
+    return await execute([addrs, basisPoints]);
+  };
+
+  // 错误日志记录
+  useEffect(() => {
+    if (hash) {
+      console.log('setRecipients tx hash:', hash);
+    }
+    if (error) {
+      console.log('提交 setRecipients 交易错误:');
+      logWeb3Error(error);
+      logError(error);
+    }
+  }, [hash, error]);
+
+  return {
+    setRecipients,
+    isPending,
+    isConfirming,
+    writeError: error,
+    isConfirmed,
+    hash,
+    isTukeMode,
+  };
+}
+
+/**
  * Hook for updateVerificationInfo - 更新验证信息
  */
 export function useUpdateVerificationInfo(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionLpAbi,
+    LOVE20ExtensionGroupServiceAbi,
     contractAddress,
     'updateVerificationInfo',
   );
@@ -774,3 +678,4 @@ export function useUpdateVerificationInfo(contractAddress: `0x${string}`) {
     isTukeMode,
   };
 }
+

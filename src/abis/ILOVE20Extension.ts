@@ -4,7 +4,20 @@ import { Abi } from 'abitype';
 export const ILOVE20ExtensionAbi = [
   {
     "type": "function",
-    "name": "accountAtIndex",
+    "name": "accounts",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "accountsAtIndex",
     "inputs": [
       {
         "name": "index",
@@ -17,19 +30,6 @@ export const ILOVE20ExtensionAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "accounts",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address[]",
-        "internalType": "address[]"
       }
     ],
     "stateMutability": "view"
@@ -90,13 +90,6 @@ export const ILOVE20ExtensionAbi = [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "exit",
-    "inputs": [],
-    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -172,6 +165,25 @@ export const ILOVE20ExtensionAbi = [
   },
   {
     "type": "function",
+    "name": "reward",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "rewardByAccount",
     "inputs": [
       {
@@ -213,125 +225,6 @@ export const ILOVE20ExtensionAbi = [
     "stateMutability": "view"
   },
   {
-    "type": "function",
-    "name": "updateVerificationInfo",
-    "inputs": [
-      {
-        "name": "verificationInfos",
-        "type": "string[]",
-        "internalType": "string[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "verificationInfo",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "verificationKey",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "verificationInfoByRound",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "verificationKey",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "verificationInfoUpdateRoundsAtIndex",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "verificationKey",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "verificationInfoUpdateRoundsCount",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "verificationKey",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
     "type": "event",
     "name": "ClaimReward",
     "inputs": [
@@ -342,10 +235,10 @@ export const ILOVE20ExtensionAbi = [
         "internalType": "address"
       },
       {
-        "name": "account",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        "name": "round",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       },
       {
         "name": "actionId",
@@ -354,59 +247,16 @@ export const ILOVE20ExtensionAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "reward",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "UpdateVerificationInfo",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
         "name": "account",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "verificationKey",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      },
-      {
-        "name": "round",
+        "name": "amount",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
-      },
-      {
-        "name": "verificationInfo",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
       }
     ],
     "anonymous": false
@@ -444,11 +294,6 @@ export const ILOVE20ExtensionAbi = [
   {
     "type": "error",
     "name": "RoundNotFinished",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "VerificationInfoLengthMismatch",
     "inputs": []
   }
 ] as const satisfies Abi;

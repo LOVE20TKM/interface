@@ -10,7 +10,7 @@ import { ActionInfo } from '@/src/types/love20types';
 import { ExtensionType, getExtensionConfigByFactory } from '@/src/config/extensionConfig';
 
 // my components
-import LpMyAction from '@/src/components/Extension/Plugins/Lp/LpMyAction';
+import LpMyParticipation from '@/src/components/Extension/Plugins/Lp/LpMyParticipation';
 import ActionPanelForJoin from '@/src/components/ActionDetail/ActionPanelForJoin';
 
 // my hooks
@@ -67,7 +67,7 @@ const ExtensionMyParticipation: React.FC<ExtensionMyParticipationProps> = ({ act
   switch (extensionConfig.type) {
     case ExtensionType.LP:
       return (
-        <LpMyAction actionId={actionId} actionInfo={actionInfo} extensionAddress={contractInfo.extension} />
+        <LpMyParticipation actionId={actionId} actionInfo={actionInfo} extensionAddress={contractInfo.extension} />
       );
 
     // 未来添加新的扩展类型时，在这里添加对应的 case

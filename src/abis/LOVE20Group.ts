@@ -269,6 +269,25 @@ export const LOVE20GroupAbi = [
   },
   {
     "type": "function",
+    "name": "normalizedNameOf",
+    "inputs": [
+      {
+        "name": "groupName",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
     "name": "ownerOf",
     "inputs": [
       {

@@ -24,7 +24,7 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import LpStatsCard from '@/src/components/Extension/Plugins/Lp/_LpStatsCard';
 
-interface LpMyActionProps {
+interface LpMyParticipationProps {
   actionId: bigint;
   actionInfo: ActionInfo | undefined;
   extensionAddress: `0x${string}`;
@@ -38,7 +38,7 @@ interface LpMyActionProps {
  * 2. 显示激励占比（LP部分）
  * 3. 提供退出LP、增加LP、查看激励的操作入口
  */
-const LpMyAction: React.FC<LpMyActionProps> = ({ actionId, actionInfo, extensionAddress }) => {
+const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionInfo, extensionAddress }) => {
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
   const router = useRouter();
@@ -227,4 +227,4 @@ const LpMyAction: React.FC<LpMyActionProps> = ({ actionId, actionInfo, extension
   );
 };
 
-export default LpMyAction;
+export default LpMyParticipation;
