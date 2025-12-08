@@ -146,11 +146,11 @@ export const useStakingMultiplier = (contractAddress: `0x${string}`) => {
 /**
  * Hook for accountAtIndex - 根据索引获取账户地址
  */
-export const useAccountAtIndex = (contractAddress: `0x${string}`, index: bigint) => {
+export const useAccountsAtIndex = (contractAddress: `0x${string}`, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'accountAtIndex',
+    functionName: 'accountsAtIndex',
     args: [index],
     query: {
       enabled: !!contractAddress && index !== undefined,
