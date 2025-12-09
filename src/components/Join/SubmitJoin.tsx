@@ -351,7 +351,7 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
                     {myStakedAmount ? '' : '参与代币数:'}{' '}
                     {tokensFor100Percent > BigInt(0) && !myStakedAmount && (
                       <span className="text-sm text-gray-500">
-                        (100%概率被抽中，需{' '}
+                        (100%概率抽中，至少需{' '}
                         <span className="text-secondary">{formatTokenAmount(tokensFor100Percent, 4, 'ceil')}</span>
                         代币)
                       </span>

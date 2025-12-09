@@ -251,7 +251,7 @@ const ActRewardsPage: React.FC = () => {
                                   <span className="text-greyscale-500">-</span>
                                 )}
                               </td>
-                              <td className="text-center">
+                              <td className="text-center px-1">
                                 <button
                                   onClick={() =>
                                     router.push(
