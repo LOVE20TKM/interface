@@ -20,6 +20,7 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { Button } from '@/components/ui/button';
+import { Info } from 'lucide-react';
 
 // utils
 import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
@@ -50,7 +51,6 @@ const ActRewardsPage: React.FC = () => {
     isPending: isLoadingRewards,
     error: errorLoadingRewards,
   } = useActionRewardsByAccountOfLastRounds(token?.address as `0x${string}`, account as `0x${string}`, LAST_ROUNDS);
-  console.log('rewards', rewards);
 
   // 获取所有参与的行动
   const {
@@ -183,6 +183,21 @@ const ActRewardsPage: React.FC = () => {
               </button>
             </div>
 
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-500 text-sm">
+              <div className="flex items-start gap-2">
+                <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="font-medium">小贴士：</span>
+                  <br />
+                  如果对激励打分有疑问，可以
+                  <br />
+                  1. 仔细阅读行动打分规则，检查是否按要求打卡；
+                  <br />
+                  2. 请教周围的治理者或志愿者；
+                </div>
+              </div>
+            </div>
+
             {isLoadingRewards || isLoadingActions ? (
               <LoadingIcon />
             ) : displayedGroups.length > 0 ? (
@@ -203,9 +218,10 @@ const ActRewardsPage: React.FC = () => {
                       <table className="table w-full table-auto">
                         <thead>
                           <tr className="border-b border-gray-100">
-                            <th>轮次</th>
+                            <th className="text-left px-0">轮次</th>
                             <th className="text-center">可铸造激励</th>
                             <th className="text-center">结果</th>
+                            <th className="text-center">查看打分</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -216,9 +232,9 @@ const ActRewardsPage: React.FC = () => {
                                 index === group.rewards.length - 1 ? 'border-none' : 'border-b border-gray-100'
                               }
                             >
-                              <td>{formatRoundForDisplay(item.round, token).toString()}</td>
-                              <td className="text-center">{formatTokenAmount(item.reward || BigInt(0))}</td>
-                              <td className="text-center">
+                              <td className="px-1">{formatRoundForDisplay(item.round, token).toString()}</td>
+                              <td className="text-center px-1">{formatTokenAmount(item.reward || BigInt(0))}</td>
+                              <td className="text-center px-1">
                                 {item.reward > BigInt(0) && !item.isMinted ? (
                                   <Button
                                     variant="outline"
@@ -234,6 +250,20 @@ const ActRewardsPage: React.FC = () => {
                                 ) : (
                                   <span className="text-greyscale-500">-</span>
                                 )}
+                              </td>
+                              <td className="text-center">
+                                <button
+                                  onClick={() =>
+                                    router.push(
+                                      `/verify/detail?symbol=${
+                                        token?.symbol
+                                      }&id=${group.action.action.head.id.toString()}&round=${item.round.toString()}`,
+                                    )
+                                  }
+                                  className="text-secondary hover:text-secondary/80 underline text-sm bg-transparent border-none cursor-pointer"
+                                >
+                                  打分明细 &gt;&gt;
+                                </button>
                               </td>
                             </tr>
                           ))}
