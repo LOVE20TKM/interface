@@ -221,7 +221,7 @@ const ActRewardsPage: React.FC = () => {
                             <th className="text-left px-0">轮次</th>
                             <th className="text-center">可铸造激励</th>
                             <th className="text-center">结果</th>
-                            <th className="text-center">查看打分</th>
+                            <th className="text-center">验证详情</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -262,7 +262,7 @@ const ActRewardsPage: React.FC = () => {
                                   }
                                   className="text-secondary hover:text-secondary/80 underline text-sm bg-transparent border-none cursor-pointer"
                                 >
-                                  打分明细 &gt;&gt;
+                                  验证明细 &gt;&gt;
                                 </button>
                               </td>
                             </tr>
