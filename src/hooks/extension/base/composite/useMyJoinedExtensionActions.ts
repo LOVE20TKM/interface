@@ -19,7 +19,7 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { useActionIdsByAccount } from '@/src/hooks/extension/base/contracts/useLOVE20ExtensionCenter';
-import { useExtensionsContractInfo } from './useExtensionBaseData';
+import { useExtensionsContractInfo, ExtensionContractInfo } from './useExtensionBaseData';
 import { LOVE20RoundViewerAbi } from '@/src/abis/LOVE20RoundViewer';
 import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
 import { JoinedAction } from '@/src/types/love20types';
@@ -37,6 +37,7 @@ export interface UseMyJoinedExtensionActionsParams {
 
 export interface UseMyJoinedExtensionActionsResult {
   joinedExtensionActions: JoinedAction[];
+  extensionContractInfos: ExtensionContractInfo[];
   isPending: boolean;
   error: any;
 }
@@ -47,7 +48,7 @@ export interface UseMyJoinedExtensionActionsResult {
  * @param tokenAddress 代币地址
  * @param account 用户地址
  * @param currentRound 当前轮次（从外部传入，避免重复查询）
- * @returns 扩展行动列表（与 useJoinedActions 相同的数据格式）
+ * @returns 扩展行动列表（与 useJoinedActions 相同的数据格式）+ 扩展合约信息
  */
 export const useMyJoinedExtensionActions = ({
   tokenAddress,
@@ -64,23 +65,8 @@ export const useMyJoinedExtensionActions = ({
   // 检查是否有扩展行动（但不能提前返回，必须保持 hooks 调用顺序一致）
   const hasExtensionActions = !isPendingExtensionIds && extensionActionIds && extensionActionIds.length > 0;
 
-  // 步骤2: 获取扩展行动的合约信息（factory、extension地址）
-  // 即使没有扩展行动，也要调用这个 hook 以保持 hooks 调用顺序一致
-  const {
-    contractInfos,
-    isPending: isPendingContractInfo,
-    error: errorContractInfo,
-  } = useExtensionsContractInfo({
-    tokenAddress,
-    actionIds: hasExtensionActions ? extensionActionIds : [], // 没有行动时传空数组
-  });
-
-  // 步骤3: 构建批量 RPC 调用
-  // 调用顺序：
-  // [0] actionInfosByIds - 获取行动详细信息
-  // [1] votesNums - 获取投票信息（如果 currentRound 可用）
+  // 步骤2: 先获取行动详细信息
   const actionInfosContract = useMemo(() => {
-    // 即使没有行动，也要保持这个 useMemo 被调用
     if (!hasExtensionActions || !tokenAddress || !account) {
       return null;
     }
@@ -93,7 +79,7 @@ export const useMyJoinedExtensionActions = ({
     };
   }, [hasExtensionActions, tokenAddress, account, extensionActionIds]);
 
-  // 步骤4: 获取行动详细信息
+  // 步骤3: 获取行动详细信息
   const {
     data: actionInfosData,
     isPending: isPendingActionInfos,
@@ -105,7 +91,26 @@ export const useMyJoinedExtensionActions = ({
     },
   });
 
-  // 步骤5: 获取投票信息（需要 currentRound）
+  // 步骤4: 解析行动信息，用于获取扩展合约信息
+  const actionInfos = useMemo(() => {
+    if (!actionInfosData || actionInfosData.length === 0 || !actionInfosData[0]?.result) {
+      return [];
+    }
+    const result = actionInfosData[0].result as any[];
+    return result || [];
+  }, [actionInfosData]);
+
+  // 步骤5: 获取扩展行动的合约信息（factory、extension地址）
+  const {
+    contractInfos,
+    isPending: isPendingContractInfo,
+    error: errorContractInfo,
+  } = useExtensionsContractInfo({
+    tokenAddress,
+    actionInfos: hasExtensionActions ? actionInfos : [], // 没有行动时传空数组
+  });
+
+  // 步骤6: 获取投票信息（需要 currentRound）
   const votesNumsContract = useMemo(() => {
     if (!tokenAddress || !currentRound || currentRound === BigInt(0)) return null;
 
@@ -263,6 +268,7 @@ export const useMyJoinedExtensionActions = ({
 
   return {
     joinedExtensionActions: joinedExtensionActions || [], // 确保总是返回数组
+    extensionContractInfos: contractInfos || [], // 返回扩展合约信息
     isPending,
     error,
   };

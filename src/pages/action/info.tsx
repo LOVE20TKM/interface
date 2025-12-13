@@ -157,7 +157,12 @@ export default function ActionInfoPage() {
         return <GovPublicTabs actionId={actionId} currentRound={currentRound || BigInt(0)} actionInfo={actionInfo} />;
       case 'public':
         return isExtensionAction && extensionAddress ? (
-          <ExtensionPublicTabs extensionAddress={extensionAddress} currentRound={currentRound || BigInt(0)} />
+          <ExtensionPublicTabs
+            extensionAddress={extensionAddress}
+            currentRound={currentRound || BigInt(0)}
+            actionId={actionId}
+            actionInfo={actionInfo}
+          />
         ) : null;
       default:
         return null;

@@ -37,12 +37,12 @@
 
 import { useMemo, useEffect, useState } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
+import { ILOVE20ExtensionAbi } from '@/src/abis/ILOVE20Extension';
 import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
-import { getExtensionConfigByFactory, ExtensionType } from '@/src/config/extensionConfig';
+import { LOVE20ExtensionFactoryBaseAbi } from '@/src/abis/LOVE20ExtensionFactoryBase';
+import { getExtensionConfigByFactory, getExtensionConfigs, ExtensionType } from '@/src/config/extensionConfig';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-
-const EXTENSION_CENTER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
+import { ActionInfo } from '@/src/types/love20types';
 
 // ==================== 类型定义 ====================
 
@@ -167,7 +167,7 @@ export function clearContractInfoCache(tokenAddress: string, actionId: bigint): 
 
 export interface UseExtensionsContractInfoParams {
   tokenAddress: `0x${string}` | undefined;
-  actionIds: bigint[];
+  actionInfos: ActionInfo[];
 }
 
 export interface UseExtensionsContractInfoResult {
@@ -179,42 +179,44 @@ export interface UseExtensionsContractInfoResult {
 /**
  * Hook 1: 批量获取扩展合约信息
  *
- * 功能：
- * 1. 批量查询多个行动的扩展合约信息
- * 2. 使用 localStorage 永久缓存结果（合约信息不会变化）
- * 3. 合并多个 RPC 调用为批量调用
+ * 新的验证逻辑：
+ * 1. 从行动详情中获取白名单地址（whiteListAddress）
+ * 2. 如果白名单地址为零地址，则不是扩展行动
+ * 3. 调用白名单地址的 factory() 方法获取 factory 地址
+ * 4. 检查 factory 地址是否在配置的 factory 列表中
+ * 5. 调用 factory 的 exists(whitelist) 方法验证扩展是否合法
  *
  * @param tokenAddress 代币地址
- * @param actionIds 行动ID列表
+ * @param actionInfos 行动信息列表
  * @returns 扩展合约信息列表、加载状态和错误信息
  */
 export const useExtensionsContractInfo = ({
   tokenAddress,
-  actionIds,
+  actionInfos,
 }: UseExtensionsContractInfoParams): UseExtensionsContractInfoResult => {
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // 步骤1: 检查缓存，分离出需要请求的 actionIds
-  const { cachedData, uncachedActionIds } = useMemo(() => {
-    if (!tokenAddress || actionIds.length === 0) {
-      return { cachedData: new Map<bigint, ExtensionContractInfo>(), uncachedActionIds: [] };
+  // 步骤1: 检查缓存，分离出需要请求的 actionInfos
+  const { cachedData, uncachedActionInfos } = useMemo(() => {
+    if (!tokenAddress || actionInfos.length === 0) {
+      return { cachedData: new Map<bigint, ExtensionContractInfo>(), uncachedActionInfos: [] };
     }
 
     const cached = new Map<bigint, ExtensionContractInfo>();
-    const uncached: bigint[] = [];
+    const uncached: ActionInfo[] = [];
 
-    for (const actionId of actionIds) {
+    for (const actionInfo of actionInfos) {
+      const actionId = actionInfo.head.id;
       const cacheItem = getCachedContractInfo(tokenAddress, actionId);
 
       if (cacheItem) {
         const isExtensionZero = cacheItem.data.extensionAddress === '0x0000000000000000000000000000000000000000';
 
         // 验证缓存完整性：如果有扩展地址但没有 factory 地址，认为缓存无效
-        // 注意：factoryType 可以为空（未在配置中注册的工厂），这不影响扩展功能
         if (!isExtensionZero && !cacheItem.data.factoryAddress) {
           console.log(`⚠️ ActionId ${actionId} 合约信息缓存不完整，清除缓存重新查询`);
           clearContractInfoCache(tokenAddress, actionId);
-          uncached.push(actionId);
+          uncached.push(actionInfo);
           continue;
         }
 
@@ -231,127 +233,174 @@ export const useExtensionsContractInfo = ({
           extension: !isExtensionZero ? (cacheItem.data.extensionAddress as `0x${string}`) : undefined,
         });
       } else {
-        uncached.push(actionId);
+        uncached.push(actionInfo);
       }
     }
 
-    return { cachedData: cached, uncachedActionIds: uncached };
-  }, [tokenAddress, actionIds, refreshKey]);
+    return { cachedData: cached, uncachedActionInfos: uncached };
+  }, [tokenAddress, actionInfos, refreshKey]);
 
-  // 步骤2: 构建批量合约调用列表 - 查询扩展地址
-  const extensionContracts = useMemo(() => {
-    if (!tokenAddress || uncachedActionIds.length === 0) return [];
+  // 步骤2: 过滤出有白名单地址的行动，并构建批量查询 factory 地址的调用
+  const { validWhitelistInfos, factoryContracts } = useMemo(() => {
+    if (!tokenAddress || uncachedActionInfos.length === 0) {
+      return { validWhitelistInfos: [], factoryContracts: [] };
+    }
 
-    return uncachedActionIds.map((actionId) => ({
-      address: EXTENSION_CENTER_ADDRESS,
-      abi: LOVE20ExtensionCenterAbi,
-      functionName: 'extension' as const,
-      args: [tokenAddress, actionId],
-    }));
-  }, [tokenAddress, uncachedActionIds]);
+    const infos: Array<{ actionInfo: ActionInfo; whitelistAddress: `0x${string}` }> = [];
+    const contracts: any[] = [];
 
-  // 步骤3: 批量读取扩展地址
+    for (const actionInfo of uncachedActionInfos) {
+      const whitelistAddress = actionInfo.body.whiteListAddress;
+
+      // 如果白名单地址是零地址，跳过
+      if (!whitelistAddress || whitelistAddress === '0x0000000000000000000000000000000000000000') {
+        continue;
+      }
+
+      infos.push({ actionInfo, whitelistAddress });
+
+      // 调用白名单地址的 factory() 方法
+      contracts.push({
+        address: whitelistAddress,
+        abi: ILOVE20ExtensionAbi,
+        functionName: 'factory' as const,
+        args: [],
+      });
+    }
+
+    return { validWhitelistInfos: infos, factoryContracts: contracts };
+  }, [tokenAddress, uncachedActionInfos]);
+
+  // 步骤3: 批量读取 factory 地址
   const {
-    data: extensionAddressesData,
+    data: factoryAddressesData,
     isPending: isPending1,
     error: error1,
   } = useReadContracts({
-    contracts: extensionContracts as any,
+    contracts: factoryContracts as any,
     query: {
-      enabled: !!tokenAddress && extensionContracts.length > 0,
+      enabled: !!tokenAddress && factoryContracts.length > 0,
     },
   });
 
-  // 步骤4: 根据扩展地址，构建批量查询 factory 地址的合约列表
-  const factoryContracts = useMemo(() => {
-    if (!extensionAddressesData) return [];
+  // 步骤4: 获取配置的 factory 列表，并构建 exists 验证调用
+  const existsContracts = useMemo(() => {
+    if (!factoryAddressesData || factoryAddressesData.length === 0) return [];
 
-    const calls: any[] = [];
+    const configuredFactories = getExtensionConfigs();
+    const factoryAddressSet = new Set(configuredFactories.map((c) => c.factoryAddress.toLowerCase()));
+    const contracts: any[] = [];
 
-    for (let i = 0; i < extensionAddressesData.length; i++) {
-      const result = extensionAddressesData[i];
-      const extensionAddress = result?.result as `0x${string}` | undefined;
+    for (let i = 0; i < factoryAddressesData.length; i++) {
+      const factoryAddress = factoryAddressesData[i]?.result as `0x${string}` | undefined;
+      const whitelistInfo = validWhitelistInfos[i];
 
-      // 如果是非零地址，查询 factory
-      if (extensionAddress && extensionAddress !== '0x0000000000000000000000000000000000000000') {
-        calls.push({
-          address: extensionAddress,
-          abi: LOVE20ExtensionLpAbi,
-          functionName: 'factory' as const,
-          args: [],
-        });
+      // 检查 factory 地址是否在配置列表中
+      if (!factoryAddress || !factoryAddressSet.has(factoryAddress.toLowerCase())) {
+        continue;
       }
+
+      // 调用 factory.exists(whitelistAddress) 验证
+      contracts.push({
+        address: factoryAddress,
+        abi: LOVE20ExtensionFactoryBaseAbi, // 所有 factory 都有相同的 exists 接口
+        functionName: 'exists' as const,
+        args: [whitelistInfo.whitelistAddress],
+      });
     }
 
-    return calls;
-  }, [extensionAddressesData]);
+    return contracts;
+  }, [factoryAddressesData, validWhitelistInfos]);
 
-  // 步骤5: 批量读取 factory 地址
+  // 步骤5: 批量调用 exists 验证
   const {
-    data: factoryAddressesData,
+    data: existsData,
     isPending: isPending2,
     error: error2,
   } = useReadContracts({
-    contracts: factoryContracts as any,
+    contracts: existsContracts as any,
     query: {
-      enabled: factoryContracts.length > 0,
+      enabled: existsContracts.length > 0,
     },
   });
 
   // 步骤6: 组合结果并缓存
   useEffect(() => {
-    if (!tokenAddress || !extensionAddressesData) return;
+    if (!tokenAddress || uncachedActionInfos.length === 0) return;
 
-    // 检查是否有需要查询 factory 的扩展地址
-    let hasExtensionNeedingFactory = false;
-    for (let i = 0; i < uncachedActionIds.length; i++) {
-      const extensionAddress = extensionAddressesData[i]?.result as `0x${string}` | undefined;
-      if (extensionAddress && extensionAddress !== '0x0000000000000000000000000000000000000000') {
-        hasExtensionNeedingFactory = true;
-        break;
-      }
-    }
+    // 等待 factory 查询完成
+    if (factoryContracts.length > 0 && isPending1) return;
 
-    // 如果有扩展地址需要查询 factory，但 factory 数据还在 pending，则等待
-    if (hasExtensionNeedingFactory && isPending2) {
-      return;
-    }
+    // 等待 exists 验证完成
+    if (existsContracts.length > 0 && isPending2) return;
 
-    let factoryIndex = 0;
+    const configuredFactories = getExtensionConfigs();
+    const factoryAddressSet = new Set(configuredFactories.map((c) => c.factoryAddress.toLowerCase()));
+
     let cachedCount = 0;
+    let validWhitelistIndex = 0;
+    let existsIndex = 0;
 
-    for (let i = 0; i < uncachedActionIds.length; i++) {
-      const actionId = uncachedActionIds[i];
-      const extensionAddress = extensionAddressesData[i]?.result as `0x${string}` | undefined;
+    for (const actionInfo of uncachedActionInfos) {
+      const actionId = actionInfo.head.id;
+      const whitelistAddress = actionInfo.body.whiteListAddress;
 
-      let factoryAddress: `0x${string}` | undefined = undefined;
-      let factoryName = '';
-      let factoryType = '';
-
-      if (extensionAddress && extensionAddress !== '0x0000000000000000000000000000000000000000') {
-        // 有扩展地址，获取对应的 factory
-        if (factoryAddressesData && factoryAddressesData[factoryIndex]) {
-          factoryAddress = factoryAddressesData[factoryIndex]?.result as `0x${string}` | undefined;
-
-          // 根据 factory 地址获取配置信息，如果找不到配置则使用默认值
-          if (factoryAddress) {
-            const config = getExtensionConfigByFactory(factoryAddress);
-            factoryName = config?.name || '未知类型';
-            factoryType = config?.type || ExtensionType.LP;
-          }
-        }
-        factoryIndex++;
+      // 如果白名单地址是零地址，标记为非扩展并缓存
+      if (!whitelistAddress || whitelistAddress === '0x0000000000000000000000000000000000000000') {
+        setCachedContractInfo(
+          tokenAddress,
+          actionId,
+          '0x0000000000000000000000000000000000000000',
+          '0x0000000000000000000000000000000000000000',
+          '',
+          '',
+        );
+        cachedCount++;
+        continue;
       }
 
-      // 保存到缓存（即使是零地址也缓存，避免重复查询）
-      setCachedContractInfo(
-        tokenAddress,
-        actionId,
-        extensionAddress || '0x0000000000000000000000000000000000000000',
-        factoryAddress || '0x0000000000000000000000000000000000000000',
-        factoryName,
-        factoryType,
-      );
+      // 获取 factory 地址
+      const factoryAddress = factoryAddressesData?.[validWhitelistIndex]?.result as `0x${string}` | undefined;
+      validWhitelistIndex++;
+
+      // 如果没有获取到 factory 地址，或 factory 地址不在配置列表中，标记为非扩展
+      if (!factoryAddress || !factoryAddressSet.has(factoryAddress.toLowerCase())) {
+        setCachedContractInfo(
+          tokenAddress,
+          actionId,
+          '0x0000000000000000000000000000000000000000',
+          '0x0000000000000000000000000000000000000000',
+          '',
+          '',
+        );
+        cachedCount++;
+        continue;
+      }
+
+      // 检查 exists 验证结果
+      const existsResult = existsData?.[existsIndex]?.result as boolean | undefined;
+      existsIndex++;
+
+      // 如果 exists 返回 false 或未定义，标记为非扩展
+      if (existsResult !== true) {
+        setCachedContractInfo(
+          tokenAddress,
+          actionId,
+          '0x0000000000000000000000000000000000000000',
+          '0x0000000000000000000000000000000000000000',
+          '',
+          '',
+        );
+        cachedCount++;
+        continue;
+      }
+
+      // exists 返回 true，确认为合法扩展
+      const config = getExtensionConfigByFactory(factoryAddress);
+      const factoryName = config?.name || '未知类型';
+      const factoryType = config?.type || ExtensionType.LP;
+
+      setCachedContractInfo(tokenAddress, actionId, whitelistAddress, factoryAddress, factoryName, factoryType);
       cachedCount++;
     }
 
@@ -360,13 +409,24 @@ export const useExtensionsContractInfo = ({
       console.log(`✅ 成功缓存 ${cachedCount} 个扩展合约信息`);
       setRefreshKey((prev) => prev + 1);
     }
-  }, [tokenAddress, uncachedActionIds, extensionAddressesData, factoryAddressesData, isPending2]);
+  }, [
+    tokenAddress,
+    uncachedActionInfos,
+    factoryContracts,
+    existsContracts,
+    factoryAddressesData,
+    existsData,
+    isPending1,
+    isPending2,
+  ]);
 
   // 步骤7: 合并缓存数据和新数据
   const contractInfos = useMemo(() => {
     const results: ExtensionContractInfo[] = [];
 
-    for (const actionId of actionIds) {
+    for (const actionInfo of actionInfos) {
+      const actionId = actionInfo.head.id;
+
       // 优先从缓存读取
       const cached = cachedData.get(actionId);
       if (cached) {
@@ -374,59 +434,25 @@ export const useExtensionsContractInfo = ({
         continue;
       }
 
-      // 从当前查询结果读取
-      const index = uncachedActionIds.indexOf(actionId);
-      if (index !== -1 && extensionAddressesData && extensionAddressesData[index]) {
-        const extensionAddress = extensionAddressesData[index]?.result as `0x${string}` | undefined;
-        const isZeroAddress = !extensionAddress || extensionAddress === '0x0000000000000000000000000000000000000000';
-
-        let factoryInfo: FactoryInfo | undefined = undefined;
-        if (!isZeroAddress && factoryAddressesData) {
-          // 找到对应的 factory 索引
-          let factoryIndex = 0;
-          for (let i = 0; i < index; i++) {
-            const prevExtAddr = extensionAddressesData[i]?.result as `0x${string}` | undefined;
-            if (prevExtAddr && prevExtAddr !== '0x0000000000000000000000000000000000000000') {
-              factoryIndex++;
-            }
-          }
-
-          const factoryAddress = factoryAddressesData[factoryIndex]?.result as `0x${string}` | undefined;
-          if (factoryAddress) {
-            const config = getExtensionConfigByFactory(factoryAddress);
-            // 如果找到配置则使用配置，否则使用默认值
-            factoryInfo = {
-              type: config?.type || ExtensionType.LP,
-              name: config?.name || '未知类型',
-              address: factoryAddress,
-            };
-          }
-        }
-
-        results.push({
-          actionId,
-          isExtension: !isZeroAddress,
-          factory: factoryInfo,
-          extension: !isZeroAddress ? extensionAddress : undefined,
-        });
-      } else {
-        // 数据还未加载，返回默认值
-        results.push({
-          actionId,
-          isExtension: false,
-        });
-      }
+      // 数据还未加载，返回默认值
+      results.push({
+        actionId,
+        isExtension: false,
+      });
     }
 
     return results;
-  }, [actionIds, cachedData, uncachedActionIds, extensionAddressesData, factoryAddressesData]);
+  }, [actionInfos, cachedData]);
 
-  const isPending = (extensionContracts.length > 0 && isPending1) || (factoryContracts.length > 0 && isPending2);
+  const isPending =
+    uncachedActionInfos.length > 0
+      ? (factoryContracts.length > 0 && isPending1) || (existsContracts.length > 0 && isPending2)
+      : false;
   const error = error1 || error2;
 
   return {
     contractInfos,
-    isPending: uncachedActionIds.length > 0 ? isPending : false,
+    isPending,
     error,
   };
 };
@@ -435,7 +461,7 @@ export const useExtensionsContractInfo = ({
 
 export interface UseExtensionContractInfoParams {
   tokenAddress: `0x${string}` | undefined;
-  actionId: bigint | undefined;
+  actionInfo: ActionInfo | undefined;
 }
 
 export interface UseExtensionContractInfoResult {
@@ -450,24 +476,24 @@ export interface UseExtensionContractInfoResult {
  * 封装 Hook 1，简化单个行动的查询
  *
  * @param tokenAddress 代币地址
- * @param actionId 行动ID
+ * @param actionInfo 行动信息
  * @returns 扩展合约信息、加载状态和错误信息
  */
 export const useExtensionContractInfo = ({
   tokenAddress,
-  actionId,
+  actionInfo,
 }: UseExtensionContractInfoParams): UseExtensionContractInfoResult => {
-  const actionIds = useMemo(() => (actionId !== undefined ? [actionId] : []), [actionId]);
+  const actionInfos = useMemo(() => (actionInfo !== undefined ? [actionInfo] : []), [actionInfo]);
 
   const { contractInfos, isPending, error } = useExtensionsContractInfo({
     tokenAddress,
-    actionIds,
+    actionInfos,
   });
 
   const contractInfo = useMemo(() => {
-    if (actionId === undefined) return undefined;
-    return contractInfos.find((info) => info.actionId === actionId);
-  }, [contractInfos, actionId]);
+    if (actionInfo === undefined) return undefined;
+    return contractInfos.find((info) => info.actionId === actionInfo.head.id);
+  }, [contractInfos, actionInfo]);
 
   return {
     contractInfo,
@@ -480,7 +506,7 @@ export const useExtensionContractInfo = ({
 
 export interface UseExtensionsBaseDataParams {
   tokenAddress: `0x${string}` | undefined;
-  actionIds: bigint[];
+  actionInfos: ActionInfo[];
 }
 
 export interface UseExtensionsBaseDataResult {
@@ -497,12 +523,12 @@ export interface UseExtensionsBaseDataResult {
  * 2. 批量查询扩展行动的参与统计数据（不缓存，每次实时查询）
  *
  * @param tokenAddress 代币地址
- * @param actionIds 行动ID列表
+ * @param actionInfos 行动信息列表
  * @returns 扩展基础数据列表、加载状态和错误信息
  */
 export const useExtensionsBaseData = ({
   tokenAddress,
-  actionIds,
+  actionInfos,
 }: UseExtensionsBaseDataParams): UseExtensionsBaseDataResult => {
   // 步骤1: 使用 Hook 1 获取合约信息
   const {
@@ -511,12 +537,12 @@ export const useExtensionsBaseData = ({
     error: errorContract,
   } = useExtensionsContractInfo({
     tokenAddress,
-    actionIds,
+    actionInfos,
   });
 
   // 步骤2: 构建扩展地址列表（只处理有扩展的行动）
   const { extensionAddresses, actionIdMap } = useMemo(() => {
-    if (!tokenAddress || actionIds.length === 0 || contractInfos.length === 0) {
+    if (!tokenAddress || actionInfos.length === 0 || contractInfos.length === 0) {
       return {
         extensionAddresses: [],
         actionIdMap: new Map<number, bigint>(),
@@ -538,7 +564,7 @@ export const useExtensionsBaseData = ({
       extensionAddresses: extensions,
       actionIdMap: idMap,
     };
-  }, [tokenAddress, actionIds, contractInfos]);
+  }, [tokenAddress, actionInfos, contractInfos]);
 
   // 步骤3: 构建批量合约调用列表
   const dynamicContracts = useMemo(() => {
@@ -583,7 +609,8 @@ export const useExtensionsBaseData = ({
   const baseData = useMemo(() => {
     const results: ExtensionBaseData[] = [];
 
-    for (const actionId of actionIds) {
+    for (const actionInfo of actionInfos) {
+      const actionId = actionInfo.head.id;
       const contractInfo = contractInfos.find((info) => info.actionId === actionId);
 
       // 如果不是扩展行动，直接返回基本信息
@@ -628,7 +655,7 @@ export const useExtensionsBaseData = ({
     }
 
     return results;
-  }, [actionIds, contractInfos, extensionAddresses, actionIdMap, dynamicContractsData]);
+  }, [actionInfos, contractInfos, extensionAddresses, actionIdMap, dynamicContractsData]);
 
   const isPending = isPendingContract || (dynamicContracts.length > 0 && isPendingDynamic);
   const error = errorContract || errorDynamic;
@@ -644,7 +671,7 @@ export const useExtensionsBaseData = ({
 
 export interface UseExtensionBaseDataParams {
   tokenAddress: `0x${string}` | undefined;
-  actionId: bigint | undefined;
+  actionInfo: ActionInfo | undefined;
 }
 
 export interface UseExtensionBaseDataResult {
@@ -659,14 +686,14 @@ export interface UseExtensionBaseDataResult {
  * 封装 Hook 3，简化单个行动的查询
  *
  * @param tokenAddress 代币地址
- * @param actionId 行动ID
+ * @param actionInfo 行动信息
  * @returns 扩展基础数据、加载状态和错误信息
  */
 export const useExtensionBaseData = ({
   tokenAddress,
-  actionId,
+  actionInfo,
 }: UseExtensionBaseDataParams): UseExtensionBaseDataResult => {
-  const actionIds = useMemo(() => (actionId !== undefined ? [actionId] : []), [actionId]);
+  const actionInfos = useMemo(() => (actionInfo !== undefined ? [actionInfo] : []), [actionInfo]);
 
   const {
     baseData: allBaseData,
@@ -674,13 +701,13 @@ export const useExtensionBaseData = ({
     error,
   } = useExtensionsBaseData({
     tokenAddress,
-    actionIds,
+    actionInfos,
   });
 
   const baseData = useMemo(() => {
-    if (actionId === undefined) return undefined;
-    return allBaseData.find((data) => data.actionId === actionId);
-  }, [allBaseData, actionId]);
+    if (actionInfo === undefined) return undefined;
+    return allBaseData.find((data) => data.actionId === actionInfo.head.id);
+  }, [allBaseData, actionInfo]);
 
   return {
     baseData,

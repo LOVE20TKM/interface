@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { useRouter } from 'next/router';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 // my hooks
-import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
+import { formatTokenAmount } from '@/src/lib/format';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useBalanceOf, useAllowance, useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import { useMint, useMaxGroupNameLength } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
@@ -29,6 +29,7 @@ import { useGroupNameValidation } from '@/src/hooks/extension/base/composite/use
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import { TokenContext } from '@/src/contexts/TokenContext';
 
 const FIRST_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_FIRST_TOKEN as `0x${string}`;
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
@@ -47,7 +48,7 @@ const getFormSchema = (balance: bigint) =>
 export default function MintGroup() {
   const { address: account, isConnected } = useAccount();
   const router = useRouter();
-
+  const { token } = useContext(TokenContext) || { token: undefined };
   // 获取最大名称长度
   const { maxGroupNameLength } = useMaxGroupNameLength();
 
@@ -202,7 +203,7 @@ export default function MintGroup() {
       toast.success('铸造成功！');
       // 2秒后跳转到"我的"页面
       setTimeout(() => {
-        router.push('/extension/groups?tab=my');
+        router.push('/extension/groupids?tab=my');
       }, 2000);
     }
   }, [isConfirmedMint, router]);
@@ -288,20 +289,24 @@ export default function MintGroup() {
                 {isValid && mintCost !== undefined && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">铸造成本:</span>
-                    <span className="font-mono text-secondary font-medium">{formatTokenAmount(mintCost)} LOVE20</span>
+                    <span className="font-mono text-secondary font-medium">
+                      {formatTokenAmount(mintCost)} {token?.symbol}
+                    </span>
                   </div>
                 )}
 
                 {balance !== undefined && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">我的余额:</span>
-                    <span className="font-mono text-greyscale-600">{formatTokenAmount(balance)} LOVE20</span>
+                    <span className="font-mono text-greyscale-600">
+                      {formatTokenAmount(balance)} {token?.symbol}
+                    </span>
                   </div>
                 )}
 
                 {isValid && mintCost !== undefined && balance !== undefined && balance < mintCost && (
                   <div className="text-xs text-red-600 mt-1">
-                    余额不足，还需要 {formatTokenAmount(mintCost - balance)} LOVE20
+                    余额不足，还需要 {formatTokenAmount(mintCost - balance)} {token?.symbol}
                   </div>
                 )}
               </div>

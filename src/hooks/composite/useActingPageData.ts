@@ -53,9 +53,9 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
     error: errorActions,
   } = useJoinableActions(tokenAddress || ('' as `0x${string}`), currentRound || BigInt(0), account as `0x${string}`);
 
-  // 提取 actionIds
-  const actionIds = useMemo(() => {
-    return rawActions?.map((action) => action.action.head.id) || [];
+  // 提取 actionInfos
+  const actionInfos = useMemo(() => {
+    return rawActions?.map((action) => action.action) || [];
   }, [rawActions]);
 
   // 获取扩展行动的基础数据（accountsCount, joinedValue）
@@ -65,7 +65,7 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
     error: errorExtension,
   } = useExtensionsBaseData({
     tokenAddress,
-    actionIds,
+    actionInfos,
   });
 
   // 增强 joinableActions 数据：用扩展的 joinedValue 覆盖原始 joinedAmount

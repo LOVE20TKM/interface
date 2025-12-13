@@ -12,9 +12,10 @@ import { ExtensionType, getExtensionConfigByFactory } from '@/src/config/extensi
 // my components
 import LpMyParticipation from '@/src/components/Extension/Plugins/Lp/LpMyParticipation';
 import ActionPanelForJoin from '@/src/components/ActionDetail/ActionPanelForJoin';
+import GroupMyParticipation from '@/src/components/Extension/Plugins/Group/GroupMyParticipation';
 
 // my hooks
-import { useExtensionContractInfo } from "@/src/hooks/extension/base/composite/useExtensionBaseData";
+import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 
 interface ExtensionMyParticipationProps {
   actionId: bigint;
@@ -39,9 +40,8 @@ const ExtensionMyParticipation: React.FC<ExtensionMyParticipationProps> = ({ act
 
   const { contractInfo, isPending } = useExtensionContractInfo({
     tokenAddress,
-    actionId,
+    actionInfo,
   });
-
 
   // 如果正在加载扩展信息，先显示默认面板（它会显示加载状态）
   if (isPending) {
@@ -69,7 +69,10 @@ const ExtensionMyParticipation: React.FC<ExtensionMyParticipationProps> = ({ act
       return (
         <LpMyParticipation actionId={actionId} actionInfo={actionInfo} extensionAddress={contractInfo.extension} />
       );
-
+    case ExtensionType.GROUP_ACTION:
+      return (
+        <GroupMyParticipation actionId={actionId} actionInfo={actionInfo} extensionAddress={contractInfo.extension} />
+      );
     // 未来添加新的扩展类型时，在这里添加对应的 case
     // case ExtensionType.XXXX:
     //   return <MyXxxxActionPanel ... />;

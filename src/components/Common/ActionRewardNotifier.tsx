@@ -14,7 +14,6 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useHasUnmintedActionRewardOfLastRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
 import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite';
 import { useExtensionActionsLatestRewards } from '@/src/hooks/extension/base/composite/useExtensionActionsLatestRewards';
-import { useExtensionsContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 
 // my components
 import AlertBox from '@/src/components/Common/AlertBox';
@@ -90,23 +89,15 @@ const ActionRewardNotifier: React.FC = () => {
     gateRounds,
   );
 
-  // 获取扩展行动列表（用于检查扩展激励）
-  const { joinedExtensionActions, isPending: isPendingExtensionActions } = useMyJoinedExtensionActions({
+  // 获取扩展行动列表（用于检查扩展激励，同时获取扩展合约信息）
+  const {
+    joinedExtensionActions,
+    extensionContractInfos: contractInfos,
+    isPending: isPendingExtensionActions,
+  } = useMyJoinedExtensionActions({
     tokenAddress: token?.address,
     account: account as `0x${string}`,
     currentRound: undefined,
-  });
-
-  // 提取扩展行动的 actionIds，用于查询扩展信息
-  const extensionActionIds = useMemo(() => {
-    if (!shouldTriggerCheck || !joinedExtensionActions) return [];
-    return joinedExtensionActions.map((ja) => ja.action.head.id);
-  }, [shouldTriggerCheck, joinedExtensionActions]);
-
-  // 获取扩展行动的扩展合约信息
-  const { contractInfos, isPending: isPendingExtensionInfo } = useExtensionsContractInfo({
-    tokenAddress: token?.address,
-    actionIds: extensionActionIds,
   });
 
   // 提取扩展地址
@@ -155,7 +146,7 @@ const ActionRewardNotifier: React.FC = () => {
     if (gateRounds === BigInt(0)) return;
 
     // 等待所有数据加载完成
-    if (isPendingExtensionActions || isPendingExtensionInfo || isPendingExtensionRewards) return;
+    if (isPendingExtensionActions || isPendingExtensionRewards) return;
 
     // 组合普通激励和扩展激励的结果
     if (typeof hasUnmintedActionRewardOfLastRounds === 'boolean') {
@@ -178,7 +169,6 @@ const ActionRewardNotifier: React.FC = () => {
     currentRound,
     gateRounds,
     isPendingExtensionActions,
-    isPendingExtensionInfo,
     isPendingExtensionRewards,
   ]);
 

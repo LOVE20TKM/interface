@@ -16,12 +16,22 @@ export const LOVE20ExtensionGroupActionAbi = [
         "internalType": "address"
       },
       {
-        "name": "groupAddress_",
+        "name": "groupManagerAddress_",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "minGovernanceVoteRatio_",
+        "name": "groupDistrustAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "stakeTokenAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "minGovVoteRatioBps_",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -64,6 +74,32 @@ export const LOVE20ExtensionGroupActionAbi = [
   {
     "type": "function",
     "name": "GROUP_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "GROUP_DISTRUST_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "GROUP_MANAGER_ADDRESS",
     "inputs": [],
     "outputs": [
       {
@@ -154,38 +190,6 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "accounts",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "accountsAtIndex",
-    "inputs": [
-      {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "accountsByGroupId",
     "inputs": [
       {
@@ -248,123 +252,7 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "accountsCount",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "actionId",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "activateGroup",
-    "inputs": [
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "description",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "stakedAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupMinJoinAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupMaxJoinAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "activeGroupIds",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "activeGroupIdsAtIndex",
-    "inputs": [
-      {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "activeGroupIdsByOwner",
-    "inputs": [
-      {
-        "name": "owner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "activeGroupIdsCount",
     "inputs": [],
     "outputs": [
       {
@@ -387,19 +275,6 @@ export const LOVE20ExtensionGroupActionAbi = [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "calculateJoinMaxAmount",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -459,19 +334,6 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "deactivateGroup",
-    "inputs": [
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "delegatedVerifierByGroupId",
     "inputs": [
       {
@@ -485,64 +347,6 @@ export const LOVE20ExtensionGroupActionAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "distrustRatioByGroupOwner",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupOwner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "distrustVotes",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "totalVerifyVotes",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "distrustReason",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "voter",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupOwner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
       }
     ],
     "stateMutability": "view"
@@ -572,155 +376,10 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "distrustVotesByGroupId",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "distrustVotesByGroupOwner",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupOwner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "distrustVotesByVoterByGroupOwner",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "voter",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupOwner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "exit",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "expandGroup",
-    "inputs": [
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "additionalStake",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "newStakedAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "newCapacity",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "expandableInfo",
-    "inputs": [
-      {
-        "name": "owner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "currentCapacity",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxCapacity",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "currentStake",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxStake",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "additionalStakeAllowed",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -838,98 +497,8 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "groupInfo",
-    "inputs": [
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct IGroupCore.GroupInfo",
-        "components": [
-          {
-            "name": "groupId",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "description",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "stakedAmount",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "capacity",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "groupMinJoinAmount",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "groupMaxJoinAmount",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "totalJoinedAmount",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "isActive",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "activatedRound",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "deactivatedRound",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "initialized",
     "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "isGroupActive",
-    "inputs": [
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
     "outputs": [
       {
         "name": "",
@@ -965,6 +534,11 @@ export const LOVE20ExtensionGroupActionAbi = [
         "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "verificationInfos",
+        "type": "string[]",
+        "internalType": "string[]"
       }
     ],
     "outputs": [],
@@ -1018,25 +592,6 @@ export const LOVE20ExtensionGroupActionAbi = [
     "inputs": [
       {
         "name": "account",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "maxCapacityByOwner",
-    "inputs": [
-      {
-        "name": "owner",
         "type": "address",
         "internalType": "address"
       }
@@ -1148,7 +703,7 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "rewardByGroupOwner",
+    "name": "rewardByVerifier",
     "inputs": [
       {
         "name": "round",
@@ -1156,7 +711,7 @@ export const LOVE20ExtensionGroupActionAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "groupOwner",
+        "name": "verifier",
         "type": "address",
         "internalType": "address"
       }
@@ -1484,7 +1039,7 @@ export const LOVE20ExtensionGroupActionAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "scores",
+        "name": "originScores",
         "type": "uint256[]",
         "internalType": "uint256[]"
       }
@@ -1509,6 +1064,25 @@ export const LOVE20ExtensionGroupActionAbi = [
     "type": "function",
     "name": "totalJoinedAmount",
     "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalJoinedAmountByGroupId",
+    "inputs": [
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [
       {
         "name": "",
@@ -1560,66 +1134,6 @@ export const LOVE20ExtensionGroupActionAbi = [
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "totalStaked",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "totalStakedByOwner",
-    "inputs": [
-      {
-        "name": "owner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "updateGroupInfo",
-    "inputs": [
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "newDescription",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "newMinJoinAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "newMaxJoinAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -1865,55 +1379,6 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "event",
-    "name": "DistrustVote",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupOwner",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "voter",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "reason",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Exit",
     "inputs": [
       {
@@ -1957,92 +1422,6 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "event",
-    "name": "GroupActivate",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "owner",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "stakedAmount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "capacity",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "GroupDeactivate",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "returnedStake",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "GroupDelegatedVerifierSet",
     "inputs": [
       {
@@ -2074,98 +1453,6 @@ export const LOVE20ExtensionGroupActionAbi = [
         "type": "address",
         "indexed": false,
         "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "GroupExpand",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "additionalStake",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "newCapacity",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "GroupInfoUpdate",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "newDescription",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      },
-      {
-        "name": "newMinJoinAmount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "newMaxJoinAmount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -2351,11 +1638,6 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "error",
-    "name": "AccountNotFound",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "ActionIdNotFound",
     "inputs": []
   },
@@ -2386,32 +1668,7 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "error",
-    "name": "CannotDeactivateInActivatedRound",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "CannotJoinDeactivatedGroup",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "DistrustVoteExceedsLimit",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ExceedsMaxStake",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "GroupAlreadyActivated",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "GroupAlreadyDeactivated",
     "inputs": []
   },
   {
@@ -2426,27 +1683,7 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "error",
-    "name": "GroupNotFound",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InsufficientGovVotes",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidJoinTokenAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidMinMaxJoinAmount",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidReason",
     "inputs": []
   },
   {
@@ -2457,11 +1694,6 @@ export const LOVE20ExtensionGroupActionAbi = [
   {
     "type": "error",
     "name": "JoinAmountZero",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "MinStakeNotMet",
     "inputs": []
   },
   {
@@ -2477,11 +1709,6 @@ export const LOVE20ExtensionGroupActionAbi = [
   {
     "type": "error",
     "name": "NoSnapshotForRound",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "NotGovernor",
     "inputs": []
   },
   {
@@ -2532,11 +1759,6 @@ export const LOVE20ExtensionGroupActionAbi = [
   {
     "type": "error",
     "name": "VerifierCapacityExceeded",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ZeroStakeAmount",
     "inputs": []
   }
 ] as const satisfies Abi;

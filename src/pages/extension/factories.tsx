@@ -1,35 +1,72 @@
 'use client';
 
-import { useContext } from 'react';
 import Header from '@/src/components/Header';
-import { TokenContext } from '@/src/contexts/TokenContext';
-import { useFactories } from '@/src/hooks/extension/base/contracts';
-import FactoryList from '@/src/components/Extension/Base/Center/FactoryList';
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { getExtensionConfigs } from '@/src/config/extensionConfig';
 
 /**
  * 扩展工厂列表页面
- * 
+ *
  * 显示当前代币支持的所有扩展工厂类型
  */
 export default function ExtensionFactoriesPage() {
-  const context = useContext(TokenContext);
-  const tokenAddress = context?.token?.address || ('' as `0x${string}`);
+  // 从配置文件获取工厂列表
+  const configs = getExtensionConfigs();
 
-  // 获取工厂列表
-  const { factories, isPending, error } = useFactories(tokenAddress);
+  if (configs.length === 0) {
+    return (
+      <>
+        <Header title="扩展类别" />
+        <main className="flex-grow container mx-auto px-4 py-6 max-w-4xl">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">扩展工厂列表</h2>
+            </div>
+            <p className="text-center text-greyscale-500 py-8">暂无类别</p>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
       <Header title="扩展类别" />
       <main className="flex-grow container mx-auto px-4 py-6 max-w-4xl">
-        <FactoryList tokenAddress={tokenAddress} factories={factories} isPending={isPending} />
-        {error && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-            加载失败: {error.message}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">行动工厂</h2>
           </div>
-        )}
+          <div className="space-y-3">
+            {configs.map((config) => {
+              return (
+                <div
+                  key={config.factoryAddress}
+                  className="flex flex-col py-2 px-3 border border-greyscale-200 rounded-lg gap-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-base text-greyscale-900 font-bold">{config.name}</span>
+                    <Link href={`/extension/deploy?factory=${config.factoryAddress}`}>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="border-secondary text-secondary hover:text-secondary-foreground px-0"
+                      >
+                        添加行动&gt;&gt;
+                      </Button>
+                    </Link>
+                  </div>
+                  <div className="flex items-center">
+                    <AddressWithCopyButton address={config.factoryAddress} showAddress={true} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </main>
     </>
   );
 }
-

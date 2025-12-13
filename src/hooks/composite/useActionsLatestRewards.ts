@@ -9,10 +9,7 @@ import {
   useExtensionActionsLatestRewards,
   ExtensionActionRewardWithAddress,
 } from '@/src/hooks/extension/base/composite';
-import {
-  useExtensionsContractInfo,
-  ExtensionContractInfo,
-} from '@/src/hooks/extension/base/composite/useExtensionBaseData';
+import { ExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import { JoinedAction, ActionReward } from '@/src/types/love20types';
 import {
   setActionRewardNeedMinted,
@@ -90,30 +87,16 @@ export const useActionsLatestRewards = ({
     error: errorLoadingCoreActions,
   } = useJoinedActions(tokenAddress || ('' as `0x${string}`), account || ('' as `0x${string}`));
 
-  // 第3步：获取扩展协议中的参与行动
+  // 第3步：获取扩展协议中的参与行动（同时获取扩展合约信息）
   const {
     joinedExtensionActions: extensionActions,
+    extensionContractInfos: contractInfos,
     isPending: isLoadingExtensionActions,
     error: errorLoadingExtensionActions,
   } = useMyJoinedExtensionActions({
     tokenAddress,
     account: account as `0x${string}`,
     currentRound: undefined, // actionrewards 页面不需要投票信息
-  });
-
-  // 提取扩展行动的 actionIds，用于查询扩展信息
-  const extensionActionIds = useMemo(() => {
-    return (extensionActions || []).map((ja) => ja.action.head.id);
-  }, [extensionActions]);
-
-  // 获取扩展行动的扩展合约信息
-  const {
-    contractInfos,
-    isPending: isLoadingExtensionInfo,
-    error: errorLoadingExtensionInfo,
-  } = useExtensionsContractInfo({
-    tokenAddress,
-    actionIds: extensionActionIds,
   });
 
   // 第4步：提取扩展地址，获取扩展协议最近 N 轮的行动激励
@@ -300,11 +283,7 @@ export const useActionsLatestRewards = ({
   }, [grouped, locallyMinted]);
 
   const isLoading =
-    isLoadingCoreRewards ||
-    isLoadingCoreActions ||
-    isLoadingExtensionActions ||
-    isLoadingExtensionInfo ||
-    isLoadingExtensionRewards;
+    isLoadingCoreRewards || isLoadingCoreActions || isLoadingExtensionActions || isLoadingExtensionRewards;
 
   return {
     displayedGroups,
@@ -317,7 +296,6 @@ export const useActionsLatestRewards = ({
     errors: {
       coreRewards: errorLoadingCoreRewards,
       actions: errorLoadingCoreActions || errorLoadingExtensionActions,
-      extensionInfo: errorLoadingExtensionInfo,
       extensionRewards: errorLoadingExtensionRewards,
       mint: writeError,
     },

@@ -60,7 +60,7 @@ const ActRewardsPage: React.FC = () => {
     errorExtensionInfo,
   } = useActionRewardsByRounds({
     tokenAddress: token?.address as `0x${string}`,
-    actionId,
+    actionInfo,
     startRound,
     endRound,
     enabled: isInitialized,

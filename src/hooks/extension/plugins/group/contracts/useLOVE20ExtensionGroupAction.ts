@@ -48,6 +48,38 @@ export const useGroupAddress = (contractAddress: `0x${string}`) => {
 };
 
 /**
+ * Hook for GROUP_DISTRUST_ADDRESS - 获取群不信任合约地址
+ */
+export const useGroupDistrustAddress = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupActionAbi,
+    functionName: 'GROUP_DISTRUST_ADDRESS',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { groupDistrustAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for GROUP_MANAGER_ADDRESS - 获取群管理合约地址
+ */
+export const useGroupManagerAddress = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupActionAbi,
+    functionName: 'GROUP_MANAGER_ADDRESS',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { groupManagerAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
  * Hook for JOIN_TOKEN_ADDRESS - 获取加入代币地址
  */
 export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
@@ -144,39 +176,6 @@ export const useStakingMultiplier = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for accountAtIndex - 根据索引获取账户地址
- */
-export const useAccountsAtIndex = (contractAddress: `0x${string}`, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'accountsAtIndex',
-    args: [index],
-    query: {
-      enabled: !!contractAddress && index !== undefined,
-    },
-  });
-
-  return { accountAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for accounts - 获取所有账户地址
- */
-export const useAccounts = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'accounts',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { accounts: data as `0x${string}`[] | undefined, isPending, error };
-};
-
-/**
  * Hook for accountsByGroupId - 获取指定组ID的账户列表
  */
 export const useAccountsByGroupId = (contractAddress: `0x${string}`, groupId: bigint) => {
@@ -228,22 +227,6 @@ export const useAccountsByGroupIdCount = (contractAddress: `0x${string}`, groupI
 };
 
 /**
- * Hook for accountsCount - 获取账户数量
- */
-export const useAccountsCount = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'accountsCount',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { accountsCount: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for actionId - 获取 action ID
  */
 export const useActionId = (contractAddress: `0x${string}`) => {
@@ -257,88 +240,6 @@ export const useActionId = (contractAddress: `0x${string}`) => {
   });
 
   return { actionId: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for activeGroupIds - 获取所有活跃组ID列表
- */
-export const useActiveGroupIds = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'activeGroupIds',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { activeGroupIds: data as bigint[] | undefined, isPending, error };
-};
-
-/**
- * Hook for activeGroupIdsAtIndex - 根据索引获取活跃组ID
- */
-export const useActiveGroupIdsAtIndex = (contractAddress: `0x${string}`, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'activeGroupIdsAtIndex',
-    args: [index],
-    query: {
-      enabled: !!contractAddress && index !== undefined,
-    },
-  });
-
-  return { groupId: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for activeGroupIdsByOwner - 获取指定所有者的活跃组ID列表
- */
-export const useActiveGroupIdsByOwner = (contractAddress: `0x${string}`, owner: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'activeGroupIdsByOwner',
-    args: [owner],
-    query: {
-      enabled: !!contractAddress && !!owner,
-    },
-  });
-
-  return { activeGroupIds: data as bigint[] | undefined, isPending, error };
-};
-
-/**
- * Hook for activeGroupIdsCount - 获取活跃组ID数量
- */
-export const useActiveGroupIdsCount = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'activeGroupIdsCount',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { count: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for calculateJoinMaxAmount - 计算最大加入数量
- */
-export const useCalculateJoinMaxAmount = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'calculateJoinMaxAmount',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { maxAmount: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -389,139 +290,6 @@ export const useDelegatedVerifierByGroupId = (contractAddress: `0x${string}`, gr
   });
 
   return { delegatedVerifier: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for distrustRatioByGroupOwner - 获取指定组所有者的不信任比率
- */
-export const useDistrustRatioByGroupOwner = (
-  contractAddress: `0x${string}`,
-  round: bigint,
-  groupOwner: `0x${string}`,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'distrustRatioByGroupOwner',
-    args: [round, groupOwner],
-    query: {
-      enabled: !!contractAddress && round !== undefined && !!groupOwner,
-    },
-  });
-
-  return {
-    distrustVotes: data ? safeToBigInt(data[0]) : undefined,
-    totalVerifyVotes: data ? safeToBigInt(data[1]) : undefined,
-    isPending,
-    error,
-  };
-};
-
-/**
- * Hook for distrustReason - 获取不信任投票的原因
- */
-export const useDistrustReason = (
-  contractAddress: `0x${string}`,
-  round: bigint,
-  voter: `0x${string}`,
-  groupOwner: `0x${string}`,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'distrustReason',
-    args: [round, voter, groupOwner],
-    query: {
-      enabled: !!contractAddress && round !== undefined && !!voter && !!groupOwner,
-    },
-  });
-
-  return { reason: data as string | undefined, isPending, error };
-};
-
-/**
- * Hook for distrustVotesByGroupId - 获取指定组ID的不信任投票数
- */
-export const useDistrustVotesByGroupId = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'distrustVotesByGroupId',
-    args: [round, groupId],
-    query: {
-      enabled: !!contractAddress && round !== undefined && groupId !== undefined,
-    },
-  });
-
-  return { votes: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for distrustVotesByGroupOwner - 获取指定组所有者的不信任投票数
- */
-export const useDistrustVotesByGroupOwner = (
-  contractAddress: `0x${string}`,
-  round: bigint,
-  groupOwner: `0x${string}`,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'distrustVotesByGroupOwner',
-    args: [round, groupOwner],
-    query: {
-      enabled: !!contractAddress && round !== undefined && !!groupOwner,
-    },
-  });
-
-  return { votes: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for distrustVotesByVoterByGroupOwner - 获取指定投票者对组所有者的不信任投票数
- */
-export const useDistrustVotesByVoterByGroupOwner = (
-  contractAddress: `0x${string}`,
-  round: bigint,
-  voter: `0x${string}`,
-  groupOwner: `0x${string}`,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'distrustVotesByVoterByGroupOwner',
-    args: [round, voter, groupOwner],
-    query: {
-      enabled: !!contractAddress && round !== undefined && !!voter && !!groupOwner,
-    },
-  });
-
-  return { votes: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for expandableInfo - 获取可扩展信息
- */
-export const useExpandableInfo = (contractAddress: `0x${string}`, owner: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'expandableInfo',
-    args: [owner],
-    query: {
-      enabled: !!contractAddress && !!owner,
-    },
-  });
-
-  return {
-    currentCapacity: data ? safeToBigInt(data[0]) : undefined,
-    maxCapacity: data ? safeToBigInt(data[1]) : undefined,
-    currentStake: data ? safeToBigInt(data[2]) : undefined,
-    maxStake: data ? safeToBigInt(data[3]) : undefined,
-    additionalStakeAllowed: data ? safeToBigInt(data[4]) : undefined,
-    isPending,
-    error,
-  };
 };
 
 /**
@@ -614,40 +382,6 @@ export const useGroupIdsByVerifierCount = (contractAddress: `0x${string}`, round
 };
 
 /**
- * Hook for groupInfo - 获取组信息
- */
-export const useGroupInfo = (contractAddress: `0x${string}`, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'groupInfo',
-    args: [groupId],
-    query: {
-      enabled: !!contractAddress && groupId !== undefined,
-    },
-  });
-
-  const typedData = data as
-    | [bigint, string, bigint, bigint, bigint, bigint, bigint, boolean, bigint, bigint]
-    | undefined;
-
-  return {
-    groupId: typedData ? safeToBigInt(typedData[0]) : undefined,
-    description: typedData ? typedData[1] : undefined,
-    stakedAmount: typedData ? safeToBigInt(typedData[2]) : undefined,
-    capacity: typedData ? safeToBigInt(typedData[3]) : undefined,
-    groupMinJoinAmount: typedData ? safeToBigInt(typedData[4]) : undefined,
-    groupMaxJoinAmount: typedData ? safeToBigInt(typedData[5]) : undefined,
-    totalJoinedAmount: typedData ? safeToBigInt(typedData[6]) : undefined,
-    isActive: typedData ? typedData[7] : undefined,
-    activatedRound: typedData ? safeToBigInt(typedData[8]) : undefined,
-    deactivatedRound: typedData ? safeToBigInt(typedData[9]) : undefined,
-    isPending,
-    error,
-  };
-};
-
-/**
  * Hook for initialized - 检查是否已初始化
  */
 export const useInitialized = (contractAddress: `0x${string}`) => {
@@ -661,23 +395,6 @@ export const useInitialized = (contractAddress: `0x${string}`) => {
   });
 
   return { initialized: data as boolean | undefined, isPending, error };
-};
-
-/**
- * Hook for isGroupActive - 检查组是否活跃
- */
-export const useIsGroupActive = (contractAddress: `0x${string}`, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'isGroupActive',
-    args: [groupId],
-    query: {
-      enabled: !!contractAddress && groupId !== undefined,
-    },
-  });
-
-  return { isActive: data as boolean | undefined, isPending, error };
 };
 
 /**
@@ -755,23 +472,6 @@ export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account:
 };
 
 /**
- * Hook for maxCapacityByOwner - 获取指定所有者的最大容量
- */
-export const useMaxCapacityByOwner = (contractAddress: `0x${string}`, owner: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'maxCapacityByOwner',
-    args: [owner],
-    query: {
-      enabled: !!contractAddress && !!owner,
-    },
-  });
-
-  return { maxCapacity: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for originScoreByAccount - 获取账户的原始积分
  */
 export const useOriginScoreByAccount = (contractAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
@@ -842,23 +542,6 @@ export const useRewardByGroupId = (contractAddress: `0x${string}`, round: bigint
   });
 
   return { reward: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for rewardByGroupOwner - 获取指定组所有者的奖励
- */
-export const useRewardByGroupOwner = (contractAddress: `0x${string}`, round: bigint, groupOwner: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'rewardByGroupOwner',
-    args: [round, groupOwner],
-    query: {
-      enabled: !!contractAddress && round !== undefined && !!groupOwner,
-    },
-  });
-
-  return { amount: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -1141,39 +824,6 @@ export const useTotalJoinedAmountByRound = (contractAddress: `0x${string}`, roun
 };
 
 /**
- * Hook for totalStaked - 获取总质押数量
- */
-export const useTotalStaked = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'totalStaked',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { totalStaked: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for totalStakedByOwner - 获取指定所有者的总质押数量
- */
-export const useTotalStakedByOwner = (contractAddress: `0x${string}`, owner: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'totalStakedByOwner',
-    args: [owner],
-    query: {
-      enabled: !!contractAddress && !!owner,
-    },
-  });
-
-  return { totalStaked: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for verificationInfo - 获取验证信息
  */
 export const useVerificationInfo = (
@@ -1332,58 +982,6 @@ export const useVerifiersCount = (contractAddress: `0x${string}`, round: bigint)
 // =====================
 
 /**
- * Hook for activateGroup - 激活组
- */
-export function useActivateGroup(contractAddress: `0x${string}`) {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupActionAbi,
-    contractAddress,
-    'activateGroup',
-  );
-
-  const activateGroup = async (
-    groupId: bigint,
-    description: string,
-    stakedAmount: bigint,
-    groupMinJoinAmount: bigint,
-    groupMaxJoinAmount: bigint,
-  ) => {
-    console.log('提交 activateGroup 交易:', {
-      contractAddress,
-      groupId,
-      description,
-      stakedAmount,
-      groupMinJoinAmount,
-      groupMaxJoinAmount,
-      isTukeMode,
-    });
-    return await execute([groupId, description, stakedAmount, groupMinJoinAmount, groupMaxJoinAmount]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('activateGroup tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 activateGroup 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    activateGroup,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}
-
-/**
  * Hook for burnUnclaimedReward - 销毁未领取的奖励
  */
 export function useBurnUnclaimedReward(contractAddress: `0x${string}`) {
@@ -1460,82 +1058,6 @@ export function useClaimReward(contractAddress: `0x${string}`) {
 }
 
 /**
- * Hook for deactivateGroup - 停用组
- */
-export function useDeactivateGroup(contractAddress: `0x${string}`) {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupActionAbi,
-    contractAddress,
-    'deactivateGroup',
-  );
-
-  const deactivateGroup = async (groupId: bigint) => {
-    console.log('提交 deactivateGroup 交易:', { contractAddress, groupId, isTukeMode });
-    return await execute([groupId]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('deactivateGroup tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 deactivateGroup 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    deactivateGroup,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}
-
-/**
- * Hook for distrustVote - 不信任投票
- */
-export function useDistrustVote(contractAddress: `0x${string}`) {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupActionAbi,
-    contractAddress,
-    'distrustVote',
-  );
-
-  const distrustVote = async (groupOwner: `0x${string}`, amount: bigint, reason: string) => {
-    console.log('提交 distrustVote 交易:', { contractAddress, groupOwner, amount, reason, isTukeMode });
-    return await execute([groupOwner, amount, reason]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('distrustVote tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 distrustVote 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    distrustVote,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}
-
-/**
  * Hook for exit - 退出（取回代币）
  */
 export function useExit(contractAddress: `0x${string}`) {
@@ -1564,44 +1086,6 @@ export function useExit(contractAddress: `0x${string}`) {
 
   return {
     exit,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}
-
-/**
- * Hook for expandGroup - 扩展组
- */
-export function useExpandGroup(contractAddress: `0x${string}`) {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupActionAbi,
-    contractAddress,
-    'expandGroup',
-  );
-
-  const expandGroup = async (groupId: bigint, additionalStake: bigint) => {
-    console.log('提交 expandGroup 交易:', { contractAddress, groupId, additionalStake, isTukeMode });
-    return await execute([groupId, additionalStake]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('expandGroup tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 expandGroup 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    expandGroup,
     isPending,
     isConfirming,
     writeError: error,
@@ -1759,56 +1243,6 @@ export function useSubmitOriginScore(contractAddress: `0x${string}`) {
 
   return {
     submitOriginScore,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}
-
-/**
- * Hook for updateGroupInfo - 更新组信息
- */
-export function useUpdateGroupInfo(contractAddress: `0x${string}`) {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupActionAbi,
-    contractAddress,
-    'updateGroupInfo',
-  );
-
-  const updateGroupInfo = async (
-    groupId: bigint,
-    newDescription: string,
-    newMinJoinAmount: bigint,
-    newMaxJoinAmount: bigint,
-  ) => {
-    console.log('提交 updateGroupInfo 交易:', {
-      contractAddress,
-      groupId,
-      newDescription,
-      newMinJoinAmount,
-      newMaxJoinAmount,
-      isTukeMode,
-    });
-    return await execute([groupId, newDescription, newMinJoinAmount, newMaxJoinAmount]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('updateGroupInfo tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 updateGroupInfo 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    updateGroupInfo,
     isPending,
     isConfirming,
     writeError: error,

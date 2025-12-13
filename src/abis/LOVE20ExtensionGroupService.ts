@@ -69,51 +69,6 @@ export const LOVE20ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "accounts",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "accountsAtIndex",
-    "inputs": [
-      {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "accountsCount",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "actionId",
     "inputs": [],
     "outputs": [
@@ -773,11 +728,6 @@ export const LOVE20ExtensionGroupServiceAbi = [
   },
   {
     "type": "error",
-    "name": "AccountNotFound",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "ActionIdNotFound",
     "inputs": []
   },
@@ -799,6 +749,11 @@ export const LOVE20ExtensionGroupServiceAbi = [
   {
     "type": "error",
     "name": "ArrayLengthMismatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DuplicateAddress",
     "inputs": []
   },
   {

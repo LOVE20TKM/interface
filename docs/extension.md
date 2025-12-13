@@ -22,3 +22,27 @@ src/components/Extension/Plugins/{name}/{name}ActionPublicTabs.tsx : 行动公�
 src/components/Extension/Plugins/{name}/{name}Deploy.tsx : 行动部署
 src/components/Extension/Plugins/{name}/{name}JoinPanel.tsx : 加入行动
 src/components/Extension/Plugins/{name}/{name}MyParticipation.tsx : 我的参与详情
+
+# factory
+
+## 1. 配置
+
+- 在 .env 中配置：NEXT*PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY*{NAME}
+- 在 src/config/extensionConfig.ts 中配置
+
+## 2. 部署扩展组件
+
+- 实现
+- 配置：
+  src/components/Extension/Base/Center/ExtensionDeploy.tsx
+
+# 配置
+
+行动公示：
+src/components/Extension/Base/Action/ExtensionPublicTabs.tsx
+
+加入行动：
+src/components/Extension/Base/Action/ExtensionActionJoinPanel.tsx
+
+我的参与：
+src/components/Extension/Base/Action/ExtensionMyParticipation.tsx

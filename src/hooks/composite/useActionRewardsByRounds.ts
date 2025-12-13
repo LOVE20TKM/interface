@@ -31,6 +31,7 @@ import { useAccount } from 'wagmi';
 import { useActionRewardsByAccountByActionIdByRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
 import { useExtensionContractInfo, ExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import { useExtensionActionRewardsByRounds } from '@/src/hooks/extension/base/composite';
+import { ActionInfo } from '@/src/types/love20types';
 
 /**
  * 统一的激励数据格式
@@ -47,8 +48,8 @@ export interface ActionReward {
 export interface UseActionRewardsByRoundsParams {
   /** 代币地址 */
   tokenAddress: `0x${string}` | undefined;
-  /** 行动 ID */
-  actionId: bigint | undefined;
+  /** 行动信息 */
+  actionInfo: ActionInfo | undefined;
   /** 起始轮次 */
   startRound: bigint;
   /** 结束轮次 */
@@ -85,7 +86,7 @@ export interface UseActionRewardsByRoundsResult {
  * 查询单个行动指定轮次范围的激励数据
  *
  * @param tokenAddress 代币地址
- * @param actionId 行动 ID
+ * @param actionInfo 行动信息
  * @param startRound 起始轮次
  * @param endRound 结束轮次
  * @param enabled 是否启用查询
@@ -93,12 +94,14 @@ export interface UseActionRewardsByRoundsResult {
  */
 export const useActionRewardsByRounds = ({
   tokenAddress,
-  actionId,
+  actionInfo,
   startRound,
   endRound,
   enabled,
 }: UseActionRewardsByRoundsParams): UseActionRewardsByRoundsResult => {
   const { address: account } = useAccount();
+
+  const actionId = actionInfo?.head.id;
 
   // 第1步：查询扩展合约信息（判断行动类型）
   const {
@@ -107,12 +110,12 @@ export const useActionRewardsByRounds = ({
     error: errorExtensionInfo,
   } = useExtensionContractInfo({
     tokenAddress,
-    actionId,
+    actionInfo,
   });
 
   const isExtensionAction = extensionInfo?.isExtension || false;
 
-  // 第3步：查询普通激励（如果不是扩展行动）
+  // 第2步：查询普通激励（如果不是扩展行动）
   const {
     rewards: coreRewards,
     isPending: isLoadingCoreRewards,
@@ -125,7 +128,7 @@ export const useActionRewardsByRounds = ({
     !isExtensionAction && enabled ? endRound : BigInt(0),
   );
 
-  // 第4步：查询扩展激励（如果是扩展行动）
+  // 第3步：查询扩展激励（如果是扩展行动）
   const {
     rewards: extensionRewards,
     isPending: isLoadingExtensionRewards,
@@ -137,7 +140,7 @@ export const useActionRewardsByRounds = ({
     enabled: isExtensionAction && enabled,
   });
 
-  // 第5步：合并返回统一格式
+  // 第4步：合并返回统一格式
   const rewards = useMemo(() => {
     if (isExtensionAction) {
       return extensionRewards || [];

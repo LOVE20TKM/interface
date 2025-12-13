@@ -466,12 +466,6 @@ const TokenPage = () => {
                     <CardHeader className="px-4 pt-4 pb-2">
                       <CardTitle className="flex items-center justify-between text-lg">
                         <span>LOVE20 扩展合约地址：</span>
-                        <Link
-                          href="/extension/addfactory"
-                          className="text-sm text-secondary hover:text-secondary/80 transition-colors"
-                        >
-                          注册工厂合约 &gt;&gt;
-                        </Link>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">

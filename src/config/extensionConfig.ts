@@ -3,6 +3,8 @@
  */
 export enum ExtensionType {
   LP = 'LP',
+  GROUP_ACTION = 'GROUP_ACTION',
+  GROUP_SERVICE = 'GROUP_SERVICE',
 }
 
 /**
@@ -27,6 +29,26 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
       type: ExtensionType.LP,
       name: 'LP池行动',
       factoryAddress: stakeLpFactory as `0x${string}`,
+    });
+  }
+
+  // 链群行动 扩展配置
+  const groupActionFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_ACTION;
+  if (groupActionFactory) {
+    configs.push({
+      type: ExtensionType.GROUP_ACTION,
+      name: '链群行动',
+      factoryAddress: groupActionFactory as `0x${string}`,
+    });
+  }
+
+  // 链群服务 扩展配置
+  const groupServiceFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_SERVICE;
+  if (groupServiceFactory) {
+    configs.push({
+      type: ExtensionType.GROUP_SERVICE,
+      name: '链群服务',
+      factoryAddress: groupServiceFactory as `0x${string}`,
     });
   }
 

@@ -11,10 +11,16 @@ import { ExtensionType, getExtensionConfigByFactory } from '@/src/config/extensi
 // my components
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LpActionPublicTabs from '@/src/components/Extension/Plugins/Lp/LpActionPublicTabs';
+import GroupActionPublicTabs from '@/src/components/Extension/Plugins/Group/GroupActionPublicTabs';
+
+// my types
+import { ActionInfo } from '@/src/types/love20types';
 
 interface ExtensionPublicTabsProps {
   extensionAddress: `0x${string}`;
   currentRound: bigint;
+  actionId?: bigint;
+  actionInfo?: ActionInfo;
 }
 
 /**
@@ -29,7 +35,12 @@ interface ExtensionPublicTabsProps {
  * - 添加新的扩展类型时，在 extensionConfig 中注册
  * - 在此组件中添加对应的类型判断和组件渲染逻辑
  */
-const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({ extensionAddress, currentRound }) => {
+const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
+  extensionAddress,
+  currentRound,
+  actionId,
+  actionInfo,
+}) => {
   // 获取扩展合约的 factory 地址，判断类型
   const { factoryAddress, isPending: isFactoryPending } = useFactory(extensionAddress);
 
@@ -63,6 +74,25 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({ extensionAddr
   switch (extensionConfig.type) {
     case ExtensionType.LP:
       return <LpActionPublicTabs extensionAddress={extensionAddress} currentRound={currentRound} />;
+
+    case ExtensionType.GROUP_ACTION:
+      if (!actionId || !actionInfo) {
+        return (
+          <div className="bg-white rounded-lg p-8">
+            <div className="text-center text-gray-500">
+              <p>缺少必要的行动信息</p>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <GroupActionPublicTabs
+          extensionAddress={extensionAddress}
+          currentRound={currentRound}
+          actionId={actionId}
+          actionInfo={actionInfo}
+        />
+      );
 
     // 未来添加新的扩展类型时，在这里添加对应的 case
     // case ExtensionType.XXXX:

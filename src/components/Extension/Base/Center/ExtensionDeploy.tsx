@@ -9,6 +9,7 @@ import { ExtensionType, getExtensionConfigByFactory } from '@/src/config/extensi
 
 // my components
 import LpDeploy from '@/src/components/Extension/Plugins/Lp/LpDeploy';
+import GroupActionDeploy from '@/src/components/Extension/Plugins/Group/GroupActionDeploy';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 interface ExtensionDeployProps {
@@ -61,6 +62,9 @@ const ExtensionDeploy: React.FC<ExtensionDeployProps> = ({ factoryAddress }) => 
     case ExtensionType.LP:
       return <LpDeploy factoryAddress={factoryAddress as `0x${string}`} />;
 
+    case ExtensionType.GROUP_ACTION:
+      return <GroupActionDeploy factoryAddress={factoryAddress as `0x${string}`} />;
+
     // 未来添加新的扩展类型时，在这里添加对应的 case
     // case ExtensionType.XXXX:
     //   return <XxxxDeploy factoryAddress={factoryAddress} />;
@@ -79,4 +83,3 @@ const ExtensionDeploy: React.FC<ExtensionDeployProps> = ({ factoryAddress }) => 
 };
 
 export default ExtensionDeploy;
-
