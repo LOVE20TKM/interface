@@ -23,7 +23,7 @@ export const useAllowance = (
   spender: `0x${string}`,
   flag: boolean = true,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error, refetch } = useReadContract({
     address: token,
     abi: LOVE20TokenAbi,
     functionName: 'allowance',
@@ -33,7 +33,7 @@ export const useAllowance = (
     },
   });
 
-  return { allowance: data ? safeToBigInt(data) : undefined, isPending, error };
+  return { allowance: data ? safeToBigInt(data) : undefined, isPending, error, refetch };
 };
 
 /**

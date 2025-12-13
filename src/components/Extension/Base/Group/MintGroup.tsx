@@ -109,6 +109,7 @@ export default function MintGroup() {
     allowance,
     isPending: isPendingAllowance,
     error: errAllowance,
+    refetch: refetchAllowance,
   } = useAllowance(FIRST_TOKEN_ADDRESS, account as `0x${string}`, GROUP_CONTRACT_ADDRESS);
 
   // 授权交易确认后，设置状态
@@ -126,8 +127,10 @@ export default function MintGroup() {
       hasHandledApproveSuccessRef.current = true;
       setIsTokenApproved(true);
       toast.success('授权成功');
+      // 授权成功后，刷新授权额度
+      refetchAllowance();
     }
-  }, [isConfirmedApprove]);
+  }, [isConfirmedApprove, refetchAllowance]);
 
   // 根据铸造成本和已授权额度，判断是否满足授权
   useEffect(() => {

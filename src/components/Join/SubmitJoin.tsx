@@ -63,6 +63,7 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
     allowance: allowanceToken,
     isPending: isPendingAllowanceToken,
     error: errAllowanceToken,
+    refetch: refetchAllowance,
   } = useAllowance(
     token?.address as `0x${string}`,
     account as `0x${string}`,
@@ -214,8 +215,10 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
     if (isConfirmedApprove) {
       setIsTokenApproved(true);
       toast.success(`授权${token?.symbol}成功`);
+      // 授权成功后，刷新授权额度
+      refetchAllowance();
     }
-  }, [isConfirmedApprove, token?.symbol]);
+  }, [isConfirmedApprove, token?.symbol, refetchAllowance]);
 
   // 监听用户输入的质押数量及链上返回的授权额度判断是否已授权
   const additionalStakeAmount = form.watch('additionalStakeAmount');

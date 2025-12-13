@@ -153,6 +153,7 @@ const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: Launch
     allowance: allowanceParentTokenApproved,
     isPending: isPendingAllowanceParentToken,
     error: errAllowanceParentToken,
+    refetch: refetchAllowance,
   } = useAllowance(
     token?.parentTokenAddress as `0x${string}`,
     account as `0x${string}`,
@@ -165,8 +166,10 @@ const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: Launch
     if (isConfirmedApproveParentToken && !isNativeContribute) {
       setIsTokenApproved(true);
       toast.success(`授权${token?.parentTokenSymbol}成功`);
+      // 授权成功后，刷新授权额度
+      refetchAllowance();
     }
-  }, [isConfirmedApproveParentToken, token?.parentTokenSymbol, isNativeContribute]);
+  }, [isConfirmedApproveParentToken, token?.parentTokenSymbol, isNativeContribute, refetchAllowance]);
 
   // 根据用户输入和已授权额度，判断是否满足当前申购数额的授权
   const contributeAmount = form.watch('contributeAmount');

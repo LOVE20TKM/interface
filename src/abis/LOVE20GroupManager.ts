@@ -118,6 +118,11 @@ export const LOVE20GroupManagerAbi = [
         "name": "groupMaxJoinAmount",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "groupMaxAccounts_",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -471,6 +476,11 @@ export const LOVE20GroupManagerAbi = [
         "internalType": "uint256"
       },
       {
+        "name": "groupMaxAccounts",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "isActive",
         "type": "bool",
         "internalType": "bool"
@@ -694,6 +704,11 @@ export const LOVE20GroupManagerAbi = [
         "name": "newMaxJoinAmount",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "newMaxAccounts",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -760,6 +775,12 @@ export const LOVE20GroupManagerAbi = [
       },
       {
         "name": "capacity",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "groupMaxAccounts",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -892,6 +913,12 @@ export const LOVE20GroupManagerAbi = [
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
+      },
+      {
+        "name": "newMaxAccounts",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -939,6 +966,11 @@ export const LOVE20GroupManagerAbi = [
   {
     "type": "error",
     "name": "InsufficientGovVotes",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMaxAccounts",
     "inputs": []
   },
   {

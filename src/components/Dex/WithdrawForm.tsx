@@ -97,7 +97,10 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
   // 1. LP代币授权查询
   // --------------------------------------------------
   const spenderAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER as `0x${string}`;
-  const { allowance: lpAllowance } = useAllowance(pairAddress, account as `0x${string}`, spenderAddress);
+  const {
+    allowance: lpAllowance,
+    refetch: refetchAllowance,
+  } = useAllowance(pairAddress, account as `0x${string}`, spenderAddress);
 
   // --------------------------------------------------
   // 2. 表单设置
@@ -169,8 +172,10 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
     if (isConfirmedApproveLP) {
       setIsLPApproved(true);
       toast.success('LP代币授权成功');
+      // 授权成功后，刷新授权额度
+      refetchAllowance();
     }
-  }, [isConfirmedApproveLP]);
+  }, [isConfirmedApproveLP, refetchAllowance]);
 
   // --------------------------------------------------
   // 5. 撤销流动性逻辑

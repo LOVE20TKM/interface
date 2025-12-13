@@ -50,7 +50,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     params: actionParams,
     isPending: isPendingParams,
     error: errorParams,
-  } = useExtensionActionParam({ extensionAddress });
+  } = useExtensionActionParam({ actionId, extensionAddress });
 
   // 表单验证
   const formSchema = z.object({
@@ -157,6 +157,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
         values.description,
         minJoinAmountBigInt,
         maxJoinAmountBigInt,
+        BigInt(0),
       );
     } catch (error) {
       console.error('Update group failed', error);

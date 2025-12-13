@@ -93,6 +93,7 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
     allowance: allowanceToken,
     isPending: isPendingAllowanceToken,
     error: errAllowanceToken,
+    refetch: refetchAllowance,
   } = useAllowance(
     token?.address as `0x${string}`,
     account as `0x${string}`,
@@ -145,8 +146,10 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
     if (isConfirmedApproveToken) {
       setIsTokenApproved(true);
       toast.success(`授权${token?.symbol}成功`);
+      // 授权成功后，刷新授权额度
+      refetchAllowance();
     }
-  }, [isConfirmedApproveToken, token?.symbol]);
+  }, [isConfirmedApproveToken, token?.symbol, refetchAllowance]);
 
   // 4. 质押按钮点击
   const handleStake = async (data: z.infer<ReturnType<typeof stakeSchemaFactory>>) => {

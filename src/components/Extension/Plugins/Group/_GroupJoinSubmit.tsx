@@ -72,6 +72,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     allowance,
     isPending: isPendingAllowance,
     error: errorAllowance,
+    refetch: refetchAllowance,
   } = useAllowance(
     token?.address as `0x${string}`,
     account as `0x${string}`,
@@ -170,8 +171,10 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     if (isConfirmedApprove) {
       setIsTokenApproved(true);
       toast.success('授权代币成功');
+      // 授权成功后，刷新授权额度
+      refetchAllowance();
     }
-  }, [isConfirmedApprove]);
+  }, [isConfirmedApprove, refetchAllowance]);
 
   // 监听用户输入的加入数量及链上返回的授权额度判断是否已授权
   const joinAmount = form.watch('joinAmount');

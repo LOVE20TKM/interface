@@ -89,6 +89,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     allowance: allowanceLp,
     isPending: isPendingAllowanceLp,
     error: errAllowanceLp,
+    refetch: refetchAllowance,
   } = useAllowance(joinTokenAddress as `0x${string}`, account as `0x${string}`, extensionAddress, !!joinTokenAddress);
 
   // 定义授权状态变量：是否已完成LP授权
@@ -178,8 +179,10 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     if (isConfirmedApproveLp) {
       setIsLpApproved(true);
       toast.success('授权LP成功');
+      // 授权成功后，刷新授权额度
+      refetchAllowance();
     }
-  }, [isConfirmedApproveLp]);
+  }, [isConfirmedApproveLp, refetchAllowance]);
 
   // 监听用户输入的加入数量及链上返回的授权额度判断是否已授权
   const joinAmount = form.watch('joinAmount');

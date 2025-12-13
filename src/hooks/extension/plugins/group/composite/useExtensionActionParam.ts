@@ -3,9 +3,8 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
+import { LOVE20GroupManagerAbi } from '@/src/abis/LOVE20GroupManager';
 import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
-import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useExtensionActionConstCache } from './useExtensionActionConstCache';
 
@@ -24,6 +23,7 @@ export interface ExtensionActionParam {
 }
 
 export interface UseExtensionActionParamParams {
+  actionId: bigint;
   extensionAddress: `0x${string}` | undefined;
 }
 
@@ -64,6 +64,7 @@ function calcMinStake(params: {
  * 3. 计算最小质押量（基于 totalSupply 与扩展常量）
  */
 export const useExtensionActionParam = ({
+  actionId,
   extensionAddress,
 }: UseExtensionActionParamParams): UseExtensionActionParamResult => {
   // 获取常量缓存数据
@@ -79,13 +80,15 @@ export const useExtensionActionParam = ({
     if (!extensionAddress) return [];
     if (!constants?.tokenAddress) return [];
     if (!STAKE_CONTRACT_ADDRESS) return [];
+    if (actionId === undefined) return [];
 
     const tokenAddress = constants.tokenAddress;
     return [
       {
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER,
+        abi: LOVE20GroupManagerAbi,
         functionName: 'calculateJoinMaxAmount',
+        args: [tokenAddress, actionId],
       },
       {
         address: tokenAddress,
@@ -99,7 +102,7 @@ export const useExtensionActionParam = ({
       //   args: [tokenAddress],
       // },
     ];
-  }, [extensionAddress, constants?.tokenAddress]);
+  }, [extensionAddress, constants?.tokenAddress, actionId]);
 
   const {
     data: realtimeData,
@@ -115,7 +118,6 @@ export const useExtensionActionParam = ({
   // 合并数据
   const params = useMemo(() => {
     if (!constants) return undefined;
-
     const joinMaxAmount = realtimeData?.[0]?.result ? safeToBigInt(realtimeData[0].result) : BigInt(0);
     const totalMinted = realtimeData?.[1]?.result ? safeToBigInt(realtimeData[1].result) : BigInt(0);
     // const totalGovVotes = realtimeData?.[2]?.result ? safeToBigInt(realtimeData[2].result) : BigInt(0);

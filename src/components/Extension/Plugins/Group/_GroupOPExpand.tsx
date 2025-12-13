@@ -111,6 +111,7 @@ const _GroupOPExpand: React.FC<GroupOPExpandProps> = ({ actionId, actionInfo, ex
     allowance,
     isPending: isPendingAllowance,
     error: errorAllowance,
+    refetch: refetchAllowance,
   } = useAllowance(stakeTokenAddress as `0x${string}`, account as `0x${string}`, extensionAddress);
 
   const isTokenApproved = allowance !== undefined && allowance >= additionalStakeBigInt;
@@ -140,8 +141,10 @@ const _GroupOPExpand: React.FC<GroupOPExpandProps> = ({ actionId, actionInfo, ex
   useEffect(() => {
     if (isConfirmedApprove) {
       toast.success('授权成功');
+      // 授权成功后，刷新授权额度
+      refetchAllowance();
     }
-  }, [isConfirmedApprove]);
+  }, [isConfirmedApprove, refetchAllowance]);
 
   // 追加质押
   const {

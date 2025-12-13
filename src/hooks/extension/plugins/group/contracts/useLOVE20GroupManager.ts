@@ -86,11 +86,7 @@ export const useActiveGroupIds = (tokenAddress: `0x${string}`, actionId: bigint)
 /**
  * Hook for activeGroupIdsAtIndex - 根据索引获取活跃组ID
  */
-export const useActiveGroupIdsAtIndex = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  index: bigint,
-) => {
+export const useActiveGroupIdsAtIndex = (tokenAddress: `0x${string}`, actionId: bigint, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupManagerAbi,
@@ -107,11 +103,7 @@ export const useActiveGroupIdsAtIndex = (
 /**
  * Hook for activeGroupIdsByOwner - 获取指定所有者的活跃组ID列表
  */
-export const useActiveGroupIdsByOwner = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  owner: `0x${string}`,
-) => {
+export const useActiveGroupIdsByOwner = (tokenAddress: `0x${string}`, actionId: bigint, owner: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupManagerAbi,
@@ -128,10 +120,7 @@ export const useActiveGroupIdsByOwner = (
 /**
  * Hook for activeGroupIdsCount - 获取活跃组ID数量
  */
-export const useActiveGroupIdsCount = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-) => {
+export const useActiveGroupIdsCount = (tokenAddress: `0x${string}`, actionId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupManagerAbi,
@@ -148,10 +137,7 @@ export const useActiveGroupIdsCount = (
 /**
  * Hook for calculateJoinMaxAmount - 计算最大加入数量
  */
-export const useCalculateJoinMaxAmount = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-) => {
+export const useCalculateJoinMaxAmount = (tokenAddress: `0x${string}`, actionId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupManagerAbi,
@@ -196,11 +182,7 @@ export const useConfig = (tokenAddress: `0x${string}`, actionId: bigint) => {
 /**
  * Hook for expandableInfo - 获取可扩展信息
  */
-export const useExpandableInfo = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  owner: `0x${string}`,
-) => {
+export const useExpandableInfo = (tokenAddress: `0x${string}`, actionId: bigint, owner: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupManagerAbi,
@@ -227,11 +209,7 @@ export const useExpandableInfo = (
 /**
  * Hook for groupInfo - 获取组信息
  */
-export const useGroupInfo = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  groupId: bigint,
-) => {
+export const useGroupInfo = (tokenAddress: `0x${string}`, actionId: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupManagerAbi,
@@ -279,11 +257,7 @@ export const useIsConfigSet = (tokenAddress: `0x${string}`, actionId: bigint) =>
 /**
  * Hook for isGroupActive - 检查组是否活跃
  */
-export const useIsGroupActive = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  groupId: bigint,
-) => {
+export const useIsGroupActive = (tokenAddress: `0x${string}`, actionId: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupManagerAbi,
@@ -300,11 +274,7 @@ export const useIsGroupActive = (
 /**
  * Hook for maxCapacityByOwner - 获取指定所有者的最大容量
  */
-export const useMaxCapacityByOwner = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  owner: `0x${string}`,
-) => {
+export const useMaxCapacityByOwner = (tokenAddress: `0x${string}`, actionId: bigint, owner: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupManagerAbi,
@@ -338,11 +308,7 @@ export const useTotalStaked = (tokenAddress: `0x${string}`, actionId: bigint) =>
 /**
  * Hook for totalStakedByOwner - 获取指定所有者的总质押数量
  */
-export const useTotalStakedByOwner = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  owner: `0x${string}`,
-) => {
+export const useTotalStakedByOwner = (tokenAddress: `0x${string}`, actionId: bigint, owner: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupManagerAbi,
@@ -378,6 +344,7 @@ export function useActivateGroup() {
     stakedAmount: bigint,
     groupMinJoinAmount: bigint,
     groupMaxJoinAmount: bigint,
+    groupMaxAccounts: bigint,
   ) => {
     console.log('提交 activateGroup 交易:', {
       tokenAddress,
@@ -387,9 +354,19 @@ export function useActivateGroup() {
       stakedAmount,
       groupMinJoinAmount,
       groupMaxJoinAmount,
+      groupMaxAccounts,
       isTukeMode,
     });
-    return await execute([tokenAddress, actionId, groupId, description, stakedAmount, groupMinJoinAmount, groupMaxJoinAmount]);
+    return await execute([
+      tokenAddress,
+      actionId,
+      groupId,
+      description,
+      stakedAmount,
+      groupMinJoinAmount,
+      groupMaxJoinAmount,
+      groupMaxAccounts,
+    ]);
   };
 
   // 错误日志记录
@@ -463,7 +440,12 @@ export function useExpandGroup() {
     'expandGroup',
   );
 
-  const expandGroup = async (tokenAddress: `0x${string}`, actionId: bigint, groupId: bigint, additionalStake: bigint) => {
+  const expandGroup = async (
+    tokenAddress: `0x${string}`,
+    actionId: bigint,
+    groupId: bigint,
+    additionalStake: bigint,
+  ) => {
     console.log('提交 expandGroup 交易:', { tokenAddress, actionId, groupId, additionalStake, isTukeMode });
     return await execute([tokenAddress, actionId, groupId, additionalStake]);
   };
@@ -568,6 +550,7 @@ export function useUpdateGroupInfo() {
     newDescription: string,
     newMinJoinAmount: bigint,
     newMaxJoinAmount: bigint,
+    newMaxAccounts: bigint,
   ) => {
     console.log('提交 updateGroupInfo 交易:', {
       tokenAddress,
@@ -576,9 +559,18 @@ export function useUpdateGroupInfo() {
       newDescription,
       newMinJoinAmount,
       newMaxJoinAmount,
+      newMaxAccounts,
       isTukeMode,
     });
-    return await execute([tokenAddress, actionId, groupId, newDescription, newMinJoinAmount, newMaxJoinAmount]);
+    return await execute([
+      tokenAddress,
+      actionId,
+      groupId,
+      newDescription,
+      newMinJoinAmount,
+      newMaxJoinAmount,
+      newMaxAccounts,
+    ]);
   };
 
   // 错误日志记录

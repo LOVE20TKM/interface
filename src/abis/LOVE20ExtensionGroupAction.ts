@@ -1673,12 +1673,12 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "error",
-    "name": "GroupCapacityFull",
+    "name": "GroupAccountsFull",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "GroupNotActive",
+    "name": "GroupCapacityFull",
     "inputs": []
   },
   {
