@@ -27,7 +27,7 @@ const ActionGroupOpPage: React.FC = () => {
   const { address: account } = useAccount();
 
   // 从 query 获取必要参数
-  const actionId = router.query.id ? BigInt(router.query.id as string) : undefined;
+  const actionId = router.query.actionId ? BigInt(router.query.actionId as string) : undefined;
   const groupIdBigInt = groupId ? BigInt(groupId as string) : undefined;
 
   // 当 op 为 activate 时，不需要 groupId，因为会从用户的 group NFT 中选择

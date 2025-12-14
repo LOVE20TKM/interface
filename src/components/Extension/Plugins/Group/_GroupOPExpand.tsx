@@ -62,6 +62,7 @@ const _GroupOPExpand: React.FC<GroupOPExpandProps> = ({ actionId, actionInfo, ex
     error: errorDetail,
   } = useExtensionGroupDetail({
     extensionAddress,
+    actionId,
     groupId,
   });
 

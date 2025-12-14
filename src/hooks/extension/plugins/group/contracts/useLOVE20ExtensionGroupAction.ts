@@ -1105,9 +1105,9 @@ export function useJoin(contractAddress: `0x${string}`) {
     'join',
   );
 
-  const join = async (groupId: bigint, amount: bigint) => {
-    console.log('提交 join 交易:', { contractAddress, groupId, amount, isTukeMode });
-    return await execute([groupId, amount]);
+  const join = async (groupId: bigint, amount: bigint, verificationInfos: string[] = []) => {
+    console.log('提交 join 交易:', { contractAddress, groupId, amount, verificationInfos, isTukeMode });
+    return await execute([groupId, amount, verificationInfos]);
   };
 
   // 错误日志记录

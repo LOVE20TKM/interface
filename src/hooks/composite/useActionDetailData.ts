@@ -4,7 +4,7 @@ import { LOVE20SubmitAbi } from '@/src/abis/LOVE20Submit';
 import { LOVE20JoinAbi } from '@/src/abis/LOVE20Join';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { ActionInfo } from '@/src/types/love20types';
-import { useActionParticipationWithExtension } from './useActionParticipationWithExtension';
+import { useActionParticipationAdapter } from './useActionParticipationAdapter';
 
 const SUBMIT_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_SUBMIT as `0x${string}`;
 const JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`;
@@ -143,11 +143,10 @@ export const useActionDetailData = ({
   // ==========================================
   // 步骤 2: 获取参与数据（自动判断扩展行动）
   // ==========================================
-  const participationData = useActionParticipationWithExtension(
+  const participationData = useActionParticipationAdapter(
     tokenAddress,
-    actionId,
+    basicData.actionInfo, // 传入 actionInfo 用于判断是否为扩展行动
     account,
-    basicData.actionInfo, // 传入 actionInfo 用于判断白名单地址
     {
       participantCount: basicData.participantCount,
       totalAmount: basicData.totalAmount,
@@ -155,6 +154,9 @@ export const useActionDetailData = ({
       isJoined: basicData.isJoined,
     },
   );
+
+  console.log('participationData:', participationData);
+  console.log('basicData:', basicData);
 
   // ==========================================
   // 步骤 3: 整合所有数据

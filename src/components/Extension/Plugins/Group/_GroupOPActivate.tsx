@@ -20,6 +20,7 @@ import { ActionInfo } from '@/src/types/love20types';
 import {
   useExpandableInfo,
   useActivateGroup,
+  useActiveGroupIdsByOwner,
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
 import { useAllowance, useBalanceOf, useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
@@ -69,6 +70,23 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
 
   // 如果传入了 groupId，直接使用；否则使用选中的 groupId
   const finalGroupId = groupId || selectedGroupId;
+
+  // 获取已经激活的 groupId 列表
+  const {
+    activeGroupIds: activatedGroupIds,
+    isPending: isPendingActivatedGroups,
+    error: errorActivatedGroups,
+  } = useActiveGroupIdsByOwner(
+    (token?.address as `0x${string}`) || ZERO_ADDRESS,
+    actionId,
+    (account || ZERO_ADDRESS) as `0x${string}`,
+  );
+
+  // 过滤掉已经激活的 groupId
+  const availableGroups = useMemo(() => {
+    if (!myGroups || !activatedGroupIds) return myGroups;
+    return myGroups.filter((group) => !activatedGroupIds.some((activatedId) => activatedId === group.tokenId));
+  }, [myGroups, activatedGroupIds]);
 
   // 获取链群行动整体参数（扩展基本常量 + 实时数据）
   const {
@@ -306,7 +324,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     if (isConfirmedActivate) {
       toast.success('链群激活成功');
       setTimeout(() => {
-        router.back();
+        router.push(`/extension/action_info/?id=${actionId.toString()}&symbol=${token?.symbol}&tab=public`);
       }, 1500);
     }
   }, [isConfirmedActivate, router]);
@@ -401,6 +419,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     if (errorApprove) handleContractError(errorApprove, 'token');
     if (errorActivate) handleContractError(errorActivate, 'extension');
     if (errorGroups) handleContractError(errorGroups, 'group');
+    if (errorActivatedGroups) handleContractError(errorActivatedGroups, 'extension');
   }, [
     errorActionParams,
     errorExpandable,
@@ -409,10 +428,16 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     errorApprove,
     errorActivate,
     errorGroups,
+    errorActivatedGroups,
     handleContractError,
   ]);
 
-  if (isPendingActionParams || isPendingExpandable || isPendingBalance || (!groupId && isPendingGroups)) {
+  if (
+    isPendingActionParams ||
+    isPendingExpandable ||
+    isPendingBalance ||
+    (!groupId && (isPendingGroups || isPendingActivatedGroups))
+  ) {
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
@@ -421,17 +446,21 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     );
   }
 
-  // 如果没有传入 groupId 且没有可用的 group
-  if (!groupId && (!myGroups || myGroups.length === 0)) {
+  // 如果没有传入 groupId 且没有可用的 group（考虑已过滤的可用链群）
+  if (!groupId && (!availableGroups || availableGroups.length === 0)) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500 mb-2">您目前没有可用的链群</p>
-        <p className="text-sm text-gray-600">
-          请先铸造一个链群ID，
-          <Link href="/extension/groupids/" className="text-blue-500 hover:text-blue-700 underline">
-            去铸造&gt;&gt;
-          </Link>
+        <p className="text-red-500 mb-2">
+          {myGroups && myGroups.length > 0 ? '您的所有链群已经激活，没有可用的链群' : '您目前没有可用的链群'}
         </p>
+        {(!myGroups || myGroups.length === 0) && (
+          <p className="text-sm text-gray-600">
+            请先铸造一个链群ID，
+            <Link href="/extension/groupids/" className="text-blue-500 hover:text-blue-700 underline">
+              去铸造&gt;&gt;
+            </Link>
+          </p>
+        )}
       </div>
     );
   }
@@ -460,7 +489,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                 <SelectValue placeholder="请选择要激活的链群" />
               </SelectTrigger>
               <SelectContent>
-                {myGroups?.map((group) => (
+                {availableGroups?.map((group) => (
                   <SelectItem key={group.tokenId.toString()} value={group.tokenId.toString()}>
                     {group.groupName || `链群 #${group.tokenId.toString()}`}
                   </SelectItem>
@@ -616,10 +645,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
 
         {/* 小贴士（算法 + 数值） */}
         <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="flex items-center gap-2 text-base font-bold text-blue-800 pb-2">
-            <HelpCircle className="w-4 h-4" />
-            小贴士
-          </div>
+          <div className="flex items-center gap-2 text-base font-bold text-blue-800 pb-2">💡小贴士</div>
           <div className="flex flex-col space-y-2 text-blue-700">
             <div className="text-base font-bold text-blue-700 pt-2 pb-1">权限：</div>
             <div>

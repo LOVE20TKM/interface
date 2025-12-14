@@ -15,10 +15,12 @@ import { Loader2 } from 'lucide-react';
 // ui components
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 
 // my hooks
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import { useJoin } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 import { useHandleContractError } from '@/src/lib/errorUtils';
@@ -36,6 +38,7 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 
 interface FormValues {
   joinAmount: string;
+  verificationInfos: string[]; // 验证信息数组
 }
 
 interface GroupJoinSubmitProps {
@@ -57,6 +60,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     error: errorDetail,
   } = useExtensionGroupDetail({
     extensionAddress,
+    actionId,
     groupId,
   });
 
@@ -79,6 +83,18 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     extensionAddress,
     !!token?.address && !!account,
   );
+
+  // 获取已填写的验证信息
+  const verificationKeys = actionInfo?.body?.verificationKeys as string[] | undefined;
+  const {
+    verificationInfos: existingVerificationInfos,
+    isPending: isPendingVerificationInfos,
+    error: errorVerificationInfos,
+  } = useAccountVerificationInfos({
+    extensionAddress,
+    account: account as `0x${string}`,
+    verificationKeys,
+  });
 
   // 授权状态
   const [isTokenApproved, setIsTokenApproved] = useState(false);
@@ -123,16 +139,28 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
           }`,
         },
       ),
+    // 验证信息数组（如果有验证字段）
+    verificationInfos: z.array(z.string().min(1, { message: '验证信息不能为空' })),
   });
 
   // 表单实例
+  const defaultVerificationInfos = verificationKeys ? verificationKeys.map(() => '') : [];
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       joinAmount: '',
+      verificationInfos: defaultVerificationInfos,
     },
     mode: 'onChange',
   });
+
+  // 当已有验证信息加载完成时，更新表单默认值
+  useEffect(() => {
+    if (!isPendingVerificationInfos && existingVerificationInfos && verificationKeys) {
+      const updatedInfos = verificationKeys.map((key, index) => existingVerificationInfos[index] || '');
+      form.setValue('verificationInfos', updatedInfos);
+    }
+  }, [isPendingVerificationInfos, existingVerificationInfos, verificationKeys, form]);
 
   // 授权
   const {
@@ -199,26 +227,22 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
   async function handleJoin(values: FormValues) {
     try {
-      await join(groupId, parseUnits(values.joinAmount) ?? BigInt(0));
+      // 加入时同时提交验证信息
+      await join(groupId, parseUnits(values.joinAmount) ?? BigInt(0), values.verificationInfos || []);
     } catch (error) {
       console.error('Join failed', error);
     }
   }
 
-  // 加入成功后跳转到第三步
+  // 加入成功后跳转到我的页面
   useEffect(() => {
     if (isConfirmedJoin) {
       toast.success('加入链群成功');
-      // 跳转到第三步：填写验证信息
       setTimeout(() => {
-        router.push(
-          `/acting/join?tab=update_verification_info&groupId=${groupId.toString()}&id=${actionId.toString()}&symbol=${
-            token?.symbol
-          }`,
-        );
+        router.push(`/my/myaction?id=${actionId.toString()}&symbol=${token?.symbol}`);
       }, 1000);
     }
-  }, [isConfirmedJoin, router, groupId, actionId, token?.symbol]);
+  }, [isConfirmedJoin, router, actionId, token?.symbol]);
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -228,7 +252,8 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     if (errorAllowance) handleContractError(errorAllowance, 'token');
     if (errorApprove) handleContractError(errorApprove, 'token');
     if (errorJoin) handleContractError(errorJoin, 'extension');
-  }, [errorDetail, errorBalance, errorAllowance, errorApprove, errorJoin, handleContractError]);
+    if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
+  }, [errorDetail, errorBalance, errorAllowance, errorApprove, errorJoin, errorVerificationInfos, handleContractError]);
 
   if (isPendingDetail) {
     return (
@@ -306,13 +331,11 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                     />
                   </FormControl>
                   <FormMessage />
-                  <FormDescription className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs text-gray-500">
-                        范围：{formatTokenAmount(groupDetail.actualMinJoinAmount, 2)} {token?.symbol} ~{' '}
-                        {formatTokenAmount(groupDetail.actualMaxJoinAmount, 2)} {token?.symbol}
-                      </span>
-                    </div>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span className="text-xs text-gray-500">
+                      参与范围：{formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
+                      {formatTokenAmount(groupDetail.actualMaxJoinAmount)}
+                    </span>
                     <Button
                       type="button"
                       variant="link"
@@ -329,16 +352,61 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                     >
                       最高
                     </Button>
-                  </FormDescription>
-                  <FormDescription>
-                    <span>
-                      余额：<span className="text-secondary">{formatTokenAmount(balance || BigInt(0), 4)}</span>{' '}
-                      {token?.symbol}
-                    </span>
-                  </FormDescription>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    我的余额：<span className="text-secondary">{formatTokenAmount(balance || BigInt(0), 4)}</span>{' '}
+                    {token?.symbol}
+                  </div>
                 </FormItem>
               )}
             />
+
+            {/* 验证信息字段 */}
+            {verificationKeys && verificationKeys.length > 0 && (
+              <>
+                <div className="pt-4 border-t border-gray-200">
+                  <h3 className="text-base font-medium text-gray-700 mb-3">验证信息</h3>
+                  {isPendingVerificationInfos ? (
+                    <div className="text-sm text-gray-500">加载已有验证信息...</div>
+                  ) : (
+                    <>
+                      {verificationKeys.map((key, index) => {
+                        const guide = (actionInfo.body.verificationInfoGuides as string[])?.[index] || '';
+                        return (
+                          <FormField
+                            key={key + index}
+                            control={form.control}
+                            name={`verificationInfos.${index}`}
+                            render={({ field }) => (
+                              <FormItem className="mb-4">
+                                <FormLabel className="text-greyscale-500 font-normal">{key}：</FormLabel>
+                                <FormControl>
+                                  {guide.length > 50 ? (
+                                    <Textarea
+                                      placeholder={guide || `请输入${key}`}
+                                      className="!ring-secondary-foreground min-h-[100px]"
+                                      {...field}
+                                    />
+                                  ) : (
+                                    <Input
+                                      placeholder={guide || `请输入${key}`}
+                                      className="!ring-secondary-foreground"
+                                      {...field}
+                                    />
+                                  )}
+                                </FormControl>
+                                {guide && <FormDescription className="text-xs">{guide}</FormDescription>}
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        );
+                      })}
+                    </>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* 操作按钮 */}
             <div className="flex justify-center space-x-4 pt-2">
@@ -386,11 +454,12 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
         {/* 提示信息 */}
         <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 温馨提示</div>
+          <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
-            <div>• 加入后需要填写验证信息（如果行动需要）</div>
+            {verificationKeys && verificationKeys.length > 0 && <div>• 验证信息用于链群服务者验证您的行动完成情况</div>}
             <div>• 您的激励将基于链群服务者的验证打分</div>
             <div>• 可以随时取回参与的代币</div>
+            {verificationKeys && verificationKeys.length > 0 && <div>• 加入后可以随时修改验证信息</div>}
           </div>
         </div>
       </div>

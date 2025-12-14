@@ -11,6 +11,7 @@ export * from './useMyJoinedExtensionActions';
 export * from './useExtensionParticipationData';
 export * from './useIsExtensionContract';
 export * from './useExtensionAddressOfAction';
+export * from './useAccountVerificationInfos';
 
 export { useGroupNameValidation } from './useGroupNameValidation';
 export { useMyGroups } from './useMyGroups';

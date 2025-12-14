@@ -4,6 +4,7 @@
 export * from './useExtensionActionConstCache';
 export * from './useExtensionActionParam';
 export * from './useExtensionGroupsOfAction';
+export * from './useExtensionGroupsOfAccount';
 export * from './useExtensionGroupDetail';
 export * from './useDistrustVotesOfLastRounds';
 export * from './useDistrustVotesOfGroupOwner';

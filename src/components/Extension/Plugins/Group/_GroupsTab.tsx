@@ -26,7 +26,11 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
   const { token } = useContext(TokenContext) || {};
 
   // 获取链群列表
-  const { groups, isPending, error } = useExtensionGroupsOfAction({ extensionAddress, actionId });
+  const { groups, isPending, error } = useExtensionGroupsOfAction({
+    extensionAddress,
+    tokenAddress: token?.address,
+    actionId,
+  });
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
@@ -37,7 +41,9 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
 
   // 跳转到链群主页
   const handleGroupClick = (groupId: bigint) => {
-    router.push(`/extension/group?groupId=${groupId.toString()}`);
+    router.push(
+      `/extension/group?groupId=${groupId.toString()}&actionId=${actionId.toString()}&symbol=${token?.symbol}`,
+    );
   };
 
   if (isPending) {
@@ -72,39 +78,34 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                {/* 链群ID/名称 */}
                 <div className="font-semibold text-gray-800 mb-2">
                   #{group.groupId.toString()} {group.groupName}
                 </div>
 
-                {/* 服务者 */}
                 <div className="text-sm text-gray-600 mb-2 flex items-center gap-2">
                   <span className="text-gray-500">服务者:</span>
                   <AddressWithCopyButton address={group.owner} showCopyButton={true} />
                 </div>
 
-                {/* 统计数据 */}
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500">地址数:</span>
-                    <span className="font-medium text-gray-800">{group.accountCount.toString()}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500">代币数:</span>
-                    <span className="font-medium text-secondary">
-                      {formatTokenAmount(group.totalJoinedAmount, 2)} {token?.symbol}
-                    </span>
-                  </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  <span>参与代币范围: </span>
+                  <span>
+                    {formatTokenAmount(group.actualMinJoinAmount)} ~
+                    {group.actualMaxJoinAmount > BigInt(0) ? formatTokenAmount(group.actualMaxJoinAmount) : '不限'}{' '}
+                  </span>
                 </div>
 
-                {/* 参与范围 */}
-                <div className="text-xs text-gray-500 mt-2">
-                  <span>参与范围: </span>
-                  <span>
-                    {formatTokenAmount(group.minJoinAmount, 2)} ~
-                    {group.maxJoinAmount > BigInt(0) ? formatTokenAmount(group.maxJoinAmount, 2) : '不限'}{' '}
-                    {token?.symbol}
-                  </span>
+                <div className="flex items-center gap-4 text-xs text-gray-500 ">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500">地址数:</span>
+                    <span className="">{group.accountCount.toString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="">代币数:</span>
+                    <span className="">
+                      {formatTokenAmount(group.totalJoinedAmount)} {token?.symbol}
+                    </span>
+                  </div>
                 </div>
               </div>
 

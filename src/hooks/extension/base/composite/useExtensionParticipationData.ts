@@ -72,9 +72,10 @@ export function useExtensionParticipationData(
     const contractCalls = [
       // 1. 查询参与者数量（公共数据，始终查询）
       {
-        address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        address: EXTENSION_CENTER_ADDRESS,
+        abi: LOVE20ExtensionCenterAbi,
         functionName: 'accountsCount' as const,
+        args: [tokenAddress, actionId],
       },
       // 2. 查询总参与金额（公共数据，始终查询）
       {
@@ -110,6 +111,9 @@ export function useExtensionParticipationData(
       enabled: !!extensionAddress,
     },
   });
+
+  console.log('data:', data);
+  console.log('contracts:', contracts);
 
   // ==========================================
   // 解析返回数据

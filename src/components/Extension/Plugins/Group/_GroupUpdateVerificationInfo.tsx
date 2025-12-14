@@ -19,8 +19,8 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 
 // my hooks
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import {
-  useVerificationInfo,
   useUpdateVerificationInfo,
   useJoinInfo,
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
@@ -62,6 +62,7 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     error: errorDetail,
   } = useExtensionGroupDetail({
     extensionAddress,
+    actionId,
     groupId,
   });
 
@@ -88,34 +89,21 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     }));
   }, [fullActionInfo]);
 
-  // 获取已填写的验证信息
-  const [existingVerificationInfo, setExistingVerificationInfo] = useState<Record<string, string>>({});
-  const [isLoadingExisting, setIsLoadingExisting] = useState(true);
+  // 获取验证字段的 keys
+  const verificationKeys = useMemo(() => {
+    return verificationFields.map((field) => field.key);
+  }, [verificationFields]);
 
-  useEffect(() => {
-    const loadExistingInfo = async () => {
-      if (!extensionAddress || !account || verificationFields.length === 0) {
-        setIsLoadingExisting(false);
-        return;
-      }
-
-      try {
-        const infoMap: Record<string, string> = {};
-
-        // 这里需要遍历每个验证字段，调用 verificationInfo 获取已填写的值
-        // 由于 useVerificationInfo 是单个调用，我们需要在组件外部处理
-        // 为了简化，这里先设置为空，实际使用时需要批量获取
-
-        setExistingVerificationInfo(infoMap);
-      } catch (error) {
-        console.error('Failed to load existing verification info:', error);
-      } finally {
-        setIsLoadingExisting(false);
-      }
-    };
-
-    loadExistingInfo();
-  }, [extensionAddress, account, verificationFields]);
+  // 使用 useAccountVerificationInfos 批量获取已填写的验证信息
+  const {
+    verificationInfos: existingVerificationInfos,
+    isPending: isPendingVerificationInfos,
+    error: errorVerificationInfos,
+  } = useAccountVerificationInfos({
+    extensionAddress,
+    account: account as `0x${string}`,
+    verificationKeys: verificationKeys.length > 0 ? verificationKeys : undefined,
+  });
 
   // 动态构造 zod schema
   const formSchema = useMemo(() => {
@@ -134,7 +122,7 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: verificationFields.reduce((acc, field) => {
-      acc[field.key] = existingVerificationInfo[field.key] || '';
+      acc[field.key] = '';
       return acc;
     }, {} as Record<string, string>),
     mode: 'onChange',
@@ -142,14 +130,15 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
 
   // 当已有验证信息加载完成时，更新表单默认值
   useEffect(() => {
-    if (!isLoadingExisting && Object.keys(existingVerificationInfo).length > 0) {
-      verificationFields.forEach((field) => {
-        if (existingVerificationInfo[field.key]) {
-          form.setValue(field.key, existingVerificationInfo[field.key]);
+    if (!isPendingVerificationInfos && existingVerificationInfos && verificationFields.length > 0) {
+      verificationFields.forEach((field, index) => {
+        const existingValue = existingVerificationInfos[index];
+        if (existingValue) {
+          form.setValue(field.key, existingValue);
         }
       });
     }
-  }, [isLoadingExisting, existingVerificationInfo, verificationFields, form]);
+  }, [isPendingVerificationInfos, existingVerificationInfos, verificationFields, form]);
 
   // 更新验证信息
   const {
@@ -187,9 +176,10 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     if (errorJoinInfo) handleContractError(errorJoinInfo, 'extension');
     if (errorActionInfo) handleContractError(errorActionInfo, 'submit');
     if (errorUpdate) handleContractError(errorUpdate, 'extension');
-  }, [errorDetail, errorJoinInfo, errorActionInfo, errorUpdate, handleContractError]);
+    if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
+  }, [errorDetail, errorJoinInfo, errorActionInfo, errorUpdate, errorVerificationInfos, handleContractError]);
 
-  if (isPendingDetail || isPendingActionInfo || isLoadingExisting) {
+  if (isPendingDetail || isPendingActionInfo || isPendingVerificationInfos) {
     return (
       <div className="flex flex-col items-center px-4 pt-6">
         <LoadingIcon />
@@ -284,7 +274,7 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
                         />
                       )}
                     </FormControl>
-                    {field.guide && <FormDescription className="text-xs">{field.guide}</FormDescription>}
+                    {field.guide && <FormDescription className="text-xs">提示信息：{field.guide}</FormDescription>}
                     <FormMessage />
                   </FormItem>
                 )}

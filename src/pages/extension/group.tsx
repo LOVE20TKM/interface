@@ -21,7 +21,7 @@ const ActionGroupPage: React.FC = () => {
   const { address: account } = useAccount();
 
   // 从 query 获取必要参数
-  const actionId = router.query.id ? BigInt(router.query.id as string) : undefined;
+  const actionId = router.query.actionId ? BigInt(router.query.actionId as string) : undefined;
   const groupIdBigInt = groupId ? BigInt(groupId as string) : undefined;
 
   // 获取行动信息

@@ -42,6 +42,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     error: errorDetail,
   } = useExtensionGroupDetail({
     extensionAddress,
+    actionId,
     groupId,
   });
 

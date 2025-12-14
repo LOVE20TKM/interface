@@ -28,6 +28,7 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
   // 获取链群列表
   const { groups, isPending, error } = useExtensionGroupsOfAction({
     extensionAddress,
+    tokenAddress: token?.address,
     actionId,
   });
 
@@ -86,7 +87,8 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
                   <span className="font-semibold text-gray-800">
                     #{group.groupId.toString()} {group.groupName}
                   </span>
-                  <span className="text-xs text-gray-500">•</span>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm text-gray-600">服务者:</span>
                   <AddressWithCopyButton address={group.owner} showCopyButton={true} />
                 </div>
@@ -94,24 +96,20 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
                 {/* 第二行：参与代币范围 */}
                 <div className="text-sm text-gray-600">
                   <span className="text-gray-500">参与代币范围：</span>
-                  <span className="font-medium text-secondary">
-                    {formatTokenAmount(group.minJoinAmount, 2)} {token?.symbol}
-                  </span>
+                  <span className="font-medium text-secondary">{formatTokenAmount(group.actualMinJoinAmount)}</span>
                   <span className="mx-1">~</span>
                   <span className="font-medium text-secondary">
-                    {group.maxJoinAmount > BigInt(0)
-                      ? `${formatTokenAmount(group.maxJoinAmount, 2)} ${token?.symbol}`
-                      : '不限'}
+                    {group.actualMaxJoinAmount > BigInt(0) ? `${formatTokenAmount(group.actualMaxJoinAmount)}` : '不限'}
                   </span>
                 </div>
 
                 {/* 第三行：参与情况 */}
                 <div className="text-xs text-gray-500 mt-1">
-                  <span>{group.accountCount.toString()} 个地址</span>
+                  <span>地址: {group.accountCount.toString()} 个</span>
                   <span className="mx-1">•</span>
-                  <span>
-                    {formatTokenAmount(group.totalJoinedAmount, 2)} {token?.symbol}
-                  </span>
+                  <span>参与代币: {formatTokenAmount(group.totalJoinedAmount)}</span>
+                  <span className="mx-1">•</span>
+                  <span>剩余容量: {formatTokenAmount(group.capacity - group.totalJoinedAmount)}</span>
                 </div>
               </div>
 

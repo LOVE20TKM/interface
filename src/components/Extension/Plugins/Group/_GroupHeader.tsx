@@ -44,6 +44,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     error: errorDetail,
   } = useExtensionGroupDetail({
     extensionAddress,
+    actionId,
     groupId,
   });
 

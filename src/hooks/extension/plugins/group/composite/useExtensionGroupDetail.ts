@@ -31,14 +31,11 @@ export interface GroupDetailInfo {
   actionMaxJoinAmount: bigint;
   actualMinJoinAmount: bigint;
   actualMaxJoinAmount: bigint;
-  // 容量信息
-  leftCapacity: bigint;
-  currentCapacity: bigint;
-  maxCapacity: bigint;
 }
 
 export interface UseExtensionGroupDetailParams {
   extensionAddress: `0x${string}` | undefined;
+  actionId: bigint | undefined;
   groupId: bigint | undefined;
 }
 
@@ -53,37 +50,32 @@ export interface UseExtensionGroupDetailResult {
  *
  * 功能：
  * 1. 获取链群基本信息
- * 2. 获取链群主的容量信息
- * 3. 计算实际最大/最小参与代币量
- * 4. 计算还差多少达到链群容量上限
+ * 2. 计算实际最大/最小参与代币量
  */
 export const useExtensionGroupDetail = ({
   extensionAddress,
+  actionId,
   groupId,
 }: UseExtensionGroupDetailParams): UseExtensionGroupDetailResult => {
   // 获取常量配置
-  const { constants, isPending: isConstPending, error: constError } = useExtensionActionConstCache({ extensionAddress });
+  const {
+    constants,
+    isPending: isConstPending,
+    error: constError,
+  } = useExtensionActionConstCache({ extensionAddress, actionId });
 
   // 获取 GroupManager 合约地址
   const { groupManagerAddress } = useGroupManagerAddress(extensionAddress as `0x${string}`);
 
+  // 从 constants 中获取 tokenAddress
+  const tokenAddress = constants?.tokenAddress;
+
   // 批量获取链群详细信息
   const detailContracts = useMemo(() => {
-    if (!groupManagerAddress || !extensionAddress || groupId === undefined) return [];
+    if (!groupManagerAddress || !extensionAddress || !tokenAddress || actionId === undefined || groupId === undefined)
+      return [];
 
     return [
-      // 获取tokenAddress
-      {
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'tokenAddress',
-      },
-      // 获取actionId
-      {
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'actionId',
-      },
       // 获取群组名称
       {
         address: GROUP_CONTRACT_ADDRESS,
@@ -100,9 +92,10 @@ export const useExtensionGroupDetail = ({
       },
       // 获取行动最大参与代币量
       {
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        address: groupManagerAddress,
+        abi: LOVE20GroupManagerAbi,
         functionName: 'calculateJoinMaxAmount',
+        args: [tokenAddress, actionId],
       },
       // 获取总加入数量（因为GroupManager的groupInfo不返回totalJoinedAmount）
       {
@@ -110,8 +103,15 @@ export const useExtensionGroupDetail = ({
         abi: LOVE20ExtensionGroupActionAbi,
         functionName: 'totalJoinedAmount',
       },
+      // 获取群组信息
+      {
+        address: groupManagerAddress,
+        abi: LOVE20GroupManagerAbi,
+        functionName: 'groupInfo',
+        args: [tokenAddress, actionId, groupId],
+      },
     ];
-  }, [groupManagerAddress, extensionAddress, groupId]);
+  }, [groupManagerAddress, extensionAddress, tokenAddress, actionId, groupId]);
 
   const {
     data: detailData,
@@ -120,69 +120,28 @@ export const useExtensionGroupDetail = ({
   } = useReadContracts({
     contracts: detailContracts as any,
     query: {
-      enabled: !!groupManagerAddress && !!extensionAddress && groupId !== undefined && detailContracts.length > 0,
+      enabled:
+        !!groupManagerAddress &&
+        !!extensionAddress &&
+        !!tokenAddress &&
+        actionId !== undefined &&
+        groupId !== undefined &&
+        detailContracts.length > 0,
     },
   });
 
-  // 获取tokenAddress, actionId和owner地址，用于第二次批量调用
-  const tokenAddress = useMemo(() => {
-    if (!detailData || !detailData[0]?.result) return undefined;
-    return detailData[0].result as `0x${string}`;
-  }, [detailData]);
-
-  const actionId = useMemo(() => {
-    if (!detailData || !detailData[1]?.result) return undefined;
-    return safeToBigInt(detailData[1].result);
-  }, [detailData]);
-
-  const owner = useMemo(() => {
-    if (!detailData || !detailData[3]?.result) return undefined;
-    return detailData[3].result as `0x${string}`;
-  }, [detailData]);
-
-  // 第二次批量调用：获取groupInfo和expandableInfo
-  const infoContracts = useMemo(() => {
-    if (!groupManagerAddress || !tokenAddress || actionId === undefined || !owner || groupId === undefined) return [];
-
-    return [
-      // 获取群组信息
-      {
-        address: groupManagerAddress,
-        abi: LOVE20GroupManagerAbi,
-        functionName: 'groupInfo',
-        args: [tokenAddress, actionId, groupId],
-      },
-      // 获取容量信息
-      {
-        address: groupManagerAddress,
-        abi: LOVE20GroupManagerAbi,
-        functionName: 'expandableInfo',
-        args: [tokenAddress, actionId, owner],
-      },
-    ];
-  }, [groupManagerAddress, tokenAddress, actionId, owner, groupId]);
-
-  const {
-    data: infoData,
-    isPending: isInfoPending,
-    error: infoError,
-  } = useReadContracts({
-    contracts: infoContracts as any,
-    query: {
-      enabled: !!groupManagerAddress && !!tokenAddress && actionId !== undefined && !!owner && infoContracts.length > 0,
-    },
-  });
+  // console.log('Group Detail Data:', detailData);
 
   // 解析数据
   const groupDetail = useMemo(() => {
-    if (!detailData || !infoData || !constants || detailData.length < 6) return undefined;
+    if (!detailData || !constants || detailData.length < 5) return undefined;
 
-    const groupName = detailData[2]?.result as string | undefined;
-    const ownerAddress = detailData[3]?.result as `0x${string}` | undefined;
-    const actionMaxJoinAmount = safeToBigInt(detailData[4]?.result);
-    const totalJoinedAmount = safeToBigInt(detailData[5]?.result);
+    const groupName = detailData[0]?.result as string | undefined;
+    const ownerAddress = detailData[1]?.result as `0x${string}` | undefined;
+    const actionMaxJoinAmount = safeToBigInt(detailData[2]?.result);
+    const totalJoinedAmount = safeToBigInt(detailData[3]?.result);
 
-    const groupInfoData = infoData[0]?.result as
+    const groupInfoData = detailData[4]?.result as
       | [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint, bigint]
       | undefined;
 
@@ -198,12 +157,6 @@ export const useExtensionGroupDetail = ({
     const isActive = groupInfoData[6];
     const activatedRound = safeToBigInt(groupInfoData[7]);
     const deactivatedRound = safeToBigInt(groupInfoData[8]);
-
-    // 解析 expandableInfo
-    const expandableInfo = infoData?.[1]?.result as [bigint, bigint, bigint, bigint, bigint] | undefined;
-    const currentCapacity = expandableInfo ? safeToBigInt(expandableInfo[0]) : BigInt(0);
-    const maxCapacity = expandableInfo ? safeToBigInt(expandableInfo[1]) : BigInt(0);
-    const leftCapacity = maxCapacity > currentCapacity ? maxCapacity - currentCapacity : BigInt(0);
 
     // 获取行动最小参与量
     const actionMinJoinAmount = constants.minJoinAmount;
@@ -241,15 +194,12 @@ export const useExtensionGroupDetail = ({
       actionMaxJoinAmount,
       actualMinJoinAmount,
       actualMaxJoinAmount,
-      leftCapacity,
-      currentCapacity,
-      maxCapacity,
     };
-  }, [detailData, infoData, constants]);
+  }, [detailData, constants]);
 
   return {
     groupDetail: groupDetail as GroupDetailInfo | undefined,
-    isPending: isConstPending || isDetailPending || isInfoPending,
-    error: constError || detailError || infoError,
+    isPending: isConstPending || isDetailPending,
+    error: constError || detailError,
   };
 };

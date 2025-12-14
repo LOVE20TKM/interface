@@ -72,7 +72,7 @@ export const useExtensionActionParam = ({
     constants,
     isPending: isConstPending,
     error: constError,
-  } = useExtensionActionConstCache({ extensionAddress });
+  } = useExtensionActionConstCache({ extensionAddress, actionId });
 
   // 一次批量读取：joinMaxAmount + totalSupply + govVotesNum
   // tokenAddress 属于扩展基本常量，由 useExtensionActionConstCache 提供

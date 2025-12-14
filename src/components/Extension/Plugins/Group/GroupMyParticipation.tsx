@@ -13,11 +13,11 @@ import { Button } from '@/components/ui/button';
 
 // my hooks
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import {
   useJoinInfo,
   useTotalJoinedAmountByRound,
   useExit,
-  useVerificationInfo,
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useHandleContractError } from '@/src/lib/errorUtils';
@@ -33,6 +33,9 @@ import { ActionInfo } from '@/src/types/love20types';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+
+// my utils
+import { LinkIfUrl } from '@/src/lib/stringUtils';
 
 interface GroupMyParticipationProps {
   actionId: bigint;
@@ -64,6 +67,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     error: errorDetail,
   } = useExtensionGroupDetail({
     extensionAddress,
+    actionId,
     groupId: groupId || BigInt(0),
   });
 
@@ -73,6 +77,18 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     isPending: isPendingTotalAmount,
     error: errorTotalAmount,
   } = useTotalJoinedAmountByRound(extensionAddress, currentRound || BigInt(0));
+
+  // 获取验证信息
+  const verificationKeys = actionInfo?.body?.verificationKeys as string[] | undefined;
+  const {
+    verificationInfos,
+    isPending: isPendingVerificationInfos,
+    error: errorVerificationInfos,
+  } = useAccountVerificationInfos({
+    extensionAddress,
+    account: account as `0x${string}`,
+    verificationKeys,
+  });
 
   // 计算是否已加入
   const isJoined = joinedAmount && joinedAmount > BigInt(0);
@@ -118,7 +134,16 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     if (errorDetail) handleContractError(errorDetail, 'extension');
     if (errorTotalAmount) handleContractError(errorTotalAmount, 'extension');
     if (errorExit) handleContractError(errorExit, 'extension');
-  }, [errorRound, errorJoinInfo, errorDetail, errorTotalAmount, errorExit, handleContractError]);
+    if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
+  }, [
+    errorRound,
+    errorJoinInfo,
+    errorDetail,
+    errorTotalAmount,
+    errorExit,
+    errorVerificationInfos,
+    handleContractError,
+  ]);
 
   if (isPendingRound || isPendingJoinInfo || isPendingDetail || isPendingTotalAmount) {
     return (
@@ -169,7 +194,11 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
       {groupDetail && (
         <div className="w-full mb-6">
           <div className="text-sm text-gray-600 mb-2 font-medium">所属链群</div>
-          <Link href={`/extension/group?groupId=${groupId?.toString()}`}>
+          <Link
+            href={`/extension/group?groupId=${groupId?.toString()}&actionId=${actionId.toString()}&symbol=${
+              token?.symbol
+            }`}
+          >
             <div className="border border-gray-200 rounded-lg p-4 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -189,10 +218,10 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
       )}
 
       {/* 验证信息 */}
-      {actionInfo?.body?.verificationKeys && (actionInfo.body.verificationKeys as string[]).length > 0 && (
+      {verificationKeys && verificationKeys.length > 0 && (
         <div className="w-full mb-6">
           <div className="text-sm text-gray-600 mb-2 font-medium flex items-center justify-between">
-            <span>验证信息</span>
+            <span>我提供的验证信息</span>
             <Button
               variant="link"
               size="sm"
@@ -210,14 +239,24 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
             </Button>
           </div>
           <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-            <div className="text-sm text-gray-600">
-              {(actionInfo.body.verificationKeys as string[]).map((key) => (
-                <div key={key} className="mb-2 last:mb-0">
-                  <span className="font-medium">{key}：</span>
-                  <span className="text-gray-500">已填写</span>
-                </div>
-              ))}
-            </div>
+            {isPendingVerificationInfos ? (
+              <div className="text-sm text-gray-500">加载中...</div>
+            ) : (
+              <div className="space-y-3">
+                {verificationKeys.map((key, index) => (
+                  <div key={key} className="last:mb-0">
+                    <div className="text-sm font-semibold text-gray-700 mb-1">{key}</div>
+                    <div className="text-base text-gray-800">
+                      {verificationInfos[index] ? (
+                        <LinkIfUrl text={verificationInfos[index] || ''} />
+                      ) : (
+                        <span className="text-gray-400">未填写</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

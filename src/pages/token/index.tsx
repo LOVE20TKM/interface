@@ -167,6 +167,10 @@ const TokenPage = () => {
     MintViewer: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_MINTVIEWER,
     Hub: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB,
     ExtensionCenter: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER,
+    ExtensionGroupManager: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER,
+    ExtensionGroupDistrust: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_DISTRUST,
+    ExtensionGroupActionFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_ACTION,
+    ExtensionGroupServiceFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_SERVICE,
     StakeLpExtensionFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP,
   } as const;
 
@@ -469,11 +473,15 @@ const TokenPage = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
-                      <AddressItem name="ExtensionCenter" address={constantsAddresses.ExtensionCenter} />
+                      <AddressItem name="Center" address={constantsAddresses.ExtensionCenter} />
+                      <AddressItem name="GroupManager" address={constantsAddresses.ExtensionGroupManager} />
+                      <AddressItem name="GroupDistrust" address={constantsAddresses.ExtensionGroupDistrust} />
+                      <AddressItem name="GroupActionFactory" address={constantsAddresses.ExtensionGroupActionFactory} />
                       <AddressItem
-                        name="StakeLpExtensionFactory"
-                        address={constantsAddresses.StakeLpExtensionFactory}
+                        name="GroupServiceFactory"
+                        address={constantsAddresses.ExtensionGroupServiceFactory}
                       />
+                      <AddressItem name="StakeLpFactory" address={constantsAddresses.StakeLpExtensionFactory} />
                     </CardContent>
                   </Card>
                 </div>

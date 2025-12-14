@@ -31,7 +31,11 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
   const { token } = useContext(TokenContext) || {};
 
   // 获取链群列表
-  const { groups, isPending, error } = useExtensionGroupsOfAction({ extensionAddress, actionId });
+  const { groups, isPending, error } = useExtensionGroupsOfAction({
+    extensionAddress,
+    tokenAddress: token?.address,
+    actionId,
+  });
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -121,9 +125,7 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
                 </div>
 
                 {/* 统计 */}
-                <div className="text-xs text-gray-500 mt-1">
-                  管理 {ownerGroup.groups.length} 个链群
-                </div>
+                <div className="text-xs text-gray-500 mt-1">管理 {ownerGroup.groups.length} 个链群</div>
               </div>
             </div>
           </div>

@@ -80,6 +80,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     error: errorGroups,
   } = useExtensionGroupsOfAction({
     extensionAddress,
+    tokenAddress: token?.address,
     actionId,
   });
 

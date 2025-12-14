@@ -8,6 +8,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 
 export interface ExtensionActionConst {
   tokenAddress: `0x${string}`;
+  actionId: bigint;
   minGovVoteRatioBps: bigint; // 最小治理票占比
   capacityMultiplier: bigint; // 容量倍数
   stakeTokenAddress: `0x${string}`;
@@ -18,6 +19,7 @@ export interface ExtensionActionConst {
 
 export interface UseExtensionActionConstCacheParams {
   extensionAddress: `0x${string}` | undefined;
+  actionId: bigint | undefined;
 }
 
 export interface UseExtensionActionConstCacheResult {
@@ -36,13 +38,14 @@ export interface UseExtensionActionConstCacheResult {
  */
 export const useExtensionActionConstCache = ({
   extensionAddress,
+  actionId,
 }: UseExtensionActionConstCacheParams): UseExtensionActionConstCacheResult => {
   // 尝试从缓存读取
   const cachedData = useMemo(() => {
-    if (!extensionAddress) return null;
+    if (!extensionAddress || actionId === undefined) return null;
 
     try {
-      const cacheKey = `extension_const_${extensionAddress}`;
+      const cacheKey = `extension_const_${extensionAddress}_${actionId.toString()}`;
       const cached = localStorage.getItem(cacheKey);
 
       if (cached) {
@@ -53,6 +56,7 @@ export const useExtensionActionConstCache = ({
         if (now - cacheTime < 24 * 60 * 60 * 1000) {
           return {
             tokenAddress: parsed.tokenAddress as `0x${string}`,
+            actionId: BigInt(parsed.actionId),
             minGovVoteRatioBps: BigInt(parsed.minGovVoteRatioBps),
             capacityMultiplier: BigInt(parsed.capacityMultiplier),
             stakeTokenAddress: parsed.stakeTokenAddress as `0x${string}`,
@@ -67,11 +71,11 @@ export const useExtensionActionConstCache = ({
     }
 
     return null;
-  }, [extensionAddress]);
+  }, [extensionAddress, actionId]);
 
   // 构建批量查询合约
   const contracts = useMemo(() => {
-    if (!extensionAddress || cachedData) return [];
+    if (!extensionAddress || actionId === undefined || cachedData) return [];
 
     return [
       {
@@ -110,7 +114,7 @@ export const useExtensionActionConstCache = ({
         functionName: 'MIN_JOIN_AMOUNT',
       },
     ];
-  }, [extensionAddress, cachedData]);
+  }, [extensionAddress, actionId, cachedData]);
 
   // 批量读取合约数据
   const {
@@ -120,7 +124,7 @@ export const useExtensionActionConstCache = ({
   } = useReadContracts({
     contracts: contracts as any,
     query: {
-      enabled: !!extensionAddress && contracts.length > 0,
+      enabled: !!extensionAddress && actionId !== undefined && contracts.length > 0,
     },
   });
 
@@ -129,11 +133,15 @@ export const useExtensionActionConstCache = ({
     // 如果有缓存数据，直接返回
     if (cachedData) return cachedData;
 
+    // 如果 actionId 未定义，返回 undefined
+    if (actionId === undefined) return undefined;
+
     // 如果没有合约数据，返回 undefined
     if (!contractData || contractData.length < 7) return undefined;
 
     return {
       tokenAddress: contractData[0]?.result as `0x${string}`,
+      actionId: actionId,
       minGovVoteRatioBps: safeToBigInt(contractData[1]?.result),
       capacityMultiplier: safeToBigInt(contractData[2]?.result),
       stakeTokenAddress: contractData[3]?.result as `0x${string}` | undefined,
@@ -141,16 +149,17 @@ export const useExtensionActionConstCache = ({
       maxJoinAmountMultiplier: safeToBigInt(contractData[5]?.result),
       minJoinAmount: safeToBigInt(contractData[6]?.result),
     };
-  }, [contractData, cachedData]);
+  }, [contractData, cachedData, actionId]);
 
   // 缓存数据到 LocalStorage
   useEffect(() => {
-    if (!extensionAddress || !constants || cachedData) return;
+    if (!extensionAddress || actionId === undefined || !constants || cachedData) return;
 
     try {
-      const cacheKey = `extension_const_${extensionAddress}`;
+      const cacheKey = `extension_const_${extensionAddress}_${actionId.toString()}`;
       const cacheValue = {
         tokenAddress: constants.tokenAddress,
+        actionId: constants.actionId?.toString(),
         minGovVoteRatioBps: constants.minGovVoteRatioBps?.toString(),
         capacityMultiplier: constants.capacityMultiplier?.toString(),
         stakeTokenAddress: constants.stakeTokenAddress,
@@ -163,7 +172,7 @@ export const useExtensionActionConstCache = ({
     } catch (error) {
       console.error('Failed to save to cache:', error);
     }
-  }, [constants, extensionAddress, cachedData]);
+  }, [constants, extensionAddress, actionId, cachedData]);
 
   return {
     constants: constants as ExtensionActionConst | undefined,
