@@ -21,6 +21,7 @@ export interface GroupDetailInfo {
   stakedAmount: bigint;
   capacity: bigint;
   totalJoinedAmount: bigint;
+  remainingCapacity: bigint; // 剩余容量
   isActive: boolean;
   activatedRound: bigint;
   deactivatedRound: bigint;
@@ -97,11 +98,12 @@ export const useExtensionGroupDetail = ({
         functionName: 'calculateJoinMaxAmount',
         args: [tokenAddress, actionId],
       },
-      // 获取总加入数量（因为GroupManager的groupInfo不返回totalJoinedAmount）
+      // 获取总加入数量
       {
         address: extensionAddress,
         abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'totalJoinedAmount',
+        functionName: 'totalJoinedAmountByGroupId',
+        args: [groupId],
       },
       // 获取群组信息
       {
@@ -142,7 +144,7 @@ export const useExtensionGroupDetail = ({
     const totalJoinedAmount = safeToBigInt(detailData[3]?.result);
 
     const groupInfoData = detailData[4]?.result as
-      | [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint, bigint]
+      | [bigint, string, bigint, bigint, bigint, bigint, bigint, boolean, bigint, bigint]
       | undefined;
 
     if (!groupInfoData || !groupName || !ownerAddress) return undefined;
@@ -154,9 +156,11 @@ export const useExtensionGroupDetail = ({
     const capacity = safeToBigInt(groupInfoData[3]);
     const groupMinJoinAmount = safeToBigInt(groupInfoData[4]);
     const groupMaxJoinAmount = safeToBigInt(groupInfoData[5]);
-    const isActive = groupInfoData[6];
-    const activatedRound = safeToBigInt(groupInfoData[7]);
-    const deactivatedRound = safeToBigInt(groupInfoData[8]);
+    const groupMaxAccounts = safeToBigInt(groupInfoData[6]);
+    const isActive = groupInfoData[7];
+    const activatedRound = safeToBigInt(groupInfoData[8]);
+    const deactivatedRound = safeToBigInt(groupInfoData[9]);
+    const remainingCapacity = capacity - totalJoinedAmount;
 
     // 获取行动最小参与量
     const actionMinJoinAmount = constants.minJoinAmount;
@@ -185,6 +189,7 @@ export const useExtensionGroupDetail = ({
       stakedAmount,
       capacity,
       totalJoinedAmount,
+      remainingCapacity,
       isActive,
       activatedRound,
       deactivatedRound,

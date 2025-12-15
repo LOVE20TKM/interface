@@ -4,17 +4,19 @@
 'use client';
 
 import React, { useContext, useEffect, useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/router';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { ActionInfo } from '@/src/types/love20types';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useGroupAccountsRewardOfRound } from '@/src/hooks/extension/plugins/group/composite';
+import { useGroupScoresOfRound } from '@/src/hooks/extension/plugins/group/composite';
+import { useGroupAccountsJoinedAmountOfRound } from '@/src/hooks/extension/plugins/group/composite';
 import { useHandleContractError } from '@/src/lib/errorUtils';
-import { formatTokenAmount } from '@/src/lib/format';
+import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import ChangeRound from '@/src/components/Common/ChangeRound';
 
 interface GroupRewardsProps {
   actionId: bigint;
@@ -24,26 +26,56 @@ interface GroupRewardsProps {
 }
 
 const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, extensionAddress, groupId }) => {
+  const router = useRouter();
   const { token } = useContext(TokenContext) || {};
 
   // 获取当前轮次
   const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
 
-  // 状态：是否展开
-  const [isExpanded, setIsExpanded] = useState(false);
+  // 从URL获取round参数
+  const { round: urlRound } = router.query;
+  const [selectedRound, setSelectedRound] = useState<bigint>(currentRound || BigInt(1));
 
-  // 获取最近5轮激励记录
+  // 初始化轮次状态
+  useEffect(() => {
+    if (urlRound && !isNaN(Number(urlRound))) {
+      setSelectedRound(BigInt(urlRound as string));
+    } else if (currentRound) {
+      setSelectedRound(currentRound);
+    }
+  }, [urlRound, currentRound]);
+
+  // 获取指定轮次的激励记录
   const {
-    rewardRecords,
+    accountRewards,
     isPending: isPendingRewards,
     error: errorRewards,
   } = useGroupAccountsRewardOfRound({
     extensionAddress,
-    tokenAddress: token?.address as `0x${string}`,
-    actionId,
-    round: currentRound,
+    round: selectedRound,
     groupId,
-    lastNRounds: 5,
+  });
+
+  // 获取打分记录
+  const {
+    accountScores,
+    isPending: isPendingScores,
+    error: errorScores,
+  } = useGroupScoresOfRound({
+    extensionAddress,
+    round: selectedRound,
+    groupId,
+  });
+
+  // 获取参与代币数明细
+  const {
+    accountJoinedAmounts,
+    isPending: isPendingAmounts,
+    error: errorAmounts,
+  } = useGroupAccountsJoinedAmountOfRound({
+    extensionAddress,
+    round: selectedRound,
+    groupId,
   });
 
   // 错误处理
@@ -51,11 +83,32 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
   useEffect(() => {
     if (errorRound) handleContractError(errorRound, 'vote');
     if (errorRewards) handleContractError(errorRewards, 'extension');
-  }, [errorRound, errorRewards, handleContractError]);
+    if (errorScores) handleContractError(errorScores, 'extension');
+    if (errorAmounts) handleContractError(errorAmounts, 'extension');
+  }, [errorRound, errorRewards, errorScores, errorAmounts, handleContractError]);
 
-  if (isPendingRound || isPendingRewards) {
+  const handleChangedRound = (round: number) => {
+    const newRound = BigInt(round);
+    setSelectedRound(newRound);
+
+    // 更新URL参数
+    const currentQuery = { ...router.query };
+    currentQuery.round = newRound.toString();
+
+    router.push(
+      {
+        pathname: router.pathname,
+        query: currentQuery,
+      },
+      undefined,
+      { shallow: true },
+    );
+  };
+
+  // 只有在初次加载且还没有数据时才显示整页加载状态
+  if (isPendingRound) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg p-8">
         <div className="flex flex-col items-center py-8">
           <LoadingIcon />
           <p className="mt-4 text-gray-600">加载激励记录...</p>
@@ -64,120 +117,121 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
     );
   }
 
-  const hasRewards = rewardRecords && rewardRecords.length > 0;
+  if (!token) {
+    return <div>Token信息加载中...</div>;
+  }
+
+  // 创建地图来快速查找参与代币数和得分
+  const amountMap = new Map<string, bigint>();
+  if (accountJoinedAmounts) {
+    accountJoinedAmounts.forEach((item) => {
+      amountMap.set(item.account.toLowerCase(), item.joinedAmount);
+    });
+  }
+
+  const scoreMap = new Map<string, bigint>();
+  if (accountScores) {
+    accountScores.forEach((scoreInfo) => {
+      scoreMap.set(scoreInfo.account.toLowerCase(), scoreInfo.originScore);
+    });
+  }
+
+  // 计算总激励
+  const totalReward = accountRewards?.reduce((sum, item) => sum + item.reward, BigInt(0)) || BigInt(0);
+
+  // 合并数据：为每个激励记录添加参与代币数和得分
+  const combinedData =
+    accountRewards?.map((accountReward) => {
+      const joinedAmount = amountMap.get(accountReward.account.toLowerCase()) || BigInt(0);
+      const score = scoreMap.get(accountReward.account.toLowerCase()) || BigInt(0);
+      const rewardPercentage = totalReward > BigInt(0) ? (Number(accountReward.reward) / Number(totalReward)) * 100 : 0;
+
+      return {
+        account: accountReward.account,
+        joinedAmount,
+        score,
+        reward: accountReward.reward,
+        rewardPercentage,
+      };
+    }) || [];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="space-y-4">
-        {/* 标题和展开按钮 */}
-        <div className="flex items-center justify-between">
-          <LeftTitle title="历史激励记录" />
-          {hasRewards && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-gray-600"
-            >
-              {isExpanded ? (
-                <>
-                  <ChevronUp className="w-4 h-4 mr-1" />
-                  收起
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-4 h-4 mr-1" />
-                  展开
-                </>
-              )}
-            </Button>
-          )}
+    <div className="relative pb-4">
+      {selectedRound === BigInt(0) && (
+        <div className="flex items-center justify-center">
+          <div className="text-center text-sm text-greyscale-500">暂无激励数据</div>
         </div>
-
-        {!hasRewards ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 mb-2">暂无激励记录</p>
-            <p className="text-sm text-gray-400">最近5轮内没有激励记录</p>
-          </div>
-        ) : (
+      )}
+      <div className="flex items-center">
+        {selectedRound > 0 && (
           <>
-            {/* 预览模式：只显示最近一轮 */}
-            {!isExpanded && rewardRecords[0] && (
-              <div className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700">
-                    第 {rewardRecords[0].round.toString()} 轮
-                  </span>
-                  <span className="text-lg font-bold text-secondary">
-                    {formatTokenAmount(rewardRecords[0].totalReward, 2)} {token?.symbol}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-500">
-                  {rewardRecords[0].accounts.length} 人获得激励
-                </div>
-              </div>
-            )}
-
-            {/* 展开模式：显示所有记录 */}
-            {isExpanded && (
-              <div className="space-y-3">
-                {rewardRecords.map((record) => (
-                  <div key={record.round.toString()} className="border border-gray-200 rounded-lg p-4">
-                    {/* 轮次和总激励 */}
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-medium text-gray-700">
-                        第 {record.round.toString()} 轮
-                      </span>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-secondary">
-                          {formatTokenAmount(record.totalReward, 2)}
-                        </div>
-                        <div className="text-xs text-gray-500">{token?.symbol}</div>
-                      </div>
-                    </div>
-
-                    {/* 激励明细列表 */}
-                    <div className="space-y-2">
-                      {record.accounts.map((accountReward, index) => (
-                        <div
-                          key={`${accountReward.account}-${index}`}
-                          className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                        >
-                          <div className="flex-1">
-                            <AddressWithCopyButton address={accountReward.account} showCopyButton={true} />
-                          </div>
-                          <div className="text-right ml-4">
-                            <div className="text-sm font-medium text-gray-800">
-                              {formatTokenAmount(accountReward.reward, 2)}
-                            </div>
-                            <div className="text-xs text-gray-500">{token?.symbol}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* 统计信息 */}
-                    <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
-                      共 {record.accounts.length} 人获得激励，总计{' '}
-                      {formatTokenAmount(record.totalReward, 2)} {token?.symbol}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <LeftTitle title={`第 ${selectedRound.toString()} 轮激励结果`} />
+            <span className="text-sm text-greyscale-500 ml-2">(</span>
+            <ChangeRound currentRound={currentRound || BigInt(0)} handleChangedRound={handleChangedRound} />
+            <span className="text-sm text-greyscale-500">)</span>
           </>
         )}
-
-        {/* 说明 */}
-        <div className="mt-4 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 关于激励</div>
-          <div className="space-y-1 text-gray-600">
-            <div>• 激励按参与者的代币数量和链群打分分配</div>
-            <div>• 链群打分越高，参与者获得的激励越多</div>
-            <div>• 最多显示最近5轮的激励记录</div>
-          </div>
-        </div>
       </div>
+
+      {/* 加载状态 */}
+      {(isPendingRewards || isPendingScores || isPendingAmounts) && (
+        <div className="flex justify-center py-8">
+          <LoadingIcon />
+        </div>
+      )}
+
+      {/* 错误状态 */}
+      {(errorRewards || errorScores || errorAmounts) && (
+        <div className="alert alert-error">
+          <svg className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <span>加载激励数据失败</span>
+        </div>
+      )}
+
+      {/* 激励详情列表 */}
+      {!isPendingRewards &&
+        !isPendingScores &&
+        !isPendingAmounts &&
+        !errorRewards &&
+        !errorScores &&
+        !errorAmounts &&
+        selectedRound > 0 &&
+        (combinedData.length === 0 ? (
+          <div className="text-center text-sm text-greyscale-400 p-4">该轮次暂无激励记录</div>
+        ) : (
+          <table className="table w-full">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="px-1 text-left">成员地址</th>
+                <th className="px-1 text-right">参与币数</th>
+                <th className="px-1 text-right">得分</th>
+                <th className="px-1 text-right">激励(占比)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {combinedData.map((item, index) => (
+                <tr key={`${item.account}-${index}`} className="border-b border-gray-100">
+                  <td className="px-1">
+                    <AddressWithCopyButton address={item.account} showCopyButton={true} />
+                  </td>
+                  <td className="px-1 text-right font-mono text-secondary">{formatTokenAmount(item.joinedAmount)}</td>
+                  <td className="px-1 text-right text-greyscale-700">{formatPercentage(Number(item.score) / 100)}</td>
+                  <td className="px-1 text-right">
+                    <div className="font-mono text-secondary">{formatTokenAmount(item.reward, 2)}</div>
+                    <div className="text-xs text-greyscale-500">{item.rewardPercentage.toFixed(2)}%</div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ))}
     </div>
   );
 };

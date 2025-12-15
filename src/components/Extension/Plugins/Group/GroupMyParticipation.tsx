@@ -93,13 +93,24 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   // 计算是否已加入
   const isJoined = joinedAmount && joinedAmount > BigInt(0);
 
-  // 计算还可以追加的代币数
-  const additionalAllowed = groupDetail && joinedAmount ? groupDetail.actualMaxJoinAmount - joinedAmount : BigInt(0);
+  // 计算还可以追加的代币数（考虑链群剩余容量）
+  // additionalAllowed = min(actualMaxJoinAmount - joinedAmount, remainingCapacity)
+  const additionalAllowed =
+    groupDetail && joinedAmount
+      ? (() => {
+          const maxByLimit = groupDetail.actualMaxJoinAmount - joinedAmount;
+          const maxByCapacity = groupDetail.remainingCapacity;
+          return maxByLimit < maxByCapacity ? maxByLimit : maxByCapacity;
+        })()
+      : BigInt(0);
 
-  // 计算仓位百分比（我的参与/链群参与上限）
+  // 计算仓位百分比（我的参与 / (我的参与 + 还可追加)）
   const positionRatio =
-    groupDetail && joinedAmount && groupDetail.actualMaxJoinAmount > BigInt(0)
-      ? Number(joinedAmount) / Number(groupDetail.actualMaxJoinAmount)
+    groupDetail && joinedAmount && additionalAllowed !== undefined
+      ? (() => {
+          const totalPossible = joinedAmount + additionalAllowed;
+          return totalPossible > BigInt(0) ? Number(joinedAmount) / Number(totalPossible) : 0;
+        })()
       : 0;
 
   // 退出
@@ -170,23 +181,24 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   return (
     <div className="flex flex-col items-center pt-1">
       {/* 数据区 */}
-      <div className="grid grid-cols-2 gap-4 w-full mb-6">
+      <div className="stats w-full grid grid-cols-2 divide-x-0 gap-4 mb-6">
         {/* 我的参与 */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-          <div className="text-sm text-gray-600 mb-1">我的参与</div>
-          <div className="text-2xl font-bold text-blue-800 mb-2">{formatTokenAmount(joinedAmount || BigInt(0), 2)}</div>
-          <div className="text-xs text-blue-600">
-            还可以追加 {formatTokenAmount(additionalAllowed, 2)} {token?.symbol}
+        <div className="stat place-items-center flex flex-col justify-center">
+          <div className="stat-title">我的参与</div>
+          <div className="stat-value text-2xl text-secondary">{formatTokenAmount(joinedAmount || BigInt(0), 2)}</div>
+          <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
+            占链群{' '}
+            {groupDetail?.totalJoinedAmount && groupDetail.totalJoinedAmount > BigInt(0)
+              ? formatPercentage((Number(joinedAmount || BigInt(0)) * 100) / Number(groupDetail.totalJoinedAmount))
+              : '0.00%'}
           </div>
         </div>
 
         {/* 仓位 */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-          <div className="text-sm text-gray-600 mb-1">仓位</div>
-          <div className="text-2xl font-bold text-green-800 mb-2">{formatPercentage(positionRatio)}</div>
-          <div className="text-xs text-green-600">
-            参与上限 {formatTokenAmount(groupDetail?.actualMaxJoinAmount || BigInt(0), 2)} {token?.symbol}
-          </div>
+        <div className="stat place-items-center flex flex-col justify-center">
+          <div className="stat-title">还可追加</div>
+          <div className="stat-value text-2xl text-secondary">{formatTokenAmount(additionalAllowed)}</div>
+          <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">{token?.symbol}</div>
         </div>
       </div>
 
@@ -288,11 +300,10 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
 
       {/* 说明 */}
       <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2 w-full">
-        <div className="font-medium text-gray-700 mb-1">💡 参与说明</div>
+        <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
         <div className="space-y-1 text-gray-600">
           <div>• 您的激励将基于链群服务者的验证打分</div>
           <div>• 可以随时取回参与的代币，不影响已产生的激励</div>
-          <div>• 可以追加参与代币数量（不超过仓位上限）</div>
         </div>
       </div>
 

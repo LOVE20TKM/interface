@@ -3,17 +3,14 @@
 
 'use client';
 
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { ActionInfo } from '@/src/types/love20types';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
@@ -28,6 +25,10 @@ import { parseUnits, formatTokenAmount } from '@/src/lib/format';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import LeftTitle from '@/src/components/Common/LeftTitle';
+import { useExtensionActionParam } from '@/src/hooks/extension/plugins/group/composite';
+import _GroupStakeTokenPanel from './_GroupStakeTokenPanel';
+import _GroupTokenApproveButtons from './_GroupTokenApproveButtons';
+import _GroupActionTips from './_GroupActionTips';
 
 interface GroupOPExpandProps {
   actionId: bigint;
@@ -54,6 +55,13 @@ const _GroupOPExpand: React.FC<GroupOPExpandProps> = ({ actionId, actionInfo, ex
     isPending: isPendingStakeSymbol,
     error: errorStakeSymbol,
   } = useSymbol(stakeTokenAddress as `0x${string}`);
+
+  // 获取链群行动整体参数（扩展基本常量 + 实时数据）
+  const {
+    params: actionParams,
+    isPending: isPendingActionParams,
+    error: errorActionParams,
+  } = useExtensionActionParam({ actionId, extensionAddress });
 
   // 获取链群详情
   const {
@@ -113,7 +121,11 @@ const _GroupOPExpand: React.FC<GroupOPExpandProps> = ({ actionId, actionInfo, ex
     isPending: isPendingAllowance,
     error: errorAllowance,
     refetch: refetchAllowance,
-  } = useAllowance(stakeTokenAddress as `0x${string}`, account as `0x${string}`, extensionAddress);
+  } = useAllowance(
+    stakeTokenAddress as `0x${string}`,
+    account as `0x${string}`,
+    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`,
+  );
 
   const isTokenApproved = allowance !== undefined && allowance >= additionalStakeBigInt;
 
@@ -133,7 +145,10 @@ const _GroupOPExpand: React.FC<GroupOPExpandProps> = ({ actionId, actionInfo, ex
     }
 
     try {
-      await approve(extensionAddress, additionalStakeBigInt);
+      await approve(
+        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`,
+        additionalStakeBigInt,
+      );
     } catch (error) {
       console.error('Approve failed', error);
     }
@@ -162,8 +177,19 @@ const _GroupOPExpand: React.FC<GroupOPExpandProps> = ({ actionId, actionInfo, ex
       return;
     }
 
-    if (additionalStakeAllowed !== undefined && additionalStakeBigInt > additionalStakeAllowed) {
-      toast.error('追加质押金额超过允许的最大值');
+    // 验证追加金额范围
+    if (actualMinStake > BigInt(0) && additionalStakeBigInt < actualMinStake) {
+      toast.error(`追加质押金额不能小于最小值 ${formatTokenAmount(actualMinStake, 4, 'ceil')} ${stakeSymbol}`);
+      return;
+    }
+
+    if (actualMaxStake !== undefined && additionalStakeBigInt > actualMaxStake) {
+      toast.error(`追加质押金额不能大于最大值 ${formatTokenAmount(actualMaxStake)} ${stakeSymbol}`);
+      return;
+    }
+
+    if (userBalance !== undefined && userBalance > BigInt(0) && additionalStakeBigInt > userBalance) {
+      toast.error(`追加质押金额不能大于余额 ${formatTokenAmount(userBalance)} ${stakeSymbol}`);
       return;
     }
 
@@ -183,13 +209,57 @@ const _GroupOPExpand: React.FC<GroupOPExpandProps> = ({ actionId, actionInfo, ex
     }
   }, [isConfirmedExpand, router]);
 
+  // 计算追加质押的实际范围
+  // 实际最小值：如果原最小质押量 > 当前已质押量，则需要至少补足差额，否则为 0
+  const actualMinStake = useMemo(() => {
+    if (!actionParams?.minStake || !groupDetail?.stakedAmount) return BigInt(0);
+    const diff = actionParams.minStake - groupDetail.stakedAmount;
+    return diff > BigInt(0) ? diff : BigInt(0);
+  }, [actionParams?.minStake, groupDetail?.stakedAmount]);
+
+  // 实际最大值：取 additionalStakeAllowed（已经考虑了容量限制）
+  const actualMaxStake = useMemo(() => {
+    return additionalStakeAllowed || BigInt(0);
+  }, [additionalStakeAllowed]);
+
   // 设置最高按钮
   const handleSetMax = () => {
-    if (!userBalance || !additionalStakeAllowed) return;
+    if (!userBalance || !actualMaxStake) return;
 
-    const maxAmount = userBalance < additionalStakeAllowed ? userBalance : additionalStakeAllowed;
-    form.setValue('additionalStake', formatTokenAmount(maxAmount, token?.decimals || 18));
+    const maxAmount = userBalance < actualMaxStake ? userBalance : actualMaxStake;
+    form.setValue('additionalStake', formatTokenAmount(maxAmount, 6));
   };
+
+  // 实时表单验证
+  useEffect(() => {
+    const staked = additionalStakeBigInt;
+
+    if (additionalStake && staked > BigInt(0)) {
+      // 验证最小值
+      if (actualMinStake > BigInt(0) && staked < actualMinStake) {
+        form.setError('additionalStake', {
+          type: 'validate',
+          message: `追加质押金额不能小于最小值 ${formatTokenAmount(actualMinStake, 4, 'ceil')} ${stakeSymbol}`,
+        });
+      }
+      // 验证最大值
+      else if (actualMaxStake > BigInt(0) && staked > actualMaxStake) {
+        form.setError('additionalStake', {
+          type: 'validate',
+          message: `追加质押金额不能大于最大值 ${formatTokenAmount(actualMaxStake)} ${stakeSymbol}`,
+        });
+      }
+      // 验证余额
+      else if (userBalance !== undefined && userBalance > BigInt(0) && staked > userBalance) {
+        form.setError('additionalStake', {
+          type: 'validate',
+          message: `追加质押金额不能大于余额 ${formatTokenAmount(userBalance)} ${stakeSymbol}`,
+        });
+      } else {
+        form.clearErrors('additionalStake');
+      }
+    }
+  }, [additionalStake, additionalStakeBigInt, actualMinStake, actualMaxStake, userBalance, stakeSymbol, form]);
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -234,12 +304,6 @@ const _GroupOPExpand: React.FC<GroupOPExpandProps> = ({ actionId, actionInfo, ex
   return (
     <>
       <div className="space-y-6">
-        {/* 返回按钮 */}
-        <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          返回
-        </Button>
-
         {/* 标题 */}
         <div>
           <LeftTitle title="追加质押" />
@@ -252,19 +316,19 @@ const _GroupOPExpand: React.FC<GroupOPExpandProps> = ({ actionId, actionInfo, ex
             <div className="flex justify-between">
               <span className="text-gray-600">当前质押:</span>
               <span className="font-medium">
-                {formatTokenAmount(groupDetail.stakedAmount, 2)} {stakeSymbol}
+                {formatTokenAmount(groupDetail.stakedAmount)} {stakeSymbol}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">当前容量:</span>
               <span className="font-medium">
-                {formatTokenAmount(groupDetail.capacity, 2)} {token?.symbol}
+                {formatTokenAmount(groupDetail.capacity)} {token?.symbol}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">还可以质押:</span>
               <span className="font-medium text-secondary">
-                {formatTokenAmount(additionalStakeAllowed || BigInt(0), 2)} {stakeSymbol}
+                {formatTokenAmount(additionalStakeAllowed || BigInt(0))} {stakeSymbol}
               </span>
             </div>
           </div>
@@ -274,81 +338,47 @@ const _GroupOPExpand: React.FC<GroupOPExpandProps> = ({ actionId, actionInfo, ex
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
             {/* 追加质押金额 */}
-            <FormField
-              control={form.control}
-              name="additionalStake"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-greyscale-500 font-normal">追加质押金额 ({stakeSymbol})*</FormLabel>
-                  <div className="flex gap-2">
-                    <FormControl>
-                      <Input
-                        placeholder="请输入追加质押金额"
-                        className="!ring-secondary-foreground flex-1"
-                        {...field}
-                      />
-                    </FormControl>
-                    <Button type="button" variant="outline" onClick={handleSetMax}>
-                      最高
-                    </Button>
-                  </div>
-                  <FormDescription className="text-xs">
-                    最多可追加: {formatTokenAmount(additionalStakeAllowed || BigInt(0), 2)} {stakeSymbol}
-                  </FormDescription>
-                  <FormDescription className="text-xs">
-                    您的余额：{formatTokenAmount(userBalance || BigInt(0), 2)} {stakeSymbol}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <_GroupStakeTokenPanel
+              form={form}
+              fieldName="additionalStake"
+              label="追加质押金额"
+              placeholder="请输入追加质押金额"
+              tokenSymbol={stakeSymbol}
+              userBalance={userBalance}
+              minAmount={actualMinStake}
+              maxAmount={actualMaxStake}
+              showRange={true}
+              onSetMax={handleSetMax}
             />
 
             {/* 按钮 */}
-            <div className="flex justify-center space-x-4 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => router.back()}
-                disabled={isPendingApprove || isConfirmingApprove || isPendingExpand || isConfirmingExpand}
-              >
-                取消
-              </Button>
-              <Button
-                disabled={isPendingAllowance || isPendingApprove || isConfirmingApprove || isTokenApproved}
-                type="button"
-                onClick={() => {
-                  form.handleSubmit((values) => handleApprove(values))();
-                }}
-              >
-                {isTokenApproved ? `1.${stakeSymbol}已授权` : `1.授权${stakeSymbol}`}
-              </Button>
-              <Button
-                disabled={!isTokenApproved || isPendingExpand || isConfirmingExpand || isConfirmedExpand}
-                type="button"
-                onClick={() => {
-                  form.handleSubmit((values) => handleExpand(values))();
-                }}
-              >
-                {isPendingExpand
-                  ? '2.提交中...'
-                  : isConfirmingExpand
-                  ? '2.确认中...'
-                  : isConfirmedExpand
-                  ? '2.已追加'
-                  : '2.追加质押'}
-              </Button>
-            </div>
+            <_GroupTokenApproveButtons
+              tokenSymbol={stakeSymbol}
+              isTokenApproved={isTokenApproved}
+              isPendingApprove={isPendingApprove}
+              isConfirmingApprove={isConfirmingApprove}
+              onApprove={() => form.handleSubmit((values) => handleApprove(values))()}
+              isPendingAction={isPendingExpand}
+              isConfirmingAction={isConfirmingExpand}
+              isConfirmedAction={isConfirmedExpand}
+              onAction={() => form.handleSubmit((values) => handleExpand(values))()}
+              actionLabel="追加质押"
+              actionLabelPending="2.提交中..."
+              actionLabelConfirming="2.确认中..."
+              actionLabelConfirmed="2.已追加"
+            />
           </form>
         </Form>
 
-        {/* 说明 */}
-        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 追加质押说明</div>
-          <div className="space-y-1 text-gray-600">
-            <div>• 追加质押可以增加链群的容量上限</div>
-            <div>• 容量上限取决于质押量和治理票占比</div>
-            <div>• 关闭链群后可以取回质押代币</div>
-          </div>
-        </div>
+        {/* 小贴士（算法 + 数值） */}
+        <_GroupActionTips
+          minGovVoteRatioBps={actionParams?.minGovVoteRatioBps}
+          capacityMultiplier={actionParams?.capacityMultiplier}
+          stakingMultiplier={actionParams?.stakingMultiplier}
+          minJoinAmount={actionParams?.minJoinAmount}
+          maxJoinAmountMultiplier={actionParams?.maxJoinAmountMultiplier}
+          joinMaxAmount={actionParams?.joinMaxAmount}
+        />
       </div>
 
       <LoadingOverlay

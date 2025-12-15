@@ -85,14 +85,7 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
           </div>
         );
       }
-      return (
-        <GroupActionPublicTabs
-          extensionAddress={extensionAddress}
-          currentRound={currentRound}
-          actionId={actionId}
-          actionInfo={actionInfo}
-        />
-      );
+      return <GroupActionPublicTabs extensionAddress={extensionAddress} actionId={actionId} actionInfo={actionInfo} />;
 
     // 未来添加新的扩展类型时，在这里添加对应的 case
     // case ExtensionType.XXXX:

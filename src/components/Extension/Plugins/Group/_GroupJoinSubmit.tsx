@@ -21,7 +21,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 // my hooks
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
-import { useJoin } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
@@ -52,6 +52,16 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
+
+  // 获取加入信息
+  const {
+    amount: joinedAmount,
+    isPending: isPendingJoinInfo,
+    error: errorJoinInfo,
+  } = useJoinInfo(extensionAddress, account as `0x${string}`);
+
+  // 判断是否已加入
+  const isJoined = joinedAmount && joinedAmount > BigInt(0);
 
   // 获取链群详情
   const {
@@ -131,11 +141,23 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
         (val) => {
           if (!groupDetail) return true;
           const inputVal = parseUnits(val);
-          return inputVal !== null && inputVal <= groupDetail.actualMaxJoinAmount;
+          // 实际上限 = min(行动上限, 群上限, 链群剩余容量)
+          const effectiveMaxAmount =
+            groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
+              ? groupDetail.actualMaxJoinAmount
+              : groupDetail.remainingCapacity;
+          return inputVal !== null && inputVal <= effectiveMaxAmount;
         },
         {
           message: `参与代币数不能大于最大值 ${
-            groupDetail ? formatTokenAmount(groupDetail.actualMaxJoinAmount, 2) : '0'
+            groupDetail
+              ? formatTokenAmount(
+                  groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
+                    ? groupDetail.actualMaxJoinAmount
+                    : groupDetail.remainingCapacity,
+                  2,
+                )
+              : '0'
           }`,
         },
       ),
@@ -248,14 +270,24 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
     if (errorDetail) handleContractError(errorDetail, 'extension');
+    if (errorJoinInfo) handleContractError(errorJoinInfo, 'extension');
     if (errorBalance) handleContractError(errorBalance, 'token');
     if (errorAllowance) handleContractError(errorAllowance, 'token');
     if (errorApprove) handleContractError(errorApprove, 'token');
     if (errorJoin) handleContractError(errorJoin, 'extension');
     if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
-  }, [errorDetail, errorBalance, errorAllowance, errorApprove, errorJoin, errorVerificationInfos, handleContractError]);
+  }, [
+    errorDetail,
+    errorJoinInfo,
+    errorBalance,
+    errorAllowance,
+    errorApprove,
+    errorJoin,
+    errorVerificationInfos,
+    handleContractError,
+  ]);
 
-  if (isPendingDetail) {
+  if (isPendingDetail || isPendingJoinInfo) {
     return (
       <div className="flex flex-col items-center px-4 pt-6">
         <LoadingIcon />
@@ -275,7 +307,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   return (
     <>
       <div className="px-6 pt-6 pb-2">
-        <LeftTitle title="加入链群" />
+        <LeftTitle title={isJoined ? '追加代币' : '加入链群'} />
 
         {/* 行动信息 */}
         <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
@@ -294,14 +326,16 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                 #{groupDetail.groupId.toString()} {groupDetail.groupName}
               </span>
             </div>
-            <Button
-              variant="link"
-              size="sm"
-              onClick={() => router.push(`/acting/join?id=${actionId}&symbol=${token?.symbol}`)}
-              className="text-secondary p-0 h-auto"
-            >
-              切换链群
-            </Button>
+            {!isJoined && (
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => router.push(`/acting/join?id=${actionId}&symbol=${token?.symbol}`)}
+                className="text-secondary p-0 h-auto"
+              >
+                切换链群
+              </Button>
+            )}
           </div>
 
           {/* 服务者 */}
@@ -334,7 +368,11 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span className="text-xs text-gray-500">
                       参与范围：{formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
-                      {formatTokenAmount(groupDetail.actualMaxJoinAmount)}
+                      {formatTokenAmount(
+                        groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
+                          ? groupDetail.actualMaxJoinAmount
+                          : groupDetail.remainingCapacity,
+                      )}
                     </span>
                     <Button
                       type="button"
@@ -342,8 +380,12 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                       size="sm"
                       onClick={() => {
                         if (balance && balance > BigInt(0) && groupDetail) {
-                          const maxAmount =
-                            balance < groupDetail.actualMaxJoinAmount ? balance : groupDetail.actualMaxJoinAmount;
+                          // 实际上限 = min(行动上限, 群上限, 链群剩余容量)
+                          const effectiveMaxAmount =
+                            groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
+                              ? groupDetail.actualMaxJoinAmount
+                              : groupDetail.remainingCapacity;
+                          const maxAmount = balance < effectiveMaxAmount ? balance : effectiveMaxAmount;
                           form.setValue('joinAmount', formatUnits(maxAmount));
                         }
                       }}
@@ -395,7 +437,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                                     />
                                   )}
                                 </FormControl>
-                                {guide && <FormDescription className="text-xs">{guide}</FormDescription>}
+                                {guide && <FormDescription className="text-xs">提示信息：{guide}</FormDescription>}
                                 <FormMessage />
                               </FormItem>
                             )}

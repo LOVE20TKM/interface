@@ -4,10 +4,6 @@
 'use client';
 
 import React, { useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { ActionInfo } from '@/src/types/love20types';
 import {
@@ -16,11 +12,11 @@ import {
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
 import { useGroupManagerAddress, useTokenAddress } from '@/src/hooks/extension/plugins/group/contracts';
 import { useHandleContractError } from '@/src/lib/errorUtils';
-import { formatTokenAmount } from '@/src/lib/format';
 import { useExtensionGroupsOfAccount } from '@/src/hooks/extension/plugins/group/composite';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import _MyGroups from './_MyGroups';
 import _ManagerDataPanel from './_ManagerDataPanel';
+import _GroupManagementDialog from './_GroupManagementDialog';
 
 interface ManagerTabProps {
   actionId: bigint;
@@ -30,7 +26,6 @@ interface ManagerTabProps {
 }
 
 const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensionAddress, account }) => {
-  const router = useRouter();
   const { token } = useContext(TokenContext) || {};
 
   // 获取 GroupManager 合约地址和 tokenAddress
@@ -84,13 +79,6 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   const handleManageClick = (groupId: bigint) => {
     setSelectedGroupId(groupId);
     setIsDialogOpen(true);
-  };
-
-  // 跳转到操作页面
-  const handleNavigateToOp = (op: string) => {
-    if (!selectedGroupId) return;
-    setIsDialogOpen(false);
-    router.push(`/extension/group_op?actionId=${actionId}&groupId=${selectedGroupId.toString()}&op=${op}`);
   };
 
   if (!account) {
@@ -181,43 +169,14 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
       </div>
 
       {/* 管理面板弹窗 */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>链群管理</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 py-4">
-            <Button variant="outline" className="w-full justify-start" onClick={() => handleNavigateToOp('verify')}>
-              <Settings className="w-4 h-4 mr-2" />
-              链群打分
-            </Button>
-            <Button variant="outline" className="w-full justify-start" onClick={() => handleNavigateToOp('expand')}>
-              <Settings className="w-4 h-4 mr-2" />
-              追加质押
-            </Button>
-            <Button variant="outline" className="w-full justify-start" onClick={() => handleNavigateToOp('update')}>
-              <Settings className="w-4 h-4 mr-2" />
-              更新信息
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => handleNavigateToOp('set_delegated')}
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              设置打分代理
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-red-600 hover:text-red-700"
-              onClick={() => handleNavigateToOp('deactivate')}
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              关闭链群
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {selectedGroupId && (
+        <_GroupManagementDialog
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          actionId={actionId}
+          groupId={selectedGroupId}
+        />
+      )}
     </>
   );
 };

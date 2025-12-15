@@ -9,7 +9,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,6 +22,12 @@ import { parseUnits, formatTokenAmount } from '@/src/lib/format';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import LeftTitle from '@/src/components/Common/LeftTitle';
+import _GroupActionTips from './_GroupActionTips';
+
+function safeParseUnits(val: string | undefined): bigint {
+  if (!val) return BigInt(0);
+  return parseUnits(val);
+}
 
 interface GroupOPUpdateProps {
   actionId: bigint;
@@ -56,14 +61,13 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   // 表单验证
   const formSchema = z.object({
     description: z.string().max(500, { message: '描述不能超过500字' }),
-    url: z.string().url({ message: '请输入有效的URL' }).or(z.literal('')),
     minJoinAmount: z.string().refine(
       (val) => {
         if (!val || val === '0') return true;
         const amount = parseFloat(val);
         return !isNaN(amount) && amount >= 0;
       },
-      { message: '请输入有效的金额' },
+      { message: '请输入有效的代币数' },
     ),
     maxJoinAmount: z.string().refine(
       (val) => {
@@ -71,7 +75,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
         const amount = parseFloat(val);
         return !isNaN(amount) && amount >= 0;
       },
-      { message: '请输入有效的金额' },
+      { message: '请输入有效的代币数' },
     ),
   });
 
@@ -81,9 +85,8 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     resolver: zodResolver(formSchema),
     defaultValues: {
       description: '',
-      url: '',
-      minJoinAmount: '0',
-      maxJoinAmount: '0',
+      minJoinAmount: '',
+      maxJoinAmount: '',
     },
     mode: 'onChange',
   });
@@ -93,18 +96,21 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     if (groupDetail) {
       form.reset({
         description: groupDetail.description || '',
-        url: '', // URL 字段不在 GroupDetailInfo 中，保持为空
         minJoinAmount:
           groupDetail.groupMinJoinAmount > BigInt(0)
             ? formatTokenAmount(groupDetail.groupMinJoinAmount, token?.decimals || 18)
-            : '0',
+            : '',
         maxJoinAmount:
           groupDetail.groupMaxJoinAmount > BigInt(0)
             ? formatTokenAmount(groupDetail.groupMaxJoinAmount, token?.decimals || 18)
-            : '0',
+            : '',
       });
     }
   }, [groupDetail, form, token?.decimals]);
+
+  // 监控表单值用于实时验证
+  const minJoinAmountValue = form.watch('minJoinAmount');
+  const maxJoinAmountValue = form.watch('maxJoinAmount');
 
   // 更新链群信息
   const {
@@ -117,33 +123,34 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
 
   async function handleUpdate(values: FormValues) {
     if (!actionParams) {
-      toast.error('行动参数未加载完成');
+      toast.error('扩展协议参数未加载完成');
       return;
     }
 
-    // 验证最小参与金额
+    // 验证最小参与代币数
     const minJoinAmountBigInt = values.minJoinAmount ? parseUnits(values.minJoinAmount) : BigInt(0);
 
     if (minJoinAmountBigInt > BigInt(0)) {
-      // 不能小于行动本身的最小参与量
+      // 不能小于行动的最小参与量
       if (minJoinAmountBigInt < actionParams.minJoinAmount) {
         toast.error(
           `最小参与量不能小于行动要求的 ${formatTokenAmount(actionParams.minJoinAmount, 2)} ${token?.symbol}`,
         );
         return;
       }
-      // 不能大于行动本身的单个行动者最大参与代币数
+
+      // 不能大于行动的单个行动者最大参与代币数
       if (minJoinAmountBigInt > actionParams.joinMaxAmount) {
         toast.error(`最小参与量不能大于 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`);
         return;
       }
     }
 
-    // 验证最大参与金额
+    // 验证最大参与代币数
     const maxJoinAmountBigInt = values.maxJoinAmount ? parseUnits(values.maxJoinAmount) : BigInt(0);
 
     if (maxJoinAmountBigInt > BigInt(0)) {
-      // 不能大于行动本身的单个行动者最大参与代币数
+      // 不能大于行动的单个行动者最大参与代币数
       if (maxJoinAmountBigInt > actionParams.joinMaxAmount) {
         toast.error(`最大参与量不能大于 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`);
         return;
@@ -174,6 +181,42 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     }
   }, [isConfirmedUpdate, router]);
 
+  // 额外校验：把"范围约束"实时反馈到输入框下方
+  useEffect(() => {
+    if (!actionParams) return;
+
+    // minJoinAmount
+    const minJoin = safeParseUnits(minJoinAmountValue);
+    if (minJoinAmountValue && minJoin > BigInt(0)) {
+      if (minJoin < actionParams.minJoinAmount) {
+        form.setError('minJoinAmount', {
+          type: 'validate',
+          message: `不能小于行动最小参与量 ${formatTokenAmount(actionParams.minJoinAmount, 2)} ${token?.symbol}`,
+        });
+      } else if (minJoin > actionParams.joinMaxAmount) {
+        form.setError('minJoinAmount', {
+          type: 'validate',
+          message: `不能大于全局最大参与量 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`,
+        });
+      } else {
+        form.clearErrors('minJoinAmount');
+      }
+    }
+
+    // maxJoinAmount
+    const maxJoin = safeParseUnits(maxJoinAmountValue);
+    if (maxJoinAmountValue && maxJoin > BigInt(0)) {
+      if (maxJoin > actionParams.joinMaxAmount) {
+        form.setError('maxJoinAmount', {
+          type: 'validate',
+          message: `不能大于全局最大参与量 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`,
+        });
+      } else {
+        form.clearErrors('maxJoinAmount');
+      }
+    }
+  }, [actionParams, form, maxJoinAmountValue, minJoinAmountValue, token?.symbol]);
+
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
@@ -186,7 +229,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载链群信息...</p>
+        <p className="mt-4 text-gray-600">加载参数中...</p>
       </div>
     );
   }
@@ -194,7 +237,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   if (!groupDetail || !actionParams) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">未找到必要信息</p>
+        <p className="text-red-500">未找到扩展参数</p>
       </div>
     );
   }
@@ -202,16 +245,8 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   return (
     <>
       <div className="space-y-6">
-        {/* 返回按钮 */}
-        <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          返回
-        </Button>
-
-        {/* 标题 */}
         <div>
           <LeftTitle title="更新链群信息" />
-          <p className="text-sm text-gray-600 mt-2">更新链群 #{groupId.toString()} 的描述和参与规则</p>
         </div>
 
         {/* 表单 */}
@@ -223,7 +258,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-greyscale-500 font-normal">链群描述</FormLabel>
+                  <FormLabel>链群描述</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="介绍您的链群..."
@@ -236,58 +271,44 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               )}
             />
 
-            {/* 链群链接 */}
-            <FormField
-              control={form.control}
-              name="url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-greyscale-500 font-normal">相关链接</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://..." className="!ring-secondary-foreground" {...field} />
-                  </FormControl>
-                  <FormDescription className="text-xs">链群的网站、社交媒体等</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* 最小参与金额 */}
+            {/* 最小参与代币数 */}
             <FormField
               control={form.control}
               name="minJoinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-greyscale-500 font-normal">最小参与金额 ({token?.symbol})</FormLabel>
+                  <FormLabel>最小参与代币数 ({token?.symbol})</FormLabel>
                   <FormControl>
-                    <Input placeholder="0 表示使用行动默认值" className="!ring-secondary-foreground" {...field} />
+                    <Input
+                      placeholder="可填0, 表示与扩展行动默认值保持一致"
+                      className="!ring-secondary-foreground"
+                      {...field}
+                    />
                   </FormControl>
                   <FormDescription className="text-xs">
-                    行动默认值: {formatTokenAmount(actionParams.minJoinAmount, 2)} {token?.symbol}
-                  </FormDescription>
-                  <FormDescription className="text-xs">
-                    当前实际值: {formatTokenAmount(groupDetail.actualMinJoinAmount, 2)} {token?.symbol}
+                    扩展行动默认值最小参与量：{formatTokenAmount(actionParams.minJoinAmount)} {token?.symbol}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* 最大参与金额 */}
+            {/* 最大参与代币数 */}
             <FormField
               control={form.control}
               name="maxJoinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-greyscale-500 font-normal">最大参与金额 ({token?.symbol})</FormLabel>
+                  <FormLabel>最大参与代币数 ({token?.symbol})</FormLabel>
                   <FormControl>
-                    <Input placeholder="0 表示使用行动默认值" className="!ring-secondary-foreground" {...field} />
+                    <Input
+                      placeholder="可填0, 表示与扩展行动默认值保持一致"
+                      className="!ring-secondary-foreground"
+                      {...field}
+                    />
                   </FormControl>
                   <FormDescription className="text-xs">
-                    行动默认值: {formatTokenAmount(actionParams?.joinMaxAmount || BigInt(0), 2)} {token?.symbol}
-                  </FormDescription>
-                  <FormDescription className="text-xs">
-                    当前实际值: {formatTokenAmount(groupDetail.actualMaxJoinAmount, 2)} {token?.symbol}
+                    扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)} {token?.symbol}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -296,11 +317,9 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
 
             {/* 按钮 */}
             <div className="flex justify-center space-x-4 pt-4">
-              <Button variant="outline" onClick={() => router.back()} disabled={isPendingUpdate || isConfirmingUpdate}>
-                取消
-              </Button>
               <Button
                 disabled={isPendingUpdate || isConfirmingUpdate || isConfirmedUpdate}
+                className="w-full max-w-xs"
                 type="button"
                 onClick={() => {
                   form.handleSubmit((values) => handleUpdate(values))();
@@ -318,15 +337,15 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
           </form>
         </Form>
 
-        {/* 说明 */}
-        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 更新说明</div>
-          <div className="space-y-1 text-gray-600">
-            <div>• 可以随时更新链群的描述和链接</div>
-            <div>• 参与金额限制会影响新加入者</div>
-            <div>• 实际限制取决于链群设置和行动默认值的较小值</div>
-          </div>
-        </div>
+        {/* 小贴士（算法 + 数值） */}
+        <_GroupActionTips
+          minGovVoteRatioBps={actionParams?.minGovVoteRatioBps}
+          capacityMultiplier={actionParams?.capacityMultiplier}
+          stakingMultiplier={actionParams?.stakingMultiplier}
+          minJoinAmount={actionParams?.minJoinAmount}
+          maxJoinAmountMultiplier={actionParams?.maxJoinAmountMultiplier}
+          joinMaxAmount={actionParams?.joinMaxAmount}
+        />
       </div>
 
       <LoadingOverlay

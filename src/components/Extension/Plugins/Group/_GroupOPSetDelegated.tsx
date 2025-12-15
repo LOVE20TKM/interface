@@ -9,7 +9,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft } from 'lucide-react';
 import { isAddress } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,12 +56,15 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
     error: errorDelegated,
   } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
 
-  // 表单验证
+  // 表单验证：允许空值，空值表示取消代理
   const formSchema = z.object({
-    delegatedVerifier: z
-      .string()
-      .min(1, { message: '请输入代理地址' })
-      .refine((val) => isAddress(val), { message: '请输入有效的以太坊地址' }),
+    delegatedVerifier: z.string().refine(
+      (val) => {
+        if (!val || val.trim() === '') return true; // 空值合法，表示取消代理
+        return isAddress(val);
+      },
+      { message: '请输入有效的以太坊地址' },
+    ),
   });
 
   type FormValues = z.infer<typeof formSchema>;
@@ -70,7 +72,7 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      delegatedVerifier: '0x0000000000000000000000000000000000000000' as `0x${string}`,
+      delegatedVerifier: '',
     },
     mode: 'onChange',
   });
@@ -94,21 +96,34 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
   } = useSetGroupDelegatedVerifier(extensionAddress);
 
   async function handleSetDelegated(values: FormValues) {
+    // 如果输入为空，使用零地址（取消代理）
+    const address = values.delegatedVerifier?.trim() || '0x0000000000000000000000000000000000000000';
+
     try {
-      await setGroupDelegatedVerifier(groupId, values.delegatedVerifier as `0x${string}`);
+      await setGroupDelegatedVerifier(groupId, address as `0x${string}`);
     } catch (error) {
       console.error('Set delegated verifier failed', error);
     }
   }
 
+  // 快速取消代理
+  async function handleCancelDelegated() {
+    try {
+      await setGroupDelegatedVerifier(groupId, '0x0000000000000000000000000000000000000000' as `0x${string}`);
+    } catch (error) {
+      console.error('Cancel delegated verifier failed', error);
+    }
+  }
+
   useEffect(() => {
     if (isConfirmedSet) {
-      toast.success('打分代理设置成功');
+      const message = form.getValues('delegatedVerifier')?.trim() ? '打分代理设置成功' : '打分代理已取消';
+      toast.success(message);
       setTimeout(() => {
-        router.back();
+        router.push(`/extension/group/?groupId=${groupId}&actionId=${actionId}&symbol=${token?.symbol}`);
       }, 1500);
     }
-  }, [isConfirmedSet, router]);
+  }, [isConfirmedSet, router, form]);
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -122,7 +137,7 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载链群信息...</p>
+        <p className="mt-4 text-gray-600">加载参数中...</p>
       </div>
     );
   }
@@ -130,7 +145,7 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
   if (delegatedVerifier === undefined) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">未找到链群信息</p>
+        <p className="text-red-500">未找到扩展参数</p>
       </div>
     );
   }
@@ -140,23 +155,25 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
   return (
     <>
       <div className="space-y-6">
-        {/* 返回按钮 */}
-        <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          返回
-        </Button>
-
-        {/* 标题 */}
         <div>
           <LeftTitle title="设置打分代理" />
-          <p className="text-sm text-gray-600 mt-2">为链群 #{groupId.toString()} 设置打分代理人</p>
         </div>
 
         {/* 当前代理信息 */}
         {hasDelegated && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="text-sm text-blue-800 mb-2">当前打分代理:</div>
-            <AddressWithCopyButton address={delegatedVerifier} showCopyButton={true} />
+            <div className="flex items-center gap-3">
+              <AddressWithCopyButton address={delegatedVerifier} showCopyButton={true} />
+              <button
+                type="button"
+                onClick={handleCancelDelegated}
+                disabled={isPendingSet || isConfirmingSet || isConfirmedSet}
+                className="text-sm text-blue-600 hover:text-blue-800 underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
+              >
+                取消代理
+              </button>
+            </div>
           </div>
         )}
 
@@ -169,25 +186,25 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
               name="delegatedVerifier"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-greyscale-500 font-normal">代理地址*</FormLabel>
+                  <FormLabel>代理地址</FormLabel>
                   <FormControl>
-                    <Input placeholder="0x..." className="!ring-secondary-foreground" {...field} />
+                    <Input
+                      placeholder="输入代理打分地址，留空表示取消原打分代理"
+                      className="!ring-secondary-foreground"
+                      {...field}
+                    />
                   </FormControl>
-                  <FormDescription className="text-xs">
-                    输入零地址 (0x0000000000000000000000000000000000000000) 可取消代理
-                  </FormDescription>
+                  <FormDescription className="text-xs">不填表示取消代理</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
             {/* 按钮 */}
-            <div className="flex justify-center space-x-4 pt-4">
-              <Button variant="outline" onClick={() => router.back()} disabled={isPendingSet || isConfirmingSet}>
-                取消
-              </Button>
+            <div className="flex justify-center gap-3 pt-4">
               <Button
                 disabled={isPendingSet || isConfirmingSet || isConfirmedSet}
+                className="w-full max-w-xs"
                 type="button"
                 onClick={() => {
                   form.handleSubmit((values) => handleSetDelegated(values))();
@@ -206,7 +223,7 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
             <div>• 打分代理可以代替您对链群进行验证打分</div>
             <div>• 代理人不需要是链群所有者</div>
             <div>• 可以随时更换或取消代理</div>
-            <div>• 输入零地址可以取消代理，恢复自己打分</div>
+            <div>• 留空提交或点击"取消代理"按钮可恢复自己打分</div>
           </div>
         </div>
       </div>

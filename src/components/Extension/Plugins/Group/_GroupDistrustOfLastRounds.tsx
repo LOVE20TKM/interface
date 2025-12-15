@@ -85,7 +85,8 @@ const _GroupDistrustOfLastRounds: React.FC<GroupDistrustOfLastRoundsProps> = ({
     setSelectedOwner(null);
   };
 
-  if (isPending) {
+  // 只有在真正加载中且还没有数据时才显示加载状态
+  if (isPending && !distrustVotes) {
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />

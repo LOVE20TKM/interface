@@ -31,25 +31,15 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { HelpCircle } from 'lucide-react';
-import { env } from 'process';
+import _GroupStakeTokenPanel from './_GroupStakeTokenPanel';
+import _GroupTokenApproveButtons from './_GroupTokenApproveButtons';
+import _GroupActionTips from './_GroupActionTips';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 function safeParseUnits(val: string | undefined): bigint {
   if (!val) return BigInt(0);
   return parseUnits(val);
-}
-
-function formatBpsToPercent(bps: bigint): string {
-  // 100 bps = 1.00%
-  const integer = bps / BigInt(100);
-  const frac = (bps % BigInt(100)).toString().padStart(2, '0');
-  return `${integer.toString()}.${frac}%`;
-}
-
-function minBigInt(a: bigint, b: bigint): bigint {
-  return a < b ? a : b;
 }
 
 interface GroupOPActivateProps {
@@ -177,13 +167,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     return stakedAmountBigInt * actionParams.stakingMultiplier;
   }, [actionParams?.stakingMultiplier, stakedAmountBigInt]);
 
-  const actualCapacity = useMemo(() => {
-    if (!stakedCapacity || stakedCapacity <= BigInt(0)) return BigInt(0);
-    // maxCapacity 来自 expandableInfo（链上计算的治理上限），若为空则只显示质押容量
-    if (maxCapacity === undefined || maxCapacity <= BigInt(0)) return stakedCapacity;
-    return minBigInt(stakedCapacity, maxCapacity);
-  }, [stakedCapacity, maxCapacity]);
-
   const {
     allowance,
     isPending: isPendingAllowance,
@@ -258,7 +241,11 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
 
     // 验证质押代币数
     if (actionParams.minStake > BigInt(0) && stakedAmountBigInt < actionParams.minStake) {
-      toast.error(`质押代币数不能小于最小质押量 ${formatTokenAmount(actionParams.minStake, 2)} ${token?.symbol}`);
+      toast.error(
+        `质押代币数不能小于最小质押量 ${formatTokenAmount(actionParams.minStake || BigInt(0), 4, 'ceil')} ${
+          token?.symbol
+        }`,
+      );
       return;
     }
     if (
@@ -324,7 +311,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     if (isConfirmedActivate) {
       toast.success('链群激活成功');
       setTimeout(() => {
-        router.push(`/extension/action_info/?id=${actionId.toString()}&symbol=${token?.symbol}&tab=public`);
+        router.push(`/action/info/?id=${actionId.toString()}&symbol=${token?.symbol}&tab=public`);
       }, 1500);
     }
   }, [isConfirmedActivate, router]);
@@ -351,17 +338,19 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
       if (minStake > BigInt(0) && staked < minStake) {
         form.setError('stakedAmount', {
           type: 'validate',
-          message: `质押代币数不能小于最小质押量 ${formatTokenAmount(minStake, 2)} ${token?.symbol}`,
+          message: `质押代币数不能小于最小质押量 ${formatTokenAmount(actionParams.minStake || BigInt(0), 4, 'ceil')} ${
+            token?.symbol
+          }`,
         });
       } else if (maxStakeAllowed > BigInt(0) && staked > maxStakeAllowed) {
         form.setError('stakedAmount', {
           type: 'validate',
-          message: `质押代币数不能大于最大质押量 ${formatTokenAmount(maxStakeAllowed, 2)} ${token?.symbol}`,
+          message: `质押代币数不能大于最大质押量 ${formatTokenAmount(maxStakeAllowed)} ${token?.symbol}`,
         });
       } else if (userBalance !== undefined && userBalance > BigInt(0) && staked > userBalance) {
         form.setError('stakedAmount', {
           type: 'validate',
-          message: `质押代币数不能大于余额 ${formatTokenAmount(userBalance, 2)} ${token?.symbol}`,
+          message: `质押代币数不能大于余额 ${formatTokenAmount(userBalance)} ${token?.symbol}`,
         });
       } else {
         form.clearErrors('stakedAmount');
@@ -453,14 +442,12 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
         <p className="text-red-500 mb-2">
           {myGroups && myGroups.length > 0 ? '您的所有链群已经激活，没有可用的链群' : '您目前没有可用的链群'}
         </p>
-        {(!myGroups || myGroups.length === 0) && (
-          <p className="text-sm text-gray-600">
-            请先铸造一个链群ID，
-            <Link href="/extension/groupids/" className="text-blue-500 hover:text-blue-700 underline">
-              去铸造&gt;&gt;
-            </Link>
-          </p>
-        )}
+        <p className="text-sm text-gray-600">
+          请先铸造一个链群ID，
+          <Link href="/extension/groupids/" className="text-blue-500 hover:text-blue-700 underline">
+            去铸造&gt;&gt;
+          </Link>
+        </p>
       </div>
     );
   }
@@ -504,46 +491,23 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
             {/* 质押代币数 */}
-            <FormField
-              control={form.control}
-              name="stakedAmount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    质押代币数
-                    <span className="font-normal">
-                      {' '}
-                      (范围：
-                      {formatTokenAmount(actionParams.minStake || BigInt(0), 4, 'ceil')} ~{' '}
-                      {formatTokenAmount(additionalStakeAllowed || BigInt(0))})
-                    </span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="请输入质押代币数" className="!ring-secondary-foreground" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                  <FormDescription className="text-xs">
-                    对应容量：<span className="text-secondary">{formatTokenAmount(stakedCapacity, 2)}</span>{' '}
-                    {token?.symbol}
-                  </FormDescription>
-                  <FormDescription className="flex items-center gap-2 text-xs">
-                    <span>
-                      余额：<span className="text-secondary">{formatTokenAmount(userBalance || BigInt(0))}</span>{' '}
-                      {token?.symbol}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      onClick={handleSetMax}
-                      className="text-secondary p-0 h-auto"
-                      disabled={!userBalance || userBalance <= BigInt(0)}
-                    >
-                      最高
-                    </Button>
-                  </FormDescription>
-                </FormItem>
-              )}
+            <_GroupStakeTokenPanel
+              form={form}
+              fieldName="stakedAmount"
+              label="质押代币数"
+              placeholder="请输入质押代币数"
+              tokenSymbol={token?.symbol}
+              userBalance={userBalance}
+              minAmount={actionParams.minStake}
+              maxAmount={additionalStakeAllowed}
+              showRange={true}
+              onSetMax={handleSetMax}
+              additionalInfo={
+                <FormDescription className="text-xs">
+                  对应容量：<span className="text-secondary">{formatTokenAmount(stakedCapacity, 2)}</span>{' '}
+                  {token?.symbol}
+                </FormDescription>
+              }
             />
 
             {/* 链群描述 */}
@@ -610,71 +574,34 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
             />
 
             {/* 按钮 */}
-            <div className="flex justify-center space-x-4 pt-4">
-              <Button
-                className="w-1/2"
-                disabled={isPendingAllowance || isPendingApprove || isConfirmingApprove || isTokenApproved}
-                type="button"
-                onClick={() => {
-                  form.handleSubmit((values) => handleApprove(values))();
-                }}
-              >
-                {isTokenApproved ? `1.${token?.symbol}已授权` : `1.授权${token?.symbol}`}
-              </Button>
-              <Button
-                className="w-1/2"
-                disabled={
-                  !finalGroupId || !isTokenApproved || isPendingActivate || isConfirmingActivate || isConfirmedActivate
-                }
-                type="button"
-                onClick={() => {
-                  form.handleSubmit((values) => handleActivate(values))();
-                }}
-              >
-                {isPendingActivate
-                  ? '2.提交中...'
-                  : isConfirmingActivate
-                  ? '2.确认中...'
-                  : isConfirmedActivate
-                  ? '2.已激活'
-                  : '2.激活链群'}
-              </Button>
-            </div>
+            <_GroupTokenApproveButtons
+              tokenSymbol={token?.symbol}
+              isTokenApproved={isTokenApproved}
+              isPendingApprove={isPendingApprove}
+              isConfirmingApprove={isConfirmingApprove}
+              onApprove={() => form.handleSubmit((values) => handleApprove(values))()}
+              isPendingAction={isPendingActivate}
+              isConfirmingAction={isConfirmingActivate}
+              isConfirmedAction={isConfirmedActivate}
+              onAction={() => form.handleSubmit((values) => handleActivate(values))()}
+              actionLabel="激活链群"
+              actionLabelPending="2.提交中..."
+              actionLabelConfirming="2.确认中..."
+              actionLabelConfirmed="2.已激活"
+              disableAction={!finalGroupId}
+            />
           </form>
         </Form>
 
         {/* 小贴士（算法 + 数值） */}
-        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="flex items-center gap-2 text-base font-bold text-blue-800 pb-2">💡小贴士</div>
-          <div className="flex flex-col space-y-2 text-blue-700">
-            <div className="text-base font-bold text-blue-700 pt-2 pb-1">权限：</div>
-            <div>
-              1. 要激活链群，链群服务者的治理票占比需 ≥{' '}
-              {formatBpsToPercent(actionParams?.minGovVoteRatioBps || BigInt(0))}
-            </div>
-            <div className="text-base font-bold text-blue-700 pt-2 pb-1">容量与质押量：</div>
-            <div>
-              1. <b>链群服务者“最大”链群容量</b> = 已铸造代币总量 × 链群服务者治理票占比 × 容量倍数( 为
-              {actionParams?.capacityMultiplier.toString()})
-            </div>
-            <div>
-              2. <b>链群服务者“实际”链群容量</b> = 质押量 × 质押倍数( 为{actionParams?.stakingMultiplier.toString()})
-            </div>
-            <div>
-              3. <b>链群服务者“最大”质押量</b> = 链群服务者“最大”链群容量 / 质押倍数( 为
-              {actionParams?.stakingMultiplier.toString()})
-            </div>
-            <div className="text-base font-bold text-blue-700 pt-2 pb-1">参与代币：</div>
-            <div>
-              1. <b>行动最小参与代币量</b> = {formatTokenAmount(actionParams?.minJoinAmount || BigInt(0))}
-            </div>
-            <div>
-              2. <b>行动最大参与代币量</b> = 已铸造代币总量 / 最大参与代币倍数( 为
-              {actionParams?.maxJoinAmountMultiplier.toString()}) ={' '}
-              {formatTokenAmount(actionParams?.joinMaxAmount || BigInt(0))}
-            </div>
-          </div>
-        </div>
+        <_GroupActionTips
+          minGovVoteRatioBps={actionParams?.minGovVoteRatioBps}
+          capacityMultiplier={actionParams?.capacityMultiplier}
+          stakingMultiplier={actionParams?.stakingMultiplier}
+          minJoinAmount={actionParams?.minJoinAmount}
+          maxJoinAmountMultiplier={actionParams?.maxJoinAmountMultiplier}
+          joinMaxAmount={actionParams?.joinMaxAmount}
+        />
       </div>
 
       <LoadingOverlay

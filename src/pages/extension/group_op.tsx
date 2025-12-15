@@ -91,7 +91,7 @@ const ActionGroupOpPage: React.FC = () => {
           <div className="container mx-auto px-4 py-8">
             <div className="text-center py-12">
               <p className="text-red-500">缺少必要参数</p>
-              <p className="text-sm text-gray-600 mt-2">需要: id (actionId), op (操作类型)</p>
+              <p className="text-sm text-gray-600 mt-2">需要: actionId (行动ID), op (操作类型)</p>
             </div>
           </div>
         </main>
