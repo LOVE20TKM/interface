@@ -435,7 +435,7 @@ const LiquidityPanel = () => {
   // --------------------------------------------------
   // 7. 价格比例显示
   // --------------------------------------------------
-  const [showTokenToBase, setShowTokenToBase] = useState(false);
+  const [showTokenToBase, setShowTokenToBase] = useState(true);
 
   // 价格计算
   const priceInfo = useMemo(() => {
