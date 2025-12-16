@@ -3,19 +3,35 @@
 
 'use client';
 
+// React
 import React, { useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+
+// Next.js
 import Link from 'next/link';
-import { TokenContext } from '@/src/contexts/TokenContext';
+import { useRouter } from 'next/router';
+
+// 第三方库
+import toast from 'react-hot-toast';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
+import { useCurrentRound as useVerifyCurrentRound, useScoreByVerifierByActionId } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useDelegatedVerifierByGroupId } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
-import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
-import { useScoreByVerifierByActionId } from '@/src/hooks/contracts/useLOVE20Verify';
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
+import {
+  useAccountsByGroupIdCount,
+  useDelegatedVerifierByGroupId,
+} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+
+// 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatTokenAmount } from '@/src/lib/format';
-import toast from 'react-hot-toast';
+
+// 组件
 import _GroupManagementDialog from './_GroupManagementDialog';
 
 interface GroupHeaderProps {
@@ -58,8 +74,8 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     error: errorDelegated,
   } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
 
-  // 获取当前轮次
-  const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
+  // 获取当前轮次（使用 Verify 合约的 round）
+  const { currentRound, isPending: isPendingRound, error: errorRound } = useVerifyCurrentRound();
 
   // 获取我的验证票数（用于判断是否能投不信任票）
   const {
@@ -79,7 +95,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     if (errorDetail) handleContractError(errorDetail, 'extension');
     if (errorAccountsCount) handleContractError(errorAccountsCount, 'extension');
     if (errorDelegated) handleContractError(errorDelegated, 'extension');
-    if (errorRound) handleContractError(errorRound, 'vote');
+    if (errorRound) handleContractError(errorRound, 'verify');
     if (errorVerify) handleContractError(errorVerify, 'verify');
   }, [errorDetail, errorAccountsCount, errorDelegated, errorRound, errorVerify, handleContractError]);
 
@@ -133,7 +149,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
       {/* 第二行：参与统计信息 */}
       <div className="grid grid-cols-2 gap-4 text-sm mb-2">
         <div className="flex items-center">
-          <span className="text-gray-500 mr-2">参与代币总数:</span>
+          <span className="text-gray-500 mr-2">参与代币数:</span>
           <span className="font-mono text-secondary">{formattedTotalAmount}</span>
         </div>
         <div className="flex items-center">

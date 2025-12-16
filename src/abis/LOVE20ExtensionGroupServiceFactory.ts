@@ -36,7 +36,12 @@ export const LOVE20ExtensionGroupServiceFactoryAbi = [
         "internalType": "address"
       },
       {
-        "name": "groupActionAddress_",
+        "name": "groupActionTokenAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupActionFactoryAddress_",
         "type": "address",
         "internalType": "address"
       },
@@ -91,7 +96,12 @@ export const LOVE20ExtensionGroupServiceFactoryAbi = [
         "internalType": "address"
       },
       {
-        "name": "groupActionAddress",
+        "name": "groupActionTokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupActionFactoryAddress",
         "type": "address",
         "internalType": "address"
       },

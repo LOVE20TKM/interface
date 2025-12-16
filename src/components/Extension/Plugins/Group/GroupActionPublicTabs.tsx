@@ -3,13 +3,22 @@
 
 'use client';
 
+// React
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ActionInfo } from '@/src/types/love20types';
-import _GroupsTab from './_GroupsTab';
-import _GroupDistrustTab from './_GroupDistrustTab';
-import _ManagerTab from './_ManagerTab';
+
+// 第三方库
 import { useAccount } from 'wagmi';
+
+// UI 组件
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// 类型
+import { ActionInfo } from '@/src/types/love20types';
+
+// 组件
+import _GroupDistrustTab from './_GroupDistrustTab';
+import _GroupsTab from './_GroupsTab';
+import _ManagerTab from './_ManagerTab';
 
 interface GroupActionPublicTabsProps {
   actionId: bigint;

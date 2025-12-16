@@ -19,7 +19,9 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { VerificationInfoAbi } from '@/src/abis/VerificationInfo';
+import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
+
+const CONTRACT_CENTER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
 
 // ==================== 类型定义 ====================
 
@@ -27,8 +29,10 @@ import { VerificationInfoAbi } from '@/src/abis/VerificationInfo';
  * Hook 参数
  */
 export interface UseAccountVerificationInfosParams {
-  /** 扩展合约地址 */
-  extensionAddress: `0x${string}` | undefined;
+  /** Token 地址 */
+  tokenAddress: `0x${string}` | undefined;
+  /** Action ID */
+  actionId: bigint | undefined;
   /** 账户地址 */
   account: `0x${string}` | undefined;
   /** 验证信息的 key 列表（如：['微信', '邮箱', '电话']） */
@@ -56,15 +60,16 @@ export interface UseAccountVerificationInfosResult {
  * @returns 账户的验证信息列表及加载状态
  *
  * @description
- * 对每个 verificationKey，调用扩展合约的 verificationInfo(account, key) 方法
+ * 对每个 verificationKey，调用 ExtensionCenter 合约的 verificationInfo(tokenAddress, actionId, account, key) 方法
  * 使用 useReadContracts 批量查询，提升性能
  *
  * @example
  * ```typescript
  * // 查询用户的微信、邮箱、电话验证信息
  * const { verificationInfos, isPending } = useAccountVerificationInfos({
- *   extensionAddress: '0x123...',
- *   account: '0xabc...',
+ *   tokenAddress: '0xabc...', // Token 地址
+ *   actionId: BigInt(1), // Action ID
+ *   account: '0xdef...', // 用户地址
  *   verificationKeys: ['微信', '邮箱', '电话']
  * });
  *
@@ -78,7 +83,7 @@ export interface UseAccountVerificationInfosResult {
 export function useAccountVerificationInfos(
   params: UseAccountVerificationInfosParams,
 ): UseAccountVerificationInfosResult {
-  const { extensionAddress, account, verificationKeys } = params;
+  const { tokenAddress, actionId, account, verificationKeys } = params;
 
   // ==========================================
   // 构建批量查询合约配置
@@ -91,12 +96,13 @@ export function useAccountVerificationInfos(
 
     // 为每个 verificationKey 构建一个查询配置
     return verificationKeys.map((key) => ({
-      address: extensionAddress,
-      abi: VerificationInfoAbi,
+      address: CONTRACT_CENTER_ADDRESS,
+      abi: LOVE20ExtensionCenterAbi,
       functionName: 'verificationInfo' as const,
-      args: account && key ? [account, key] : undefined,
+      args:
+        tokenAddress && actionId !== undefined && account && key ? [tokenAddress, actionId, account, key] : undefined,
     }));
-  }, [extensionAddress, account, verificationKeys]);
+  }, [CONTRACT_CENTER_ADDRESS, tokenAddress, actionId, account, verificationKeys]);
 
   // ==========================================
   // 批量调用合约
@@ -105,7 +111,13 @@ export function useAccountVerificationInfos(
     contracts,
     query: {
       // 只有在所有必要参数都存在且有 key 需要查询时才启用
-      enabled: !!extensionAddress && !!account && !!verificationKeys && verificationKeys.length > 0,
+      enabled:
+        !!CONTRACT_CENTER_ADDRESS &&
+        !!tokenAddress &&
+        actionId !== undefined &&
+        !!account &&
+        !!verificationKeys &&
+        verificationKeys.length > 0,
     },
   });
 

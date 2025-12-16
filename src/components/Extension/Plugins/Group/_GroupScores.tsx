@@ -3,19 +3,34 @@
 
 'use client';
 
+// React
 import React, { useContext, useEffect, useState } from 'react';
+
+// Next.js
 import { useRouter } from 'next/router';
-import { TokenContext } from '@/src/contexts/TokenContext';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useGroupScoresOfRound } from '@/src/hooks/extension/plugins/group/composite';
-import { useGroupAccountsJoinedAmountOfRound } from '@/src/hooks/extension/plugins/group/composite';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
+import {
+  useGroupAccountsJoinedAmountOfRound,
+  useGroupScoresOfRound,
+} from '@/src/hooks/extension/plugins/group/composite';
+
+// 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import LeftTitle from '@/src/components/Common/LeftTitle';
+
+// 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import ChangeRound from '@/src/components/Common/ChangeRound';
+import LeftTitle from '@/src/components/Common/LeftTitle';
+import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 interface GroupScoresProps {
   actionId: bigint;
@@ -120,7 +135,8 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extens
   const combinedData =
     accountScores?.map((scoreInfo) => ({
       account: scoreInfo.account,
-      score: scoreInfo.originScore,
+      originScore: scoreInfo.originScore,
+      finalScore: scoreInfo.finalScore,
       joinedAmount: amountMap.get(scoreInfo.account.toLowerCase()) || BigInt(0),
     })) || [];
 
@@ -177,8 +193,8 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extens
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-1 text-left">成员地址</th>
-                <th className="px-1 text-right">参与币数</th>
-                <th className="px-1 text-right">得分</th>
+                <th className="px-1 text-right">参与币数 / 原始打分</th>
+                <th className="px-1 text-right">最终打分</th>
               </tr>
             </thead>
             <tbody>
@@ -187,8 +203,12 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extens
                   <td className="px-1">
                     <AddressWithCopyButton address={item.account} showCopyButton={true} />
                   </td>
-                  <td className="px-1 text-right font-mono text-secondary">{formatTokenAmount(item.joinedAmount)}</td>
-                  <td className="px-1 text-right text-greyscale-700">{formatPercentage(Number(item.score) / 100)}</td>
+                  <td className="px-1 text-right font-mono">
+                    {formatTokenAmount(item.joinedAmount)}/{Number(item.originScore).toString()}
+                  </td>
+                  <td className="px-1 text-right text-greyscale-700 font-mono ">
+                    {formatTokenAmount(item.finalScore)}
+                  </td>
                 </tr>
               ))}
             </tbody>

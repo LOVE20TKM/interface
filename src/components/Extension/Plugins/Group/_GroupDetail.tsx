@@ -3,15 +3,25 @@
 
 'use client';
 
+// React
 import React, { useContext, useEffect } from 'react';
-import { TokenContext } from '@/src/contexts/TokenContext';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+
+// 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
-import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
+import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+
+// 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import LeftTitle from '@/src/components/Common/LeftTitle';
 
 interface GroupDetailProps {
   actionId: bigint;

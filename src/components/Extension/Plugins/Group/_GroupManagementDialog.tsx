@@ -3,9 +3,16 @@
 
 'use client';
 
+// React
 import React from 'react';
+
+// Next.js
 import { useRouter } from 'next/router';
+
+// 第三方库
 import { Settings } from 'lucide-react';
+
+// UI 组件
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 

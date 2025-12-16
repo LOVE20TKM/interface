@@ -3,20 +3,35 @@
 
 'use client';
 
+// React
 import React, { useContext, useEffect, useState } from 'react';
+
+// Next.js
 import { useRouter } from 'next/router';
-import { TokenContext } from '@/src/contexts/TokenContext';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useGroupAccountsRewardOfRound } from '@/src/hooks/extension/plugins/group/composite';
-import { useGroupScoresOfRound } from '@/src/hooks/extension/plugins/group/composite';
-import { useGroupAccountsJoinedAmountOfRound } from '@/src/hooks/extension/plugins/group/composite';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
+import {
+  useGroupAccountsJoinedAmountOfRound,
+  useGroupAccountsRewardOfRound,
+  useGroupScoresOfRound,
+} from '@/src/hooks/extension/plugins/group/composite';
+
+// 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
-import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import LeftTitle from '@/src/components/Common/LeftTitle';
+import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+
+// 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import ChangeRound from '@/src/components/Common/ChangeRound';
+import LeftTitle from '@/src/components/Common/LeftTitle';
+import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 interface GroupRewardsProps {
   actionId: bigint;
@@ -34,14 +49,14 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
 
   // 从URL获取round参数
   const { round: urlRound } = router.query;
-  const [selectedRound, setSelectedRound] = useState<bigint>(currentRound || BigInt(1));
+  const [selectedRound, setSelectedRound] = useState<bigint>(currentRound - BigInt(1) || BigInt(1));
 
   // 初始化轮次状态
   useEffect(() => {
     if (urlRound && !isNaN(Number(urlRound))) {
       setSelectedRound(BigInt(urlRound as string));
-    } else if (currentRound) {
-      setSelectedRound(currentRound);
+    } else if (currentRound && currentRound > BigInt(0)) {
+      setSelectedRound(currentRound - BigInt(1));
     }
   }, [urlRound, currentRound]);
 
@@ -222,7 +237,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
                     <AddressWithCopyButton address={item.account} showCopyButton={true} />
                   </td>
                   <td className="px-1 text-right font-mono text-secondary">{formatTokenAmount(item.joinedAmount)}</td>
-                  <td className="px-1 text-right text-greyscale-700">{formatPercentage(Number(item.score) / 100)}</td>
+                  <td className="px-1 text-right text-greyscale-700">{Number(item.score).toString()}</td>
                   <td className="px-1 text-right">
                     <div className="font-mono text-secondary">{formatTokenAmount(item.reward, 2)}</div>
                     <div className="text-xs text-greyscale-500">{item.rewardPercentage.toFixed(2)}%</div>

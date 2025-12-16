@@ -3,10 +3,11 @@
 
 export * from './useExtensionActionConstCache';
 export * from './useExtensionActionParam';
-export * from './useExtensionGroupsOfAction';
+export * from './useExtensionGroupInfosOfAction';
+export * from './useExtensionGroupBaseInfosOfAction';
 export * from './useExtensionGroupsOfAccount';
 export * from './useExtensionGroupDetail';
-export * from './useDistrustVotesOfLastRounds';
+export * from './useDistrustVotesOfCurrentRound';
 export * from './useDistrustVotesOfGroupOwner';
 export * from './useGroupScoresOfRound';
 export * from './useGroupAccountsJoinedAmountOfRound';

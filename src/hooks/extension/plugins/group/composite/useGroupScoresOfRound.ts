@@ -5,10 +5,12 @@ import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
 import { safeToBigInt } from '@/src/lib/clientUtils';
+import { useAccountsByGroupIdByRound } from './useAccountsByGroupIdByRound';
 
 export interface AccountScoreInfo {
   account: `0x${string}`;
   originScore: bigint;
+  finalScore: bigint;
 }
 
 export interface UseGroupScoresOfRoundParams {
@@ -35,48 +37,36 @@ export const useGroupScoresOfRound = ({
   round,
   groupId,
 }: UseGroupScoresOfRoundParams): UseGroupScoresOfRoundResult => {
-  // 第一步：获取快照账户列表
-  const accountsContract = useMemo(() => {
-    if (!extensionAddress || round === undefined || groupId === undefined) return [];
-
-    return [
-      {
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'snapshotAccountsByGroupId',
-        args: [round, groupId],
-      },
-    ];
-  }, [extensionAddress, round, groupId]);
-
+  // 第一步：获取账户列表（使用 useAccountsByGroupIdByRound hook）
   const {
-    data: accountsData,
+    accounts,
     isPending: isAccountsPending,
     error: accountsError,
-  } = useReadContracts({
-    contracts: accountsContract as any,
-    query: {
-      enabled:
-        !!extensionAddress && round !== undefined && groupId !== undefined && accountsContract.length > 0,
-    },
+  } = useAccountsByGroupIdByRound({
+    extensionAddress: extensionAddress || '0x0',
+    groupId: groupId || BigInt(0),
+    round: round || BigInt(0),
   });
 
-  const accounts = useMemo(() => {
-    if (!accountsData || !accountsData[0]?.result) return [];
-    return accountsData[0].result as `0x${string}`[];
-  }, [accountsData]);
-
-  // 第二步：获取每个账户的原始得分
+  // 第二步：获取每个账户的原始得分和最终得分
   const scoresContracts = useMemo(() => {
     if (!extensionAddress || round === undefined || accounts.length === 0) return [];
 
     const contracts = [];
 
     for (const account of accounts) {
+      // 获取原始得分
       contracts.push({
         address: extensionAddress,
         abi: LOVE20ExtensionGroupActionAbi,
         functionName: 'originScoreByAccount',
+        args: [round, account],
+      });
+      // 获取最终得分
+      contracts.push({
+        address: extensionAddress,
+        abi: LOVE20ExtensionGroupActionAbi,
+        functionName: 'scoreByAccount',
         args: [round, account],
       });
     }
@@ -101,21 +91,35 @@ export const useGroupScoresOfRound = ({
 
     const result: AccountScoreInfo[] = [];
 
+    // 由于每个账户有两个查询（originScoreByAccount 和 scoreByAccount），
+    // 所以数据索引是 i * 2 和 i * 2 + 1
     for (let i = 0; i < accounts.length; i++) {
-      const originScore = safeToBigInt(scoresData[i]?.result);
+      const originScore = safeToBigInt(scoresData[i * 2]?.result);
+      const finalScore = safeToBigInt(scoresData[i * 2 + 1]?.result);
 
       result.push({
         account: accounts[i],
         originScore,
+        finalScore,
       });
     }
 
     return result;
   }, [scoresData, accounts]);
 
+  // 计算最终的 pending 状态
+  // 如果账户列表还在加载中，返回 true
+  // 如果账户列表加载完成但为空，返回 false（不需要等待后续查询）
+  // 如果账户列表不为空，等待分数数据加载完成
+  const finalIsPending = useMemo(() => {
+    if (isAccountsPending) return true;
+    if (accounts.length === 0) return false;
+    return isScoresPending;
+  }, [isAccountsPending, accounts.length, isScoresPending]);
+
   return {
     accountScores,
-    isPending: isAccountsPending || isScoresPending,
+    isPending: finalIsPending,
     error: accountsError || scoresError,
   };
 };

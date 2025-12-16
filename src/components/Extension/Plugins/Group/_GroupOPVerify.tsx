@@ -3,26 +3,44 @@
 
 'use client';
 
+// React
 import React, { useContext, useEffect, useState } from 'react';
+
+// Next.js
 import { useRouter } from 'next/router';
-import { useAccount } from 'wagmi';
+
+// 第三方库
 import { toast } from 'react-hot-toast';
+import { useAccount } from 'wagmi';
+
+// UI 组件
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { TokenContext } from '@/src/contexts/TokenContext';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
-import {
-  useSnapshotAccountsByGroupId,
-  useSubmitOriginScore,
-  useDelegatedVerifierByGroupId,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useOwnerOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
+import { useAccountsByGroupIdByRound } from '@/src/hooks/extension/plugins/group/composite/useAccountsByGroupIdByRound';
+import {
+  useDelegatedVerifierByGroupId,
+  useSubmitOriginScore,
+  useSubmittedCount,
+} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+
+// 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
+
+// 组件
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import LeftTitle from '@/src/components/Common/LeftTitle';
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 interface GroupOPVerifyProps {
   actionId: bigint;
@@ -60,44 +78,48 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
     account &&
     (account.toLowerCase() === groupOwner?.toLowerCase() || account.toLowerCase() === delegatedVerifier?.toLowerCase());
 
-  // 获取被验证者地址列表
+  // 获取被验证者地址列表（使用新的 hook）
   const {
-    accounts: snapshotAccounts,
-    isPending: isPendingSnapshot,
-    error: errorSnapshot,
-  } = useSnapshotAccountsByGroupId(extensionAddress, currentRound || BigInt(0), groupId);
+    accounts: accounts,
+    isPending: isPendingGetAccounts,
+    error: errorGetAccounts,
+  } = useAccountsByGroupIdByRound({
+    extensionAddress,
+    groupId,
+    round: currentRound || BigInt(0),
+  });
 
-  console.log('currentRound', currentRound);
-  console.log('groupId', groupId);
-  console.log('extensionAddress', extensionAddress);
-  console.log('snapshotAccounts', snapshotAccounts);
+  // 获取已提交的打分数量
+  const {
+    submittedCount,
+    isPending: isPendingSubmittedCount,
+    error: errorSubmittedCount,
+  } = useSubmittedCount(extensionAddress, currentRound || BigInt(0), groupId);
 
   // 打分状态
   const [accountScores, setAccountScores] = useState<AccountScore[]>([]);
 
   // 初始化打分列表
   useEffect(() => {
-    if (snapshotAccounts && snapshotAccounts.length > 0) {
+    if (accounts && accounts.length > 0) {
       setAccountScores(
-        snapshotAccounts.map((acc) => ({
+        accounts.map((acc) => ({
           account: acc,
           score: '100', // 默认100分
           ratio: 0,
         })),
       );
     }
-  }, [snapshotAccounts]);
+  }, [accounts]);
 
-  // 计算占比
-  useEffect(() => {
+  // 计算占比 - 使用 useMemo 而不是 useEffect 来避免无限循环
+  const accountScoresWithRatio = React.useMemo(() => {
     const totalScore = accountScores.reduce((sum, item) => sum + parseFloat(item.score || '0'), 0);
-    setAccountScores((prev) =>
-      prev.map((item) => ({
-        ...item,
-        ratio: totalScore > 0 ? parseFloat(item.score || '0') / totalScore : 0,
-      })),
-    );
-  }, [accountScores.map((s) => s.score).join(',')]);
+    return accountScores.map((item) => ({
+      ...item,
+      ratio: totalScore > 0 ? parseFloat(item.score || '0') / totalScore : 0,
+    }));
+  }, [accountScores]);
 
   // 打分
   const {
@@ -149,25 +171,33 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
       return;
     }
 
-    // 检查是否所有分数都有效
-    const hasInvalidScore = accountScores.some((item) => {
+    // 检查是否已经提交过打分
+    if (submittedCount !== undefined && accounts && submittedCount >= BigInt(accounts.length)) {
+      toast.error('本轮打分已经完成，无需重复提交');
+      return;
+    }
+
+    // 检查是否所有分数都有效（0~100 之间）
+    const hasInvalidScore = accountScoresWithRatio.some((item) => {
       const score = parseFloat(item.score || '0');
-      return isNaN(score) || score < 0;
+      return isNaN(score) || score < 0 || score > 100;
     });
 
     if (hasInvalidScore) {
-      toast.error('请确保所有分数都是有效的非负数');
+      toast.error('请确保所有分数都在 0~100 之间');
       return;
     }
 
     try {
       // 准备分数数据：直接使用原始整数
-      const scores = accountScores.map((item) => {
+      const scores = accountScoresWithRatio.map((item) => {
         const score = parseInt(item.score);
         return BigInt(isNaN(score) || score < 0 ? 0 : score);
       });
 
-      await submitOriginScore(groupId, scores);
+      // 使用新的 submitOriginScore 签名：groupId, startIndex, originScores
+      // startIndex 设置为 0，表示从第一个账号开始提交
+      await submitOriginScore(groupId, BigInt(0), scores);
     } catch (error) {
       console.error('Verify group failed', error);
     }
@@ -177,7 +207,11 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
     if (isConfirmedVerify) {
       toast.success('打分提交成功');
       setTimeout(() => {
-        router.back();
+        router.push(
+          `/extension/group/?groupId=${groupId.toString()}&actionId=${actionId.toString()}&symbol=${
+            token?.symbol
+          }&tab=scores`,
+        );
       }, 1500);
     }
   }, [isConfirmedVerify, router]);
@@ -188,11 +222,20 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
     if (errorRound) handleContractError(errorRound, 'vote');
     if (errorOwner) handleContractError(errorOwner, 'group');
     if (errorDelegated) handleContractError(errorDelegated, 'extension');
-    if (errorSnapshot) handleContractError(errorSnapshot, 'extension');
+    if (errorGetAccounts) handleContractError(errorGetAccounts, 'extension');
+    if (errorSubmittedCount) handleContractError(errorSubmittedCount, 'extension');
     if (errorVerifyGroup) handleContractError(errorVerifyGroup, 'extension');
-  }, [errorRound, errorOwner, errorDelegated, errorSnapshot, errorVerifyGroup, handleContractError]);
+  }, [
+    errorRound,
+    errorOwner,
+    errorDelegated,
+    errorGetAccounts,
+    errorSubmittedCount,
+    errorVerifyGroup,
+    handleContractError,
+  ]);
 
-  if (isPendingRound || isPendingOwner || isPendingDelegated || isPendingSnapshot) {
+  if (isPendingRound || isPendingOwner || isPendingDelegated || isPendingGetAccounts || isPendingSubmittedCount) {
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
@@ -215,7 +258,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
     );
   }
 
-  if (!snapshotAccounts || snapshotAccounts.length === 0) {
+  if (!accounts || accounts.length === 0) {
     return (
       <div className="space-y-4">
         <LeftTitle title="验证打分" />
@@ -229,9 +272,57 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
 
   const handleScoreChange = (index: number, value: string) => {
     const newScores = [...accountScores];
-    newScores[index].score = value;
-    setAccountScores(newScores);
+    // 限制分值在 0~100 之间
+    const numValue = parseFloat(value);
+    if (value === '' || (numValue >= 0 && numValue <= 100)) {
+      newScores[index].score = value;
+      setAccountScores(newScores);
+    } else if (numValue > 100) {
+      newScores[index].score = '100';
+      setAccountScores(newScores);
+      toast.error('分数不能超过 100');
+    } else if (numValue < 0) {
+      newScores[index].score = '0';
+      setAccountScores(newScores);
+      toast.error('分数不能小于 0');
+    }
   };
+
+  // 检查是否已经打分完成
+  const isAlreadySubmitted = submittedCount !== undefined && accounts && submittedCount >= BigInt(accounts.length);
+
+  // 如果已经打分完成，只显示查看按钮
+  if (isAlreadySubmitted) {
+    return (
+      <div className="space-y-6">
+        {/* 标题 */}
+        <div>
+          <LeftTitle title="验证打分" />
+          <p className="text-sm text-gray-600 mt-2">为链群 #{groupId.toString()} 中的行动者打分</p>
+        </div>
+
+        {/* 已完成提示 */}
+        <div className="text-center py-6">
+          <div className="mb-6">
+            <p className="text-lg font-medium text-gray-900 mb-2">打分已完成</p>
+            <p className="text-sm text-gray-600">本轮已为 {accounts?.length} 个行动者提交打分</p>
+          </div>
+
+          <Button
+            onClick={() => {
+              router.push(
+                `/extension/group/?groupId=${groupId.toString()}&actionId=${actionId.toString()}&symbol=${
+                  token?.symbol
+                }&tab=scores`,
+              );
+            }}
+          >
+            查看打分
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -242,34 +333,18 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
           <p className="text-sm text-gray-600 mt-2">为链群 #{groupId.toString()} 中的行动者打分</p>
         </div>
 
-        {/* 权限信息 */}
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-          <span className="text-gray-600">您的身份: </span>
-          <span className="font-medium text-blue-800">
-            {account?.toLowerCase() === groupOwner?.toLowerCase() ? '链群主' : '打分代理'}
-          </span>
-        </div>
-
-        {/* 操作按钮 */}
-        <div className="flex justify-between items-center">
-          <Button variant="outline" size="sm" onClick={handlePasteFromClipboard}>
-            从剪贴板粘贴分数
-          </Button>
-          <div className="text-sm text-gray-600">共 {accountScores.length} 个行动者</div>
-        </div>
-
         {/* 打分列表 */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           {/* 表头 */}
           <div className="grid grid-cols-12 gap-4 p-3 bg-gray-50 border-b border-gray-200 font-medium text-sm text-gray-700">
             <div className="col-span-6">行动者地址</div>
-            <div className="col-span-3">打分（原始整数）</div>
+            <div className="col-span-3">打分</div>
             <div className="col-span-3">占比</div>
           </div>
 
           {/* 列表 */}
           <div className="divide-y divide-gray-200">
-            {accountScores.map((item, index) => (
+            {accountScoresWithRatio.map((item, index) => (
               <div key={item.account} className="grid grid-cols-12 gap-4 p-3 hover:bg-gray-50">
                 <div className="col-span-6 flex items-center">
                   <AddressWithCopyButton address={item.account} showCopyButton={true} />
@@ -278,6 +353,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
                   <Input
                     type="number"
                     min="0"
+                    max="100"
                     step="1"
                     value={item.score}
                     onChange={(e) => handleScoreChange(index, e.target.value)}
@@ -294,10 +370,14 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
 
         {/* 按钮 */}
         <div className="flex justify-center space-x-4 pt-4">
-          <Button variant="outline" onClick={() => router.back()} disabled={isPendingVerifyGroup || isConfirmingVerify}>
-            取消
+          <Button className="w-1/2" variant="outline" onClick={handlePasteFromClipboard}>
+            从剪贴板粘贴分数
           </Button>
-          <Button disabled={isPendingVerifyGroup || isConfirmingVerify || isConfirmedVerify} onClick={handleVerify}>
+          <Button
+            className="w-1/2"
+            disabled={isPendingVerifyGroup || isConfirmingVerify || isConfirmedVerify}
+            onClick={handleVerify}
+          >
             {isPendingVerifyGroup
               ? '提交中...'
               : isConfirmingVerify
@@ -310,12 +390,10 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
 
         {/* 说明 */}
         <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 打分说明</div>
+          <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
-            <div>• 为每个行动者输入原始整数分数（非负数）</div>
-            <div>• 可以从剪贴板粘贴分数（格式：地址 分数，每行一个）</div>
-            <div>• 占比根据分数自动计算</div>
-            <div>• 只有链群主和打分代理才能打分</div>
+            <div>• 为每个行动者输入整数分数（0~100 之间）</div>
+            <div>• 可以从剪贴板粘贴分数（格式：每行一个分数）</div>
           </div>
         </div>
       </div>

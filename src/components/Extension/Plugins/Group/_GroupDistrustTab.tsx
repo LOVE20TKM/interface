@@ -3,9 +3,14 @@
 
 'use client';
 
+// React
 import React, { useState } from 'react';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
-import _GroupDistrustOfLastRounds from './_GroupDistrustOfLastRounds';
+
+// 组件
+import _GroupDistrustInfoOfCurrentRound from './_GroupDistrustInfoOfCurrentRound';
 import _GroupDistrustVoteSelect from './_GroupDistrustVoteSelect';
 import _GroupDistrustVoteSubmit from './_GroupDistrustVoteSubmit';
 
@@ -70,9 +75,9 @@ const _GroupDistrustTab: React.FC<GroupDistrustTabProps> = ({ actionId, actionIn
     );
   }
 
-  // 默认显示最近n轮不信任投票列表
+  // 默认显示当前轮不信任投票列表
   return (
-    <_GroupDistrustOfLastRounds
+    <_GroupDistrustInfoOfCurrentRound
       actionId={actionId}
       actionInfo={actionInfo}
       extensionAddress={extensionAddress}

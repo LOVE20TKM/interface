@@ -1,5 +1,5 @@
-// hooks/extension/plugins/group/composite/useExtensionGroupsOfAction.ts
-// 批量获取链群列表基本数据
+// hooks/extension/plugins/group/composite/useExtensionGroupInfosOfAction.ts
+// 批量获取链群列表完整信息
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
@@ -29,31 +29,31 @@ export interface GroupBasicInfo {
   actualMaxJoinAmount: bigint;
 }
 
-export interface UseExtensionGroupsOfActionParams {
+export interface UseExtensionGroupInfosOfActionParams {
   extensionAddress: `0x${string}` | undefined;
   tokenAddress: `0x${string}` | undefined;
   actionId: bigint | undefined;
 }
 
-export interface UseExtensionGroupsOfActionResult {
+export interface UseExtensionGroupInfosOfActionResult {
   groups: GroupBasicInfo[];
   isPending: boolean;
   error: any;
 }
 
 /**
- * Hook: 批量获取链群列表基本数据
+ * Hook: 批量获取链群列表完整信息
  *
  * 功能：
  * 1. 获取所有活跃链群ID
- * 2. 批量获取每个链群的基本信息（名称、服务者、参与数据）
+ * 2. 批量获取每个链群的完整信息（名称、服务者、参与数据、容量等）
  * 3. 计算实际最大/最小参与代币量
  */
-export const useExtensionGroupsOfAction = ({
+export const useExtensionGroupInfosOfAction = ({
   extensionAddress,
   tokenAddress,
   actionId,
-}: UseExtensionGroupsOfActionParams): UseExtensionGroupsOfActionResult => {
+}: UseExtensionGroupInfosOfActionParams): UseExtensionGroupInfosOfActionResult => {
   // 获取常量配置（用于获取 actionMinJoinAmount）
   const {
     constants,

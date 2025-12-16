@@ -3,40 +3,50 @@
 
 'use client';
 
-import React, { useContext, useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/router';
-import { useAccount } from 'wagmi';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { toast } from 'react-hot-toast';
+// React
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
-// ui components
+// Next.js
+import { useRouter } from 'next/router';
+
+// 第三方库
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
+import { useAccount } from 'wagmi';
+import { z } from 'zod';
+
+// UI 组件
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 
-// my hooks
-import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+// 类型
+import { ActionInfo } from '@/src/types/love20types';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
+import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
+import { useUpdateVerificationInfo } from '@/src/hooks/extension/base/contracts/useLOVE20ExtensionCenter';
+import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import {
-  useUpdateVerificationInfo,
+  useCenter,
   useJoinInfo,
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
-import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
+
+// 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatTokenAmount } from '@/src/lib/format';
 
-// contexts / types
-import { TokenContext } from '@/src/contexts/TokenContext';
-import { ActionInfo } from '@/src/types/love20types';
-
-// my components
+// 组件
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import LeftTitle from '@/src/components/Common/LeftTitle';
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 interface GroupUpdateVerificationInfoProps {
   actionId: bigint;
@@ -65,6 +75,9 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     actionId,
     groupId,
   });
+
+  // 获取 center 地址
+  const { centerAddress, isPending: isPendingCenter, error: errorCenter } = useCenter(extensionAddress);
 
   // 获取加入信息
   const { joinedRound, amount, error: errorJoinInfo } = useJoinInfo(extensionAddress, account as `0x${string}`);
@@ -100,7 +113,9 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     isPending: isPendingVerificationInfos,
     error: errorVerificationInfos,
   } = useAccountVerificationInfos({
-    extensionAddress,
+    centerAddress,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
     account: account as `0x${string}`,
     verificationKeys: verificationKeys.length > 0 ? verificationKeys : undefined,
   });
@@ -147,13 +162,18 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     isConfirming: isConfirmingUpdate,
     isConfirmed: isConfirmedUpdate,
     writeError: errorUpdate,
-  } = useUpdateVerificationInfo(extensionAddress);
+  } = useUpdateVerificationInfo(centerAddress as `0x${string}`);
 
   async function handleSubmit(values: FormValues) {
+    if (!centerAddress || !token?.address || !account) {
+      console.error('Missing required parameters');
+      return;
+    }
+
     try {
       // 将表单值转换为数组，顺序与 verificationKeys 一致
       const verificationInfos = verificationFields.map((field) => values[field.key] || '');
-      await updateVerificationInfo(verificationInfos);
+      await updateVerificationInfo(token.address, actionId, account, verificationInfos);
     } catch (error) {
       console.error('Update verification info failed', error);
     }
@@ -173,13 +193,14 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
     if (errorDetail) handleContractError(errorDetail, 'extension');
+    if (errorCenter) handleContractError(errorCenter, 'extension');
     if (errorJoinInfo) handleContractError(errorJoinInfo, 'extension');
     if (errorActionInfo) handleContractError(errorActionInfo, 'submit');
     if (errorUpdate) handleContractError(errorUpdate, 'extension');
     if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
-  }, [errorDetail, errorJoinInfo, errorActionInfo, errorUpdate, errorVerificationInfos, handleContractError]);
+  }, [errorDetail, errorCenter, errorJoinInfo, errorActionInfo, errorUpdate, errorVerificationInfos, handleContractError]);
 
-  if (isPendingDetail || isPendingActionInfo || isPendingVerificationInfos) {
+  if (isPendingDetail || isPendingCenter || isPendingActionInfo || isPendingVerificationInfos) {
     return (
       <div className="flex flex-col items-center px-4 pt-6">
         <LoadingIcon />

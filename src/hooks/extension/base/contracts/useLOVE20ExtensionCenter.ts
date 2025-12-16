@@ -15,6 +15,155 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENT
 // =====================
 
 /**
+ * Hook for verificationInfo - 获取验证信息
+ */
+export const useVerificationInfo = (
+  tokenAddress: `0x${string}`,
+  actionId: bigint,
+  account: `0x${string}`,
+  verificationKey: string,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20ExtensionCenterAbi,
+    functionName: 'verificationInfo',
+    args: [tokenAddress, actionId, account, verificationKey],
+    query: {
+      enabled: !!tokenAddress && actionId !== undefined && !!account && !!verificationKey,
+    },
+  });
+
+  return { verificationInfo: data as string | undefined, isPending, error };
+};
+
+/**
+ * Hook for verificationInfoByRound - 获取指定轮次的验证信息
+ */
+export const useVerificationInfoByRound = (
+  tokenAddress: `0x${string}`,
+  actionId: bigint,
+  account: `0x${string}`,
+  verificationKey: string,
+  round: bigint,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20ExtensionCenterAbi,
+    functionName: 'verificationInfoByRound',
+    args: [tokenAddress, actionId, account, verificationKey, round],
+    query: {
+      enabled:
+        !!tokenAddress &&
+        actionId !== undefined &&
+        !!account &&
+        !!verificationKey &&
+        round !== undefined,
+    },
+  });
+
+  return { verificationInfo: data as string | undefined, isPending, error };
+};
+
+/**
+ * Hook for accounts - 获取指定 token 和 actionId 的所有账户地址
+ */
+export const useAccounts = (tokenAddress: `0x${string}`, actionId: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20ExtensionCenterAbi,
+    functionName: 'accounts',
+    args: [tokenAddress, actionId],
+    query: {
+      enabled: !!tokenAddress && actionId !== undefined,
+    },
+  });
+
+  return { accounts: data as `0x${string}`[] | undefined, isPending, error };
+};
+
+/**
+ * Hook for accountsAtIndex - 根据索引获取账户地址
+ */
+export const useAccountsAtIndex = (
+  tokenAddress: `0x${string}`,
+  actionId: bigint,
+  index: bigint,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20ExtensionCenterAbi,
+    functionName: 'accountsAtIndex',
+    args: [tokenAddress, actionId, index],
+    query: {
+      enabled: !!tokenAddress && actionId !== undefined && index !== undefined,
+    },
+  });
+
+  return { accountAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for accountsAtIndexByRound - 根据轮次和索引获取账户地址
+ */
+export const useAccountsAtIndexByRound = (
+  tokenAddress: `0x${string}`,
+  actionId: bigint,
+  index: bigint,
+  round: bigint,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20ExtensionCenterAbi,
+    functionName: 'accountsAtIndexByRound',
+    args: [tokenAddress, actionId, index, round],
+    query: {
+      enabled:
+        !!tokenAddress && actionId !== undefined && index !== undefined && round !== undefined,
+    },
+  });
+
+  return { accountAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for accountsCount - 获取账户数量
+ */
+export const useAccountsCount = (tokenAddress: `0x${string}`, actionId: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20ExtensionCenterAbi,
+    functionName: 'accountsCount',
+    args: [tokenAddress, actionId],
+    query: {
+      enabled: !!tokenAddress && actionId !== undefined,
+    },
+  });
+
+  return { count: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for accountsCountByRound - 获取指定轮次的账户数量
+ */
+export const useAccountsCountByRound = (
+  tokenAddress: `0x${string}`,
+  actionId: bigint,
+  round: bigint,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20ExtensionCenterAbi,
+    functionName: 'accountsCountByRound',
+    args: [tokenAddress, actionId, round],
+    query: {
+      enabled: !!tokenAddress && actionId !== undefined && round !== undefined,
+    },
+  });
+
+  return { count: safeToBigInt(data), isPending, error };
+};
+
+/**
  * Hook for actionIdsByAccount - 获取用户参与的所有 action ID
  */
 export const useActionIdsByAccount = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
@@ -28,13 +177,17 @@ export const useActionIdsByAccount = (tokenAddress: `0x${string}`, account: `0x$
     },
   });
 
-  return { actionIdsByAccount: data as bigint[] | undefined, isPending, error };
+  return { actionIds: data as bigint[] | undefined, isPending, error };
 };
 
 /**
  * Hook for actionIdsByAccountAtIndex - 根据索引获取用户参与的 action ID
  */
-export const useActionIdsByAccountAtIndex = (tokenAddress: `0x${string}`, account: `0x${string}`, index: bigint) => {
+export const useActionIdsByAccountAtIndex = (
+  tokenAddress: `0x${string}`,
+  account: `0x${string}`,
+  index: bigint,
+) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20ExtensionCenterAbi,
@@ -62,7 +215,7 @@ export const useActionIdsByAccountCount = (tokenAddress: `0x${string}`, account:
     },
   });
 
-  return { actionIdsCount: safeToBigInt(data), isPending, error };
+  return { count: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -85,7 +238,11 @@ export const useExtension = (tokenAddress: `0x${string}`, actionId: bigint) => {
 /**
  * Hook for isAccountJoined - 检查账户是否已加入
  */
-export const useIsAccountJoined = (tokenAddress: `0x${string}`, actionId: bigint, account: `0x${string}`) => {
+export const useIsAccountJoined = (
+  tokenAddress: `0x${string}`,
+  actionId: bigint,
+  account: `0x${string}`,
+) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20ExtensionCenterAbi,
@@ -96,7 +253,7 @@ export const useIsAccountJoined = (tokenAddress: `0x${string}`, actionId: bigint
     },
   });
 
-  return { isAccountJoined: data as boolean | undefined, isPending, error };
+  return { isJoined: data as boolean | undefined, isPending, error };
 };
 
 /**
@@ -230,9 +387,20 @@ export function useAddAccount() {
     'addAccount',
   );
 
-  const addAccount = async (tokenAddress: `0x${string}`, actionId: bigint, account: `0x${string}`) => {
-    console.log('提交 addAccount 交易:', { tokenAddress, actionId, account, isTukeMode });
-    return await execute([tokenAddress, actionId, account]);
+  const addAccount = async (
+    tokenAddress: `0x${string}`,
+    actionId: bigint,
+    account: `0x${string}`,
+    verificationInfos: string[],
+  ) => {
+    console.log('提交 addAccount 交易:', {
+      tokenAddress,
+      actionId,
+      account,
+      verificationInfos,
+      isTukeMode,
+    });
+    return await execute([tokenAddress, actionId, account, verificationInfos]);
   };
 
   // 错误日志记录
@@ -268,7 +436,11 @@ export function useRemoveAccount() {
     'removeAccount',
   );
 
-  const removeAccount = async (tokenAddress: `0x${string}`, actionId: bigint, account: `0x${string}`) => {
+  const removeAccount = async (
+    tokenAddress: `0x${string}`,
+    actionId: bigint,
+    account: `0x${string}`,
+  ) => {
     console.log('提交 removeAccount 交易:', { tokenAddress, actionId, account, isTukeMode });
     return await execute([tokenAddress, actionId, account]);
   };
@@ -287,6 +459,55 @@ export function useRemoveAccount() {
 
   return {
     removeAccount,
+    isPending,
+    isConfirming,
+    writeError: error,
+    isConfirmed,
+    hash,
+    isTukeMode,
+  };
+}
+
+/**
+ * Hook for updateVerificationInfo - 更新验证信息
+ */
+export function useUpdateVerificationInfo() {
+  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
+    LOVE20ExtensionCenterAbi,
+    CONTRACT_ADDRESS,
+    'updateVerificationInfo',
+  );
+
+  const updateVerificationInfo = async (
+    tokenAddress: `0x${string}`,
+    actionId: bigint,
+    account: `0x${string}`,
+    verificationInfos: string[],
+  ) => {
+    console.log('提交 updateVerificationInfo 交易:', {
+      tokenAddress,
+      actionId,
+      account,
+      verificationInfos,
+      isTukeMode,
+    });
+    return await execute([tokenAddress, actionId, account, verificationInfos]);
+  };
+
+  // 错误日志记录
+  useEffect(() => {
+    if (hash) {
+      console.log('updateVerificationInfo tx hash:', hash);
+    }
+    if (error) {
+      console.log('提交 updateVerificationInfo 交易错误:');
+      logWeb3Error(error);
+      logError(error);
+    }
+  }, [hash, error]);
+
+  return {
+    updateVerificationInfo,
     isPending,
     isConfirming,
     writeError: error,

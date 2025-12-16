@@ -3,13 +3,28 @@
 
 'use client';
 
+// React
 import React, { useContext } from 'react';
+
+// Next.js
 import Link from 'next/link';
+
+// 第三方库
 import { ChevronRight } from 'lucide-react';
+
+// UI 组件
 import { Button } from '@/components/ui/button';
+
+// 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
-import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
+
+// hooks
 import { AccountGroupInfo } from '@/src/hooks/extension/plugins/group/composite';
+
+// 工具函数
+import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+
+// 组件
 import LeftTitle from '@/src/components/Common/LeftTitle';
 
 interface MyGroupsProps {

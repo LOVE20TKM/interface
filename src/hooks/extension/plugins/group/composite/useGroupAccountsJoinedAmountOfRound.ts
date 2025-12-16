@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
 import { safeToBigInt } from '@/src/lib/clientUtils';
+import { useAccountsByGroupIdByRound } from './useAccountsByGroupIdByRound';
 
 export interface AccountJoinedAmountInfo {
   account: `0x${string}`;
@@ -35,36 +36,16 @@ export const useGroupAccountsJoinedAmountOfRound = ({
   round,
   groupId,
 }: UseGroupAccountsJoinedAmountOfRoundParams): UseGroupAccountsJoinedAmountOfRoundResult => {
-  // 第一步：获取快照账户列表
-  const accountsContract = useMemo(() => {
-    if (!extensionAddress || round === undefined || groupId === undefined) return [];
-
-    return [
-      {
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'snapshotAccountsByGroupId',
-        args: [round, groupId],
-      },
-    ];
-  }, [extensionAddress, round, groupId]);
-
+  // 第一步：获取账户列表（使用 useAccountsByGroupIdByRound hook）
   const {
-    data: accountsData,
+    accounts,
     isPending: isAccountsPending,
     error: accountsError,
-  } = useReadContracts({
-    contracts: accountsContract as any,
-    query: {
-      enabled:
-        !!extensionAddress && round !== undefined && groupId !== undefined && accountsContract.length > 0,
-    },
+  } = useAccountsByGroupIdByRound({
+    extensionAddress: extensionAddress || '0x0',
+    groupId: groupId || BigInt(0),
+    round: round || BigInt(0),
   });
-
-  const accounts = useMemo(() => {
-    if (!accountsData || !accountsData[0]?.result) return [];
-    return accountsData[0].result as `0x${string}`[];
-  }, [accountsData]);
 
   // 第二步：获取每个账户的参与代币数量
   const amountsContracts = useMemo(() => {
@@ -76,8 +57,8 @@ export const useGroupAccountsJoinedAmountOfRound = ({
       contracts.push({
         address: extensionAddress,
         abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'snapshotAmountByAccount',
-        args: [round, account],
+        functionName: 'amountByAccountByRound',
+        args: [account, round],
       });
     }
 
@@ -113,9 +94,19 @@ export const useGroupAccountsJoinedAmountOfRound = ({
     return result;
   }, [amountsData, accounts]);
 
+  // 计算最终的 pending 状态
+  // 如果账户列表还在加载中，返回 true
+  // 如果账户列表加载完成但为空，返回 false（不需要等待后续查询）
+  // 如果账户列表不为空，等待参与数量数据加载完成
+  const finalIsPending = useMemo(() => {
+    if (isAccountsPending) return true;
+    if (accounts.length === 0) return false;
+    return isAmountsPending;
+  }, [isAccountsPending, accounts.length, isAmountsPending]);
+
   return {
     accountJoinedAmounts,
-    isPending: isAccountsPending || isAmountsPending,
+    isPending: finalIsPending,
     error: accountsError || amountsError,
   };
 };

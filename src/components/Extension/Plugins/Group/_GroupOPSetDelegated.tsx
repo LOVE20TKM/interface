@@ -3,28 +3,45 @@
 
 'use client';
 
+// React
 import React, { useContext, useEffect } from 'react';
+
+// Next.js
 import { useRouter } from 'next/router';
+
+// 第三方库
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { toast } from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
 import { isAddress } from 'viem';
+import { z } from 'zod';
+
+// UI 组件
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
-import { TokenContext } from '@/src/contexts/TokenContext';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
-import { useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
 import {
-  useSetGroupDelegatedVerifier,
   useDelegatedVerifierByGroupId,
+  useSetGroupDelegatedVerifier,
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+import { useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+
+// 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
+
+// 组件
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import LeftTitle from '@/src/components/Common/LeftTitle';
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 interface GroupOPSetDelegatedProps {
   actionId: bigint;

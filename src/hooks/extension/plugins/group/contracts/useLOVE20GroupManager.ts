@@ -238,23 +238,6 @@ export const useGroupInfo = (tokenAddress: `0x${string}`, actionId: bigint, grou
 };
 
 /**
- * Hook for isConfigSet - 检查配置是否已设置
- */
-export const useIsConfigSet = (tokenAddress: `0x${string}`, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: LOVE20GroupManagerAbi,
-    functionName: 'isConfigSet',
-    args: [tokenAddress, actionId],
-    query: {
-      enabled: !!tokenAddress && actionId !== undefined,
-    },
-  });
-
-  return { isConfigSet: data as boolean | undefined, isPending, error };
-};
-
-/**
  * Hook for isGroupActive - 检查组是否活跃
  */
 export const useIsGroupActive = (tokenAddress: `0x${string}`, actionId: bigint, groupId: bigint) => {

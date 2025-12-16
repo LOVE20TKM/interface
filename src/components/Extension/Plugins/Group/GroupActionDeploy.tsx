@@ -1,21 +1,31 @@
 'use client';
 
-import { useState, useContext, useEffect } from 'react';
-import { TokenContext } from '@/src/contexts/TokenContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  useCreateExtension,
-  useExtensionsCount,
-  useExtensionsAtIndex,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupActionFactory';
-import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+// React
+import { useContext, useEffect, useState } from 'react';
+
+// 第三方库
 import toast from 'react-hot-toast';
 import { isAddress, parseEther } from 'viem';
-// import { useWaitForTransactionReceipt } from 'wagmi';
+
+// UI 组件
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
+import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import {
+  useCreateExtension,
+  useExtensionsAtIndex,
+  useExtensionsCount,
+} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupActionFactory';
+
+// 组件
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 interface GroupActionDeployProps {
   factoryAddress: `0x${string}`;
@@ -27,6 +37,7 @@ interface GroupActionDeployProps {
 export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployProps) {
   const context = useContext(TokenContext);
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
+  const tokenSymbol = context?.token?.symbol || '';
 
   // 从环境变量中获取固定的合约地址
   const groupManagerAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
@@ -111,7 +122,6 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
   useEffect(() => {
     if (isConfirmed && deployedExtensionAddress) {
       setApprovalStep('deployed');
-      toast.success('扩展部署成功！');
     }
   }, [isConfirmed, deployedExtensionAddress]);
 
@@ -386,37 +396,46 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
 
           {/* 授权和部署按钮 */}
           {!deployedExtensionAddress && (
-            <div className="flex space-x-4 w-full">
-              <Button
-                type="button"
-                onClick={handleApprove}
-                className="w-1/2"
-                disabled={
-                  isApprovePending ||
-                  isApproveConfirming ||
-                  approvalStep === 'approved' ||
-                  approvalStep === 'deploying' ||
-                  approvalStep === 'deployed'
-                }
-              >
-                {isApprovePending
-                  ? '7.提交中...'
-                  : isApproveConfirming
-                  ? '7.确认中...'
-                  : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
-                  ? '7.代币已授权'
-                  : '7.授权代币'}
-              </Button>
+            <>
+              <div className="flex space-x-4 w-full">
+                <Button
+                  type="button"
+                  onClick={handleApprove}
+                  className="w-1/2"
+                  disabled={
+                    isApprovePending ||
+                    isApproveConfirming ||
+                    approvalStep === 'approved' ||
+                    approvalStep === 'deploying' ||
+                    approvalStep === 'deployed'
+                  }
+                >
+                  {isApprovePending
+                    ? '7.提交中...'
+                    : isApproveConfirming
+                    ? '7.确认中...'
+                    : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
+                    ? '7.代币已授权'
+                    : '7.授权 1' + tokenSymbol}
+                </Button>
 
-              <Button
-                type="button"
-                onClick={handleDeploy}
-                className="w-1/2"
-                disabled={(approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming}
-              >
-                {isPending ? '8.部署中...' : isConfirming ? '8.确认中...' : '8.部署扩展'}
-              </Button>
-            </div>
+                <Button
+                  type="button"
+                  onClick={handleDeploy}
+                  className="w-1/2"
+                  disabled={(approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming}
+                >
+                  {isPending ? '8.部署中...' : isConfirming ? '8.确认中...' : '8.部署扩展'}
+                </Button>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mt-2 mb-1">
+                  <div className="text-sm font-medium text-gray-700 mb-1">💡 小贴士：</div>
+                </div>
+                <p className="text-sm text-greyscale-500">需转 1个 {tokenSymbol} 给合约地址，用于加入行动</p>
+              </div>
+            </>
           )}
         </form>
       </CardContent>

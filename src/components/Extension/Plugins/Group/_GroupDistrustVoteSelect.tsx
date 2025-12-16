@@ -3,15 +3,28 @@
 
 'use client';
 
+// React
 import React, { useContext, useEffect, useMemo } from 'react';
+
+// UI 组件
 import { Button } from '@/components/ui/button';
-import { TokenContext } from '@/src/contexts/TokenContext';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
-import { useExtensionGroupsOfAction } from '@/src/hooks/extension/plugins/group/composite';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
+import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
+
+// 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import LeftTitle from '@/src/components/Common/LeftTitle';
+
+// 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import LeftTitle from '@/src/components/Common/LeftTitle';
+import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 interface GroupDistrustVoteSelectProps {
   actionId: bigint;
@@ -31,7 +44,7 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
   const { token } = useContext(TokenContext) || {};
 
   // 获取链群列表
-  const { groups, isPending, error } = useExtensionGroupsOfAction({
+  const { groups, isPending, error } = useExtensionGroupInfosOfAction({
     extensionAddress,
     tokenAddress: token?.address,
     actionId,

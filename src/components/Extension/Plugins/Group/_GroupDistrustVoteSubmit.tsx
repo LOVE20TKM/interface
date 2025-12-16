@@ -3,26 +3,46 @@
 
 'use client';
 
-import React, { useContext, useEffect, useState, useMemo } from 'react';
-import { useAccount } from 'wagmi';
+// React
+import React, { useContext, useEffect, useMemo } from 'react';
+
+// 第三方库
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { toast } from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
+import { useAccount } from 'wagmi';
+import { z } from 'zod';
+
+// UI 组件
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
-import { TokenContext } from '@/src/contexts/TokenContext';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
-import { useExtensionGroupsOfAction } from '@/src/hooks/extension/plugins/group/composite';
-import { useDistrustVote } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupDistrust';
-import { useScoreByVerifierByActionId } from '@/src/hooks/contracts/useLOVE20Verify';
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
+import {
+  useCurrentRound as useVerifyCurrentRound,
+  useScoreByVerifierByActionId,
+} from '@/src/hooks/contracts/useLOVE20Verify';
+import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
+import { useDistrustVote } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+import { useDistrustVotesByVoterByGroupOwner } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupDistrust';
+
+// 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
+import { formatTokenAmount } from '@/src/lib/format';
+
+// 组件
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import LeftTitle from '@/src/components/Common/LeftTitle';
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 interface GroupDistrustVoteSubmitProps {
   actionId: bigint;
@@ -33,13 +53,18 @@ interface GroupDistrustVoteSubmitProps {
   onSuccess: () => void;
 }
 
-// 投票档位选项
+// 投票档位选项（10% 到 100%，共10个选项）
 const VOTE_OPTIONS = [
-  { label: '100% 不信任票', value: 1.0 },
-  { label: '80% 不信任票', value: 0.8 },
-  { label: '60% 不信任票', value: 0.6 },
-  { label: '40% 不信任票', value: 0.4 },
+  { label: '10% 不信任票', value: 0.1 },
   { label: '20% 不信任票', value: 0.2 },
+  { label: '30% 不信任票', value: 0.3 },
+  { label: '40% 不信任票', value: 0.4 },
+  { label: '50% 不信任票', value: 0.5 },
+  { label: '60% 不信任票', value: 0.6 },
+  { label: '70% 不信任票', value: 0.7 },
+  { label: '80% 不信任票', value: 0.8 },
+  { label: '90% 不信任票', value: 0.9 },
+  { label: '100% 不信任票', value: 1.0 },
 ];
 
 interface FormValues {
@@ -58,8 +83,8 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
-  // 获取当前轮次
-  const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
+  // 获取当前轮次（使用 Verify 合约的 round）
+  const { currentRound, isPending: isPendingRound, error: errorRound } = useVerifyCurrentRound();
 
   // 获取我的验证票数
   const {
@@ -73,12 +98,88 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     actionId,
   );
 
+  // 获取已投不信任票数
+  const {
+    votes: alreadyVotedAmount,
+    isPending: isPendingAlreadyVoted,
+    error: errorAlreadyVoted,
+  } = useDistrustVotesByVoterByGroupOwner(
+    token?.address as `0x${string}`,
+    actionId,
+    currentRound || BigInt(0),
+    account as `0x${string}`,
+    groupOwner,
+  );
+
+  console.log('token?.address', token?.address);
+  console.log('actionId', actionId);
+  console.log('currentRound', currentRound);
+  console.log('account', account);
+  console.log('groupOwner', groupOwner);
+  console.log('alreadyVotedAmount', alreadyVotedAmount);
+
+  // 计算剩余可投不信任票数
+  const remainingVotes = useMemo(() => {
+    // 注意：alreadyVotedAmount 可能是 0n，不能用 !alreadyVotedAmount 判断
+    if (
+      myVerifyVotes === undefined ||
+      myVerifyVotes === null ||
+      alreadyVotedAmount === undefined ||
+      alreadyVotedAmount === null
+    ) {
+      return BigInt(0);
+    }
+    const remaining = myVerifyVotes - alreadyVotedAmount;
+    return remaining > BigInt(0) ? remaining : BigInt(0);
+  }, [myVerifyVotes, alreadyVotedAmount]);
+
+  // 判断是否已经投完
+  const hasVotedAll = useMemo(() => {
+    return remainingVotes <= BigInt(100000); // 剩余 <= 100000 wei 认为已投完
+  }, [remainingVotes]);
+
+  // 调试日志
+  useEffect(() => {
+    console.log('🔍 投票权限检查调试信息:', {
+      token: token?.address,
+      currentRound: currentRound?.toString(),
+      account,
+      actionId: actionId.toString(),
+      myVerifyVotes: myVerifyVotes?.toString(),
+      alreadyVotedAmount: alreadyVotedAmount?.toString(),
+      remainingVotes: remainingVotes?.toString(),
+      hasVotedAll,
+      myVerifyVotesType: typeof myVerifyVotes,
+      isPendingVerify,
+      isPendingRound,
+      isPendingAlreadyVoted,
+      errorVerify,
+      errorAlreadyVoted,
+      // 检查查询是否被启用
+      queryEnabled: !!(token?.address && currentRound !== undefined && account && actionId !== undefined),
+    });
+  }, [
+    token?.address,
+    currentRound,
+    account,
+    actionId,
+    myVerifyVotes,
+    alreadyVotedAmount,
+    remainingVotes,
+    hasVotedAll,
+    isPendingVerify,
+    isPendingRound,
+    isPendingAlreadyVoted,
+    errorVerify,
+    errorAlreadyVoted,
+  ]);
+
   // 获取服务者管理的链群
   const {
     groups,
     isPending: isPendingGroups,
     error: errorGroups,
-  } = useExtensionGroupsOfAction({
+  } = useExtensionGroupInfosOfAction({
     extensionAddress,
     tokenAddress: token?.address,
     actionId,
@@ -91,7 +192,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
 
   // 表单验证
   const formSchema = z.object({
-    ratio: z.number().min(0.2).max(1.0, { message: '请选择不信任比例' }),
+    ratio: z.number().min(0.1).max(1.0, { message: '请选择不信任比例' }),
     reason: z.string().min(1, { message: '请输入不信任的原因' }).max(500, { message: '原因不能超过500字' }),
   });
 
@@ -106,11 +207,11 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
 
   const selectedRatio = form.watch('ratio');
 
-  // 计算不信任票数
+  // 计算不信任票数（基于剩余可投票数）
   const distrustVotes = useMemo(() => {
-    if (!myVerifyVotes || myVerifyVotes === BigInt(0) || selectedRatio === 0) return BigInt(0);
-    return BigInt(Math.floor(Number(myVerifyVotes) * selectedRatio));
-  }, [myVerifyVotes, selectedRatio]);
+    if (!remainingVotes || remainingVotes === BigInt(0) || selectedRatio === 0) return BigInt(0);
+    return BigInt(Math.floor(Number(remainingVotes) * selectedRatio));
+  }, [remainingVotes, selectedRatio]);
 
   // 提交不信任投票
   const {
@@ -127,20 +228,18 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
       return;
     }
 
+    if (hasVotedAll) {
+      toast.error('您已经投完所有不信任票');
+      return;
+    }
+
     if (distrustVotes === BigInt(0)) {
       toast.error('请选择不信任比例');
       return;
     }
 
     try {
-      await distrustVote(
-        token?.address as `0x${string}`,
-        actionId,
-        groupOwner,
-        distrustVotes,
-        values.reason,
-        account as `0x${string}`,
-      );
+      await distrustVote(groupOwner, distrustVotes, values.reason);
     } catch (error) {
       console.error('Distrust vote failed', error);
     }
@@ -161,10 +260,27 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     if (errorRound) handleContractError(errorRound, 'vote');
     if (errorVerify) handleContractError(errorVerify, 'verify');
     if (errorGroups) handleContractError(errorGroups, 'extension');
+    if (errorAlreadyVoted) handleContractError(errorAlreadyVoted, 'extension');
     if (errorVote) handleContractError(errorVote, 'extension');
-  }, [errorRound, errorVerify, errorGroups, errorVote, handleContractError]);
+  }, [errorRound, errorVerify, errorGroups, errorAlreadyVoted, errorVote, handleContractError]);
 
-  if (isPendingRound || isPendingVerify || isPendingGroups) {
+  // 检查必要参数是否完整
+  if (!token?.address || !account) {
+    return (
+      <div className="space-y-4">
+        <LeftTitle title="对该服务者投不信任票" />
+        <div className="text-center py-12">
+          <p className="text-red-500 mb-4">请先连接钱包</p>
+          <Button variant="outline" onClick={onCancel}>
+            返回
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // 检查是否加载中
+  if (isPendingRound || isPendingVerify || isPendingGroups || isPendingAlreadyVoted) {
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
@@ -174,14 +290,47 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
   }
 
   // 检查是否有投票权限
-  if (!myVerifyVotes || myVerifyVotes === BigInt(0)) {
+  // 注意：myVerifyVotes 可能是 BigInt(0) 或 undefined
+  // 只有明确查询成功且值为 0 时，才认为没有投票权限
+  if (myVerifyVotes === BigInt(0)) {
+    console.warn('⚠️ 没有投票权限，myVerifyVotes 为 0');
     return (
       <div className="space-y-4">
         <LeftTitle title="对该服务者投不信任票" />
         <div className="text-center py-12">
           <p className="text-red-500 mb-4">您没有投票权限</p>
-          <p className="text-sm text-gray-600 mb-6">只有给本行动投过票的治理者才能投不信任票</p>
-          <Button variant="outline" onClick={onCancel}>
+          <p className="text-sm text-gray-600 mb-6">只有给本行动投过验证票的治理者才能投不信任票</p>
+          <div className="text-xs text-gray-500 mt-4 p-3 bg-gray-50 rounded border border-gray-200">
+            <div>调试信息：</div>
+            <div>Token: {token?.address}</div>
+            <div>Round: {currentRound?.toString()}</div>
+            <div>Account: {account}</div>
+            <div>ActionId: {actionId.toString()}</div>
+            <div>MyVerifyVotes: {myVerifyVotes?.toString()}</div>
+          </div>
+          <Button variant="outline" onClick={onCancel} className="mt-4">
+            返回
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // 检查是否已经投完所有票
+  if (hasVotedAll) {
+    console.warn('⚠️ 已投完所有不信任票');
+    return (
+      <div className="space-y-4">
+        <LeftTitle title="对该服务者投不信任票" />
+        <div className="text-center py-12">
+          <p className="text-amber-600 mb-4">您已投完所有不信任票</p>
+          <p className="text-sm text-gray-600 mb-6">您对该服务者的不信任票已全部投出</p>
+          <div className="text-xs text-gray-500 mt-4 p-3 bg-gray-50 rounded border border-gray-200">
+            <div>总验证票数: {formatTokenAmount(myVerifyVotes)}</div>
+            <div>已投不信任票: {formatTokenAmount(alreadyVotedAmount || BigInt(0))}</div>
+            <div>剩余票数: {formatTokenAmount(remainingVotes)}</div>
+          </div>
+          <Button variant="outline" onClick={onCancel} className="mt-4">
             返回
           </Button>
         </div>
@@ -217,8 +366,26 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
 
         {/* 我的验证票信息 */}
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-          <span className="text-gray-600">您对本行动的验证票: </span>
-          <span className="font-medium text-blue-800">{myVerifyVotes.toString()}</span>
+          <div className="space-y-1">
+            <div>
+              <span className="text-gray-600">您对本行动的验证票: </span>
+              <span className="font-medium text-blue-800">{formatTokenAmount(myVerifyVotes)}</span>
+            </div>
+            {myVerifyVotes !== remainingVotes && (
+              <>
+                <div>
+                  <span className="text-gray-600">已投不信任票: </span>
+                  <span className="font-medium text-amber-700">
+                    {formatTokenAmount(alreadyVotedAmount || BigInt(0))}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">剩余可投票数: </span>
+                  <span className="font-medium text-green-700">{formatTokenAmount(remainingVotes)}</span>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* 投票表单 */}
@@ -233,31 +400,28 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
                   <FormLabel className="text-greyscale-500 font-normal">选择不信任比例：</FormLabel>
                   <FormControl>
                     <div className="space-y-2">
-                      {VOTE_OPTIONS.map((option) => (
-                        <div
-                          key={option.value}
-                          onClick={() => field.onChange(option.value)}
-                          className={`border rounded-lg p-3 cursor-pointer transition-all ${
-                            field.value === option.value
-                              ? 'border-secondary bg-secondary/10 ring-2 ring-secondary'
-                              : 'border-gray-200 hover:border-secondary hover:bg-secondary/5'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">{option.label}</span>
-                            {field.value === option.value && (
-                              <div className="w-5 h-5 rounded-full bg-secondary flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-white" />
-                              </div>
-                            )}
-                          </div>
-                          {field.value === option.value && (
-                            <div className="text-sm text-gray-600 mt-1">
-                              将投 {Math.floor(Number(myVerifyVotes) * option.value).toString()} 票不信任
-                            </div>
-                          )}
+                      <Select
+                        value={field.value > 0 ? field.value.toString() : ''}
+                        onValueChange={(val) => {
+                          field.onChange(parseFloat(val));
+                        }}
+                      >
+                        <SelectTrigger className="!ring-secondary-foreground">
+                          <SelectValue placeholder="请选择不信任比例" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {VOTE_OPTIONS.map((option) => (
+                            <SelectItem key={option.value.toString()} value={option.value.toString()}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {field.value > 0 && (
+                        <div className="text-sm text-gray-600 mt-1">
+                          将投 {formatTokenAmount(BigInt(Number(remainingVotes) * field.value))} 不信任票
                         </div>
-                      ))}
+                      )}
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -279,7 +443,6 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription className="text-xs">原因将在链上公示，供其他治理者参考</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -287,12 +450,18 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
 
             {/* 按钮 */}
             <div className="flex justify-center space-x-4 pt-4">
-              <Button variant="outline" onClick={onCancel} disabled={isPendingVote || isConfirmingVote}>
+              <Button
+                variant="outline"
+                className="w-1/2"
+                onClick={onCancel}
+                disabled={isPendingVote || isConfirmingVote}
+              >
                 取消
               </Button>
               <Button
-                disabled={isPendingVote || isConfirmingVote || isConfirmedVote}
+                disabled={isPendingVote || isConfirmingVote || isConfirmedVote || hasVotedAll}
                 type="button"
+                className="w-1/2"
                 onClick={() => {
                   form.handleSubmit((values) => handleSubmit(values))();
                 }}

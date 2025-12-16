@@ -3,12 +3,19 @@
 
 'use client';
 
+// React
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
-import { formatTokenAmount } from '@/src/lib/format';
+
+// 第三方库
 import { UseFormReturn } from 'react-hook-form';
+
+// UI 组件
+import { Button } from '@/components/ui/button';
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+
+// 工具函数
+import { formatTokenAmount } from '@/src/lib/format';
 
 interface GroupStakeTokenPanelProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

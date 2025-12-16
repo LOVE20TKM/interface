@@ -7,10 +7,11 @@ import { LOVE20GroupDistrustAbi } from '@/src/abis/LOVE20GroupDistrust';
 import { LOVE20VoteAbi } from '@/src/abis/LOVE20Vote';
 import { LOVE20VerifyAbi } from '@/src/abis/LOVE20Verify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-import { useGroupDistrustAddress } from '../contracts';
 
 const VOTE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VOTE as `0x${string}`;
 const VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VERIFY as `0x${string}`;
+const GROUP_DISTRUST_CONTRACT_ADDRESS = process.env
+  .NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_DISTRUST as `0x${string}`;
 
 export interface VoterDistrustInfo {
   voter: `0x${string}`;
@@ -51,9 +52,6 @@ export const useDistrustVotesOfGroupOwner = ({
   round,
   groupOwner,
 }: UseDistrustVotesOfGroupOwnerParams): UseDistrustVotesOfGroupOwnerResult => {
-  // 获取 GroupDistrust 合约地址
-  const { groupDistrustAddress } = useGroupDistrustAddress(extensionAddress as `0x${string}`);
-
   // 第一步：获取当轮投票者数量
   const voterCountContract = useMemo(() => {
     if (!tokenAddress || !actionId || round === undefined) return [];
@@ -119,8 +117,7 @@ export const useDistrustVotesOfGroupOwner = ({
 
   // 第三步：获取每个投票者的验证票、不信任票、原因
   const detailContracts = useMemo(() => {
-    if (!groupDistrustAddress || !tokenAddress || !actionId || round === undefined || !groupOwner || voters.length === 0)
-      return [];
+    if (!tokenAddress || !actionId || round === undefined || !groupOwner || voters.length === 0) return [];
 
     const contracts = [];
 
@@ -135,7 +132,7 @@ export const useDistrustVotesOfGroupOwner = ({
 
       // 获取不信任票
       contracts.push({
-        address: groupDistrustAddress,
+        address: GROUP_DISTRUST_CONTRACT_ADDRESS,
         abi: LOVE20GroupDistrustAbi,
         functionName: 'distrustVotesByVoterByGroupOwner',
         args: [tokenAddress, actionId, round, voter, groupOwner],
@@ -143,7 +140,7 @@ export const useDistrustVotesOfGroupOwner = ({
 
       // 获取原因
       contracts.push({
-        address: groupDistrustAddress,
+        address: GROUP_DISTRUST_CONTRACT_ADDRESS,
         abi: LOVE20GroupDistrustAbi,
         functionName: 'distrustReason',
         args: [tokenAddress, actionId, round, voter, groupOwner],
@@ -151,7 +148,7 @@ export const useDistrustVotesOfGroupOwner = ({
     }
 
     return contracts;
-  }, [groupDistrustAddress, tokenAddress, actionId, round, groupOwner, voters]);
+  }, [tokenAddress, actionId, round, groupOwner, voters]);
 
   const {
     data: detailData,
@@ -161,12 +158,7 @@ export const useDistrustVotesOfGroupOwner = ({
     contracts: detailContracts as any,
     query: {
       enabled:
-        !!groupDistrustAddress &&
-        !!tokenAddress &&
-        actionId !== undefined &&
-        round !== undefined &&
-        !!groupOwner &&
-        detailContracts.length > 0,
+        !!tokenAddress && actionId !== undefined && round !== undefined && !!groupOwner && detailContracts.length > 0,
     },
   });
 
@@ -196,9 +188,23 @@ export const useDistrustVotesOfGroupOwner = ({
     return result;
   }, [detailData, voters]);
 
+  // 计算最终的 pending 状态
+  // 如果投票者数量还在加载中，返回 true
+  // 如果投票者数量为 0，返回 false（不需要等待后续查询）
+  // 如果投票者列表还在加载中，返回 true
+  // 如果投票者列表为空，返回 false（不需要等待后续查询）
+  // 如果投票者列表不为空，等待详细信息加载完成
+  const finalIsPending = useMemo(() => {
+    if (isVoterCountPending) return true;
+    if (voterCount === BigInt(0)) return false;
+    if (isVotersPending) return true;
+    if (voters.length === 0) return false;
+    return isDetailPending;
+  }, [isVoterCountPending, voterCount, isVotersPending, voters.length, isDetailPending]);
+
   return {
     voterDistrusts,
-    isPending: isVoterCountPending || isVotersPending || isDetailPending,
+    isPending: finalIsPending,
     error: voterCountError || votersError || detailError,
   };
 };

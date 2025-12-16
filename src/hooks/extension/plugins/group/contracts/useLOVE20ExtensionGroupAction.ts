@@ -176,20 +176,42 @@ export const useStakingMultiplier = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for accountsByGroupId - 获取指定组ID的账户列表
+ * Hook for accountByGroupIdAndIndexByRound - 根据轮次和索引获取指定组ID的账户
  */
-export const useAccountsByGroupId = (contractAddress: `0x${string}`, groupId: bigint) => {
+export const useAccountByGroupIdAndIndexByRound = (
+  contractAddress: `0x${string}`,
+  groupId: bigint,
+  index: bigint,
+  round: bigint,
+) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'accountsByGroupId',
-    args: [groupId],
+    functionName: 'accountByGroupIdAndIndexByRound',
+    args: [groupId, index, round],
     query: {
-      enabled: !!contractAddress && groupId !== undefined,
+      enabled: !!contractAddress && groupId !== undefined && index !== undefined && round !== undefined,
     },
   });
 
-  return { accounts: data as `0x${string}`[] | undefined, isPending, error };
+  return { accountAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for accountCountByGroupIdByRound - 获取指定轮次和组ID的账户数量
+ */
+export const useAccountCountByGroupIdByRound = (contractAddress: `0x${string}`, groupId: bigint, round: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupActionAbi,
+    functionName: 'accountCountByGroupIdByRound',
+    args: [groupId, round],
+    query: {
+      enabled: !!contractAddress && groupId !== undefined && round !== undefined,
+    },
+  });
+
+  return { count: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -224,6 +246,23 @@ export const useAccountsByGroupIdCount = (contractAddress: `0x${string}`, groupI
   });
 
   return { count: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for amountByAccountByRound - 获取指定账户在指定轮次的参与代币量
+ */
+export const useAmountByAccountByRound = (contractAddress: `0x${string}`, account: `0x${string}`, round: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupActionAbi,
+    functionName: 'amountByAccountByRound',
+    args: [account, round],
+    query: {
+      enabled: !!contractAddress && !!account && round !== undefined,
+    },
+  });
+
+  return { amount: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -530,14 +569,35 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
 /**
  * Hook for rewardByGroupId - 获取指定组ID的奖励
  */
-export const useRewardByGroupId = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
+export const useGeneratedRewardByGroupId = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'rewardByGroupId',
+    functionName: 'generatedRewardByGroupId',
     args: [round, groupId],
     query: {
       enabled: !!contractAddress && round !== undefined && groupId !== undefined,
+    },
+  });
+
+  return { reward: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for rewardByGroupId - 获取指定组ID的奖励
+ */
+export const useGeneratedRewardByVerifier = (
+  contractAddress: `0x${string}`,
+  round: bigint,
+  verifier: `0x${string}`,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupActionAbi,
+    functionName: 'generatedRewardByVerifier',
+    args: [round, verifier],
+    query: {
+      enabled: !!contractAddress && round !== undefined && !!verifier,
     },
   });
 
@@ -596,161 +656,20 @@ export const useScoreByGroupId = (contractAddress: `0x${string}`, round: bigint,
 };
 
 /**
- * Hook for snapshotAccountsByGroupId - 获取指定轮次和组ID的快照账户列表
+ * Hook for submittedCount - 获取指定轮次和组ID的已提交数量
  */
-export const useSnapshotAccountsByGroupId = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
+export const useSubmittedCount = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'snapshotAccountsByGroupId',
+    functionName: 'submittedCount',
     args: [round, groupId],
     query: {
       enabled: !!contractAddress && round !== undefined && groupId !== undefined,
     },
   });
 
-  return { accounts: data as `0x${string}`[] | undefined, isPending, error };
-};
-
-/**
- * Hook for snapshotAccountsByGroupIdAtIndex - 根据索引获取指定轮次和组ID的快照账户
- */
-export const useSnapshotAccountsByGroupIdAtIndex = (
-  contractAddress: `0x${string}`,
-  round: bigint,
-  groupId: bigint,
-  index: bigint,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'snapshotAccountsByGroupIdAtIndex',
-    args: [round, groupId, index],
-    query: {
-      enabled: !!contractAddress && round !== undefined && groupId !== undefined && index !== undefined,
-    },
-  });
-
-  return { accountAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for snapshotAccountsByGroupIdCount - 获取指定轮次和组ID的快照账户数量
- */
-export const useSnapshotAccountsByGroupIdCount = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'snapshotAccountsByGroupIdCount',
-    args: [round, groupId],
-    query: {
-      enabled: !!contractAddress && round !== undefined && groupId !== undefined,
-    },
-  });
-
-  return { count: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for snapshotAmount - 获取指定轮次的快照数量
- */
-export const useSnapshotAmount = (contractAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'snapshotAmount',
-    args: [round],
-    query: {
-      enabled: !!contractAddress && round !== undefined,
-    },
-  });
-
-  return { amount: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for snapshotAmountByAccount - 获取指定轮次和账户的快照数量
- */
-export const useSnapshotAmountByAccount = (contractAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'snapshotAmountByAccount',
-    args: [round, account],
-    query: {
-      enabled: !!contractAddress && round !== undefined && !!account,
-    },
-  });
-
-  return { amount: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for snapshotAmountByGroupId - 获取指定轮次和组ID的快照数量
- */
-export const useSnapshotAmountByGroupId = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'snapshotAmountByGroupId',
-    args: [round, groupId],
-    query: {
-      enabled: !!contractAddress && round !== undefined && groupId !== undefined,
-    },
-  });
-
-  return { amount: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for snapshotGroupIds - 获取指定轮次的快照组ID列表
- */
-export const useSnapshotGroupIds = (contractAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'snapshotGroupIds',
-    args: [round],
-    query: {
-      enabled: !!contractAddress && round !== undefined,
-    },
-  });
-
-  return { groupIds: data as bigint[] | undefined, isPending, error };
-};
-
-/**
- * Hook for snapshotGroupIdsAtIndex - 根据索引获取指定轮次的快照组ID
- */
-export const useSnapshotGroupIdsAtIndex = (contractAddress: `0x${string}`, round: bigint, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'snapshotGroupIdsAtIndex',
-    args: [round, index],
-    query: {
-      enabled: !!contractAddress && round !== undefined && index !== undefined,
-    },
-  });
-
-  return { groupId: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for snapshotGroupIdsCount - 获取指定轮次的快照组ID数量
- */
-export const useSnapshotGroupIdsCount = (contractAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'snapshotGroupIdsCount',
-    args: [round],
-    query: {
-      enabled: !!contractAddress && round !== undefined,
-    },
-  });
-
-  return { count: safeToBigInt(data), isPending, error };
+  return { submittedCount: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -821,92 +740,6 @@ export const useTotalJoinedAmountByRound = (contractAddress: `0x${string}`, roun
   });
 
   return { totalJoinedAmount: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for verificationInfo - 获取验证信息
- */
-export const useVerificationInfo = (
-  contractAddress: `0x${string}`,
-  account: `0x${string}`,
-  verificationKey: string,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'verificationInfo',
-    args: [account, verificationKey],
-    query: {
-      enabled: !!contractAddress && !!account && !!verificationKey,
-    },
-  });
-
-  return { verificationInfo: data as string | undefined, isPending, error };
-};
-
-/**
- * Hook for verificationInfoByRound - 获取指定轮次的验证信息
- */
-export const useVerificationInfoByRound = (
-  contractAddress: `0x${string}`,
-  account: `0x${string}`,
-  verificationKey: string,
-  round: bigint,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'verificationInfoByRound',
-    args: [account, verificationKey, round],
-    query: {
-      enabled: !!contractAddress && !!account && !!verificationKey && round !== undefined,
-    },
-  });
-
-  return { verificationInfo: data as string | undefined, isPending, error };
-};
-
-/**
- * Hook for verificationInfoUpdateRoundsAtIndex - 根据索引获取验证信息更新轮次
- */
-export const useVerificationInfoUpdateRoundsAtIndex = (
-  contractAddress: `0x${string}`,
-  account: `0x${string}`,
-  verificationKey: string,
-  index: bigint,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'verificationInfoUpdateRoundsAtIndex',
-    args: [account, verificationKey, index],
-    query: {
-      enabled: !!contractAddress && !!account && !!verificationKey && index !== undefined,
-    },
-  });
-
-  return { round: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for verificationInfoUpdateRoundsCount - 获取验证信息更新轮次数量
- */
-export const useVerificationInfoUpdateRoundsCount = (
-  contractAddress: `0x${string}`,
-  account: `0x${string}`,
-  verificationKey: string,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'verificationInfoUpdateRoundsCount',
-    args: [account, verificationKey],
-    query: {
-      enabled: !!contractAddress && !!account && !!verificationKey,
-    },
-  });
-
-  return { count: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -1177,44 +1010,6 @@ export function useSetGroupDelegatedVerifier(contractAddress: `0x${string}`) {
 }
 
 /**
- * Hook for snapshotIfNeeded - 如果需要则创建快照
- */
-export function useSnapshotIfNeeded(contractAddress: `0x${string}`) {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupActionAbi,
-    contractAddress,
-    'snapshotIfNeeded',
-  );
-
-  const snapshotIfNeeded = async (groupId: bigint) => {
-    console.log('提交 snapshotIfNeeded 交易:', { contractAddress, groupId, isTukeMode });
-    return await execute([groupId]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('snapshotIfNeeded tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 snapshotIfNeeded 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    snapshotIfNeeded,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}
-
-/**
  * Hook for submitOriginScore - 提交原始积分
  */
 export function useSubmitOriginScore(contractAddress: `0x${string}`) {
@@ -1224,9 +1019,9 @@ export function useSubmitOriginScore(contractAddress: `0x${string}`) {
     'submitOriginScore',
   );
 
-  const submitOriginScore = async (groupId: bigint, scores: bigint[]) => {
-    console.log('提交 submitOriginScore 交易:', { contractAddress, groupId, scores, isTukeMode });
-    return await execute([groupId, scores]);
+  const submitOriginScore = async (groupId: bigint, startIndex: bigint, originScores: bigint[]) => {
+    console.log('提交 submitOriginScore 交易:', { contractAddress, groupId, startIndex, originScores, isTukeMode });
+    return await execute([groupId, startIndex, originScores]);
   };
 
   // 错误日志记录
@@ -1253,34 +1048,34 @@ export function useSubmitOriginScore(contractAddress: `0x${string}`) {
 }
 
 /**
- * Hook for updateVerificationInfo - 更新验证信息
+ * Hook for distrustVote - 不信任投票
  */
-export function useUpdateVerificationInfo(contractAddress: `0x${string}`) {
+export function useDistrustVote(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
     LOVE20ExtensionGroupActionAbi,
     contractAddress,
-    'updateVerificationInfo',
+    'distrustVote',
   );
 
-  const updateVerificationInfo = async (verificationInfos: string[]) => {
-    console.log('提交 updateVerificationInfo 交易:', { contractAddress, verificationInfos, isTukeMode });
-    return await execute([verificationInfos]);
+  const distrustVote = async (groupOwner: `0x${string}`, amount: bigint, reason: string) => {
+    console.log('提交 distrustVote 交易:', { contractAddress, groupOwner, amount, reason, isTukeMode });
+    return await execute([groupOwner, amount, reason]);
   };
 
   // 错误日志记录
   useEffect(() => {
     if (hash) {
-      console.log('updateVerificationInfo tx hash:', hash);
+      console.log('distrustVote tx hash:', hash);
     }
     if (error) {
-      console.log('提交 updateVerificationInfo 交易错误:');
+      console.log('提交 distrustVote 交易错误:');
       logWeb3Error(error);
       logError(error);
     }
   }, [hash, error]);
 
   return {
-    updateVerificationInfo,
+    distrustVote,
     isPending,
     isConfirming,
     writeError: error,

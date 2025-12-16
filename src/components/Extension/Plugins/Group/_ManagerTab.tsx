@@ -3,20 +3,31 @@
 
 'use client';
 
+// React
 import React, { useContext, useEffect, useState } from 'react';
-import { TokenContext } from '@/src/contexts/TokenContext';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
-import {
-  useExpandableInfo,
-  useActiveGroupIdsByOwner,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
-import { useGroupManagerAddress, useTokenAddress } from '@/src/hooks/extension/plugins/group/contracts';
-import { useHandleContractError } from '@/src/lib/errorUtils';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
 import { useExtensionGroupsOfAccount } from '@/src/hooks/extension/plugins/group/composite';
+import { useGroupManagerAddress, useTokenAddress } from '@/src/hooks/extension/plugins/group/contracts';
+import {
+  useActiveGroupIdsByOwner,
+  useExpandableInfo,
+} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+
+// 工具函数
+import { useHandleContractError } from '@/src/lib/errorUtils';
+
+// 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import _MyGroups from './_MyGroups';
-import _ManagerDataPanel from './_ManagerDataPanel';
 import _GroupManagementDialog from './_GroupManagementDialog';
+import _ManagerDataPanel from './_ManagerDataPanel';
+import _MyGroups from './_MyGroups';
 
 interface ManagerTabProps {
   actionId: bigint;

@@ -16,7 +16,12 @@ export const LOVE20ExtensionGroupServiceAbi = [
         "internalType": "address"
       },
       {
-        "name": "groupActionAddress_",
+        "name": "groupActionTokenAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupActionFactoryAddress_",
         "type": "address",
         "internalType": "address"
       },
@@ -43,7 +48,20 @@ export const LOVE20ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "GROUP_ACTION_ADDRESS",
+    "name": "GROUP_ACTION_FACTORY_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "GROUP_ACTION_TOKEN_ADDRESS",
     "inputs": [],
     "outputs": [
       {
@@ -423,125 +441,6 @@ export const LOVE20ExtensionGroupServiceAbi = [
     "stateMutability": "view"
   },
   {
-    "type": "function",
-    "name": "updateVerificationInfo",
-    "inputs": [
-      {
-        "name": "verificationInfos",
-        "type": "string[]",
-        "internalType": "string[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "verificationInfo",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "verificationKey",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "verificationInfoByRound",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "verificationKey",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "verificationInfoUpdateRoundsAtIndex",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "verificationKey",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "verificationInfoUpdateRoundsCount",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "verificationKey",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
     "type": "event",
     "name": "ClaimReward",
     "inputs": [
@@ -684,49 +583,6 @@ export const LOVE20ExtensionGroupServiceAbi = [
     "anonymous": false
   },
   {
-    "type": "event",
-    "name": "UpdateVerificationInfo",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "verificationKey",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      },
-      {
-        "name": "verificationInfo",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
-    ],
-    "anonymous": false
-  },
-  {
     "type": "error",
     "name": "ActionIdNotFound",
     "inputs": []
@@ -763,6 +619,11 @@ export const LOVE20ExtensionGroupServiceAbi = [
   },
   {
     "type": "error",
+    "name": "InvalidGroupActionTokenAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidTokenAddress",
     "inputs": []
   },
@@ -789,11 +650,6 @@ export const LOVE20ExtensionGroupServiceAbi = [
   {
     "type": "error",
     "name": "TooManyRecipients",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "VerificationInfoLengthMismatch",
     "inputs": []
   },
   {

@@ -3,17 +3,33 @@
 
 'use client';
 
+// React
 import React, { useContext, useEffect } from 'react';
+
+// Next.js
 import { useRouter } from 'next/router';
+
+// 第三方库
 import { ChevronRight } from 'lucide-react';
-import { TokenContext } from '@/src/contexts/TokenContext';
+import Link from 'next/link';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
-import { useExtensionGroupsOfAction } from '@/src/hooks/extension/plugins/group/composite';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
+import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
+
+// 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatTokenAmount } from '@/src/lib/format';
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import LeftTitle from '@/src/components/Common/LeftTitle';
+
+// 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import LeftTitle from '@/src/components/Common/LeftTitle';
+import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 interface GroupsTabProps {
   actionId: bigint;
@@ -26,7 +42,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
   const { token } = useContext(TokenContext) || {};
 
   // 获取链群列表
-  const { groups, isPending, error } = useExtensionGroupsOfAction({
+  const { groups, isPending, error } = useExtensionGroupInfosOfAction({
     extensionAddress,
     tokenAddress: token?.address,
     actionId,
@@ -59,7 +75,14 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
     return (
       <div className="text-center py-12">
         <p className="text-gray-500 mb-2">暂无链群参与本行动</p>
-        <p className="text-sm text-gray-400">等待链群服务者激活链群</p>
+        <div className="">
+          <Link
+            href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}
+            className="text-sm text-secondary hover:text-secondary/80 transition-colors"
+          >
+            新增链群 &gt;&gt;
+          </Link>
+        </div>
       </div>
     );
   }

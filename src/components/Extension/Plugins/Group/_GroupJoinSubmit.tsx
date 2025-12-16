@@ -3,38 +3,47 @@
 
 'use client';
 
-import React, { useContext, useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/router';
-import { useAccount } from 'wagmi';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { toast } from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
+// React
+import React, { useContext, useEffect, useRef, useState } from 'react';
 
-// ui components
+// Next.js
+import { useRouter } from 'next/router';
+
+// 第三方库
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
+import { useAccount } from 'wagmi';
+import { z } from 'zod';
+
+// UI 组件
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 
-// my hooks
-import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+// 类型
+import { ActionInfo } from '@/src/types/love20types';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
+import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
+import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
-import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
+
+// 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 
-// contexts / types
-import { TokenContext } from '@/src/contexts/TokenContext';
-import { ActionInfo } from '@/src/types/love20types';
-
-// my components
+// 组件
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import LeftTitle from '@/src/components/Common/LeftTitle';
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 interface FormValues {
   joinAmount: string;
@@ -101,8 +110,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     isPending: isPendingVerificationInfos,
     error: errorVerificationInfos,
   } = useAccountVerificationInfos({
-    extensionAddress,
     account: account as `0x${string}`,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
     verificationKeys,
   });
 

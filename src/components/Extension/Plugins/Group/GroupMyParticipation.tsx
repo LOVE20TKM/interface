@@ -3,39 +3,46 @@
 
 'use client';
 
-import React, { useEffect, useContext } from 'react';
-import { useAccount } from 'wagmi';
-import { useRouter } from 'next/router';
-import { toast } from 'react-hot-toast';
+// React
+import React, { useContext, useEffect } from 'react';
+
+// Next.js
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+
+// 第三方库
 import { ChevronRight, Edit } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { useAccount } from 'wagmi';
+
+// UI 组件
 import { Button } from '@/components/ui/button';
 
-// my hooks
-import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
-import {
-  useJoinInfo,
-  useTotalJoinedAmountByRound,
-  useExit,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
-
-// my contexts
-import { TokenContext } from '@/src/contexts/TokenContext';
-
-// my types
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
 
-// my components
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
+import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
+import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+import {
+  useExit,
+  useJoinInfo,
+  useTotalJoinedAmountByRound,
+} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+
+// 工具函数
+import { useHandleContractError } from '@/src/lib/errorUtils';
+import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+import { LinkIfUrl } from '@/src/lib/stringUtils';
+
+// 组件
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
-
-// my utils
-import { LinkIfUrl } from '@/src/lib/stringUtils';
 
 interface GroupMyParticipationProps {
   actionId: bigint;
@@ -85,7 +92,8 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     isPending: isPendingVerificationInfos,
     error: errorVerificationInfos,
   } = useAccountVerificationInfos({
-    extensionAddress,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
     account: account as `0x${string}`,
     verificationKeys,
   });

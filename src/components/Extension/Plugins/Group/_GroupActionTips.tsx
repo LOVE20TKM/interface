@@ -3,8 +3,11 @@
 
 'use client';
 
+// React
 import React from 'react';
-import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
+
+// 工具函数
+import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 
 interface GroupActionTipsProps {
   minGovVoteRatioBps?: bigint;

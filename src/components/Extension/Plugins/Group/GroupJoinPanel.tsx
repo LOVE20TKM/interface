@@ -3,10 +3,19 @@
 
 'use client';
 
+// React
 import React, { useContext } from 'react';
+
+// Next.js
 import { useRouter } from 'next/router';
-import { TokenContext } from '@/src/contexts/TokenContext';
+
+// 类型
 import { ActionInfo } from '@/src/types/love20types';
+
+// 上下文
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import _GroupJoinSelect from './_GroupJoinSelect';
 import _GroupJoinSubmit from './_GroupJoinSubmit';

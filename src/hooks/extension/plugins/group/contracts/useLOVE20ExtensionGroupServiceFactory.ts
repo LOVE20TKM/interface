@@ -128,6 +128,8 @@ export const useExtensionsCount = (contractAddress: `0x${string}`) => {
 
 /**
  * Hook for createExtension - 创建扩展
+ *
+ * 注意：在调用 createExtension 之前，需要先授权 1 个代币给 factory
  */
 export function useCreateExtension(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
@@ -137,18 +139,20 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
   );
 
   const createExtension = async (
-    tokenAddress: `0x${string}`,
-    groupActionAddress: `0x${string}`,
-    maxRecipients: bigint,
+    tokenAddress: `0x${string}`, // 链群服务行动代币地址
+    groupActionTokenAddress: `0x${string}`, // 组行动代币地址
+    groupActionFactoryAddress: `0x${string}`, // 组行动工厂地址
+    maxRecipients: bigint, // 链群服务激励行动 激励分配地址 上限
   ) => {
     console.log('提交 createExtension 交易:', {
       contractAddress,
       tokenAddress,
-      groupActionAddress,
+      groupActionTokenAddress,
+      groupActionFactoryAddress,
       maxRecipients,
       isTukeMode,
     });
-    return await execute([tokenAddress, groupActionAddress, maxRecipients]);
+    return await execute([tokenAddress, groupActionTokenAddress, groupActionFactoryAddress, maxRecipients]);
   };
 
   // 错误日志记录

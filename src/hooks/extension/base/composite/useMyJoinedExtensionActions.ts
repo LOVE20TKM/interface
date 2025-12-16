@@ -57,7 +57,7 @@ export const useMyJoinedExtensionActions = ({
 }: UseMyJoinedExtensionActionsParams): UseMyJoinedExtensionActionsResult => {
   // 步骤1: 获取用户在扩展协议中参与的行动ID列表
   const {
-    actionIdsByAccount: extensionActionIds,
+    actionIds: extensionActionIds,
     isPending: isPendingExtensionIds,
     error: errorExtensionIds,
   } = useActionIdsByAccount(tokenAddress || ('' as `0x${string}`), account || ('' as `0x${string}`));
