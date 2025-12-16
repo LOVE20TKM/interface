@@ -27,7 +27,6 @@ src/components/Extension/Plugins/{name}/{name}ActionDeploy.tsx
 ## 2. 具体行动组件
 
 src/components/Extension/Plugins/{name}/{name}ActionPublicTabs.tsx : 行动公示内容
-src/components/Extension/Plugins/{name}/{name}Deploy.tsx : 行动部署
 src/components/Extension/Plugins/{name}/{name}JoinPanel.tsx : 加入行动
 src/components/Extension/Plugins/{name}/{name}MyParticipation.tsx : 我的参与详情
 

@@ -62,12 +62,13 @@ export const useExtensionParams = (contractAddress: `0x${string}`, extension: `0
     },
   });
 
-  const typedData = data as [string, string, bigint] | undefined;
+  const typedData = data as [string, string, string, bigint] | undefined;
 
   return {
     tokenAddress: typedData ? (typedData[0] as `0x${string}`) : undefined,
-    groupActionAddress: typedData ? (typedData[1] as `0x${string}`) : undefined,
-    maxRecipients: typedData ? safeToBigInt(typedData[2]) : undefined,
+    groupActionTokenAddress: typedData ? (typedData[1] as `0x${string}`) : undefined,
+    groupActionFactoryAddress: typedData ? (typedData[2] as `0x${string}`) : undefined,
+    maxRecipients: typedData ? safeToBigInt(typedData[3]) : undefined,
     isPending,
     error,
   };

@@ -174,7 +174,7 @@ export const LOVE20ExtensionGroupServiceAbi = [
         "internalType": "bool"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",

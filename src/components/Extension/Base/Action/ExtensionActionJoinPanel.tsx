@@ -13,6 +13,7 @@ import { ExtensionType, getExtensionConfigByFactory } from '@/src/config/extensi
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LpJoinPanel from '@/src/components/Extension/Plugins/Lp/LpJoinPanel';
 import GroupJoinPanel from '@/src/components/Extension/Plugins/Group/GroupJoinPanel';
+import GroupServiceJoinPanel from '@/src/components/Extension/Plugins/GroupService/GroupServiceJoinPanel';
 
 // my types
 import { ActionInfo } from '@/src/types/love20types';
@@ -41,10 +42,7 @@ const ExtensionActionJoinPanel: React.FC<ExtensionActionJoinPanelProps> = ({
   extensionAddress,
 }) => {
   // 获取扩展合约的 factory 地址，判断类型（使用通用接口 ILOVE20Extension）
-  const {
-    data: factoryAddress,
-    isPending: isFactoryPending,
-  } = useReadContract({
+  const { data: factoryAddress, isPending: isFactoryPending } = useReadContract({
     address: extensionAddress,
     abi: ILOVE20ExtensionAbi,
     functionName: 'factory',
@@ -66,9 +64,7 @@ const ExtensionActionJoinPanel: React.FC<ExtensionActionJoinPanelProps> = ({
   }
 
   // 获取扩展配置
-  const extensionConfig = factoryAddress
-    ? getExtensionConfigByFactory(factoryAddress as `0x${string}`)
-    : null;
+  const extensionConfig = factoryAddress ? getExtensionConfigByFactory(factoryAddress as `0x${string}`) : null;
 
   // 如果是未知的扩展类型，显示暂不支持
   if (!extensionConfig) {
@@ -84,14 +80,13 @@ const ExtensionActionJoinPanel: React.FC<ExtensionActionJoinPanelProps> = ({
   // 根据扩展类型渲染对应的组件
   switch (extensionConfig.type) {
     case ExtensionType.LP:
-      return (
-        <LpJoinPanel actionId={actionId} actionInfo={actionInfo} extensionAddress={extensionAddress} />
-      );
+      return <LpJoinPanel actionId={actionId} actionInfo={actionInfo} extensionAddress={extensionAddress} />;
 
     case ExtensionType.GROUP_ACTION:
-      return (
-        <GroupJoinPanel actionId={actionId} actionInfo={actionInfo} extensionAddress={extensionAddress} />
-      );
+      return <GroupJoinPanel actionId={actionId} actionInfo={actionInfo} extensionAddress={extensionAddress} />;
+
+    case ExtensionType.GROUP_SERVICE:
+      return <GroupServiceJoinPanel actionId={actionId} actionInfo={actionInfo} extensionAddress={extensionAddress} />;
 
     // 未来添加新的扩展类型时，在这里添加对应的 case
     // case ExtensionType.XXXX:
@@ -109,4 +104,3 @@ const ExtensionActionJoinPanel: React.FC<ExtensionActionJoinPanelProps> = ({
 };
 
 export default ExtensionActionJoinPanel;
-

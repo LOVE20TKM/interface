@@ -13,6 +13,7 @@ import { ExtensionType, getExtensionConfigByFactory } from '@/src/config/extensi
 import LpMyParticipation from '@/src/components/Extension/Plugins/Lp/LpMyParticipation';
 import ActionPanelForJoin from '@/src/components/ActionDetail/ActionPanelForJoin';
 import GroupMyParticipation from '@/src/components/Extension/Plugins/Group/GroupMyParticipation';
+import GroupServiceMyParticipation from '@/src/components/Extension/Plugins/GroupService/GroupServiceMyParticipation';
 
 // my hooks
 import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
@@ -72,6 +73,10 @@ const ExtensionMyParticipation: React.FC<ExtensionMyParticipationProps> = ({ act
     case ExtensionType.GROUP_ACTION:
       return (
         <GroupMyParticipation actionId={actionId} actionInfo={actionInfo} extensionAddress={contractInfo.extension} />
+      );
+    case ExtensionType.GROUP_SERVICE:
+      return (
+        <GroupServiceMyParticipation actionId={actionId} extensionAddress={contractInfo.extension} />
       );
     // 未来添加新的扩展类型时，在这里添加对应的 case
     // case ExtensionType.XXXX:

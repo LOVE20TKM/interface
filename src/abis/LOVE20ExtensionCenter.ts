@@ -697,6 +697,11 @@ export const LOVE20ExtensionCenterAbi = [
   },
   {
     "type": "error",
+    "name": "ActionNotVotedInCurrentRound",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidJoinAddress",
     "inputs": []
   },

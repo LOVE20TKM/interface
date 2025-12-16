@@ -12,6 +12,7 @@ import { ExtensionType, getExtensionConfigByFactory } from '@/src/config/extensi
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LpActionPublicTabs from '@/src/components/Extension/Plugins/Lp/LpActionPublicTabs';
 import GroupActionPublicTabs from '@/src/components/Extension/Plugins/Group/GroupActionPublicTabs';
+import GroupServiceActionPublicTabs from '@/src/components/Extension/Plugins/GroupService/GroupServiceActionPublicTabs';
 
 // my types
 import { ActionInfo } from '@/src/types/love20types';
@@ -86,6 +87,25 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
         );
       }
       return <GroupActionPublicTabs extensionAddress={extensionAddress} actionId={actionId} actionInfo={actionInfo} />;
+
+    case ExtensionType.GROUP_SERVICE:
+      if (!actionId || !actionInfo) {
+        return (
+          <div className="bg-white rounded-lg p-8">
+            <div className="text-center text-gray-500">
+              <p>缺少必要的行动信息</p>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <GroupServiceActionPublicTabs
+          extensionAddress={extensionAddress}
+          currentJoinRound={currentRound}
+          actionId={actionId}
+          actionInfo={actionInfo}
+        />
+      );
 
     // 未来添加新的扩展类型时，在这里添加对应的 case
     // case ExtensionType.XXXX:
