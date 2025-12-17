@@ -9,11 +9,12 @@ interface GovPublicTabsProps {
   actionId: bigint;
   currentRound: bigint;
   actionInfo: ActionInfo;
+  isExtensionAction: boolean;
 }
 
 type GovSubTab = 'vote' | 'join' | 'verify';
 
-const GovPublicTabs: React.FC<GovPublicTabsProps> = ({ actionId, currentRound, actionInfo }) => {
+const GovPublicTabs: React.FC<GovPublicTabsProps> = ({ actionId, currentRound, actionInfo, isExtensionAction }) => {
   const router = useRouter();
   const [activeSubTab, setActiveSubTab] = useState<GovSubTab>('vote');
 
@@ -28,11 +29,12 @@ const GovPublicTabs: React.FC<GovPublicTabsProps> = ({ actionId, currentRound, a
   }, [tab2]);
 
   // 子Tab配置
-  const subTabs: { key: GovSubTab; label: string }[] = [
-    { key: 'vote', label: '投票公示' },
-    { key: 'join', label: '参与公示' },
-    { key: 'verify', label: '验证公示' },
+  const allSubTabs = [
+    { key: 'vote' as const, label: '投票公示' },
+    { key: 'join' as const, label: '参与公示' },
+    { key: 'verify' as const, label: '验证公示' },
   ];
+  const subTabs = allSubTabs.filter((tab) => !(isExtensionAction && tab.key === 'join'));
 
   // 处理子tab切换
   const handleSubTabChange = (subTabKey: GovSubTab) => {
@@ -93,4 +95,3 @@ const GovPublicTabs: React.FC<GovPublicTabsProps> = ({ actionId, currentRound, a
 };
 
 export default GovPublicTabs;
-

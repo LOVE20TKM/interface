@@ -57,21 +57,21 @@ const _ManagerDataPanel: React.FC<ManagerDataPanelProps> = ({
 
   return (
     <div>
-      <LeftTitle title="服务者数据" />
+      <LeftTitle title="我的服务数据" />
 
       {/* 行动者参与总量 - 参考 LaunchStatus 样式 */}
-      <div className="stats w-full mt-4 grid grid-cols-2 bg-gray-50 rounded-lg p-2 border border-gray-200">
-        <div className="stat place-items-center p-2">
+      <div className="stats w-full mt-2 grid grid-cols-2 bg-gray-50 rounded-lg pt-2 pb-1 border border-gray-200">
+        <div className="stat place-items-center p-1">
           <div className="stat-title text-sm">行动者参与总量</div>
-          <div className="stat-value">
-            <span className="text-2xl text-secondary">{formatTokenAmount(totalJoinedAmount)}</span>
+          <div className="stat-value h-6 flex items-center">
+            <span className="text-xl text-secondary">{formatTokenAmount(totalJoinedAmount)}</span>
           </div>
           <div className="text-xs text-greyscale-500 mt-1">{token?.symbol}</div>
         </div>
-        <div className="stat place-items-center p-2">
-          <div className="stat-title text-sm">最大容量使用率</div>
-          <div className="stat-value">
-            <span className="text-2xl text-secondary">{formatPercentage(totalJoinedToCapacityRatio * 100)}</span>
+        <div className="stat place-items-center p-1">
+          <div className="stat-title text-sm">容量使用率</div>
+          <div className="stat-value h-6 flex items-center">
+            <span className="text-xl text-secondary">{formatPercentage(totalJoinedToCapacityRatio * 100)}</span>
           </div>
           <div className="text-xs text-greyscale-500 mt-1">
             {formatTokenAmount(totalJoinedAmount, 2)} / {formatTokenAmount(currentCapacity || BigInt(0), 2)}
@@ -82,24 +82,24 @@ const _ManagerDataPanel: React.FC<ManagerDataPanelProps> = ({
       {/* 容量和质押数据网格 */}
       <div className="stats w-full grid grid-cols-2 px-2 divide-x-0 ">
         {/* 当前容量 */}
-        <div className="stat place-items-center px-2 pb-1">
-          <div className="stat-title text-sm">当前最大容量</div>
-          <div className="stat-value leading-4">
+        <div className="stat place-items-center px-2 pt-3 pb-1">
+          <div className="stat-title text-sm">当前容量</div>
+          <div className="stat-value leading-3">
             <span className="text-base">{formatTokenAmount(currentCapacity || BigInt(0), 2)}</span>
           </div>
-          <div className="text-xs text-greyscale-500 mt-2">
-            已达 <span className="text-secondary">{formatPercentage(capacityRatio * 100)}</span>
+          <div className="text-xs text-greyscale-500 mt-0">
+            最大容量的 <span className="text-secondary">{formatPercentage(capacityRatio * 100)}</span>
           </div>
         </div>
 
         {/* 当前质押 */}
-        <div className="stat place-items-center px-2 pb-1">
-          <div className="stat-title text-sm">当前实际质押</div>
-          <div className="stat-value leading-4">
+        <div className="stat place-items-center px-2 pt-3 pb-1">
+          <div className="stat-title text-sm">当前质押</div>
+          <div className="stat-value leading-3">
             <span className="text-base">{formatTokenAmount(currentStake || BigInt(0))}</span>
           </div>
-          <div className="text-xs text-greyscale-500 mt-1">
-            已达 <span className="text-secondary">{formatPercentage(stakeRatio * 100)}</span>
+          <div className="text-xs text-greyscale-500 mt-0">
+            最大质押的 <span className="text-secondary">{formatPercentage(stakeRatio * 100)}</span>
           </div>
         </div>
       </div>
@@ -107,19 +107,19 @@ const _ManagerDataPanel: React.FC<ManagerDataPanelProps> = ({
         {/* 最大容量 */}
         <div className="stat place-items-center px-2">
           <div className="stat-title text-sm">理论最大容量</div>
-          <div className="stat-value leading-4">
+          <div className="stat-value leading-3">
             <span className="text-sm text-gray-600">{formatTokenAmount(maxCapacity || BigInt(0))}</span>
           </div>
-          <div className="text-xs text-greyscale-500 mt-1">{token?.symbol}</div>
+          <div className="text-xs text-greyscale-500 mt-0">{token?.symbol}</div>
         </div>
 
         {/* 最大质押 */}
         <div className="stat place-items-center px-2">
           <div className="stat-title text-sm">最大可质押量</div>
-          <div className="stat-value leading-4">
+          <div className="stat-value leading-3">
             <span className="text-sm text-gray-600">{formatTokenAmount(maxStake || BigInt(0))}</span>
           </div>
-          <div className="text-xs text-greyscale-500 mt-1">{token?.symbol}</div>
+          <div className="text-xs text-greyscale-500 mt-0">{token?.symbol}</div>
         </div>
       </div>
     </div>

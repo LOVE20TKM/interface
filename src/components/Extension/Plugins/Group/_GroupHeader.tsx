@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 // 第三方库
+import { User } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // 类型
@@ -20,7 +21,10 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import { useCurrentRound as useVerifyCurrentRound, useScoreByVerifierByActionId } from '@/src/hooks/contracts/useLOVE20Verify';
+import {
+  useCurrentRound as useVerifyCurrentRound,
+  useScoreByVerifierByActionId,
+} from '@/src/hooks/contracts/useLOVE20Verify';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import {
   useAccountsByGroupIdCount,
@@ -32,6 +36,7 @@ import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatTokenAmount } from '@/src/lib/format';
 
 // 组件
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import _GroupManagementDialog from './_GroupManagementDialog';
 
 interface GroupHeaderProps {
@@ -123,7 +128,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
 
   const handleDistrustClick = () => {
     if (!hasVoted) {
-      toast.error('只有投票给本行动的治理者，才能投不信任票');
+      toast.error('投票给本行动的治理者，才可投不信任票');
       return;
     }
     router.push(
@@ -132,35 +137,36 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
   };
 
   return (
-    <div className="bg-gray-100 rounded-lg px-4 pt-2 pb-2 text-sm my-4">
-      {/* 第一行：链群ID/name + 状态 */}
+    <div className="bg-gray-100 rounded-lg px-4 pt-3 pb-3 text-sm my-4">
+      {/* 第一行：链群ID/name + 链群主地址 */}
       <div className="mb-2">
-        <h1 className="text-lg mb-1">
-          <div className="flex items-baseline justify-between">
-            <div className="flex items-baseline">
-              <span className="text-secondary text-xl font-bold mr-2">#{groupId.toString()}</span>
-              <span className="font-bold text-gray-800">{groupDetail.groupName}</span>
-            </div>
-            {!groupDetail.isActive && <span className="text-red-600 font-medium text-sm ml-2">已关闭</span>}
+        <div className="flex items-center justify-between">
+          <div className="flex items-baseline">
+            <span className="text-gray-500 text-sm">#</span>
+            <span className="text-secondary text-xl font-semibold">{groupId.toString()}</span>
+            <span className="font-semibold text-gray-800 text-lg ml-1">{groupDetail.groupName}</span>
+            {!groupDetail.isActive && <span className="text-red-600 font-medium text-xs ml-2">(已关闭)</span>}
           </div>
-        </h1>
+          <div className="text-sm text-gray-600 flex items-center gap-1">
+            <User className="text-greyscale-400 h-3 w-3" />
+            <span className="text-greyscale-400">
+              <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* 第二行：参与统计信息 */}
-      <div className="grid grid-cols-2 gap-4 text-sm mb-2">
-        <div className="flex items-center">
-          <span className="text-gray-500 mr-2">参与代币数:</span>
-          <span className="font-mono text-secondary">{formattedTotalAmount}</span>
-        </div>
-        <div className="flex items-center">
-          <span className="text-gray-500 mr-2">参与地址数:</span>
-          <span className="font-mono text-secondary">
-            {isPendingAccountsCount ? '...' : accountsCount?.toString() || '0'}
-          </span>
-        </div>
-        <div className="flex items-center">
-          <span className="text-gray-500 mr-2">还可参与:</span>
-          <span className="font-mono text-secondary">{formattedRemainingCapacity}</span>
+      <div className="space-y-2 text-sm text-gray-500 mb-1">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="">总参与代币:</span>
+            <span className="">{formattedTotalAmount}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500">总参与地址:</span>
+            <span className="">{isPendingAccountsCount ? '...' : accountsCount?.toString() || '0'}</span>
+          </div>
         </div>
       </div>
 

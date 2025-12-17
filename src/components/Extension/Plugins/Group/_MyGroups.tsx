@@ -52,7 +52,7 @@ const _MyGroups: React.FC<MyGroupsProps> = ({ groups, actionId, onManageClick })
           href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}
           className="text-sm text-secondary hover:text-secondary/80 transition-colors"
         >
-          新增链群 &gt;&gt;
+          激活链群 &gt;&gt;
         </Link>
       </div>
 
@@ -81,32 +81,40 @@ const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, onManageClick, token }
   const capacityRatio = group.capacity > BigInt(0) ? Number(group.totalJoinedAmount) / Number(group.capacity) : 0;
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 hover:border-secondary hover:bg-secondary/5 transition-all">
+    <div
+      onClick={() => onManageClick(group.groupId)}
+      className="border border-gray-200 rounded-lg py-3 pl-3 pr-0 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all"
+    >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <div className="font-semibold text-gray-800 mb-2">
-            #{group.groupId.toString()} {group.groupName}
+          <div className="text-gray-800 mb-2">
+            <span className="text-gray-500 text-xs">#</span>
+            <span className="text-secondary text-base font-semibold ">{group.groupId.toString()}</span>{' '}
+            <span className="font-semibold">{group.groupName}</span>
           </div>
-          <div className="text-sm text-gray-600 space-y-1">
-            <div>
-              <span className="text-gray-500">参与量: </span>
-              <span className="font-medium">
-                {formatTokenAmount(group.totalJoinedAmount, 2)} / {formatTokenAmount(group.capacity, 2)} (
-                {formatPercentage(capacityRatio * 100)})
-              </span>
+
+          <div className="text-xs text-gray-500 mt-2">
+            <span>参与量: </span>
+            <span>
+              {formatTokenAmount(group.totalJoinedAmount, 2)} / {formatTokenAmount(group.capacity, 2)} (
+              {formatPercentage(capacityRatio * 100)})
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500">质押量:</span>
+              <span className="">{formatTokenAmount(group.stakedAmount, 2)}</span>
             </div>
-            <div>
-              <span className="text-gray-500">质押量: </span>
-              <span className="font-medium">
-                {formatTokenAmount(group.stakedAmount, 2)} {token?.symbol}
-              </span>
+            <div className="flex items-center gap-2">
+              <span className="">容量:</span>
+              <span className="">{formatTokenAmount(group.capacity, 2)}</span>
             </div>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => onManageClick(group.groupId)} className="ml-4">
-          管理
-          <ChevronRight className="w-4 h-4 ml-1" />
-        </Button>
+
+        {/* 右侧箭头 */}
+        <ChevronRight className="w-5 h-5 text-gray-400" />
       </div>
     </div>
   );

@@ -19,10 +19,8 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { ILOVE20ExtensionAbi } from '@/src/abis/ILOVE20Extension';
-import { LOVE20JoinAbi } from '@/src/abis/LOVE20Join';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-
-const JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`;
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 
 /**
  * 扩展激励数据结构（包含扩展地址）
@@ -72,32 +70,7 @@ export const useExtensionActionsLatestRewards = ({
   account,
 }: UseExtensionActionsLatestRewardsParams): UseExtensionActionsLatestRewardsResult => {
   // 步骤1: 获取当前轮次
-  const currentRoundContract = useMemo(() => {
-    return [
-      {
-        address: JOIN_CONTRACT_ADDRESS,
-        abi: LOVE20JoinAbi,
-        functionName: 'currentRound',
-        args: [],
-      },
-    ];
-  }, []);
-
-  const {
-    data: currentRoundData,
-    isPending: isPendingCurrentRound,
-    error: errorCurrentRound,
-  } = useReadContracts({
-    contracts: currentRoundContract as any,
-    query: {
-      enabled: extensionAddresses.length > 0 && !!account,
-    },
-  });
-
-  const currentRound = useMemo(() => {
-    if (!currentRoundData || currentRoundData.length === 0) return undefined;
-    return safeToBigInt(currentRoundData[0]?.result);
-  }, [currentRoundData]);
+  const { currentRound, isPending: isPendingCurrentRound, error: errorCurrentRound } = useCurrentRound();
 
   // 步骤2: 构建批量查询合约列表
   // 为每个扩展地址查询最近 lastRounds 轮的激励
@@ -113,7 +86,7 @@ export const useExtensionActionsLatestRewards = ({
       const startRound = currentRound > lastRounds ? currentRound - lastRounds + BigInt(1) : BigInt(1);
 
       // 为每一轮创建查询
-      for (let round = startRound; round <= currentRound; round++) {
+      for (let round = startRound; round < currentRound; round++) {
         contracts.push({
           address: extensionAddress,
           abi: ILOVE20ExtensionAbi,

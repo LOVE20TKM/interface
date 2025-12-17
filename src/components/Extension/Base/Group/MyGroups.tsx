@@ -57,8 +57,12 @@ export default function MyGroups() {
       <LeftTitle title="我的链群ID" />
 
       <div className="mb-4">
-        <span className="text-gray-500 mr-1">拥有数量:</span>
-        <span className="font-mono text-secondary">{balance?.toString() || '0'}</span>
+        {balance > 3 && (
+          <>
+            <span className="text-gray-500 mr-1">数量:</span>
+            <span className="font-mono text-secondary">{balance?.toString() || '0'}</span>
+          </>
+        )}
       </div>
 
       {myGroups.length === 0 ? (

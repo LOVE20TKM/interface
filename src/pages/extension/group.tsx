@@ -59,8 +59,8 @@ const ActionGroupPage: React.FC = () => {
 
   // Tab配置
   const tabs: { key: TabType; label: string }[] = [
-    { key: 'detail', label: '详情' },
-    { key: 'scores', label: '分数公示' },
+    { key: 'detail', label: '链群详情' },
+    { key: 'scores', label: '打分公示' },
     { key: 'rewards', label: '激励公示' },
   ];
 

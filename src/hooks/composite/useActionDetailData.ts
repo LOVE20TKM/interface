@@ -155,9 +155,6 @@ export const useActionDetailData = ({
     },
   );
 
-  console.log('participationData:', participationData);
-  console.log('basicData:', basicData);
-
   // ==========================================
   // 步骤 3: 整合所有数据
   // ==========================================

@@ -22,6 +22,7 @@ import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 interface GroupDetailProps {
   actionId: bigint;
@@ -78,33 +79,53 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
   // 计算容量比例
   const capacityRatio =
     groupDetail.capacity > BigInt(0) ? Number(groupDetail.totalJoinedAmount) / Number(groupDetail.capacity) : 0;
-
+  const remainingCapacityRatio =
+    groupDetail.remainingCapacity > BigInt(0)
+      ? Number(groupDetail.remainingCapacity) / Number(groupDetail.capacity)
+      : 0;
   return (
     <div>
       <div className="space-y-6">
+        {/* 链群描述 */}
+        <div className="mt-6">
+          <div className="text-sm mb-2">链群描述:</div>
+          <div className="leading-loose bg-gray-50 p-2 rounded-md">
+            <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">{groupDetail.description || '无'}</p>
+          </div>
+        </div>
+
         {/* 容量信息 */}
         <div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
             <div className="flex items-center justify-between md:max-w-xs">
-              <span className="text-sm">参与代币数:</span>
-              <span className="font-mono text-secondary">
-                {formatTokenAmount(groupDetail.totalJoinedAmount, 2)} ({formatPercentage(capacityRatio * 100)})
+              <span className="text-sm">链群服务者:</span>
+              <span>
+                <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />
               </span>
             </div>
             <div className="flex items-center justify-between md:max-w-xs">
-              <span className="text-sm">参与地址数:</span>
-              <span className="font-mono text-secondary">{accountsCount?.toString() || '0'}</span>
-            </div>
-
-            <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">最大容量:</span>
-              <span className="font-mono text-secondary">{formatTokenAmount(groupDetail.capacity, 2)}</span>
+              <span className="font-mono">{formatTokenAmount(groupDetail.capacity)}</span>
             </div>
 
             <div className="flex items-center justify-between md:max-w-xs">
-              <span className="text-sm">质押金额:</span>
-              <span className="font-mono text-secondary">{formatTokenAmount(groupDetail.stakedAmount, 2)}</span>
+              <span className="text-sm">剩余容量:</span>
+              <span className="font-mono">
+                <span className="">{formatTokenAmount(groupDetail.remainingCapacity)} </span>
+                <span className="text-sm text-gray-500">({formatPercentage(remainingCapacityRatio * 100)})</span>
+              </span>
             </div>
+            <div className="flex items-center justify-between md:max-w-xs">
+              <span className="text-sm">已参与代币:</span>
+              <span className="font-mono">
+                <span className="">{formatTokenAmount(groupDetail.totalJoinedAmount)} </span>
+                <span className="text-sm text-gray-500">({formatPercentage(capacityRatio * 100)})</span>
+              </span>
+            </div>
+            {/* <div className="flex items-center justify-between md:max-w-xs">
+              <span className="text-sm">总参与地址:</span>
+              <span className="font-mono">{accountsCount?.toString() || '0'}</span>
+            </div> */}
           </div>
         </div>
 
@@ -113,27 +134,15 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">最小参与代币数:</span>
-              <span className="font-mono text-secondary">
-                {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')}
-              </span>
+              <span className="font-mono ">{formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')}</span>
             </div>
 
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">最大参与代币数:</span>
-              <span className="font-mono text-secondary">{formatTokenAmount(groupDetail.actualMaxJoinAmount)}</span>
+              <span className="font-mono">{formatTokenAmount(groupDetail.actualMaxJoinAmount)}</span>
             </div>
           </div>
         </div>
-
-        {/* 链群描述 */}
-        {groupDetail.description && (
-          <div className="mt-6">
-            <div className="text-sm mb-2">链群描述:</div>
-            <div className="leading-loose bg-gray-50 p-2 rounded-md">
-              <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">{groupDetail.description}</p>
-            </div>
-          </div>
-        )}
 
         {/* 说明 */}
         {/* <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">

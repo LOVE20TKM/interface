@@ -7,7 +7,7 @@ import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useExtensionAddressOfAction } from '@/src/hooks/extension/base/composite/useExtensionAddressOfAction';
-import { useOwnerOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
+import { useOwnerOf, useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import Header from '@/src/components/Header';
@@ -54,13 +54,21 @@ const ActionGroupOpPage: React.FC = () => {
     error: errorOwner,
   } = useOwnerOf(!isActivate && groupIdBigInt ? groupIdBigInt : BigInt(0));
 
+  // 获取链群名称（verify 操作需要）
+  const {
+    groupName,
+    isPending: isPendingGroupName,
+    error: errorGroupName,
+  } = useGroupNameOf(op === 'verify' && groupIdBigInt ? groupIdBigInt : BigInt(0));
+
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
     if (errorAction) handleContractError(errorAction, 'submit');
     if (errorExtension) handleContractError(errorExtension, 'extension');
     if (!isActivate && errorOwner) handleContractError(errorOwner, 'group');
-  }, [errorAction, errorExtension, errorOwner, handleContractError, isActivate]);
+    if (op === 'verify' && errorGroupName) handleContractError(errorGroupName, 'group');
+  }, [errorAction, errorExtension, errorOwner, errorGroupName, handleContractError, isActivate, op]);
 
   // 获取页面标题
   const getPageTitle = () => {
@@ -115,7 +123,13 @@ const ActionGroupOpPage: React.FC = () => {
   }
 
   // activate 操作不需要等待 groupOwner 加载
-  if (isPendingAction || isPendingExtension || (!isActivate && isPendingOwner)) {
+  // verify 操作需要等待 groupName 加载
+  if (
+    isPendingAction ||
+    isPendingExtension ||
+    (!isActivate && isPendingOwner) ||
+    (op === 'verify' && isPendingGroupName)
+  ) {
     return (
       <>
         <Header title={getPageTitle()} showBackButton={true} />
@@ -183,7 +197,7 @@ const ActionGroupOpPage: React.FC = () => {
       case 'set_delegated':
         return <_GroupOPSetDelegated {...baseProps} groupId={groupIdBigInt!} />;
       case 'verify':
-        return <_GroupOPVerify {...baseProps} groupId={groupIdBigInt!} />;
+        return <_GroupOPVerify {...baseProps} groupId={groupIdBigInt!} groupName={groupName || ''} />;
       default:
         return (
           <div className="text-center py-12">

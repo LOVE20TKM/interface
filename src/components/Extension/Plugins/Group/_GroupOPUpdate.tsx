@@ -4,7 +4,7 @@
 'use client';
 
 // React
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
@@ -76,25 +76,85 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   } = useExtensionActionParam({ actionId, extensionAddress });
 
   // 表单验证
-  const formSchema = z.object({
-    description: z.string().max(500, { message: '描述不能超过500字' }),
-    minJoinAmount: z.string().refine(
-      (val) => {
-        if (!val || val === '0') return true;
-        const amount = parseFloat(val);
-        return !isNaN(amount) && amount >= 0;
-      },
-      { message: '请输入有效的代币数' },
-    ),
-    maxJoinAmount: z.string().refine(
-      (val) => {
-        if (!val || val === '0') return true;
-        const amount = parseFloat(val);
-        return !isNaN(amount) && amount >= 0;
-      },
-      { message: '请输入有效的代币数' },
-    ),
-  });
+  const formSchema = useMemo(
+    () =>
+      z
+        .object({
+          description: z.string().max(500, { message: '描述不能超过500字' }),
+          minJoinAmount: z
+            .string()
+            .refine(
+              (val) => {
+                if (!val || val === '0') return true;
+                const amount = parseFloat(val);
+                return !isNaN(amount) && amount >= 0;
+              },
+              { message: '请输入有效的代币数' },
+            )
+            .superRefine((val, ctx) => {
+              if (!val || val === '0') return;
+              const amount = parseUnits(val);
+              if (amount > BigInt(0)) {
+                // 不能小于行动的最小参与量
+                if (actionParams?.minJoinAmount && amount < actionParams.minJoinAmount) {
+                  ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `不能小于行动最小参与量 ${formatTokenAmount(actionParams.minJoinAmount, 2)} ${
+                      token?.symbol || ''
+                    }`,
+                  });
+                }
+                // 不能大于行动的单个行动者最大参与代币数
+                if (actionParams?.joinMaxAmount && amount > actionParams.joinMaxAmount) {
+                  ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `不能大于全局最大参与量 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${
+                      token?.symbol || ''
+                    }`,
+                  });
+                }
+              }
+            }),
+          maxJoinAmount: z
+            .string()
+            .refine(
+              (val) => {
+                if (!val || val === '0') return true;
+                const amount = parseFloat(val);
+                return !isNaN(amount) && amount >= 0;
+              },
+              { message: '请输入有效的代币数' },
+            )
+            .superRefine((val, ctx) => {
+              if (!val || val === '0') return;
+              const amount = parseUnits(val);
+              if (amount > BigInt(0)) {
+                // 不能大于行动的单个行动者最大参与代币数
+                if (actionParams?.joinMaxAmount && amount > actionParams.joinMaxAmount) {
+                  ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `不能大于全局最大参与量 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${
+                      token?.symbol || ''
+                    }`,
+                  });
+                }
+              }
+            }),
+        })
+        .refine(
+          (data) => {
+            // 交叉验证：最大参与量不能小于最小参与量
+            const minAmount = parseUnits(data.minJoinAmount || '0');
+            const maxAmount = parseUnits(data.maxJoinAmount || '0');
+            return !(minAmount > BigInt(0) && maxAmount > BigInt(0) && maxAmount < minAmount);
+          },
+          {
+            message: `最大参与量不能小于最小参与量`,
+            path: ['maxJoinAmount'], // 错误显示在 maxJoinAmount 字段
+          },
+        ),
+    [actionParams, token],
+  );
 
   type FormValues = z.infer<typeof formSchema>;
 
@@ -125,10 +185,6 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     }
   }, [groupDetail, form, token?.decimals]);
 
-  // 监控表单值用于实时验证
-  const minJoinAmountValue = form.watch('minJoinAmount');
-  const maxJoinAmountValue = form.watch('maxJoinAmount');
-
   // 更新链群信息
   const {
     updateGroupInfo,
@@ -144,35 +200,9 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
       return;
     }
 
-    // 验证最小参与代币数
+    // 转换参数为 BigInt（formSchema 已经完成验证）
     const minJoinAmountBigInt = values.minJoinAmount ? parseUnits(values.minJoinAmount) : BigInt(0);
-
-    if (minJoinAmountBigInt > BigInt(0)) {
-      // 不能小于行动的最小参与量
-      if (minJoinAmountBigInt < actionParams.minJoinAmount) {
-        toast.error(
-          `最小参与量不能小于行动要求的 ${formatTokenAmount(actionParams.minJoinAmount, 2)} ${token?.symbol}`,
-        );
-        return;
-      }
-
-      // 不能大于行动的单个行动者最大参与代币数
-      if (minJoinAmountBigInt > actionParams.joinMaxAmount) {
-        toast.error(`最小参与量不能大于 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`);
-        return;
-      }
-    }
-
-    // 验证最大参与代币数
     const maxJoinAmountBigInt = values.maxJoinAmount ? parseUnits(values.maxJoinAmount) : BigInt(0);
-
-    if (maxJoinAmountBigInt > BigInt(0)) {
-      // 不能大于行动的单个行动者最大参与代币数
-      if (maxJoinAmountBigInt > actionParams.joinMaxAmount) {
-        toast.error(`最大参与量不能大于 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`);
-        return;
-      }
-    }
 
     try {
       await updateGroupInfo(
@@ -197,42 +227,6 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
       }, 1500);
     }
   }, [isConfirmedUpdate, router]);
-
-  // 额外校验：把"范围约束"实时反馈到输入框下方
-  useEffect(() => {
-    if (!actionParams) return;
-
-    // minJoinAmount
-    const minJoin = safeParseUnits(minJoinAmountValue);
-    if (minJoinAmountValue && minJoin > BigInt(0)) {
-      if (minJoin < actionParams.minJoinAmount) {
-        form.setError('minJoinAmount', {
-          type: 'validate',
-          message: `不能小于行动最小参与量 ${formatTokenAmount(actionParams.minJoinAmount, 2)} ${token?.symbol}`,
-        });
-      } else if (minJoin > actionParams.joinMaxAmount) {
-        form.setError('minJoinAmount', {
-          type: 'validate',
-          message: `不能大于全局最大参与量 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`,
-        });
-      } else {
-        form.clearErrors('minJoinAmount');
-      }
-    }
-
-    // maxJoinAmount
-    const maxJoin = safeParseUnits(maxJoinAmountValue);
-    if (maxJoinAmountValue && maxJoin > BigInt(0)) {
-      if (maxJoin > actionParams.joinMaxAmount) {
-        form.setError('maxJoinAmount', {
-          type: 'validate',
-          message: `不能大于全局最大参与量 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`,
-        });
-      } else {
-        form.clearErrors('maxJoinAmount');
-      }
-    }
-  }, [actionParams, form, maxJoinAmountValue, minJoinAmountValue, token?.symbol]);
 
   // 错误处理
   const { handleContractError } = useHandleContractError();

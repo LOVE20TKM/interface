@@ -4,14 +4,15 @@
 'use client';
 
 // React
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
 
 // 第三方库
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, User } from 'lucide-react';
 import Link from 'next/link';
+import { useAccount } from 'wagmi';
 
 // 类型
 import { ActionInfo } from '@/src/types/love20types';
@@ -21,6 +22,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
+import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
@@ -40,6 +42,7 @@ interface GroupsTabProps {
 const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionAddress }) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
+  const { address: account } = useAccount();
 
   // 获取链群列表
   const { groups, isPending, error } = useExtensionGroupInfosOfAction({
@@ -47,13 +50,49 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
     tokenAddress: token?.address,
     actionId,
   });
+
+  // 获取当前用户加入的链群信息
+  const {
+    groupId: joinedGroupId,
+    isPending: isPendingJoinInfo,
+    error: errorJoinInfo,
+  } = useJoinInfo(extensionAddress, account as `0x${string}`);
+
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
     if (error) {
       handleContractError(error, 'extension');
     }
-  }, [error, handleContractError]);
+    if (errorJoinInfo) {
+      handleContractError(errorJoinInfo, 'extension');
+    }
+  }, [error, errorJoinInfo, handleContractError]);
+
+  // 对链群进行分类和排序
+  const sortedGroups = useMemo(() => {
+    if (!groups || groups.length === 0) return [];
+
+    // 分类：我激活的、我参与的、其他
+    const myActivatedGroups = groups.filter((g) => account && g.owner.toLowerCase() === account.toLowerCase());
+    const myJoinedGroups = groups.filter(
+      (g) =>
+        joinedGroupId !== undefined &&
+        g.groupId === joinedGroupId &&
+        !(account && g.owner.toLowerCase() === account.toLowerCase()),
+    );
+    const otherGroups = groups.filter(
+      (g) =>
+        !(account && g.owner.toLowerCase() === account.toLowerCase()) &&
+        !(joinedGroupId !== undefined && g.groupId === joinedGroupId),
+    );
+
+    // 随机打乱 otherGroups
+    const shuffledOtherGroups = [...otherGroups].sort(() => Math.random() - 0.5);
+
+    // 合并：我激活的 -> 我参与的 -> 其他（随机）
+    return [...myActivatedGroups, ...myJoinedGroups, ...shuffledOtherGroups];
+  }, [groups, account, joinedGroupId]);
 
   // 跳转到链群主页
   const handleGroupClick = (groupId: bigint) => {
@@ -62,7 +101,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
     );
   };
 
-  if (isPending) {
+  if (isPending || isPendingJoinInfo) {
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
@@ -89,56 +128,75 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
 
   return (
     <div className="space-y-4">
-      <LeftTitle title={`参与本行动的链群 (${groups.length})`} />
+      <div className="flex items-center justify-between">
+        <LeftTitle title={`链群列表 (${groups.length})`} />
+        <Link
+          href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}
+          className="text-sm text-secondary hover:text-secondary/80 ml-2"
+        >
+          激活链群 &gt;&gt;
+        </Link>
+      </div>
 
       {/* 链群列表 */}
       <div className="space-y-3">
-        {groups.map((group) => (
-          <div
-            key={group.groupId.toString()}
-            onClick={() => handleGroupClick(group.groupId)}
-            className="border border-gray-200 rounded-lg p-4 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="font-semibold text-gray-800 mb-2">
-                  #{group.groupId.toString()} {group.groupName}
-                </div>
+        {sortedGroups.map((group) => {
+          // 判断是否为我的链群（我激活的或我参与的）
+          const isMyActivated = account && group.owner.toLowerCase() === account.toLowerCase();
+          const isMyJoined = joinedGroupId !== undefined && group.groupId === joinedGroupId;
+          const isMyGroup = isMyActivated || isMyJoined;
 
-                <div className="text-sm text-gray-600 mb-2 flex items-center gap-2">
-                  <span className="text-gray-500">服务者:</span>
-                  <AddressWithCopyButton address={group.owner} showCopyButton={true} />
-                </div>
-
-                <div className="text-xs text-gray-500 mt-2">
-                  <span>参与代币范围: </span>
-                  <span>
-                    {formatTokenAmount(group.actualMinJoinAmount)} ~
-                    {group.actualMaxJoinAmount > BigInt(0) ? formatTokenAmount(group.actualMaxJoinAmount) : '不限'}{' '}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-4 text-xs text-gray-500 ">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500">地址数:</span>
-                    <span className="">{group.accountCount.toString()}</span>
+          return (
+            <div
+              key={group.groupId.toString()}
+              onClick={() => handleGroupClick(group.groupId)}
+              className="border border-gray-200 rounded-lg py-3 pl-3 pr-0 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="text-gray-800 mb-2 flex items-center justify-between">
+                    <div className="flex items-center items-baseline">
+                      <span className="text-gray-500 text-xs">#</span>
+                      <span className="text-secondary text-base font-semibold">{group.groupId.toString()}</span>{' '}
+                      <span className="font-semibold ml-1">{group.groupName}</span>
+                      {isMyGroup && <span className="text-secondary text-xs ml-1">(我的)</span>}
+                    </div>
+                    <div className="text-sm text-gray-600 flex items-center gap-1">
+                      <User className="text-greyscale-400 h-3 w-3" />
+                      <span className="text-greyscale-400">
+                        <AddressWithCopyButton address={group.owner} showCopyButton={false} />
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="">代币数:</span>
-                    <span className="">
-                      {formatTokenAmount(group.totalJoinedAmount)} {token?.symbol}
+
+                  <div className="text-xs text-gray-500 mt-2">
+                    <span>单地址代币限制: </span>
+                    <span>
+                      {formatTokenAmount(group.actualMinJoinAmount)} ~&nbsp;
+                      {group.actualMaxJoinAmount > BigInt(0)
+                        ? formatTokenAmount(group.actualMaxJoinAmount)
+                        : '不限'}{' '}
                     </span>
                   </div>
-                </div>
-              </div>
 
-              {/* 右侧箭头 */}
-              <div className="ml-4">
+                  <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="">参与代币数:</span>
+                      <span className="">{formatTokenAmount(group.totalJoinedAmount)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500">参与地址数:</span>
+                      <span className="">{group.accountCount.toString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 右侧箭头 */}
                 <ChevronRight className="w-5 h-5 text-gray-400" />
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* 说明 */}

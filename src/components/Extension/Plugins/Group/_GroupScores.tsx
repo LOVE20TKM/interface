@@ -193,8 +193,8 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extens
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-1 text-left">成员地址</th>
-                <th className="px-1 text-right">参与币数 / 原始打分</th>
-                <th className="px-1 text-right">最终打分</th>
+                <th className="px-1 text-right">参与币数</th>
+                <th className="px-1 text-right">打分</th>
               </tr>
             </thead>
             <tbody>
@@ -203,11 +203,9 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extens
                   <td className="px-1">
                     <AddressWithCopyButton address={item.account} showCopyButton={true} />
                   </td>
-                  <td className="px-1 text-right font-mono">
-                    {formatTokenAmount(item.joinedAmount)}/{Number(item.originScore).toString()}
-                  </td>
+                  <td className="px-1 text-right font-mono">{formatTokenAmount(item.joinedAmount)}</td>
                   <td className="px-1 text-right text-greyscale-700 font-mono ">
-                    {formatTokenAmount(item.finalScore)}
+                    {Number(item.originScore).toString()}
                   </td>
                 </tr>
               ))}

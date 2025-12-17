@@ -112,9 +112,6 @@ export function useExtensionParticipationData(
     },
   });
 
-  console.log('data:', data);
-  console.log('contracts:', contracts);
-
   // ==========================================
   // 解析返回数据
   // ==========================================

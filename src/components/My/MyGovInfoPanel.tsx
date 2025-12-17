@@ -9,8 +9,8 @@ import { formatPhaseText } from '@/src/lib/domainUtils';
 
 // my hooks
 import { useHandleContractError } from '@/src/lib/errorUtils';
-import { useAccountStakeStatus, useCurrentRound, useValidGovVotes } from '@/src/hooks/contracts/useLOVE20Stake';
-import { useGovData } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { useAccountStakeStatus, useCurrentRound } from '@/src/hooks/contracts/useLOVE20Stake';
+import { useMyGovData } from '@/src/hooks/composite/useMyGovData';
 
 // my contexts
 import { Token } from '@/src/contexts/TokenContext';
@@ -40,15 +40,17 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
     error: errorAccountStakeStatus,
   } = useAccountStakeStatus(token?.address as `0x${string}`, account as `0x${string}`);
 
-  // 我的治理票&总有效票数
+  // 获取治理票数据（合并RPC调用）
   const {
     validGovVotes,
-    isPending: isPendingValidGovVotes,
-    error: errorValidGovVotes,
-  } = useValidGovVotes((token?.address as `0x${string}`) || '', (account as `0x${string}`) || '');
-
-  // 获取总的治理票数
-  const { govData, isPending: isPendingGovData, error: errorGovData } = useGovData(token?.address as `0x${string}`);
+    govData,
+    governancePercentage,
+    isPending: isPendingGovData,
+    error: errorGovData,
+  } = useMyGovData({
+    tokenAddress: token?.address as `0x${string}`,
+    account: account as `0x${string}`,
+  });
 
   // // 获取上一轮次的治理奖励（用于计算加速激励倍数）
   // const {
@@ -61,10 +63,6 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
   //   currentRound > BigInt(3) ? currentRound - BigInt(3) : BigInt(0),
   //   currentRound > BigInt(3) ? currentRound - BigInt(3) : BigInt(0),
   // );
-
-  // 计算我的治理票占比
-  const governancePercentage =
-    govData?.govVotes && validGovVotes ? (Number(validGovVotes) / Number(govData.govVotes)) * 100 : 0;
 
   // 我的加速激励的质押占比
   const tokenStakedPercentage = stAmount && govData?.stAmount ? (Number(stAmount) / Number(govData.stAmount)) * 100 : 0;
@@ -135,7 +133,7 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
         <div className="stat place-items-center pt-0 pb-1 pl-1">
           <div className="stat-title text-sm flex items-center">我的治理票占比</div>
           <div className="stat-value text-xl text-secondary">
-            {isPendingGovData || isPendingValidGovVotes ? (
+            {isPendingGovData || isPendingGovData ? (
               <LoadingIcon />
             ) : (
               `${formatPercentage(governancePercentage.toString())}`
@@ -165,7 +163,7 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
           </div>
         </div>
       </div>
-      {!isPendingValidGovVotes &&
+      {!isPendingGovData &&
         !isPendingAccountStakeStatus &&
         validGovVotes !== undefined &&
         govVotes !== undefined &&

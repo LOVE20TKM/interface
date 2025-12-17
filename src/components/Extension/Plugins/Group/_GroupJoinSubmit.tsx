@@ -4,7 +4,7 @@
 'use client';
 
 // React
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
@@ -44,6 +44,7 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import _GroupParticipationStats from './_GroupParticipationStats';
 
 interface FormValues {
   joinAmount: string;
@@ -82,6 +83,17 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     actionId,
     groupId,
   });
+
+  // 计算还可以追加的代币数量（仅在追加参与时使用）
+  // remainingQuota = min(actualMaxJoinAmount - joinedAmount, remainingCapacity)
+  const remainingQuota = useMemo(() => {
+    if (!isJoined || !groupDetail || !joinedAmount) {
+      return BigInt(0);
+    }
+    const maxByLimit = groupDetail.actualMaxJoinAmount - joinedAmount;
+    const maxByCapacity = groupDetail.remainingCapacity;
+    return maxByLimit < maxByCapacity ? maxByLimit : maxByCapacity;
+  }, [isJoined, groupDetail, joinedAmount]);
 
   // 获取代币余额
   const { balance, error: errorBalance } = useBalanceOf(
@@ -137,6 +149,8 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
       )
       .refine(
         (val) => {
+          // 追加参与时跳过最小值检查（已满足首次要求）
+          if (isJoined) return true;
           if (!groupDetail) return true;
           const inputVal = parseUnits(val);
           return inputVal !== null && inputVal >= groupDetail.actualMinJoinAmount;
@@ -151,22 +165,30 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
         (val) => {
           if (!groupDetail) return true;
           const inputVal = parseUnits(val);
-          // 实际上限 = min(行动上限, 群上限, 链群剩余容量)
-          const effectiveMaxAmount =
-            groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
-              ? groupDetail.actualMaxJoinAmount
-              : groupDetail.remainingCapacity;
-          return inputVal !== null && inputVal <= effectiveMaxAmount;
+
+          if (isJoined) {
+            // 追加参与：使用剩余配额
+            return inputVal !== null && inputVal <= remainingQuota;
+          } else {
+            // 首次加入：实际上限 = min(行动上限, 群上限, 链群剩余容量)
+            const effectiveMaxAmount =
+              groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
+                ? groupDetail.actualMaxJoinAmount
+                : groupDetail.remainingCapacity;
+            return inputVal !== null && inputVal <= effectiveMaxAmount;
+          }
         },
         {
           message: `参与代币数不能大于最大值 ${
             groupDetail
-              ? formatTokenAmount(
-                  groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
-                    ? groupDetail.actualMaxJoinAmount
-                    : groupDetail.remainingCapacity,
-                  2,
-                )
+              ? isJoined
+                ? formatTokenAmount(remainingQuota, 2)
+                : formatTokenAmount(
+                    groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
+                      ? groupDetail.actualMaxJoinAmount
+                      : groupDetail.remainingCapacity,
+                    2,
+                  )
               : '0'
           }`,
         },
@@ -266,6 +288,29 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     }
   }
 
+  /**
+   * 处理"最高"按钮点击 - 根据场景设置最大可参与数量
+   */
+  const handleSetMaxAmount = () => {
+    if (!balance || balance <= BigInt(0) || !groupDetail) return;
+
+    let maxAmount: bigint;
+
+    if (isJoined) {
+      // 追加场景：min(余额, 剩余配额)
+      maxAmount = balance < remainingQuota ? balance : remainingQuota;
+    } else {
+      // 首次加入：min(余额, actualMaxJoinAmount, remainingCapacity)
+      const effectiveMaxAmount =
+        groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
+          ? groupDetail.actualMaxJoinAmount
+          : groupDetail.remainingCapacity;
+      maxAmount = balance < effectiveMaxAmount ? balance : effectiveMaxAmount;
+    }
+
+    form.setValue('joinAmount', formatUnits(maxAmount));
+  };
+
   // 加入成功后跳转到我的页面
   useEffect(() => {
     if (isConfirmedJoin) {
@@ -316,44 +361,45 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
   return (
     <>
-      <div className="px-6 pt-6 pb-2">
+      <div className="px-6 pt-0 pb-2">
+        {/* 追加时显示参与统计 */}
+        {isJoined && (
+          <div className="my-4">
+            <_GroupParticipationStats actionId={actionId} extensionAddress={extensionAddress} groupId={groupId} />
+          </div>
+        )}
+
         <LeftTitle title={isJoined ? '追加代币' : '加入链群'} />
 
-        {/* 行动信息 */}
-        <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-          <div className="text-sm text-gray-600 mb-2">
-            <span className="font-medium">行动：</span>
-            <span className="text-gray-800">
-              #{actionId.toString()} {actionInfo.body.title}
-            </span>
-          </div>
-
-          {/* 链群信息 */}
-          <div className="text-sm text-gray-600 flex items-center justify-between">
-            <div>
-              <span className="font-medium">链群：</span>
-              <span className="text-gray-800">
-                #{groupDetail.groupId.toString()} {groupDetail.groupName}
-              </span>
+        {!isJoined && (
+          <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            {/* 链群信息 */}
+            <div className="text-sm text-gray-600 flex items-center justify-between">
+              <div>
+                <span className="text-sm">链群：</span>
+                <span className="text-gray-500 text-xs">#</span>
+                <span className="text-secondary text-base font-semibold ">{groupDetail.groupId.toString()}</span>{' '}
+                <span className="font-semibold text-gray-800">{groupDetail.groupName}</span>
+              </div>
+              {!isJoined && (
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => router.push(`/acting/join?id=${actionId}&symbol=${token?.symbol}`)}
+                  className="text-secondary p-0 h-auto"
+                >
+                  切换链群
+                </Button>
+              )}
             </div>
-            {!isJoined && (
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() => router.push(`/acting/join?id=${actionId}&symbol=${token?.symbol}`)}
-                className="text-secondary p-0 h-auto"
-              >
-                切换链群
-              </Button>
-            )}
-          </div>
 
-          {/* 服务者 */}
-          <div className="text-sm text-gray-600 mt-2 flex items-center gap-2">
-            <span className="font-medium">服务者：</span>
-            <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />
+            {/* 服务者 */}
+            <div className="text-gray-600 mt-2 flex items-center gap-2">
+              <span className="text-sm">服务者：</span>
+              <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 表单 */}
         <Form {...form}>
@@ -364,7 +410,22 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
               name="joinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-greyscale-500 font-normal">参与代币数：</FormLabel>
+                  {!isJoined && (
+                    <FormLabel className="text-greyscale-500 font-normal">
+                      <>
+                        参与代币数：{' '}
+                        <span className="text-xs text-gray-500">
+                          (限 {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
+                          {formatTokenAmount(
+                            groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
+                              ? groupDetail.actualMaxJoinAmount
+                              : groupDetail.remainingCapacity,
+                          )}
+                          )
+                        </span>
+                      </>
+                    </FormLabel>
+                  )}
                   <FormControl>
                     <Input
                       placeholder={`请输入参与代币数量`}
@@ -375,39 +436,21 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                     />
                   </FormControl>
                   <FormMessage />
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span className="text-xs text-gray-500">
-                      参与范围：{formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
-                      {formatTokenAmount(
-                        groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
-                          ? groupDetail.actualMaxJoinAmount
-                          : groupDetail.remainingCapacity,
-                      )}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      我的余额：<span className="text-secondary">{formatTokenAmount(balance || BigInt(0), 4)}</span>{' '}
+                      {token?.symbol}
                     </span>
                     <Button
                       type="button"
                       variant="link"
                       size="sm"
-                      onClick={() => {
-                        if (balance && balance > BigInt(0) && groupDetail) {
-                          // 实际上限 = min(行动上限, 群上限, 链群剩余容量)
-                          const effectiveMaxAmount =
-                            groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
-                              ? groupDetail.actualMaxJoinAmount
-                              : groupDetail.remainingCapacity;
-                          const maxAmount = balance < effectiveMaxAmount ? balance : effectiveMaxAmount;
-                          form.setValue('joinAmount', formatUnits(maxAmount));
-                        }
-                      }}
+                      onClick={handleSetMaxAmount}
                       className="text-secondary p-0 h-auto"
                       disabled={!balance || balance <= BigInt(0)}
                     >
                       最高
                     </Button>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    我的余额：<span className="text-secondary">{formatTokenAmount(balance || BigInt(0), 4)}</span>{' '}
-                    {token?.symbol}
                   </div>
                 </FormItem>
               )}
@@ -416,8 +459,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
             {/* 验证信息字段 */}
             {verificationKeys && verificationKeys.length > 0 && (
               <>
-                <div className="pt-4 border-t border-gray-200">
-                  <h3 className="text-base font-medium text-gray-700 mb-3">验证信息</h3>
+                <div>
                   {isPendingVerificationInfos ? (
                     <div className="text-sm text-gray-500">加载已有验证信息...</div>
                   ) : (
@@ -509,7 +551,6 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
           <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
             {verificationKeys && verificationKeys.length > 0 && <div>• 验证信息用于链群服务者验证您的行动完成情况</div>}
-            <div>• 您的激励将基于链群服务者的验证打分</div>
             <div>• 可以随时取回参与的代币</div>
             {verificationKeys && verificationKeys.length > 0 && <div>• 加入后可以随时修改验证信息</div>}
           </div>

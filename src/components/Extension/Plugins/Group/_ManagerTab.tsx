@@ -186,6 +186,7 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
           onOpenChange={setIsDialogOpen}
           actionId={actionId}
           groupId={selectedGroupId}
+          showViewGroup={true}
         />
       )}
     </>

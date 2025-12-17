@@ -32,6 +32,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useMyGovData } from '@/src/hooks/composite/useMyGovData';
 import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
 import { useExtensionActionParam } from '@/src/hooks/extension/plugins/group/composite';
 import {
@@ -71,6 +72,16 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
+  // 获取治理票占比数据
+  const {
+    governancePercentage,
+    isPending: isPendingGovData,
+    error: errorGovData,
+  } = useMyGovData({
+    tokenAddress: token?.address as `0x${string}`,
+    account: account as `0x${string}`,
+  });
+
   // 如果没有传入 groupId，需要从用户的 group NFT 中选择
   const { myGroups, isPending: isPendingGroups, error: errorGroups } = useMyGroups(account);
   const [selectedGroupId, setSelectedGroupId] = useState<bigint | undefined>(groupId);
@@ -95,12 +106,20 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     return myGroups.filter((group) => !activatedGroupIds.some((activatedId) => activatedId === group.tokenId));
   }, [myGroups, activatedGroupIds]);
 
+  // 当只有一个可用链群时，自动选择它
+  useEffect(() => {
+    if (!groupId && availableGroups && availableGroups.length === 1 && !selectedGroupId) {
+      setSelectedGroupId(availableGroups[0].tokenId);
+    }
+  }, [groupId, availableGroups, selectedGroupId]);
+
   // 获取链群行动整体参数（扩展基本常量 + 实时数据）
   const {
     params: actionParams,
     isPending: isPendingActionParams,
     error: errorActionParams,
   } = useExtensionActionParam({ actionId, extensionAddress });
+  console.log('actionParams', actionParams);
 
   // 获取可扩展信息（用于计算最大质押量）
   const {
@@ -128,35 +147,130 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   );
 
   // 表单验证
-  const formSchema = z.object({
-    stakedAmount: z
-      .string()
-      .min(1, { message: '请输入质押代币数' })
-      .refine(
-        (val) => {
-          const amount = parseFloat(val);
-          return !isNaN(amount) && amount > 0;
-        },
-        { message: '请输入有效的质押代币数' },
-      ),
-    description: z.string().max(500, { message: '描述不能超过500字' }),
-    minJoinAmount: z.string().refine(
-      (val) => {
-        if (!val || val === '0') return true;
-        const amount = parseFloat(val);
-        return !isNaN(amount) && amount >= 0;
-      },
-      { message: '请输入有效的代币数' },
-    ),
-    maxJoinAmount: z.string().refine(
-      (val) => {
-        if (!val || val === '0') return true;
-        const amount = parseFloat(val);
-        return !isNaN(amount) && amount >= 0;
-      },
-      { message: '请输入有效的代币数' },
-    ),
-  });
+  const formSchema = useMemo(
+    () =>
+      z
+        .object({
+          stakedAmount: z
+            .string()
+            .min(1, { message: '请输入质押代币数' })
+            .refine(
+              (val) => {
+                const amount = parseFloat(val);
+                return !isNaN(amount) && amount > 0;
+              },
+              { message: '请输入有效的质押代币数' },
+            )
+            .superRefine((val, ctx) => {
+              const amount = parseUnits(val);
+
+              // 最小质押量验证
+              if (actionParams?.minStake && actionParams.minStake > BigInt(0) && amount < actionParams.minStake) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: `质押代币数不能小于最小质押量 ${formatTokenAmount(actionParams.minStake, 4, 'ceil')} ${
+                    token?.symbol || ''
+                  }`,
+                });
+              }
+
+              // 最大质押量验证
+              if (
+                additionalStakeAllowed !== undefined &&
+                additionalStakeAllowed > BigInt(0) &&
+                amount > additionalStakeAllowed
+              ) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: `质押代币数不能大于最大质押量 ${formatTokenAmount(additionalStakeAllowed)} ${
+                    token?.symbol || ''
+                  }`,
+                });
+              }
+
+              // 余额验证
+              if (userBalance !== undefined && userBalance > BigInt(0) && amount > userBalance) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: `质押代币数不能大于余额 ${formatTokenAmount(userBalance)} ${token?.symbol || ''}`,
+                });
+              }
+            }),
+          description: z.string().max(500, { message: '描述不能超过500字' }),
+          minJoinAmount: z
+            .string()
+            .refine(
+              (val) => {
+                if (!val || val === '0') return true;
+                const amount = parseFloat(val);
+                return !isNaN(amount) && amount >= 0;
+              },
+              { message: '请输入有效的代币数' },
+            )
+            .superRefine((val, ctx) => {
+              if (!val || val === '0') return;
+              const amount = parseUnits(val);
+              if (amount > BigInt(0)) {
+                // 不能小于行动的最小参与量
+                if (actionParams?.minJoinAmount && amount < actionParams.minJoinAmount) {
+                  ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `不能小于行动最小参与量 ${formatTokenAmount(actionParams.minJoinAmount, 2)} ${
+                      token?.symbol || ''
+                    }`,
+                  });
+                }
+                // 不能大于行动的单个行动者最大参与代币数
+                if (actionParams?.joinMaxAmount && amount > actionParams.joinMaxAmount) {
+                  ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `不能大于全局最大参与量 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${
+                      token?.symbol || ''
+                    }`,
+                  });
+                }
+              }
+            }),
+          maxJoinAmount: z
+            .string()
+            .refine(
+              (val) => {
+                if (!val || val === '0') return true;
+                const amount = parseFloat(val);
+                return !isNaN(amount) && amount >= 0;
+              },
+              { message: '请输入有效的代币数' },
+            )
+            .superRefine((val, ctx) => {
+              if (!val || val === '0') return;
+              const amount = parseUnits(val);
+              if (amount > BigInt(0)) {
+                // 不能大于行动的单个行动者最大参与代币数
+                if (actionParams?.joinMaxAmount && amount > actionParams.joinMaxAmount) {
+                  ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `不能大于全局最大参与量 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${
+                      token?.symbol || ''
+                    }`,
+                  });
+                }
+              }
+            }),
+        })
+        .refine(
+          (data) => {
+            // 交叉验证：最大参与量不能小于最小参与量
+            const minAmount = parseUnits(data.minJoinAmount || '0');
+            const maxAmount = parseUnits(data.maxJoinAmount || '0');
+            return !(minAmount > BigInt(0) && maxAmount > BigInt(0) && maxAmount < minAmount);
+          },
+          {
+            message: `最大参与量不能小于最小参与量`,
+            path: ['maxJoinAmount'], // 错误显示在 maxJoinAmount 字段
+          },
+        ),
+    [actionParams, additionalStakeAllowed, userBalance, token],
+  );
 
   type FormValues = z.infer<typeof formSchema>;
 
@@ -174,8 +288,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   // 授权检查
   const stakedAmount = form.watch('stakedAmount');
   const stakedAmountBigInt = stakedAmount ? parseUnits(stakedAmount) : BigInt(0);
-  const minJoinAmountValue = form.watch('minJoinAmount');
-  const maxJoinAmountValue = form.watch('maxJoinAmount');
 
   // 当前输入的质押量对应的容量（实时提示用）
   const stakedCapacity = useMemo(() => {
@@ -256,57 +368,9 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
       return;
     }
 
-    // 验证质押代币数
-    if (actionParams.minStake > BigInt(0) && stakedAmountBigInt < actionParams.minStake) {
-      toast.error(
-        `质押代币数不能小于最小质押量 ${formatTokenAmount(actionParams.minStake || BigInt(0), 4, 'ceil')} ${
-          token?.symbol
-        }`,
-      );
-      return;
-    }
-    if (
-      additionalStakeAllowed !== undefined &&
-      additionalStakeAllowed > BigInt(0) &&
-      stakedAmountBigInt > additionalStakeAllowed
-    ) {
-      toast.error(`质押代币数不能大于最大质押量 ${formatTokenAmount(additionalStakeAllowed, 2)} ${token?.symbol}`);
-      return;
-    }
-    if (userBalance !== undefined && userBalance > BigInt(0) && stakedAmountBigInt > userBalance) {
-      toast.error(`质押代币数不能大于余额 ${formatTokenAmount(userBalance, 2)} ${token?.symbol}`);
-      return;
-    }
-
-    // 验证最小参与代币数
+    // 转换参数为 BigInt（formSchema 已经完成验证）
     const minJoinAmountBigInt = values.minJoinAmount ? parseUnits(values.minJoinAmount) : BigInt(0);
-
-    if (minJoinAmountBigInt > BigInt(0)) {
-      // 不能小于行动的最小参与量
-      if (minJoinAmountBigInt < actionParams.minJoinAmount) {
-        toast.error(
-          `最小参与量不能小于行动要求的 ${formatTokenAmount(actionParams.minJoinAmount, 2)} ${token?.symbol}`,
-        );
-        return;
-      }
-
-      // 不能大于行动的单个行动者最大参与代币数
-      if (minJoinAmountBigInt > actionParams.joinMaxAmount) {
-        toast.error(`最小参与量不能大于 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`);
-        return;
-      }
-    }
-
-    // 验证最大参与代币数
     const maxJoinAmountBigInt = values.maxJoinAmount ? parseUnits(values.maxJoinAmount) : BigInt(0);
-
-    if (maxJoinAmountBigInt > BigInt(0)) {
-      // 不能大于行动的单个行动者最大参与代币数
-      if (maxJoinAmountBigInt > actionParams.joinMaxAmount) {
-        toast.error(`最大参与量不能大于 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`);
-        return;
-      }
-    }
 
     try {
       await activateGroup(
@@ -342,79 +406,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     form.setValue('stakedAmount', formatTokenAmount(maxAmount, 6));
   };
 
-  // 额外校验：把“范围约束”实时反馈到输入框下方（参照 StakeTokenPanel 的体验）
-  useEffect(() => {
-    if (!actionParams) return;
-
-    const staked = safeParseUnits(stakedAmount);
-    const minStake = actionParams.minStake || BigInt(0);
-    const maxStakeAllowed = additionalStakeAllowed || BigInt(0);
-
-    // stakedAmount
-    if (stakedAmount && staked > BigInt(0)) {
-      if (minStake > BigInt(0) && staked < minStake) {
-        form.setError('stakedAmount', {
-          type: 'validate',
-          message: `质押代币数不能小于最小质押量 ${formatTokenAmount(actionParams.minStake || BigInt(0), 4, 'ceil')} ${
-            token?.symbol
-          }`,
-        });
-      } else if (maxStakeAllowed > BigInt(0) && staked > maxStakeAllowed) {
-        form.setError('stakedAmount', {
-          type: 'validate',
-          message: `质押代币数不能大于最大质押量 ${formatTokenAmount(maxStakeAllowed)} ${token?.symbol}`,
-        });
-      } else if (userBalance !== undefined && userBalance > BigInt(0) && staked > userBalance) {
-        form.setError('stakedAmount', {
-          type: 'validate',
-          message: `质押代币数不能大于余额 ${formatTokenAmount(userBalance)} ${token?.symbol}`,
-        });
-      } else {
-        form.clearErrors('stakedAmount');
-      }
-    }
-
-    // minJoinAmount
-    const minJoin = safeParseUnits(minJoinAmountValue);
-    if (minJoinAmountValue && minJoin > BigInt(0)) {
-      if (minJoin < actionParams.minJoinAmount) {
-        form.setError('minJoinAmount', {
-          type: 'validate',
-          message: `不能小于行动最小参与量 ${formatTokenAmount(actionParams.minJoinAmount, 2)} ${token?.symbol}`,
-        });
-      } else if (minJoin > actionParams.joinMaxAmount) {
-        form.setError('minJoinAmount', {
-          type: 'validate',
-          message: `不能大于全局最大参与量 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`,
-        });
-      } else {
-        form.clearErrors('minJoinAmount');
-      }
-    }
-
-    // maxJoinAmount
-    const maxJoin = safeParseUnits(maxJoinAmountValue);
-    if (maxJoinAmountValue && maxJoin > BigInt(0)) {
-      if (maxJoin > actionParams.joinMaxAmount) {
-        form.setError('maxJoinAmount', {
-          type: 'validate',
-          message: `不能大于全局最大参与量 ${formatTokenAmount(actionParams.joinMaxAmount, 2)} ${token?.symbol}`,
-        });
-      } else {
-        form.clearErrors('maxJoinAmount');
-      }
-    }
-  }, [
-    actionParams,
-    additionalStakeAllowed,
-    form,
-    maxJoinAmountValue,
-    minJoinAmountValue,
-    stakedAmount,
-    token?.symbol,
-    userBalance,
-  ]);
-
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
@@ -426,6 +417,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     if (errorActivate) handleContractError(errorActivate, 'extension');
     if (errorGroups) handleContractError(errorGroups, 'group');
     if (errorActivatedGroups) handleContractError(errorActivatedGroups, 'extension');
+    if (errorGovData) handleContractError(errorGovData, 'stake');
   }, [
     errorActionParams,
     errorExpandable,
@@ -435,6 +427,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     errorActivate,
     errorGroups,
     errorActivatedGroups,
+    errorGovData,
     handleContractError,
   ]);
 
@@ -442,6 +435,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     isPendingActionParams ||
     isPendingExpandable ||
     isPendingBalance ||
+    isPendingGovData ||
     (!groupId && (isPendingGroups || isPendingActivatedGroups))
   ) {
     return (
@@ -452,17 +446,41 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     );
   }
 
+  // 检查治理票占比是否满足要求
+  if (actionParams?.minGovVoteRatioBps) {
+    const requiredPercentage = Number(actionParams.minGovVoteRatioBps) / 100;
+    if (governancePercentage < requiredPercentage) {
+      return (
+        <div className="text-center py-12">
+          <p className="mb-4">
+            治理票必须 <span className="text-secondary"> ≥ {requiredPercentage.toFixed(2)}%</span> 才可以激活链群！
+          </p>
+          <p className="mb-4">
+            请先
+            <Link href={`/stake/stakelp/?symbol=${token?.symbol}`}>
+              <Button variant="link" className="text-secondary font-normal px-1 text-base">
+                获取治理票 &gt;&gt;
+              </Button>
+            </Link>
+          </p>
+        </div>
+      );
+    }
+  }
+
   // 如果没有传入 groupId 且没有可用的 group（考虑已过滤的可用链群）
-  if (!groupId && (!availableGroups || availableGroups.length === 0)) {
+  if (!isPendingActivate && !groupId && (!availableGroups || availableGroups.length === 0)) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500 mb-2">
-          {myGroups && myGroups.length > 0 ? '您的所有链群已经激活，没有可用的链群' : '您目前没有可用的链群'}
+        <p className="mb-4">
+          {myGroups && myGroups.length > 0 ? '您的所有链群已经激活，没有可用的链群' : '您当前没有未激活的链群ID'}
         </p>
-        <p className="text-sm text-gray-600">
-          请先铸造一个链群ID，
-          <Link href="/extension/groupids/" className="text-blue-500 hover:text-blue-700 underline">
-            去铸造&gt;&gt;
+        <p className="mb-4">
+          请先
+          <Link href="/extension/groupids/">
+            <Button variant="link" className="text-secondary font-normal px-1 text-base">
+              铸造链群ID &gt;&gt;
+            </Button>
           </Link>
         </p>
       </div>
@@ -521,7 +539,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               onSetMax={handleSetMax}
               additionalInfo={
                 <FormDescription className="text-xs">
-                  对应容量：<span className="text-secondary">{formatTokenAmount(stakedCapacity, 2)}</span>{' '}
+                  对应的链群容量：<span className="text-secondary">{formatTokenAmount(stakedCapacity, 2)}</span>{' '}
                   {token?.symbol}
                 </FormDescription>
               }

@@ -8,12 +8,30 @@ export enum ExtensionType {
 }
 
 /**
+ * 标签显示条件类型
+ * - 'always': 始终显示
+ * - 'hasExtension': 当行动是扩展行动时显示
+ * - 未来可扩展更多条件类型
+ */
+export type TabShowCondition = 'always' | 'hasExtension';
+
+/**
+ * 行动详情页标签配置接口
+ */
+export interface ActionTabConfig {
+  key: string; // 标签唯一标识
+  label: string; // 标签显示名称
+  showCondition?: TabShowCondition; // 显示条件，默认为 'hasExtension'
+}
+
+/**
  * 扩展配置信息接口
  */
 export interface ExtensionConfig {
   type: ExtensionType;
   name: string;
   factoryAddress: `0x${string}`;
+  actionDetailTabs?: ActionTabConfig[]; // 行动详情页的标签配置
 }
 
 /**
@@ -29,6 +47,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
       type: ExtensionType.LP,
       name: 'LP池行动',
       factoryAddress: stakeLpFactory as `0x${string}`,
+      actionDetailTabs: [{ key: 'public', label: 'LP公示', showCondition: 'hasExtension' }],
     });
   }
 
@@ -39,6 +58,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
       type: ExtensionType.GROUP_ACTION,
       name: '链群行动',
       factoryAddress: groupActionFactory as `0x${string}`,
+      actionDetailTabs: [{ key: 'public', label: '链群公示', showCondition: 'hasExtension' }],
     });
   }
 
@@ -49,6 +69,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
       type: ExtensionType.GROUP_SERVICE,
       name: '链群服务',
       factoryAddress: groupServiceFactory as `0x${string}`,
+      actionDetailTabs: [{ key: 'public', label: '激励公示', showCondition: 'hasExtension' }],
     });
   }
 

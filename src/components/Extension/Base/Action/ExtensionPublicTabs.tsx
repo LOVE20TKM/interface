@@ -1,6 +1,7 @@
 // components/Extension/Base/Action/ExtensionPublicTabs.tsx
 
 import React from 'react';
+import { useAccount } from 'wagmi';
 
 // my hooks
 import { useFactory } from '@/src/hooks/extension/plugins/lp/contracts';
@@ -13,6 +14,7 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LpActionPublicTabs from '@/src/components/Extension/Plugins/Lp/LpActionPublicTabs';
 import GroupActionPublicTabs from '@/src/components/Extension/Plugins/Group/GroupActionPublicTabs';
 import GroupServiceActionPublicTabs from '@/src/components/Extension/Plugins/GroupService/GroupServiceActionPublicTabs';
+import ManagerTab from '@/src/components/Extension/Plugins/Group/_ManagerTab';
 
 // my types
 import { ActionInfo } from '@/src/types/love20types';
@@ -22,6 +24,7 @@ interface ExtensionPublicTabsProps {
   currentRound: bigint;
   actionId?: bigint;
   actionInfo?: ActionInfo;
+  activeTab?: string; // 当前选中的标签 key
 }
 
 /**
@@ -29,7 +32,7 @@ interface ExtensionPublicTabsProps {
  *
  * 功能：
  * 1. 根据扩展的factory地址判断扩展类型
- * 2. 根据扩展类型动态加载对应的公示组件
+ * 2. 根据扩展类型和 activeTab 动态加载对应的组件
  * 3. 处理加载状态和未知类型的情况
  *
  * 扩展方式：
@@ -41,7 +44,10 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
   currentRound,
   actionId,
   actionInfo,
+  activeTab = 'public', // 默认为公示标签
 }) => {
+  const { address: account } = useAccount();
+
   // 获取扩展合约的 factory 地址，判断类型
   const { factoryAddress, isPending: isFactoryPending } = useFactory(extensionAddress);
 
@@ -86,6 +92,19 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
           </div>
         );
       }
+      // 根据 activeTab 渲染不同的组件
+      if (activeTab === 'group-manage') {
+        // 渲染链群管理组件
+        return (
+          <ManagerTab
+            extensionAddress={extensionAddress}
+            actionId={actionId}
+            actionInfo={actionInfo}
+            account={account}
+          />
+        );
+      }
+      // 默认渲染链群公示组件
       return <GroupActionPublicTabs extensionAddress={extensionAddress} actionId={actionId} actionInfo={actionInfo} />;
 
     case ExtensionType.GROUP_SERVICE:

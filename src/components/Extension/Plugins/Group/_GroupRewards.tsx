@@ -25,7 +25,7 @@ import {
 
 // 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
-import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+import { formatTokenAmount } from '@/src/lib/format';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -182,7 +182,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
           <>
             <LeftTitle title={`第 ${selectedRound.toString()} 轮激励结果`} />
             <span className="text-sm text-greyscale-500 ml-2">(</span>
-            <ChangeRound currentRound={currentRound || BigInt(0)} handleChangedRound={handleChangedRound} />
+            <ChangeRound currentRound={currentRound - BigInt(1) || BigInt(0)} handleChangedRound={handleChangedRound} />
             <span className="text-sm text-greyscale-500">)</span>
           </>
         )}

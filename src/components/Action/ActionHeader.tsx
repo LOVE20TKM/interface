@@ -64,11 +64,11 @@ export default function ActionHeader({
       </div>
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center">
-          <span className="text-gray-500 mr-2">参与代币总数:</span>
+          <span className="text-gray-500 mr-2">总参与代币:</span>
           <span className="font-mono text-secondary">{formattedTotalAmount} </span>
         </div>
         <div className="flex items-center">
-          <span className="text-gray-500 mr-2">参与地址数:</span>
+          <span className="text-gray-500 mr-2">总参与地址:</span>
           <span className="font-mono text-secondary">{participantCount?.toString() || '0'}</span>
         </div>
       </div>

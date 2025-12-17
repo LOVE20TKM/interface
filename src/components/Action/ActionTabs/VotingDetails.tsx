@@ -15,7 +15,7 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 // my utils
-import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
+import { formatTokenAmount, formatRoundForDisplay, formatPercentage } from '@/src/lib/format';
 
 interface VotingDetailsProps {
   actionId: bigint;
@@ -82,7 +82,7 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
   // 计算投票占比
   const calculatePercentage = (voteCount: bigint) => {
     if (totalVotes === BigInt(0)) return '0.00';
-    return ((Number(voteCount) / Number(totalVotes)) * 100).toFixed(2);
+    return formatPercentage((Number(voteCount) / Number(totalVotes)) * 100);
   };
 
   return (
@@ -178,7 +178,7 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
                     </Link>
                   </td>
                   <td className="px-1 text-right font-mono text-secondary">{formatTokenAmount(voter.voteCount)}</td>
-                  <td className="px-1 text-right text-greyscale-500">{calculatePercentage(voter.voteCount)}%</td>
+                  <td className="px-1 text-right text-greyscale-500">{calculatePercentage(voter.voteCount)}</td>
                 </tr>
               ))}
             </tbody>

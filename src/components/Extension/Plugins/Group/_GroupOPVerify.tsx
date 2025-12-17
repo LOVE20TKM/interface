@@ -35,6 +35,10 @@ import {
 
 // 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
+import { LinkIfUrl } from '@/src/lib/stringUtils';
+
+// 复合 hooks
+import { useVerificationInfos } from '@/src/hooks/composite/useVerificationInfos';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -47,6 +51,7 @@ interface GroupOPVerifyProps {
   actionInfo: ActionInfo;
   extensionAddress: `0x${string}`;
   groupId: bigint;
+  groupName: string;
 }
 
 interface AccountScore {
@@ -55,7 +60,13 @@ interface AccountScore {
   ratio: number; // 自动计算的占比
 }
 
-const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, extensionAddress, groupId }) => {
+const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
+  actionId,
+  actionInfo,
+  extensionAddress,
+  groupId,
+  groupName,
+}) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
@@ -78,7 +89,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
     account &&
     (account.toLowerCase() === groupOwner?.toLowerCase() || account.toLowerCase() === delegatedVerifier?.toLowerCase());
 
-  // 获取被验证者地址列表（使用新的 hook）
+  // 获取被验证者地址列表
   const {
     accounts: accounts,
     isPending: isPendingGetAccounts,
@@ -95,6 +106,19 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
     isPending: isPendingSubmittedCount,
     error: errorSubmittedCount,
   } = useSubmittedCount(extensionAddress, currentRound || BigInt(0), groupId);
+
+  // 批量获取验证信息
+  const {
+    verificationInfos,
+    isPending: isPendingVerificationInfos,
+    error: errorVerificationInfos,
+  } = useVerificationInfos({
+    tokenAddress: token?.address,
+    actionId,
+    accounts: accounts || [],
+    verificationKeys: actionInfo?.body.verificationKeys || [],
+    enabled: !!token?.address && !!actionInfo && (accounts?.length || 0) > 0,
+  });
 
   // 打分状态
   const [accountScores, setAccountScores] = useState<AccountScore[]>([]);
@@ -225,6 +249,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
     if (errorGetAccounts) handleContractError(errorGetAccounts, 'extension');
     if (errorSubmittedCount) handleContractError(errorSubmittedCount, 'extension');
     if (errorVerifyGroup) handleContractError(errorVerifyGroup, 'extension');
+    if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
   }, [
     errorRound,
     errorOwner,
@@ -232,10 +257,18 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
     errorGetAccounts,
     errorSubmittedCount,
     errorVerifyGroup,
+    errorVerificationInfos,
     handleContractError,
   ]);
 
-  if (isPendingRound || isPendingOwner || isPendingDelegated || isPendingGetAccounts || isPendingSubmittedCount) {
+  if (
+    isPendingRound ||
+    isPendingOwner ||
+    isPendingDelegated ||
+    isPendingGetAccounts ||
+    isPendingSubmittedCount ||
+    isPendingVerificationInfos
+  ) {
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
@@ -272,9 +305,23 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
 
   const handleScoreChange = (index: number, value: string) => {
     const newScores = [...accountScores];
+
+    // 只允许空字符串或整数
+    if (value === '') {
+      newScores[index].score = value;
+      setAccountScores(newScores);
+      return;
+    }
+
+    // 检查是否为整数（不包含小数点）
+    if (!/^\d+$/.test(value)) {
+      toast.error('请输入整数');
+      return;
+    }
+
     // 限制分值在 0~100 之间
-    const numValue = parseFloat(value);
-    if (value === '' || (numValue >= 0 && numValue <= 100)) {
+    const numValue = parseInt(value, 10);
+    if (numValue >= 0 && numValue <= 100) {
       newScores[index].score = value;
       setAccountScores(newScores);
     } else if (numValue > 100) {
@@ -330,42 +377,85 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({ actionId, actionInfo, ex
         {/* 标题 */}
         <div>
           <LeftTitle title="验证打分" />
-          <p className="text-sm text-gray-600 mt-2">为链群 #{groupId.toString()} 中的行动者打分</p>
+          <div className="text-gray-500 mb-2 text-sm">
+            <span>链群：</span>
+            <span className="text-gray-500 text-xs">#</span>
+            <span className="text-secondary text-base font-semibold ">{groupId.toString()}</span>{' '}
+            <span className="font-semibold">{groupName}</span>
+          </div>
         </div>
 
         {/* 打分列表 */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          {/* 表头 */}
-          <div className="grid grid-cols-12 gap-4 p-3 bg-gray-50 border-b border-gray-200 font-medium text-sm text-gray-700">
-            <div className="col-span-6">行动者地址</div>
-            <div className="col-span-3">打分</div>
-            <div className="col-span-3">占比</div>
-          </div>
+        <div className="w-full max-w-2xl">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="pb-3 text-left text-sm text-greyscale-500">行动者地址</th>
+                <th className="pb-3 text-left whitespace-nowrap w-16 text-sm text-greyscale-500">打分</th>
+                <th className="pb-3 text-center whitespace-nowrap w-12 text-sm text-greyscale-500">占比</th>
+              </tr>
+            </thead>
+            <tbody>
+              {accountScoresWithRatio.map((item, index) => {
+                // 获取该地址的验证信息
+                const verificationInfo = verificationInfos.find(
+                  (v) => v.account.toLowerCase() === item.account.toLowerCase(),
+                );
 
-          {/* 列表 */}
-          <div className="divide-y divide-gray-200">
-            {accountScoresWithRatio.map((item, index) => (
-              <div key={item.account} className="grid grid-cols-12 gap-4 p-3 hover:bg-gray-50">
-                <div className="col-span-6 flex items-center">
-                  <AddressWithCopyButton address={item.account} showCopyButton={true} />
-                </div>
-                <div className="col-span-3 flex items-center">
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="1"
-                    value={item.score}
-                    onChange={(e) => handleScoreChange(index, e.target.value)}
-                    className="!ring-secondary-foreground"
-                  />
-                </div>
-                <div className="col-span-3 flex items-center">
-                  <span className="text-sm text-gray-600">{(item.ratio * 100).toFixed(2)}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
+                return (
+                  <tr key={item.account} className="border-b border-gray-100">
+                    <td className="py-1">
+                      <div className="text-left">
+                        {/* 地址和复制按钮 */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-gray-500 min-w-[4px]">{index + 1}</span>
+                          <div className="font-mono">
+                            <AddressWithCopyButton
+                              address={item.account}
+                              showCopyButton={true}
+                              showCopyLast4Button={true}
+                            />
+                          </div>
+                        </div>
+                        {/* 验证信息 */}
+                        {actionInfo && verificationInfo && (
+                          <div className="text-sm text-greyscale-800 ml-3">
+                            {actionInfo.body.verificationKeys.map((key, i) => (
+                              <div key={i} className="mb-2">
+                                <div className="text-xs font-semibold text-gray-600 mb-1">{key}:</div>
+                                <div>
+                                  <LinkIfUrl text={verificationInfo.infos[i] || ''} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-1 w-18 px-1">
+                      <div className="flex items-center text-left">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="1"
+                          pattern="\d*"
+                          inputMode="numeric"
+                          value={item.score}
+                          placeholder="0"
+                          onChange={(e) => handleScoreChange(index, e.target.value)}
+                          className="w-16 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </td>
+                    <td className="py-1 text-center w-12 whitespace-nowrap px-0">
+                      <div className="text-sm text-greyscale-600">{(item.ratio * 100).toFixed(2)}%</div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
         {/* 按钮 */}
