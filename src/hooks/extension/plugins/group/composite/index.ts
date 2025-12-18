@@ -8,6 +8,7 @@ export * from './useExtensionGroupBaseInfosOfAction';
 export * from './useExtensionGroupsOfAccount';
 export * from './useExtensionGroupDetail';
 export * from './useDistrustVotesOfCurrentRound';
+export * from './useDistrustVotesOfRound';
 export * from './useDistrustVotesOfGroupOwner';
 export * from './useGroupScoresOfRound';
 export * from './useGroupAccountsJoinedAmountOfRound';

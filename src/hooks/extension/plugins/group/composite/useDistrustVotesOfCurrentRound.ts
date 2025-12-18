@@ -37,7 +37,9 @@ export interface UseDistrustVotesOfCurrentRoundResult {
  * 算法：
  * 1. 使用 useExtensionGroupBaseInfosOfAction 获取链群列表
  * 2. 整理链群群主列表（一个群主可能有多个群）
- * 3. 批量 RPC 调用 distrustVotesByGroupOwner 获取每个群主的不信任票数
+ * 3. 批量 RPC 调用：
+ *    - 调用一次 totalVerifyVotes 获取总验证票数
+ *    - 对每个群主调用 distrustVotesByGroupOwner 获取不信任票数
  */
 export const useDistrustVotesOfCurrentRound = ({
   extensionAddress,
@@ -83,21 +85,21 @@ export const useDistrustVotesOfCurrentRound = ({
 
     const contracts = [];
 
+    // 首先获取总验证票数（只需要调用一次）
+    contracts.push({
+      address: GROUP_DISTRUST_CONTRACT_ADDRESS,
+      abi: LOVE20GroupDistrustAbi,
+      functionName: 'totalVerifyVotes',
+      args: [tokenAddress, actionId, round],
+    });
+
+    // 然后获取每个群主的不信任票数
     for (const owner of groupOwners) {
-      // 获取不信任票数
       contracts.push({
         address: GROUP_DISTRUST_CONTRACT_ADDRESS,
         abi: LOVE20GroupDistrustAbi,
         functionName: 'distrustVotesByGroupOwner',
         args: [tokenAddress, actionId, round, owner],
-      });
-
-      // 获取总验证票数
-      contracts.push({
-        address: GROUP_DISTRUST_CONTRACT_ADDRESS,
-        abi: LOVE20GroupDistrustAbi,
-        functionName: 'totalVerifyVotes',
-        args: [tokenAddress, actionId, round],
       });
     }
 
@@ -120,22 +122,20 @@ export const useDistrustVotesOfCurrentRound = ({
     },
   });
 
-  console.log('distrustData', distrustData);
-  console.log('distrustContracts', distrustContracts);
-
   // 解析数据
   const distrustVotes = useMemo(() => {
     if (!distrustData || groupOwners.length === 0) return [];
+
+    // 第一个调用是 totalVerifyVotes（所有群主共享）
+    const totalVerifyVotes = safeToBigInt(distrustData[0]?.result);
 
     const result: DistrustVoteInfo[] = [];
 
     for (let i = 0; i < groupOwners.length; i++) {
       const owner = groupOwners[i];
-      const baseIndex = i * 2;
 
-      // 每个群主有2个调用：distrustVotes 和 totalVerifyVotes
-      const distrustVotesNum = safeToBigInt(distrustData[baseIndex]?.result);
-      const totalVerifyVotes = safeToBigInt(distrustData[baseIndex + 1]?.result);
+      // distrustVotes 从索引 1 开始（索引 0 是 totalVerifyVotes）
+      const distrustVotesNum = safeToBigInt(distrustData[i + 1]?.result);
       const distrustRatio = totalVerifyVotes > BigInt(0) ? Number(distrustVotesNum) / Number(totalVerifyVotes) : 0;
 
       // 获取该群主管理的链群列表

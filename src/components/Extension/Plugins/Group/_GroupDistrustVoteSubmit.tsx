@@ -111,13 +111,6 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     groupOwner,
   );
 
-  console.log('token?.address', token?.address);
-  console.log('actionId', actionId);
-  console.log('currentRound', currentRound);
-  console.log('account', account);
-  console.log('groupOwner', groupOwner);
-  console.log('alreadyVotedAmount', alreadyVotedAmount);
-
   // 计算剩余可投不信任票数
   const remainingVotes = useMemo(() => {
     // 注意：alreadyVotedAmount 可能是 0n，不能用 !alreadyVotedAmount 判断
@@ -346,17 +339,19 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
         {/* 服务者信息 */}
         <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
           <div className="text-sm text-gray-600 mb-2">
-            <span className="font-medium">服务者:</span>
+            <span className="font-medium">服务者：</span>
+            <AddressWithCopyButton address={groupOwner} />
           </div>
-          <AddressWithCopyButton address={groupOwner} />
 
           {/* 管理的链群列表 */}
           {ownerGroups.length > 0 && (
             <div className="mt-3 text-sm text-gray-600">
-              <span className="font-medium">管理的链群: </span>
+              <span className="font-medium">链群：</span>
               {ownerGroups.map((group, idx) => (
                 <span key={group.groupId.toString()}>
-                  #{group.groupId.toString()} {group.groupName}
+                  <span className="text-gray-500 text-xs">#</span>
+                  <span className="font-semibold ">{group.groupId.toString()}</span>{' '}
+                  <span className="font-semibold text-gray-800">{group.groupName}</span>
                   {idx < ownerGroups.length - 1 && ', '}
                 </span>
               ))}
@@ -365,13 +360,13 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
         </div>
 
         {/* 我的验证票信息 */}
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-          <div className="space-y-1">
-            <div>
+        {myVerifyVotes !== remainingVotes && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+            <div className="space-y-1">
+              {/* <div>
               <span className="text-gray-600">您对本行动的验证票: </span>
               <span className="font-medium text-blue-800">{formatTokenAmount(myVerifyVotes)}</span>
-            </div>
-            {myVerifyVotes !== remainingVotes && (
+            </div> */}
               <>
                 <div>
                   <span className="text-gray-600">已投不信任票: </span>
@@ -384,9 +379,9 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
                   <span className="font-medium text-green-700">{formatTokenAmount(remainingVotes)}</span>
                 </div>
               </>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 投票表单 */}
         <Form {...form}>
@@ -449,7 +444,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
             />
 
             {/* 按钮 */}
-            <div className="flex justify-center space-x-4 pt-4">
+            <div className="flex justify-center space-x-4">
               <Button
                 variant="outline"
                 className="w-1/2"
@@ -474,11 +469,9 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
 
         {/* 说明 */}
         <div className="mt-6 text-sm text-gray-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-          <div className="font-medium text-amber-800 mb-1">⚠️ 重要提示</div>
+          <div className="font-medium text-amber-800 mb-1">⚠️ 小贴士</div>
           <div className="space-y-1 text-amber-700">
             <div>• 不信任投票会降低该服务者管理的所有链群的激励</div>
-            <div>• 投票原因将在链上公示，请客观公正</div>
-            <div>• 投票后不可撤回，请谨慎操作</div>
           </div>
         </div>
       </div>

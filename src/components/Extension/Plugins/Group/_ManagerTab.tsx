@@ -155,7 +155,7 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
 
   return (
     <>
-      <div className="space-y-6">
+      <div>
         {/* 服务者数据面板 */}
         <_ManagerDataPanel
           groups={groups}
@@ -169,7 +169,7 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
         <_MyGroups groups={groups} actionId={actionId} onManageClick={handleManageClick} />
 
         {/* 说明 */}
-        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
+        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded mt-6 px-3 py-2">
           <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
             <div>• 容量上限取决于您的治理票占比和质押量</div>

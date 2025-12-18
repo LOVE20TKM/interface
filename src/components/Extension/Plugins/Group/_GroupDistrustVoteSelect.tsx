@@ -128,7 +128,7 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
 
                 {/* 管理的链群列表 */}
                 <div className="text-sm text-gray-600">
-                  <span className="text-gray-500">管理的链群: </span>
+                  <span className="text-gray-500">链群: </span>
                   {ownerGroup.groups.map((group, idx) => (
                     <span key={group.groupId.toString()}>
                       #{group.groupId.toString()} {group.groupName}
@@ -136,9 +136,6 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
                     </span>
                   ))}
                 </div>
-
-                {/* 统计 */}
-                <div className="text-xs text-gray-500 mt-1">管理 {ownerGroup.groups.length} 个链群</div>
               </div>
             </div>
           </div>
@@ -146,8 +143,8 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
       </div>
 
       {/* 取消按钮 */}
-      <div className="flex justify-center pt-4">
-        <Button variant="outline" onClick={onCancel}>
+      <div className="flex justify-center">
+        <Button variant="outline" onClick={onCancel} className="w-1/2">
           取消
         </Button>
       </div>

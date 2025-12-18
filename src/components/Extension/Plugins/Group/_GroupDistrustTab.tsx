@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { ActionInfo } from '@/src/types/love20types';
 
 // 组件
-import _GroupDistrustInfoOfCurrentRound from './_GroupDistrustInfoOfCurrentRound';
+import _GroupDistrustInfoOfRound from './_GroupDistrustInfoOfRound';
 import _GroupDistrustVoteSelect from './_GroupDistrustVoteSelect';
 import _GroupDistrustVoteSubmit from './_GroupDistrustVoteSubmit';
 
@@ -75,9 +75,9 @@ const _GroupDistrustTab: React.FC<GroupDistrustTabProps> = ({ actionId, actionIn
     );
   }
 
-  // 默认显示当前轮不信任投票列表
+  // 默认显示不信任投票列表（支持轮次切换）
   return (
-    <_GroupDistrustInfoOfCurrentRound
+    <_GroupDistrustInfoOfRound
       actionId={actionId}
       actionInfo={actionInfo}
       extensionAddress={extensionAddress}

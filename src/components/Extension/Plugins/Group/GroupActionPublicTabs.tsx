@@ -34,7 +34,7 @@ const GroupActionPublicTabs: React.FC<GroupActionPublicTabsProps> = ({ actionId,
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-2 bg-muted rounded-lg p-1 mb-4 mx-16">
           <TabsTrigger value="groups">链群</TabsTrigger>
-          <TabsTrigger value="distrust">不信任投票</TabsTrigger>
+          <TabsTrigger value="distrust">不信任票</TabsTrigger>
         </TabsList>
 
         <TabsContent value="groups" className="mt-0">

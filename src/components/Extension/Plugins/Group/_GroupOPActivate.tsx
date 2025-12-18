@@ -473,7 +473,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     return (
       <div className="text-center py-12">
         <p className="mb-4">
-          {myGroups && myGroups.length > 0 ? '您的所有链群已经激活，没有可用的链群' : '您当前没有未激活的链群ID'}
+          {myGroups && myGroups.length > 0 ? '您的所有链群已激活，没有未激活链群' : '您当前没有未激活的链群ID'}
         </p>
         <p className="mb-4">
           请先
