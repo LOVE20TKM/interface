@@ -7,12 +7,14 @@ import { LOVE20GroupManagerAbi } from '@/src/abis/LOVE20GroupManager';
 import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useExtensionActionConstCache } from './useExtensionActionConstCache';
-import { useGroupActivationStakeAmount } from '../contracts/useLOVE20ExtensionGroupAction';
 
 export interface ExtensionActionParam {
   // 常量数据
   tokenAddress: `0x${string}`;
   stakeTokenAddress: `0x${string}`;
+  stakeTokenSymbol: string | undefined;
+  joinTokenAddress: `0x${string}`;
+  joinTokenSymbol: string | undefined;
   maxJoinAmountMultiplier: bigint; // 单个行动者最大参与代币数倍数
   verifyCapacityMultiplier: bigint; // 验证容量倍数
   groupActivationStakeAmount: bigint; // 激活需质押代币数量
@@ -50,15 +52,7 @@ export const useExtensionActionParam = ({
     error: constError,
   } = useExtensionActionConstCache({ extensionAddress, actionId });
 
-  // 获取激活需质押代币数量
-  const {
-    groupActivationStakeAmount,
-    isPending: isStakeAmountPending,
-    error: stakeAmountError,
-  } = useGroupActivationStakeAmount(extensionAddress as `0x${string}`);
-
   // 一次批量读取：joinMaxAmount
-  // tokenAddress 属于扩展基本常量，由 useExtensionActionConstCache 提供
   const realtimeContracts = useMemo(() => {
     if (!extensionAddress) return [];
     if (!constants?.tokenAddress) return [];
@@ -93,14 +87,13 @@ export const useExtensionActionParam = ({
 
     return {
       ...constants,
-      groupActivationStakeAmount: groupActivationStakeAmount || BigInt(0),
       joinMaxAmount,
     };
-  }, [constants, realtimeData, groupActivationStakeAmount]);
+  }, [constants, realtimeData]);
 
   return {
     params: params as ExtensionActionParam | undefined,
-    isPending: isConstPending || isRealtimePending || isStakeAmountPending,
-    error: constError || realtimeError || stakeAmountError,
+    isPending: isConstPending || isRealtimePending,
+    error: constError || realtimeError,
   };
 };

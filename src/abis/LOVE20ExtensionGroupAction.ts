@@ -31,6 +31,11 @@ export const LOVE20ExtensionGroupActionAbi = [
         "internalType": "address"
       },
       {
+        "name": "joinTokenAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "activationStakeAmount_",
         "type": "uint256",
         "internalType": "uint256"
@@ -613,7 +618,7 @@ export const LOVE20ExtensionGroupActionAbi = [
         "internalType": "bool"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",

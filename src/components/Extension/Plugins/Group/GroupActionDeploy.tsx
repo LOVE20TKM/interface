@@ -45,6 +45,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
 
   // 表单状态
   const [stakeTokenAddress, setStakeTokenAddress] = useState(''); // 质押代币地址
+  const [joinTokenAddress, setJoinTokenAddress] = useState(''); // 加入代币地址
   const [activationStakeAmount, setActivationStakeAmount] = useState(''); // 激活需质押代币数量
   const [maxJoinAmountMultiplier, setMaxJoinAmountMultiplier] = useState(''); // 最大参与代币倍数
   const [verifyCapacityMultiplier, setVerifyCapacityMultiplier] = useState(''); // 验证容量倍数
@@ -156,6 +157,16 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
       return false;
     }
 
+    // 验证加入代币地址
+    if (!joinTokenAddress) {
+      toast.error('请输入加入代币地址');
+      return false;
+    }
+    if (!isAddress(joinTokenAddress)) {
+      toast.error('加入代币地址格式无效');
+      return false;
+    }
+
     // 验证激活需质押代币数量
     if (!activationStakeAmount) {
       toast.error('请输入激活需质押代币数量');
@@ -230,6 +241,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
         groupManagerAddress as `0x${string}`,
         groupDistrustAddress as `0x${string}`,
         stakeTokenAddress as `0x${string}`,
+        joinTokenAddress as `0x${string}`,
         activationStakeAmountWei,
         BigInt(maxJoinAmountMultiplier),
         BigInt(verifyCapacityMultiplier),
@@ -263,9 +275,23 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
             <p className="text-sm text-greyscale-500">所在社群的代币合约地址，也可设置为 LP 地址等</p>
           </div>
 
+          {/* 加入代币地址 */}
+          <div className="space-y-2">
+            <Label htmlFor="joinTokenAddress">2. 加入代币合约地址</Label>
+            <Input
+              id="joinTokenAddress"
+              type="text"
+              placeholder="0x..."
+              value={joinTokenAddress}
+              onChange={(e) => setJoinTokenAddress(e.target.value)}
+              disabled={approvalStep !== 'idle'}
+            />
+            <p className="text-sm text-greyscale-500">参与行动时使用的代币地址，可以是普通代币地址或 LP 代币地址</p>
+          </div>
+
           {/* 激活需质押代币数量 */}
           <div className="space-y-2">
-            <Label htmlFor="activationStakeAmount">2. 激活需质押代币数量</Label>
+            <Label htmlFor="activationStakeAmount">3. 激活需质押代币数量</Label>
             <Input
               id="activationStakeAmount"
               type="number"
@@ -282,7 +308,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
 
           {/* 最大参与代币倍数 */}
           <div className="space-y-2">
-            <Label htmlFor="maxJoinAmountMultiplier">3. 最大参与代币倍数</Label>
+            <Label htmlFor="maxJoinAmountMultiplier">4. 最大参与代币倍数</Label>
             <Input
               id="maxJoinAmountMultiplier"
               type="number"
@@ -298,7 +324,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
 
           {/* 验证容量倍数 */}
           <div className="space-y-2">
-            <Label htmlFor="verifyCapacityMultiplier">4. 验证容量倍数</Label>
+            <Label htmlFor="verifyCapacityMultiplier">5. 验证容量倍数</Label>
             <Input
               id="verifyCapacityMultiplier"
               type="number"

@@ -13,7 +13,10 @@ import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+import {
+  useExtensionActionConstCache,
+  useExtensionGroupDetail,
+} from '@/src/hooks/extension/plugins/group/composite';
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
@@ -36,6 +39,15 @@ interface _GroupParticipationStatsProps {
 const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ actionId, extensionAddress, groupId }) => {
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
+
+  // 获取扩展常量数据（包括 joinTokenAddress 和 joinTokenSymbol）
+  const {
+    constants,
+    isPending: isPendingConstants,
+    error: errorConstants,
+  } = useExtensionActionConstCache({ extensionAddress, actionId });
+
+  const joinTokenSymbol = constants?.joinTokenSymbol;
 
   // 获取加入信息
   const {
@@ -71,10 +83,11 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
   useEffect(() => {
     if (errorJoinInfo) handleContractError(errorJoinInfo, 'extension');
     if (errorDetail) handleContractError(errorDetail, 'extension');
-  }, [errorJoinInfo, errorDetail, handleContractError]);
+    if (errorConstants) handleContractError(errorConstants, 'extension');
+  }, [errorJoinInfo, errorDetail, errorConstants, handleContractError]);
 
   // 加载中状态
-  if (isPendingJoinInfo || isPendingDetail) {
+  if (isPendingJoinInfo || isPendingDetail || isPendingConstants) {
     return (
       <div className="w-full py-4">
         <LoadingIcon />
@@ -105,7 +118,9 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
       <div className="stat place-items-center flex flex-col justify-center">
         <div className="stat-title">还可追加</div>
         <div className="stat-value text-2xl text-secondary">{formatTokenAmount(additionalAllowed)}</div>
-        <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">{token?.symbol}</div>
+        <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
+          {joinTokenSymbol || token?.symbol || ''}
+        </div>
       </div>
     </div>
   );

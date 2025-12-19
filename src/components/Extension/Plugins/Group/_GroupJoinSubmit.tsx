@@ -32,7 +32,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // hooks
 import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
-import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
@@ -62,6 +62,16 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
+
+  // 获取扩展常量数据（包括 joinTokenAddress 和 joinTokenSymbol）
+  const {
+    constants,
+    isPending: isPendingConstants,
+    error: errorConstants,
+  } = useExtensionActionConstCache({ extensionAddress, actionId });
+
+  const joinTokenAddress = constants?.joinTokenAddress;
+  const joinTokenSymbol = constants?.joinTokenSymbol;
 
   // 获取加入信息
   const {
@@ -97,9 +107,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
   // 获取代币余额
   const { balance, error: errorBalance } = useBalanceOf(
-    token?.address as `0x${string}`,
+    joinTokenAddress as `0x${string}`,
     account as `0x${string}`,
-    !!token?.address && !!account,
+    !!joinTokenAddress && !!account,
   );
 
   // 获取已授权数量
@@ -109,10 +119,10 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     error: errorAllowance,
     refetch: refetchAllowance,
   } = useAllowance(
-    token?.address as `0x${string}`,
+    joinTokenAddress as `0x${string}`,
     account as `0x${string}`,
     extensionAddress,
-    !!token?.address && !!account,
+    !!joinTokenAddress && !!account,
   );
 
   // 获取已填写的验证信息
@@ -223,7 +233,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     isConfirming: isConfirmingApprove,
     isConfirmed: isConfirmedApprove,
     writeError: errorApprove,
-  } = useApprove(token?.address as `0x${string}`);
+  } = useApprove(joinTokenAddress as `0x${string}`);
 
   const approveButtonRef = useRef<HTMLButtonElement>(null);
   const prevIsPendingAllowanceRef = useRef(isPendingAllowance);
@@ -316,10 +326,10 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     if (isConfirmedJoin) {
       toast.success('加入链群成功');
       setTimeout(() => {
-        router.push(`/my/myaction?id=${actionId.toString()}&symbol=${token?.symbol}`);
+        router.push(`/my/myaction?id=${actionId.toString()}&symbol=${joinTokenSymbol || token?.symbol || ''}`);
       }, 1000);
     }
-  }, [isConfirmedJoin, router, actionId, token?.symbol]);
+  }, [isConfirmedJoin, router, actionId, joinTokenSymbol, token?.symbol]);
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -331,6 +341,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     if (errorApprove) handleContractError(errorApprove, 'token');
     if (errorJoin) handleContractError(errorJoin, 'extension');
     if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
+    if (errorConstants) handleContractError(errorConstants, 'extension');
   }, [
     errorDetail,
     errorJoinInfo,
@@ -339,10 +350,11 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     errorApprove,
     errorJoin,
     errorVerificationInfos,
+    errorConstants,
     handleContractError,
   ]);
 
-  if (isPendingDetail || isPendingJoinInfo) {
+  if (isPendingDetail || isPendingJoinInfo || isPendingConstants) {
     return (
       <div className="flex flex-col items-center px-4 pt-6">
         <LoadingIcon />
@@ -385,7 +397,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                 <Button
                   variant="link"
                   size="sm"
-                  onClick={() => router.push(`/acting/join?id=${actionId}&symbol=${token?.symbol}`)}
+                  onClick={() => router.push(`/acting/join?id=${actionId}&symbol=${token?.symbol || ''}`)}
                   className="text-secondary p-0 h-auto"
                 >
                   切换链群
@@ -439,7 +451,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
                       我的余额：<span className="text-secondary">{formatTokenAmount(balance || BigInt(0), 4)}</span>{' '}
-                      {token?.symbol}
+                      {joinTokenSymbol}
                     </span>
                     <Button
                       type="button"
@@ -520,9 +532,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                 ) : isConfirmingApprove ? (
                   '1.确认中...'
                 ) : isTokenApproved ? (
-                  `1.${token?.symbol}已授权`
+                  `1.${joinTokenSymbol || token?.symbol || ''}已授权`
                 ) : (
-                  `1.授权${token?.symbol}`
+                  `1.授权${joinTokenSymbol || token?.symbol || ''}`
                 )}
               </Button>
 

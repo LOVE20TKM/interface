@@ -27,7 +27,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
-import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import {
   useExit,
   useJoinInfo,
@@ -54,6 +54,15 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
   const router = useRouter();
+
+  // 获取扩展常量数据（包括 joinTokenAddress 和 joinTokenSymbol）
+  const {
+    constants,
+    isPending: isPendingConstants,
+    error: errorConstants,
+  } = useExtensionActionConstCache({ extensionAddress, actionId });
+
+  const joinTokenSymbol = constants?.joinTokenSymbol;
 
   // 获取当前轮次
   const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
@@ -134,6 +143,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     if (errorTotalAmount) handleContractError(errorTotalAmount, 'extension');
     if (errorExit) handleContractError(errorExit, 'extension');
     if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
+    if (errorConstants) handleContractError(errorConstants, 'extension');
   }, [
     errorRound,
     errorJoinInfo,
@@ -141,10 +151,11 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     errorTotalAmount,
     errorExit,
     errorVerificationInfos,
+    errorConstants,
     handleContractError,
   ]);
 
-  if (isPendingRound || isPendingJoinInfo || isPendingDetail || isPendingTotalAmount) {
+  if (isPendingRound || isPendingJoinInfo || isPendingDetail || isPendingTotalAmount || isPendingConstants) {
     return (
       <div className="bg-white rounded-lg p-8">
         <div className="text-center">
@@ -160,7 +171,9 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
       <div className="flex flex-col items-center pt-8">
         <p className="text-gray-600 mb-6">您还没有参与此链群行动</p>
         <Button variant="outline" className="text-secondary border-secondary" asChild>
-          <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol}`}>加入链群参与</Link>
+          <Link href={`/acting/join?id=${actionId}&symbol=${joinTokenSymbol || token?.symbol || ''}`}>
+            加入链群参与
+          </Link>
         </Button>
       </div>
     );
@@ -182,7 +195,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
             <span>所属链群</span>
             <Link
               href={`/extension/group?groupId=${groupId?.toString()}&actionId=${actionId.toString()}&symbol=${
-                token?.symbol
+                joinTokenSymbol || token?.symbol || ''
               }`}
               className="text-secondary hover:underline flex items-center gap-1"
             >
@@ -205,7 +218,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
               onClick={() =>
                 router.push(
                   `/acting/join?tab=update_verification_info&groupId=${groupId?.toString()}&id=${actionId}&symbol=${
-                    token?.symbol
+                    joinTokenSymbol || token?.symbol || ''
                   }`,
                 )
               }
@@ -251,12 +264,18 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
 
         {/* 查看激励 */}
         <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
-          <Link href={`/my/rewardsofaction?id=${actionId}&symbol=${token?.symbol}`}>查看激励</Link>
+          <Link href={`/my/rewardsofaction?id=${actionId}&symbol=${joinTokenSymbol || token?.symbol || ''}`}>
+            查看激励
+          </Link>
         </Button>
 
         {/* 增加参与代币 */}
         <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
-          <Link href={`/acting/join?tab=join&groupId=${groupId?.toString()}&id=${actionId}&symbol=${token?.symbol}`}>
+          <Link
+            href={`/acting/join?tab=join&groupId=${groupId?.toString()}&id=${actionId}&symbol=${
+              joinTokenSymbol || token?.symbol || ''
+            }`}
+          >
             增加代币
           </Link>
         </Button>

@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useExtensionAddressOfAction } from '@/src/hooks/extension/base/composite/useExtensionAddressOfAction';
+import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import { useOwnerOf, useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -41,10 +41,14 @@ const ActionGroupOpPage: React.FC = () => {
 
   // 获取扩展合约地址
   const {
-    extensionAddress,
+    contractInfo,
     isPending: isPendingExtension,
     error: errorExtension,
-  } = useExtensionAddressOfAction(token?.address as `0x${string}`, actionId, actionInfo);
+  } = useExtensionContractInfo({
+    tokenAddress: token?.address as `0x${string}`,
+    actionInfo,
+  });
+  const extensionAddress = contractInfo?.extension;
 
   // 获取链群所有者（activate 操作不需要，因为会从用户的 group NFT 中选择）
   const {

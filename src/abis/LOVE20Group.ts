@@ -489,7 +489,7 @@ export const LOVE20GroupAbi = [
   },
   {
     "type": "function",
-    "name": "totalMintCost",
+    "name": "totalBurnedForMint",
     "inputs": [],
     "outputs": [
       {

@@ -9,8 +9,6 @@ export * from './useExtensionActionsLatestRewards';
 export * from './useExtensionActionRewardsByRounds';
 export * from './useMyJoinedExtensionActions';
 export * from './useExtensionParticipationData';
-export * from './useIsExtensionContract';
-export * from './useExtensionAddressOfAction';
 export * from './useAccountVerificationInfos';
 export * from './useAccountsByActionByRound';
 

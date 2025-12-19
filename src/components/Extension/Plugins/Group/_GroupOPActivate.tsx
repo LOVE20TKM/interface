@@ -237,10 +237,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     mode: 'onChange',
   });
 
-  // 授权检查 - 使用固定的质押量
-  const maxCapacity = form.watch('maxCapacity');
-  const maxCapacityBigInt = maxCapacity ? parseUnits(maxCapacity) : BigInt(0);
-
   const {
     allowance,
     isPending: isPendingAllowance,
@@ -438,14 +434,15 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               userBalance !== undefined && userBalance < stakeAmount ? 'text-red-900' : 'text-blue-900'
             }`}
           >
-            {formatTokenAmount(stakeAmount, 4, 'ceil')} <span className="text-sm text-gray-600">{token?.symbol}</span>
+            {formatTokenAmount(stakeAmount, 4, 'ceil')}{' '}
+            <span className="text-sm text-gray-600">{actionParams?.stakeTokenSymbol}</span>
           </div>
           <div
             className={`text-xs mt-1 ${
               userBalance !== undefined && userBalance < stakeAmount ? 'text-red-600' : 'text-gray-600'
             }`}
           >
-            当前余额：{formatTokenAmount(userBalance || BigInt(0))} {token?.symbol}
+            当前余额：{formatTokenAmount(userBalance || BigInt(0))} {actionParams?.stakeTokenSymbol}
           </div>
           {userBalance !== undefined && userBalance < stakeAmount && (
             <div className="text-xs text-red-700 font-medium mt-2">⚠️ 余额不足，无法激活链群</div>

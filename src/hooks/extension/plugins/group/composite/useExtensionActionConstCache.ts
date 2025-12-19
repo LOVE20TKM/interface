@@ -4,14 +4,19 @@
 import { useMemo, useEffect } from 'react';
 import { useReadContracts } from 'wagmi';
 import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
+import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 export interface ExtensionActionConst {
   tokenAddress: `0x${string}`;
   actionId: bigint;
   stakeTokenAddress: `0x${string}`;
+  stakeTokenSymbol: string | undefined;
+  joinTokenAddress: `0x${string}`;
+  joinTokenSymbol: string | undefined;
   maxJoinAmountMultiplier: bigint; // 单个行动者最大参与代币数倍数
   verifyCapacityMultiplier: bigint; // 验证容量倍数
+  groupActivationStakeAmount: bigint; // 激活需质押代币数量
 }
 
 export interface UseExtensionActionConstCacheParams {
@@ -55,8 +60,12 @@ export const useExtensionActionConstCache = ({
             tokenAddress: parsed.tokenAddress as `0x${string}`,
             actionId: BigInt(parsed.actionId),
             stakeTokenAddress: parsed.stakeTokenAddress as `0x${string}`,
+            stakeTokenSymbol: parsed.stakeTokenSymbol as string | undefined,
+            joinTokenAddress: parsed.joinTokenAddress as `0x${string}`,
+            joinTokenSymbol: parsed.joinTokenSymbol as string | undefined,
             maxJoinAmountMultiplier: BigInt(parsed.maxJoinAmountMultiplier),
             verifyCapacityMultiplier: BigInt(parsed.verifyCapacityMultiplier),
+            groupActivationStakeAmount: BigInt(parsed.groupActivationStakeAmount),
           };
         }
       }
@@ -85,12 +94,22 @@ export const useExtensionActionConstCache = ({
       {
         address: extensionAddress,
         abi: LOVE20ExtensionGroupActionAbi,
+        functionName: 'JOIN_TOKEN_ADDRESS',
+      },
+      {
+        address: extensionAddress,
+        abi: LOVE20ExtensionGroupActionAbi,
         functionName: 'MAX_JOIN_AMOUNT_MULTIPLIER',
       },
       {
         address: extensionAddress,
         abi: LOVE20ExtensionGroupActionAbi,
         functionName: 'VERIFY_CAPACITY_MULTIPLIER',
+      },
+      {
+        address: extensionAddress,
+        abi: LOVE20ExtensionGroupActionAbi,
+        functionName: 'GROUP_ACTIVATION_STAKE_AMOUNT',
       },
     ];
   }, [extensionAddress, actionId, cachedData]);
@@ -107,25 +126,112 @@ export const useExtensionActionConstCache = ({
     },
   });
 
-  // 解析合约数据
-  const constants = useMemo(() => {
-    // 如果有缓存数据，直接返回
-    if (cachedData) return cachedData;
+  // 解析合约数据，获取基础常量
+  const baseConstants = useMemo(() => {
+    // 如果有缓存数据，直接返回（但不包含 symbol，需要单独查询）
+    if (cachedData) {
+      // 如果缓存中有 symbol，直接返回完整数据
+      if (cachedData.joinTokenSymbol !== undefined && cachedData.stakeTokenSymbol !== undefined) {
+        return cachedData;
+      }
+      // 否则返回基础数据，symbol 需要单独查询
+      return {
+        ...cachedData,
+        joinTokenSymbol: cachedData.joinTokenSymbol,
+        stakeTokenSymbol: cachedData.stakeTokenSymbol,
+      };
+    }
 
     // 如果 actionId 未定义，返回 undefined
     if (actionId === undefined) return undefined;
 
     // 如果没有合约数据，返回 undefined
-    if (!contractData || contractData.length < 4) return undefined;
+    if (!contractData || contractData.length < 6) return undefined;
+
+    const stakeTokenAddress = contractData[1]?.result as `0x${string}` | undefined;
+    const joinTokenAddress = contractData[2]?.result as `0x${string}` | undefined;
 
     return {
       tokenAddress: contractData[0]?.result as `0x${string}`,
       actionId: actionId,
-      stakeTokenAddress: contractData[1]?.result as `0x${string}` | undefined,
-      maxJoinAmountMultiplier: safeToBigInt(contractData[2]?.result),
-      verifyCapacityMultiplier: safeToBigInt(contractData[3]?.result),
+      stakeTokenAddress: stakeTokenAddress,
+      joinTokenAddress: joinTokenAddress,
+      stakeTokenSymbol: undefined, // 需要单独查询
+      joinTokenSymbol: undefined, // 需要单独查询
+      maxJoinAmountMultiplier: safeToBigInt(contractData[3]?.result),
+      verifyCapacityMultiplier: safeToBigInt(contractData[4]?.result),
+      groupActivationStakeAmount: safeToBigInt(contractData[5]?.result),
     };
   }, [contractData, cachedData, actionId]);
+
+  // 构建 symbol 查询合约
+  const symbolContracts = useMemo(() => {
+    if (!baseConstants) return [];
+    if (cachedData && cachedData.joinTokenSymbol !== undefined && cachedData.stakeTokenSymbol !== undefined) {
+      return [];
+    }
+
+    const contracts: any[] = [];
+    if (baseConstants.stakeTokenAddress) {
+      contracts.push({
+        address: baseConstants.stakeTokenAddress,
+        abi: LOVE20TokenAbi,
+        functionName: 'symbol',
+      });
+    }
+    if (baseConstants.joinTokenAddress) {
+      contracts.push({
+        address: baseConstants.joinTokenAddress,
+        abi: LOVE20TokenAbi,
+        functionName: 'symbol',
+      });
+    }
+    return contracts;
+  }, [baseConstants, cachedData]);
+
+  // 批量读取 symbol 数据
+  const {
+    data: symbolData,
+    isPending: isPendingSymbol,
+    error: errorSymbol,
+  } = useReadContracts({
+    contracts: symbolContracts as any,
+    query: {
+      enabled: symbolContracts.length > 0,
+    },
+  });
+
+  // 合并 symbol 到 constants
+  const constants = useMemo(() => {
+    if (!baseConstants) return undefined;
+
+    // 如果缓存数据中已经有 symbol，直接返回
+    if (cachedData && cachedData.joinTokenSymbol !== undefined && cachedData.stakeTokenSymbol !== undefined) {
+      return cachedData;
+    }
+
+    // 解析 symbol 数据
+    let stakeTokenSymbol: string | undefined = undefined;
+    let joinTokenSymbol: string | undefined = undefined;
+
+    if (symbolData && symbolData.length > 0) {
+      stakeTokenSymbol = symbolData[0]?.result as string | undefined;
+      joinTokenSymbol = symbolData[1]?.result as string | undefined;
+    }
+
+    // 如果缓存中有部分 symbol，使用缓存的值
+    if (cachedData) {
+      stakeTokenSymbol = cachedData.stakeTokenSymbol ?? stakeTokenSymbol;
+      joinTokenSymbol = cachedData.joinTokenSymbol ?? joinTokenSymbol;
+    }
+
+    // 否则合并查询到的 symbol
+    return {
+      ...baseConstants,
+      stakeTokenSymbol: stakeTokenSymbol,
+      joinTokenSymbol: joinTokenSymbol,
+    };
+  }, [baseConstants, symbolData, cachedData]);
 
   // 缓存数据到 LocalStorage
   useEffect(() => {
@@ -137,8 +243,12 @@ export const useExtensionActionConstCache = ({
         tokenAddress: constants.tokenAddress,
         actionId: constants.actionId?.toString(),
         stakeTokenAddress: constants.stakeTokenAddress,
+        stakeTokenSymbol: constants.stakeTokenSymbol,
+        joinTokenAddress: constants.joinTokenAddress,
+        joinTokenSymbol: constants.joinTokenSymbol,
         maxJoinAmountMultiplier: constants.maxJoinAmountMultiplier?.toString(),
         verifyCapacityMultiplier: constants.verifyCapacityMultiplier?.toString(),
+        groupActivationStakeAmount: constants.groupActivationStakeAmount?.toString(),
         timestamp: Date.now(),
       };
       localStorage.setItem(cacheKey, JSON.stringify(cacheValue));
@@ -149,7 +259,13 @@ export const useExtensionActionConstCache = ({
 
   return {
     constants: constants as ExtensionActionConst | undefined,
-    isPending: cachedData ? false : isPending,
-    error: cachedData ? null : error,
+    isPending:
+      cachedData && cachedData.joinTokenSymbol !== undefined && cachedData.stakeTokenSymbol !== undefined
+        ? false
+        : isPending || isPendingSymbol,
+    error:
+      cachedData && cachedData.joinTokenSymbol !== undefined && cachedData.stakeTokenSymbol !== undefined
+        ? null
+        : error || errorSymbol,
   };
 };

@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useExtensionAddressOfAction } from '@/src/hooks/extension/base/composite/useExtensionAddressOfAction';
+import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AlertBox from '@/src/components/Common/AlertBox';
@@ -38,10 +38,14 @@ const ActionGroupPage: React.FC = () => {
 
   // 获取扩展合约地址
   const {
-    extensionAddress,
+    contractInfo,
     isPending: isPendingExtension,
     error: errorExtension,
-  } = useExtensionAddressOfAction(token?.address as `0x${string}`, actionId, actionInfo);
+  } = useExtensionContractInfo({
+    tokenAddress: token?.address as `0x${string}`,
+    actionInfo,
+  });
+  const extensionAddress = contractInfo?.extension;
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
