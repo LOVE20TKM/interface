@@ -31,17 +31,7 @@ export const LOVE20ExtensionGroupActionAbi = [
         "internalType": "address"
       },
       {
-        "name": "minGovVoteRatioBps_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "capacityMultiplier_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "stakingMultiplier_",
+        "name": "activationStakeAmount_",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -51,7 +41,7 @@ export const LOVE20ExtensionGroupActionAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "minJoinAmount_",
+        "name": "verifyCapacityMultiplier_",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -60,7 +50,7 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "CAPACITY_MULTIPLIER",
+    "name": "GROUP_ACTIVATION_STAKE_AMOUNT",
     "inputs": [],
     "outputs": [
       {
@@ -138,32 +128,6 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "MIN_GOV_VOTE_RATIO_BPS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "MIN_JOIN_AMOUNT",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "STAKE_TOKEN_ADDRESS",
     "inputs": [],
     "outputs": [
@@ -177,7 +141,7 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "STAKING_MULTIPLIER",
+    "name": "VERIFY_CAPACITY_MULTIPLIER",
     "inputs": [],
     "outputs": [
       {
@@ -354,6 +318,30 @@ export const LOVE20ExtensionGroupActionAbi = [
         "name": "",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "capacityReductionByGroupId",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -870,53 +858,6 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "submitOriginScore",
-    "inputs": [
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "startIndex",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "originScores",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "submittedCount",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "tokenAddress",
     "inputs": [],
     "outputs": [
@@ -990,6 +931,30 @@ export const LOVE20ExtensionGroupActionAbi = [
     "inputs": [
       {
         "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "verifiedAccountCount",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "groupId",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -1088,6 +1053,29 @@ export const LOVE20ExtensionGroupActionAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "verifyWithOriginScores",
+    "inputs": [
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "startIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "originScores",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "event",
@@ -1251,7 +1239,38 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "event",
-    "name": "ScoreSubmit",
+    "name": "UnclaimedRewardBurn",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "VerifyWithOriginScores",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -1299,37 +1318,6 @@ export const LOVE20ExtensionGroupActionAbi = [
     "anonymous": false
   },
   {
-    "type": "event",
-    "name": "UnclaimedRewardBurn",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
     "type": "error",
     "name": "ActionIdNotFound",
     "inputs": []
@@ -1347,6 +1335,11 @@ export const LOVE20ExtensionGroupActionAbi = [
   {
     "type": "error",
     "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyVerified",
     "inputs": []
   },
   {
@@ -1371,7 +1364,7 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "error",
-    "name": "GroupCapacityFull",
+    "name": "GroupCapacityExceeded",
     "inputs": []
   },
   {
@@ -1406,6 +1399,11 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "error",
+    "name": "NoRemainingVerifyCapacity",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NotInGroup",
     "inputs": []
   },
@@ -1417,6 +1415,11 @@ export const LOVE20ExtensionGroupActionAbi = [
   {
     "type": "error",
     "name": "OnlyGroupOwner",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OwnerCapacityExceeded",
     "inputs": []
   },
   {
@@ -1437,16 +1440,6 @@ export const LOVE20ExtensionGroupActionAbi = [
   {
     "type": "error",
     "name": "ScoresExceedAccountCount",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "VerificationAlreadySubmitted",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "VerifierCapacityExceeded",
     "inputs": []
   }
 ] as const satisfies Abi;

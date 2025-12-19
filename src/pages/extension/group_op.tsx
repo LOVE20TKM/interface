@@ -12,13 +12,12 @@ import { useHandleContractError } from '@/src/lib/errorUtils';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import Header from '@/src/components/Header';
 import _GroupOPActivate from '@/src/components/Extension/Plugins/Group/_GroupOPActivate';
-import _GroupOPExpand from '@/src/components/Extension/Plugins/Group/_GroupOPExpand';
 import _GroupOPDeactivate from '@/src/components/Extension/Plugins/Group/_GroupOPDeactivate';
 import _GroupOPUpdate from '@/src/components/Extension/Plugins/Group/_GroupOPUpdate';
 import _GroupOPSetDelegated from '@/src/components/Extension/Plugins/Group/_GroupOPSetDelegated';
 import _GroupOPVerify from '@/src/components/Extension/Plugins/Group/_GroupOPVerify';
 
-type OpType = 'activate' | 'expand' | 'deactivate' | 'update' | 'set_delegated' | 'verify';
+type OpType = 'activate' | 'deactivate' | 'update' | 'set_delegated' | 'verify';
 
 const ActionGroupOpPage: React.FC = () => {
   const router = useRouter();
@@ -75,8 +74,6 @@ const ActionGroupOpPage: React.FC = () => {
     switch (op as OpType) {
       case 'activate':
         return '激活链群';
-      case 'expand':
-        return '扩展链群';
       case 'deactivate':
         return '停用链群';
       case 'update':
@@ -188,8 +185,6 @@ const ActionGroupOpPage: React.FC = () => {
     switch (op as OpType) {
       case 'activate':
         return <_GroupOPActivate {...baseProps} />;
-      case 'expand':
-        return <_GroupOPExpand {...baseProps} groupId={groupIdBigInt!} />;
       case 'deactivate':
         return <_GroupOPDeactivate {...baseProps} groupId={groupIdBigInt!} />;
       case 'update':

@@ -105,22 +105,22 @@ export const LOVE20GroupManagerAbi = [
         "internalType": "string"
       },
       {
-        "name": "stakedAmount",
+        "name": "maxCapacity",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "groupMinJoinAmount",
+        "name": "minJoinAmount",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "groupMaxJoinAmount",
+        "name": "maxJoinAmount",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "groupMaxAccounts_",
+        "name": "maxAccounts_",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -286,17 +286,7 @@ export const LOVE20GroupManagerAbi = [
         "internalType": "address"
       },
       {
-        "name": "minGovVoteRatioBps",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "capacityMultiplier",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "stakingMultiplier",
+        "name": "activationStakeAmount",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -306,7 +296,7 @@ export const LOVE20GroupManagerAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "minJoinAmount",
+        "name": "verifyCapacityMultiplier",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -335,94 +325,6 @@ export const LOVE20GroupManagerAbi = [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "expandGroup",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "additionalStake",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "newStakedAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "newCapacity",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "expandableInfo",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "owner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "currentCapacity",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxCapacity",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "currentStake",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxStake",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "additionalStakeAllowed",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -456,27 +358,22 @@ export const LOVE20GroupManagerAbi = [
         "internalType": "string"
       },
       {
-        "name": "stakedAmount",
+        "name": "maxCapacity",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "capacity",
+        "name": "minJoinAmount",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "groupMinJoinAmount",
+        "name": "maxJoinAmount",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "groupMaxJoinAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupMaxAccounts",
+        "name": "maxAccounts",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -529,7 +426,7 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "function",
-    "name": "maxCapacityByOwner",
+    "name": "maxVerifyCapacityByOwner",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -566,17 +463,7 @@ export const LOVE20GroupManagerAbi = [
         "internalType": "address"
       },
       {
-        "name": "minGovVoteRatioBps",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "capacityMultiplier",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "stakingMultiplier",
+        "name": "activationStakeAmount",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -586,7 +473,7 @@ export const LOVE20GroupManagerAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "minJoinAmount",
+        "name": "verifyCapacityMultiplier",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -672,6 +559,11 @@ export const LOVE20GroupManagerAbi = [
         "internalType": "string"
       },
       {
+        "name": "newMaxCapacity",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "newMinJoinAmount",
         "type": "uint256",
         "internalType": "uint256"
@@ -744,19 +636,13 @@ export const LOVE20GroupManagerAbi = [
         "internalType": "address"
       },
       {
-        "name": "stakedAmount",
+        "name": "maxCapacity",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
       },
       {
-        "name": "capacity",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupMaxAccounts",
+        "name": "maxAccounts",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -803,49 +689,6 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "event",
-    "name": "GroupExpand",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "additionalStake",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "newCapacity",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "GroupInfoUpdate",
     "inputs": [
       {
@@ -877,6 +720,12 @@ export const LOVE20GroupManagerAbi = [
         "type": "string",
         "indexed": false,
         "internalType": "string"
+      },
+      {
+        "name": "newMaxCapacity",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       },
       {
         "name": "newMinJoinAmount",
@@ -916,11 +765,6 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "error",
-    "name": "ExceedsMaxStake",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "GroupAlreadyActivated",
     "inputs": []
   },
@@ -941,11 +785,6 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "error",
-    "name": "InsufficientGovVotes",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidMaxAccounts",
     "inputs": []
   },
@@ -956,22 +795,12 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "error",
-    "name": "MinStakeNotMet",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "NotRegisteredExtension",
     "inputs": []
   },
   {
     "type": "error",
     "name": "OnlyGroupOwner",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ZeroStakeAmount",
     "inputs": []
   }
 ] as const satisfies Abi;

@@ -9,12 +9,9 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 export interface ExtensionActionConst {
   tokenAddress: `0x${string}`;
   actionId: bigint;
-  minGovVoteRatioBps: bigint; // 最小治理票占比
-  capacityMultiplier: bigint; // 容量倍数
   stakeTokenAddress: `0x${string}`;
-  stakingMultiplier: bigint; // 质押倍数
   maxJoinAmountMultiplier: bigint; // 单个行动者最大参与代币数倍数
-  minJoinAmount: bigint; // 单个行动者最小参与代币数
+  verifyCapacityMultiplier: bigint; // 验证容量倍数
 }
 
 export interface UseExtensionActionConstCacheParams {
@@ -34,7 +31,7 @@ export interface UseExtensionActionConstCacheResult {
  * 功能：
  * 1. 批量获取扩展行动的各项常量参数
  * 2. 使用 LocalStorage 缓存数据，减少重复请求
- * 3. 包括：最小治理票占比、容量倍数、质押代币地址、质押倍数、最大参与代币倍数、最小参与代币量
+ * 3. 包括：质押代币地址、最大参与代币倍数、容量因子
  */
 export const useExtensionActionConstCache = ({
   extensionAddress,
@@ -57,12 +54,9 @@ export const useExtensionActionConstCache = ({
           return {
             tokenAddress: parsed.tokenAddress as `0x${string}`,
             actionId: BigInt(parsed.actionId),
-            minGovVoteRatioBps: BigInt(parsed.minGovVoteRatioBps),
-            capacityMultiplier: BigInt(parsed.capacityMultiplier),
             stakeTokenAddress: parsed.stakeTokenAddress as `0x${string}`,
-            stakingMultiplier: BigInt(parsed.stakingMultiplier),
             maxJoinAmountMultiplier: BigInt(parsed.maxJoinAmountMultiplier),
-            minJoinAmount: BigInt(parsed.minJoinAmount),
+            verifyCapacityMultiplier: BigInt(parsed.verifyCapacityMultiplier),
           };
         }
       }
@@ -86,22 +80,7 @@ export const useExtensionActionConstCache = ({
       {
         address: extensionAddress,
         abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'MIN_GOV_VOTE_RATIO_BPS',
-      },
-      {
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'CAPACITY_MULTIPLIER',
-      },
-      {
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
         functionName: 'STAKE_TOKEN_ADDRESS',
-      },
-      {
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'STAKING_MULTIPLIER',
       },
       {
         address: extensionAddress,
@@ -111,7 +90,7 @@ export const useExtensionActionConstCache = ({
       {
         address: extensionAddress,
         abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'MIN_JOIN_AMOUNT',
+        functionName: 'VERIFY_CAPACITY_MULTIPLIER',
       },
     ];
   }, [extensionAddress, actionId, cachedData]);
@@ -137,17 +116,14 @@ export const useExtensionActionConstCache = ({
     if (actionId === undefined) return undefined;
 
     // 如果没有合约数据，返回 undefined
-    if (!contractData || contractData.length < 7) return undefined;
+    if (!contractData || contractData.length < 4) return undefined;
 
     return {
       tokenAddress: contractData[0]?.result as `0x${string}`,
       actionId: actionId,
-      minGovVoteRatioBps: safeToBigInt(contractData[1]?.result),
-      capacityMultiplier: safeToBigInt(contractData[2]?.result),
-      stakeTokenAddress: contractData[3]?.result as `0x${string}` | undefined,
-      stakingMultiplier: safeToBigInt(contractData[4]?.result),
-      maxJoinAmountMultiplier: safeToBigInt(contractData[5]?.result),
-      minJoinAmount: safeToBigInt(contractData[6]?.result),
+      stakeTokenAddress: contractData[1]?.result as `0x${string}` | undefined,
+      maxJoinAmountMultiplier: safeToBigInt(contractData[2]?.result),
+      verifyCapacityMultiplier: safeToBigInt(contractData[3]?.result),
     };
   }, [contractData, cachedData, actionId]);
 
@@ -160,12 +136,9 @@ export const useExtensionActionConstCache = ({
       const cacheValue = {
         tokenAddress: constants.tokenAddress,
         actionId: constants.actionId?.toString(),
-        minGovVoteRatioBps: constants.minGovVoteRatioBps?.toString(),
-        capacityMultiplier: constants.capacityMultiplier?.toString(),
         stakeTokenAddress: constants.stakeTokenAddress,
-        stakingMultiplier: constants.stakingMultiplier?.toString(),
         maxJoinAmountMultiplier: constants.maxJoinAmountMultiplier?.toString(),
-        minJoinAmount: constants.minJoinAmount?.toString(),
+        verifyCapacityMultiplier: constants.verifyCapacityMultiplier?.toString(),
         timestamp: Date.now(),
       };
       localStorage.setItem(cacheKey, JSON.stringify(cacheValue));

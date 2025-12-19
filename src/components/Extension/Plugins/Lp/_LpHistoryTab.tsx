@@ -23,6 +23,7 @@ import { formatPercentage, formatRoundForDisplay, formatNumber, formatTokenAmoun
 interface LpHistoryTabProps {
   extensionAddress: `0x${string}`;
   currentRound: bigint; // 行动轮次
+  actionId: bigint;
 }
 
 /**
@@ -33,6 +34,7 @@ interface LpHistoryTabProps {
 const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
   extensionAddress,
   currentRound, // 行动轮次
+  actionId,
 }) => {
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
@@ -54,6 +56,8 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
 
   const { participants, totalScore, isEmpty, isPending, error } = useLpVerifyHistoryData({
     extensionAddress,
+    tokenAddress: token?.address as `0x${string}` | undefined,
+    actionId,
     round: selectedRound,
   });
 
@@ -77,10 +81,10 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
     );
   }
 
-  // 按得分排序
+  // 按激励金额排序（score 已废弃）
   const sortedParticipants = [...participants].sort((a, b) => {
-    if (a.score > b.score) return -1;
-    if (a.score < b.score) return 1;
+    if (a.reward > b.reward) return -1;
+    if (a.reward < b.reward) return 1;
     return 0;
   });
 
@@ -122,7 +126,7 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-2 text-left">地址</th>
-                <th className="px-2 text-right">得分</th>
+                {/* <th className="px-2 text-right">得分</th> */}
                 <th className="px-2 text-right">可铸造激励</th>
               </tr>
             </thead>
@@ -139,7 +143,7 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
                       word={participant.address === account ? '(我)' : ''}
                     />
                   </td>
-                  <td className="px-2 text-right">{formatNumber(participant.score)}</td>
+                  {/* <td className="px-2 text-right">{formatNumber(participant.score)}</td> */}
                   <td className="px-2 text-right">{formatTokenAmount(participant.reward)}</td>
                 </tr>
               ))}

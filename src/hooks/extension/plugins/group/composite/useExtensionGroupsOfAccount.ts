@@ -15,11 +15,10 @@ export interface AccountGroupInfo {
   groupId: bigint;
   groupName: string;
   description: string;
-  stakedAmount: bigint;
-  capacity: bigint;
+  maxCapacity: bigint;
   totalJoinedAmount: bigint;
-  groupMinJoinAmount: bigint;
-  groupMaxJoinAmount: bigint;
+  minJoinAmount: bigint;
+  maxJoinAmount: bigint;
   isActive: boolean;
   activatedRound: bigint;
   deactivatedRound: bigint;
@@ -148,7 +147,7 @@ export const useExtensionGroupsOfAccount = ({
 
     for (let i = 0; i < groupIds.length; i++) {
       const baseIndex = i * 3;
-      // GroupManager 的 groupInfo 返回 9 个字段
+      // GroupManager 的 groupInfo 返回 9 个字段: [groupId, description, maxCapacity, minJoinAmount, maxJoinAmount, maxAccounts, isActive, activatedRound, deactivatedRound]
       const groupInfoData = detailData[baseIndex]?.result as
         | [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint, bigint]
         | undefined;
@@ -157,16 +156,15 @@ export const useExtensionGroupsOfAccount = ({
 
       if (!groupInfoData || !groupName) continue;
 
-      // GroupManager groupInfo 字段: [groupId, description, stakedAmount, capacity, groupMinJoinAmount, groupMaxJoinAmount, isActive, activatedRound, deactivatedRound]
+      // GroupManager groupInfo 字段: [groupId, description, maxCapacity, minJoinAmount, maxJoinAmount, maxAccounts, isActive, activatedRound, deactivatedRound]
       result.push({
         groupId: groupIds[i],
         groupName,
         description: groupInfoData[1],
-        stakedAmount: safeToBigInt(groupInfoData[2]),
-        capacity: safeToBigInt(groupInfoData[3]),
+        maxCapacity: safeToBigInt(groupInfoData[2]),
         totalJoinedAmount: safeToBigInt(totalJoinedAmount),
-        groupMinJoinAmount: safeToBigInt(groupInfoData[4]),
-        groupMaxJoinAmount: safeToBigInt(groupInfoData[5]),
+        minJoinAmount: safeToBigInt(groupInfoData[3]),
+        maxJoinAmount: safeToBigInt(groupInfoData[4]),
         isActive: groupInfoData[6],
         activatedRound: safeToBigInt(groupInfoData[7]),
         deactivatedRound: safeToBigInt(groupInfoData[8]),

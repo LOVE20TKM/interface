@@ -15,6 +15,7 @@ type SubTabType = 'current' | 'history';
 interface LpActionPublicTabsProps {
   extensionAddress: `0x${string}`;
   currentRound: bigint;
+  actionId: bigint;
 }
 
 /**
@@ -22,7 +23,7 @@ interface LpActionPublicTabsProps {
  *
  * 显示LP扩展行动的当前参与和激励公示信息
  */
-const LpActionPublicTabs: React.FC<LpActionPublicTabsProps> = ({ extensionAddress, currentRound }) => {
+const LpActionPublicTabs: React.FC<LpActionPublicTabsProps> = ({ extensionAddress, currentRound, actionId }) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>('current');
@@ -81,9 +82,9 @@ const LpActionPublicTabs: React.FC<LpActionPublicTabsProps> = ({ extensionAddres
 
       {/* 二级标签内容 */}
       {activeSubTab === 'current' ? (
-        <LpCurrentTab extensionAddress={extensionAddress} tokenAddress={token?.address} />
+        <LpCurrentTab extensionAddress={extensionAddress} tokenAddress={token?.address} actionId={actionId} />
       ) : (
-        <LpHistoryTab extensionAddress={extensionAddress} currentRound={currentRound} />
+        <LpHistoryTab extensionAddress={extensionAddress} currentRound={currentRound} actionId={actionId} />
       )}
     </div>
   );

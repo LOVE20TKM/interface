@@ -8,25 +8,28 @@ import { LOVE20GroupManagerAbi } from '@/src/abis/LOVE20GroupManager';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useGroupManagerAddress } from '../contracts';
-import { useExtensionActionConstCache } from './useExtensionActionConstCache';
 
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
 
 export interface GroupBasicInfo {
   groupId: bigint;
   groupName: string;
+  description: string;
   owner: `0x${string}`;
-  capacity: bigint;
-  accountCount: bigint;
-  totalJoinedAmount: bigint;
+  maxCapacity: bigint;
+  minJoinAmount: bigint;
+  maxJoinAmount: bigint;
+  maxAccounts: bigint;
   isActive: boolean;
-  // 最大最小参与量
-  groupMinJoinAmount: bigint;
-  groupMaxJoinAmount: bigint;
-  actionMinJoinAmount: bigint;
-  actionMaxJoinAmount: bigint;
-  actualMinJoinAmount: bigint;
-  actualMaxJoinAmount: bigint;
+  activatedRound: bigint;
+  deactivatedRound: bigint;
+
+  // 补充计算信息
+  actionMaxJoinAmount: bigint; //行动最大参与代币量
+  actualMinJoinAmount: bigint; //实际最小参与代币量（综合考虑链群、全局）
+  actualMaxJoinAmount: bigint; //实际最大参与代币量（综合考虑链群、全局）
+  accountCount: bigint; //当前参与地址数
+  totalJoinedAmount: bigint; //当前参与代币量
 }
 
 export interface UseExtensionGroupInfosOfActionParams {
@@ -47,20 +50,13 @@ export interface UseExtensionGroupInfosOfActionResult {
  * 功能：
  * 1. 获取所有活跃链群ID
  * 2. 批量获取每个链群的完整信息（名称、服务者、参与数据、容量等）
- * 3. 计算实际最大/最小参与代币量
+ * 3. 计算实际最大/最小参与代币量（从 groupInfo 直接获取）
  */
 export const useExtensionGroupInfosOfAction = ({
   extensionAddress,
   tokenAddress,
   actionId,
 }: UseExtensionGroupInfosOfActionParams): UseExtensionGroupInfosOfActionResult => {
-  // 获取常量配置（用于获取 actionMinJoinAmount）
-  const {
-    constants,
-    isPending: isConstPending,
-    error: constError,
-  } = useExtensionActionConstCache({ extensionAddress, actionId });
-
   // 获取 GroupManager 合约地址
   const { groupManagerAddress, isPending: isGroupManagerPending } = useGroupManagerAddress(
     extensionAddress as `0x${string}`,
@@ -179,15 +175,13 @@ export const useExtensionGroupInfosOfAction = ({
 
   // 解析群组详细信息
   const groups = useMemo(() => {
-    if (!detailData || groupIds.length === 0 || !constants) return [];
+    if (!detailData || groupIds.length === 0) return [];
 
     const result: GroupBasicInfo[] = [];
-    // 获取行动最小参与量
-    const actionMinJoinAmount = constants.minJoinAmount;
 
     for (let i = 0; i < groupIds.length; i++) {
       const baseIndex = i * 5;
-      // GroupManager 的 groupInfo 返回 9 个字段（不包含 totalJoinedAmount）
+      // GroupManager 的 groupInfo 返回 9 个字段: [groupId, description, maxCapacity, minJoinAmount, maxJoinAmount, maxAccounts, isActive, activatedRound, deactivatedRound]
       const groupInfoData = detailData[baseIndex]?.result as
         | [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint, bigint]
         | undefined;
@@ -198,38 +192,40 @@ export const useExtensionGroupInfosOfAction = ({
 
       if (!groupInfoData || !groupName || !owner) continue;
 
-      // GroupManager groupInfo 字段: [groupId, description, stakedAmount, capacity, groupMinJoinAmount, groupMaxJoinAmount, isActive, activatedRound, deactivatedRound]
-      const groupMinJoinAmount = safeToBigInt(groupInfoData[4]);
-      const groupMaxJoinAmount = safeToBigInt(groupInfoData[5]);
+      // GroupManager groupInfo 字段: [groupId, description, maxCapacity, minJoinAmount, maxJoinAmount, maxAccounts, isActive, activatedRound, deactivatedRound]
+      const description = groupInfoData[1];
+      const maxCapacity = safeToBigInt(groupInfoData[2]);
+      const minJoinAmount = safeToBigInt(groupInfoData[3]);
+      const maxJoinAmount = safeToBigInt(groupInfoData[4]);
+      const maxAccounts = safeToBigInt(groupInfoData[5]);
+      const isActive = groupInfoData[6];
+      const activatedRound = safeToBigInt(groupInfoData[7]);
+      const deactivatedRound = safeToBigInt(groupInfoData[8]);
 
       // 计算实际最小参与量
-      // 如果群设置的最小参与量不为0，则实际最小 = max(群设置, 行动最小)
-      // 如果群设置的最小参与量为0，则实际最小 = 行动最小
-      const actualMinJoinAmount =
-        groupMinJoinAmount > BigInt(0) && groupMinJoinAmount > actionMinJoinAmount
-          ? groupMinJoinAmount
-          : actionMinJoinAmount;
+      const actualMinJoinAmount = minJoinAmount;
 
       // 计算实际最大参与量
       // 如果群设置的最大参与量不为0，则实际最大 = min(群设置, 行动最大)
       // 如果群设置的最大参与量为0，则实际最大 = 行动最大
       const actualMaxJoinAmount =
-        groupMaxJoinAmount > BigInt(0) && groupMaxJoinAmount < actionMaxJoinAmount
-          ? groupMaxJoinAmount
-          : actionMaxJoinAmount;
+        maxJoinAmount > BigInt(0) && maxJoinAmount < actionMaxJoinAmount ? maxJoinAmount : actionMaxJoinAmount;
 
       result.push({
         groupId: groupIds[i],
         groupName,
+        description,
         owner,
-        capacity: safeToBigInt(groupInfoData[3]),
+        maxCapacity,
         accountCount: safeToBigInt(accountCount),
         totalJoinedAmount: safeToBigInt(totalJoinedAmount),
         isActive: groupInfoData[6],
+        activatedRound,
+        deactivatedRound,
         // 最大最小参与量
-        groupMinJoinAmount,
-        groupMaxJoinAmount,
-        actionMinJoinAmount,
+        minJoinAmount,
+        maxJoinAmount,
+        maxAccounts,
         actionMaxJoinAmount,
         actualMinJoinAmount,
         actualMaxJoinAmount,
@@ -237,13 +233,11 @@ export const useExtensionGroupInfosOfAction = ({
     }
 
     return result;
-  }, [detailData, groupIds, constants, actionMaxJoinAmount]);
+  }, [detailData, groupIds, actionMaxJoinAmount]);
 
   // 计算最终的 isPending 状态
   // 如果 groupIds 为空且已经获取完成，则不需要等待 detailPending
   const isPending = useMemo(() => {
-    // 如果常量数据还在加载，返回 true
-    if (isConstPending) return true;
     // 如果第一步（获取活跃链群ID列表和行动最大参与量）还在加载，返回 true
     if (isFirstBatchPending) return true;
     // 如果 GroupManager 地址还在加载，返回 true
@@ -268,7 +262,6 @@ export const useExtensionGroupInfosOfAction = ({
     // 其他情况，返回 true
     return true;
   }, [
-    isConstPending,
     isFirstBatchPending,
     isGroupManagerPending,
     isDetailPending,
@@ -281,6 +274,6 @@ export const useExtensionGroupInfosOfAction = ({
   return {
     groups,
     isPending,
-    error: constError || firstBatchError || detailError,
+    error: firstBatchError || detailError,
   };
 };

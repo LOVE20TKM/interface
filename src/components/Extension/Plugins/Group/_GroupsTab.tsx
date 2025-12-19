@@ -119,7 +119,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
             href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}
             className="text-sm text-secondary hover:text-secondary/80 transition-colors"
           >
-            新增链群 &gt;&gt;
+            激活链群 &gt;&gt;
           </Link>
         </div>
       </div>

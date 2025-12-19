@@ -165,42 +165,12 @@ export const useConfig = (tokenAddress: `0x${string}`, actionId: bigint) => {
     },
   });
 
-  const typedData = data as [string, bigint, bigint, bigint, bigint, bigint] | undefined;
+  const typedData = data as [string, bigint, bigint] | undefined;
 
   return {
     stakeTokenAddress: typedData ? (typedData[0] as `0x${string}`) : undefined,
-    minGovVoteRatioBps: typedData ? safeToBigInt(typedData[1]) : undefined,
-    capacityMultiplier: typedData ? safeToBigInt(typedData[2]) : undefined,
-    stakingMultiplier: typedData ? safeToBigInt(typedData[3]) : undefined,
-    maxJoinAmountMultiplier: typedData ? safeToBigInt(typedData[4]) : undefined,
-    minJoinAmount: typedData ? safeToBigInt(typedData[5]) : undefined,
-    isPending,
-    error,
-  };
-};
-
-/**
- * Hook for expandableInfo - 获取可扩展信息
- */
-export const useExpandableInfo = (tokenAddress: `0x${string}`, actionId: bigint, owner: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: LOVE20GroupManagerAbi,
-    functionName: 'expandableInfo',
-    args: [tokenAddress, actionId, owner],
-    query: {
-      enabled: !!tokenAddress && actionId !== undefined && !!owner,
-    },
-  });
-
-  const typedData = data as [bigint, bigint, bigint, bigint, bigint] | undefined;
-
-  return {
-    currentCapacity: typedData ? safeToBigInt(typedData[0]) : undefined,
-    maxCapacity: typedData ? safeToBigInt(typedData[1]) : undefined,
-    currentStake: typedData ? safeToBigInt(typedData[2]) : undefined,
-    maxStake: typedData ? safeToBigInt(typedData[3]) : undefined,
-    additionalStakeAllowed: typedData ? safeToBigInt(typedData[4]) : undefined,
+    activationStakeAmount: typedData ? safeToBigInt(typedData[1]) : undefined,
+    maxJoinAmountMultiplier: typedData ? safeToBigInt(typedData[2]) : undefined,
     isPending,
     error,
   };
@@ -225,10 +195,10 @@ export const useGroupInfo = (tokenAddress: `0x${string}`, actionId: bigint, grou
   return {
     groupId: typedData ? safeToBigInt(typedData[0]) : undefined,
     description: typedData ? typedData[1] : undefined,
-    stakedAmount: typedData ? safeToBigInt(typedData[2]) : undefined,
-    capacity: typedData ? safeToBigInt(typedData[3]) : undefined,
-    groupMinJoinAmount: typedData ? safeToBigInt(typedData[4]) : undefined,
-    groupMaxJoinAmount: typedData ? safeToBigInt(typedData[5]) : undefined,
+    maxCapacity: typedData ? safeToBigInt(typedData[2]) : undefined,
+    minJoinAmount: typedData ? safeToBigInt(typedData[3]) : undefined,
+    maxJoinAmount: typedData ? safeToBigInt(typedData[4]) : undefined,
+    maxAccounts: typedData ? safeToBigInt(typedData[5]) : undefined,
     isActive: typedData ? typedData[6] : undefined,
     activatedRound: typedData ? safeToBigInt(typedData[7]) : undefined,
     deactivatedRound: typedData ? safeToBigInt(typedData[8]) : undefined,
@@ -255,20 +225,20 @@ export const useIsGroupActive = (tokenAddress: `0x${string}`, actionId: bigint, 
 };
 
 /**
- * Hook for maxCapacityByOwner - 获取指定所有者的最大容量
+ * Hook for maxVerifyCapacityByOwner - 获取指定所有者的最大容量
  */
-export const useMaxCapacityByOwner = (tokenAddress: `0x${string}`, actionId: bigint, owner: `0x${string}`) => {
+export const useMaxVerifyCapacityByOwner = (tokenAddress: `0x${string}`, actionId: bigint, owner: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupManagerAbi,
-    functionName: 'maxCapacityByOwner',
+    functionName: 'maxVerifyCapacityByOwner',
     args: [tokenAddress, actionId, owner],
     query: {
       enabled: !!tokenAddress && actionId !== undefined && !!owner,
     },
   });
 
-  return { maxCapacity: safeToBigInt(data), isPending, error };
+  return { maxVerifyCapacity: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -324,20 +294,20 @@ export function useActivateGroup() {
     actionId: bigint,
     groupId: bigint,
     description: string,
-    stakedAmount: bigint,
-    groupMinJoinAmount: bigint,
-    groupMaxJoinAmount: bigint,
-    groupMaxAccounts: bigint,
+    maxCapacity: bigint,
+    minJoinAmount: bigint,
+    maxJoinAmount: bigint,
+    maxAccounts: bigint,
   ) => {
     console.log('提交 activateGroup 交易:', {
       tokenAddress,
       actionId,
       groupId,
       description,
-      stakedAmount,
-      groupMinJoinAmount,
-      groupMaxJoinAmount,
-      groupMaxAccounts,
+      maxCapacity,
+      minJoinAmount,
+      maxJoinAmount,
+      maxAccounts,
       isTukeMode,
     });
     return await execute([
@@ -345,10 +315,10 @@ export function useActivateGroup() {
       actionId,
       groupId,
       description,
-      stakedAmount,
-      groupMinJoinAmount,
-      groupMaxJoinAmount,
-      groupMaxAccounts,
+      maxCapacity,
+      minJoinAmount,
+      maxJoinAmount,
+      maxAccounts,
     ]);
   };
 
@@ -414,49 +384,6 @@ export function useDeactivateGroup() {
 }
 
 /**
- * Hook for expandGroup - 扩展组
- */
-export function useExpandGroup() {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20GroupManagerAbi,
-    CONTRACT_ADDRESS,
-    'expandGroup',
-  );
-
-  const expandGroup = async (
-    tokenAddress: `0x${string}`,
-    actionId: bigint,
-    groupId: bigint,
-    additionalStake: bigint,
-  ) => {
-    console.log('提交 expandGroup 交易:', { tokenAddress, actionId, groupId, additionalStake, isTukeMode });
-    return await execute([tokenAddress, actionId, groupId, additionalStake]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('expandGroup tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 expandGroup 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    expandGroup,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}
-
-/**
  * Hook for setConfig - 设置配置
  */
 export function useSetConfig() {
@@ -468,29 +395,16 @@ export function useSetConfig() {
 
   const setConfig = async (
     stakeTokenAddress: `0x${string}`,
-    minGovVoteRatioBps: bigint,
-    capacityMultiplier: bigint,
-    stakingMultiplier: bigint,
+    activationStakeAmount: bigint,
     maxJoinAmountMultiplier: bigint,
-    minJoinAmount: bigint,
   ) => {
     console.log('提交 setConfig 交易:', {
       stakeTokenAddress,
-      minGovVoteRatioBps,
-      capacityMultiplier,
-      stakingMultiplier,
+      activationStakeAmount,
       maxJoinAmountMultiplier,
-      minJoinAmount,
       isTukeMode,
     });
-    return await execute([
-      stakeTokenAddress,
-      minGovVoteRatioBps,
-      capacityMultiplier,
-      stakingMultiplier,
-      maxJoinAmountMultiplier,
-      minJoinAmount,
-    ]);
+    return await execute([stakeTokenAddress, activationStakeAmount, maxJoinAmountMultiplier]);
   };
 
   // 错误日志记录
@@ -531,6 +445,7 @@ export function useUpdateGroupInfo() {
     actionId: bigint,
     groupId: bigint,
     newDescription: string,
+    newMaxCapacity: bigint,
     newMinJoinAmount: bigint,
     newMaxJoinAmount: bigint,
     newMaxAccounts: bigint,
@@ -540,6 +455,7 @@ export function useUpdateGroupInfo() {
       actionId,
       groupId,
       newDescription,
+      newMaxCapacity,
       newMinJoinAmount,
       newMaxJoinAmount,
       newMaxAccounts,
@@ -550,6 +466,7 @@ export function useUpdateGroupInfo() {
       actionId,
       groupId,
       newDescription,
+      newMaxCapacity,
       newMinJoinAmount,
       newMaxJoinAmount,
       newMaxAccounts,

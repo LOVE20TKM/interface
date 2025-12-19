@@ -16,19 +16,35 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 // =====================
 
 /**
- * Hook for CAPACITY_MULTIPLIER - 获取容量乘数
+ * Hook for VERIFY_CAPACITY_MULTIPLIER - 获取验证容量倍数
  */
-export const useCapacityMultiplier = (contractAddress: `0x${string}`) => {
+export const useVerifyCapacityMultiplier = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'CAPACITY_MULTIPLIER',
+    functionName: 'VERIFY_CAPACITY_MULTIPLIER',
     query: {
       enabled: !!contractAddress,
     },
   });
 
-  return { capacityMultiplier: safeToBigInt(data), isPending, error };
+  return { verifyCapacityMultiplier: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for GROUP_ACTIVATION_STAKE_AMOUNT - 获取激活需质押代币数量
+ */
+export const useGroupActivationStakeAmount = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupActionAbi,
+    functionName: 'GROUP_ACTIVATION_STAKE_AMOUNT',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { groupActivationStakeAmount: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -112,38 +128,6 @@ export const useMaxJoinAmountMultiplier = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for MIN_GOV_VOTE_RATIO_BPS - 获取最小治理投票比率（基点）
- */
-export const useMinGovVoteRatioBps = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'MIN_GOV_VOTE_RATIO_BPS',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { minGovVoteRatioBps: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for MIN_JOIN_AMOUNT - 获取最小加入数量
- */
-export const useMinJoinAmount = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'MIN_JOIN_AMOUNT',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { minJoinAmount: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for STAKE_TOKEN_ADDRESS - 获取质押代币地址
  */
 export const useStakeTokenAddress = (contractAddress: `0x${string}`) => {
@@ -157,22 +141,6 @@ export const useStakeTokenAddress = (contractAddress: `0x${string}`) => {
   });
 
   return { stakeTokenAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for STAKING_MULTIPLIER - 获取质押乘数
- */
-export const useStakingMultiplier = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'STAKING_MULTIPLIER',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { stakingMultiplier: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -656,20 +624,20 @@ export const useScoreByGroupId = (contractAddress: `0x${string}`, round: bigint,
 };
 
 /**
- * Hook for submittedCount - 获取指定轮次和组ID的已提交数量
+ * Hook for verifiedAccountCount - 获取指定轮次和组ID的已提交数量
  */
-export const useSubmittedCount = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
+export const useVerifiedAccountCount = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'submittedCount',
+    functionName: 'verifiedAccountCount',
     args: [round, groupId],
     query: {
       enabled: !!contractAddress && round !== undefined && groupId !== undefined,
     },
   });
 
-  return { submittedCount: safeToBigInt(data), isPending, error };
+  return { verifiedAccountCount: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -1010,34 +978,40 @@ export function useSetGroupDelegatedVerifier(contractAddress: `0x${string}`) {
 }
 
 /**
- * Hook for submitOriginScore - 提交原始积分
+ * Hook for verifyWithOriginScores - 提交原始积分
  */
-export function useSubmitOriginScore(contractAddress: `0x${string}`) {
+export function useVerifyWithOriginScores(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
     LOVE20ExtensionGroupActionAbi,
     contractAddress,
-    'submitOriginScore',
+    'verifyWithOriginScores',
   );
 
-  const submitOriginScore = async (groupId: bigint, startIndex: bigint, originScores: bigint[]) => {
-    console.log('提交 submitOriginScore 交易:', { contractAddress, groupId, startIndex, originScores, isTukeMode });
+  const verifyWithOriginScores = async (groupId: bigint, startIndex: bigint, originScores: bigint[]) => {
+    console.log('提交 verifyWithOriginScores 交易:', {
+      contractAddress,
+      groupId,
+      startIndex,
+      originScores,
+      isTukeMode,
+    });
     return await execute([groupId, startIndex, originScores]);
   };
 
   // 错误日志记录
   useEffect(() => {
     if (hash) {
-      console.log('submitOriginScore tx hash:', hash);
+      console.log('verifyWithOriginScores tx hash:', hash);
     }
     if (error) {
-      console.log('提交 submitOriginScore 交易错误:');
+      console.log('提交 verifyWithOriginScores 交易错误:');
       logWeb3Error(error);
       logError(error);
     }
   }, [hash, error]);
 
   return {
-    submitOriginScore,
+    verifyWithOriginScores,
     isPending,
     isConfirming,
     writeError: error,

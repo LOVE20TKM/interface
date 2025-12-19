@@ -306,7 +306,7 @@ export default function NewAction() {
                                 <FormControl>
                                   <Input
                                     type="text"
-                                    placeholder="名称，比如 '微博地址'"
+                                    placeholder="名称，比如 '微信昵称'"
                                     className="!ring-secondary-foreground"
                                     {...field}
                                   />
@@ -334,7 +334,7 @@ export default function NewAction() {
                               <FormControl>
                                 <Input
                                   type="text"
-                                  placeholder="提示信息，比如 '例如 https://weibo.com/12345678'"
+                                  placeholder="提示信息，比如 '张三-12bc'"
                                   className="!ring-secondary-foreground"
                                   maxLength={1010}
                                   {...field}

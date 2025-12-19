@@ -22,7 +22,7 @@ import { ActionInfo } from '@/src/types/love20types';
 interface ExtensionPublicTabsProps {
   extensionAddress: `0x${string}`;
   currentRound: bigint;
-  actionId?: bigint;
+  actionId: bigint;
   actionInfo?: ActionInfo;
   activeTab?: string; // 当前选中的标签 key
 }
@@ -80,7 +80,7 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
   // 根据扩展类型渲染对应的组件
   switch (extensionConfig.type) {
     case ExtensionType.LP:
-      return <LpActionPublicTabs extensionAddress={extensionAddress} currentRound={currentRound} />;
+      return <LpActionPublicTabs extensionAddress={extensionAddress} currentRound={currentRound} actionId={actionId} />;
 
     case ExtensionType.GROUP_ACTION:
       if (!actionId || !actionInfo) {

@@ -100,6 +100,30 @@ export const LOVE20ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
+    "name": "actionIdsWithRecipients",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "center",
     "inputs": [],
     "outputs": [
@@ -146,6 +170,83 @@ export const LOVE20ExtensionGroupServiceAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "generatedRewardByVerifier",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifier",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "accountReward",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "totalReward",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "groupIdsWithRecipients",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "actionId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hasActiveGroups",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -250,6 +351,16 @@ export const LOVE20ExtensionGroupServiceAbi = [
         "internalType": "address"
       },
       {
+        "name": "actionId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "round",
         "type": "uint256",
         "internalType": "uint256"
@@ -277,6 +388,16 @@ export const LOVE20ExtensionGroupServiceAbi = [
         "name": "groupOwner",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "actionId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -356,6 +477,16 @@ export const LOVE20ExtensionGroupServiceAbi = [
         "internalType": "address"
       },
       {
+        "name": "actionId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "recipient",
         "type": "address",
         "internalType": "address"
@@ -383,6 +514,16 @@ export const LOVE20ExtensionGroupServiceAbi = [
         "name": "groupOwner",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "actionId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -411,8 +552,79 @@ export const LOVE20ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
+    "name": "rewardDistributionAll",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "groupOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "distributions",
+        "type": "tuple[]",
+        "internalType": "struct ILOVE20ExtensionGroupService.GroupDistribution[]",
+        "components": [
+          {
+            "name": "actionId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "groupId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "groupReward",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "recipients",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "basisPoints",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "amounts",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "ownerAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "setRecipients",
     "inputs": [
+      {
+        "name": "actionId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
       {
         "name": "addrs",
         "type": "address[]",
@@ -562,9 +774,15 @@ export const LOVE20ExtensionGroupServiceAbi = [
         "internalType": "uint256"
       },
       {
+        "name": "groupId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
         "name": "account",
         "type": "address",
-        "indexed": true,
+        "indexed": false,
         "internalType": "address"
       },
       {
@@ -639,7 +857,17 @@ export const LOVE20ExtensionGroupServiceAbi = [
   },
   {
     "type": "error",
+    "name": "NotGroupOwner",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NotJoined",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RecipientCannotBeSelf",
     "inputs": []
   },
   {

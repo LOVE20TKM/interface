@@ -29,8 +29,8 @@ import { useOwnerOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group'
 import { useAccountsByGroupIdByRound } from '@/src/hooks/extension/plugins/group/composite/useAccountsByGroupIdByRound';
 import {
   useDelegatedVerifierByGroupId,
-  useSubmitOriginScore,
-  useSubmittedCount,
+  useVerifyWithOriginScores,
+  useVerifiedAccountCount,
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
@@ -102,10 +102,10 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
   // 获取已提交的打分数量
   const {
-    submittedCount,
+    verifiedAccountCount,
     isPending: isPendingSubmittedCount,
     error: errorSubmittedCount,
-  } = useSubmittedCount(extensionAddress, currentRound || BigInt(0), groupId);
+  } = useVerifiedAccountCount(extensionAddress, currentRound || BigInt(0), groupId);
 
   // 批量获取验证信息
   const {
@@ -147,12 +147,12 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
   // 打分
   const {
-    submitOriginScore,
+    verifyWithOriginScores,
     isPending: isPendingVerifyGroup,
     isConfirming: isConfirmingVerify,
     isConfirmed: isConfirmedVerify,
     writeError: errorVerifyGroup,
-  } = useSubmitOriginScore(extensionAddress);
+  } = useVerifyWithOriginScores(extensionAddress);
 
   // 从剪贴板粘贴分数
   const handlePasteFromClipboard = async () => {
@@ -196,7 +196,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     }
 
     // 检查是否已经提交过打分
-    if (submittedCount !== undefined && accounts && submittedCount >= BigInt(accounts.length)) {
+    if (verifiedAccountCount !== undefined && accounts && verifiedAccountCount >= BigInt(accounts.length)) {
       toast.error('本轮打分已经完成，无需重复提交');
       return;
     }
@@ -219,9 +219,9 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         return BigInt(isNaN(score) || score < 0 ? 0 : score);
       });
 
-      // 使用新的 submitOriginScore 签名：groupId, startIndex, originScores
+      // 使用新的 verifyWithOriginScores 签名：groupId, startIndex, originScores
       // startIndex 设置为 0，表示从第一个账号开始提交
-      await submitOriginScore(groupId, BigInt(0), scores);
+      await verifyWithOriginScores(groupId, BigInt(0), scores);
     } catch (error) {
       console.error('Verify group failed', error);
     }
@@ -336,7 +336,8 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   };
 
   // 检查是否已经打分完成
-  const isAlreadySubmitted = submittedCount !== undefined && accounts && submittedCount >= BigInt(accounts.length);
+  const isAlreadySubmitted =
+    verifiedAccountCount !== undefined && accounts && verifiedAccountCount >= BigInt(accounts.length);
 
   // 如果已经打分完成，只显示查看按钮
   if (isAlreadySubmitted) {

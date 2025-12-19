@@ -78,10 +78,6 @@ const _GroupManagementDialog: React.FC<GroupManagementDialogProps> = ({
             <CheckCircle className="w-4 h-4 mr-2" />
             链群打分
           </Button>
-          <Button variant="outline" className="w-full justify-start" onClick={() => handleNavigateToOp('expand')}>
-            <PlusCircle className="w-4 h-4 mr-2" />
-            追加质押
-          </Button>
           <Button variant="outline" className="w-full justify-start" onClick={() => handleNavigateToOp('update')}>
             <Edit className="w-4 h-4 mr-2" />
             更新信息

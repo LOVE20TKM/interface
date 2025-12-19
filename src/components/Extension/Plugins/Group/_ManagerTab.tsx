@@ -17,7 +17,7 @@ import { useExtensionGroupsOfAccount } from '@/src/hooks/extension/plugins/group
 import { useGroupManagerAddress, useTokenAddress } from '@/src/hooks/extension/plugins/group/contracts';
 import {
   useActiveGroupIdsByOwner,
-  useExpandableInfo,
+  useMaxVerifyCapacityByOwner,
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
 
 // 工具函数
@@ -45,16 +45,12 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   );
   const { tokenAddress, isPending: isPendingTokenAddress } = useTokenAddress(extensionAddress as `0x${string}`);
 
-  // 获取服务者的可扩展信息
+  // 获取服务者的最大容量上限
   const {
-    currentCapacity,
-    maxCapacity,
-    currentStake,
-    maxStake,
-    additionalStakeAllowed,
-    isPending: isPendingExpandable,
-    error: errorExpandable,
-  } = useExpandableInfo(tokenAddress as `0x${string}`, actionId, account as `0x${string}`);
+    maxVerifyCapacity,
+    isPending: isPendingMaxCapacity,
+    error: errorMaxCapacity,
+  } = useMaxVerifyCapacityByOwner(tokenAddress as `0x${string}`, actionId, account as `0x${string}`);
 
   // 获取服务者的活跃链群ID列表
   const {
@@ -81,10 +77,10 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
-    if (errorExpandable) handleContractError(errorExpandable, 'extension');
+    if (errorMaxCapacity) handleContractError(errorMaxCapacity, 'extension');
     if (errorGroupIds) handleContractError(errorGroupIds, 'extension');
     if (groupsError) handleContractError(groupsError, 'extension');
-  }, [errorExpandable, errorGroupIds, groupsError, handleContractError]);
+  }, [errorMaxCapacity, errorGroupIds, groupsError, handleContractError]);
 
   // 打开管理面板
   const handleManageClick = (groupId: bigint) => {
@@ -121,7 +117,7 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   }
 
   // 如果前置条件满足，检查其他数据的加载状态
-  const isPending = isPendingExpandable || isPendingGroupIds || isGroupsPending;
+  const isPending = isPendingMaxCapacity || isPendingGroupIds || isGroupsPending;
 
   if (isPending) {
     return (
@@ -157,13 +153,7 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
     <>
       <div>
         {/* 服务者数据面板 */}
-        <_ManagerDataPanel
-          groups={groups}
-          currentCapacity={currentCapacity}
-          maxCapacity={maxCapacity}
-          currentStake={currentStake}
-          maxStake={maxStake}
-        />
+        <_ManagerDataPanel groups={groups} maxVerifyCapacity={maxVerifyCapacity} />
 
         {/* 我的链群列表 */}
         <_MyGroups groups={groups} actionId={actionId} onManageClick={handleManageClick} />
@@ -172,9 +162,9 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
         <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded mt-6 px-3 py-2">
           <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
-            <div>• 容量上限取决于您的治理票占比和质押量</div>
-            <div>• 可以追加质押来增加容量上限</div>
-            <div>• 点击"管理"按钮可以进行验证打分、追加质押等操作</div>
+            <div>• 容量上限由系统根据您的治理票占比计算得出</div>
+            <div>• 可以通过更新链群信息来调整容量上限（不超过最大容量）</div>
+            <div>• 点击"管理"按钮可以进行验证打分、更新链群信息等操作</div>
           </div>
         </div>
       </div>

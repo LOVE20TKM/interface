@@ -29,7 +29,11 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useExtensionActionParam, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useUpdateGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+import {
+  useUpdateGroupInfo,
+  useMaxVerifyCapacityByOwner,
+} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+import { useAccount } from 'wagmi';
 
 // 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
@@ -56,6 +60,7 @@ interface GroupOPUpdateProps {
 const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, extensionAddress, groupId }) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
+  const { address: account } = useAccount();
 
   // 获取链群详情
   const {
@@ -75,11 +80,28 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     error: errorParams,
   } = useExtensionActionParam({ actionId, extensionAddress });
 
+  // 获取服务者的最大容量上限
+  const {
+    maxVerifyCapacity,
+    isPending: isPendingMaxCapacity,
+    error: errorMaxCapacity,
+  } = useMaxVerifyCapacityByOwner(token?.address as `0x${string}`, actionId, account as `0x${string}`);
+
   // 表单验证
   const formSchema = useMemo(
     () =>
       z
         .object({
+          maxCapacity: z
+            .string()
+            .min(1, { message: '请输入链群容量上限' })
+            .refine(
+              (val) => {
+                const amount = parseFloat(val);
+                return !isNaN(amount) && amount > 0;
+              },
+              { message: '请输入有效的容量上限' },
+            ),
           description: z.string().max(500, { message: '描述不能超过500字' }),
           minJoinAmount: z
             .string()
@@ -95,15 +117,6 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               if (!val || val === '0') return;
               const amount = parseUnits(val);
               if (amount > BigInt(0)) {
-                // 不能小于行动的最小参与量
-                if (actionParams?.minJoinAmount && amount < actionParams.minJoinAmount) {
-                  ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: `不能小于行动最小参与量 ${formatTokenAmount(actionParams.minJoinAmount, 2)} ${
-                      token?.symbol || ''
-                    }`,
-                  });
-                }
                 // 不能大于行动的单个行动者最大参与代币数
                 if (actionParams?.joinMaxAmount && amount > actionParams.joinMaxAmount) {
                   ctx.addIssue({
@@ -161,6 +174,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      maxCapacity: '',
       description: '',
       minJoinAmount: '',
       maxJoinAmount: '',
@@ -172,14 +186,16 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   useEffect(() => {
     if (groupDetail) {
       form.reset({
+        maxCapacity:
+          groupDetail.maxCapacity > BigInt(0) ? formatTokenAmount(groupDetail.maxCapacity, token?.decimals || 18) : '',
         description: groupDetail.description || '',
         minJoinAmount:
-          groupDetail.groupMinJoinAmount > BigInt(0)
-            ? formatTokenAmount(groupDetail.groupMinJoinAmount, token?.decimals || 18)
+          groupDetail.minJoinAmount > BigInt(0)
+            ? formatTokenAmount(groupDetail.minJoinAmount, token?.decimals || 18)
             : '',
         maxJoinAmount:
-          groupDetail.groupMaxJoinAmount > BigInt(0)
-            ? formatTokenAmount(groupDetail.groupMaxJoinAmount, token?.decimals || 18)
+          groupDetail.maxJoinAmount > BigInt(0)
+            ? formatTokenAmount(groupDetail.maxJoinAmount, token?.decimals || 18)
             : '',
       });
     }
@@ -201,6 +217,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     }
 
     // 转换参数为 BigInt（formSchema 已经完成验证）
+    const maxCapacityBigInt = values.maxCapacity ? parseUnits(values.maxCapacity) : BigInt(0);
     const minJoinAmountBigInt = values.minJoinAmount ? parseUnits(values.minJoinAmount) : BigInt(0);
     const maxJoinAmountBigInt = values.maxJoinAmount ? parseUnits(values.maxJoinAmount) : BigInt(0);
 
@@ -210,6 +227,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
         actionId,
         groupId,
         values.description,
+        maxCapacityBigInt,
         minJoinAmountBigInt,
         maxJoinAmountBigInt,
         BigInt(0),
@@ -233,10 +251,11 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   useEffect(() => {
     if (errorDetail) handleContractError(errorDetail, 'extension');
     if (errorParams) handleContractError(errorParams, 'extension');
+    if (errorMaxCapacity) handleContractError(errorMaxCapacity, 'extension');
     if (errorUpdate) handleContractError(errorUpdate, 'extension');
-  }, [errorDetail, errorParams, errorUpdate, handleContractError]);
+  }, [errorDetail, errorParams, errorMaxCapacity, errorUpdate, handleContractError]);
 
-  if (isPendingDetail || isPendingParams) {
+  if (isPendingDetail || isPendingParams || isPendingMaxCapacity) {
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
@@ -263,6 +282,24 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
         {/* 表单 */}
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+            {/* 链群容量上限 */}
+            <FormField
+              control={form.control}
+              name="maxCapacity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>链群容量上限 ({token?.symbol})</FormLabel>
+                  <FormControl>
+                    <Input placeholder="请输入链群容量上限" className="!ring-secondary-foreground" {...field} />
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    您的最大容量上限：{formatTokenAmount(maxVerifyCapacity || BigInt(0))} {token?.symbol}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* 链群描述 */}
             <FormField
               control={form.control}
@@ -291,14 +328,12 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                   <FormLabel>最小参与代币数 ({token?.symbol})</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="可填0, 表示与扩展行动默认值保持一致"
+                      placeholder="可填0, 表示任何>0的参与量都可以"
                       className="!ring-secondary-foreground"
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription className="text-xs">
-                    扩展行动默认值最小参与量：{formatTokenAmount(actionParams.minJoinAmount)} {token?.symbol}
-                  </FormDescription>
+                  <FormDescription className="text-xs">设置为0表示任何大于0的参与量都可以</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -350,12 +385,10 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
 
         {/* 小贴士（算法 + 数值） */}
         <_GroupActionTips
-          minGovVoteRatioBps={actionParams?.minGovVoteRatioBps}
-          capacityMultiplier={actionParams?.capacityMultiplier}
-          stakingMultiplier={actionParams?.stakingMultiplier}
-          minJoinAmount={actionParams?.minJoinAmount}
+          verifyCapacityMultiplier={actionParams?.verifyCapacityMultiplier}
           maxJoinAmountMultiplier={actionParams?.maxJoinAmountMultiplier}
           joinMaxAmount={actionParams?.joinMaxAmount}
+          groupActivationStakeAmount={actionParams?.groupActivationStakeAmount}
         />
       </div>
 

@@ -67,11 +67,9 @@ export const useExtensionParams = (contractAddress: `0x${string}`, extension: `0
     groupManagerAddress: data ? (data.groupManagerAddress as `0x${string}`) : undefined,
     groupDistrustAddress: data ? (data.groupDistrustAddress as `0x${string}`) : undefined,
     stakeTokenAddress: data ? (data.stakeTokenAddress as `0x${string}`) : undefined,
-    minGovVoteRatioBps: data ? safeToBigInt(data.minGovVoteRatioBps) : undefined,
-    capacityMultiplier: data ? safeToBigInt(data.capacityMultiplier) : undefined,
-    stakingMultiplier: data ? safeToBigInt(data.stakingMultiplier) : undefined,
+    activationStakeAmount: data ? safeToBigInt(data.activationStakeAmount) : undefined,
     maxJoinAmountMultiplier: data ? safeToBigInt(data.maxJoinAmountMultiplier) : undefined,
-    minJoinAmount: data ? safeToBigInt(data.minJoinAmount) : undefined,
+    verifyCapacityMultiplier: data ? safeToBigInt(data.verifyCapacityMultiplier) : undefined,
     isPending,
     error,
   };
@@ -145,11 +143,9 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
     groupManagerAddress: `0x${string}`,
     groupDistrustAddress: `0x${string}`,
     stakeTokenAddress: `0x${string}`,
-    minGovVoteRatioBps: bigint,
-    capacityMultiplier: bigint,
-    stakingMultiplier: bigint,
+    activationStakeAmount: bigint,
     maxJoinAmountMultiplier: bigint,
-    minJoinAmount: bigint,
+    verifyCapacityMultiplier: bigint,
   ) => {
     console.log('提交 createExtension 交易:', {
       contractAddress,
@@ -157,11 +153,9 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
       groupManagerAddress,
       groupDistrustAddress,
       stakeTokenAddress,
-      minGovVoteRatioBps,
-      capacityMultiplier,
-      stakingMultiplier,
+      activationStakeAmount,
       maxJoinAmountMultiplier,
-      minJoinAmount,
+      verifyCapacityMultiplier,
       isTukeMode,
     });
     return await execute([
@@ -169,11 +163,9 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
       groupManagerAddress,
       groupDistrustAddress,
       stakeTokenAddress,
-      minGovVoteRatioBps,
-      capacityMultiplier,
-      stakingMultiplier,
+      activationStakeAmount,
       maxJoinAmountMultiplier,
-      minJoinAmount,
+      verifyCapacityMultiplier,
     ]);
   };
 

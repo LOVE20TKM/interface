@@ -45,11 +45,9 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
 
   // 表单状态
   const [stakeTokenAddress, setStakeTokenAddress] = useState(''); // 质押代币地址
-  const [minGovVoteRatioBps, setMinGovVoteRatioBps] = useState(''); // 最小治理票占比（基点，10000=100%）
-  const [capacityMultiplier, setCapacityMultiplier] = useState(''); // 容量倍数
-  const [stakingMultiplier, setStakingMultiplier] = useState(''); // 质押倍数
+  const [activationStakeAmount, setActivationStakeAmount] = useState(''); // 激活需质押代币数量
   const [maxJoinAmountMultiplier, setMaxJoinAmountMultiplier] = useState(''); // 最大参与代币倍数
-  const [minJoinAmount, setMinJoinAmount] = useState(''); // 最小参与代币量
+  const [verifyCapacityMultiplier, setVerifyCapacityMultiplier] = useState(''); // 验证容量倍数
 
   const { createExtension, isPending, isConfirming, isConfirmed, writeError, hash } =
     useCreateExtension(factoryAddress);
@@ -158,36 +156,14 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
       return false;
     }
 
-    // 验证最小治理票占比
-    if (!minGovVoteRatioBps) {
-      toast.error('请输入最小治理票占比');
+    // 验证激活需质押代币数量
+    if (!activationStakeAmount) {
+      toast.error('请输入激活需质押代币数量');
       return false;
     }
-    const minGovVoteRatioBpsNum = parseFloat(minGovVoteRatioBps);
-    if (isNaN(minGovVoteRatioBpsNum) || minGovVoteRatioBpsNum < 0 || minGovVoteRatioBpsNum > 10000) {
-      toast.error('最小治理票占比必须是0-10000之间的整数（10000=100%）');
-      return false;
-    }
-
-    // 验证容量倍数
-    if (!capacityMultiplier) {
-      toast.error('请输入容量倍数');
-      return false;
-    }
-    const capacityMultiplierNum = parseFloat(capacityMultiplier);
-    if (isNaN(capacityMultiplierNum) || capacityMultiplierNum <= 0) {
-      toast.error('容量倍数必须是大于0的整数');
-      return false;
-    }
-
-    // 验证质押倍数
-    if (!stakingMultiplier) {
-      toast.error('请输入质押倍数');
-      return false;
-    }
-    const stakingMultiplierNum = parseFloat(stakingMultiplier);
-    if (isNaN(stakingMultiplierNum) || stakingMultiplierNum <= 0) {
-      toast.error('质押倍数必须是大于0的整数');
+    const activationStakeAmountNum = parseFloat(activationStakeAmount);
+    if (isNaN(activationStakeAmountNum) || activationStakeAmountNum <= 0) {
+      toast.error('激活需质押代币数量必须大于0');
       return false;
     }
 
@@ -202,14 +178,14 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
       return false;
     }
 
-    // 验证最小参与代币量
-    if (!minJoinAmount) {
-      toast.error('请输入最小参与代币量');
+    // 验证容量倍数
+    if (!verifyCapacityMultiplier) {
+      toast.error('请输入验证容量倍数');
       return false;
     }
-    const minJoinAmountNum = parseFloat(minJoinAmount);
-    if (isNaN(minJoinAmountNum) || minJoinAmountNum < 0) {
-      toast.error('最小参与代币量必须是非负数');
+    const verifyCapacityMultiplierNum = parseFloat(verifyCapacityMultiplier);
+    if (isNaN(verifyCapacityMultiplierNum) || verifyCapacityMultiplierNum <= 0) {
+      toast.error('验证容量倍数必须是大于0的整数');
       return false;
     }
 
@@ -246,19 +222,17 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
 
     try {
       setApprovalStep('deploying');
-      // 将 minJoinAmount 从 eth 转换为 wei
-      const minJoinAmountWei = parseEther(minJoinAmount);
+      // 将 activationStakeAmount 从 eth 转换为 wei
+      const activationStakeAmountWei = parseEther(activationStakeAmount);
 
       await createExtension(
         tokenAddress,
         groupManagerAddress as `0x${string}`,
         groupDistrustAddress as `0x${string}`,
         stakeTokenAddress as `0x${string}`,
-        BigInt(minGovVoteRatioBps),
-        BigInt(capacityMultiplier),
-        BigInt(stakingMultiplier),
+        activationStakeAmountWei,
         BigInt(maxJoinAmountMultiplier),
-        minJoinAmountWei,
+        BigInt(verifyCapacityMultiplier),
       );
     } catch (error: any) {
       console.error('部署扩展失败:', error);
@@ -277,7 +251,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
         <form className="space-y-4 md:space-y-6">
           {/* 质押代币地址 */}
           <div className="space-y-2">
-            <Label htmlFor="stakeTokenAddress">1. 参与行动代币地址</Label>
+            <Label htmlFor="stakeTokenAddress">1. 质押代币合约地址</Label>
             <Input
               id="stakeTokenAddress"
               type="text"
@@ -286,60 +260,29 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
               onChange={(e) => setStakeTokenAddress(e.target.value)}
               disabled={approvalStep !== 'idle'}
             />
+            <p className="text-sm text-greyscale-500">所在社群的代币合约地址，也可设置为 LP 地址等</p>
           </div>
 
-          {/* 最小治理票占比 */}
+          {/* 激活需质押代币数量 */}
           <div className="space-y-2">
-            <Label htmlFor="minGovVoteRatioBps">2. 最小治理票占比</Label>
+            <Label htmlFor="activationStakeAmount">2. 激活需质押代币数量</Label>
             <Input
-              id="minGovVoteRatioBps"
+              id="activationStakeAmount"
               type="number"
-              placeholder="比如 100（表示1%）"
-              value={minGovVoteRatioBps}
-              onChange={(e) => setMinGovVoteRatioBps(e.target.value)}
+              placeholder="比如 1000"
+              value={activationStakeAmount}
+              onChange={(e) => setActivationStakeAmount(e.target.value)}
               disabled={approvalStep !== 'idle'}
               min="0"
-              max="10000"
+              step="0.000001"
               className="max-w-40 md:max-w-xs"
             />
-            <p className="text-sm text-greyscale-500">治理票大于等于此比例的治理者可创建链群（10000=100%）</p>
-          </div>
-
-          {/* 容量倍数 */}
-          <div className="space-y-2">
-            <Label htmlFor="capacityMultiplier">3. 容量倍数</Label>
-            <Input
-              id="capacityMultiplier"
-              type="number"
-              placeholder="比如 10"
-              value={capacityMultiplier}
-              onChange={(e) => setCapacityMultiplier(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-              min="1"
-              className="max-w-40 md:max-w-xs"
-            />
-            <p className="text-sm text-greyscale-500">链群容量上限 = 基础容量 × 容量倍数</p>
-          </div>
-
-          {/* 质押倍数 */}
-          <div className="space-y-2">
-            <Label htmlFor="stakingMultiplier">4. 质押倍数</Label>
-            <Input
-              id="stakingMultiplier"
-              type="number"
-              placeholder="比如 100"
-              value={stakingMultiplier}
-              onChange={(e) => setStakingMultiplier(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-              min="1"
-              className="max-w-40 md:max-w-xs"
-            />
-            <p className="text-sm text-greyscale-500">链群容量 = 质押量 × 质押倍数</p>
+            <p className="text-sm text-greyscale-500">链群服务者激活链群时需质押的代币数量</p>
           </div>
 
           {/* 最大参与代币倍数 */}
           <div className="space-y-2">
-            <Label htmlFor="maxJoinAmountMultiplier">5. 最大参与代币倍数</Label>
+            <Label htmlFor="maxJoinAmountMultiplier">3. 最大参与代币倍数</Label>
             <Input
               id="maxJoinAmountMultiplier"
               type="number"
@@ -350,24 +293,25 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
               min="1"
               className="max-w-40 md:max-w-xs"
             />
-            <p className="text-sm text-greyscale-500">单个行动者最大参与量 = 已铸造总量 / 此倍数</p>
+            <p className="text-sm text-greyscale-500">单个行动者最大参与代币数 = 已铸造代币总量 / 最大参与代币倍数</p>
           </div>
 
-          {/* 最小参与代币量 */}
+          {/* 验证容量倍数 */}
           <div className="space-y-2">
-            <Label htmlFor="minJoinAmount">6. 最小参与代币量</Label>
+            <Label htmlFor="verifyCapacityMultiplier">4. 验证容量倍数</Label>
             <Input
-              id="minJoinAmount"
+              id="verifyCapacityMultiplier"
               type="number"
-              placeholder="比如 100"
-              value={minJoinAmount}
-              onChange={(e) => setMinJoinAmount(e.target.value)}
+              placeholder="比如 10"
+              value={verifyCapacityMultiplier}
+              onChange={(e) => setVerifyCapacityMultiplier(e.target.value)}
               disabled={approvalStep !== 'idle'}
-              min="0"
-              step="0.000001"
+              min="1"
               className="max-w-40 md:max-w-xs"
             />
-            <p className="text-sm text-greyscale-500">单个行动者参与行动时最少需要的代币数量</p>
+            <p className="text-sm text-greyscale-500">
+              理论最大容量 = 治理票占比 × (已铸造代币量 - 流动性质押量 - 加速激励质押量) × 验证容量倍数
+            </p>
           </div>
 
           {/* 错误信息 */}
@@ -411,12 +355,12 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                   }
                 >
                   {isApprovePending
-                    ? '7.提交中...'
+                    ? '1.提交中...'
                     : isApproveConfirming
-                    ? '7.确认中...'
+                    ? '1.确认中...'
                     : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
-                    ? '7.代币已授权'
-                    : '7.授权 1' + tokenSymbol}
+                    ? '1.代币已授权'
+                    : '1.授权 1' + tokenSymbol}
                 </Button>
 
                 <Button
@@ -425,7 +369,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                   className="w-1/2"
                   disabled={(approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming}
                 >
-                  {isPending ? '8.部署中...' : isConfirming ? '8.确认中...' : '8.部署扩展'}
+                  {isPending ? '2.部署中...' : isConfirming ? '2.确认中...' : '2.部署扩展'}
                 </Button>
               </div>
 

@@ -51,17 +51,7 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
         "internalType": "address"
       },
       {
-        "name": "minGovVoteRatioBps_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "capacityMultiplier_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "stakingMultiplier_",
+        "name": "activationStakeAmount_",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -71,7 +61,7 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "minJoinAmount_",
+        "name": "verifyCapacityMultiplier_",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -141,17 +131,7 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
             "internalType": "address"
           },
           {
-            "name": "minGovVoteRatioBps",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "capacityMultiplier",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "stakingMultiplier",
+            "name": "activationStakeAmount",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -161,7 +141,7 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
             "internalType": "uint256"
           },
           {
-            "name": "minJoinAmount",
+            "name": "verifyCapacityMultiplier",
             "type": "uint256",
             "internalType": "uint256"
           }

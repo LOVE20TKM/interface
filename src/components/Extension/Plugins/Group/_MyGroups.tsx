@@ -77,8 +77,8 @@ interface MyGroupItemProps {
 }
 
 const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, onManageClick, token }) => {
-  // 计算容量使用百分比：参与量 / 容量
-  const capacityRatio = group.capacity > BigInt(0) ? Number(group.totalJoinedAmount) / Number(group.capacity) : 0;
+  // 计算容量使用百分比：参与量 / 容量上限
+  const capacityRatio = group.maxCapacity > BigInt(0) ? Number(group.totalJoinedAmount) / Number(group.maxCapacity) : 0;
 
   return (
     <div
@@ -96,19 +96,15 @@ const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, onManageClick, token }
           <div className="text-xs text-gray-500 mt-2">
             <span>参与量: </span>
             <span>
-              {formatTokenAmount(group.totalJoinedAmount, 2)} / {formatTokenAmount(group.capacity, 2)} (
+              {formatTokenAmount(group.totalJoinedAmount, 2)} / {formatTokenAmount(group.maxCapacity, 2)} (
               {formatPercentage(capacityRatio * 100)})
             </span>
           </div>
 
           <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
             <div className="flex items-center gap-2">
-              <span className="text-gray-500">质押量:</span>
-              <span className="">{formatTokenAmount(group.stakedAmount, 2)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="">容量:</span>
-              <span className="">{formatTokenAmount(group.capacity, 2)}</span>
+              <span className="">容量上限:</span>
+              <span className="">{formatTokenAmount(group.maxCapacity, 2)}</span>
             </div>
           </div>
         </div>

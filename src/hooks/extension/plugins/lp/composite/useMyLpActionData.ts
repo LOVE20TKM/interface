@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useReadContracts, useBlockNumber } from 'wagmi';
 import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
 import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
-import { UniswapV2PairAbi } from '@/src/abis/UniswapV2Pair';
 
 const STAKE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`;
 
@@ -165,42 +164,17 @@ export const useMyLpActionData = ({
     return data[4].result as `0x${string}`;
   }, [data]);
 
-  // 构建第二批调用：获取 LP Token 的 totalSupply
-  const pairContracts = useMemo(() => {
-    if (!joinTokenAddress) return [];
-    return [
-      {
-        address: joinTokenAddress,
-        abi: UniswapV2PairAbi,
-        functionName: 'totalSupply',
-        args: [],
-      },
-    ];
-  }, [joinTokenAddress]);
-
-  // 批量读取数据（第二批）
-  const {
-    data: pairData,
-    isPending: isPendingPair,
-    error: errorPair,
-  } = useReadContracts({
-    contracts: pairContracts as any,
-    query: {
-      enabled: !!joinTokenAddress && pairContracts.length > 0,
-    },
-  });
-
   // 解析数据
   const joinedAmount = useMemo(() => {
     if (!data || !data[0]?.result) return BigInt(0);
-    const joinInfo = data[0].result as [bigint, bigint, bigint];
-    return joinInfo[0];
+    const joinInfo = data[0].result as [bigint, bigint, bigint, bigint];
+    return joinInfo[1];
   }, [data]);
 
   const joinedBlock = useMemo(() => {
     if (!data || !data[0]?.result) return BigInt(0);
-    const joinInfo = data[0].result as [bigint, bigint, bigint];
-    return joinInfo[1];
+    const joinInfo = data[0].result as [bigint, bigint, bigint, bigint];
+    return joinInfo[2];
   }, [data]);
 
   const waitingBlocks = useMemo(() => {
@@ -209,10 +183,11 @@ export const useMyLpActionData = ({
   }, [data]);
 
   const exitableBlock = useMemo(() => {
-    // exitableBlock = joinedBlock + waitingBlocks
-    if (!joinedBlock || joinedBlock === BigInt(0) || !waitingBlocks) return BigInt(0);
-    return joinedBlock + waitingBlocks;
-  }, [joinedBlock, waitingBlocks]);
+    // 直接从 joinInfo 中获取 exitableBlock（合约已经计算好了）
+    if (!data || !data[0]?.result) return BigInt(0);
+    const joinInfo = data[0].result as [bigint, bigint, bigint, bigint];
+    return joinInfo[3];
+  }, [data]);
 
   const totalJoinedAmount = useMemo(() => {
     if (!data || !data[1]?.result) return BigInt(0);
@@ -244,32 +219,12 @@ export const useMyLpActionData = ({
     return BigInt(data[9].result.toString());
   }, [data]);
 
-  const lpTotalSupply = useMemo(() => {
-    if (!pairData || !pairData[0]?.result) return BigInt(0);
-    return BigInt(pairData[0].result.toString());
-  }, [pairData]);
-
   // 获取用户得分和总得分（calculateScore 返回 [total, score]）
   const userScore = useMemo(() => {
     if (!data || !data[7]?.result) {
       return BigInt(0);
     }
     const scoreResult = data[7].result as [bigint, bigint];
-
-    // console.log('🔍 calculateScore 返回值:', {
-    //   total: scoreResult[0]?.toString(),
-    //   score: scoreResult[1]?.toString(),
-    //   rawResult: data[7].result,
-    // });
-
-    // // 同时打印相关的其他数据
-    // console.log('🔍 相关数据:', {
-    //   joinedAmount: (data[0]?.result as any)?.[0]?.toString(),
-    //   totalJoinedAmount: data[1]?.result?.toString(),
-    //   userGovVotes: data[5]?.result?.toString(),
-    //   totalGovVotes: data[6]?.result?.toString(),
-    //   minGovVotes: data[9]?.result?.toString(),
-    // });
 
     return scoreResult[1]; // score 是第二个值
   }, [data]);
@@ -282,11 +237,11 @@ export const useMyLpActionData = ({
 
   // 计算 LP 占比（用于显示）
   const lpRatio = useMemo(() => {
-    if (!joinedAmount || joinedAmount === BigInt(0) || !lpTotalSupply || lpTotalSupply === BigInt(0)) {
+    if (!joinedAmount || joinedAmount === BigInt(0) || !totalJoinedAmount || totalJoinedAmount === BigInt(0)) {
       return 0;
     }
-    return (Number(joinedAmount) / Number(lpTotalSupply)) * 100;
-  }, [joinedAmount, lpTotalSupply]);
+    return (Number(joinedAmount) / Number(totalJoinedAmount)) * 100;
+  }, [joinedAmount, totalJoinedAmount]);
 
   // 获取当前区块
   const currentBlock = currentBlockData || BigInt(0);
@@ -313,14 +268,12 @@ export const useMyLpActionData = ({
     return exitableBlock - currentBlock;
   }, [joinedAmount, currentBlock, exitableBlock]);
 
-  // 只有当 joinTokenAddress 存在时，才需要等待第二批数据加载
-  const shouldWaitForPairData = !!joinTokenAddress;
-  const finalIsPending = isPending || isPendingBlock || (shouldWaitForPairData && isPendingPair);
+  const finalIsPending = isPending || isPendingBlock;
 
   return {
     joinedAmount,
     totalJoinedAmount,
-    lpTotalSupply,
+    lpTotalSupply: BigInt(0), // 已废弃，不再使用
     joinedBlock,
     exitableBlock,
     currentBlock,
@@ -337,6 +290,6 @@ export const useMyLpActionData = ({
     govRatioMultiplier,
     joinedValue,
     isPending: finalIsPending,
-    error: error || errorPair,
+    error: error,
   };
 };

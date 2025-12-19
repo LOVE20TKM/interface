@@ -17,6 +17,7 @@ import { formatPercentage, formatNumber } from '@/src/lib/format';
 interface LpCurrentTabProps {
   extensionAddress: `0x${string}`;
   tokenAddress: `0x${string}` | undefined;
+  actionId: bigint;
 }
 
 /**
@@ -24,12 +25,13 @@ interface LpCurrentTabProps {
  *
  * 实时显示所有参与者的质押状态
  */
-const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddress }) => {
+const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddress, actionId }) => {
   const { address: account } = useAccount();
 
   const { participants, totalScore, totalLp, totalGovVotes, isPending, error } = useLpActionPublicData({
     extensionAddress,
     tokenAddress,
+    actionId,
   });
 
   if (isPending) {
