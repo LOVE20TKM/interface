@@ -33,7 +33,7 @@ import {
   useDistrustVotesOfGroupOwner,
 } from '@/src/hooks/extension/plugins/group/composite';
 import { useDistrustVotesByVoterByGroupOwner } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupDistrust';
-import { useGroupNames } from '@/src/hooks/extension/base/composite';
+import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 
 // 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
@@ -160,7 +160,9 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
   }, [distrustVotes]);
 
   // 批量获取 groupName
-  const { groupNameMap } = useGroupNames(allGroupIds.length > 0 ? allGroupIds : undefined);
+  const { groupNameMap } = useGroupNamesWithCache({
+    groupIds: allGroupIds.length > 0 ? allGroupIds : undefined,
+  });
 
   // 弹窗状态
   const [isDialogOpen, setIsDialogOpen] = useState(false);

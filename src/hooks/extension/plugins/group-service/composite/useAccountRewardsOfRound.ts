@@ -24,7 +24,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
+import { LOVE20ExtensionGroupServiceAbi } from '@/src/abis/LOVE20ExtensionGroupService';
 import { useAccountsByActionByRound } from '@/src/hooks/extension/base/composite/useAccountsByActionByRound';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -40,6 +40,8 @@ export interface AccountRewardInfo {
   amount: bigint;
   /** 是否已铸造 */
   isMinted: boolean;
+  /** 是否设置了二次分配地址 */
+  hasRecipients: boolean;
 }
 
 /**
@@ -112,7 +114,7 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
     // 为每个地址构建一个查询配置
     return accounts.map((account) => ({
       address: extensionAddress,
-      abi: LOVE20ExtensionGroupActionAbi,
+      abi: LOVE20ExtensionGroupServiceAbi,
       functionName: 'rewardByAccount' as const,
       args: [round, account] as const,
     }));
@@ -131,7 +133,38 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
   });
 
   // ==========================================
-  // 解析激励数据
+  // 第三步：批量查询每个地址的二次分配地址设置情况
+  // ==========================================
+  const recipientsContracts = useMemo(() => {
+    // 如果扩展地址未获取到，或参与者列表为空，返回空数组
+    if (!extensionAddress || !round || accounts.length === 0) {
+      return [];
+    }
+
+    // 为每个地址构建一个查询配置
+    // actionIdsWithRecipients 的参数顺序是 (account, round)
+    return accounts.map((account) => ({
+      address: extensionAddress,
+      abi: LOVE20ExtensionGroupServiceAbi,
+      functionName: 'actionIdsWithRecipients' as const,
+      args: [account, round] as const,
+    }));
+  }, [extensionAddress, round, accounts]);
+
+  const {
+    data: recipientsData,
+    isPending: isRecipientsPending,
+    error: recipientsError,
+  } = useReadContracts({
+    contracts: recipientsContracts,
+    query: {
+      // 只有在扩展地址、轮次、账户列表都就绪时才启用
+      enabled: !!extensionAddress && !!round && accounts.length > 0 && recipientsContracts.length > 0,
+    },
+  });
+
+  // ==========================================
+  // 解析激励数据和二次分配地址设置情况
   // ==========================================
   const accountRewards = useMemo(() => {
     // 如果没有数据或账户列表为空，返回空数组
@@ -142,18 +175,30 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
     // 解析每个查询结果
     const result: AccountRewardInfo[] = [];
     for (let i = 0; i < accounts.length; i++) {
-      const data = rewardsData[i];
-      if (data?.status === 'success' && data.result) {
-        const [amount, isMinted] = data.result as [bigint, boolean];
+      const rewardData = rewardsData[i];
+      const recipientData = recipientsData?.[i];
+
+      if (rewardData?.status === 'success' && rewardData.result) {
+        const [amount, isMinted] = rewardData.result as [bigint, boolean];
+
+        // 检查是否设置了二次分配地址
+        // 如果 actionIdsWithRecipients 返回的列表不为空，就是设置了
+        let hasRecipients = false;
+        if (recipientData?.status === 'success' && recipientData.result) {
+          const actionIds = recipientData.result as bigint[];
+          hasRecipients = Array.isArray(actionIds) && actionIds.length > 0;
+        }
+
         result.push({
           account: accounts[i],
           amount: safeToBigInt(amount),
           isMinted,
+          hasRecipients,
         });
       }
     }
     return result;
-  }, [rewardsData, accounts]);
+  }, [rewardsData, recipientsData, accounts]);
 
   // ==========================================
   // 计算最终状态
@@ -163,11 +208,11 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
     if (isAccountsPending) return true;
     // 账户列表为空，无需等待激励查询
     if (accounts.length === 0) return false;
-    // 等待激励数据加载完成
-    return isRewardsPending;
-  }, [isAccountsPending, accounts.length, isRewardsPending]);
+    // 等待激励数据和二次分配地址查询完成
+    return isRewardsPending || isRecipientsPending;
+  }, [isAccountsPending, accounts.length, isRewardsPending, isRecipientsPending]);
 
-  const error = accountsError || rewardsError;
+  const error = accountsError || rewardsError || recipientsError;
 
   // ==========================================
   // 返回结果

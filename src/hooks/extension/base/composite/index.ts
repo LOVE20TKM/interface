@@ -15,5 +15,3 @@ export * from './useAccountsByActionByRound';
 export { useGroupNameValidation } from './useGroupNameValidation';
 export { useMyGroups } from './useMyGroups';
 export type { GroupNFT } from './useMyGroups';
-export { useGroupNames } from './useGroupNames';
-export type { GroupNameResult } from './useGroupNames';

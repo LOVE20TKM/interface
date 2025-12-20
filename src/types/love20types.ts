@@ -19,6 +19,21 @@ export interface ActionInfo {
   body: ActionBody;
 }
 
+// 行动基本信息（去掉 verificationRule 字段以节省缓存空间）
+export interface ActionBaseBody {
+  minStake: bigint;
+  maxRandomAccounts: bigint;
+  whiteListAddress: `0x${string}`;
+  title: string;
+  verificationKeys: string[];
+  verificationInfoGuides: string[];
+}
+
+export interface ActionBaseInfo {
+  head: ActionHead;
+  body: ActionBaseBody;
+}
+
 export interface ActionSubmitInfo {
   submitter: `0x${string}`;
   actionId: bigint;

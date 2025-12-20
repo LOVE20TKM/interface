@@ -19,6 +19,8 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import ChangeRound from '@/src/components/Common/ChangeRound';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import { Button } from '@/components/ui/button';
+import RecipientsDetailDialog from './RecipientsDetailDialog';
 
 // my funcs
 import { formatRoundForDisplay, formatTokenAmount, formatPercentage } from '@/src/lib/format';
@@ -40,6 +42,8 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
   const [selectedRound, setSelectedRound] = useState(BigInt(0));
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<`0x${string}` | undefined>(undefined);
 
   // 从URL获取round参数
   const { round: urlRound } = router.query;
@@ -111,6 +115,12 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
   const displayRound =
     token && currentJoinRound ? formatRoundForDisplay(currentJoinRound - BigInt(1), token) : BigInt(0);
 
+  // 处理查看明细
+  const handleViewDetail = (account: `0x${string}`) => {
+    setSelectedAccount(account);
+    setDetailDialogOpen(true);
+  };
+
   return (
     <div className="relative pb-4">
       {/* 顶部：标题与轮次切换 */}
@@ -153,6 +163,7 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
                 <th className="px-2 py-3 text-left font-medium">地址</th>
                 <th className="px-2 py-3 text-right font-medium">激励</th>
                 <th className="px-2 py-3 text-right font-medium">占比</th>
+                <th className="px-2 py-3 text-center font-medium">二次分配</th>
               </tr>
             </thead>
             <tbody>
@@ -178,6 +189,20 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
                       ? formatPercentage(Number((BigInt(item.amount) * BigInt(10000)) / totalReward) / 100)
                       : '0%'}
                   </td>
+                  <td className="px-2 py-3 text-center">
+                    {item.hasRecipients ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDetail(item.account)}
+                        className="h-7 px-3 text-xs"
+                      >
+                        查看
+                      </Button>
+                    ) : (
+                      <span className="text-greyscale-400 text-xs">-</span>
+                    )}
+                  </td>
                 </tr>
               ))}
 
@@ -186,11 +211,22 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
                 <td className="px-2 py-3 text-left">汇总</td>
                 <td className="px-2 py-3 text-right">{formatTokenAmount(totalReward)}</td>
                 <td className="px-2 py-3 text-right">100%</td>
+                <td className="px-2 py-3"></td>
               </tr>
             </tbody>
           </table>
         </div>
       )}
+
+      {/* 二次分配明细 Dialog */}
+      <RecipientsDetailDialog
+        extensionAddress={extensionAddress}
+        tokenAddress={token?.address as `0x${string}`}
+        account={selectedAccount}
+        round={selectedRound > BigInt(0) ? selectedRound : undefined}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </div>
   );
 };

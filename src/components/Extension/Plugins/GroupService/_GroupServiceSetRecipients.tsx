@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
+import React, { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -16,7 +15,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 import {
   useSetRecipients,
-  useRecipientsLatest,
   useBasisPointsBase,
 } from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupService';
 import { useHandleContractError } from '@/src/lib/errorUtils';
@@ -36,18 +34,31 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface _GroupServiceSetRecipientsProps {
   extensionAddress: `0x${string}`;
+  actionId: bigint;
+  actionTitle: string;
+  groupId: bigint;
+  groupName: string | undefined;
+  currentAddrs?: `0x${string}`[];
+  currentBasisPoints?: bigint[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export default function _GroupServiceSetRecipients({ extensionAddress }: _GroupServiceSetRecipientsProps) {
-  const { address: account } = useAccount();
-  const [isOpen, setIsOpen] = useState(false);
-
+export default function _GroupServiceSetRecipients({
+  extensionAddress,
+  actionId,
+  actionTitle,
+  groupId,
+  groupName,
+  currentAddrs,
+  currentBasisPoints,
+  open,
+  onOpenChange,
+  onSuccess,
+}: _GroupServiceSetRecipientsProps) {
   // Contracts
   const { setRecipients, isPending, isConfirming, isConfirmed, writeError } = useSetRecipients(extensionAddress);
-  const { addrs: currentAddrs, basisPoints: currentBasisPoints } = useRecipientsLatest(
-    extensionAddress,
-    account as `0x${string}`,
-  );
   const { basisPointsBase } = useBasisPointsBase(extensionAddress);
 
   // Form
@@ -63,19 +74,19 @@ export default function _GroupServiceSetRecipients({ extensionAddress }: _GroupS
     name: 'recipients',
   });
 
-  // Initialize form with current data
+  // Initialize form with current data when dialog opens
   useEffect(() => {
-    if (isOpen && currentAddrs && currentBasisPoints) {
+    if (open && currentAddrs && currentBasisPoints) {
       const initialData = currentAddrs.map((addr, index) => ({
         address: addr,
         basisPoints: Number(currentBasisPoints[index]),
       }));
       form.reset({ recipients: initialData });
-    } else if (isOpen) {
-      // If open but no data, reset to empty (or default)
+    } else if (open) {
+      // If open but no data, reset to empty
       form.reset({ recipients: [] });
     }
-  }, [isOpen, currentAddrs, currentBasisPoints, form]);
+  }, [open, currentAddrs, currentBasisPoints, form]);
 
   const { handleContractError } = useHandleContractError();
 
@@ -88,9 +99,10 @@ export default function _GroupServiceSetRecipients({ extensionAddress }: _GroupS
   useEffect(() => {
     if (isConfirmed) {
       toast.success('二次分配地址设置成功');
-      setIsOpen(false);
+      onSuccess?.();
+      onOpenChange(false);
     }
-  }, [isConfirmed]);
+  }, [isConfirmed, onSuccess, onOpenChange]);
 
   const onSubmit = async (values: FormValues) => {
     const addrs = values.recipients.map((r) => r.address as `0x${string}`);
@@ -105,19 +117,18 @@ export default function _GroupServiceSetRecipients({ extensionAddress }: _GroupS
       return;
     }
 
-    await setRecipients(addrs, basisPoints);
+    // Call contract with actionId and groupId
+    await setRecipients(actionId, groupId, addrs, basisPoints);
   };
 
+  // Generate dialog title
+  const dialogTitle = `编辑二次分配 - ${actionTitle} / ${groupName || `链群 #${groupId}`}`;
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="link" className="text-secondary border-secondary">
-          设置地址&gt;&gt;
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-3 sm:p-6">
         <DialogHeader>
-          <DialogTitle>设置二次分配地址</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -213,7 +224,7 @@ export default function _GroupServiceSetRecipients({ extensionAddress }: _GroupS
             </Button>
 
             <div className="flex justify-end gap-2 mt-4">
-              <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                 取消
               </Button>
               <Button type="submit" disabled={isPending || isConfirming}>

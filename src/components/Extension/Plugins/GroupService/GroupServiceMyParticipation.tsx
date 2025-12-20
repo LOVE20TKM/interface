@@ -1,22 +1,26 @@
 'use client';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
+import { Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import { formatTokenAmount } from '@/src/lib/format';
 import { toast } from 'react-hot-toast';
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 
 import {
   useJoinedValueByAccount,
   useJoinedValue,
   useExit,
-  useRecipientsLatest,
 } from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupService';
+
+import { useActionGroupRecipientsData } from '@/src/hooks/extension/plugins/group-service/composite';
 
 import _GroupServiceSetRecipients from './_GroupServiceSetRecipients';
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -37,11 +41,43 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   );
   const { joinedValue: totalJoinedValue } = useJoinedValue(extensionAddress);
 
-  // Recipients Hooks (Read only here for display)
-  const { addrs: recipientAddrs, basisPoints: recipientBasisPoints } = useRecipientsLatest(
+  // Get current round for fetching recipients data
+  const { currentRound } = useCurrentRound();
+
+  // Fetch all action-group recipients data
+  const {
+    actionGroupRecipientsData,
+    isPending: isRecipientsPending,
+    error: recipientsError,
+  } = useActionGroupRecipientsData({
+    tokenAddress: token?.address,
+    verifyRound: currentRound,
+    account: account as `0x${string}`,
     extensionAddress,
-    account as `0x${string}`,
-  );
+  });
+
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<{
+    actionId: bigint;
+    actionTitle: string;
+    groupId: bigint;
+    groupName: string | undefined;
+    addrs?: `0x${string}`[];
+    basisPoints?: bigint[];
+  } | null>(null);
+
+  const handleEditClick = (action: any, group: any) => {
+    setEditingGroup({
+      actionId: action.actionId,
+      actionTitle: action.actionTitle,
+      groupId: group.groupId,
+      groupName: group.groupName,
+      addrs: group.addrs,
+      basisPoints: group.basisPoints,
+    });
+    setEditDialogOpen(true);
+  };
 
   // Exit Hook
   const {
@@ -59,6 +95,12 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
       handleContractError(exitError, 'extension');
     }
   }, [exitError, handleContractError]);
+
+  useEffect(() => {
+    if (recipientsError) {
+      handleContractError(recipientsError, 'extension');
+    }
+  }, [recipientsError, handleContractError]);
 
   useEffect(() => {
     if (isExitConfirmed) {
@@ -134,40 +176,96 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
 
       {/* 二次分配地址 */}
       <div className="w-full mt-6">
-        <div className="flex items-center justify-between">
-          <LeftTitle title="二次分配地址" />
-          <_GroupServiceSetRecipients extensionAddress={extensionAddress} />
-        </div>
+        <LeftTitle title="二次分配地址" />
 
-        {recipientAddrs && recipientAddrs.length > 0 ? (
-          <table className="table w-full">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="px-1 text-left">序号</th>
-                <th className="px-1 text-left">地址</th>
-                <th className="px-1 text-right">分配比例</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recipientAddrs.map((addr, idx) => (
-                <tr key={`${addr}-${idx}`} className="border-b border-gray-100">
-                  <td className="px-1 text-greyscale-400">{idx + 1}</td>
-                  <td className="px-1">
-                    <div className="inline-flex items-center bg-gray-50 rounded-md px-2 py-1">
-                      <AddressWithCopyButton address={addr as `0x${string}`} showCopyButton={true} />
-                    </div>
-                  </td>
-                  <td className="px-1 text-right font-mono text-secondary">
-                    {recipientBasisPoints ? (Number(recipientBasisPoints[idx]) / 100).toFixed(2) : '0.00'}%
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {isRecipientsPending ? (
+          <div className="flex justify-center p-8">
+            <LoadingIcon />
+          </div>
+        ) : !actionGroupRecipientsData || actionGroupRecipientsData.length === 0 ? (
+          <div className="text-center text-sm text-greyscale-400 p-4 bg-gray-50 rounded-lg mt-4">
+            暂无二次分配地址配置
+          </div>
         ) : (
-          <div className="text-center text-sm text-greyscale-400 p-4 bg-gray-50 rounded-lg">暂无二次分配地址</div>
+          <div className="space-y-6 mt-4">
+            {actionGroupRecipientsData.map((action) => (
+              <div key={action.actionId.toString()} className="border rounded-lg p-4">
+                <h3 className="font-medium text-base mb-4">
+                  行动 #{action.actionId.toString()}: {action.actionTitle}
+                </h3>
+
+                <div className="space-y-4">
+                  {action.groups.map((group) => (
+                    <div key={group.groupId.toString()} className="border-t pt-4 first:border-t-0 first:pt-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium text-sm">
+                          {group.groupName || `链群 #${group.groupId}`}
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => handleEditClick(action, group)}>
+                          <Edit className="w-3 h-3 mr-1" />
+                          编辑
+                        </Button>
+                      </div>
+
+                      {group.addrs && group.addrs.length > 0 ? (
+                        <table className="table w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-gray-100">
+                              <th className="px-1 text-left">序号</th>
+                              <th className="px-1 text-left">地址</th>
+                              <th className="px-1 text-right">分配比例</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {group.addrs.map((addr, idx) => (
+                              <tr key={`${addr}-${idx}`} className="border-b border-gray-100">
+                                <td className="px-1 text-greyscale-400">{idx + 1}</td>
+                                <td className="px-1">
+                                  <div className="inline-flex items-center bg-gray-50 rounded-md px-2 py-1">
+                                    <AddressWithCopyButton address={addr} showCopyButton={true} />
+                                  </div>
+                                </td>
+                                <td className="px-1 text-right font-mono text-secondary">
+                                  {group.basisPoints
+                                    ? (Number(group.basisPoints[idx]) / 100).toFixed(2)
+                                    : '0.00'}
+                                  %
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      ) : (
+                        <div className="text-sm text-greyscale-400 p-2 bg-gray-50 rounded">暂未设置二次分配地址</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
+
+      {/* Edit Dialog */}
+      {editingGroup && (
+        <_GroupServiceSetRecipients
+          extensionAddress={extensionAddress}
+          actionId={editingGroup.actionId}
+          actionTitle={editingGroup.actionTitle}
+          groupId={editingGroup.groupId}
+          groupName={editingGroup.groupName}
+          currentAddrs={editingGroup.addrs}
+          currentBasisPoints={editingGroup.basisPoints}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSuccess={() => {
+            toast.success('二次分配设置已更新');
+            setEditDialogOpen(false);
+            // Data will auto-refresh due to wagmi cache invalidation
+          }}
+        />
+      )}
 
       <LoadingOverlay
         isLoading={isExitPending || isExitConfirming}

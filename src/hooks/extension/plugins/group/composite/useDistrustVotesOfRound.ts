@@ -7,7 +7,7 @@ import { LOVE20GroupDistrustAbi } from '@/src/abis/LOVE20GroupDistrust';
 import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useVerifiers } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
-import { useGroupNames } from '../../../base/composite/useGroupNames';
+import { useGroupNamesWithCache } from '../../../base/composite/useGroupNamesWithCache';
 import type { DistrustVoteInfo } from './useDistrustVotesOfCurrentRound';
 
 const GROUP_DISTRUST_CONTRACT_ADDRESS = process.env
@@ -32,7 +32,7 @@ export interface UseDistrustVotesOfRoundResult {
  * 算法：
  * 1. 使用 useVerifiers 获取指定轮次的验证者列表（验证者即为链群主）
  * 2. 批量调用 groupIdsByVerifier 获取每个验证者管理的链群ID列表
- * 3. 使用 useGroupNames 批量获取链群名称
+ * 3. 使用 useGroupNamesWithCache 批量获取链群名称（带缓存）
  * 4. 批量 RPC 调用：
  *    - 调用一次 totalVerifyVotes 获取总验证票数
  *    - 对每个验证者调用 distrustVotesByGroupOwner 获取不信任票数
@@ -110,7 +110,10 @@ export const useDistrustVotesOfRound = ({
     groupNameMap,
     isPending: isGroupNamesPending,
     error: groupNamesError,
-  } = useGroupNames(allGroupIds.length > 0 ? allGroupIds : undefined);
+  } = useGroupNamesWithCache({
+    groupIds: allGroupIds.length > 0 ? allGroupIds : undefined,
+    enabled: allGroupIds.length > 0,
+  });
 
   // 第四步：批量获取不信任票数据
   const distrustContracts = useMemo(() => {

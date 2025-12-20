@@ -5,4 +5,6 @@
  */
 
 export * from './useAccountRewardsOfRound';
+export * from './useActionIdsWithActiveGroupIdsByOwner';
+export * from './useActionGroupRecipientsData';
 
