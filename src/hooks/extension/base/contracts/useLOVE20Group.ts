@@ -81,7 +81,7 @@ export const useLove20Token = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
-    functionName: 'love20Token',
+    functionName: 'LOVE20_TOKEN_ADDRESS',
     args: [],
   });
 
@@ -167,6 +167,21 @@ export const useTotalSupply = () => {
   });
 
   return { totalSupply: data ? safeToBigInt(data) : undefined, isPending, error };
+};
+
+/**
+ * Hook for holdersCount
+ * 获取持有者总数
+ */
+export const useHoldersCount = () => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupAbi,
+    functionName: 'holdersCount',
+    args: [],
+  });
+
+  return { holdersCount: data ? safeToBigInt(data) : undefined, isPending, error };
 };
 
 /**
@@ -257,6 +272,24 @@ export const useTokenByIndex = (index: bigint) => {
   });
 
   return { tokenId: data ? safeToBigInt(data) : undefined, isPending, error };
+};
+
+/**
+ * Hook for holdersAtIndex
+ * 根据索引获取持有者地址
+ */
+export const useHoldersAtIndex = (index: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupAbi,
+    functionName: 'holdersAtIndex',
+    args: [index],
+    query: {
+      enabled: index !== undefined,
+    },
+  });
+
+  return { holder: data as `0x${string}` | undefined, isPending, error };
 };
 
 /**
@@ -362,6 +395,24 @@ export const useIsApprovedForAll = (owner: `0x${string}`, operator: `0x${string}
   });
 
   return { isApprovedForAll: data as boolean | undefined, isPending, error };
+};
+
+/**
+ * Hook for supportsInterface
+ * 检查合约是否支持指定的接口
+ */
+export const useSupportsInterface = (interfaceId: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupAbi,
+    functionName: 'supportsInterface',
+    args: [interfaceId],
+    query: {
+      enabled: !!interfaceId,
+    },
+  });
+
+  return { supports: data as boolean | undefined, isPending, error };
 };
 
 // =======================

@@ -61,6 +61,19 @@ export const LOVE20GroupAbi = [
   },
   {
     "type": "function",
+    "name": "LOVE20_TOKEN_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "MAX_GROUP_NAME_LENGTH",
     "inputs": [],
     "outputs": [
@@ -181,6 +194,38 @@ export const LOVE20GroupAbi = [
   },
   {
     "type": "function",
+    "name": "holdersAtIndex",
+    "inputs": [
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "holdersCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "isApprovedForAll",
     "inputs": [
       {
@@ -224,19 +269,6 @@ export const LOVE20GroupAbi = [
   },
   {
     "type": "function",
-    "name": "love20Token",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "mint",
     "inputs": [
       {
@@ -248,6 +280,11 @@ export const LOVE20GroupAbi = [
     "outputs": [
       {
         "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "mintCost",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -656,6 +693,11 @@ export const LOVE20GroupAbi = [
   {
     "type": "error",
     "name": "GroupNameEmpty",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "HolderIndexOutOfBounds",
     "inputs": []
   },
   {
