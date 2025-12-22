@@ -25,7 +25,11 @@
  */
 
 import { useMemo } from 'react';
-import { useExtensionParticipationData, useExtensionContractInfo } from '@/src/hooks/extension/base/composite';
+import {
+  useExtensionParticipationData,
+  useExtensionContractInfo,
+  type FactoryInfo,
+} from '@/src/hooks/extension/base/composite';
 import { ActionInfo } from '@/src/types/love20types';
 
 // ==================== 类型定义 ====================
@@ -52,6 +56,8 @@ export interface ActionParticipationData {
   isExtensionAction: boolean;
   /** 扩展合约地址（仅扩展行动有值） */
   extensionAddress: `0x${string}` | undefined;
+  /** 工厂信息（仅扩展行动有值，包含 type, name, address） */
+  factory: FactoryInfo | undefined;
   /** 参与者数量 */
   participantCount: bigint | undefined;
   /** 总参与金额 */
@@ -134,6 +140,7 @@ export function useActionParticipationAdapter(
       // 行动类型信息
       isExtensionAction,
       extensionAddress: isExtensionAction ? extensionAddress : undefined,
+      factory: isExtensionAction ? contractInfo?.factory : undefined,
 
       // 参与统计（扩展优先，回退到 core）
       participantCount: isExtensionAction ? extensionData.participantCount : coreData?.participantCount,
@@ -149,7 +156,7 @@ export function useActionParticipationAdapter(
       // 错误信息（仅在扩展行动时传递扩展数据的错误）
       error: isExtensionAction ? extensionData.error : null,
     };
-  }, [isExtensionAction, extensionAddress, extensionData, coreData, isExtensionCheckPending]);
+  }, [isExtensionAction, extensionAddress, contractInfo, extensionData, coreData, isExtensionCheckPending]);
 
   return finalData;
 }

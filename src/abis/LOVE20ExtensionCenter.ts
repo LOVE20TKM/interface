@@ -108,7 +108,36 @@ export const LOVE20ExtensionCenterAbi = [
   },
   {
     "type": "function",
-    "name": "accountsAtIndexByRound",
+    "name": "accountsByRound",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "accountsByRoundAtIndex",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -142,7 +171,7 @@ export const LOVE20ExtensionCenterAbi = [
   },
   {
     "type": "function",
-    "name": "accountsCount",
+    "name": "accountsByRoundCount",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -151,6 +180,11 @@ export const LOVE20ExtensionCenterAbi = [
       },
       {
         "name": "actionId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "round",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -166,7 +200,7 @@ export const LOVE20ExtensionCenterAbi = [
   },
   {
     "type": "function",
-    "name": "accountsCountByRound",
+    "name": "accountsCount",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -175,11 +209,6 @@ export const LOVE20ExtensionCenterAbi = [
       },
       {
         "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "round",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -321,6 +350,24 @@ export const LOVE20ExtensionCenterAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "forceExit",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -688,11 +735,6 @@ export const LOVE20ExtensionCenterAbi = [
   {
     "type": "error",
     "name": "AccountAlreadyJoined",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "AccountNotJoined",
     "inputs": []
   },
   {

@@ -25,6 +25,7 @@ import {
   useCurrentRound as useVerifyCurrentRound,
   useScoreByVerifierByActionId,
 } from '@/src/hooks/contracts/useLOVE20Verify';
+import { useJoinedAmountByActionIdByAccount } from '@/src/hooks/contracts/useLOVE20Join';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import {
   useAccountsByGroupIdCount,
@@ -94,6 +95,16 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     actionId,
   );
 
+  // 获取当前账户的参与金额，判断是否已加入行动
+  const {
+    joinedAmountByActionIdByAccount,
+    isPending: isPendingJoinedAmount,
+    error: errorJoinedAmount,
+  } = useJoinedAmountByActionIdByAccount(token?.address as `0x${string}`, actionId, account as `0x${string}`);
+
+  // 判断是否已加入行动
+  const isJoined = joinedAmountByActionIdByAccount !== undefined && joinedAmountByActionIdByAccount > BigInt(0);
+
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
@@ -102,7 +113,16 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     if (errorDelegated) handleContractError(errorDelegated, 'extension');
     if (errorRound) handleContractError(errorRound, 'verify');
     if (errorVerify) handleContractError(errorVerify, 'verify');
-  }, [errorDetail, errorAccountsCount, errorDelegated, errorRound, errorVerify, handleContractError]);
+    if (errorJoinedAmount) handleContractError(errorJoinedAmount, 'join');
+  }, [
+    errorDetail,
+    errorAccountsCount,
+    errorDelegated,
+    errorRound,
+    errorVerify,
+    errorJoinedAmount,
+    handleContractError,
+  ]);
 
   if (!token) {
     return <div>Token信息加载中...</div>;
@@ -202,6 +222,27 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
           >
             投不信任票 &gt;&gt;
           </span>
+
+          {/* 加入行动 - 当不能打分时显示 */}
+          {!canScore && (
+            <>
+              {!isJoined ? (
+                <Link
+                  className="text-secondary hover:text-secondary/80 text-sm cursor-pointer"
+                  href={`/acting/join/?tab=join&groupId=${groupId}&id=${actionId}&symbol=${token?.symbol}`}
+                >
+                  加入行动 &gt;&gt;
+                </Link>
+              ) : (
+                <Link
+                  className="text-secondary hover:text-secondary/80 text-sm cursor-pointer"
+                  href={`/my/myaction?symbol=${token?.symbol}&id=${actionId}`}
+                >
+                  我的参与 &gt;&gt;
+                </Link>
+              )}
+            </>
+          )}
         </div>
       )}
 

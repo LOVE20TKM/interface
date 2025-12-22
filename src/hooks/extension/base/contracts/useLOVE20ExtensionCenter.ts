@@ -52,12 +52,7 @@ export const useVerificationInfoByRound = (
     functionName: 'verificationInfoByRound',
     args: [tokenAddress, actionId, account, verificationKey, round],
     query: {
-      enabled:
-        !!tokenAddress &&
-        actionId !== undefined &&
-        !!account &&
-        !!verificationKey &&
-        round !== undefined,
+      enabled: !!tokenAddress && actionId !== undefined && !!account && !!verificationKey && round !== undefined,
     },
   });
 
@@ -84,11 +79,7 @@ export const useAccounts = (tokenAddress: `0x${string}`, actionId: bigint) => {
 /**
  * Hook for accountsAtIndex - 根据索引获取账户地址
  */
-export const useAccountsAtIndex = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  index: bigint,
-) => {
+export const useAccountsAtIndex = (tokenAddress: `0x${string}`, actionId: bigint, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20ExtensionCenterAbi,
@@ -105,7 +96,7 @@ export const useAccountsAtIndex = (
 /**
  * Hook for accountsAtIndexByRound - 根据轮次和索引获取账户地址
  */
-export const useAccountsAtIndexByRound = (
+export const useAccountsByRoundAtIndex = (
   tokenAddress: `0x${string}`,
   actionId: bigint,
   index: bigint,
@@ -114,11 +105,10 @@ export const useAccountsAtIndexByRound = (
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20ExtensionCenterAbi,
-    functionName: 'accountsAtIndexByRound',
+    functionName: 'accountsByRoundAtIndex',
     args: [tokenAddress, actionId, index, round],
     query: {
-      enabled:
-        !!tokenAddress && actionId !== undefined && index !== undefined && round !== undefined,
+      enabled: !!tokenAddress && actionId !== undefined && index !== undefined && round !== undefined,
     },
   });
 
@@ -145,15 +135,11 @@ export const useAccountsCount = (tokenAddress: `0x${string}`, actionId: bigint) 
 /**
  * Hook for accountsCountByRound - 获取指定轮次的账户数量
  */
-export const useAccountsCountByRound = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  round: bigint,
-) => {
+export const useAccountsByRoundCount = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20ExtensionCenterAbi,
-    functionName: 'accountsCountByRound',
+    functionName: 'accountsByRoundCount',
     args: [tokenAddress, actionId, round],
     query: {
       enabled: !!tokenAddress && actionId !== undefined && round !== undefined,
@@ -183,11 +169,7 @@ export const useActionIdsByAccount = (tokenAddress: `0x${string}`, account: `0x$
 /**
  * Hook for actionIdsByAccountAtIndex - 根据索引获取用户参与的 action ID
  */
-export const useActionIdsByAccountAtIndex = (
-  tokenAddress: `0x${string}`,
-  account: `0x${string}`,
-  index: bigint,
-) => {
+export const useActionIdsByAccountAtIndex = (tokenAddress: `0x${string}`, account: `0x${string}`, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20ExtensionCenterAbi,
@@ -238,11 +220,7 @@ export const useExtension = (tokenAddress: `0x${string}`, actionId: bigint) => {
 /**
  * Hook for isAccountJoined - 检查账户是否已加入
  */
-export const useIsAccountJoined = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  account: `0x${string}`,
-) => {
+export const useIsAccountJoined = (tokenAddress: `0x${string}`, actionId: bigint, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20ExtensionCenterAbi,
@@ -436,11 +414,7 @@ export function useRemoveAccount() {
     'removeAccount',
   );
 
-  const removeAccount = async (
-    tokenAddress: `0x${string}`,
-    actionId: bigint,
-    account: `0x${string}`,
-  ) => {
+  const removeAccount = async (tokenAddress: `0x${string}`, actionId: bigint, account: `0x${string}`) => {
     console.log('提交 removeAccount 交易:', { tokenAddress, actionId, account, isTukeMode });
     return await execute([tokenAddress, actionId, account]);
   };

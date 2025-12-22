@@ -105,6 +105,12 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     return maxByLimit < maxByCapacity ? maxByLimit : maxByCapacity;
   }, [isJoined, groupDetail, joinedAmount]);
 
+  // 判断链群是否已满（仅在首次加入时检查）
+  const isGroupFull = useMemo(() => {
+    if (isJoined || !groupDetail) return false;
+    return groupDetail.remainingCapacity <= BigInt(0);
+  }, [isJoined, groupDetail]);
+
   // 获取代币余额
   const { balance, error: errorBalance } = useBalanceOf(
     joinTokenAddress as `0x${string}`,
@@ -381,7 +387,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
           </div>
         )}
 
-        <LeftTitle title={isJoined ? '追加代币' : '加入链群'} />
+        <LeftTitle title={isJoined ? '追加代币' : '加入行动'} />
 
         {!isJoined && (
           <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
@@ -426,15 +432,19 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                     <FormLabel className="text-greyscale-500 font-normal">
                       <>
                         参与代币数：{' '}
-                        <span className="text-xs text-gray-500">
-                          (限 {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
-                          {formatTokenAmount(
-                            groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
-                              ? groupDetail.actualMaxJoinAmount
-                              : groupDetail.remainingCapacity,
-                          )}
-                          )
-                        </span>
+                        {isGroupFull ? (
+                          <span className="text-red-600 text-sm">链群已满，无法加入</span>
+                        ) : (
+                          <span className="text-xs text-gray-500">
+                            (限 {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
+                            {formatTokenAmount(
+                              groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
+                                ? groupDetail.actualMaxJoinAmount
+                                : groupDetail.remainingCapacity,
+                            )}
+                            )
+                          </span>
+                        )}
                       </>
                     </FormLabel>
                   )}
@@ -442,7 +452,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                     <Input
                       placeholder={`请输入参与代币数量`}
                       type="number"
-                      disabled={!balance || balance <= BigInt(0)}
+                      disabled={!balance || balance <= BigInt(0) || isGroupFull}
                       className="!ring-secondary-foreground"
                       {...field}
                     />
@@ -459,7 +469,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                       size="sm"
                       onClick={handleSetMaxAmount}
                       className="text-secondary p-0 h-auto"
-                      disabled={!balance || balance <= BigInt(0)}
+                      disabled={!balance || balance <= BigInt(0) || isGroupFull}
                     >
                       最高
                     </Button>
@@ -519,7 +529,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
               <Button
                 ref={approveButtonRef}
                 className="w-1/2"
-                disabled={isPendingAllowance || isPendingApprove || isConfirmingApprove || isTokenApproved}
+                disabled={isPendingAllowance || isPendingApprove || isConfirmingApprove || isTokenApproved || isGroupFull}
                 type="button"
                 onClick={() => {
                   form.handleSubmit((values) => handleApprove(values))();
@@ -540,7 +550,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
               <Button
                 className="w-1/2"
-                disabled={!isTokenApproved || isPendingJoin || isConfirmingJoin || isConfirmedJoin}
+                disabled={!isTokenApproved || isPendingJoin || isConfirmingJoin || isConfirmedJoin || isGroupFull}
                 type="button"
                 onClick={() => {
                   form.handleSubmit((values) => handleJoin(values))();

@@ -193,15 +193,18 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
         <div className="w-full mb-2">
           <div className="text-sm text-gray-600 mb-2 font-medium flex items-center justify-between">
             <span>所属链群</span>
-            <Link
-              href={`/extension/group?groupId=${groupId?.toString()}&actionId=${actionId.toString()}&symbol=${
-                joinTokenSymbol || token?.symbol || ''
-              }`}
-              className="text-secondary hover:underline flex items-center gap-1"
-            >
-              #{groupDetail.groupId.toString()} {groupDetail.groupName}
-              <ChevronRight className="w-3 h-3" />
-            </Link>
+            <span className="flex items-center gap-1">
+              <span className="text-gray-500 text-xs">#</span>
+              <Link
+                href={`/extension/group?groupId=${groupId?.toString()}&actionId=${actionId.toString()}&symbol=${
+                  joinTokenSymbol || token?.symbol || ''
+                }`}
+                className="text-secondary hover:underline flex items-center gap-1"
+              >
+                {groupDetail.groupId.toString()} {groupDetail.groupName}
+                <ChevronRight className="w-3 h-3" />
+              </Link>
+            </span>
           </div>
         </div>
       )}

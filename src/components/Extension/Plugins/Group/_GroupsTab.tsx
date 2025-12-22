@@ -26,7 +26,7 @@ import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLO
 
 // 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
-import { formatTokenAmount } from '@/src/lib/format';
+import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -179,14 +179,28 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
+                  <div className="flex items-center justify-between text-xs mt-1">
                     <div className="flex items-center gap-2">
-                      <span className="">参与代币数:</span>
-                      <span className="">{formatTokenAmount(group.totalJoinedAmount)}</span>
+                      <span className="text-gray-500">参与代币数:</span>
+                      {/* 容量百分比显示 */}
+                      {(() => {
+                        const capacityRatio =
+                          group.maxCapacity > BigInt(0)
+                            ? Number(group.totalJoinedAmount) / Number(group.maxCapacity)
+                            : 0;
+                        const percentage = capacityRatio * 100;
+                        const colorClass =
+                          percentage >= 100 ? 'text-red-600' : percentage >= 90 ? 'text-yellow-600' : 'text-gray-500';
+                        return (
+                          <span className={colorClass}>
+                            {formatTokenAmount(group.totalJoinedAmount)} ({formatPercentage(percentage)})
+                          </span>
+                        );
+                      })()}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500">参与地址数:</span>
-                      <span className="">{group.accountCount.toString()}</span>
+                      <span className="text-gray-500">{group.accountCount.toString()}</span>
                     </div>
                   </div>
                 </div>

@@ -14,6 +14,7 @@ import ActionHeader from '@/src/components/Action/ActionHeader';
 import BasicInfo from '@/src/components/Action/ActionTabs/BasicInfo';
 import GovPublicTabs from '@/src/components/Action/ActionTabs/GovPublicTabs';
 import ExtensionPublicTabs from '@/src/components/Extension/Base/Action/ExtensionPublicTabs';
+import ExtensionBasicInfo from '@/src/components/Extension/Base/Action/ExtensionBasicInfo';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AlertBox from '@/src/components/Common/AlertBox';
 import Header from '@/src/components/Header';
@@ -43,6 +44,7 @@ export default function ActionInfoPage() {
     currentRound,
     isExtensionAction,
     extensionAddress,
+    factory,
     isPending,
     error,
   } = useActionDetailData({
@@ -180,7 +182,19 @@ export default function ActionInfoPage() {
     // 处理基础标签
     switch (activeTab) {
       case 'basic':
-        return <BasicInfo actionInfo={actionInfo} currentRound={currentRound} isExtensionAction={isExtensionAction} />;
+        return (
+          <>
+            <BasicInfo actionInfo={actionInfo} currentRound={currentRound} isExtensionAction={isExtensionAction} />
+            {isExtensionAction && extensionAddress && factory && (
+              <ExtensionBasicInfo
+                extensionAddress={extensionAddress}
+                factoryAddress={factory.address}
+                actionId={actionId}
+                actionInfo={actionInfo}
+              />
+            )}
+          </>
+        );
       case 'gov':
         return (
           <GovPublicTabs

@@ -8,7 +8,7 @@ import { useAccount, useChainId } from 'wagmi';
 // my hooks
 import { useCurrentRound, useSubmit } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useHandleContractError } from '@/src/lib/errorUtils';
-import { useCanSubmit } from '@/src/hooks/util/useCanSubmit';
+import { useCanSubmit } from '@/src/hooks/composite/useCanSubmit';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';

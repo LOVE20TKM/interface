@@ -20,7 +20,7 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
-import { useAccountsCountByRound } from '@/src/hooks/extension/base/contracts/useLOVE20ExtensionCenter';
+import { useAccountsByRoundCount } from '@/src/hooks/extension/base/contracts/useLOVE20ExtensionCenter';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
 
@@ -70,7 +70,7 @@ export function useAccountsByActionByRound(params: UseAccountsByActionByRoundPar
     count,
     isPending: isCountPending,
     error: countError,
-  } = useAccountsCountByRound(tokenAddress || '0x0', actionId || BigInt(0), round || BigInt(0));
+  } = useAccountsByRoundCount(tokenAddress || '0x0', actionId || BigInt(0), round || BigInt(0));
 
   // ==========================================
   // 第二步：批量查询所有地址

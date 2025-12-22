@@ -3,6 +3,9 @@
 // React
 import { useContext, useEffect, useState } from 'react';
 
+// Next.js
+import Link from 'next/link';
+
 // 第三方库
 import toast from 'react-hot-toast';
 import { isAddress, parseEther } from 'viem';
@@ -263,7 +266,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
         <form className="space-y-4 md:space-y-6">
           {/* 质押代币地址 */}
           <div className="space-y-2">
-            <Label htmlFor="stakeTokenAddress">1. 质押代币合约地址</Label>
+            <Label htmlFor="stakeTokenAddress">1. 服务者质押代币合约地址</Label>
             <Input
               id="stakeTokenAddress"
               type="text"
@@ -277,7 +280,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
 
           {/* 加入代币地址 */}
           <div className="space-y-2">
-            <Label htmlFor="joinTokenAddress">2. 加入代币合约地址</Label>
+            <Label htmlFor="joinTokenAddress">2. 参与行动时使用的代币地址</Label>
             <Input
               id="joinTokenAddress"
               type="text"
@@ -286,12 +289,12 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
               onChange={(e) => setJoinTokenAddress(e.target.value)}
               disabled={approvalStep !== 'idle'}
             />
-            <p className="text-sm text-greyscale-500">参与行动时使用的代币地址，可以是普通代币地址或 LP 代币地址</p>
+            <p className="text-sm text-greyscale-500">可以是普通代币地址或 LP 代币地址</p>
           </div>
 
           {/* 激活需质押代币数量 */}
           <div className="space-y-2">
-            <Label htmlFor="activationStakeAmount">3. 激活需质押代币数量</Label>
+            <Label htmlFor="activationStakeAmount">3. 激活链群需质押的代币数</Label>
             <Input
               id="activationStakeAmount"
               type="number"
@@ -358,8 +361,17 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 <p className="text-sm text-greyscale-600">扩展合约地址:</p>
                 <AddressWithCopyButton address={deployedExtensionAddress} showAddress={true} />
               </div>
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded">
-                <p className="text-sm text-blue-700">✨ 扩展已部署！请复制合约地址，在创建行动时设置为扩展地址。</p>
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded space-y-3">
+                <p className="text-sm text-blue-700">✨ 扩展已部署！现在可以使用此扩展地址创建行动。</p>
+                <Button className="w-full" asChild>
+                  <Link
+                    href={`/action/new/?symbol=${tokenSymbol}&extension=${deployedExtensionAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    立即创建行动
+                  </Link>
+                </Button>
               </div>
             </div>
           )}

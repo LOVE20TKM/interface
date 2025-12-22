@@ -19,7 +19,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 // my hooks
 import { useSubmitNewAction } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useHandleContractError } from '@/src/lib/errorUtils';
-import { useCanSubmit } from '@/src/hooks/util/useCanSubmit';
+import { useCanSubmit } from '@/src/hooks/composite/useCanSubmit';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -34,7 +34,6 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { formatTokenAmount, parseUnits } from '@/src/lib/format';
 
 // 获取环境变量
-const SUBMIT_MIN_PERCENTAGE = Number(process.env.NEXT_PUBLIC_SUBMIT_MIN_PER_THOUSAND || '0') / 1000;
 const MAX_VERIFICATION_KEY_BYTES = Number(process.env.NEXT_PUBLIC_MAX_VERIFICATION_KEY_LENGTH || '0');
 const MAX_VERIFICATION_KEY_CHARS = Math.floor(MAX_VERIFICATION_KEY_BYTES / 3);
 
@@ -134,6 +133,16 @@ type FormValues = z.infer<typeof FormSchema>;
 export default function NewAction() {
   const chainId = useChainId();
   const { token } = useContext(TokenContext) || {};
+  const router = useRouter();
+
+  // 获取并验证 extension URL 参数
+  const extension = router.query.extension as string | undefined;
+  const isValidExtension = Boolean(
+    extension &&
+      typeof extension === 'string' &&
+      /^0x[a-fA-F0-9]{40}$/.test(extension) &&
+      extension.toLowerCase() !== '0x0000000000000000000000000000000000000000',
+  );
 
   // 初始化表单
   const form = useForm<FormValues>({
@@ -155,7 +164,16 @@ export default function NewAction() {
     name: 'verificationPairs',
   });
 
-  // 检查是否可以提交（替换原有的两个hooks）
+  // 当 extension 有效时，自动设置表单值
+  useEffect(() => {
+    if (isValidExtension) {
+      form.setValue('rewardAddressCount', '1');
+      form.setValue('minStake', '1');
+      form.setValue('whiteListAddress', extension);
+    }
+  }, [isValidExtension, extension, form]);
+
+  // 检查是否可以提交
   const {
     hasEnoughVotes,
     percentage: accountPercentage,
@@ -208,7 +226,6 @@ export default function NewAction() {
   };
 
   // 提交成功后跳转
-  const router = useRouter();
   useEffect(() => {
     if (isSubmitted) {
       router.push(`/vote/batch?symbol=${token?.symbol}`);
@@ -373,11 +390,13 @@ export default function NewAction() {
                     <Input
                       type="number"
                       placeholder="地址数必须大于0"
-                      className="!ring-secondary-foreground"
+                      className="!ring-secondary-foreground disabled:bg-gray-200 disabled:text-gray-500 disabled:opacity-70"
                       autoComplete="off"
+                      disabled={isValidExtension}
                       {...field}
                     />
                   </FormControl>
+                  {isValidExtension && <FormDescription>由扩展地址自动设置为 1</FormDescription>}
                   <FormMessage />
                 </FormItem>
               )}
@@ -394,11 +413,13 @@ export default function NewAction() {
                     <Input
                       type="number"
                       placeholder="最小参与代币数必须大于0"
-                      className="!ring-secondary-foreground"
+                      className="!ring-secondary-foreground disabled:bg-gray-200 disabled:text-gray-500 disabled:opacity-70"
                       autoComplete="off"
+                      disabled={isValidExtension}
                       {...field}
                     />
                   </FormControl>
+                  {isValidExtension && <FormDescription>由扩展地址自动设置为 1</FormDescription>}
                   <FormMessage />
                 </FormItem>
               )}
@@ -412,8 +433,15 @@ export default function NewAction() {
                 <FormItem>
                   <FormLabel>白名单</FormLabel>
                   <FormControl>
-                    <Input type="text" placeholder="不填为不限" className="!ring-secondary-foreground" {...field} />
+                    <Input
+                      type="text"
+                      placeholder="不填为不限"
+                      className="!ring-secondary-foreground disabled:bg-gray-200 disabled:text-gray-500 disabled:opacity-70"
+                      disabled={isValidExtension}
+                      {...field}
+                    />
                   </FormControl>
+                  {isValidExtension && <FormDescription>由扩展地址自动设置</FormDescription>}
                   <FormMessage />
                 </FormItem>
               )}

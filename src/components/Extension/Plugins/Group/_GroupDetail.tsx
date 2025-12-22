@@ -96,7 +96,7 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
 
         {/* 容量信息 */}
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">链群服务者:</span>
               <span>
@@ -130,8 +130,8 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
         </div>
 
         {/* 参与规则 */}
-        <div className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">最小参与代币数:</span>
               <span className="font-mono ">{formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')}</span>

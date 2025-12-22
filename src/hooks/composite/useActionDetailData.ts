@@ -4,7 +4,7 @@ import { LOVE20SubmitAbi } from '@/src/abis/LOVE20Submit';
 import { LOVE20JoinAbi } from '@/src/abis/LOVE20Join';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { ActionInfo } from '@/src/types/love20types';
-import { useActionParticipationAdapter } from './useActionParticipationAdapter';
+import { useActionParticipationAdapter, type FactoryInfo } from '@/src/hooks/extension/base/composite';
 
 const SUBMIT_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_SUBMIT as `0x${string}`;
 const JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`;
@@ -33,6 +33,7 @@ export interface ActionDetailData {
   // 扩展行动信息
   isExtensionAction: boolean;
   extensionAddress: `0x${string}` | undefined;
+  factory: FactoryInfo | undefined;
 
   // 加载状态
   isPending: boolean;
@@ -173,6 +174,7 @@ export const useActionDetailData = ({
       // 扩展行动信息
       isExtensionAction: participationData.isExtensionAction,
       extensionAddress: participationData.extensionAddress,
+      factory: participationData.factory,
 
       // 加载状态（合并）
       isPending: isBasicDataPending || participationData.isPending,

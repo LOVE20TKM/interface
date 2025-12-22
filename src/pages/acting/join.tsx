@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 
 // my hooks
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useActionParticipationAdapter } from '@/src/hooks/composite/useActionParticipationAdapter';
+import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my contexts
@@ -39,16 +39,13 @@ const JoinPage = () => {
 
   // 检查是否是扩展行动
   const {
-    isExtensionAction,
-    extensionAddress,
+    contractInfo,
     isPending: isPendingExtension,
     error: errorExtension,
-  } = useActionParticipationAdapter(
-    token?.address as `0x${string}`,
-    actionInfo, // 传入 actionInfo 用于判断是否为扩展行动
-    undefined, // account 不需要，因为只是检查是否是扩展行动
-    undefined, // coreData 不需要
-  );
+  } = useExtensionContractInfo({
+    tokenAddress: token?.address as `0x${string}`,
+    actionInfo,
+  });
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -70,13 +67,13 @@ const JoinPage = () => {
         ) : (
           <>
             {/* 根据是否是扩展行动，显示不同的组件 */}
-            {isExtensionAction && extensionAddress ? (
+            {contractInfo?.isExtension && contractInfo?.extension ? (
               <>
                 {/* 扩展行动：显示 ExtensionActionJoinPanel（根据类型自动选择对应组件） */}
                 <ExtensionActionJoinPanel
                   actionId={BigInt(actionId)}
                   actionInfo={actionInfo}
-                  extensionAddress={extensionAddress as `0x${string}`}
+                  extensionAddress={contractInfo.extension}
                 />
               </>
             ) : (

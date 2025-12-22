@@ -45,7 +45,7 @@ const _MyGroups: React.FC<MyGroupsProps> = ({ groups, actionId, onManageClick })
   const { token } = useContext(TokenContext) || {};
 
   return (
-    <div>
+    <div className="mt-4">
       <div className="flex items-center justify-between">
         <LeftTitle title={`我的链群 (${groups.length})`} />
         <Link
@@ -79,6 +79,11 @@ interface MyGroupItemProps {
 const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, onManageClick, token }) => {
   // 计算容量使用百分比：参与量 / 容量上限
   const capacityRatio = group.maxCapacity > BigInt(0) ? Number(group.totalJoinedAmount) / Number(group.maxCapacity) : 0;
+  const percentage = capacityRatio * 100;
+
+  // 根据用量设置百分比颜色
+  const percentageColorClass =
+    percentage >= 100 ? 'text-red-600' : percentage >= 90 ? 'text-yellow-600' : 'text-gray-500';
 
   return (
     <div
@@ -93,19 +98,12 @@ const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, onManageClick, token }
             <span className="font-semibold">{group.groupName}</span>
           </div>
 
-          <div className="text-xs text-gray-500 mt-2">
-            <span>参与量: </span>
-            <span>
+          <div className="text-xs mt-2">
+            <span className="text-gray-500">参与量: </span>
+            <span className={percentageColorClass}>
               {formatTokenAmount(group.totalJoinedAmount, 2)} / {formatTokenAmount(group.maxCapacity, 2)} (
-              {formatPercentage(capacityRatio * 100)})
+              {formatPercentage(percentage)})
             </span>
-          </div>
-
-          <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
-            <div className="flex items-center gap-2">
-              <span className="">容量上限:</span>
-              <span className="">{formatTokenAmount(group.maxCapacity, 2)}</span>
-            </div>
           </div>
         </div>
 
