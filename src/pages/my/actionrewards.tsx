@@ -4,6 +4,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -12,6 +13,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionRewardsByAccountOfLastRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
 import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
+import { useEstimateAccountScoresByActionIdsByRounds } from '@/src/hooks/composite/useEstimateAccountScoresByActionIdsByRounds';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my components
@@ -19,6 +21,7 @@ import Header from '@/src/components/Header';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import InfoTooltip from '@/src/components/Common/InfoTooltip';
 import { Button } from '@/components/ui/button';
 import { Info } from 'lucide-react';
 
@@ -33,7 +36,7 @@ import {
 // types
 import { JoinedAction, ActionReward } from '@/src/types/love20types';
 
-const LAST_ROUNDS = BigInt(15);
+const LAST_ROUNDS = BigInt(6);
 
 type ActionRewardsGroup = {
   action: JoinedAction;
@@ -91,6 +94,40 @@ const ActRewardsPage: React.FC = () => {
     return list;
   }, [joinedActions, rewards]);
 
+  // 准备得分查询参数：从 rewards 中提取实际存在的 (actionId, round) 组合
+  const scoreQueryParams = useMemo(() => {
+    if (!rewards || rewards.length === 0) {
+      return { actionRoundPairs: [], enabled: false };
+    }
+
+    // 从 rewards 中提取所有有激励的 (actionId, round) 组合
+    // 按轮次倒序排列，确保最新轮次优先加载
+    const pairs = rewards
+      .filter((r) => r.reward > BigInt(0)) // 只查询有激励的记录
+      .map((r) => ({
+        actionId: r.actionId,
+        round: r.round,
+      }))
+      .sort((a, b) => (a.round > b.round ? -1 : 1)); // 按轮次倒序
+
+    return {
+      actionRoundPairs: pairs,
+      enabled: pairs.length > 0,
+    };
+  }, [rewards]);
+
+  // 获取得分数据
+  const {
+    scores: accountScores,
+    isLoading: isLoadingScores,
+    hasError: hasScoreError,
+  } = useEstimateAccountScoresByActionIdsByRounds({
+    account: account as `0x${string}`,
+    tokenAddress: token?.address as `0x${string}`,
+    actionRoundPairs: scoreQueryParams.actionRoundPairs,
+    enabled: scoreQueryParams.enabled && !!account && !!token?.address,
+  });
+
   // 铸造行动激励
   const { mintActionReward, isPending, isConfirming, isConfirmed, writeError } = useMintActionReward();
   const [mintingTarget, setMintingTarget] = useState<{ actionId: bigint; round: bigint } | null>(null);
@@ -145,17 +182,32 @@ const ActRewardsPage: React.FC = () => {
     }
   };
 
-  // 结合本地已铸造集合覆盖 UI 展示
+  // 结合本地已铸造集合和得分数据覆盖 UI 展示
   const displayedGroups = useMemo(() => {
     if (!grouped) return [];
     return grouped.map((g) => ({
       ...g,
       rewards: g.rewards.map((r) => {
         const key = `${BigInt(g.action.action.head.id).toString()}-${r.round.toString()}`;
-        return locallyMinted.has(key) || r.isMinted ? { ...r, isMinted: true } : r;
+        const actionIdStr = g.action.action.head.id.toString();
+        const roundStr = r.round.toString();
+
+        // 获取该行动该轮次的得分
+        const score = accountScores?.[actionIdStr]?.[roundStr];
+
+        // 判断该得分是否还在加载中
+        // 如果整体还在加载且该得分不存在，说明还未加载到这个轮次
+        const isScoreLoading = isLoadingScores && !score;
+
+        return {
+          ...r,
+          isMinted: locallyMinted.has(key) || r.isMinted,
+          score: score || '0.0', // 添加得分字段
+          isScoreLoading, // 添加加载状态字段
+        };
       }),
     }));
-  }, [grouped, locallyMinted]);
+  }, [grouped, locallyMinted, accountScores, isLoadingScores]);
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -220,8 +272,13 @@ const ActRewardsPage: React.FC = () => {
                           <tr className="border-b border-gray-100">
                             <th className="text-left px-0">轮次</th>
                             <th className="text-center">可铸造激励</th>
+                            <th className="text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                得分
+                                <InfoTooltip title="得分说明" content="这个得分，是用最终激励估算的平均分得分" />
+                              </div>
+                            </th>
                             <th className="text-center">结果</th>
-                            <th className="text-center">验证详情</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -234,6 +291,26 @@ const ActRewardsPage: React.FC = () => {
                             >
                               <td className="px-1">{formatRoundForDisplay(item.round, token).toString()}</td>
                               <td className="text-center px-1">{formatTokenAmount(item.reward || BigInt(0))}</td>
+                              <td className="text-center px-1">
+                                {item.isScoreLoading ? (
+                                  <div className="flex justify-center items-center">
+                                    <LoadingIcon />
+                                  </div>
+                                ) : item.score && parseFloat(item.score) > 0 ? (
+                                  <Link
+                                    href={`/verify/detail?symbol=${
+                                      token?.symbol
+                                    }&id=${group.action.action.head.id.toString()}&round=${item.round.toString()}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-secondary hover:text-secondary/80 underline text-sm"
+                                  >
+                                    {item.score}
+                                  </Link>
+                                ) : (
+                                  <span className="text-greyscale-500">-</span>
+                                )}
+                              </td>
                               <td className="text-center px-1">
                                 {item.reward > BigInt(0) && !item.isMinted ? (
                                   <Button
@@ -250,20 +327,6 @@ const ActRewardsPage: React.FC = () => {
                                 ) : (
                                   <span className="text-greyscale-500">-</span>
                                 )}
-                              </td>
-                              <td className="text-center px-1">
-                                <button
-                                  onClick={() =>
-                                    router.push(
-                                      `/verify/detail?symbol=${
-                                        token?.symbol
-                                      }&id=${group.action.action.head.id.toString()}&round=${item.round.toString()}`,
-                                    )
-                                  }
-                                  className="text-secondary hover:text-secondary/80 underline text-sm bg-transparent border-none cursor-pointer"
-                                >
-                                  验证明细 &gt;&gt;
-                                </button>
                               </td>
                             </tr>
                           ))}
