@@ -13,10 +13,7 @@ import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import {
-  useExtensionActionConstCache,
-  useExtensionGroupDetail,
-} from '@/src/hooks/extension/plugins/group/composite';
+import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
@@ -101,7 +98,7 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
   }
 
   return (
-    <div className="stats w-full grid grid-cols-2 divide-x-0 gap-4">
+    <div className="stats w-full grid grid-cols-2 divide-x-0 gap-4 mb-2">
       {/* 我的参与 */}
       <div className="stat place-items-center flex flex-col justify-center">
         <div className="stat-title">我的参与</div>

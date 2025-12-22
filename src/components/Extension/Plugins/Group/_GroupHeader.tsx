@@ -122,7 +122,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
   const hasVoted = myVerifyVotes && myVerifyVotes > BigInt(0);
 
   // 计算剩余容量
-  const remainingCapacity = groupDetail.capacity - groupDetail.totalJoinedAmount;
+  const remainingCapacity = groupDetail.maxCapacity - groupDetail.totalJoinedAmount;
   const formattedTotalAmount = formatTokenAmount(groupDetail.totalJoinedAmount);
   const formattedRemainingCapacity = formatTokenAmount(remainingCapacity);
 

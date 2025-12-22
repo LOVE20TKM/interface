@@ -14,14 +14,14 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${
 // =====================
 
 /**
- * Hook for baseDivisor
+ * Hook for BASE_DIVISOR
  * 获取基础除数
  */
 export const useBaseDivisor = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
-    functionName: 'baseDivisor',
+    functionName: 'BASE_DIVISOR',
     args: [],
   });
 
@@ -29,14 +29,14 @@ export const useBaseDivisor = () => {
 };
 
 /**
- * Hook for bytesThreshold
+ * Hook for BYTES_THRESHOLD
  * 获取字节阈值
  */
 export const useBytesThreshold = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
-    functionName: 'bytesThreshold',
+    functionName: 'BYTES_THRESHOLD',
     args: [],
   });
 
@@ -44,14 +44,14 @@ export const useBytesThreshold = () => {
 };
 
 /**
- * Hook for multiplier
+ * Hook for MULTIPLIER
  * 获取乘数
  */
 export const useMultiplier = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
-    functionName: 'multiplier',
+    functionName: 'MULTIPLIER',
     args: [],
   });
 
@@ -59,14 +59,14 @@ export const useMultiplier = () => {
 };
 
 /**
- * Hook for maxGroupNameLength
+ * Hook for MAX_GROUP_NAME_LENGTH
  * 获取最大组名长度
  */
 export const useMaxGroupNameLength = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
-    functionName: 'maxGroupNameLength',
+    functionName: 'MAX_GROUP_NAME_LENGTH',
     args: [],
   });
 
@@ -296,6 +296,39 @@ export const useTokenURI = (tokenId: bigint) => {
 };
 
 /**
+ * Hook for normalizedNameOf
+ * 获取标准化的群名称
+ */
+export const useNormalizedNameOf = (groupName: string) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupAbi,
+    functionName: 'normalizedNameOf',
+    args: [groupName],
+    query: {
+      enabled: !!groupName,
+    },
+  });
+
+  return { normalizedName: data as string | undefined, isPending, error };
+};
+
+/**
+ * Hook for totalBurnedForMint
+ * 获取铸造时销毁的总代币数
+ */
+export const useTotalBurnedForMint = () => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupAbi,
+    functionName: 'totalBurnedForMint',
+    args: [],
+  });
+
+  return { totalBurnedForMint: data ? safeToBigInt(data) : undefined, isPending, error };
+};
+
+/**
  * Hook for getApproved
  * 获取已批准的地址
  */
@@ -329,24 +362,6 @@ export const useIsApprovedForAll = (owner: `0x${string}`, operator: `0x${string}
   });
 
   return { isApprovedForAll: data as boolean | undefined, isPending, error };
-};
-
-/**
- * Hook for normalizedNameOf
- * 获取标准化后的组名
- */
-export const useNormalizedNameOf = (groupName: string) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: LOVE20GroupAbi,
-    functionName: 'normalizedNameOf',
-    args: [groupName],
-    query: {
-      enabled: !!groupName,
-    },
-  });
-
-  return { normalizedName: data as string | undefined, isPending, error };
 };
 
 /**

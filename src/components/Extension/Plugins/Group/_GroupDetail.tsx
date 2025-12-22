@@ -78,10 +78,10 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
 
   // 计算容量比例
   const capacityRatio =
-    groupDetail.capacity > BigInt(0) ? Number(groupDetail.totalJoinedAmount) / Number(groupDetail.capacity) : 0;
+    groupDetail.maxCapacity > BigInt(0) ? Number(groupDetail.totalJoinedAmount) / Number(groupDetail.maxCapacity) : 0;
   const remainingCapacityRatio =
     groupDetail.remainingCapacity > BigInt(0)
-      ? Number(groupDetail.remainingCapacity) / Number(groupDetail.capacity)
+      ? Number(groupDetail.remainingCapacity) / Number(groupDetail.maxCapacity)
       : 0;
   return (
     <div>
@@ -105,7 +105,7 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
             </div>
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">最大容量:</span>
-              <span className="font-mono">{formatTokenAmount(groupDetail.capacity)}</span>
+              <span className="font-mono">{formatTokenAmount(groupDetail.maxCapacity)}</span>
             </div>
 
             <div className="flex items-center justify-between md:max-w-xs">

@@ -112,7 +112,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
 
   if (!groups || groups.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-6">
         <p className="text-gray-500 mb-2">暂无链群参与本行动</p>
         <div className="">
           <Link
