@@ -271,14 +271,14 @@ const ActRewardsPage: React.FC = () => {
                         <thead>
                           <tr className="border-b border-gray-100">
                             <th className="text-left px-0">轮次</th>
-                            <th className="text-center">可铸造激励</th>
                             <th className="text-center">
                               <div className="flex items-center justify-center gap-1">
                                 得分
                                 <InfoTooltip title="得分说明" content="这个得分，是用最终激励估算的平均分得分" />
                               </div>
                             </th>
-                            <th className="text-center">结果</th>
+                            <th className="text-center">可铸造激励</th>
+                            <th className="text-center">操作</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -290,7 +290,6 @@ const ActRewardsPage: React.FC = () => {
                               }
                             >
                               <td className="px-1">{formatRoundForDisplay(item.round, token).toString()}</td>
-                              <td className="text-center px-1">{formatTokenAmount(item.reward || BigInt(0))}</td>
                               <td className="text-center px-1">
                                 {item.isScoreLoading ? (
                                   <div className="flex justify-center items-center">
@@ -301,7 +300,6 @@ const ActRewardsPage: React.FC = () => {
                                     href={`/verify/detail?symbol=${
                                       token?.symbol
                                     }&id=${group.action.action.head.id.toString()}&round=${item.round.toString()}`}
-                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-secondary hover:text-secondary/80 underline text-sm"
                                   >
@@ -311,6 +309,7 @@ const ActRewardsPage: React.FC = () => {
                                   <span className="text-greyscale-500">-</span>
                                 )}
                               </td>
+                              <td className="text-center px-1">{formatTokenAmount(item.reward || BigInt(0))}</td>
                               <td className="text-center px-1">
                                 {item.reward > BigInt(0) && !item.isMinted ? (
                                   <Button
