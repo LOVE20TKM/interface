@@ -9,6 +9,52 @@ import { config } from '@/src/wagmi';
 const JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`;
 const VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VERIFY as `0x${string}`;
 
+// ==================== localStorage 缓存工具函数 ====================
+
+// 缓存数据结构: { "actionId_round": "score" }
+type ScoreCacheData = {
+  [actionId_round: string]: string;
+};
+
+// 生成缓存 key
+const buildScoreCacheKey = (account: string, tokenAddress: string) =>
+  `love20_score_cache_${account.toLowerCase()}_${tokenAddress.toLowerCase()}`;
+
+// 读取缓存
+const getScoreCache = (account: string, tokenAddress: string): ScoreCacheData => {
+  if (typeof window === 'undefined') return {};
+  try {
+    const cached = localStorage.getItem(buildScoreCacheKey(account, tokenAddress));
+    return cached ? JSON.parse(cached) : {};
+  } catch {
+    return {};
+  }
+};
+
+// 批量写入缓存
+const batchSetScoreCache = (
+  account: string,
+  tokenAddress: string,
+  scores: { [actionId: string]: { [round: string]: string } },
+) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const existing = getScoreCache(account, tokenAddress);
+    // 合并新旧数据
+    Object.entries(scores).forEach(([actionId, rounds]) => {
+      Object.entries(rounds).forEach(([round, score]) => {
+        const key = `${actionId}_${round}`;
+        existing[key] = score;
+      });
+    });
+    localStorage.setItem(buildScoreCacheKey(account, tokenAddress), JSON.stringify(existing));
+  } catch (err) {
+    console.error('写入得分缓存失败:', err);
+  }
+};
+
+// ==================== 类型定义 ====================
+
 interface ActionRoundKey {
   actionId: bigint;
   round: bigint;
@@ -25,15 +71,18 @@ interface EstimateAccountScoresParams {
  * 批量估算账户在多个行动和轮次下的原始得分（100分制）
  *
  * 算法流程：
- * 1. 批量获取所有行动×轮次的随机账户列表
- * 2. 分批串行获取所有账户的分数（按每个行动×轮次分批，避免单次RPC调用过多导致超时）
- * 3. 计算每个行动×轮次下的最高分，并将目标账户分数换算为100分制
+ * 1. 从 localStorage 读取已缓存的得分数据
+ * 2. 批量获取未缓存行动×轮次的随机账户列表
+ * 3. 分批串行获取所有账户的分数（按每个行动×轮次分批，避免单次RPC调用过多导致超时）
+ * 4. 计算每个行动×轮次下的最高分，并将目标账户分数换算为100分制
+ * 5. 将新获取的得分写入 localStorage 缓存
  *
  * 优化说明：
  * - 每个行动×轮次约有500个随机账户，如果一次性查询所有会导致RPC超时
  * - 采用分批策略：每次只查询一个行动×轮次的所有账户分数
  * - 通过 useEffect + async/await 实现串行批量加载，确保稳定性
  * - 只查询传入的 actionRoundPairs，避免查询不必要的轮次
+ * - 使用 localStorage 缓存已查询的得分，避免重复请求链上数据
  */
 export const useEstimateAccountScoresByActionIdsByRounds = ({
   account,
@@ -42,32 +91,63 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
   enabled = true,
 }: EstimateAccountScoresParams) => {
   // 使用传入的行动×轮次组合，并生成稳定的 key 用于依赖追踪
-  const { validActionRoundPairs, actionRoundPairsKey } = useMemo(() => {
-    if (!enabled || actionRoundPairs.length === 0) {
-      return { validActionRoundPairs: [], actionRoundPairsKey: '' };
+  // 同时从缓存中读取已有的得分数据，过滤出需要请求的 pairs
+  const { validActionRoundPairs, actionRoundPairsKey, cachedScores, uncachedPairs } = useMemo(() => {
+    if (!enabled || actionRoundPairs.length === 0 || !account || !tokenAddress) {
+      return { validActionRoundPairs: [], actionRoundPairsKey: '', cachedScores: {}, uncachedPairs: [] };
     }
-    
-    // 生成稳定的 key，基于实际的 actionId 和 round 值
-    const key = actionRoundPairs
-      .map((pair) => `${pair.actionId.toString()}_${pair.round.toString()}`)
-      .join('|');
-    
-    return { validActionRoundPairs: actionRoundPairs, actionRoundPairsKey: key };
-  }, [actionRoundPairs, enabled]);
 
-  // 第一步：批量获取随机账户列表
+    // 读取缓存
+    const cache = getScoreCache(account, tokenAddress);
+
+    // 分离已缓存和未缓存的 pairs
+    const cached: { [actionId: string]: { [round: string]: string } } = {};
+    const uncached: ActionRoundKey[] = [];
+
+    actionRoundPairs.forEach((pair) => {
+      const cacheKey = `${pair.actionId.toString()}_${pair.round.toString()}`;
+      const cachedScore = cache[cacheKey];
+
+      if (cachedScore !== undefined) {
+        // 已缓存
+        const actionIdStr = pair.actionId.toString();
+        const roundStr = pair.round.toString();
+        if (!cached[actionIdStr]) {
+          cached[actionIdStr] = {};
+        }
+        cached[actionIdStr][roundStr] = cachedScore;
+      } else {
+        // 未缓存，需要请求
+        uncached.push(pair);
+      }
+    });
+
+    // 生成稳定的 key，基于实际的 actionId 和 round 值
+    const key = actionRoundPairs.map((pair) => `${pair.actionId.toString()}_${pair.round.toString()}`).join('|');
+
+    console.log(`缓存命中: ${Object.keys(cache).length} 条, 需要请求: ${uncached.length} 条`);
+
+    return {
+      validActionRoundPairs: actionRoundPairs,
+      actionRoundPairsKey: key,
+      cachedScores: cached,
+      uncachedPairs: uncached,
+    };
+  }, [actionRoundPairs, enabled, account, tokenAddress]);
+
+  // 第一步：批量获取随机账户列表（只获取未缓存的）
   const randomAccountsContracts = useMemo(() => {
-    if (!enabled || validActionRoundPairs.length === 0 || !tokenAddress) {
+    if (!enabled || uncachedPairs.length === 0 || !tokenAddress) {
       return [];
     }
 
-    return validActionRoundPairs.map(({ actionId, round }) => ({
+    return uncachedPairs.map(({ actionId, round }) => ({
       address: JOIN_CONTRACT_ADDRESS,
       abi: LOVE20JoinAbi,
       functionName: 'randomAccounts' as const,
       args: [tokenAddress, round, actionId],
     }));
-  }, [tokenAddress, validActionRoundPairs, enabled]);
+  }, [tokenAddress, uncachedPairs, enabled]);
 
   const {
     data: randomAccountsData,
@@ -103,7 +183,7 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
       !enabled ||
       !randomAccountsData ||
       !randomAccountsSuccess ||
-      validActionRoundPairs.length === 0 ||
+      uncachedPairs.length === 0 ||
       !tokenAddress ||
       !account
     ) {
@@ -117,11 +197,12 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
       setBatchScoresData({});
 
       const allScores: typeof batchScoresData = {};
+      const newScoresToCache: { [actionId: string]: { [round: string]: string } } = {};
 
       try {
         // 按每个行动×轮次组合分批执行
-        for (let index = 0; index < validActionRoundPairs.length; index++) {
-          const { actionId, round } = validActionRoundPairs[index];
+        for (let index = 0; index < uncachedPairs.length; index++) {
+          const { actionId, round } = uncachedPairs[index];
           const result = randomAccountsData[index];
 
           if (result?.status === 'success') {
@@ -151,28 +232,70 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
             // 处理当前批次的结果
             const key = `${actionId.toString()}_${round.toString()}`;
             const accountScores: { [account: string]: bigint } = {};
+            let hasFailedRequest = false;
 
             batchResults.forEach((result, idx) => {
               if (result?.status === 'success') {
                 const acc = accountsToQuery[idx];
                 const score = (result.result as bigint) || BigInt(0);
                 accountScores[acc] = score;
+              } else {
+                // 记录失败的请求
+                hasFailedRequest = true;
+                console.warn(`获取账户 ${accountsToQuery[idx]} 的得分失败:`, result?.error);
               }
             });
 
+            // 检查目标账户的得分是否成功获取
+            const hasTargetAccountScore = accountScores[account] !== undefined;
+
+            // 无论是否缓存，都更新状态让 UI 显示已获取的数据
             allScores[key] = {
               actionId,
               round,
               accountScores,
             };
 
+            // 只有当没有失败请求且目标账户得分存在时，才缓存数据
+            if (!hasFailedRequest && hasTargetAccountScore) {
+              // 计算100分制得分准备缓存
+              const scores = Object.values(accountScores);
+              const maxScore = scores.reduce((max, score) => (score > max ? score : max), BigInt(0));
+              const targetScore = accountScores[account] || BigInt(0);
+
+              let scaledScore = '0';
+              if (maxScore > BigInt(0) && targetScore > BigInt(0)) {
+                const quotient = (targetScore * BigInt(100)) / maxScore;
+                const remainder = (targetScore * BigInt(100)) % maxScore;
+                const scaledValue = remainder * BigInt(2) >= maxScore ? Number(quotient) + 1 : Number(quotient);
+                scaledScore = scaledValue.toString();
+              }
+
+              // 准备写入缓存
+              const actionIdStr = actionId.toString();
+              const roundStr = round.toString();
+              if (!newScoresToCache[actionIdStr]) {
+                newScoresToCache[actionIdStr] = {};
+              }
+              newScoresToCache[actionIdStr][roundStr] = scaledScore;
+
+              console.log(`完成加载 actionId=${actionId}, round=${round}，进度: ${index + 1}/${uncachedPairs.length}`);
+            } else {
+              console.warn(
+                `跳过缓存 actionId=${actionId}, round=${round}: ` +
+                  `hasFailedRequest=${hasFailedRequest}, hasTargetAccountScore=${hasTargetAccountScore}`,
+              );
+            }
+
             // 更新状态，让UI能看到进度
             setBatchScoresData({ ...allScores });
-
-            console.log(
-              `完成加载 actionId=${actionId}, round=${round}，进度: ${index + 1}/${validActionRoundPairs.length}`,
-            );
           }
+        }
+
+        // 批量写入缓存
+        if (Object.keys(newScoresToCache).length > 0) {
+          batchSetScoreCache(account, tokenAddress, newScoresToCache);
+          console.log('得分数据已写入缓存');
         }
 
         setScoresSuccess(true);
@@ -196,6 +319,7 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
   ]);
 
   // 第三步：计算100分制得分（支持渐进式返回部分数据）
+  // 合并缓存数据和新获取的数据
   const estimatedScores = useMemo(() => {
     if (!enabled || validActionRoundPairs.length === 0) {
       return {
@@ -217,19 +341,18 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
       };
     }
 
-    // 如果随机账户列表还在加载中，返回空数据
+    // 如果随机账户列表还在加载中，返回已缓存的数据
     if (isLoadingRandomAccounts) {
       return {
-        scores: {},
-        isLoading: true,
+        scores: cachedScores,
+        isLoading: uncachedPairs.length > 0, // 只有存在未缓存数据时才显示加载中
         hasError: false,
         allLoaded: false,
       };
     }
 
-    // 计算每个行动×轮次下的100分制得分
-    // 即使还在加载中，也返回已经加载完成的部分数据
-    const finalScores: { [actionId: string]: { [round: string]: string } } = {};
+    // 计算每个行动×轮次下的100分制得分（新获取的数据）
+    const newScores: { [actionId: string]: { [round: string]: string } } = {};
 
     Object.values(batchScoresData).forEach(({ actionId, round, accountScores }) => {
       // 找出最高分
@@ -257,15 +380,27 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
       const actionIdStr = actionId.toString();
       const roundStr = round.toString();
 
-      if (!finalScores[actionIdStr]) {
-        finalScores[actionIdStr] = {};
+      if (!newScores[actionIdStr]) {
+        newScores[actionIdStr] = {};
       }
 
-      finalScores[actionIdStr][roundStr] = scaledScore;
+      newScores[actionIdStr][roundStr] = scaledScore;
+    });
+
+    // 合并缓存数据和新获取的数据
+    const finalScores: { [actionId: string]: { [round: string]: string } } = { ...cachedScores };
+
+    Object.entries(newScores).forEach(([actionId, rounds]) => {
+      if (!finalScores[actionId]) {
+        finalScores[actionId] = {};
+      }
+      Object.entries(rounds).forEach(([round, score]) => {
+        finalScores[actionId][round] = score;
+      });
     });
 
     // 判断是否全部加载完成
-    const allLoaded = scoresSuccess && !isLoadingScores;
+    const allLoaded = uncachedPairs.length === 0 || (scoresSuccess && !isLoadingScores);
 
     return {
       scores: finalScores,
@@ -285,6 +420,8 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
     randomAccountsData,
     randomAccountsSuccess,
     batchScoresData,
+    cachedScores,
+    uncachedPairs,
   ]);
 
   return {

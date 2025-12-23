@@ -273,8 +273,11 @@ const ActRewardsPage: React.FC = () => {
                             <th className="text-left px-0">轮次</th>
                             <th className="text-center">
                               <div className="flex items-center justify-center gap-1">
-                                得分
-                                <InfoTooltip title="得分说明" content="这个得分，是用最终激励估算的平均分得分" />
+                                验证得分
+                                <InfoTooltip
+                                  title="验证得分说明"
+                                  content="这个得分，是根据最终激励，估算的平均得分。   （具体算法：将所有地址中实际得分最高者，作为100分，然后将你的实际得分等比例换算到0~100）"
+                                />
                               </div>
                             </th>
                             <th className="text-center">可铸造激励</th>
