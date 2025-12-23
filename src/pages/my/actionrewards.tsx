@@ -125,7 +125,8 @@ const ActRewardsPage: React.FC = () => {
     account: account as `0x${string}`,
     tokenAddress: token?.address as `0x${string}`,
     actionRoundPairs: scoreQueryParams.actionRoundPairs,
-    enabled: scoreQueryParams.enabled && !!account && !!token?.address,
+    // enabled: scoreQueryParams.enabled && !!account && !!token?.address,
+    enabled: false,
   });
 
   // 铸造行动激励
@@ -271,7 +272,7 @@ const ActRewardsPage: React.FC = () => {
                         <thead>
                           <tr className="border-b border-gray-100">
                             <th className="text-left px-0">轮次</th>
-                            <th className="text-center">
+                            {/* <th className="text-center">
                               <div className="flex items-center justify-center gap-1">
                                 验证得分
                                 <InfoTooltip
@@ -279,7 +280,7 @@ const ActRewardsPage: React.FC = () => {
                                   content="这个得分，是根据最终激励，估算的平均得分。   （具体算法：将所有地址中实际得分最高者，作为100分，然后将你的实际得分等比例换算到0~100）"
                                 />
                               </div>
-                            </th>
+                            </th> */}
                             <th className="text-center">可铸造激励</th>
                             <th className="text-center">操作</th>
                           </tr>
@@ -293,7 +294,7 @@ const ActRewardsPage: React.FC = () => {
                               }
                             >
                               <td className="px-1">{formatRoundForDisplay(item.round, token).toString()}</td>
-                              <td className="text-center px-1">
+                              {/* <td className="text-center px-1">
                                 {item.isScoreLoading ? (
                                   <div className="flex justify-center items-center">
                                     <LoadingIcon />
@@ -311,7 +312,7 @@ const ActRewardsPage: React.FC = () => {
                                 ) : (
                                   <span className="text-greyscale-500">-</span>
                                 )}
-                              </td>
+                              </td> */}
                               <td className="text-center px-1">{formatTokenAmount(item.reward || BigInt(0))}</td>
                               <td className="text-center px-1">
                                 {item.reward > BigInt(0) && !item.isMinted ? (
