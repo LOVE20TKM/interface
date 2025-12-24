@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   useSetRecipients,
   useBasisPointsBase,
+  useMaxRecipients,
 } from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupService';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
@@ -60,6 +61,7 @@ export default function _GroupServiceSetRecipients({
   // Contracts
   const { setRecipients, isPending, isConfirming, isConfirmed, writeError } = useSetRecipients(extensionAddress);
   const { basisPointsBase } = useBasisPointsBase(extensionAddress);
+  const { maxRecipients } = useMaxRecipients(extensionAddress);
 
   // Form
   const form = useForm<FormValues>({
@@ -133,7 +135,7 @@ export default function _GroupServiceSetRecipients({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-3 sm:p-6">
         <DialogHeader>
-          <DialogTitle>编辑二次分配</DialogTitle>
+          <DialogTitle>编辑激励分配地址</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -162,9 +164,12 @@ export default function _GroupServiceSetRecipients({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-auto px-1 sm:px-2">地址</TableHead>
-                    <TableHead className="w-20 px-1 sm:px-2 hidden sm:table-cell">基点数</TableHead>
-                    <TableHead className="w-24 px-1 sm:px-2 sm:w-16">基点数</TableHead>
+                    <TableHead className="w-auto px-1 sm:px-2 text-center">地址</TableHead>
+                    <TableHead className="w-16 px-1 sm:px-2 hidden sm:table-cell text-center">基点数</TableHead>
+                    <TableHead className="w-16 px-1 sm:px-0 sm:w-16 text-center">
+                      <span className="sm:hidden">基点数</span>
+                      <span className="hidden sm:inline">占比</span>
+                    </TableHead>
                     <TableHead className="w-10 px-1 sm:px-2"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -198,14 +203,14 @@ export default function _GroupServiceSetRecipients({
                             render={({ field }) => (
                               <FormItem>
                                 <FormControl>
-                                  <Input type="number" {...field} className="h-8 px-1 sm:px-2" />
+                                  <Input type="number" {...field} className="h-8 px-1 sm:px-2 max-w-20" />
                                 </FormControl>
                                 <FormMessage className="text-xs" />
                               </FormItem>
                             )}
                           />
                         </TableCell>
-                        <TableCell className="px-1 sm:px-2">
+                        <TableCell className="px-1 sm:px-0">
                           {/* 小屏幕：显示输入框和比例 */}
                           <div className="sm:hidden space-y-1">
                             <FormField
@@ -214,7 +219,12 @@ export default function _GroupServiceSetRecipients({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
-                                    <Input type="number" {...field} placeholder="基点数" className="h-8 px-2 text-sm" />
+                                    <Input
+                                      type="number"
+                                      {...field}
+                                      placeholder="基点数"
+                                      className="h-8 px-2 text-sm max-w-16"
+                                    />
                                   </FormControl>
                                   <FormMessage className="text-xs" />
                                 </FormItem>
@@ -258,7 +268,14 @@ export default function _GroupServiceSetRecipients({
               type="button"
               variant="outline"
               className="w-full border-dashed"
-              onClick={() => append({ address: '', basisPoints: 0 })}
+              onClick={() => {
+                // 检查是否超过最大接收者数量限制
+                if (maxRecipients !== undefined && fields.length >= Number(maxRecipients)) {
+                  toast.error(`激励分配地址数量不能超过最大限制 ${maxRecipients.toString()}`);
+                  return;
+                }
+                append({ address: '', basisPoints: 0 });
+              }}
             >
               <Plus className="w-4 h-4 mr-2" /> 添加地址
             </Button>
