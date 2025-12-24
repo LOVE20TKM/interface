@@ -41,7 +41,7 @@ const ManualCopyDialog: React.FC<ManualCopyDialogProps> = ({
       }, 100);
 
       // 设置自动关闭
-      let autoCloseTimer: NodeJS.Timeout | null = null;
+      let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
       if (autoCloseDelay > 0) {
         autoCloseTimer = setTimeout(() => {
           onClose();

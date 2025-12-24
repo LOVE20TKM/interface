@@ -821,44 +821,6 @@ export function useBurnUnclaimedReward(contractAddress: `0x${string}`) {
 }
 
 /**
- * Hook for claimReward - 领取奖励
- */
-export function useClaimReward(contractAddress: `0x${string}`) {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupActionAbi,
-    contractAddress,
-    'claimReward',
-  );
-
-  const claimReward = async (round: bigint) => {
-    console.log('提交 claimReward 交易:', { contractAddress, round, isTukeMode });
-    return await execute([round]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('claimReward tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 claimReward 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    claimReward,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}
-
-/**
  * Hook for exit - 退出（取回代币）
  */
 export function useExit(contractAddress: `0x${string}`) {

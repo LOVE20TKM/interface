@@ -16,38 +16,6 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 // =====================
 
 /**
- * Hook for actionId - 获取 action ID
- */
-export const useActionId = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'actionId',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { actionId: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for center - 获取 center 合约地址
- */
-export const useCenter = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'center',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { centerAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
  * Hook for factory - 获取工厂地址
  */
 export const useFactory = (contractAddress: `0x${string}`) => {
@@ -308,44 +276,6 @@ export const useWaitingBlocks = (contractAddress: `0x${string}`) => {
 // =====================
 // === 写入 Hook ===
 // =====================
-
-/**
- * Hook for claimReward - 领取奖励
- */
-export function useClaimReward(contractAddress: `0x${string}`) {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionLpAbi,
-    contractAddress,
-    'claimReward',
-  );
-
-  const claimReward = async (round: bigint) => {
-    console.log('提交 claimReward 交易:', { contractAddress, round, isTukeMode });
-    return await execute([round]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('claimReward tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 claimReward 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    claimReward,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}
 
 /**
  * Hook for exit - 退出（取回LP代币）

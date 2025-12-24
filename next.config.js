@@ -58,7 +58,6 @@ const nextConfig = {
       '/dex/swap': { page: '/dex/swap' },
       '/dex/withdraw': { page: '/dex/withdraw' },
       '/extension/deploy': { page: '/extension/deploy' },
-      '/extension/initialize': { page: '/extension/initialize' },
       '/extension/factories': { page: '/extension/factories' },
       '/extension/groupids': { page: '/extension/groupids' },
       '/extension/group': { page: '/extension/group' },

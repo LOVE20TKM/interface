@@ -28,19 +28,6 @@ export const useCenterAddress = () => {
 };
 
 /**
- * Hook for GROUP_ADDRESS - 获取 group 合约地址
- */
-export const useGroupAddress = () => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: LOVE20GroupManagerAbi,
-    functionName: 'GROUP_ADDRESS',
-  });
-
-  return { groupAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
  * Hook for JOIN_ADDRESS - 获取 join 合约地址
  */
 export const useJoinAddress = () => {

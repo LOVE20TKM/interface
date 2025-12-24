@@ -80,22 +80,6 @@ export const useMaxRecipients = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for actionId - 获取 action ID
- */
-export const useActionId = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
-    functionName: 'actionId',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { actionId: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for actionIdsWithRecipients - 获取账户在指定轮次设置了接收者的行动ID列表
  */
 export const useActionIdsWithRecipients = (contractAddress: `0x${string}`, account: `0x${string}`, round: bigint) => {
@@ -110,22 +94,6 @@ export const useActionIdsWithRecipients = (contractAddress: `0x${string}`, accou
   });
 
   return { actionIds: data as bigint[] | undefined, isPending, error };
-};
-
-/**
- * Hook for center - 获取 center 合约地址
- */
-export const useCenter = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
-    functionName: 'center',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { centerAddress: data as `0x${string}` | undefined, isPending, error };
 };
 
 /**
@@ -483,44 +451,6 @@ export const useTokenAddress = (contractAddress: `0x${string}`) => {
 // =====================
 // === 写入 Hook ===
 // =====================
-
-/**
- * Hook for claimReward - 领取奖励
- */
-export function useClaimReward(contractAddress: `0x${string}`) {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupServiceAbi,
-    contractAddress,
-    'claimReward',
-  );
-
-  const claimReward = async (round: bigint) => {
-    console.log('提交 claimReward 交易:', { contractAddress, round, isTukeMode });
-    return await execute([round]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('claimReward tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 claimReward 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    claimReward,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}
 
 /**
  * Hook for exit - 退出

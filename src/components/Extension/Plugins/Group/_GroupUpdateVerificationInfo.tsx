@@ -33,10 +33,7 @@ import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import { useUpdateVerificationInfo } from '@/src/hooks/extension/base/contracts/useLOVE20ExtensionCenter';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import {
-  useCenter,
-  useJoinInfo,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+import { useCenter, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
@@ -113,7 +110,6 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     isPending: isPendingVerificationInfos,
     error: errorVerificationInfos,
   } = useAccountVerificationInfos({
-    centerAddress,
     tokenAddress: token?.address as `0x${string}`,
     actionId,
     account: account as `0x${string}`,
@@ -162,7 +158,7 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     isConfirming: isConfirmingUpdate,
     isConfirmed: isConfirmedUpdate,
     writeError: errorUpdate,
-  } = useUpdateVerificationInfo(centerAddress as `0x${string}`);
+  } = useUpdateVerificationInfo();
 
   async function handleSubmit(values: FormValues) {
     if (!centerAddress || !token?.address || !account) {
@@ -198,7 +194,15 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     if (errorActionInfo) handleContractError(errorActionInfo, 'submit');
     if (errorUpdate) handleContractError(errorUpdate, 'extension');
     if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
-  }, [errorDetail, errorCenter, errorJoinInfo, errorActionInfo, errorUpdate, errorVerificationInfos, handleContractError]);
+  }, [
+    errorDetail,
+    errorCenter,
+    errorJoinInfo,
+    errorActionInfo,
+    errorUpdate,
+    errorVerificationInfos,
+    handleContractError,
+  ]);
 
   if (isPendingDetail || isPendingCenter || isPendingActionInfo || isPendingVerificationInfos) {
     return (
