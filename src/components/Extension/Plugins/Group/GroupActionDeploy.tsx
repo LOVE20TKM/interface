@@ -29,6 +29,7 @@ import {
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 
 interface GroupActionDeployProps {
   factoryAddress: `0x${string}`;
@@ -257,169 +258,185 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
   };
 
   return (
-    <Card className="border-0 shadow-none">
-      <CardHeader className="px-4 md:px-6 pb-4 md:pb-6 pt-4 md:pt-6">
-        <CardTitle className="text-xl md:text-2xl">部署链群行动扩展合约</CardTitle>
-        <CardDescription className="text-sm">每1个新的链群行动，都对应1个专属扩展合约</CardDescription>
-      </CardHeader>
-      <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
-        <form className="space-y-4 md:space-y-6">
-          {/* 质押代币地址 */}
-          <div className="space-y-2">
-            <Label htmlFor="stakeTokenAddress">1. 服务者质押代币合约地址</Label>
-            <Input
-              id="stakeTokenAddress"
-              type="text"
-              placeholder="0x..."
-              value={stakeTokenAddress}
-              onChange={(e) => setStakeTokenAddress(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-            />
-            <p className="text-sm text-greyscale-500">所在社群的代币合约地址，也可设置为 LP 地址等</p>
-          </div>
-
-          {/* 加入代币地址 */}
-          <div className="space-y-2">
-            <Label htmlFor="joinTokenAddress">2. 参与行动时使用的代币地址</Label>
-            <Input
-              id="joinTokenAddress"
-              type="text"
-              placeholder="0x..."
-              value={joinTokenAddress}
-              onChange={(e) => setJoinTokenAddress(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-            />
-            <p className="text-sm text-greyscale-500">可以是普通代币地址或 LP 代币地址</p>
-          </div>
-
-          {/* 激活需质押代币数量 */}
-          <div className="space-y-2">
-            <Label htmlFor="activationStakeAmount">3. 激活链群需质押的代币数</Label>
-            <Input
-              id="activationStakeAmount"
-              type="number"
-              placeholder="比如 1000"
-              value={activationStakeAmount}
-              onChange={(e) => setActivationStakeAmount(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-              min="0"
-              step="0.000001"
-              className="max-w-40 md:max-w-xs"
-            />
-            <p className="text-sm text-greyscale-500">链群服务者激活链群时需质押的代币数量</p>
-          </div>
-
-          {/* 最大参与代币倍数 */}
-          <div className="space-y-2">
-            <Label htmlFor="maxJoinAmountMultiplier">4. 最大参与代币倍数</Label>
-            <Input
-              id="maxJoinAmountMultiplier"
-              type="number"
-              placeholder="比如 10000"
-              value={maxJoinAmountMultiplier}
-              onChange={(e) => setMaxJoinAmountMultiplier(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-              min="1"
-              className="max-w-40 md:max-w-xs"
-            />
-            <p className="text-sm text-greyscale-500">单个行动者最大参与代币数 = 已铸造代币总量 / 最大参与代币倍数</p>
-          </div>
-
-          {/* 验证容量倍数 */}
-          <div className="space-y-2">
-            <Label htmlFor="verifyCapacityMultiplier">5. 验证容量倍数</Label>
-            <Input
-              id="verifyCapacityMultiplier"
-              type="number"
-              placeholder="比如 10"
-              value={verifyCapacityMultiplier}
-              onChange={(e) => setVerifyCapacityMultiplier(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-              min="1"
-              className="max-w-40 md:max-w-xs"
-            />
-            <p className="text-sm text-greyscale-500">
-              理论最大容量 = 治理票占比 × (已铸造代币量 - 流动性质押量 - 加速激励质押量) × 验证容量倍数
-            </p>
-          </div>
-
-          {/* 错误信息 */}
-          {writeError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">错误: {writeError.message}</p>
+    <>
+      <Card className="border-0 shadow-none">
+        <CardHeader className="px-4 md:px-6 pb-4 md:pb-6 pt-4 md:pt-6">
+          <CardTitle className="text-xl md:text-2xl">部署链群行动扩展合约</CardTitle>
+          <CardDescription className="text-sm">每1个新的链群行动，都对应1个专属扩展合约</CardDescription>
+        </CardHeader>
+        <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
+          <form className="space-y-4 md:space-y-6">
+            {/* 质押代币地址 */}
+            <div className="space-y-2">
+              <Label htmlFor="stakeTokenAddress">1. 服务者质押代币合约地址</Label>
+              <Input
+                id="stakeTokenAddress"
+                type="text"
+                placeholder="0x..."
+                value={stakeTokenAddress}
+                onChange={(e) => setStakeTokenAddress(e.target.value)}
+                disabled={approvalStep !== 'idle'}
+              />
+              <p className="text-sm text-greyscale-500">所在社群的代币合约地址，也可设置为 LP 地址等</p>
             </div>
-          )}
 
-          {/* 部署成功 - 显示扩展地址 */}
-          {deployedExtensionAddress && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">🎉</span>
-                <p className="text-base font-semibold text-green-700">扩展部署完成！</p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm text-greyscale-600">扩展合约地址:</p>
-                <AddressWithCopyButton address={deployedExtensionAddress} showAddress={true} />
-              </div>
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded space-y-3">
-                <p className="text-sm text-blue-700">✨ 扩展已部署！现在可以使用此扩展地址创建行动。</p>
-                <Button className="w-full" asChild>
-                  <Link
-                    href={`/action/new/?symbol=${tokenSymbol}&extension=${deployedExtensionAddress}`}
-                    rel="noopener noreferrer"
-                  >
-                    立即创建行动
-                  </Link>
-                </Button>
-              </div>
+            {/* 加入代币地址 */}
+            <div className="space-y-2">
+              <Label htmlFor="joinTokenAddress">2. 参与行动时使用的代币地址</Label>
+              <Input
+                id="joinTokenAddress"
+                type="text"
+                placeholder="0x..."
+                value={joinTokenAddress}
+                onChange={(e) => setJoinTokenAddress(e.target.value)}
+                disabled={approvalStep !== 'idle'}
+              />
+              <p className="text-sm text-greyscale-500">可以是普通代币地址或 LP 代币地址</p>
             </div>
-          )}
 
-          {/* 授权和部署按钮 */}
-          {!deployedExtensionAddress && (
-            <>
-              <div className="flex space-x-4 w-full">
-                <Button
-                  type="button"
-                  onClick={handleApprove}
-                  className="w-1/2"
-                  disabled={
-                    isApprovePending ||
-                    isApproveConfirming ||
-                    approvalStep === 'approved' ||
-                    approvalStep === 'deploying' ||
-                    approvalStep === 'deployed'
-                  }
-                >
-                  {isApprovePending
-                    ? '1.提交中...'
-                    : isApproveConfirming
-                    ? '1.确认中...'
-                    : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
-                    ? '1.代币已授权'
-                    : '1.授权 1' + tokenSymbol}
-                </Button>
+            {/* 激活需质押代币数量 */}
+            <div className="space-y-2">
+              <Label htmlFor="activationStakeAmount">3. 激活链群需质押的代币数</Label>
+              <Input
+                id="activationStakeAmount"
+                type="number"
+                placeholder="比如 1000"
+                value={activationStakeAmount}
+                onChange={(e) => setActivationStakeAmount(e.target.value)}
+                disabled={approvalStep !== 'idle'}
+                min="0"
+                step="0.000001"
+                className="max-w-40 md:max-w-xs"
+              />
+              <p className="text-sm text-greyscale-500">链群服务者激活链群时需质押的代币数量</p>
+            </div>
 
-                <Button
-                  type="button"
-                  onClick={handleDeploy}
-                  className="w-1/2"
-                  disabled={(approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming}
-                >
-                  {isPending ? '2.部署中...' : isConfirming ? '2.确认中...' : '2.部署扩展'}
-                </Button>
+            {/* 最大参与代币倍数 */}
+            <div className="space-y-2">
+              <Label htmlFor="maxJoinAmountMultiplier">4. 最大参与代币倍数</Label>
+              <Input
+                id="maxJoinAmountMultiplier"
+                type="number"
+                placeholder="比如 10000"
+                value={maxJoinAmountMultiplier}
+                onChange={(e) => setMaxJoinAmountMultiplier(e.target.value)}
+                disabled={approvalStep !== 'idle'}
+                min="1"
+                className="max-w-40 md:max-w-xs"
+              />
+              <p className="text-sm text-greyscale-500">单个行动者最大参与代币数 = 已铸造代币总量 / 最大参与代币倍数</p>
+            </div>
+
+            {/* 验证容量倍数 */}
+            <div className="space-y-2">
+              <Label htmlFor="verifyCapacityMultiplier">5. 验证容量倍数</Label>
+              <Input
+                id="verifyCapacityMultiplier"
+                type="number"
+                placeholder="比如 10"
+                value={verifyCapacityMultiplier}
+                onChange={(e) => setVerifyCapacityMultiplier(e.target.value)}
+                disabled={approvalStep !== 'idle'}
+                min="1"
+                className="max-w-40 md:max-w-xs"
+              />
+              <p className="text-sm text-greyscale-500">
+                理论最大容量 = 治理票占比 × (已铸造代币量 - 流动性质押量 - 加速激励质押量) × 验证容量倍数
+              </p>
+            </div>
+
+            {/* 错误信息 */}
+            {writeError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">错误: {writeError.message}</p>
               </div>
+            )}
 
-              <div>
-                <div className="flex items-center gap-2 mt-2 mb-1">
-                  <div className="text-sm font-medium text-gray-700 mb-1">💡 小贴士：</div>
+            {/* 部署成功 - 显示扩展地址 */}
+            {deployedExtensionAddress && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🎉</span>
+                  <p className="text-base font-semibold text-green-700">扩展部署完成！</p>
                 </div>
-                <p className="text-sm text-greyscale-500">需转 1个 {tokenSymbol} 给合约地址，用于加入行动</p>
+                <div className="space-y-2">
+                  <p className="text-sm text-greyscale-600">扩展合约地址:</p>
+                  <AddressWithCopyButton address={deployedExtensionAddress} showAddress={true} />
+                </div>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded space-y-3">
+                  <p className="text-sm text-blue-700">✨ 扩展已部署！现在可以使用此扩展地址创建行动。</p>
+                  <Button className="w-full" asChild>
+                    <Link
+                      href={`/action/new/?symbol=${tokenSymbol}&extension=${deployedExtensionAddress}`}
+                      rel="noopener noreferrer"
+                    >
+                      立即创建行动
+                    </Link>
+                  </Button>
+                </div>
               </div>
-            </>
-          )}
-        </form>
-      </CardContent>
-    </Card>
+            )}
+
+            {/* 授权和部署按钮 */}
+            {!deployedExtensionAddress && (
+              <>
+                <div className="flex space-x-4 w-full">
+                  <Button
+                    type="button"
+                    onClick={handleApprove}
+                    className="w-1/2"
+                    disabled={
+                      isApprovePending ||
+                      isApproveConfirming ||
+                      approvalStep === 'approved' ||
+                      approvalStep === 'deploying' ||
+                      approvalStep === 'deployed'
+                    }
+                  >
+                    {isApprovePending
+                      ? '1.提交中...'
+                      : isApproveConfirming
+                      ? '1.确认中...'
+                      : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
+                      ? '1.代币已授权'
+                      : '1.授权 1' + tokenSymbol}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    onClick={handleDeploy}
+                    className="w-1/2"
+                    disabled={
+                      (approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming
+                    }
+                  >
+                    {isPending ? '2.部署中...' : isConfirming ? '2.确认中...' : '2.部署扩展'}
+                  </Button>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 mt-2 mb-1">
+                    <div className="text-sm font-medium text-gray-700 mb-1">💡 小贴士：</div>
+                  </div>
+                  <p className="text-sm text-greyscale-500">需转 1个 {tokenSymbol} 给合约地址，用于加入行动</p>
+                </div>
+              </>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+      <LoadingOverlay
+        isLoading={isApprovePending || isApproveConfirming || isPending || isConfirming}
+        text={
+          isApprovePending
+            ? '提交授权交易...'
+            : isApproveConfirming
+            ? '确认授权交易...'
+            : isPending
+            ? '提交部署交易...'
+            : '确认部署交易...'
+        }
+      />
+    </>
   );
 }

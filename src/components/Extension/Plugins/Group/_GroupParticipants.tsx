@@ -169,8 +169,8 @@ const _GroupParticipants: React.FC<GroupParticipantsProps> = ({ actionId, action
           <table className="table w-full">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="px-1 text-left">序号</th>
-                <th className="px-1 text-center">地址</th>
+                <th className="px-1 text-left">No</th>
+                <th className="px-1 text-center">行动者地址</th>
                 <th className="px-1 text-center">参与代币</th>
                 <th className="px-1 text-center">加入轮次</th>
               </tr>

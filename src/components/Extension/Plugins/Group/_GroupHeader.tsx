@@ -190,8 +190,15 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
       {/* 第三行：操作入口链接 */}
       {account && (
         <div className="mt-4 flex justify-center gap-4">
-          {/* 链群打分 - 只有链群主和打分代理显示 */}
-          {canScore && (
+          <Link
+            className="text-secondary hover:text-secondary/80 text-sm cursor-pointer"
+            href={`/action/info?id=${actionId}&symbol=${token?.symbol}`}
+          >
+            行动详情 &gt;&gt;
+          </Link>
+
+          {/* 链群打分 - 只有打分代理显示 */}
+          {isDelegated && (
             <Link
               className="text-secondary hover:text-secondary/80 text-sm cursor-pointer"
               href={`/extension/group_op?actionId=${actionId}&extensionAddress=${extensionAddress}&groupId=${groupId}&op=verify&symbol=${token?.symbol}`}

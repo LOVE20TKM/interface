@@ -37,14 +37,13 @@ const ActionRewardNotifier: React.FC = () => {
   const router = useRouter();
   const isOnActionRewardsPage = router.pathname === '/my/actionrewards';
 
-  // 提前返回，避免在 actionrewards 页面执行任何 hooks
-  if (isOnActionRewardsPage) return null;
-
+  // 必须在条件返回之前调用所有 Hooks
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
-  // 当前轮次（用于“每轮检查一次”）
-  const { currentRound } = useCurrentRound(!!token && token.hasEnded);
+  // 当前轮次（用于"每轮检查一次"）
+  // 在 actionrewards 页面时禁用数据获取，但仍需调用 hook 保持顺序一致
+  const { currentRound } = useCurrentRound(!isOnActionRewardsPage && !!token && token.hasEnded);
 
   // UI 展示用的 needMinted
   const [needMinted, setNeedMinted] = useState<boolean>(false);
@@ -76,13 +75,15 @@ const ActionRewardNotifier: React.FC = () => {
 
   // 计算本轮是否需要触发读取链上"是否有未铸造激励"
   const shouldTriggerCheck = useMemo(() => {
+    // 在 actionrewards 页面时不触发检查
+    if (isOnActionRewardsPage) return false;
     if (!token?.address || !account || currentRound === undefined || currentRound === null) return false;
     if (currentRound <= BigInt(0)) return false;
     const cached = loadActionRewardNotice(account as `0x${string}`, token.address);
     if (!cached) return true;
     // 如果本地记录的轮次落后，则需要触发本轮检查
     return BigInt(cached.round) < currentRound;
-  }, [token?.address, account, currentRound]);
+  }, [isOnActionRewardsPage, token?.address, account, currentRound]);
 
   // 检查普通行动激励：最近 LAST_ROUNDS 轮是否存在未铸造
   const gateRounds = shouldTriggerCheck ? LAST_ROUNDS : BigInt(0);
@@ -129,6 +130,7 @@ const ActionRewardNotifier: React.FC = () => {
 
   // 根据读取结果更新缓存与展示状态
   useEffect(() => {
+    if (isOnActionRewardsPage) return;
     if (!token?.address || !account) {
       setNeedMinted(false);
       return;
@@ -137,10 +139,11 @@ const ActionRewardNotifier: React.FC = () => {
     // 初始时尝试从缓存恢复一次
     const cached = loadActionRewardNotice(account, token.address);
     if (cached) setNeedMinted(!!cached.needMinted);
-  }, [token?.address, account]);
+  }, [isOnActionRewardsPage, token?.address, account]);
 
   // 触发读取后的回写（包括普通和扩展激励）
   useEffect(() => {
+    if (isOnActionRewardsPage) return;
     if (!token?.address || !account) return;
     if (!shouldTriggerCheck) return;
     if (currentRound === undefined || currentRound === null || currentRound <= BigInt(0)) return;
@@ -164,6 +167,7 @@ const ActionRewardNotifier: React.FC = () => {
       setNeedMinted(nextState.needMinted);
     }
   }, [
+    isOnActionRewardsPage,
     hasUnmintedActionRewardOfLastRounds,
     hasUnmintedExtensionReward,
     shouldTriggerCheck,
@@ -175,8 +179,8 @@ const ActionRewardNotifier: React.FC = () => {
     isPendingExtensionRewards,
   ]);
 
-  if (!token?.address || !account) return null;
-  if (!needMinted) return null;
+  // 在 actionrewards 页面或没有需要铸造的激励时不显示
+  if (isOnActionRewardsPage || !token?.address || !account || !needMinted) return null;
 
   return (
     <div className="px-4 py-6">

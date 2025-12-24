@@ -29,6 +29,7 @@ import {
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 
 interface GroupServiceActionDeployProps {
   factoryAddress: `0x${string}`;
@@ -205,13 +206,14 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
   };
 
   return (
-    <Card className="border-0 shadow-none">
-      <CardHeader className="px-4 md:px-6 pb-4 md:pb-6 pt-4 md:pt-6">
-        <CardTitle className="text-xl md:text-2xl">部署链群服务扩展合约</CardTitle>
-        <CardDescription className="text-sm">每1个新的链群服务行动，都对应1个专属扩展合约</CardDescription>
-      </CardHeader>
-      <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
-        <form className="space-y-4 md:space-y-6">
+    <>
+      <Card className="border-0 shadow-none">
+        <CardHeader className="px-4 md:px-6 pb-4 md:pb-6 pt-4 md:pt-6">
+          <CardTitle className="text-xl md:text-2xl">部署链群服务扩展合约</CardTitle>
+          <CardDescription className="text-sm">每1个新的链群服务行动，都对应1个专属扩展合约</CardDescription>
+        </CardHeader>
+        <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
+          <form className="space-y-4 md:space-y-6">
           {/* 链群行动所在代币地址 */}
           <div className="space-y-2">
             <Label htmlFor="groupActionTokenAddress">1. 链群行动所在代币地址</Label>
@@ -321,5 +323,10 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
         </form>
       </CardContent>
     </Card>
+    <LoadingOverlay 
+      isLoading={isApprovePending || isApproveConfirming || isPending || isConfirming} 
+      text={isApprovePending ? '提交授权交易...' : isApproveConfirming ? '确认授权交易...' : isPending ? '提交部署交易...' : '确认部署交易...'} 
+    />
+    </>
   );
 }

@@ -32,6 +32,10 @@ export interface ActionRewardsListProps {
   tokenData: any;
   /** 是否为扩展行动 */
   isExtension?: boolean;
+  /** 铸造开始回调 */
+  onMintStart?: () => void;
+  /** 铸造结束回调（成功或失败） */
+  onMintEnd?: () => void;
   /** 铸造成功回调 */
   onMintSuccess?: (round: bigint) => void;
   /** 是否显示标题 */
@@ -65,6 +69,8 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
   extensionAddress,
   tokenData,
   isExtension = false,
+  onMintStart,
+  onMintEnd,
   onMintSuccess,
   showTitle = false,
   title,
@@ -104,37 +110,58 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
       toast.success('铸造成功');
       // 更新本地已铸造状态
       setLocallyMinted((prev) => new Set(prev).add(mintingTarget.toString()));
-      // 通知父组件
+      // 通知父组件铸造成功
       if (onMintSuccess) {
         onMintSuccess(mintingTarget);
       }
+      // 通知父组件铸造结束
+      if (onMintEnd) {
+        onMintEnd();
+      }
       setMintingTarget(null);
     }
-  }, [isConfirmed, mintingTarget, onMintSuccess]);
+  }, [isConfirmed, mintingTarget, onMintSuccess, onMintEnd]);
 
   // ========== 铸造处理函数 ==========
   const handleMint = async (round: bigint) => {
     setMintingTarget(round);
+
+    // 通知父组件铸造开始
+    if (onMintStart) {
+      onMintStart();
+    }
 
     try {
       if (isExtension) {
         // 扩展行动：使用 claimReward
         if (!extensionAddress) {
           toast.error('扩展合约地址未提供');
+          setMintingTarget(null);
+          if (onMintEnd) {
+            onMintEnd();
+          }
           return;
         }
         await extensionClaimReward(round);
       } else {
         // 普通行动：使用 mintActionReward
-        if (!tokenAddress || !actionId) {
+        if (!tokenAddress) {
           toast.error('Token 地址或行动 ID 未提供');
+          setMintingTarget(null);
+          if (onMintEnd) {
+            onMintEnd();
+          }
           return;
         }
-        await mintActionReward(tokenAddress, round, actionId);
+        await mintActionReward(tokenAddress, round, actionId ?? BigInt(0));
       }
     } catch (error) {
       console.error('铸造失败:', error);
       setMintingTarget(null);
+      // 通知父组件铸造结束
+      if (onMintEnd) {
+        onMintEnd();
+      }
     }
   };
 

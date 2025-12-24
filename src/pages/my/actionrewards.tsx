@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
@@ -23,20 +23,26 @@ const ActRewardsPage: React.FC = () => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
 
+  // 铸造状态管理
+  const [isMinting, setIsMinting] = useState(false);
+  const [mintingMessage, setMintingMessage] = useState('');
+
   // 获取行动激励数据
-  const {
-    displayedGroups,
-    isLoading,
-    isPending,
-    isConfirming,
-    handleClaimCoreReward,
-    locallyMinted,
-    handleExtensionMintSuccess,
-    errors,
-  } = useActionsLatestRewards({
+  const { displayedGroups, isLoading, handleExtensionMintSuccess, errors } = useActionsLatestRewards({
     tokenAddress: token?.address as `0x${string}`,
     lastRounds: LAST_ROUNDS,
   });
+
+  // 铸造回调函数
+  const handleMintStart = () => {
+    setIsMinting(true);
+    setMintingMessage('提交交易...');
+  };
+
+  const handleMintEnd = () => {
+    setIsMinting(false);
+    setMintingMessage('');
+  };
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -93,9 +99,8 @@ const ActRewardsPage: React.FC = () => {
                             isExtension={false}
                             showTitle={isExtension}
                             title="普通激励"
-                            externalIsPending={isPending}
-                            externalIsConfirming={isConfirming}
-                            onMintSuccess={(round) => handleClaimCoreReward(round, action.action.head.id)}
+                            onMintStart={handleMintStart}
+                            onMintEnd={handleMintEnd}
                           />
                         )}
 
@@ -108,6 +113,8 @@ const ActRewardsPage: React.FC = () => {
                             isExtension={true}
                             showTitle={coreRewards.length > 0}
                             title="扩展激励"
+                            onMintStart={handleMintStart}
+                            onMintEnd={handleMintEnd}
                             onMintSuccess={(round) =>
                               handleExtensionMintSuccess(extensionInfo.extension!, round.toString())
                             }
@@ -116,7 +123,7 @@ const ActRewardsPage: React.FC = () => {
                       </>
                     ) : (
                       <div className="text-center text-greyscale-500 py-4">
-                        该行动最近 {LAST_ROUNDS.toString()} 轮没有获得激励
+                        该行动最近 {(LAST_ROUNDS + BigInt(1)).toString()} 轮没有获得激励
                       </div>
                     )}
 
@@ -137,7 +144,7 @@ const ActRewardsPage: React.FC = () => {
             )}
           </div>
         )}
-        <LoadingOverlay isLoading={isPending || isConfirming} text={isPending ? '提交交易...' : '确认交易...'} />
+        <LoadingOverlay isLoading={isMinting} text={mintingMessage} />
       </main>
     </>
   );

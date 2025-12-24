@@ -140,8 +140,19 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
 
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">最大参与代币数:</span>
-              <span className="font-mono">{formatTokenAmount(groupDetail.actualMaxJoinAmount)}</span>
+              <span className="font-mono">
+                {groupDetail.maxJoinAmount > BigInt(0) ? formatTokenAmount(groupDetail.maxJoinAmount) : '不限'}
+              </span>
             </div>
+
+            {/* 当链群设置的最大参与代币数与实际最大参与代币数不同时，显示提示信息 */}
+            {groupDetail.maxJoinAmount !== groupDetail.actionMaxJoinAmount && (
+              <div className="col-span-1 md:col-span-2">
+                <div className="text-xs text-gray-600 bg-gray-100 rounded px-3 py-2">
+                  扩展行动限制 最大参与代币数 {formatTokenAmount(groupDetail.actionMaxJoinAmount)}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

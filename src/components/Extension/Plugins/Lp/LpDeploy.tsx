@@ -12,6 +12,7 @@ import { LOVE20ExtensionFactoryLpAbi } from '@/src/abis/LOVE20ExtensionFactoryLp
 import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import { clearContractInfoCache } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import toast from 'react-hot-toast';
 import { isAddress, parseEther, parseEventLogs } from 'viem';
 import { useWaitForTransactionReceipt } from 'wagmi';
@@ -225,13 +226,14 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   };
 
   return (
-    <Card className="border-0 shadow-none">
-      <CardHeader className="px-4 md:px-6 pb-4 md:pb-6 pt-4 md:pt-6">
-        <CardTitle className="text-xl md:text-2xl">部署LP池行动扩展合约</CardTitle>
-        <CardDescription className="text-sm">每1个新的LP池行动，都对应1个专属扩展合约</CardDescription>
-      </CardHeader>
-      <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
-        <form className="space-y-4 md:space-y-6">
+    <>
+      <Card className="border-0 shadow-none">
+        <CardHeader className="px-4 md:px-6 pb-4 md:pb-6 pt-4 md:pt-6">
+          <CardTitle className="text-xl md:text-2xl">部署LP池行动扩展合约</CardTitle>
+          <CardDescription className="text-sm">每1个新的LP池行动，都对应1个专属扩展合约</CardDescription>
+        </CardHeader>
+        <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
+          <form className="space-y-4 md:space-y-6">
           {/* LP Token地址 */}
           <div className="space-y-2">
             <Label htmlFor="joinTokenAddress">1. LP代币地址</Label>
@@ -379,5 +381,10 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
         </form>
       </CardContent>
     </Card>
+    <LoadingOverlay 
+      isLoading={isApprovePending || isApproveConfirming || isPending || isConfirming} 
+      text={isApprovePending ? '提交授权交易...' : isApproveConfirming ? '确认授权交易...' : isPending ? '提交部署交易...' : '确认部署交易...'} 
+    />
+    </>
   );
 }
