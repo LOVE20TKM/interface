@@ -15,8 +15,9 @@ import _GroupHeader from '@/src/components/Extension/Plugins/Group/_GroupHeader'
 import _GroupDetail from '@/src/components/Extension/Plugins/Group/_GroupDetail';
 import _GroupScores from '@/src/components/Extension/Plugins/Group/_GroupScores';
 import _GroupRewards from '@/src/components/Extension/Plugins/Group/_GroupRewards';
+import _GroupParticipants from '@/src/components/Extension/Plugins/Group/_GroupParticipants';
 
-type TabType = 'detail' | 'scores' | 'rewards';
+type TabType = 'detail' | 'scores' | 'rewards' | 'participants';
 
 const ActionGroupPage: React.FC = () => {
   const router = useRouter();
@@ -56,7 +57,7 @@ const ActionGroupPage: React.FC = () => {
 
   // 初始化tab状态
   useEffect(() => {
-    if (tab && ['detail', 'scores', 'rewards'].includes(tab as string)) {
+    if (tab && ['detail', 'scores', 'rewards', 'participants'].includes(tab as string)) {
       setActiveTab(tab as TabType);
     }
   }, [tab]);
@@ -64,6 +65,7 @@ const ActionGroupPage: React.FC = () => {
   // Tab配置
   const tabs: { key: TabType; label: string }[] = [
     { key: 'detail', label: '链群详情' },
+    { key: 'participants', label: '参与地址' },
     { key: 'scores', label: '打分公示' },
     { key: 'rewards', label: '激励公示' },
   ];
@@ -137,6 +139,15 @@ const ActionGroupPage: React.FC = () => {
       case 'rewards':
         return (
           <_GroupRewards
+            actionId={actionId}
+            actionInfo={actionInfo}
+            extensionAddress={extensionAddress}
+            groupId={groupIdBigInt}
+          />
+        );
+      case 'participants':
+        return (
+          <_GroupParticipants
             actionId={actionId}
             actionInfo={actionInfo}
             extensionAddress={extensionAddress}
