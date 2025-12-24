@@ -13,6 +13,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionRewardsByAccountOfLastRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
 import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useEstimateAccountScoresByActionIdsByRounds } from '@/src/hooks/composite/useEstimateAccountScoresByActionIdsByRounds';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
@@ -40,13 +41,16 @@ const LAST_ROUNDS = BigInt(6);
 
 type ActionRewardsGroup = {
   action: JoinedAction;
-  rewards: ActionReward[];
+  rewards: (ActionReward & { notSelected?: boolean })[];
 };
 
 const ActRewardsPage: React.FC = () => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
+
+  // 获取当前轮次
+  const { currentRound, isPending: isLoadingCurrentRound } = useCurrentRound();
 
   // 获取最近 N 轮的行动激励
   const {
@@ -62,37 +66,62 @@ const ActRewardsPage: React.FC = () => {
     error: errorLoadingActions,
   } = useJoinedActions(token?.address as `0x${string}`, account as `0x${string}`);
 
-  // 将激励按行动分组（显示所有行动，没有激励的显示提示）
+  // 将激励按行动分组（显示所有行动，包括未抽中的轮次）
   const grouped = useMemo<ActionRewardsGroup[]>(() => {
-    if (!joinedActions || !rewards) return [];
+    if (!joinedActions || !rewards || currentRound === undefined) return [];
 
-    // 创建激励映射
-    const rewardsByAction = new Map<string, ActionReward[]>();
+    // 计算需要显示的轮次范围
+    const startRound = currentRound > LAST_ROUNDS ? currentRound - LAST_ROUNDS - BigInt(1) : BigInt(0);
+    const endRound = currentRound - BigInt(1);
+
+    // 创建激励映射：actionId -> round -> ActionReward
+    const rewardsByActionAndRound = new Map<string, Map<string, ActionReward>>();
     for (const r of rewards) {
       if (r.reward <= BigInt(0)) continue;
-      const key = r.actionId.toString();
-      if (!rewardsByAction.has(key)) rewardsByAction.set(key, []);
-      rewardsByAction.get(key)!.push(r);
+      const actionKey = r.actionId.toString();
+      const roundKey = r.round.toString();
+
+      if (!rewardsByActionAndRound.has(actionKey)) {
+        rewardsByActionAndRound.set(actionKey, new Map());
+      }
+      rewardsByActionAndRound.get(actionKey)!.set(roundKey, r);
     }
 
-    // 为所有参与的行动创建分组，包括没有激励的行动
+    // 为所有参与的行动创建分组，包括完整的轮次列表
     const list: ActionRewardsGroup[] = [];
     for (const joinedAction of joinedActions) {
-      const actionIdStr = String(joinedAction.action.head.id);
-      const actionRewards = rewardsByAction.get(actionIdStr) || [];
+      const actionId = joinedAction.action.head.id;
+      const actionIdStr = actionId.toString();
+      const actionRewardsMap = rewardsByActionAndRound.get(actionIdStr);
 
-      // 如果有激励，按轮次倒序排序
-      if (actionRewards.length > 0) {
-        actionRewards.sort((a, b) => (a.round > b.round ? -1 : 1));
+      // 生成完整的轮次列表（从 startRound 到 endRound）
+      const completeRewards: (ActionReward & { notSelected?: boolean })[] = [];
+      for (let round = endRound; round >= startRound; round--) {
+        const roundStr = round.toString();
+        const existingReward = actionRewardsMap?.get(roundStr);
+
+        if (existingReward) {
+          // 有激励记录
+          completeRewards.push(existingReward);
+        } else {
+          // 没有激励记录，标记为未抽中
+          completeRewards.push({
+            actionId: actionId,
+            round: round,
+            reward: BigInt(0),
+            isMinted: false,
+            notSelected: true, // 标记为未抽中
+          });
+        }
       }
 
-      list.push({ action: joinedAction, rewards: actionRewards });
+      list.push({ action: joinedAction, rewards: completeRewards });
     }
 
     // 按行动 id 倒序
     list.sort((a, b) => (BigInt(a.action.action.head.id) > BigInt(b.action.action.head.id) ? -1 : 1));
     return list;
-  }, [joinedActions, rewards]);
+  }, [joinedActions, rewards, currentRound]);
 
   // 准备得分查询参数：从 rewards 中提取实际存在的 (actionId, round) 组合
   const scoreQueryParams = useMemo(() => {
@@ -125,8 +154,8 @@ const ActRewardsPage: React.FC = () => {
     account: account as `0x${string}`,
     tokenAddress: token?.address as `0x${string}`,
     actionRoundPairs: scoreQueryParams.actionRoundPairs,
-    // enabled: scoreQueryParams.enabled && !!account && !!token?.address,
-    enabled: false,
+    enabled: scoreQueryParams.enabled && !!account && !!token?.address,
+    // enabled: false,
   });
 
   // 铸造行动激励
@@ -205,6 +234,7 @@ const ActRewardsPage: React.FC = () => {
           isMinted: locallyMinted.has(key) || r.isMinted,
           score: score || '0.0', // 添加得分字段
           isScoreLoading, // 添加加载状态字段
+          notSelected: r.notSelected, // 保留未抽中标记
         };
       }),
     }));
@@ -251,7 +281,7 @@ const ActRewardsPage: React.FC = () => {
               </div>
             </div>
 
-            {isLoadingRewards || isLoadingActions ? (
+            {isLoadingRewards || isLoadingActions || isLoadingCurrentRound ? (
               <LoadingIcon />
             ) : displayedGroups.length > 0 ? (
               displayedGroups.map((group) => (
@@ -272,7 +302,7 @@ const ActRewardsPage: React.FC = () => {
                         <thead>
                           <tr className="border-b border-gray-100">
                             <th className="text-left px-0">轮次</th>
-                            {/* <th className="text-center">
+                            <th className="text-center">
                               <div className="flex items-center justify-center gap-1">
                                 验证得分
                                 <InfoTooltip
@@ -280,7 +310,7 @@ const ActRewardsPage: React.FC = () => {
                                   content="这个得分，是根据最终激励，估算的平均得分。   （具体算法：将所有地址中实际得分最高者，作为100分，然后将你的实际得分等比例换算到0~100）"
                                 />
                               </div>
-                            </th> */}
+                            </th>
                             <th className="text-center">可铸造激励</th>
                             <th className="text-center">操作</th>
                           </tr>
@@ -294,7 +324,7 @@ const ActRewardsPage: React.FC = () => {
                               }
                             >
                               <td className="px-1">{formatRoundForDisplay(item.round, token).toString()}</td>
-                              {/* <td className="text-center px-1">
+                              <td className="text-center px-1">
                                 {item.isScoreLoading ? (
                                   <div className="flex justify-center items-center">
                                     <LoadingIcon />
@@ -312,10 +342,18 @@ const ActRewardsPage: React.FC = () => {
                                 ) : (
                                   <span className="text-greyscale-500">-</span>
                                 )}
-                              </td> */}
-                              <td className="text-center px-1">{formatTokenAmount(item.reward || BigInt(0))}</td>
+                              </td>
                               <td className="text-center px-1">
-                                {item.reward > BigInt(0) && !item.isMinted ? (
+                                {item.notSelected ? (
+                                  <span className="text-greyscale-500">未抽中</span>
+                                ) : (
+                                  formatTokenAmount(item.reward || BigInt(0))
+                                )}
+                              </td>
+                              <td className="text-center px-1">
+                                {item.notSelected ? (
+                                  <span className="text-greyscale-500">-</span>
+                                ) : item.reward > BigInt(0) && !item.isMinted ? (
                                   <Button
                                     variant="outline"
                                     size="sm"
