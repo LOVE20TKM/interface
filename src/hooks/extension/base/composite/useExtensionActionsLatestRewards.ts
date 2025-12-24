@@ -86,7 +86,7 @@ export const useExtensionActionsLatestRewards = ({
       const startRound = currentRound > lastRounds ? currentRound - lastRounds + BigInt(1) : BigInt(1);
 
       // 为每一轮创建查询
-      for (let round = startRound; round < currentRound; round++) {
+      for (let round = startRound; round <= currentRound; round++) {
         contracts.push({
           address: extensionAddress,
           abi: ILOVE20ExtensionAbi,

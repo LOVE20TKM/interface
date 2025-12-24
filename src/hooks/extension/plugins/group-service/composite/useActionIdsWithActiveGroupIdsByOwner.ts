@@ -1,11 +1,11 @@
 /**
- * 获取一个链群主所有激活的链群ids列表（按行动id分组）Hook
+ * 获取一个链群主所有激活的链群NFTs列表（按行动id分组）Hook
  *
  * 功能：
  * 1. 批量获取 verifyRound, verifyRound-1, verifyRound-2 3个轮次的投过票的actionIds
  * 2. 批量通过 center 合约获取 extension 地址
  * 3. 批量用 factory 合约的 exists 检查 extension 地址是否有效，丢弃掉无效的地址
- * 4. 批量对于 actionId 用 activeGroupIdsByOwner 获取在该群激活的链群id列表
+ * 4. 批量对于 actionId 用 activeGroupIdsByOwner 获取在该群激活的链群NFT列表
  *
  * 使用示例：
  * ```typescript
@@ -29,12 +29,12 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 // ==================== 类型定义 ====================
 
 /**
- * 按 actionId 分组的链群id列表
+ * 按 actionId 分组的链群NFT列表
  */
 export interface ActionIdWithGroupIds {
   /** 行动ID */
   actionId: bigint;
-  /** 该行动下激活的链群id列表 */
+  /** 该行动下激活的链群NFT列表 */
   groupIds: bigint[];
 }
 
@@ -54,7 +54,7 @@ export interface UseActionIdsWithActiveGroupIdsByOwnerParams {
  * Hook 返回值
  */
 export interface UseActionIdsWithActiveGroupIdsByOwnerResult {
-  /** 按 actionId 分组的激活链群id列表 */
+  /** 按 actionId 分组的激活链群NFT列表 */
   actionIdsWithGroupIds: ActionIdWithGroupIds[];
   /** 加载状态 */
   isPending: boolean;
@@ -72,10 +72,10 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string
 // ==================== Hook 实现 ====================
 
 /**
- * 获取一个链群主所有激活的链群ids列表（按行动id分组）
+ * 获取一个链群主所有激活的链群NFTs列表（按行动id分组）
  *
  * @param params - Hook 参数
- * @returns 按 actionId 分组的激活链群id列表
+ * @returns 按 actionId 分组的激活链群NFT列表
  */
 export function useActionIdsWithActiveGroupIdsByOwner({
   tokenAddress,
@@ -287,13 +287,13 @@ export function useActionIdsWithActiveGroupIdsByOwner({
   // 过滤出有效的 actionIds（extension 存在且 factory 验证通过）
   const validActionIds = useMemo(() => {
     if (!existsData || extensionToFactory.size === 0) return [];
-    
+
     // 建立 extensionAddress 到 actionId 的反向映射
     const extensionToActionId = new Map<`0x${string}`, bigint>();
     actionIdToExtension.forEach((extensionAddress, actionId) => {
       extensionToActionId.set(extensionAddress, actionId);
     });
-    
+
     const validIds: bigint[] = [];
     let index = 0;
     // 按照 extensionToFactory 的顺序遍历（与 existsData 的顺序一致）
@@ -311,7 +311,7 @@ export function useActionIdsWithActiveGroupIdsByOwner({
   }, [existsData, extensionToFactory, actionIdToExtension]);
 
   // ==========================================
-  // 步骤4：批量获取激活的链群id列表
+  // 步骤4：批量获取激活的链群NFT列表
   // ==========================================
 
   const groupIdsContracts = useMemo(() => {
@@ -390,7 +390,7 @@ export function useActionIdsWithActiveGroupIdsByOwner({
     // 如果步骤3验证后没有有效的 actionIds，步骤4不执行，isPending 为 false
     if (validActionIds.length === 0) return false;
 
-    // 步骤4：获取链群id列表
+    // 步骤4：获取链群NFT列表
     return isGroupIdsPending;
   }, [
     tokenAddress,
@@ -426,4 +426,3 @@ export function useActionIdsWithActiveGroupIdsByOwner({
     error,
   };
 }
-

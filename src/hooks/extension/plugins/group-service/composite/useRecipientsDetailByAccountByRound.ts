@@ -47,7 +47,7 @@ export interface RecipientsDistribution {
  * 链群信息（包含二次分配明细）
  */
 export interface GroupInfoWithDistribution {
-  /** 链群ID */
+  /** 链群NFT */
   groupId: bigint;
   /** 链群名称 */
   groupName: string | undefined;
@@ -133,7 +133,7 @@ export function useRecipientsDetailByAccountByRound({
   }, [actionIdsData]);
 
   // ==========================================
-  // 步骤2：获取每个行动的有二次分配的链群ID列表
+  // 步骤2：获取每个行动的有二次分配的链群NFT列表
   // ==========================================
 
   const groupIdsContracts = useMemo(() => {
@@ -349,7 +349,7 @@ export function useRecipientsDetailByAccountByRound({
     if (isActionIdsPending) return true;
     if (actionIds.length === 0) return false; // 没有数据，不需要继续加载
 
-    // 步骤2：获取链群ID列表
+    // 步骤2：获取链群NFT列表
     if (isGroupIdsPending) return true;
     if (actionIdToGroupIdsMap.size === 0) return false; // 没有数据，不需要继续加载
 
@@ -390,4 +390,3 @@ export function useRecipientsDetailByAccountByRound({
     error,
   };
 }
-

@@ -366,7 +366,6 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 <Button className="w-full" asChild>
                   <Link
                     href={`/action/new/?symbol=${tokenSymbol}&extension=${deployedExtensionAddress}`}
-                    target="_blank"
                     rel="noopener noreferrer"
                   >
                     立即创建行动

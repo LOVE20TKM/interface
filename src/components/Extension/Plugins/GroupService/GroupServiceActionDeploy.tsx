@@ -3,6 +3,9 @@
 // React
 import { useContext, useEffect, useState } from 'react';
 
+// Next.js
+import Link from 'next/link';
+
 // 第三方库
 import toast from 'react-hot-toast';
 import { isAddress, parseEther } from 'viem';
@@ -258,8 +261,16 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
                 <p className="text-sm text-greyscale-600">扩展合约地址:</p>
                 <AddressWithCopyButton address={deployedExtensionAddress} showAddress={true} />
               </div>
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded">
-                <p className="text-sm text-blue-700">✨ 扩展已部署！请复制合约地址，在创建行动时设置为扩展地址。</p>
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded space-y-3">
+                <p className="text-sm text-blue-700">✨ 扩展已部署！现在可以使用此扩展地址创建行动。</p>
+                <Button className="w-full" asChild>
+                  <Link
+                    href={`/action/new/?symbol=${tokenSymbol}&extension=${deployedExtensionAddress}`}
+                    rel="noopener noreferrer"
+                  >
+                    立即创建行动
+                  </Link>
+                </Button>
               </div>
             </div>
           )}

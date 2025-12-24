@@ -49,12 +49,10 @@ export default function RecipientsDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto py-8 px-4">
         <DialogHeader>
           <DialogTitle>
-            {account && round !== undefined
-              ? `第 ${round.toString()} 轮二次分配明细 - ${account.slice(0, 6)}...${account.slice(-4)}`
-              : '二次分配明细'}
+            {account && round !== undefined ? `第 ${round.toString()} 轮二次分配明细` : '二次分配明细'}
           </DialogTitle>
         </DialogHeader>
 
@@ -75,24 +73,32 @@ export default function RecipientsDetailDialog({
         ) : (
           <div className="space-y-6">
             {actionInfosWithGroups.map((actionInfo) => (
-              <div key={actionInfo.actionId.toString()} className="border rounded-lg p-4">
+              <div key={actionInfo.actionId.toString()} className="">
                 {/* 行动标题 */}
-                <h3 className="text-base font-semibold mb-3 text-gray-900">
-                  {actionInfo.actionBaseInfo.body.title || `行动 #${actionInfo.actionId.toString()}`}
-                </h3>
+                <div className="flex items-baseline mb-2">
+                  <span className="text-greyscale-400 text-sm">{`No.`}</span>
+                  <span className="text-secondary text-xl font-bold mr-2">{String(actionInfo.actionId)}</span>
+                  <span className="font-bold text-greyscale-800">
+                    {actionInfo.actionBaseInfo.body.title || `行动 #${actionInfo.actionId.toString()}`}
+                  </span>
+                </div>
 
                 {/* 链群列表 */}
                 {actionInfo.groups.length === 0 ? (
                   <p className="text-sm text-gray-500">该行动下暂无链群二次分配</p>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     {actionInfo.groups.map((group) => (
-                      <div key={group.groupId.toString()} className="border rounded-md overflow-hidden">
+                      <div key={group.groupId.toString()} className="border-t pt-4 first:border-t-0 first:pt-0">
                         {/* 链群名称 */}
-                        <div className="bg-gray-50 px-3 py-2 border-b">
-                          <p className="text-sm font-medium text-gray-700">
-                            {group.groupName || `链群 #${group.groupId.toString()}`}
-                          </p>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-gray-800">
+                            <span className="text-gray-500 text-xs">&nbsp;链群 #</span>
+                            <span className="text-secondary text-base font-semibold ">
+                              {group.groupId.toString()}
+                            </span>{' '}
+                            <span>{group.groupName || `链群 #${group.groupId}`}</span>
+                          </div>
                         </div>
 
                         {/* 分配明细表格 */}
@@ -103,7 +109,7 @@ export default function RecipientsDetailDialog({
                                 <TableRow>
                                   <TableHead className="px-3 py-2 text-left text-xs font-medium">地址</TableHead>
                                   <TableHead className="px-3 py-2 text-right text-xs font-medium">比例</TableHead>
-                                  <TableHead className="px-3 py-2 text-right text-xs font-medium">金额</TableHead>
+                                  <TableHead className="px-3 py-2 text-right text-xs font-medium">激励</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -181,4 +187,3 @@ export default function RecipientsDetailDialog({
     </Dialog>
   );
 }
-

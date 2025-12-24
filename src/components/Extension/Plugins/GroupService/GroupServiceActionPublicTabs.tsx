@@ -52,9 +52,9 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
   useEffect(() => {
     if (urlRound && !isNaN(Number(urlRound))) {
       setSelectedRound(BigInt(urlRound as string));
-    } else if (token && currentJoinRound - BigInt(token.initialStakeRound) >= BigInt(1)) {
+    } else if (token && currentJoinRound - BigInt(token.initialStakeRound) >= BigInt(2)) {
       // 默认为上一轮
-      setSelectedRound(currentJoinRound - BigInt(1));
+      setSelectedRound(currentJoinRound - BigInt(2));
     }
   }, [urlRound, currentJoinRound, token]);
 
@@ -157,45 +157,46 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
         )
       ) : (
         <div className="overflow-x-auto">
-          <table className="table w-full text-sm">
+          <table className="table w-full">
             <thead>
-              <tr className="border-b border-gray-100 text-greyscale-500">
-                <th className="px-2 py-3 text-left font-medium">地址</th>
-                <th className="px-2 py-3 text-right font-medium">激励</th>
-                <th className="px-2 py-3 text-right font-medium">占比</th>
-                <th className="px-2 py-3 text-center font-medium">二次分配</th>
+              <tr className="border-b border-gray-100">
+                <th className="px-1 text-left">排名</th>
+                <th className="px-1 text-left">地址</th>
+                <th className="px-1 text-right">激励/占比</th>
+                <th className="px-1 text-center">二次分配</th>
               </tr>
             </thead>
             <tbody>
-              {sortedRewards.map((item) => (
+              {sortedRewards.map((item, index) => (
                 <tr
                   key={item.account}
-                  className={`border-b border-gray-50 hover:bg-gray-50 ${
-                    item.account === account ? 'bg-blue-50/50' : ''
-                  }`}
+                  className={`border-b border-gray-100 ${item.account === account ? 'bg-blue-50/50' : ''}`}
                 >
-                  <td className="px-2 py-3">
+                  <td className="px-1 text-greyscale-400">{index + 1}</td>
+                  <td className="px-1">
                     <AddressWithCopyButton
                       address={item.account}
                       showCopyButton={true}
                       word={item.account === account ? '(我)' : ''}
                     />
                   </td>
-                  <td className="px-2 py-3 text-right font-medium text-greyscale-900">
-                    {formatTokenAmount(item.amount)}
+                  <td className="px-1 text-right">
+                    <div className="font-mono text-secondary">{formatTokenAmount(item.amount)}</div>
+                    <div className="text-greyscale-500 text-xs">
+                      (
+                      {totalReward > BigInt(0)
+                        ? formatPercentage(Number((BigInt(item.amount) * BigInt(10000)) / totalReward) / 100)
+                        : '0%'}
+                      )
+                    </div>
                   </td>
-                  <td className="px-2 py-3 text-right text-greyscale-600">
-                    {totalReward > BigInt(0)
-                      ? formatPercentage(Number((BigInt(item.amount) * BigInt(10000)) / totalReward) / 100)
-                      : '0%'}
-                  </td>
-                  <td className="px-2 py-3 text-center">
+                  <td className="px-1 text-center">
                     {item.hasRecipients ? (
                       <Button
-                        variant="outline"
+                        variant="link"
+                        className="text-secondary text-sm font-normal"
                         size="sm"
                         onClick={() => handleViewDetail(item.account)}
-                        className="h-7 px-3 text-xs"
                       >
                         查看
                       </Button>
@@ -207,11 +208,14 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
               ))}
 
               {/* 汇总行 */}
-              <tr className="bg-gray-50 font-medium text-greyscale-900">
-                <td className="px-2 py-3 text-left">汇总</td>
-                <td className="px-2 py-3 text-right">{formatTokenAmount(totalReward)}</td>
-                <td className="px-2 py-3 text-right">100%</td>
-                <td className="px-2 py-3"></td>
+              <tr className="text-greyscale-900">
+                <td className="px-1 text-left"></td>
+                <td className="px-1 text-left">汇总</td>
+                <td className="px-1 text-right">
+                  <div className="font-mono text-secondary">{formatTokenAmount(totalReward)}</div>
+                  <div className="text-greyscale-500 text-xs">(100%)</div>
+                </td>
+                <td className="px-1"></td>
               </tr>
             </tbody>
           </table>

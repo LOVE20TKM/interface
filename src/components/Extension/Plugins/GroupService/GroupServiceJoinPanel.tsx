@@ -23,7 +23,10 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupService';
+import {
+  useJoin,
+  useJoinInfo,
+} from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupService';
 
 // 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
@@ -39,11 +42,7 @@ interface GroupServiceJoinPanelProps {
   extensionAddress: `0x${string}`;
 }
 
-const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({
-  actionId,
-  actionInfo,
-  extensionAddress,
-}) => {
+const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId, actionInfo, extensionAddress }) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
@@ -109,15 +108,11 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({
 
         {/* 行动信息 */}
         <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-          <div className="text-sm text-gray-600 mb-2">
+          <div className="text-sm text-gray-600">
             <span className="font-medium">行动：</span>
             <span className="text-gray-800">
               #{actionId.toString()} {actionInfo.body.title}
             </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            <span className="font-medium">描述：</span>
-            <span className="text-gray-800">{actionInfo.body.description || '暂无描述'}</span>
           </div>
         </div>
 
@@ -127,9 +122,7 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({
             <div className="text-sm text-blue-700">
               <span className="font-medium">✓ 您已加入此链群服务行动</span>
             </div>
-            <div className="text-xs text-blue-600 mt-1">
-              加入轮次：#{joinedRound?.toString()}
-            </div>
+            <div className="text-xs text-blue-600 mt-1">加入轮次：#{joinedRound?.toString()}</div>
           </div>
         )}
 

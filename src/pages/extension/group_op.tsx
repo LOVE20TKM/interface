@@ -161,22 +161,22 @@ const ActionGroupOpPage: React.FC = () => {
     );
   }
 
-  // 验证权限（activate 操作不需要验证，因为会从用户的 group NFT 中选择）
-  if (!isActivate && (!account || !groupOwner || groupOwner.toLowerCase() !== account.toLowerCase())) {
-    return (
-      <>
-        <Header title={getPageTitle()} showBackButton={true} />
-        <main className="flex-grow">
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center py-12">
-              <p className="text-red-500 mb-2">无操作权限</p>
-              <p className="text-sm text-gray-600">只有链群所有者才能进行此操作</p>
-            </div>
-          </div>
-        </main>
-      </>
-    );
-  }
+  // // 验证权限（activate 操作不需要验证，因为会从用户的 group NFT 中选择）
+  // if (!isActivate && (!account || !groupOwner || groupOwner.toLowerCase() !== account.toLowerCase())) {
+  //   return (
+  //     <>
+  //       <Header title={getPageTitle()} showBackButton={true} />
+  //       <main className="flex-grow">
+  //         <div className="container mx-auto px-4 py-8">
+  //           <div className="text-center py-12">
+  //             <p className="text-red-500 mb-2">无操作权限</p>
+  //             <p className="text-sm text-gray-600">只有链群所有者才能进行此操作</p>
+  //           </div>
+  //         </div>
+  //       </main>
+  //     </>
+  //   );
+  // }
 
   // 根据操作类型渲染不同组件
   const renderOperation = () => {

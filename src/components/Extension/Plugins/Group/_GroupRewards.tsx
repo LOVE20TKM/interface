@@ -239,7 +239,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
                   <td className="px-1 text-right font-mono text-secondary">{formatTokenAmount(item.joinedAmount)}</td>
                   <td className="px-1 text-right text-greyscale-700">{Number(item.score).toString()}</td>
                   <td className="px-1 text-right">
-                    <div className="font-mono text-secondary">{formatTokenAmount(item.reward, 2)}</div>
+                    <div className="font-mono text-secondary">{formatTokenAmount(item.reward)}</div>
                     <div className="text-xs text-greyscale-500">{item.rewardPercentage.toFixed(2)}%</div>
                   </td>
                 </tr>

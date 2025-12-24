@@ -23,7 +23,7 @@ interface GroupManagementDialogProps {
   onOpenChange: (open: boolean) => void;
   /** 行动ID */
   actionId: bigint;
-  /** 链群ID */
+  /** 链群NFT */
   groupId: bigint;
   /** 是否显示"查看链群"选项 */
   showViewGroup?: boolean;

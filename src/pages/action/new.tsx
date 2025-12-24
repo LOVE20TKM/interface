@@ -351,7 +351,7 @@ export default function NewAction() {
                               <FormControl>
                                 <Input
                                   type="text"
-                                  placeholder="提示信息，比如 '张三-12bc'"
+                                  placeholder="提示信息，比如 '张三-8b6c'"
                                   className="!ring-secondary-foreground"
                                   maxLength={1010}
                                   {...field}

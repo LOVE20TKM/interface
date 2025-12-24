@@ -114,6 +114,8 @@ export const useActionsLatestRewards = ({
     account: account as `0x${string}`,
   });
 
+  console.log('lastRounds@useActionsLatestRewards', lastRounds);
+
   // 第5步：将激励按行动分组，拼接所有数据
   const grouped = useMemo<ActionRewardsGroup[]>(() => {
     const safeCore = coreActions || [];

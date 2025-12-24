@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -74,6 +74,9 @@ export default function _GroupServiceSetRecipients({
     name: 'recipients',
   });
 
+  // 使用 ref 追踪是否已经处理过成功回调，避免重复触发
+  const hasCalledSuccessRef = useRef(false);
+
   // Initialize form with current data when dialog opens
   useEffect(() => {
     if (open && currentAddrs && currentBasisPoints) {
@@ -82,9 +85,13 @@ export default function _GroupServiceSetRecipients({
         basisPoints: Number(currentBasisPoints[index]),
       }));
       form.reset({ recipients: initialData });
+      // 重置成功回调标记
+      hasCalledSuccessRef.current = false;
     } else if (open) {
       // If open but no data, reset to empty
       form.reset({ recipients: [] });
+      // 重置成功回调标记
+      hasCalledSuccessRef.current = false;
     }
   }, [open, currentAddrs, currentBasisPoints, form]);
 
@@ -97,8 +104,9 @@ export default function _GroupServiceSetRecipients({
   }, [writeError, handleContractError]);
 
   useEffect(() => {
-    if (isConfirmed) {
-      toast.success('二次分配地址设置成功');
+    // 只有在确认成功且未调用过成功回调时才触发
+    if (isConfirmed && !hasCalledSuccessRef.current) {
+      hasCalledSuccessRef.current = true;
       onSuccess?.();
       onOpenChange(false);
     }
@@ -121,18 +129,29 @@ export default function _GroupServiceSetRecipients({
     await setRecipients(actionId, groupId, addrs, basisPoints);
   };
 
-  // Generate dialog title
-  const dialogTitle = `编辑二次分配 - ${actionTitle} / ${groupName || `链群 #${groupId}`}`;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-3 sm:p-6">
         <DialogHeader>
-          <DialogTitle>{dialogTitle}</DialogTitle>
+          <DialogTitle>编辑二次分配</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* 行动和链群信息 */}
+            <div className="border rounded-lg p-3 bg-gray-50">
+              <div className="flex items-baseline mb-2">
+                <span className="text-greyscale-400 text-sm">{`No.`}</span>
+                <span className="text-secondary text-xl font-bold mr-2">{String(actionId)}</span>
+                <span className="font-bold text-greyscale-800">{actionTitle}</span>
+              </div>
+              <div className="text-gray-800">
+                <span className="text-gray-500 text-xs">链群 #</span>
+                <span className="text-secondary text-base font-semibold">{groupId.toString()}</span>{' '}
+                <span>{groupName || `链群 #${groupId}`}</span>
+              </div>
+            </div>
+
             {form.formState.errors.root && (
               <div className="text-red-500 text-sm p-2 bg-red-50 rounded-md border border-red-200">
                 {form.formState.errors.root.message}
@@ -145,7 +164,7 @@ export default function _GroupServiceSetRecipients({
                   <TableRow>
                     <TableHead className="w-auto px-1 sm:px-2">地址</TableHead>
                     <TableHead className="w-20 px-1 sm:px-2 hidden sm:table-cell">基点数</TableHead>
-                    <TableHead className="w-16 px-1 sm:px-2">比例</TableHead>
+                    <TableHead className="w-24 px-1 sm:px-2 sm:w-16">基点数</TableHead>
                     <TableHead className="w-10 px-1 sm:px-2"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -186,8 +205,29 @@ export default function _GroupServiceSetRecipients({
                             )}
                           />
                         </TableCell>
-                        <TableCell className="text-muted-foreground px-1 sm:px-2 text-xs sm:text-sm">
-                          {currentBasisPoints ? (currentBasisPoints / 100).toFixed(2) : '0.00'}%
+                        <TableCell className="px-1 sm:px-2">
+                          {/* 小屏幕：显示输入框和比例 */}
+                          <div className="sm:hidden space-y-1">
+                            <FormField
+                              control={form.control}
+                              name={`recipients.${index}.basisPoints`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input type="number" {...field} placeholder="基点数" className="h-8 px-2 text-sm" />
+                                  </FormControl>
+                                  <FormMessage className="text-xs" />
+                                </FormItem>
+                              )}
+                            />
+                            <div className="text-muted-foreground text-xs text-center">
+                              {currentBasisPoints ? (currentBasisPoints / 100).toFixed(2) : '0.00'}%
+                            </div>
+                          </div>
+                          {/* 大屏幕：只显示比例 */}
+                          <div className="hidden sm:block text-muted-foreground text-sm">
+                            {currentBasisPoints ? (currentBasisPoints / 100).toFixed(2) : '0.00'}%
+                          </div>
                         </TableCell>
                         <TableCell className="px-0 sm:px-1">
                           <Button

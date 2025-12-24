@@ -144,21 +144,18 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
   // 计算剩余容量
   const remainingCapacity = groupDetail.maxCapacity - groupDetail.totalJoinedAmount;
   const formattedTotalAmount = formatTokenAmount(groupDetail.totalJoinedAmount);
-  const formattedRemainingCapacity = formatTokenAmount(remainingCapacity);
 
   const handleDistrustClick = () => {
     if (!hasVoted) {
       toast.error('投票给本行动的治理者，才可投不信任票');
       return;
     }
-    router.push(
-      `/extension/action_group_distrust?id=${actionId}&extension=${extensionAddress}&groupId=${groupId}&symbol=${token?.symbol}`,
-    );
+    router.push(`/action/info?id=${actionId}&symbol=${token?.symbol}&tab=public&tab2=distrust`);
   };
 
   return (
     <div className="bg-gray-100 rounded-lg px-4 pt-3 pb-3 text-sm my-4">
-      {/* 第一行：链群ID/name + 链群主地址 */}
+      {/* 第一行：链群NFT/name + 链群主地址 */}
       <div className="mb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline">

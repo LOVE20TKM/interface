@@ -31,7 +31,7 @@ export interface UseDistrustVotesOfRoundResult {
  *
  * 算法：
  * 1. 使用 useVerifiers 获取指定轮次的验证者列表（验证者即为链群主）
- * 2. 批量调用 groupIdsByVerifier 获取每个验证者管理的链群ID列表
+ * 2. 批量调用 groupIdsByVerifier 获取每个验证者管理的链群NFT列表
  * 3. 使用 useGroupNamesWithCache 批量获取链群名称（带缓存）
  * 4. 批量 RPC 调用：
  *    - 调用一次 totalVerifyVotes 获取总验证票数
@@ -51,7 +51,7 @@ export const useDistrustVotesOfRound = ({
     error: verifiersError,
   } = useVerifiers(extensionAddress as `0x${string}`, round !== undefined ? round : BigInt(0));
 
-  // 第二步：批量获取每个验证者的链群ID列表
+  // 第二步：批量获取每个验证者的链群NFT列表
   const groupIdsContracts = useMemo(() => {
     if (!extensionAddress || round === undefined || !verifiers || verifiers.length === 0) return [];
 
@@ -68,10 +68,6 @@ export const useDistrustVotesOfRound = ({
     return contracts;
   }, [extensionAddress, round, verifiers]);
 
-  console.log('round', round);
-  console.log('verifiers', verifiers);
-  console.log('extensionAddress', extensionAddress);
-
   const {
     data: groupIdsData,
     isPending: isGroupIdsPending,
@@ -83,7 +79,7 @@ export const useDistrustVotesOfRound = ({
     },
   });
 
-  // 解析验证者和其对应的链群ID列表
+  // 解析验证者和其对应的链群NFT列表
   const verifierGroupMap = useMemo(() => {
     if (!verifiers || !groupIdsData) return new Map<string, bigint[]>();
 
@@ -199,7 +195,7 @@ export const useDistrustVotesOfRound = ({
     if (isVerifiersPending) return true;
     // 如果没有验证者，返回 false
     if (!verifiers || verifiers.length === 0) return false;
-    // 如果链群ID列表还在加载中，返回 true
+    // 如果链群NFT列表还在加载中，返回 true
     if (isGroupIdsPending) return true;
     // 如果链群名称还在加载中，返回 true
     if (isGroupNamesPending) return true;

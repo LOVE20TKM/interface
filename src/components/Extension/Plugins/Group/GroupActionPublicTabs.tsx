@@ -4,9 +4,10 @@
 'use client';
 
 // React
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // 第三方库
+import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 
 // UI 组件
@@ -26,12 +27,43 @@ interface GroupActionPublicTabsProps {
   extensionAddress: `0x${string}`;
 }
 
+type GroupSubTab = 'groups' | 'distrust';
+
 const GroupActionPublicTabs: React.FC<GroupActionPublicTabsProps> = ({ actionId, actionInfo, extensionAddress }) => {
-  const [activeTab, setActiveTab] = useState<string>('groups');
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<GroupSubTab>('groups');
+
+  // 从URL获取tab2参数
+  const { tab2 } = router.query;
+
+  // 初始化子tab状态
+  useEffect(() => {
+    if (tab2 && ['groups', 'distrust'].includes(tab2 as string)) {
+      setActiveTab(tab2 as GroupSubTab);
+    }
+  }, [tab2]);
+
+  // 处理子tab切换
+  const handleSubTabChange = (tabKey: string) => {
+    const validTabKey = tabKey as GroupSubTab;
+    setActiveTab(validTabKey);
+    // 更新URL参数并添加到历史记录
+    const currentQuery = { ...router.query };
+    currentQuery.tab2 = validTabKey;
+
+    router.push(
+      {
+        pathname: router.pathname,
+        query: currentQuery,
+      },
+      undefined,
+      { shallow: true },
+    );
+  };
 
   return (
     <div className="w-full">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleSubTabChange} className="w-full">
         <TabsList className="grid grid-cols-2 bg-muted rounded-lg p-1 mb-4 mx-16">
           <TabsTrigger value="groups">链群</TabsTrigger>
           <TabsTrigger value="distrust">不信任票</TabsTrigger>

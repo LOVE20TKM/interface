@@ -48,7 +48,7 @@ export interface UseExtensionGroupInfosOfActionResult {
  * Hook: 批量获取链群列表完整信息
  *
  * 功能：
- * 1. 获取所有活跃链群ID
+ * 1. 获取所有活跃链群NFT
  * 2. 批量获取每个链群的完整信息（名称、服务者、参与数据、容量等）
  * 3. 计算实际最大/最小参与代币量（从 groupInfo 直接获取）
  */
@@ -62,12 +62,12 @@ export const useExtensionGroupInfosOfAction = ({
     extensionAddress as `0x${string}`,
   );
 
-  // 第一步：批量获取活跃链群ID列表和行动最大参与代币量
+  // 第一步：批量获取活跃链群NFT列表和行动最大参与代币量
   const firstBatchContracts = useMemo(() => {
     if (!groupManagerAddress || !tokenAddress || actionId === undefined) return [];
 
     return [
-      // 获取活跃链群ID列表
+      // 获取活跃链群NFT列表
       {
         address: groupManagerAddress,
         abi: LOVE20GroupManagerAbi,
@@ -238,7 +238,7 @@ export const useExtensionGroupInfosOfAction = ({
   // 计算最终的 isPending 状态
   // 如果 groupIds 为空且已经获取完成，则不需要等待 detailPending
   const isPending = useMemo(() => {
-    // 如果第一步（获取活跃链群ID列表和行动最大参与量）还在加载，返回 true
+    // 如果第一步（获取活跃链群NFT列表和行动最大参与量）还在加载，返回 true
     if (isFirstBatchPending) return true;
     // 如果 GroupManager 地址还在加载，返回 true
     if (isGroupManagerPending) return true;
@@ -248,7 +248,7 @@ export const useExtensionGroupInfosOfAction = ({
     if (!groupManagerAddress && !isGroupManagerPending) {
       return false;
     }
-    // 如果 groupManagerAddress 存在，检查链群ID列表的加载状态
+    // 如果 groupManagerAddress 存在，检查链群NFT列表的加载状态
     if (groupManagerAddress) {
       // 如果没有链群（groupIds 为空），且查询已完成，返回 false
       if (groupIds.length === 0 && !isFirstBatchPending) {

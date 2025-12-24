@@ -26,10 +26,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
-import {
-  useDeactivateGroup,
-  useGroupInfo,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+import { useDeactivateGroup, useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
 
 // 工具函数
 import { useHandleContractError } from '@/src/lib/errorUtils';
@@ -91,11 +88,6 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
   async function handleDeactivate() {
     if (!groupDetail) {
       toast.error('未找到链群信息');
-      return;
-    }
-
-    if (groupDetail.totalJoinedAmount > BigInt(0)) {
-      toast.error('链群还有参与者，无法关闭');
       return;
     }
 
@@ -191,17 +183,13 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">当前容量:</span>
               <span className="font-medium">
-                {formatTokenAmount(groupDetail.totalJoinedAmount, 2)} / {formatTokenAmount(groupDetail.capacity, 2)}{' '}
+                {formatTokenAmount(groupDetail.totalJoinedAmount, 2)} / {formatTokenAmount(groupDetail.maxCapacity, 2)}{' '}
                 {token?.symbol}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">参与人数:</span>
               <span className="font-medium">{accountsCount?.toString() || '0'} 人</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">质押金额:</span>
-              <span className="font-medium text-purple-600">{formatTokenAmount(groupDetail.stakedAmount, 2)}</span>
             </div>
           </div>
         </div>

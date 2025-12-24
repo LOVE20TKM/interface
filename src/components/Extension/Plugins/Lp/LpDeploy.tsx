@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
+import Link from 'next/link';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ interface LpDeployProps {
 export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   const context = useContext(TokenContext);
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
+  const tokenSymbol = context?.token?.symbol || '';
 
   // 表单状态
   const [joinTokenAddress, setJoinTokenAddress] = useState(''); // LP Token地址
@@ -326,8 +328,16 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                 <p className="text-sm text-greyscale-600">扩展合约地址:</p>
                 <AddressWithCopyButton address={deployedExtensionAddress} showAddress={true} />
               </div>
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded">
-                <p className="text-sm text-blue-700">✨ 扩展已部署！请复制合约地址，在创建行动时设置为扩展地址。</p>
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded space-y-3">
+                <p className="text-sm text-blue-700">✨ 扩展已部署！现在可以使用此扩展地址创建行动。</p>
+                <Button className="w-full" asChild>
+                  <Link
+                    href={`/action/new/?symbol=${tokenSymbol}&extension=${deployedExtensionAddress}`}
+                    rel="noopener noreferrer"
+                  >
+                    立即创建行动
+                  </Link>
+                </Button>
               </div>
             </div>
           )}

@@ -86,7 +86,7 @@ export function useAccountsByActionByRound(params: UseAccountsByActionByRoundPar
     return Array.from({ length: countNum }, (_, index) => ({
       address: CONTRACT_ADDRESS,
       abi: LOVE20ExtensionCenterAbi,
-      functionName: 'accountsAtIndexByRound' as const,
+      functionName: 'accountsByRoundAtIndex' as const,
       args:
         tokenAddress && actionId !== undefined && round !== undefined
           ? [tokenAddress, actionId, BigInt(index), round]

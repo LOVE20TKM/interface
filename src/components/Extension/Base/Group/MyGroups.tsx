@@ -54,7 +54,7 @@ export default function MyGroups() {
 
   return (
     <div className="px-4 mt-4">
-      <LeftTitle title="我的链群ID" />
+      <LeftTitle title="我的链群NFT" />
 
       <div className="mb-4">
         {balance > 3 && (

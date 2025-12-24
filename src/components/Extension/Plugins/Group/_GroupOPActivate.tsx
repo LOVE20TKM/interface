@@ -387,13 +387,13 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     return (
       <div className="text-center py-12">
         <p className="mb-4">
-          {myGroups && myGroups.length > 0 ? '您的所有链群已激活，没有未激活链群' : '您当前没有未激活的链群ID'}
+          {myGroups && myGroups.length > 0 ? '您的所有链群已激活，没有未激活链群' : '您当前没有未激活的链群NFT'}
         </p>
         <p className="mb-4">
           请先
           <Link href="/extension/groupids/">
             <Button variant="link" className="text-secondary font-normal px-1 text-base">
-              铸造链群ID &gt;&gt;
+              铸造链群NFT &gt;&gt;
             </Button>
           </Link>
         </p>
@@ -451,7 +451,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
         {/* 链群选择器（如果没有传入 groupId） */}
         {!groupId && (
           <div className="space-y-2">
-            <label className="text-sm font-medium">选择链群ID</label>
+            <label className="text-sm font-medium">选择链群NFT</label>
             <Select value={selectedGroupId?.toString()} onValueChange={(value) => setSelectedGroupId(BigInt(value))}>
               <SelectTrigger className="!ring-secondary-foreground">
                 <SelectValue placeholder="请选择要激活的链群" />

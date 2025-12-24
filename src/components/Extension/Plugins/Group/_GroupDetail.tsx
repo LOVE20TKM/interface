@@ -17,8 +17,9 @@ import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/com
 import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+import { LinkIfUrl } from '@/src/lib/stringUtils';
+import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -90,7 +91,7 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
         <div className="mt-6">
           <div className="text-sm mb-2">链群描述:</div>
           <div className="leading-loose bg-gray-50 p-2 rounded-md">
-            <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">{groupDetail.description || '无'}</p>
+            <LinkIfUrl text={groupDetail.description} preserveLineBreaks={true} />
           </div>
         </div>
 

@@ -276,7 +276,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
           <div className="space-y-3 mt-4">
             {/* 表头 */}
             <div className="grid grid-cols-12 gap-2 px-2 py-2 bg-gray-100 rounded text-sm font-medium text-gray-700">
-              <div className="col-span-8">服务者信息</div>
+              <div className="col-span-8">服务者信息 / 链群</div>
               <div className="col-span-3 text-center">不信任率</div>
               <div className="col-span-1"></div>
             </div>

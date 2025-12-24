@@ -174,6 +174,11 @@ export const useDistrustVotesOfGroupOwner = ({
       const distrustVotes = safeToBigInt(detailData[baseIndex + 1]?.result);
       const reason = (detailData[baseIndex + 2]?.result as string) || '';
 
+      // 过滤掉不信任票为 0 的投票者
+      if (distrustVotes === BigInt(0)) {
+        continue;
+      }
+
       const distrustRatio = verifyVotes > BigInt(0) ? Number(distrustVotes) / Number(verifyVotes) : 0;
 
       result.push({

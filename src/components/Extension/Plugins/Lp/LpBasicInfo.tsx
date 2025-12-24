@@ -76,12 +76,12 @@ const LpBasicInfo: React.FC<LpBasicInfoProps> = ({ extensionAddress, factoryAddr
 
   return (
     <div className="mt-6 bg-gray-50 rounded-lg p-4">
-      <div className="font-bold text-lg mb-4">扩展部署参数</div>
+      <div className="font-bold text-base mb-4">扩展协议参数:</div>
 
       <div className="space-y-3">
         {/* LP代币地址 */}
-        <div className="flex items-start justify-between md:max-w-2xl">
-          <span className="font-bold text-sm md:text-base">LP代币地址:</span>
+        <div className="md:max-w-2xl">
+          <div className="text-sm font-bold mb-1">LP代币地址:</div>
           <div className="flex items-center gap-2">
             <AddressWithCopyButton address={joinTokenAddress} showCopyButton={true} colorClassName="text-sm" />
             {joinTokenSymbol && <span className="text-sm text-gray-600">({joinTokenSymbol})</span>}
@@ -89,38 +89,38 @@ const LpBasicInfo: React.FC<LpBasicInfoProps> = ({ extensionAddress, factoryAddr
         </div>
 
         {/* 等待区块数 */}
-        <div className="flex items-center justify-between md:max-w-2xl">
-          <span className="font-bold text-sm md:text-base">等待区块数:</span>
-          <span className="font-mono text-secondary text-sm md:text-base">{waitingBlocks.toString()}</span>
+        <div className="md:max-w-2xl">
+          <div className="text-sm font-bold mb-1">等待区块数:</div>
+          <div className="font-mono text-secondary text-sm md:text-base">{waitingBlocks.toString()}</div>
         </div>
 
         {/* 治理比率乘数 */}
-        <div className="flex items-center justify-between md:max-w-2xl">
-          <span className="font-bold text-sm md:text-base">治理比率乘数:</span>
-          <span className="font-mono text-secondary text-sm md:text-base">{govRatioMultiplier.toString()}</span>
+        <div className="md:max-w-2xl">
+          <div className="text-sm font-bold mb-1">治理比率乘数:</div>
+          <div className="font-mono text-secondary text-sm md:text-base">{govRatioMultiplier.toString()}</div>
         </div>
 
         {/* 最小治理票数 */}
-        <div className="flex items-center justify-between md:max-w-2xl">
-          <span className="font-bold text-sm md:text-base">最小治理票数:</span>
-          <span className="font-mono text-secondary text-sm md:text-base">{formatTokenAmount(minGovVotes)}</span>
+        <div className="md:max-w-2xl">
+          <div className="text-sm font-bold mb-1">最小治理票数:</div>
+          <div className="font-mono text-secondary text-sm md:text-base">{formatTokenAmount(minGovVotes)}</div>
         </div>
 
         {/* LP比率精度 */}
-        <div className="flex items-center justify-between md:max-w-2xl">
-          <span className="font-bold text-sm md:text-base">LP比率精度:</span>
-          <span className="font-mono text-secondary text-sm md:text-base">{lpRatioPrecision.toString()}</span>
+        <div className="md:max-w-2xl">
+          <div className="text-sm font-bold mb-1">LP比率精度:</div>
+          <div className="font-mono text-secondary text-sm md:text-base">{lpRatioPrecision.toString()}</div>
         </div>
       </div>
 
       {/* 说明文字 */}
-      <div className="mt-4 text-xs md:text-sm text-gray-600 space-y-1">
+      {/* <div className="mt-4 text-xs md:text-sm text-gray-600 space-y-1">
+        <div className="text-sm font-bold mb-2">小贴士：</div>
         <p>• 加入行动后，需等待指定区块数才能退出</p>
         <p>• "治理票占比" 是 "LP占比" 的治理比率乘数倍</p>
-      </div>
+      </div> */}
     </div>
   );
 };
 
 export default LpBasicInfo;
-

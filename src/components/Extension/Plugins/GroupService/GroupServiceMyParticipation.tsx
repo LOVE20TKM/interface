@@ -4,7 +4,6 @@ import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import { Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
@@ -77,6 +76,17 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
       basisPoints: group.basisPoints,
     });
     setEditDialogOpen(true);
+  };
+
+  // 处理对话框关闭，清空编辑状态
+  const handleDialogOpenChange = (open: boolean) => {
+    setEditDialogOpen(open);
+    if (!open) {
+      // 延迟清空 editingGroup，确保对话框关闭动画完成
+      setTimeout(() => {
+        setEditingGroup(null);
+      }, 300);
+    }
   };
 
   // Exit Hook
@@ -176,7 +186,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
 
       {/* 二次分配地址 */}
       <div className="w-full mt-6">
-        <LeftTitle title="二次分配地址" />
+        <LeftTitle title="我的链群" />
 
         {isRecipientsPending ? (
           <div className="flex justify-center p-8">
@@ -189,21 +199,32 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
         ) : (
           <div className="space-y-6 mt-4">
             {actionGroupRecipientsData.map((action) => (
-              <div key={action.actionId.toString()} className="border rounded-lg p-4">
-                <h3 className="font-medium text-base mb-4">
-                  行动 #{action.actionId.toString()}: {action.actionTitle}
-                </h3>
+              <div key={action.actionId.toString()} className="border rounded-lg p-3">
+                <div className="flex items-baseline mb-2">
+                  <span className="text-greyscale-400 text-sm">{`No.`}</span>
+                  <span className="text-secondary text-xl font-bold mr-2">{String(action.actionId)}</span>
+                  <span className="font-bold text-greyscale-800">{action.actionTitle}</span>
+                </div>
 
-                <div className="space-y-4">
+                <div className="space-y-1">
                   {action.groups.map((group) => (
                     <div key={group.groupId.toString()} className="border-t pt-4 first:border-t-0 first:pt-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="font-medium text-sm">
-                          {group.groupName || `链群 #${group.groupId}`}
+                      <div className="flex items-center justify-between">
+                        <div className="text-gray-800">
+                          <span className="text-gray-500 text-xs">#</span>
+                          <span className="text-secondary text-base font-semibold ">
+                            {group.groupId.toString()}
+                          </span>{' '}
+                          <span>{group.groupName || `链群 #${group.groupId}`}</span>
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => handleEditClick(action, group)}>
+                        <Button
+                          className="gap-0 px-2"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditClick(action, group)}
+                        >
                           <Edit className="w-3 h-3 mr-1" />
-                          编辑
+                          编辑分配地址
                         </Button>
                       </div>
 
@@ -211,25 +232,22 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                         <table className="table w-full text-sm">
                           <thead>
                             <tr className="border-b border-gray-100">
-                              <th className="px-1 text-left">序号</th>
-                              <th className="px-1 text-left">地址</th>
-                              <th className="px-1 text-right">分配比例</th>
+                              <th className="py-1 px-1 text-left">序号</th>
+                              <th className="py-1 px-1 text-left">地址</th>
+                              <th className="py-1 px-1 text-right">分配比例</th>
                             </tr>
                           </thead>
                           <tbody>
                             {group.addrs.map((addr, idx) => (
                               <tr key={`${addr}-${idx}`} className="border-b border-gray-100">
-                                <td className="px-1 text-greyscale-400">{idx + 1}</td>
-                                <td className="px-1">
+                                <td className="py-1 px-1 text-greyscale-400">{idx + 1}</td>
+                                <td className="py-1 px-1">
                                   <div className="inline-flex items-center bg-gray-50 rounded-md px-2 py-1">
                                     <AddressWithCopyButton address={addr} showCopyButton={true} />
                                   </div>
                                 </td>
-                                <td className="px-1 text-right font-mono text-secondary">
-                                  {group.basisPoints
-                                    ? (Number(group.basisPoints[idx]) / 100).toFixed(2)
-                                    : '0.00'}
-                                  %
+                                <td className="py-1 px-1 text-right font-mono text-secondary">
+                                  {group.basisPoints ? (Number(group.basisPoints[idx]) / 100).toFixed(2) : '0.00'}%
                                 </td>
                               </tr>
                             ))}
@@ -258,10 +276,10 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
           currentAddrs={editingGroup.addrs}
           currentBasisPoints={editingGroup.basisPoints}
           open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
+          onOpenChange={handleDialogOpenChange}
           onSuccess={() => {
             toast.success('二次分配设置已更新');
-            setEditDialogOpen(false);
+            handleDialogOpenChange(false);
             // Data will auto-refresh due to wagmi cache invalidation
           }}
         />

@@ -136,6 +136,12 @@ export const useDistrustVotesOfCurrentRound = ({
 
       // distrustVotes 从索引 1 开始（索引 0 是 totalVerifyVotes）
       const distrustVotesNum = safeToBigInt(distrustData[i + 1]?.result);
+
+      // 如果该群主收到的不信任投票数为0，则过滤掉
+      if (distrustVotesNum === BigInt(0)) {
+        continue;
+      }
+
       const distrustRatio = totalVerifyVotes > BigInt(0) ? Number(distrustVotesNum) / Number(totalVerifyVotes) : 0;
 
       // 获取该群主管理的链群列表

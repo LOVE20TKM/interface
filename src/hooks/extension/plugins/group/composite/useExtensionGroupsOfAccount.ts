@@ -40,7 +40,7 @@ export interface UseExtensionGroupsOfAccountResult {
  * Hook: 获取一个账号的所有链群
  *
  * 功能：
- * 1. 获取账号的所有活跃链群ID（通过 GroupManager.activeGroupIdsByOwner）
+ * 1. 获取账号的所有活跃链群NFT（通过 GroupManager.activeGroupIdsByOwner）
  * 2. 批量获取每个链群的详细信息：
  *    - 链群基本信息（通过 GroupManager.groupInfo）
  *    - 链群名称（通过 Group.groupNameOf）
@@ -57,7 +57,7 @@ export const useExtensionGroupsOfAccount = ({
   );
   const { tokenAddress, isPending: isTokenAddressPending } = useTokenAddress(extensionAddress as `0x${string}`);
 
-  // 第一步：获取账号的所有活跃链群ID列表
+  // 第一步：获取账号的所有活跃链群NFT列表
   const groupIdsContract = useMemo(() => {
     if (!groupManagerAddress || !tokenAddress || actionId === undefined || !account) return [];
 
@@ -78,11 +78,12 @@ export const useExtensionGroupsOfAccount = ({
   } = useReadContracts({
     contracts: groupIdsContract as any,
     query: {
-      enabled: !!groupManagerAddress && !!tokenAddress && actionId !== undefined && !!account && groupIdsContract.length > 0,
+      enabled:
+        !!groupManagerAddress && !!tokenAddress && actionId !== undefined && !!account && groupIdsContract.length > 0,
     },
   });
 
-  // 解析链群ID列表
+  // 解析链群NFT列表
   const groupIds = useMemo(() => {
     if (!groupIdsData || !groupIdsData[0]?.result) return [];
     return groupIdsData[0].result as bigint[];
@@ -90,7 +91,8 @@ export const useExtensionGroupsOfAccount = ({
 
   // 第二步：批量获取每个链群的详细信息
   const detailContracts = useMemo(() => {
-    if (!groupManagerAddress || !tokenAddress || !extensionAddress || actionId === undefined || groupIds.length === 0) return [];
+    if (!groupManagerAddress || !tokenAddress || !extensionAddress || actionId === undefined || groupIds.length === 0)
+      return [];
 
     const contracts = [];
 
@@ -184,11 +186,11 @@ export const useExtensionGroupsOfAccount = ({
     if (!groupManagerAddress && !isGroupManagerPending) {
       return false;
     }
-    // 如果 groupManagerAddress 存在，检查链群ID列表的加载状态
+    // 如果 groupManagerAddress 存在，检查链群NFT列表的加载状态
     if (groupManagerAddress) {
-      // 如果链群ID列表还在加载，返回 true
+      // 如果链群NFT列表还在加载，返回 true
       if (isGroupIdsPending) return true;
-      // 如果没有链群（groupIds 为空），且链群ID列表查询已完成，返回 false
+      // 如果没有链群（groupIds 为空），且链群NFT列表查询已完成，返回 false
       if (groupIds.length === 0 && !isGroupIdsPending) {
         return false;
       }
@@ -217,4 +219,3 @@ export const useExtensionGroupsOfAccount = ({
     error: groupIdsError || detailError,
   };
 };
-

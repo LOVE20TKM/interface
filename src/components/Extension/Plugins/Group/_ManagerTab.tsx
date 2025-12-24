@@ -52,7 +52,7 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
     error: errorMaxCapacity,
   } = useMaxVerifyCapacityByOwner(tokenAddress as `0x${string}`, actionId, account as `0x${string}`);
 
-  // 获取服务者的活跃链群ID列表
+  // 获取服务者的活跃链群NFT列表
   const {
     activeGroupIds,
     isPending: isPendingGroupIds,

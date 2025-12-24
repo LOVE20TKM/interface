@@ -19,7 +19,7 @@ import { useExtensionActionsLatestRewards } from '@/src/hooks/extension/base/com
 import AlertBox from '@/src/components/Common/AlertBox';
 
 // 最近检查的轮数范围
-const LAST_ROUNDS = BigInt(15);
+const LAST_ROUNDS = BigInt(6);
 
 type RewardNoticeState = {
   round: number;
@@ -36,6 +36,10 @@ type RewardNoticeState = {
 const ActionRewardNotifier: React.FC = () => {
   const router = useRouter();
   const isOnActionRewardsPage = router.pathname === '/my/actionrewards';
+
+  // 提前返回，避免在 actionrewards 页面执行任何 hooks
+  if (isOnActionRewardsPage) return null;
+
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
@@ -70,16 +74,15 @@ const ActionRewardNotifier: React.FC = () => {
     };
   }, [token?.address, account]);
 
-  // 计算本轮是否需要触发读取链上“是否有未铸造激励”
+  // 计算本轮是否需要触发读取链上"是否有未铸造激励"
   const shouldTriggerCheck = useMemo(() => {
-    if (isOnActionRewardsPage) return false;
     if (!token?.address || !account || currentRound === undefined || currentRound === null) return false;
     if (currentRound <= BigInt(0)) return false;
     const cached = loadActionRewardNotice(account as `0x${string}`, token.address);
     if (!cached) return true;
     // 如果本地记录的轮次落后，则需要触发本轮检查
     return BigInt(cached.round) < currentRound;
-  }, [isOnActionRewardsPage, token?.address, account, currentRound]);
+  }, [token?.address, account, currentRound]);
 
   // 检查普通行动激励：最近 LAST_ROUNDS 轮是否存在未铸造
   const gateRounds = shouldTriggerCheck ? LAST_ROUNDS : BigInt(0);
@@ -172,7 +175,6 @@ const ActionRewardNotifier: React.FC = () => {
     isPendingExtensionRewards,
   ]);
 
-  if (isOnActionRewardsPage) return null;
   if (!token?.address || !account) return null;
   if (!needMinted) return null;
 

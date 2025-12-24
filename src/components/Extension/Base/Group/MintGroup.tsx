@@ -246,7 +246,7 @@ export default function MintGroup() {
   return (
     <>
       <div className="px-4 mt-4">
-        <LeftTitle title="铸造链群ID" />
+        <LeftTitle title="铸造链群NFT" />
 
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">

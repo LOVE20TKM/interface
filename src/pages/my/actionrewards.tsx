@@ -17,7 +17,7 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { ActionRewardsPageHeader } from '@/src/components/My/ActionRewardsPageHeader';
 import { ActionRewardsList } from '@/src/components/My/ActionRewardsList';
 
-const LAST_ROUNDS = BigInt(15);
+const LAST_ROUNDS = BigInt(6);
 
 const ActRewardsPage: React.FC = () => {
   const router = useRouter();

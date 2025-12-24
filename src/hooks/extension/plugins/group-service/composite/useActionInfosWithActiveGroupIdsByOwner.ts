@@ -2,9 +2,9 @@
  * 获取一个链群主所有激活链群的行动信息列表（包含链群列表）Hook
  *
  * 功能：
- * 1. 通过 useActionIdsWithActiveGroupIdsByOwner 获取行动id、链群id 列表
+ * 1. 通过 useActionIdsWithActiveGroupIdsByOwner 获取行动id、链群NFT 列表
  * 2. 对于行动id，用 useActionBaseInfosByIdsWithCache 批量获取行动信息
- * 3. 对于链群id，用 useGroupNamesWithCache 批量获取链群名称信息
+ * 3. 对于链群NFT，用 useGroupNamesWithCache 批量获取链群名称信息
  * 4. 组合上面的数据并返回
  *
  * 使用示例：
@@ -19,7 +19,10 @@
 
 import { useMemo } from 'react';
 import { ActionBaseInfo } from '@/src/types/love20types';
-import { useActionIdsWithActiveGroupIdsByOwner, UseActionIdsWithActiveGroupIdsByOwnerParams } from './useActionIdsWithActiveGroupIdsByOwner';
+import {
+  useActionIdsWithActiveGroupIdsByOwner,
+  UseActionIdsWithActiveGroupIdsByOwnerParams,
+} from './useActionIdsWithActiveGroupIdsByOwner';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 
@@ -29,7 +32,7 @@ import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/use
  * 链群信息
  */
 export interface GroupInfo {
-  /** 链群ID */
+  /** 链群NFT */
   groupId: bigint;
   /** 链群名称 */
   groupName: string | undefined;
@@ -73,7 +76,7 @@ export function useActionInfosWithActiveGroupIdsByOwner({
   account,
 }: UseActionIdsWithActiveGroupIdsByOwnerParams): UseActionInfosWithActiveGroupIdsByOwnerResult {
   // ==========================================
-  // 步骤1：获取行动ID和链群ID列表
+  // 步骤1：获取行动ID和链群NFT列表
   // ==========================================
 
   const {
@@ -154,7 +157,7 @@ export function useActionInfosWithActiveGroupIdsByOwner({
     // 遍历 actionIdsWithGroupIds，组合数据
     for (const { actionId, groupIds } of actionIdsWithGroupIds) {
       const actionBaseInfo = actionInfoMap.get(actionId);
-      
+
       // 如果行动信息不存在，跳过（可能还在加载中）
       if (!actionBaseInfo) {
         continue;
@@ -184,7 +187,7 @@ export function useActionInfosWithActiveGroupIdsByOwner({
     // 如果基本参数不存在，等待参数
     if (!tokenAddress || verifyRound === undefined || !account) return true;
 
-    // 步骤1：获取行动ID和链群ID列表
+    // 步骤1：获取行动ID和链群NFT列表
     if (isActionIdsPending) return true;
 
     // 如果步骤1没有数据，后续步骤不执行，isPending 为 false
@@ -221,4 +224,3 @@ export function useActionInfosWithActiveGroupIdsByOwner({
     error,
   };
 }
-

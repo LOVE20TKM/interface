@@ -27,14 +27,8 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
   actionId,
 }) => {
   // 获取扩展部署参数
-  const {
-    tokenAddress,
-    groupActionTokenAddress,
-    groupActionFactoryAddress,
-    maxRecipients,
-    isPending,
-    error,
-  } = useExtensionParams(factoryAddress, extensionAddress);
+  const { tokenAddress, groupActionTokenAddress, groupActionFactoryAddress, maxRecipients, isPending, error } =
+    useExtensionParams(factoryAddress, extensionAddress);
 
   // 获取链群行动代币符号
   const { symbol: groupActionTokenSymbol, isPending: isGroupActionSymbolPending } = useSymbol(
@@ -69,42 +63,40 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
 
   return (
     <div className="mt-6 bg-gray-50 rounded-lg p-4">
-      <div className="font-bold text-lg mb-4">扩展部署参数</div>
+      <div className="font-bold text-base mb-4">扩展协议参数:</div>
 
       <div className="space-y-3">
         {/* 链群行动所在代币地址 */}
-        <div className="flex items-start justify-between md:max-w-2xl">
-          <span className="font-bold text-sm md:text-base">链群行动所在代币地址:</span>
+        <div className="md:max-w-2xl">
+          <div className="text-sm font-bold mb-1">链群行动所在代币地址:</div>
           <div className="flex items-center gap-2">
-            <AddressWithCopyButton
-              address={groupActionTokenAddress}
-              showCopyButton={true}
-              colorClassName="text-sm"
-            />
+            <AddressWithCopyButton address={groupActionTokenAddress} showCopyButton={true} colorClassName="text-sm" />
             {groupActionTokenSymbol && <span className="text-sm text-gray-600">({groupActionTokenSymbol})</span>}
           </div>
         </div>
 
         {/* 链群行动工厂地址 */}
-        <div className="flex items-start justify-between md:max-w-2xl">
-          <span className="font-bold text-sm md:text-base">链群行动工厂地址:</span>
-          <AddressWithCopyButton address={groupActionFactoryAddress} showCopyButton={true} colorClassName="text-sm" />
+        <div className="md:max-w-2xl">
+          <div className="text-sm font-bold mb-1">链群行动工厂地址:</div>
+          <div className="flex items-center gap-2">
+            <AddressWithCopyButton address={groupActionFactoryAddress} showCopyButton={true} colorClassName="text-sm" />
+          </div>
         </div>
 
         {/* 激励分配地址数上限 */}
-        <div className="flex items-center justify-between md:max-w-2xl">
-          <span className="font-bold text-sm md:text-base">激励分配地址数上限:</span>
-          <span className="font-mono text-secondary text-sm md:text-base">{maxRecipients.toString()}</span>
+        <div className="md:max-w-2xl">
+          <div className="text-sm font-bold mb-1">激励分配地址数上限:</div>
+          <div className="font-mono text-secondary text-sm md:text-base">{maxRecipients.toString()}</div>
         </div>
       </div>
 
       {/* 说明文字 */}
-      <div className="mt-4 text-xs md:text-sm text-gray-600">
+      {/* <div className="mt-4 text-xs md:text-sm text-gray-600 space-y-1">
+        <div className="text-sm font-bold mb-2">小贴士：</div>
         <p>• 仅限链群服务所在代币地址或其子币地址</p>
-      </div>
+      </div> */}
     </div>
   );
 };
 
 export default GroupServiceBasicInfo;
-

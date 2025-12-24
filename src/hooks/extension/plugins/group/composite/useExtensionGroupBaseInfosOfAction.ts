@@ -31,7 +31,7 @@ export interface UseExtensionGroupBaseInfosOfActionResult {
  * Hook: 批量获取链群基本信息列表
  *
  * 功能：
- * 1. 获取所有活跃链群ID（使用 useActiveGroupIds）
+ * 1. 获取所有活跃链群NFT（使用 useActiveGroupIds）
  * 2. 批量获取每个链群的基本信息（GroupId、群组名称、owner地址）
  */
 export const useExtensionGroupBaseInfosOfAction = ({
@@ -44,15 +44,12 @@ export const useExtensionGroupBaseInfosOfAction = ({
     extensionAddress as `0x${string}`,
   );
 
-  // 获取活跃链群ID列表
+  // 获取活跃链群NFT列表
   const {
     activeGroupIds,
     isPending: isGroupIdsPending,
     error: groupIdsError,
-  } = useActiveGroupIds(
-    tokenAddress as `0x${string}`,
-    actionId !== undefined ? actionId : BigInt(0),
-  );
+  } = useActiveGroupIds(tokenAddress as `0x${string}`, actionId !== undefined ? actionId : BigInt(0));
 
   // 批量获取每个群组的名称和 owner
   const detailContracts = useMemo(() => {
@@ -125,7 +122,7 @@ export const useExtensionGroupBaseInfosOfAction = ({
     if (!groupManagerAddress && !isGroupManagerPending) {
       return false;
     }
-    // 如果链群ID列表还在加载中，返回 true
+    // 如果链群NFT列表还在加载中，返回 true
     if (isGroupIdsPending) return true;
     // 如果没有链群（activeGroupIds 为空或 undefined），且查询已完成，返回 false
     if ((!activeGroupIds || activeGroupIds.length === 0) && !isGroupIdsPending) {
@@ -153,4 +150,3 @@ export const useExtensionGroupBaseInfosOfAction = ({
     error: groupIdsError || detailError,
   };
 };
-

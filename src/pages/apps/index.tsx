@@ -16,7 +16,7 @@ interface AppItem {
 const APP_LIST: AppItem[] = [
   { name: '代币兑换', href: '/dex/?tab=swap', icon: HandCoins },
   { name: '流动性', href: '/dex/?tab=liquidity', icon: Droplets },
-  { name: '链群ID', href: '/extension/groupids/', icon: Users },
+  { name: '链群NFT', href: '/extension/groupids/', icon: Users },
   { name: '扩展行动', href: '/extension/factories/', icon: Blocks },
 ];
 
