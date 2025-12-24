@@ -75,9 +75,7 @@ const ExtensionMyParticipation: React.FC<ExtensionMyParticipationProps> = ({ act
         <GroupMyParticipation actionId={actionId} actionInfo={actionInfo} extensionAddress={contractInfo.extension} />
       );
     case ExtensionType.GROUP_SERVICE:
-      return (
-        <GroupServiceMyParticipation actionId={actionId} extensionAddress={contractInfo.extension} />
-      );
+      return <GroupServiceMyParticipation actionId={actionId} extensionAddress={contractInfo.extension} />;
     // 未来添加新的扩展类型时，在这里添加对应的 case
     // case ExtensionType.XXXX:
     //   return <MyXxxxActionPanel ... />;
