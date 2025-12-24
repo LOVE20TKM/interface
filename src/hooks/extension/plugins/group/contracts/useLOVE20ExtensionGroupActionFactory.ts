@@ -16,22 +16,6 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 // =====================
 
 /**
- * Hook for center - 获取 center 合约地址
- */
-export const useCenter = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionFactoryAbi,
-    functionName: 'center',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { centerAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
  * Hook for exists - 检查扩展是否存在
  */
 export const useExists = (contractAddress: `0x${string}`, extension: `0x${string}`) => {
