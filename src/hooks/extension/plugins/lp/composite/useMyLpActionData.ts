@@ -126,12 +126,12 @@ export const useMyLpActionData = ({
         functionName: 'govVotesNum',
         args: [tokenAddress],
       },
-      // 7. 获取用户得分和总得分（用于计算实际激励占比）
+      // 7. 获取 LP 比例精度
       {
         address: extensionAddress,
         abi: LOVE20ExtensionLpAbi,
-        functionName: 'calculateScore',
-        args: [account],
+        functionName: 'lpRatioPrecision',
+        args: [],
       },
       // 8. 获取需要等待的区块数
       {
@@ -219,21 +219,52 @@ export const useMyLpActionData = ({
     return BigInt(data[9].result.toString());
   }, [data]);
 
-  // 获取用户得分和总得分（calculateScore 返回 [total, score]）
+  const lpRatioPrecision = useMemo(() => {
+    if (!data || !data[7]?.result) return BigInt(0);
+    return BigInt(data[7].result.toString());
+  }, [data]);
+
+  // 计算用户得分（遵循合约算法）
   const userScore = useMemo(() => {
-    if (!data || !data[7]?.result) {
+    // Edge case: no data or no LP precision
+    if (!lpRatioPrecision || lpRatioPrecision === BigInt(0)) {
       return BigInt(0);
     }
-    const scoreResult = data[7].result as [bigint, bigint];
 
-    return scoreResult[1]; // score 是第二个值
-  }, [data]);
+    // Edge case: user hasn't joined
+    if (!joinedAmount || joinedAmount === BigInt(0)) {
+      return BigInt(0);
+    }
 
+    // Edge case: no total joined amount
+    if (!totalJoinedAmount || totalJoinedAmount === BigInt(0)) {
+      return BigInt(0);
+    }
+
+    // Calculate LP ratio (tokenRatio)
+    const lpRatioBigInt = (joinedAmount * lpRatioPrecision) / totalJoinedAmount;
+
+    // If govRatioMultiplier is 0, score is just the LP ratio
+    if (!govRatioMultiplier || govRatioMultiplier === BigInt(0)) {
+      return lpRatioBigInt;
+    }
+
+    // Edge case: no total gov votes when multiplier exists
+    if (!totalGovVotes || totalGovVotes === BigInt(0)) {
+      return BigInt(0);
+    }
+
+    // Calculate governance votes ratio
+    const govVotesRatioBigInt = (userGovVotes * lpRatioPrecision * govRatioMultiplier) / totalGovVotes;
+
+    // Score is the minimum of LP ratio and gov votes ratio
+    return lpRatioBigInt > govVotesRatioBigInt ? govVotesRatioBigInt : lpRatioBigInt;
+  }, [joinedAmount, totalJoinedAmount, userGovVotes, totalGovVotes, govRatioMultiplier, lpRatioPrecision]);
+
+  // totalScore 使用 lpRatioPrecision 作为基准（代表100%）
   const totalScore = useMemo(() => {
-    if (!data || !data[7]?.result) return BigInt(0);
-    const scoreResult = data[7].result as [bigint, bigint];
-    return scoreResult[0]; // total 是第一个值
-  }, [data]);
+    return lpRatioPrecision || BigInt(0);
+  }, [lpRatioPrecision]);
 
   // 计算 LP 占比（用于显示）
   const lpRatio = useMemo(() => {
