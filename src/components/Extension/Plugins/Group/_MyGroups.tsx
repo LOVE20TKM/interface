@@ -83,7 +83,7 @@ const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, onManageClick, token }
 
   // 根据用量设置百分比颜色
   const percentageColorClass =
-    percentage >= 100 ? 'text-red-600' : percentage >= 90 ? 'text-yellow-600' : 'text-gray-500';
+    percentage > 95 ? 'text-red-600' : percentage >= 90 ? 'text-yellow-600' : 'text-gray-500';
 
   return (
     <div

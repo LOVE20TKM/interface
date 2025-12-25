@@ -34,7 +34,6 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   const [waitingBlocks, setWaitingBlocks] = useState(''); // 等待区块数
   const [govRatioMultiplier, setGovRatioMultiplier] = useState('');
   const [minGovVotes, setMinGovVotes] = useState('');
-  const [lpRatioPrecision, setLpRatioPrecision] = useState(''); // LP比率精度
 
   const { createExtension, isPending, isConfirming, isConfirmed, writeError, hash } =
     useCreateExtension(factoryAddress);
@@ -71,10 +70,10 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   useEffect(() => {
     if (receipt && receipt.logs) {
       try {
-        // 解析 ExtensionCreated 事件
+        // 解析 ExtensionCreate 事件
         const logs = parseEventLogs({
           abi: LOVE20ExtensionFactoryLpAbi,
-          eventName: 'ExtensionCreated',
+          eventName: 'ExtensionCreate',
           logs: receipt.logs,
         });
 
@@ -102,7 +101,6 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   useEffect(() => {
     if (isConfirmed && deployedExtensionAddress) {
       setApprovalStep('deployed');
-      toast.success('扩展部署成功！');
     }
   }, [isConfirmed, deployedExtensionAddress]);
 
@@ -143,16 +141,10 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
       return false;
     }
 
-    if (!lpRatioPrecision) {
-      toast.error('请输入LP比率精度');
-      return false;
-    }
-
     // 验证数字有效性
     const waitingBlocksNum = parseFloat(waitingBlocks);
     const govRatioMultiplierNum = parseFloat(govRatioMultiplier);
     const minGovVotesNum = parseFloat(minGovVotes);
-    const lpRatioPrecisionNum = parseFloat(lpRatioPrecision);
 
     if (isNaN(waitingBlocksNum) || waitingBlocksNum < 0) {
       toast.error('等待区块数必须是非负整数');
@@ -166,11 +158,6 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
 
     if (isNaN(minGovVotesNum) || minGovVotesNum < 0) {
       toast.error('最小治理票数必须是非负整数');
-      return false;
-    }
-
-    if (isNaN(lpRatioPrecisionNum) || lpRatioPrecisionNum < 0) {
-      toast.error('LP比率精度必须是非负整数');
       return false;
     }
 
@@ -216,7 +203,6 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
         BigInt(waitingBlocks),
         BigInt(govRatioMultiplier),
         minGovVotesWei,
-        BigInt(lpRatioPrecision),
       );
     } catch (error: any) {
       console.error('部署扩展失败:', error);
@@ -234,157 +220,149 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
         </CardHeader>
         <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
           <form className="space-y-4 md:space-y-6">
-          {/* LP Token地址 */}
-          <div className="space-y-2">
-            <Label htmlFor="joinTokenAddress">1. LP代币地址</Label>
-            <Input
-              id="joinTokenAddress"
-              type="text"
-              placeholder="0x..."
-              value={joinTokenAddress}
-              onChange={(e) => setJoinTokenAddress(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-            />
-            <p className="text-sm text-greyscale-500">即 Uniswap V2 Pair 合约地址</p>
-          </div>
-
-          {/* 等待区块数 */}
-          <div className="space-y-2">
-            <Label htmlFor="waitingBlocks">2.等待区块数</Label>
-            <Input
-              id="waitingBlocks"
-              type="number"
-              placeholder="比如 10"
-              value={waitingBlocks}
-              onChange={(e) => setWaitingBlocks(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-              min="0"
-              className="max-w-40 md:max-w-xs"
-            />
-            <p className="text-sm text-greyscale-500">加入行动后，需等多少区块才能退出</p>
-          </div>
-
-          {/* 治理比率乘数 */}
-          <div className="space-y-2">
-            <Label htmlFor="govRatioMultiplier">3.治理比率乘数</Label>
-            <Input
-              id="govRatioMultiplier"
-              type="number"
-              placeholder="比如 2"
-              value={govRatioMultiplier}
-              onChange={(e) => setGovRatioMultiplier(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-              min="0"
-              className="max-w-40 md:max-w-xs"
-            />
-            <p className="text-sm text-greyscale-500">"治理票占比" 是 "LP占比" 的多少倍</p>
-          </div>
-
-          {/* 最小治理票数 */}
-          <div className="space-y-2">
-            <Label htmlFor="minGovVotes">4.最小治理票数</Label>
-            <Input
-              id="minGovVotes"
-              type="number"
-              placeholder="比如 10,000"
-              value={minGovVotes}
-              onChange={(e) => setMinGovVotes(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-              min="0"
-              step="0.000001"
-              className="max-w-40 md:max-w-xs"
-            />
-          </div>
-
-          {/* LP比率精度 */}
-          <div className="space-y-2">
-            <Label htmlFor="lpRatioPrecision">5.LP比率精度</Label>
-            <Input
-              id="lpRatioPrecision"
-              type="number"
-              placeholder="比如 10,000"
-              value={lpRatioPrecision}
-              onChange={(e) => setLpRatioPrecision(e.target.value)}
-              disabled={approvalStep !== 'idle'}
-              min="0"
-              className="max-w-40 md:max-w-xs"
-            />
-            {/* <p className="text-sm text-greyscale-500">LP比率计算的精度（通常设置为1000000）</p> */}
-          </div>
-
-          {/* 错误信息 */}
-          {writeError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">错误: {writeError.message}</p>
+            {/* LP Token地址 */}
+            <div className="space-y-2">
+              <Label htmlFor="joinTokenAddress">1. LP代币地址</Label>
+              <Input
+                id="joinTokenAddress"
+                type="text"
+                placeholder="0x..."
+                value={joinTokenAddress}
+                onChange={(e) => setJoinTokenAddress(e.target.value)}
+                disabled={approvalStep !== 'idle'}
+              />
+              <p className="text-sm text-greyscale-500">即 Uniswap V2 Pair 合约地址</p>
             </div>
-          )}
 
-          {/* 部署成功 - 显示扩展地址 */}
-          {deployedExtensionAddress && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">🎉</span>
-                <p className="text-base font-semibold text-green-700">扩展部署完成！</p>
+            {/* 等待区块数 */}
+            <div className="space-y-2">
+              <Label htmlFor="waitingBlocks">2.等待区块数</Label>
+              <Input
+                id="waitingBlocks"
+                type="number"
+                placeholder="比如 10"
+                value={waitingBlocks}
+                onChange={(e) => setWaitingBlocks(e.target.value)}
+                disabled={approvalStep !== 'idle'}
+                min="0"
+                className="max-w-40 md:max-w-xs"
+              />
+              <p className="text-sm text-greyscale-500">加入行动后，需等多少区块才能退出</p>
+            </div>
+
+            {/* 治理比率乘数 */}
+            <div className="space-y-2">
+              <Label htmlFor="govRatioMultiplier">3.治理比率乘数</Label>
+              <Input
+                id="govRatioMultiplier"
+                type="number"
+                placeholder="比如 2"
+                value={govRatioMultiplier}
+                onChange={(e) => setGovRatioMultiplier(e.target.value)}
+                disabled={approvalStep !== 'idle'}
+                min="0"
+                className="max-w-40 md:max-w-xs"
+              />
+              <p className="text-sm text-greyscale-500">"治理票占比" 是 "LP占比" 的多少倍</p>
+            </div>
+
+            {/* 最小治理票数 */}
+            <div className="space-y-2">
+              <Label htmlFor="minGovVotes">4.最小治理票数</Label>
+              <Input
+                id="minGovVotes"
+                type="number"
+                placeholder="比如 10,000"
+                value={minGovVotes}
+                onChange={(e) => setMinGovVotes(e.target.value)}
+                disabled={approvalStep !== 'idle'}
+                min="0"
+                step="0.000001"
+                className="max-w-40 md:max-w-xs"
+              />
+            </div>
+
+            {/* 错误信息 */}
+            {writeError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">错误: {writeError.message}</p>
               </div>
-              <div className="space-y-2">
-                <p className="text-sm text-greyscale-600">扩展合约地址:</p>
-                <AddressWithCopyButton address={deployedExtensionAddress} showAddress={true} />
+            )}
+
+            {/* 部署成功 - 显示扩展地址 */}
+            {deployedExtensionAddress && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🎉</span>
+                  <p className="text-base font-semibold text-green-700">扩展部署完成！</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-greyscale-600">扩展合约地址:</p>
+                  <AddressWithCopyButton address={deployedExtensionAddress} showAddress={true} />
+                </div>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded space-y-3">
+                  <p className="text-sm text-blue-700">✨ 扩展已部署！现在可以使用此扩展地址创建行动。</p>
+                  <Button className="w-full" asChild>
+                    <Link
+                      href={`/action/new/?symbol=${tokenSymbol}&extension=${deployedExtensionAddress}`}
+                      rel="noopener noreferrer"
+                    >
+                      立即创建行动
+                    </Link>
+                  </Button>
+                </div>
               </div>
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded space-y-3">
-                <p className="text-sm text-blue-700">✨ 扩展已部署！现在可以使用此扩展地址创建行动。</p>
-                <Button className="w-full" asChild>
-                  <Link
-                    href={`/action/new/?symbol=${tokenSymbol}&extension=${deployedExtensionAddress}`}
-                    rel="noopener noreferrer"
-                  >
-                    立即创建行动
-                  </Link>
+            )}
+
+            {/* 授权和部署按钮 */}
+            {!deployedExtensionAddress && (
+              <div className="flex space-x-4 w-full">
+                <Button
+                  type="button"
+                  onClick={handleApprove}
+                  className="w-1/2"
+                  disabled={
+                    isApprovePending ||
+                    isApproveConfirming ||
+                    approvalStep === 'approved' ||
+                    approvalStep === 'deploying' ||
+                    approvalStep === 'deployed'
+                  }
+                >
+                  {isApprovePending
+                    ? '1.提交中...'
+                    : isApproveConfirming
+                    ? '1.确认中...'
+                    : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
+                    ? '1.代币已授权'
+                    : '1.授权代币'}
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={handleDeploy}
+                  className="w-1/2"
+                  disabled={(approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming}
+                >
+                  {isPending ? '2.部署中...' : isConfirming ? '2.确认中...' : '2.部署扩展'}
                 </Button>
               </div>
-            </div>
-          )}
-
-          {/* 授权和部署按钮 */}
-          {!deployedExtensionAddress && (
-            <div className="flex space-x-4 w-full">
-              <Button
-                type="button"
-                onClick={handleApprove}
-                className="w-1/2"
-                disabled={
-                  isApprovePending ||
-                  isApproveConfirming ||
-                  approvalStep === 'approved' ||
-                  approvalStep === 'deploying' ||
-                  approvalStep === 'deployed'
-                }
-              >
-                {isApprovePending
-                  ? '1.提交中...'
-                  : isApproveConfirming
-                  ? '1.确认中...'
-                  : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
-                  ? '1.代币已授权'
-                  : '1.授权代币'}
-              </Button>
-
-              <Button
-                type="button"
-                onClick={handleDeploy}
-                className="w-1/2"
-                disabled={(approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming}
-              >
-                {isPending ? '2.部署中...' : isConfirming ? '2.确认中...' : '2.部署扩展'}
-              </Button>
-            </div>
-          )}
-        </form>
-      </CardContent>
-    </Card>
-    <LoadingOverlay 
-      isLoading={isApprovePending || isApproveConfirming || isPending || isConfirming} 
-      text={isApprovePending ? '提交授权交易...' : isApproveConfirming ? '确认授权交易...' : isPending ? '提交部署交易...' : '确认部署交易...'} 
-    />
+            )}
+          </form>
+        </CardContent>
+      </Card>
+      <LoadingOverlay
+        isLoading={isApprovePending || isApproveConfirming || isPending || isConfirming}
+        text={
+          isApprovePending
+            ? '提交授权交易...'
+            : isApproveConfirming
+            ? '确认授权交易...'
+            : isPending
+            ? '提交部署交易...'
+            : '确认部署交易...'
+        }
+      />
     </>
   );
 }

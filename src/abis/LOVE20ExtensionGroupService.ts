@@ -653,6 +653,30 @@ export const LOVE20ExtensionGroupServiceAbi = [
     "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "validGroupActions",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "extensions",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "actionIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
     "type": "event",
     "name": "ClaimReward",
     "inputs": [

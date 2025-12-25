@@ -5,6 +5,6 @@
  */
 
 export * from './useMyLpActionData';
-export * from './useLpActionPublicData';
+export * from './useLpActionAccounts';
 export * from './useLpVerifyHistoryData';
 

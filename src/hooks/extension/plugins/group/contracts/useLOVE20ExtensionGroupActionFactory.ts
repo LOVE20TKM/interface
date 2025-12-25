@@ -46,15 +46,19 @@ export const useExtensionParams = (contractAddress: `0x${string}`, extension: `0
     },
   });
 
+  const typedData = data as
+    | [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`, bigint, bigint, bigint]
+    | undefined;
+
   return {
-    tokenAddress: data ? (data.tokenAddress as `0x${string}`) : undefined,
-    groupManagerAddress: data ? (data.groupManagerAddress as `0x${string}`) : undefined,
-    groupDistrustAddress: data ? (data.groupDistrustAddress as `0x${string}`) : undefined,
-    stakeTokenAddress: data ? (data.stakeTokenAddress as `0x${string}`) : undefined,
-    joinTokenAddress: data ? (data.joinTokenAddress as `0x${string}`) : undefined,
-    activationStakeAmount: data ? safeToBigInt(data.activationStakeAmount) : undefined,
-    maxJoinAmountMultiplier: data ? safeToBigInt(data.maxJoinAmountMultiplier) : undefined,
-    verifyCapacityMultiplier: data ? safeToBigInt(data.verifyCapacityMultiplier) : undefined,
+    tokenAddress: typedData ? typedData[0] : undefined,
+    groupManagerAddress: typedData ? typedData[1] : undefined,
+    groupDistrustAddress: typedData ? typedData[2] : undefined,
+    stakeTokenAddress: typedData ? typedData[3] : undefined,
+    joinTokenAddress: typedData ? typedData[4] : undefined,
+    activationStakeAmount: typedData ? safeToBigInt(typedData[5]) : undefined,
+    maxJoinAmountMultiplier: typedData ? safeToBigInt(typedData[6]) : undefined,
+    verifyCapacityMultiplier: typedData ? safeToBigInt(typedData[7]) : undefined,
     isPending,
     error,
   };

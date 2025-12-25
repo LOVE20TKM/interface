@@ -135,9 +135,8 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
           {selectedRound > 0 && (
             <>
               <LeftTitle title={`第 ${selectedRound.toString()} 轮激励结果`} />
-
               <span className="text-sm text-greyscale-500 ml-2">(</span>
-              <ChangeRound currentRound={displayRound} handleChangedRound={handleChangedRound} />
+              <ChangeRound currentRound={currentJoinRound - BigInt(2)} handleChangedRound={handleChangedRound} />
               <span className="text-sm text-greyscale-500">)</span>
             </>
           )}

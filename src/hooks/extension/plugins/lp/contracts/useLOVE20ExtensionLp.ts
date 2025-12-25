@@ -155,22 +155,6 @@ export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account:
 };
 
 /**
- * Hook for lpRatioPrecision - 获取 LP 比率精度
- */
-export const useLpRatioPrecision = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
-    functionName: 'lpRatioPrecision',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { lpRatioPrecision: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for minGovVotes - 获取最小治理投票数
  */
 export const useMinGovVotes = (contractAddress: `0x${string}`) => {

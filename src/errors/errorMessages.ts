@@ -74,7 +74,7 @@ export const ErrorMessages: Record<string, string> = {
   JoinAmountLessThanMinStake: '加入数量小于最小参与代币数',
   JoinAmountZero: 'JoinAmountZero',
   JoinedAmountIsZero: '加入数量为0',
-  LastBlocksOfPhaseCannotJoin: 'LastBlocksOfPhaseCannotJoin',
+  LastBlocksOfPhaseCannotJoin: `每轮最后${process.env.NEXT_PUBLIC_JOIN_END_PHASE_BLOCKS}个区块不能加入`,
   LaunchAlreadyEnded: '公平发射已结束',
   LaunchAlreadyExists: '公平发射已存在',
   LaunchNotEnded: '公平发射尚未结束',

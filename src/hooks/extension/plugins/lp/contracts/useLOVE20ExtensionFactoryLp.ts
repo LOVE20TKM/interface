@@ -68,7 +68,6 @@ export const useExtensionParams = (factoryAddress: `0x${string}`, extensionAddre
     waitingBlocks: data ? safeToBigInt(data[2]) : undefined,
     govRatioMultiplier: data ? safeToBigInt(data[3]) : undefined,
     minGovVotes: data ? safeToBigInt(data[4]) : undefined,
-    lpRatioPrecision: data ? safeToBigInt(data[5]) : undefined,
     isPending,
     error,
   };
@@ -146,7 +145,6 @@ export function useCreateExtension(factoryAddress?: `0x${string}`) {
     waitingBlocks: bigint,
     govRatioMultiplier: bigint,
     minGovVotes: bigint,
-    lpRatioPrecision: bigint,
   ) => {
     console.log('提交 createExtension 交易:', {
       tokenAddress,
@@ -154,10 +152,9 @@ export function useCreateExtension(factoryAddress?: `0x${string}`) {
       waitingBlocks,
       govRatioMultiplier,
       minGovVotes,
-      lpRatioPrecision,
       isTukeMode,
     });
-    return await execute([tokenAddress, joinTokenAddress, waitingBlocks, govRatioMultiplier, minGovVotes, lpRatioPrecision]);
+    return await execute([tokenAddress, joinTokenAddress, waitingBlocks, govRatioMultiplier, minGovVotes]);
   };
 
   // 错误日志记录

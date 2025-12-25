@@ -16,7 +16,7 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useAccountInfosByGroupIdByRound } from '@/src/hooks/extension/plugins/group/composite/useAccountInfosByGroupIdByRound';
 
 // 工具函数
@@ -45,14 +45,14 @@ const _GroupParticipants: React.FC<GroupParticipantsProps> = ({ actionId, action
 
   // 从URL获取round参数
   const { round: urlRound } = router.query;
-  const [selectedRound, setSelectedRound] = useState<bigint>(currentRound - BigInt(1) || BigInt(1));
+  const [selectedRound, setSelectedRound] = useState<bigint>(currentRound || BigInt(1));
 
   // 初始化轮次状态
   useEffect(() => {
     if (urlRound && !isNaN(Number(urlRound))) {
       setSelectedRound(BigInt(urlRound as string));
     } else if (currentRound && currentRound > BigInt(0)) {
-      setSelectedRound(currentRound - BigInt(1));
+      setSelectedRound(currentRound);
     }
   }, [urlRound, currentRound]);
 
@@ -131,7 +131,7 @@ const _GroupParticipants: React.FC<GroupParticipantsProps> = ({ actionId, action
           <>
             <LeftTitle title={`第 ${selectedRound.toString()} 轮参与地址`} />
             <span className="text-sm text-greyscale-500 ml-2">(</span>
-            <ChangeRound currentRound={currentRound - BigInt(1) || BigInt(0)} handleChangedRound={handleChangedRound} />
+            <ChangeRound currentRound={currentRound || BigInt(0)} handleChangedRound={handleChangedRound} />
             <span className="text-sm text-greyscale-500">)</span>
           </>
         )}

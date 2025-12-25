@@ -483,7 +483,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
           <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
-            <div>• 为每个行动者输入整数分数（0~100 之间）</div>
+            <div>• 验证打分范围为：0~100 之间</div>
             <div>• 可以从剪贴板粘贴分数（格式：每行一个分数）</div>
           </div>
         </div>

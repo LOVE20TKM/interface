@@ -34,11 +34,6 @@ export const LOVE20ExtensionLpAbi = [
         "name": "minGovVotes_",
         "type": "uint256",
         "internalType": "uint256"
-      },
-      {
-        "name": "lpRatioPrecision_",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "nonpayable"
@@ -259,19 +254,6 @@ export const LOVE20ExtensionLpAbi = [
         "internalType": "address"
       }
     ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "lpRatioPrecision",
-    "inputs": [],
     "outputs": [
       {
         "name": "",
@@ -606,11 +588,6 @@ export const LOVE20ExtensionLpAbi = [
   {
     "type": "error",
     "name": "InsufficientGovVotes",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InsufficientLpRatio",
     "inputs": []
   },
   {

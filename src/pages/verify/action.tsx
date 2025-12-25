@@ -3,11 +3,15 @@
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import React, { useContext, useEffect, useState } from 'react';
+import { useAccount } from 'wagmi';
+
+// my contexts
+import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useHandleContractError } from '@/src/lib/errorUtils';
-import { TokenContext } from '@/src/contexts/TokenContext';
+import { useActionDetailData } from '@/src/hooks/composite/useActionDetailData';
 
 // my types
 import { ActionInfo } from '@/src/types/love20types';
@@ -26,6 +30,7 @@ const VerifyPage = () => {
   const router = useRouter();
   const { id } = router.query;
   const actionId = BigInt((id as string) || '0');
+  const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
   const { currentRound, error: errorCurrentRound } = useCurrentRound();
 
@@ -47,6 +52,17 @@ const VerifyPage = () => {
 
   // 行动详情
   const [actionInfo, setActionInfo] = useState<ActionInfo | undefined>(undefined);
+
+  // 获取行动详情数据（包括扩展信息）
+  const {
+    isExtensionAction,
+    extensionAddress,
+    factory,
+  } = useActionDetailData({
+    tokenAddress: token?.address,
+    actionId,
+    account,
+  });
 
   return (
     <>
@@ -93,6 +109,9 @@ const VerifyPage = () => {
           round={BigInt(currentRound || 0)}
           showSubmitter={true}
           onActionInfo={setActionInfo}
+          isExtensionAction={isExtensionAction}
+          extensionAddress={extensionAddress}
+          factory={factory}
         />
       </main>
     </>

@@ -61,8 +61,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   const {
     joinedAmount,
     totalJoinedAmount,
-    userScore,
-    totalScore,
+    rewardRatio,
     userGovVotes,
     totalGovVotes,
     minGovVotes,
@@ -277,8 +276,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
           <LpStatsCard
             stakedAmount={joinedAmount || BigInt(0)}
             lpRatioStr={lpRatioStr}
-            userScore={userScore}
-            totalScore={totalScore}
+            rewardRatio={rewardRatio}
             userGovVotes={userGovVotes}
             totalGovVotes={totalGovVotes}
           />

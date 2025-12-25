@@ -5,8 +5,7 @@ import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 interface LpStatsCardProps {
   stakedAmount: bigint;
   lpRatioStr: string;
-  userScore: bigint;
-  totalScore: bigint;
+  rewardRatio: number; // 激励占比（0-1 的比例值）
   userGovVotes: bigint;
   totalGovVotes: bigint;
 }
@@ -25,14 +24,12 @@ interface LpStatsCardProps {
 const LpStatsCard: React.FC<LpStatsCardProps> = ({
   stakedAmount,
   lpRatioStr,
-  userScore,
-  totalScore,
+  rewardRatio,
   userGovVotes,
   totalGovVotes,
 }) => {
-  // 计算实际激励占比
-  const actualRatio = totalScore > BigInt(0) ? (Number(userScore) / Number(totalScore)) * 100 : 0;
-  const actualRatioStr = formatPercentage(actualRatio);
+  // 将激励占比转换为百分比字符串
+  const actualRatioStr = formatPercentage(rewardRatio * 100);
 
   // 计算治理票占比
   const govVotesRatio = totalGovVotes > BigInt(0) ? (Number(userGovVotes) / Number(totalGovVotes)) * 100 : 0;

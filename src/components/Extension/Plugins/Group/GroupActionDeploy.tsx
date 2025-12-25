@@ -8,7 +8,8 @@ import Link from 'next/link';
 
 // 第三方库
 import toast from 'react-hot-toast';
-import { isAddress, parseEther } from 'viem';
+import { isAddress, parseEther, parseEventLogs } from 'viem';
+import { useWaitForTransactionReceipt } from 'wagmi';
 
 // UI 组件
 import { Button } from '@/components/ui/button';
@@ -21,11 +22,10 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
-import {
-  useCreateExtension,
-  useExtensionsAtIndex,
-  useExtensionsCount,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupActionFactory';
+import { useCreateExtension } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupActionFactory';
+
+// ABI
+import { LOVE20ExtensionGroupActionFactoryAbi } from '@/src/abis/LOVE20ExtensionGroupActionFactory';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -72,46 +72,41 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
     'idle',
   );
 
-  // // 等待交易回执并解析事件获取扩展地址
-  // const { data: receipt } = useWaitForTransactionReceipt({
-  //   hash,
-  // });
+  // 等待交易回执并解析事件获取扩展地址
+  const { data: receipt } = useWaitForTransactionReceipt({
+    hash,
+  });
 
-  // // 等待授权的交易回执
-  // const { data: approveReceipt } = useWaitForTransactionReceipt({
-  //   hash: approveHash,
-  // });
+  // 等待授权的交易回执
+  const { data: approveReceipt } = useWaitForTransactionReceipt({
+    hash: approveHash,
+  });
 
   // 存储部署的扩展地址
   const [deployedExtensionAddress, setDeployedExtensionAddress] = useState<`0x${string}` | null>(null);
-  const [shouldQueryExtension, setShouldQueryExtension] = useState(false);
 
-  // 查询扩展总数
-  const { count: extensionsCount, isPending: isCountPending } = useExtensionsCount(factoryAddress);
-
-  // 查询最新的扩展地址（只在交易确认后查询）
-  const { extension: latestExtension, isPending: isExtensionPending } = useExtensionsAtIndex(
-    factoryAddress,
-    shouldQueryExtension && extensionsCount !== undefined ? extensionsCount - BigInt(1) : BigInt(0),
-  );
-
-  // 交易确认后，触发查询最新扩展
+  // 从交易回执中提取扩展地址
   useEffect(() => {
-    if (isConfirmed && hash && !deployedExtensionAddress) {
-      console.log('交易已确认，准备查询最新扩展地址');
-      setShouldQueryExtension(true);
-    }
-  }, [isConfirmed, hash, deployedExtensionAddress]);
+    if (receipt && receipt.logs) {
+      try {
+        // 解析 ExtensionCreate 事件
+        const logs = parseEventLogs({
+          abi: LOVE20ExtensionGroupActionFactoryAbi,
+          eventName: 'ExtensionCreate',
+          logs: receipt.logs,
+        });
 
-  // 获取到最新扩展地址后保存
-  useEffect(() => {
-    if (shouldQueryExtension && latestExtension && !deployedExtensionAddress) {
-      setDeployedExtensionAddress(latestExtension);
-      console.log('扩展合约已部署，地址:', latestExtension);
-      toast.success('扩展部署成功！');
-      setShouldQueryExtension(false);
+        if (logs.length > 0 && logs[0].args.extension) {
+          const extensionAddress = logs[0].args.extension as `0x${string}`;
+          setDeployedExtensionAddress(extensionAddress);
+          console.log('扩展合约已部署，地址:', extensionAddress);
+          toast.success('扩展部署成功！');
+        }
+      } catch (error) {
+        console.error('解析扩展地址失败:', error);
+      }
     }
-  }, [shouldQueryExtension, latestExtension, deployedExtensionAddress]);
+  }, [receipt]);
 
   // 监听授权完成
   useEffect(() => {

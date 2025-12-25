@@ -90,7 +90,7 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
   if (!ownerGroups || ownerGroups.length === 0) {
     return (
       <div className="space-y-4">
-        <LeftTitle title="选择不信任的服务者" />
+        <LeftTitle title="选择不信任的服务者：" />
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">暂无可投票的服务者</p>
           <Button variant="outline" onClick={onCancel}>
@@ -103,7 +103,7 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
 
   return (
     <div className="space-y-4">
-      <LeftTitle title="选择不信任的服务者" />
+      <LeftTitle title="选择不信任的服务者：" />
 
       {/* 服务者列表 */}
       <div className="space-y-3">

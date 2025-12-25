@@ -77,12 +77,6 @@ export const useGroupAccountsRewardOfRound = ({
     },
   });
 
-  console.log('rewardsData', rewardsData);
-  console.log('rewardsContracts', rewardsContracts);
-  console.log('extensionAddress', extensionAddress);
-  console.log('round', round);
-  console.log('accounts', accounts);
-
   // 解析数据
   const accountRewards = useMemo(() => {
     if (!rewardsData || accounts.length === 0) return [];

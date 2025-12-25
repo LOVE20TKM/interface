@@ -109,19 +109,14 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
               <span className="font-mono">{formatTokenAmount(groupDetail.maxCapacity)}</span>
             </div>
 
-            <div className="flex items-center justify-between md:max-w-xs">
-              <span className="text-sm">剩余容量:</span>
-              <span className="font-mono">
-                <span className="">{formatTokenAmount(groupDetail.remainingCapacity)} </span>
-                <span className="text-sm text-gray-500">({formatPercentage(remainingCapacityRatio * 100)})</span>
-              </span>
-            </div>
-            <div className="flex items-center justify-between md:max-w-xs">
-              <span className="text-sm">已参与代币:</span>
-              <span className="font-mono">
-                <span className="">{formatTokenAmount(groupDetail.totalJoinedAmount)} </span>
-                <span className="text-sm text-gray-500">({formatPercentage(capacityRatio * 100)})</span>
-              </span>
+            <div className="col-span-1 md:col-span-2  text-gray-600 bg-gray-100 rounded ">
+              <div className="text-xs px-3 pt-2 pb-1">
+                剩余容量 {formatTokenAmount(groupDetail.remainingCapacity)} (
+                {formatPercentage(remainingCapacityRatio * 100)})
+              </div>
+              <div className="text-xs px-3 pt-0 pb-2">
+                已参与代币 {formatTokenAmount(groupDetail.totalJoinedAmount)} ({formatPercentage(capacityRatio * 100)})
+              </div>
             </div>
             {/* <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">总参与地址:</span>

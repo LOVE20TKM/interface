@@ -111,51 +111,44 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
     ],
     "outputs": [
       {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct LOVE20ExtensionGroupActionFactory.ExtensionParams",
-        "components": [
-          {
-            "name": "tokenAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "groupManagerAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "groupDistrustAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "stakeTokenAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "joinTokenAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "activationStakeAmount",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "maxJoinAmountMultiplier",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "verifyCapacityMultiplier",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupManagerAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupDistrustAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "stakeTokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "joinTokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "activationStakeAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxJoinAmountMultiplier",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyCapacityMultiplier",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -204,5 +197,66 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "ExtensionCreate",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "groupManagerAddress",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "groupDistrustAddress",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "stakeTokenAddress",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "joinTokenAddress",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "activationStakeAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxJoinAmountMultiplier",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyCapacityMultiplier",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
   }
 ] as const satisfies Abi;

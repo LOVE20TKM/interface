@@ -5,7 +5,7 @@ import React from 'react';
 import { useAccount } from 'wagmi';
 
 // my hooks
-import { useLpActionPublicData } from '@/src/hooks/extension/plugins/lp/composite';
+import { useLpActionAccounts } from '@/src/hooks/extension/plugins/lp/composite';
 
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -28,7 +28,7 @@ interface LpCurrentTabProps {
 const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddress, actionId }) => {
   const { address: account } = useAccount();
 
-  const { participants, totalScore, totalLp, totalGovVotes, isPending, error } = useLpActionPublicData({
+  const { participants, govRatioMultiplier, isPending, error } = useLpActionAccounts({
     extensionAddress,
     tokenAddress,
     actionId,
@@ -71,7 +71,7 @@ const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddr
         <thead>
           <tr className="border-b border-gray-100">
             <th className="px-2 text-left">地址</th>
-            <th className="px-2 text-right">得分</th>
+            <th className="px-2 text-right">治理票/LP</th>
             <th className="px-2 text-right">激励占比</th>
           </tr>
         </thead>
@@ -90,14 +90,23 @@ const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddr
               </td>
               <td className="px-2 text-right">
                 <div className="flex flex-col">
-                  <span className="font-medium">{formatNumber(participant.score)}</span>
                   <div className="text-xs text-gray-500 mt-1">
                     <div>治理票: {formatPercentage(participant.govVotesRatio * 100)}</div>
                     <div>LP: {formatPercentage(participant.lpRatio * 100)}</div>
                   </div>
                 </div>
               </td>
-              <td className="px-2 text-right">{formatPercentage(participant.rewardRatio * 100)}</td>
+              <td className="px-2 text-right">
+                {(() => {
+                  // 计算激励占比：min(participant.govVotesRatio * govRatioMultiplier, participant.lpRatio)
+                  if (!govRatioMultiplier) {
+                    return formatPercentage(participant.rewardRatio * 100);
+                  }
+                  const govVotesRatioMultiplied = participant.govVotesRatio * Number(govRatioMultiplier);
+                  const calculatedRewardRatio = Math.min(govVotesRatioMultiplied, participant.lpRatio);
+                  return formatPercentage(calculatedRewardRatio * 100);
+                })()}
+              </td>
             </tr>
           ))}
         </tbody>

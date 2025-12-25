@@ -47,8 +47,7 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
   const {
     joinedAmount,
     totalJoinedAmount,
-    userScore,
-    totalScore,
+    rewardRatio,
     userGovVotes,
     totalGovVotes,
     minGovVotes,
@@ -134,8 +133,7 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
           <LpStatsCard
             stakedAmount={joinedAmount || BigInt(0)}
             lpRatioStr={lpRatioStr}
-            userScore={userScore}
-            totalScore={totalScore}
+            rewardRatio={rewardRatio}
             userGovVotes={userGovVotes}
             totalGovVotes={totalGovVotes}
           />

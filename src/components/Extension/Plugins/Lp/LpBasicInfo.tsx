@@ -32,7 +32,6 @@ const LpBasicInfo: React.FC<LpBasicInfoProps> = ({ extensionAddress, factoryAddr
     waitingBlocks,
     govRatioMultiplier,
     minGovVotes,
-    lpRatioPrecision,
     isPending,
     error,
   } = useExtensionParams(factoryAddress, extensionAddress);
@@ -68,8 +67,7 @@ const LpBasicInfo: React.FC<LpBasicInfoProps> = ({ extensionAddress, factoryAddr
     !joinTokenAddress ||
     waitingBlocks === undefined ||
     govRatioMultiplier === undefined ||
-    minGovVotes === undefined ||
-    lpRatioPrecision === undefined
+    minGovVotes === undefined
   ) {
     return null;
   }
@@ -104,12 +102,6 @@ const LpBasicInfo: React.FC<LpBasicInfoProps> = ({ extensionAddress, factoryAddr
         <div className="md:max-w-2xl">
           <div className="text-sm font-bold mb-1">最小治理票数:</div>
           <div className="font-mono text-secondary text-sm md:text-base">{formatTokenAmount(minGovVotes)}</div>
-        </div>
-
-        {/* LP比率精度 */}
-        <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">LP比率精度:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">{lpRatioPrecision.toString()}</div>
         </div>
       </div>
 

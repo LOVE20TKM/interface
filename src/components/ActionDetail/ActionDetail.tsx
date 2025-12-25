@@ -14,11 +14,13 @@ import { formatTokenAmount } from '@/src/lib/format';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 import SafeText from '@/src/components/Common/SafeText';
 import InfoTooltip from '@/src/components/Common/InfoTooltip';
+import { FactoryInfo } from '@/src/hooks/extension/base/composite';
 
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LeftTitle from '@/src/components/Common/LeftTitle';
+import ExtensionBasicInfo from '@/src/components/Extension/Base/Action/ExtensionBasicInfo';
 
 interface ActivityDetailProps {
   actionId: bigint;
@@ -26,6 +28,10 @@ interface ActivityDetailProps {
   showSubmitter: boolean;
   showVerifyHistory?: boolean;
   onActionInfo?: (actionInfo: ActionInfo) => void;
+  // 扩展行动相关参数
+  isExtensionAction?: boolean;
+  extensionAddress?: `0x${string}`;
+  factory?: FactoryInfo;
 }
 
 const ActionDetail: React.FC<ActivityDetailProps> = ({
@@ -34,6 +40,9 @@ const ActionDetail: React.FC<ActivityDetailProps> = ({
   showSubmitter,
   showVerifyHistory = true,
   onActionInfo,
+  isExtensionAction,
+  extensionAddress,
+  factory,
 }) => {
   const { token } = useContext(TokenContext) || {};
 
@@ -162,6 +171,15 @@ const ActionDetail: React.FC<ActivityDetailProps> = ({
               )}
             </p>
           </div>
+
+          {isExtensionAction && extensionAddress && factory && (
+            <ExtensionBasicInfo
+              extensionAddress={extensionAddress}
+              factoryAddress={factory.address}
+              actionId={actionId}
+              actionInfo={actionInfo}
+            />
+          )}
         </div>
       </div>
     </>

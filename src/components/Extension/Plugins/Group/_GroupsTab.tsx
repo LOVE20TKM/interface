@@ -13,6 +13,7 @@ import { useRouter } from 'next/router';
 import { ChevronRight, User } from 'lucide-react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { Button } from '@/components/ui/button';
 
 // 类型
 import { ActionInfo } from '@/src/types/love20types';
@@ -113,14 +114,11 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
   if (!groups || groups.length === 0) {
     return (
       <div className="text-center py-6">
-        <p className="text-gray-500 mb-2">暂无链群参与本行动</p>
+        <p className="text-gray-500 mb-2">暂无链群</p>
         <div className="">
-          <Link
-            href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}
-            className="text-sm text-secondary hover:text-secondary/80 transition-colors"
-          >
-            激活链群 &gt;&gt;
-          </Link>
+          <Button asChild className="w-1/2">
+            <Link href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}>激活链群</Link>
+          </Button>
         </div>
       </div>
     );
@@ -190,7 +188,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
                             : 0;
                         const percentage = capacityRatio * 100;
                         const colorClass =
-                          percentage >= 100 ? 'text-red-600' : percentage >= 90 ? 'text-yellow-600' : 'text-gray-500';
+                          percentage > 95 ? 'text-red-600' : percentage >= 90 ? 'text-yellow-600' : 'text-gray-500';
                         return (
                           <span className={colorClass}>
                             {formatTokenAmount(group.totalJoinedAmount)} ({formatPercentage(percentage)})
@@ -215,11 +213,10 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
 
       {/* 说明 */}
       <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-        <div className="font-medium text-gray-700 mb-1">💡 关于链群</div>
+        <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
         <div className="space-y-1 text-gray-600">
-          <div>• 每个链群由一个服务者管理，负责验证成员的行动完成情况</div>
+          <div>• 每个链群，由服务者来对成员进行验证和打分</div>
           <div>• 加入链群后，您的激励将基于服务者的验证打分</div>
-          <div>• 点击链群可查看详细信息和历史数据</div>
         </div>
       </div>
     </div>

@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useRouter } from 'next/router';
+import { useAccount } from 'wagmi';
 
-// my types
-import { ActionInfo } from '@/src/types/love20types';
+// my contexts
+import { TokenContext } from '@/src/contexts/TokenContext';
+
+// my hooks
+import { useActionDetailData } from '@/src/hooks/composite/useActionDetailData';
 
 // my components
 import Header from '@/src/components/Header';
@@ -18,14 +22,25 @@ const VoteSingleActionPage = () => {
   const router = useRouter();
   const { id } = router.query;
   const idParam = id as string;
+  const actionId = id ? BigInt(id as string) : undefined;
+  const { address: account } = useAccount();
+  const { token } = useContext(TokenContext) || {};
 
   const [round, setRound] = useState<bigint | null>(null);
   const handleRoundChange = (newRound: bigint) => {
     setRound(newRound);
   };
 
-  // 行动详情
-  const [actionInfo, setActionInfo] = useState<ActionInfo | undefined>(undefined);
+  // 获取行动详情数据（包括扩展信息）
+  const {
+    isExtensionAction,
+    extensionAddress,
+    factory,
+  } = useActionDetailData({
+    tokenAddress: token?.address,
+    actionId,
+    account,
+  });
 
   return (
     <>
@@ -36,7 +51,9 @@ const VoteSingleActionPage = () => {
           actionId={BigInt(idParam || 0)}
           round={BigInt(round || 0)}
           showSubmitter={true}
-          onActionInfo={setActionInfo}
+          isExtensionAction={isExtensionAction}
+          extensionAddress={extensionAddress}
+          factory={factory}
         />
       </main>
     </>

@@ -259,7 +259,7 @@ export default function MintGroup() {
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder="请输入链群名称"
+                      placeholder="请输入NFT名称"
                       disabled={hasStartedApproving || isPendingMint || isConfirmingMint}
                       className="!ring-secondary-foreground"
                       {...field}
@@ -268,7 +268,7 @@ export default function MintGroup() {
                   <FormMessage />
                   {maxGroupNameLength && (
                     <div className="text-xs text-greyscale-400 mt-1">
-                      最大长度：{maxGroupNameLength.toString()} 字节
+                      最大长度：{maxGroupNameLength.toString()} 字节 (可以是英文、汉字、数字、符号等)
                     </div>
                   )}
                 </FormItem>

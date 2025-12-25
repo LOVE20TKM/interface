@@ -54,11 +54,6 @@ export const LOVE20ExtensionFactoryLpAbi = [
         "name": "minGovVotes",
         "type": "uint256",
         "internalType": "uint256"
-      },
-      {
-        "name": "lpRatioPrecision",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -124,11 +119,6 @@ export const LOVE20ExtensionFactoryLpAbi = [
         "name": "minGovVotes",
         "type": "uint256",
         "internalType": "uint256"
-      },
-      {
-        "name": "lpRatioPrecision",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -180,7 +170,7 @@ export const LOVE20ExtensionFactoryLpAbi = [
   },
   {
     "type": "event",
-    "name": "ExtensionCreated",
+    "name": "ExtensionCreate",
     "inputs": [
       {
         "name": "extension",
@@ -214,12 +204,6 @@ export const LOVE20ExtensionFactoryLpAbi = [
       },
       {
         "name": "minGovVotes",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "lpRatioPrecision",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"

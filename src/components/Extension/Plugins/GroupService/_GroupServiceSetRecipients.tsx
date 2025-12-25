@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,17 +21,22 @@ import {
 import { useContractError } from '@/src/errors/useContractError';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 
-// Schema
+// Schema - 优化验证，确保类型正确
 const recipientSchema = z.object({
   address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, '无效的地址格式'),
-  basisPoints: z.coerce.number().min(1, '基点数必须大于0').max(10000, '基点数不能超过10000'),
+  basisPoints: z.coerce
+    .number({ invalid_type_error: '基点数必须是数字' })
+    .int('基点数必须是整数')
+    .min(0, '基点数不能为负')
+    .max(10000, '基点数不能超过10000'),
 });
 
-const formSchema = z.object({
-  recipients: z.array(recipientSchema),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = {
+  recipients: Array<{
+    address: string;
+    basisPoints: number;
+  }>;
+};
 
 interface _GroupServiceSetRecipientsProps {
   extensionAddress: `0x${string}`;
@@ -62,6 +67,43 @@ export default function _GroupServiceSetRecipients({
   const { setRecipients, isPending, isConfirming, isConfirmed, writeError } = useSetRecipients(extensionAddress);
   const { basisPointsBase } = useBasisPointsBase(extensionAddress);
   const { maxRecipients } = useMaxRecipients(extensionAddress);
+
+  // 计算基础值，用于验证总基点数
+  const base = basisPointsBase ? Number(basisPointsBase) : 10000;
+
+  // 创建动态 schema，使用 basisPointsBase
+  const formSchema = useMemo(
+    () =>
+      z
+        .object({
+          recipients: z.array(recipientSchema),
+        })
+        .refine(
+          (data) => {
+            const total = data.recipients.reduce((sum, r) => sum + (r.basisPoints || 0), 0);
+            return total <= base;
+          },
+          {
+            message: `所有地址的基点数总和不能超过 ${base} (${base / 100}%)`,
+            path: ['root'],
+          },
+        )
+        .refine(
+          (data) => {
+            // 检查地址是否重复（同一个行动下的同一个链群下的地址不能重复）
+            const addresses = data.recipients
+              .map((r) => r.address.toLowerCase())
+              .filter((addr) => addr && addr.match(/^0x[a-fA-F0-9]{40}$/));
+            const uniqueAddresses = new Set(addresses);
+            return addresses.length === uniqueAddresses.size;
+          },
+          {
+            message: '存在重复的地址，同一链群下每个地址只能设置一次',
+            path: ['root'],
+          },
+        ),
+    [base],
+  );
 
   // Form
   const form = useForm<FormValues>({
@@ -116,18 +158,80 @@ export default function _GroupServiceSetRecipients({
     const addrs = values.recipients.map((r) => r.address as `0x${string}`);
     const basisPoints = values.recipients.map((r) => BigInt(r.basisPoints));
 
-    // Check total percentage
-    const total = values.recipients.reduce((sum, r) => sum + r.basisPoints, 0);
-    const base = basisPointsBase ? Number(basisPointsBase) : 10000;
+    // Check total percentage - 确保每个行动下，每个链群的所有待分配地址的基点数之和不能超过 base (通常是 10000)
+    const total = values.recipients.reduce((sum, r) => sum + (r.basisPoints || 0), 0);
 
     if (total > base) {
       form.setError('root', { message: `总比例不能超过 ${base / 100}% (当前: ${total / 100}%)` });
       return;
     }
 
+    // 检查是否有重复地址
+    const addressesLower = addrs.map((addr) => addr.toLowerCase());
+    const uniqueAddresses = new Set(addressesLower);
+    if (addressesLower.length !== uniqueAddresses.size) {
+      form.setError('root', { message: '存在重复的地址，同一链群下每个地址只能设置一次' });
+      return;
+    }
+
     // Call contract with actionId and groupId
     await setRecipients(actionId, groupId, addrs, basisPoints);
   };
+
+  // 实时计算总基点数（强制转换为数字类型，避免字符串拼接）
+  const watchedRecipients = form.watch('recipients');
+  const totalBasisPoints = watchedRecipients.reduce((sum, r) => sum + (Number(r.basisPoints) || 0), 0);
+  const totalPercentage = (totalBasisPoints / 100).toFixed(2);
+  const isTotalExceeded = totalBasisPoints > base;
+  const remainingBasisPoints = base - totalBasisPoints;
+
+  // 检测重复地址
+  const getDuplicateAddresses = () => {
+    const addressMap = new Map<string, number[]>();
+    watchedRecipients.forEach((r, index) => {
+      if (r.address && r.address.match(/^0x[a-fA-F0-9]{40}$/)) {
+        const lowerAddr = r.address.toLowerCase();
+        if (!addressMap.has(lowerAddr)) {
+          addressMap.set(lowerAddr, []);
+        }
+        addressMap.get(lowerAddr)!.push(index);
+      }
+    });
+    // 返回重复地址的索引数组
+    const duplicateIndices = new Set<number>();
+    addressMap.forEach((indices) => {
+      if (indices.length > 1) {
+        indices.forEach((idx) => duplicateIndices.add(idx));
+      }
+    });
+    return duplicateIndices;
+  };
+
+  const duplicateAddressIndices = getDuplicateAddresses();
+  const hasDuplicateAddresses = duplicateAddressIndices.size > 0;
+
+  // 基点数输入处理函数 - 限制输入值在合理范围内
+  const handleBasisPointsChange = useCallback(
+    (fieldOnChange: (value: any) => void, maxForThisInput: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      const numValue = Number(value);
+
+      // 限制输入：不能为负数，不能超过最大值
+      if (value === '' || value === '-') {
+        fieldOnChange('');
+      } else if (!isNaN(numValue)) {
+        if (numValue < 0) {
+          fieldOnChange(0);
+        } else if (numValue > maxForThisInput) {
+          fieldOnChange(maxForThisInput);
+          toast.error(`该地址最多可分配 ${maxForThisInput} 基点数`);
+        } else {
+          fieldOnChange(numValue);
+        }
+      }
+    },
+    [],
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -174,8 +278,16 @@ export default function _GroupServiceSetRecipients({
                 <TableBody>
                   {fields.map((field, index) => {
                     const currentBasisPoints = form.watch(`recipients.${index}.basisPoints`);
+                    // 计算当前输入框的最大值：剩余基点数 + 当前输入框的值
+                    const otherBasisPointsSum = watchedRecipients.reduce(
+                      (sum, r, i) => (i !== index ? sum + (Number(r.basisPoints) || 0) : sum),
+                      0,
+                    );
+                    const maxForThisInput = base - otherBasisPointsSum;
+                    const isDuplicate = duplicateAddressIndices.has(index);
+
                     return (
-                      <TableRow key={field.id}>
+                      <TableRow key={field.id} className={isDuplicate ? 'bg-red-50' : ''}>
                         <TableCell className="px-1 sm:px-2">
                           <FormField
                             control={form.control}
@@ -186,10 +298,13 @@ export default function _GroupServiceSetRecipients({
                                   <Input
                                     placeholder="0x..."
                                     {...field}
-                                    className="font-mono text-xs sm:text-sm h-8 px-1 sm:px-2"
+                                    className={`font-mono text-xs sm:text-sm h-8 px-1 sm:px-2 ${
+                                      isDuplicate ? 'border-red-500 focus-visible:ring-red-500' : ''
+                                    }`}
                                   />
                                 </FormControl>
                                 <FormMessage className="text-xs" />
+                                {isDuplicate && <p className="text-xs text-red-600 mt-1">该地址重复</p>}
                               </FormItem>
                             )}
                           />
@@ -201,7 +316,14 @@ export default function _GroupServiceSetRecipients({
                             render={({ field }) => (
                               <FormItem>
                                 <FormControl>
-                                  <Input type="number" {...field} className="h-8 px-1 sm:px-2 max-w-20" />
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    max={maxForThisInput}
+                                    {...field}
+                                    onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
+                                    className="h-8 px-1 sm:px-2 max-w-20"
+                                  />
                                 </FormControl>
                                 <FormMessage className="text-xs" />
                               </FormItem>
@@ -219,7 +341,10 @@ export default function _GroupServiceSetRecipients({
                                   <FormControl>
                                     <Input
                                       type="number"
+                                      min={0}
+                                      max={maxForThisInput}
                                       {...field}
+                                      onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
                                       placeholder="基点数"
                                       className="h-8 px-2 text-sm max-w-16"
                                     />
@@ -229,12 +354,12 @@ export default function _GroupServiceSetRecipients({
                               )}
                             />
                             <div className="text-muted-foreground text-xs text-center">
-                              {currentBasisPoints ? (currentBasisPoints / 100).toFixed(2) : '0.00'}%
+                              {currentBasisPoints ? (Number(currentBasisPoints) / 100).toFixed(2) : '0.00'}%
                             </div>
                           </div>
                           {/* 大屏幕：只显示比例 */}
                           <div className="hidden sm:block text-muted-foreground text-sm">
-                            {currentBasisPoints ? (currentBasisPoints / 100).toFixed(2) : '0.00'}%
+                            {currentBasisPoints ? (Number(currentBasisPoints) / 100).toFixed(2) : '0.00'}%
                           </div>
                         </TableCell>
                         <TableCell className="px-0 sm:px-1">
@@ -262,10 +387,40 @@ export default function _GroupServiceSetRecipients({
               </Table>
             </div>
 
+            {/* 显示总基点数/百分比 */}
+            {fields.length > 0 && (
+              <div
+                className={`text-sm p-2 rounded-md border ${
+                  isTotalExceeded || hasDuplicateAddresses
+                    ? 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-blue-50 border-blue-200 text-blue-700'
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <span>总基点数：</span>
+                  <span className="font-semibold">
+                    {totalBasisPoints} / {base} ({totalPercentage}%)
+                  </span>
+                </div>
+                {!isTotalExceeded && !hasDuplicateAddresses && remainingBasisPoints > 0 && (
+                  <div className="text-xs mt-1">
+                    剩余可分配：{remainingBasisPoints} ({(remainingBasisPoints / 100).toFixed(2)}%)
+                  </div>
+                )}
+                {isTotalExceeded && (
+                  <div className="text-xs mt-1 text-red-600">警告：总比例超过 100%，请调整基点数</div>
+                )}
+                {hasDuplicateAddresses && (
+                  <div className="text-xs mt-1 text-red-600">警告：存在重复地址，请修改或删除</div>
+                )}
+              </div>
+            )}
+
             <Button
               type="button"
               variant="outline"
               className="w-full border-dashed"
+              disabled={isTotalExceeded || totalBasisPoints >= base}
               onClick={() => {
                 // 检查是否超过最大接收者数量限制
                 if (maxRecipients !== undefined && fields.length >= Number(maxRecipients)) {
@@ -282,7 +437,7 @@ export default function _GroupServiceSetRecipients({
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                 取消
               </Button>
-              <Button type="submit" disabled={isPending || isConfirming}>
+              <Button type="submit" disabled={isPending || isConfirming || isTotalExceeded || hasDuplicateAddresses}>
                 {isPending || isConfirming ? '提交中...' : '提交'}
               </Button>
             </div>

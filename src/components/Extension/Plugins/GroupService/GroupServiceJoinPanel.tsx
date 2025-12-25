@@ -148,11 +148,9 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
 
         {/* 提示信息 */}
         <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 关于链群服务行动</div>
+          <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
-            <div>• 链群服务行动用于激励链群服务者</div>
-            <div>• 需要在进行中的行动中有已激活的链群，才可以参加本行动</div>
-            <div>• 激励将根据服务的所有行动的链群铸币激励自动计算</div>
+            <div>• 在进行中的行动中有激活的链群，才可参加本行动</div>
             <div>• 可在验证阶段设置激励分配地址和比例</div>
           </div>
         </div>

@@ -5,6 +5,9 @@ import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
 
 const STAKE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`;
 
+// 固定精度值
+const LP_RATIO_PRECISION = BigInt(100000);
+
 export interface UseMyLpActionDataParams {
   extensionAddress: `0x${string}` | undefined;
   tokenAddress: `0x${string}` | undefined;
@@ -25,9 +28,8 @@ export interface UseMyLpActionDataResult {
   canExitNow: boolean; // 是否可以立即退出
   remainingBlocks: bigint; // 还需要等待的区块数
 
-  // 激励占比相关 - 通过 calculateScore 计算
-  userScore: bigint; // 用户得分
-  totalScore: bigint; // 总得分
+  // 激励占比（0-1 的比例值）
+  rewardRatio: number;
 
   // 治理票信息（用于显示）
   userGovVotes: bigint;
@@ -126,21 +128,14 @@ export const useMyLpActionData = ({
         functionName: 'govVotesNum',
         args: [tokenAddress],
       },
-      // 7. 获取 LP 比例精度
-      {
-        address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
-        functionName: 'lpRatioPrecision',
-        args: [],
-      },
-      // 8. 获取需要等待的区块数
+      // 7. 获取需要等待的区块数
       {
         address: extensionAddress,
         abi: LOVE20ExtensionLpAbi,
         functionName: 'waitingBlocks',
         args: [],
       },
-      // 9. 获取最小治理票数门槛
+      // 8. 获取最小治理票数门槛
       {
         address: extensionAddress,
         abi: LOVE20ExtensionLpAbi,
@@ -178,8 +173,8 @@ export const useMyLpActionData = ({
   }, [data]);
 
   const waitingBlocks = useMemo(() => {
-    if (!data || !data[8]?.result) return BigInt(0);
-    return BigInt(data[8].result.toString());
+    if (!data || !data[7]?.result) return BigInt(0);
+    return BigInt(data[7].result.toString());
   }, [data]);
 
   const exitableBlock = useMemo(() => {
@@ -215,56 +210,44 @@ export const useMyLpActionData = ({
   }, [data]);
 
   const minGovVotes = useMemo(() => {
-    if (!data || !data[9]?.result) return BigInt(0);
-    return BigInt(data[9].result.toString());
+    if (!data || !data[8]?.result) return BigInt(0);
+    return BigInt(data[8].result.toString());
   }, [data]);
 
-  const lpRatioPrecision = useMemo(() => {
-    if (!data || !data[7]?.result) return BigInt(0);
-    return BigInt(data[7].result.toString());
-  }, [data]);
-
-  // 计算用户得分（遵循合约算法）
-  const userScore = useMemo(() => {
-    // Edge case: no data or no LP precision
-    if (!lpRatioPrecision || lpRatioPrecision === BigInt(0)) {
-      return BigInt(0);
-    }
-
+  // 计算激励占比（0-1 的比例值）
+  const rewardRatio = useMemo(() => {
     // Edge case: user hasn't joined
     if (!joinedAmount || joinedAmount === BigInt(0)) {
-      return BigInt(0);
+      return 0;
     }
 
     // Edge case: no total joined amount
     if (!totalJoinedAmount || totalJoinedAmount === BigInt(0)) {
-      return BigInt(0);
+      return 0;
     }
 
     // Calculate LP ratio (tokenRatio)
-    const lpRatioBigInt = (joinedAmount * lpRatioPrecision) / totalJoinedAmount;
+    const lpRatioBigInt = (joinedAmount * LP_RATIO_PRECISION) / totalJoinedAmount;
 
     // If govRatioMultiplier is 0, score is just the LP ratio
     if (!govRatioMultiplier || govRatioMultiplier === BigInt(0)) {
-      return lpRatioBigInt;
+      return Number(lpRatioBigInt) / Number(LP_RATIO_PRECISION);
     }
 
     // Edge case: no total gov votes when multiplier exists
     if (!totalGovVotes || totalGovVotes === BigInt(0)) {
-      return BigInt(0);
+      return 0;
     }
 
     // Calculate governance votes ratio
-    const govVotesRatioBigInt = (userGovVotes * lpRatioPrecision * govRatioMultiplier) / totalGovVotes;
+    const govVotesRatioBigInt = (userGovVotes * LP_RATIO_PRECISION * govRatioMultiplier) / totalGovVotes;
 
     // Score is the minimum of LP ratio and gov votes ratio
-    return lpRatioBigInt > govVotesRatioBigInt ? govVotesRatioBigInt : lpRatioBigInt;
-  }, [joinedAmount, totalJoinedAmount, userGovVotes, totalGovVotes, govRatioMultiplier, lpRatioPrecision]);
+    const userScore = lpRatioBigInt > govVotesRatioBigInt ? govVotesRatioBigInt : lpRatioBigInt;
 
-  // totalScore 使用 lpRatioPrecision 作为基准（代表100%）
-  const totalScore = useMemo(() => {
-    return lpRatioPrecision || BigInt(0);
-  }, [lpRatioPrecision]);
+    // Convert to ratio (0-1)
+    return Number(userScore) / Number(LP_RATIO_PRECISION);
+  }, [joinedAmount, totalJoinedAmount, userGovVotes, totalGovVotes, govRatioMultiplier]);
 
   // 计算 LP 占比（用于显示）
   const lpRatio = useMemo(() => {
@@ -311,8 +294,7 @@ export const useMyLpActionData = ({
     waitingBlocks,
     canExitNow,
     remainingBlocks,
-    userScore,
-    totalScore,
+    rewardRatio,
     userGovVotes,
     totalGovVotes,
     minGovVotes,
