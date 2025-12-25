@@ -7,7 +7,7 @@ import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AlertBox from '@/src/components/Common/AlertBox';
 import Header from '@/src/components/Header';
@@ -49,11 +49,11 @@ const ActionGroupPage: React.FC = () => {
   const extensionAddress = contractInfo?.extension;
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorAction) handleContractError(errorAction, 'submit');
-    if (errorExtension) handleContractError(errorExtension, 'extension');
-  }, [errorAction, errorExtension, handleContractError]);
+    if (errorAction) handleError(errorAction);
+    if (errorExtension) handleError(errorExtension);
+  }, [errorAction, errorExtension, handleError]);
 
   // 初始化tab状态
   useEffect(() => {

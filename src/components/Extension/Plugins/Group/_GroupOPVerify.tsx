@@ -34,7 +34,7 @@ import {
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 
 // 复合 hooks
@@ -241,15 +241,15 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   }, [isConfirmedVerify, router]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorRound) handleContractError(errorRound, 'vote');
-    if (errorOwner) handleContractError(errorOwner, 'group');
-    if (errorDelegated) handleContractError(errorDelegated, 'extension');
-    if (errorGetAccounts) handleContractError(errorGetAccounts, 'extension');
-    if (errorSubmittedCount) handleContractError(errorSubmittedCount, 'extension');
-    if (errorVerifyGroup) handleContractError(errorVerifyGroup, 'extension');
-    if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
+    if (errorRound) handleError(errorRound);
+    if (errorOwner) handleError(errorOwner);
+    if (errorDelegated) handleError(errorDelegated);
+    if (errorGetAccounts) handleError(errorGetAccounts);
+    if (errorSubmittedCount) handleError(errorSubmittedCount);
+    if (errorVerifyGroup) handleError(errorVerifyGroup);
+    if (errorVerificationInfos) handleError(errorVerificationInfos);
   }, [
     errorRound,
     errorOwner,
@@ -258,7 +258,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     errorSubmittedCount,
     errorVerifyGroup,
     errorVerificationInfos,
-    handleContractError,
+    handleError,
   ]);
 
   if (

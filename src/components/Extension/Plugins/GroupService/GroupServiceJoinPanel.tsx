@@ -29,7 +29,7 @@ import {
 } from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupService';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -86,11 +86,11 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
   }, [isConfirmedJoin, router, actionId, token?.symbol]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorJoinInfo) handleContractError(errorJoinInfo, 'extension');
-    if (errorJoin) handleContractError(errorJoin, 'extension');
-  }, [errorJoinInfo, errorJoin, handleContractError]);
+    if (errorJoinInfo) handleError(errorJoinInfo);
+    if (errorJoin) handleError(errorJoin);
+  }, [errorJoinInfo, errorJoin, handleError]);
 
   if (isPendingJoinInfo) {
     return (
@@ -151,7 +151,7 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
           <div className="font-medium text-gray-700 mb-1">💡 关于链群服务行动</div>
           <div className="space-y-1 text-gray-600">
             <div>• 链群服务行动用于激励链群服务者</div>
-            <div>• 服务者在链群行动中激活链群并服务参与者</div>
+            <div>• 需要在进行中的行动中有已激活的链群，才可以参加本行动</div>
             <div>• 激励将根据服务的所有行动的链群铸币激励自动计算</div>
             <div>• 可在验证阶段设置激励分配地址和比例</div>
           </div>

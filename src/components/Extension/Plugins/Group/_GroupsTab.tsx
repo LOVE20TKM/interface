@@ -25,7 +25,7 @@ import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/gr
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -59,15 +59,15 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
   } = useJoinInfo(extensionAddress, account as `0x${string}`);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
     if (error) {
-      handleContractError(error, 'extension');
+      handleError(error);
     }
     if (errorJoinInfo) {
-      handleContractError(errorJoinInfo, 'extension');
+      handleError(errorJoinInfo);
     }
-  }, [error, errorJoinInfo, handleContractError]);
+  }, [error, errorJoinInfo, handleError]);
 
   // 对链群进行分类和排序
   const sortedGroups = useMemo(() => {

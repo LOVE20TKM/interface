@@ -36,7 +36,7 @@ import { useDistrustVotesByVoterByGroupOwner } from '@/src/hooks/extension/plugi
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 
 // 组件
@@ -185,14 +185,14 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
   });
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (error) handleContractError(error, 'extension');
-    if (errorDetail) handleContractError(errorDetail, 'extension');
-    if (errorRound) handleContractError(errorRound, 'verify');
-    if (errorVerify) handleContractError(errorVerify, 'verify');
-    if (errorAlreadyVoted) handleContractError(errorAlreadyVoted, 'extension');
-  }, [error, errorDetail, errorRound, errorVerify, errorAlreadyVoted, handleContractError]);
+    if (error) handleError(error);
+    if (errorDetail) handleError(errorDetail);
+    if (errorRound) handleError(errorRound);
+    if (errorVerify) handleError(errorVerify);
+    if (errorAlreadyVoted) handleError(errorAlreadyVoted);
+  }, [error, errorDetail, errorRound, errorVerify, errorAlreadyVoted, handleError]);
 
   // 处理轮次切换
   const handleChangedRound = (round: number) => {

@@ -23,7 +23,7 @@ import {
 } from '@/src/hooks/extension/plugins/group/composite';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -82,12 +82,12 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extens
   });
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorRound) handleContractError(errorRound, 'vote');
-    if (errorScores) handleContractError(errorScores, 'extension');
-    if (errorAmounts) handleContractError(errorAmounts, 'extension');
-  }, [errorRound, errorScores, errorAmounts, handleContractError]);
+    if (errorRound) handleError(errorRound);
+    if (errorScores) handleError(errorScores);
+    if (errorAmounts) handleError(errorAmounts);
+  }, [errorRound, errorScores, errorAmounts, handleError]);
 
   const handleChangedRound = (round: number) => {
     const newRound = BigInt(round);

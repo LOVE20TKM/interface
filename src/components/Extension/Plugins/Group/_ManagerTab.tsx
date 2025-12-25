@@ -21,7 +21,7 @@ import {
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -75,12 +75,12 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   const [selectedGroupId, setSelectedGroupId] = useState<bigint | null>(null);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorMaxCapacity) handleContractError(errorMaxCapacity, 'extension');
-    if (errorGroupIds) handleContractError(errorGroupIds, 'extension');
-    if (groupsError) handleContractError(groupsError, 'extension');
-  }, [errorMaxCapacity, errorGroupIds, groupsError, handleContractError]);
+    if (errorMaxCapacity) handleError(errorMaxCapacity);
+    if (errorGroupIds) handleError(errorGroupIds);
+    if (groupsError) handleError(groupsError);
+  }, [errorMaxCapacity, errorGroupIds, groupsError, handleError]);
 
   // 打开管理面板
   const handleManageClick = (groupId: bigint) => {

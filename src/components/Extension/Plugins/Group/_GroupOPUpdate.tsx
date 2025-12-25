@@ -36,7 +36,7 @@ import {
 import { useAccount } from 'wagmi';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, parseUnits } from '@/src/lib/format';
 
 // 组件
@@ -247,13 +247,13 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   }, [isConfirmedUpdate, router]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorDetail) handleContractError(errorDetail, 'extension');
-    if (errorParams) handleContractError(errorParams, 'extension');
-    if (errorMaxCapacity) handleContractError(errorMaxCapacity, 'extension');
-    if (errorUpdate) handleContractError(errorUpdate, 'extension');
-  }, [errorDetail, errorParams, errorMaxCapacity, errorUpdate, handleContractError]);
+    if (errorDetail) handleError(errorDetail);
+    if (errorParams) handleError(errorParams);
+    if (errorMaxCapacity) handleError(errorMaxCapacity);
+    if (errorUpdate) handleError(errorUpdate);
+  }, [errorDetail, errorParams, errorMaxCapacity, errorUpdate, handleError]);
 
   if (isPendingDetail || isPendingParams || isPendingMaxCapacity) {
     return (

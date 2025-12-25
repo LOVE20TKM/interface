@@ -8,7 +8,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import { useOwnerOf, useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import Header from '@/src/components/Header';
 import _GroupOPActivate from '@/src/components/Extension/Plugins/Group/_GroupOPActivate';
@@ -65,13 +65,13 @@ const ActionGroupOpPage: React.FC = () => {
   } = useGroupNameOf(op === 'verify' && groupIdBigInt ? groupIdBigInt : BigInt(0));
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorAction) handleContractError(errorAction, 'submit');
-    if (errorExtension) handleContractError(errorExtension, 'extension');
-    if (!isActivate && errorOwner) handleContractError(errorOwner, 'group');
-    if (op === 'verify' && errorGroupName) handleContractError(errorGroupName, 'group');
-  }, [errorAction, errorExtension, errorOwner, errorGroupName, handleContractError, isActivate, op]);
+    if (errorAction) handleError(errorAction);
+    if (errorExtension) handleError(errorExtension);
+    if (!isActivate && errorOwner) handleError(errorOwner);
+    if (op === 'verify' && errorGroupName) handleError(errorGroupName);
+  }, [errorAction, errorExtension, errorOwner, errorGroupName, handleError, isActivate, op]);
 
   // 获取页面标题
   const getPageTitle = () => {

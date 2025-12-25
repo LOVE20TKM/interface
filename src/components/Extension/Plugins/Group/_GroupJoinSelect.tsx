@@ -30,7 +30,7 @@ import { useTokenIdOf } from '@/src/hooks/extension/base/contracts/useLOVE20Grou
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 
 // 组件
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -124,12 +124,12 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
   }, [inputGroupName, groupId, isPendingGroupId, errorGroupId, groups]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
     if (errorGroups) {
-      handleContractError(errorGroups, 'extension');
+      handleError(errorGroups);
     }
-  }, [errorGroups, handleContractError]);
+  }, [errorGroups, handleError]);
 
   // 处理表单提交
   const handleSubmit = (values: FormValues) => {

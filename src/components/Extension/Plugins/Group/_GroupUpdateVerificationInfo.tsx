@@ -36,7 +36,7 @@ import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/com
 import { useCenter, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -186,14 +186,14 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
   }, [isConfirmedUpdate, router, actionId, token?.symbol]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorDetail) handleContractError(errorDetail, 'extension');
-    if (errorCenter) handleContractError(errorCenter, 'extension');
-    if (errorJoinInfo) handleContractError(errorJoinInfo, 'extension');
-    if (errorActionInfo) handleContractError(errorActionInfo, 'submit');
-    if (errorUpdate) handleContractError(errorUpdate, 'extension');
-    if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
+    if (errorDetail) handleError(errorDetail);
+    if (errorCenter) handleError(errorCenter);
+    if (errorJoinInfo) handleError(errorJoinInfo);
+    if (errorActionInfo) handleError(errorActionInfo);
+    if (errorUpdate) handleError(errorUpdate);
+    if (errorVerificationInfos) handleError(errorVerificationInfos);
   }, [
     errorDetail,
     errorCenter,
@@ -201,7 +201,7 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     errorActionInfo,
     errorUpdate,
     errorVerificationInfos,
-    handleContractError,
+    handleError,
   ]);
 
   if (isPendingDetail || isPendingCenter || isPendingActionInfo || isPendingVerificationInfos) {

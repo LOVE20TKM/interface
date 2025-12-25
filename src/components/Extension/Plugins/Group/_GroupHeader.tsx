@@ -33,7 +33,7 @@ import {
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -106,14 +106,14 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
   const isJoined = joinedAmountByActionIdByAccount !== undefined && joinedAmountByActionIdByAccount > BigInt(0);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorDetail) handleContractError(errorDetail, 'extension');
-    if (errorAccountsCount) handleContractError(errorAccountsCount, 'extension');
-    if (errorDelegated) handleContractError(errorDelegated, 'extension');
-    if (errorRound) handleContractError(errorRound, 'verify');
-    if (errorVerify) handleContractError(errorVerify, 'verify');
-    if (errorJoinedAmount) handleContractError(errorJoinedAmount, 'join');
+    if (errorDetail) handleError(errorDetail);
+    if (errorAccountsCount) handleError(errorAccountsCount);
+    if (errorDelegated) handleError(errorDelegated);
+    if (errorRound) handleError(errorRound);
+    if (errorVerify) handleError(errorVerify);
+    if (errorJoinedAmount) handleError(errorJoinedAmount);
   }, [
     errorDetail,
     errorAccountsCount,
@@ -121,7 +121,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     errorRound,
     errorVerify,
     errorJoinedAmount,
-    handleContractError,
+    handleError,
   ]);
 
   if (!token) {

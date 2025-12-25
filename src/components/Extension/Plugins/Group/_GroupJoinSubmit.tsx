@@ -36,7 +36,7 @@ import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hoo
 import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 
 // 组件
@@ -338,16 +338,16 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   }, [isConfirmedJoin, router, actionId, joinTokenSymbol, token?.symbol]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorDetail) handleContractError(errorDetail, 'extension');
-    if (errorJoinInfo) handleContractError(errorJoinInfo, 'extension');
-    if (errorBalance) handleContractError(errorBalance, 'token');
-    if (errorAllowance) handleContractError(errorAllowance, 'token');
-    if (errorApprove) handleContractError(errorApprove, 'token');
-    if (errorJoin) handleContractError(errorJoin, 'extension');
-    if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
-    if (errorConstants) handleContractError(errorConstants, 'extension');
+    if (errorDetail) handleError(errorDetail);
+    if (errorJoinInfo) handleError(errorJoinInfo);
+    if (errorBalance) handleError(errorBalance);
+    if (errorAllowance) handleError(errorAllowance);
+    if (errorApprove) handleError(errorApprove);
+    if (errorJoin) handleError(errorJoin);
+    if (errorVerificationInfos) handleError(errorVerificationInfos);
+    if (errorConstants) handleError(errorConstants);
   }, [
     errorDetail,
     errorJoinInfo,
@@ -357,7 +357,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     errorJoin,
     errorVerificationInfos,
     errorConstants,
-    handleContractError,
+    handleError,
   ]);
 
   if (isPendingDetail || isPendingJoinInfo || isPendingConstants) {

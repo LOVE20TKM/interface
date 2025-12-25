@@ -41,7 +41,7 @@ import {
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, parseUnits } from '@/src/lib/format';
 
 // 组件
@@ -346,16 +346,16 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   }, [isConfirmedActivate, router]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorActionParams) handleContractError(errorActionParams, 'extension');
-    if (errorMaxCapacity) handleContractError(errorMaxCapacity, 'extension');
-    if (errorBalance) handleContractError(errorBalance, 'token');
-    if (errorAllowance) handleContractError(errorAllowance, 'token');
-    if (errorApprove) handleContractError(errorApprove, 'token');
-    if (errorActivate) handleContractError(errorActivate, 'extension');
-    if (errorGroups) handleContractError(errorGroups, 'group');
-    if (errorActivatedGroups) handleContractError(errorActivatedGroups, 'extension');
+    if (errorActionParams) handleError(errorActionParams);
+    if (errorMaxCapacity) handleError(errorMaxCapacity);
+    if (errorBalance) handleError(errorBalance);
+    if (errorAllowance) handleError(errorAllowance);
+    if (errorApprove) handleError(errorApprove);
+    if (errorActivate) handleError(errorActivate);
+    if (errorGroups) handleError(errorGroups);
+    if (errorActivatedGroups) handleError(errorActivatedGroups);
   }, [
     errorActionParams,
     errorMaxCapacity,
@@ -365,7 +365,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     errorActivate,
     errorGroups,
     errorActivatedGroups,
-    handleContractError,
+    handleError,
   ]);
 
   if (

@@ -29,7 +29,7 @@ import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/c
 import { useDeactivateGroup, useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -108,14 +108,14 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
   }, [isConfirmedDeactivate, router]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorDetail) handleContractError(errorDetail, 'extension');
-    if (errorInfo) handleContractError(errorInfo, 'extension');
-    if (errorAccountsCount) handleContractError(errorAccountsCount, 'extension');
-    if (errorRound) handleContractError(errorRound, 'vote');
-    if (errorDeactivate) handleContractError(errorDeactivate, 'extension');
-  }, [errorDetail, errorInfo, errorAccountsCount, errorRound, errorDeactivate, handleContractError]);
+    if (errorDetail) handleError(errorDetail);
+    if (errorInfo) handleError(errorInfo);
+    if (errorAccountsCount) handleError(errorAccountsCount);
+    if (errorRound) handleError(errorRound);
+    if (errorDeactivate) handleError(errorDeactivate);
+  }, [errorDetail, errorInfo, errorAccountsCount, errorRound, errorDeactivate, handleError]);
 
   if (isPendingDetail || isPendingInfo || isPendingAccountsCount || isPendingRound) {
     return (

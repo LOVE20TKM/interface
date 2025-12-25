@@ -20,7 +20,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 
 // my hooks
 import { formatTokenAmount } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { useBalanceOf, useAllowance, useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import { useMint, useMaxGroupNameLength } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useGroupNameValidation } from '@/src/hooks/extension/base/composite/useGroupNameValidation';
@@ -212,21 +212,21 @@ export default function MintGroup() {
   }, [isConfirmedMint, router]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
     if (balanceError) {
-      handleContractError(balanceError, 'token');
+      handleError(balanceError);
     }
     if (errApprove) {
-      handleContractError(errApprove, 'token');
+      handleError(errApprove);
     }
     if (errAllowance) {
-      handleContractError(errAllowance, 'token');
+      handleError(errAllowance);
     }
     if (errMint) {
-      handleContractError(errMint, 'group');
+      handleError(errMint);
     }
-  }, [balanceError, errApprove, errAllowance, errMint, handleContractError]);
+  }, [balanceError, errApprove, errAllowance, errMint, handleError]);
 
   // 控制按钮文案
   const hasStartedApproving = isPendingApprove || isConfirmingApprove;

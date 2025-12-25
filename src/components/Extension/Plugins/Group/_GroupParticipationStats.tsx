@@ -17,7 +17,7 @@ import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hoo
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -76,12 +76,12 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
       : BigInt(0);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorJoinInfo) handleContractError(errorJoinInfo, 'extension');
-    if (errorDetail) handleContractError(errorDetail, 'extension');
-    if (errorConstants) handleContractError(errorConstants, 'extension');
-  }, [errorJoinInfo, errorDetail, errorConstants, handleContractError]);
+    if (errorJoinInfo) handleError(errorJoinInfo);
+    if (errorDetail) handleError(errorDetail);
+    if (errorConstants) handleError(errorConstants);
+  }, [errorJoinInfo, errorDetail, errorConstants, handleError]);
 
   // 加载中状态
   if (isPendingJoinInfo || isPendingDetail || isPendingConstants) {

@@ -35,7 +35,7 @@ import { useDistrustVote } from '@/src/hooks/extension/plugins/group/contracts/u
 import { useDistrustVotesByVoterByGroupOwner } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupDistrust';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -248,14 +248,14 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
   }, [isConfirmedVote, onSuccess]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorRound) handleContractError(errorRound, 'vote');
-    if (errorVerify) handleContractError(errorVerify, 'verify');
-    if (errorGroups) handleContractError(errorGroups, 'extension');
-    if (errorAlreadyVoted) handleContractError(errorAlreadyVoted, 'extension');
-    if (errorVote) handleContractError(errorVote, 'extension');
-  }, [errorRound, errorVerify, errorGroups, errorAlreadyVoted, errorVote, handleContractError]);
+    if (errorRound) handleError(errorRound);
+    if (errorVerify) handleError(errorVerify);
+    if (errorGroups) handleError(errorGroups);
+    if (errorAlreadyVoted) handleError(errorAlreadyVoted);
+    if (errorVote) handleError(errorVote);
+  }, [errorRound, errorVerify, errorGroups, errorAlreadyVoted, errorVote, handleError]);
 
   // 检查必要参数是否完整
   if (!token?.address || !account) {

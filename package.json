@@ -12,6 +12,7 @@
     "generate:abi": "cross-env NODE_ENV=development ts-node scripts/generateAbiTs.ts",
     "generate:env": "cross-env NODE_ENV=development ts-node scripts/generate-env.js",
     "generate:selectors": "cross-env NODE_ENV=development ts-node scripts/generateFunctionSelectors.ts",
+    "generate:errors": "cross-env NODE_ENV=development ts-node scripts/generateErrorSelectors.ts",
     "postinstall": "update-browserslist-db"
   },
   "dependencies": {

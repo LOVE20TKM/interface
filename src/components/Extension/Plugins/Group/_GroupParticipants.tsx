@@ -20,7 +20,7 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useAccountInfosByGroupIdByRound } from '@/src/hooks/extension/plugins/group/composite/useAccountInfosByGroupIdByRound';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -68,11 +68,11 @@ const _GroupParticipants: React.FC<GroupParticipantsProps> = ({ actionId, action
   });
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorRound) handleContractError(errorRound, 'vote');
-    if (errorAccounts) handleContractError(errorAccounts, 'extension');
-  }, [errorRound, errorAccounts, handleContractError]);
+    if (errorRound) handleError(errorRound);
+    if (errorAccounts) handleError(errorAccounts);
+  }, [errorRound, errorAccounts, handleError]);
 
   const handleChangedRound = (round: number) => {
     const newRound = BigInt(round);

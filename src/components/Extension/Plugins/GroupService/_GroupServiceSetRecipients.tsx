@@ -18,7 +18,7 @@ import {
   useBasisPointsBase,
   useMaxRecipients,
 } from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupService';
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 
 // Schema
@@ -97,13 +97,11 @@ export default function _GroupServiceSetRecipients({
     }
   }, [open, currentAddrs, currentBasisPoints, form]);
 
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
 
   useEffect(() => {
-    if (writeError) {
-      handleContractError(writeError, 'extension');
-    }
-  }, [writeError, handleContractError]);
+    if (writeError) handleError(writeError);
+  }, [writeError, handleError]);
 
   useEffect(() => {
     // 只有在确认成功且未调用过成功回调时才触发

@@ -35,7 +35,7 @@ import {
 } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 
 // 组件
@@ -135,15 +135,15 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   }, [isConfirmedExit, router]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorRound) handleContractError(errorRound, 'vote');
-    if (errorJoinInfo) handleContractError(errorJoinInfo, 'extension');
-    if (errorDetail) handleContractError(errorDetail, 'extension');
-    if (errorTotalAmount) handleContractError(errorTotalAmount, 'extension');
-    if (errorExit) handleContractError(errorExit, 'extension');
-    if (errorVerificationInfos) handleContractError(errorVerificationInfos, 'extension');
-    if (errorConstants) handleContractError(errorConstants, 'extension');
+    if (errorRound) handleError(errorRound);
+    if (errorJoinInfo) handleError(errorJoinInfo);
+    if (errorDetail) handleError(errorDetail);
+    if (errorTotalAmount) handleError(errorTotalAmount);
+    if (errorExit) handleError(errorExit);
+    if (errorVerificationInfos) handleError(errorVerificationInfos);
+    if (errorConstants) handleError(errorConstants);
   }, [
     errorRound,
     errorJoinInfo,
@@ -152,7 +152,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     errorExit,
     errorVerificationInfos,
     errorConstants,
-    handleContractError,
+    handleError,
   ]);
 
   if (isPendingRound || isPendingJoinInfo || isPendingDetail || isPendingTotalAmount || isPendingConstants) {

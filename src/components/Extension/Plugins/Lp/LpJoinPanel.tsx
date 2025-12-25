@@ -16,7 +16,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 
 // my hooks
 import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
 import { useJoin, useJoinTokenAddress } from '@/src/hooks/extension/plugins/lp/contracts';
@@ -252,27 +252,15 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   // ------------------------------
   //  错误处理
   // ------------------------------
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (errorJoinToken) {
-      handleContractError(errorJoinToken, 'extension');
-    }
-    if (errorLpBalance) {
-      handleContractError(errorLpBalance, 'token');
-    }
-    if (errApproveLp) {
-      handleContractError(errApproveLp, 'token');
-    }
-    if (errorJoin) {
-      handleContractError(errorJoin, 'extension');
-    }
-    if (errAllowanceLp) {
-      handleContractError(errAllowanceLp, 'token');
-    }
-    if (errorData) {
-      handleContractError(errorData, 'extension');
-    }
-  }, [errorJoinToken, errorLpBalance, errApproveLp, errorJoin, errAllowanceLp, errorData]);
+    if (errorJoinToken) handleError(errorJoinToken);
+    if (errorLpBalance) handleError(errorLpBalance);
+    if (errApproveLp) handleError(errApproveLp);
+    if (errorJoin) handleError(errorJoin);
+    if (errAllowanceLp) handleError(errAllowanceLp);
+    if (errorData) handleError(errorData);
+  }, [errorJoinToken, errorLpBalance, errApproveLp, errorJoin, errAllowanceLp, errorData, handleError]);
 
   // ------------------------------
   //  组件渲染

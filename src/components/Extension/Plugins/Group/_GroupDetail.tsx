@@ -19,7 +19,7 @@ import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/c
 // 工具函数
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -50,11 +50,11 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
   } = useAccountsByGroupIdCount(extensionAddress, groupId);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
-    if (error) handleContractError(error, 'extension');
-    if (errorAccountsCount) handleContractError(errorAccountsCount, 'extension');
-  }, [error, errorAccountsCount, handleContractError]);
+    if (error) handleError(error);
+    if (errorAccountsCount) handleError(errorAccountsCount);
+  }, [error, errorAccountsCount, handleError]);
 
   if (isPending || isPendingAccountsCount) {
     return (

@@ -19,7 +19,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
 
 // 工具函数
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -51,12 +51,12 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
   });
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
     if (error) {
-      handleContractError(error, 'extension');
+      handleError(error);
     }
-  }, [error, handleContractError]);
+  }, [error, handleError]);
 
   // 按服务者分组链群
   const ownerGroups = useMemo(() => {

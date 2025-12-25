@@ -10,7 +10,7 @@ import { HelpCircle } from 'lucide-react';
 // my hooks
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
 import { useExit } from '@/src/hooks/extension/plugins/lp/contracts';
-import { useHandleContractError } from '@/src/lib/errorUtils';
+import { useContractError } from '@/src/errors/useContractError';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -106,15 +106,15 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
   }, [isConfirmedExit, router]);
 
   // 错误处理
-  const { handleContractError } = useHandleContractError();
+  const { handleError } = useContractError();
   useEffect(() => {
     if (errorData) {
-      handleContractError(errorData, 'extension');
+      handleError(errorData);
     }
     if (errorExit) {
-      handleContractError(errorExit, 'extension');
+      handleError(errorExit);
     }
-  }, [errorData, errorExit, handleContractError]);
+  }, [errorData, errorExit, handleError]);
 
   if (isPendingData) {
     return (
@@ -210,10 +210,9 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
           <div className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-3 mt-6 mb-3 w-full">
             <div className="font-medium text-gray-600 mb-2">💡 计算说明：</div>
             <div className="ml-4 text-gray-600 space-y-1">
-              <div>• LP占比 = 您加入的LP / LP Token总供应量</div>
-              <div>• 治理票占比 = 您的治理票 / 总治理票</div>
-              <div>• 激励得分 = LP占比 和 治理票占比 × {Number(govRatioMultiplier)} 的最小值</div>
-              <div>• 实际激励占比 = 您的激励得分 / 参加本行动的激励得分总和</div>
+              <div>• 您的LP占比 = 您参与本行动的LP数量 / 参与本行动的LP总和</div>
+              <div>• 您的治理票占比 = 您的治理票 / 总治理票</div>
+              <div>• 您的激励占比 = 您的LP占比 和 (您的治理票占比 × {Number(govRatioMultiplier)}) 中的最小值</div>
             </div>
           </div>
         </>
