@@ -51,7 +51,11 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   const { address: account } = useAccount();
 
   // 获取 Join Token 地址（即 LP Token 地址）
-  const { joinTokenAddress, isPending: isPendingJoinToken, error: errorJoinToken } = useJoinTokenAddress(extensionAddress);
+  const {
+    joinTokenAddress,
+    isPending: isPendingJoinToken,
+    error: errorJoinToken,
+  } = useJoinTokenAddress(extensionAddress);
 
   // 获取 Lp 扩展数据（用于显示已参与信息）
   const {
@@ -76,6 +80,9 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
 
   // 格式化 LP 占比
   const lpRatioStr = formatPercentage(lpRatio);
+
+  // 判断治理票数是否不足
+  const isGovVotesInsufficient = userGovVotes !== undefined && minGovVotes !== undefined && userGovVotes < minGovVotes;
 
   // 获取 LP Token 余额
   const { balance: lpBalance, error: errorLpBalance } = useBalanceOf(
@@ -160,6 +167,12 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   }, [isPendingAllowanceLp]);
 
   async function handleApprove(values: FormValues) {
+    // 检查治理票数是否不足
+    if (isGovVotesInsufficient) {
+      toast.error('治理票数不足，无法参与行动。');
+      return;
+    }
+
     // 确保 joinAmount 始终为 bigint，避免 null
     const joinAmount = parseUnits(values.joinAmount) ?? BigInt(0);
     if (joinAmount === BigInt(0)) {
@@ -207,6 +220,12 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   } = useJoin(extensionAddress);
 
   async function handleJoin(values: FormValues) {
+    // 检查治理票数是否不足
+    if (isGovVotesInsufficient) {
+      toast.error('治理票数不足，无法参与行动。');
+      return;
+    }
+
     try {
       // verificationInfos 传空数组（如果不需要验证信息的话）
       await join(parseUnits(values.joinAmount) ?? BigInt(0), []);
@@ -275,24 +294,26 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
             userGovVotes={userGovVotes}
             totalGovVotes={totalGovVotes}
           />
+        </div>
+      )}
 
-          {/* 治理票数不足的警告 */}
-          {userGovVotes < minGovVotes && (
-            <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-3 w-full">
-              <div className="font-medium">⚠️ 治理票数不足</div>
-              <div className="mt-1">
-                你的治理票数 <span className="font-semibold">{userGovVotes.toString()}</span> 低于最小门槛{' '}
-                <span className="font-semibold">{minGovVotes.toString()}</span>，无法获得得分和激励。
-              </div>
-              <div className="text-xs text-amber-600 mt-1">请质押更多代币以增加治理票数。</div>
+      {/* 治理票数不足的警告 */}
+      {isGovVotesInsufficient && (
+        <div className="px-6 py-0">
+          <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2 mt-3 w-full">
+            <div className="font-medium">⚠️ 治理票数不足</div>
+            <div className="mt-1">
+              你的治理票数 <span className="font-semibold">{userGovVotes.toString()}</span> 低于最小限制{' '}
+              <span className="font-semibold">{formatTokenAmount(minGovVotes)}</span>，无法参与行动。
             </div>
-          )}
+            <div className="text-xs text-red-600 mt-1">您可以增加治理票数，再重新参与行动。</div>
+          </div>
         </div>
       )}
 
       {/* 加入表单 */}
       <div className="px-6 pt-6 pb-2">
-        <LeftTitle title={isJoined ? '增加LP加入' : '加入LP参与'} />
+        <LeftTitle title={isJoined ? '追加LP' : '加入行动'} />
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4 pt-2">
             {/* LP加入数 */}
@@ -301,14 +322,14 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
               name="joinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-greyscale-500 font-normal">{isJoined ? '' : 'LP加入数：'}</FormLabel>
+                  <FormLabel className="text-greyscale-500 font-normal">{isJoined ? '' : '质押LP数量：'}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={
                         isJoined ? `最大可追加 ${formatTokenAmount(lpBalance || BigInt(0), 4)}` : `请输入LP加入数量`
                       }
                       type="number"
-                      disabled={!lpBalance || lpBalance <= BigInt(0)}
+                      disabled={!lpBalance || lpBalance <= BigInt(0) || isGovVotesInsufficient}
                       className="!ring-secondary-foreground"
                       {...field}
                     />
@@ -328,7 +349,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                         }
                       }}
                       className="text-secondary p-0 ml-6"
-                      disabled={!lpBalance || lpBalance <= BigInt(0)}
+                      disabled={!lpBalance || lpBalance <= BigInt(0) || isGovVotesInsufficient}
                     >
                       全部
                     </Button>
@@ -342,7 +363,13 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
               <Button
                 ref={approveButtonRef} // 将 ref 绑定到授权按钮上
                 className="w-1/2"
-                disabled={isPendingAllowanceLp || isPendingApproveLp || isConfirmingApproveLp || isLpApproved}
+                disabled={
+                  isPendingAllowanceLp ||
+                  isPendingApproveLp ||
+                  isConfirmingApproveLp ||
+                  isLpApproved ||
+                  isGovVotesInsufficient
+                }
                 type="button"
                 onClick={() => {
                   form.handleSubmit((values) => handleApprove(values))();
@@ -363,7 +390,9 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
 
               <Button
                 className="w-1/2"
-                disabled={!isLpApproved || isPendingJoin || isConfirmingJoin || isConfirmedJoin}
+                disabled={
+                  !isLpApproved || isPendingJoin || isConfirmingJoin || isConfirmedJoin || isGovVotesInsufficient
+                }
                 type="button"
                 onClick={() => {
                   form.handleSubmit((values) => handleJoin(values))();
