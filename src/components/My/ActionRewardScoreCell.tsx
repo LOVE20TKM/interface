@@ -74,9 +74,9 @@ const ActionRewardScoreCell: React.FC<ActionRewardScoreCellProps> = ({
     return (
       <button
         onClick={onManualLoad}
-        className="text-secondary hover:text-secondary/80 text-sm bg-transparent px-2 py-0.5 cursor-pointer"
+        className="text-secondary hover:text-secondary/80 text-sm bg-transparent px-2 py-0.5 cursor-pointer underline"
       >
-        加载
+        估算
       </button>
     );
   }
