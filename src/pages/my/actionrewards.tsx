@@ -14,7 +14,10 @@ import { useActionRewardsByAccountOfLastRounds } from '@/src/hooks/contracts/use
 import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
-import { useEstimateAccountScoresByActionIdsByRounds } from '@/src/hooks/composite/useEstimateAccountScoresByActionIdsByRounds';
+import {
+  useEstimateAccountScoresByActionIdsByRounds,
+  getScoreCache,
+} from '@/src/hooks/composite/useEstimateAccountScoresByActionIdsByRounds';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my components
@@ -23,6 +26,7 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import InfoTooltip from '@/src/components/Common/InfoTooltip';
+import ActionRewardScoreCell from '@/src/components/My/ActionRewardScoreCell';
 import { Button } from '@/components/ui/button';
 import { Info } from 'lucide-react';
 
@@ -123,29 +127,43 @@ const ActRewardsPage: React.FC = () => {
     return list;
   }, [joinedActions, rewards, currentRound]);
 
-  // 准备得分查询参数：从 rewards 中提取实际存在的 (actionId, round) 组合
+  // 计算每个行动的最后一轮（有记录的数据中 round 值最大的）
+  const lastRoundByAction = useMemo(() => {
+    const map = new Map<string, bigint>();
+    if (!rewards) return map;
+
+    for (const r of rewards) {
+      const actionIdStr = r.actionId.toString();
+      const existing = map.get(actionIdStr);
+      if (!existing || r.round > existing) {
+        map.set(actionIdStr, r.round);
+      }
+    }
+    return map;
+  }, [rewards]);
+
+  // 准备得分查询参数：只查询每个行动的最后一轮
   const scoreQueryParams = useMemo(() => {
-    if (!rewards || rewards.length === 0) {
+    if (!rewards || rewards.length === 0 || lastRoundByAction.size === 0) {
       return { actionRoundPairs: [], enabled: false };
     }
 
-    // 从 rewards 中提取所有有激励的 (actionId, round) 组合
-    // 按轮次倒序排列，确保最新轮次优先加载
-    const pairs = rewards
-      .filter((r) => r.reward > BigInt(0)) // 只查询有激励的记录
-      .map((r) => ({
-        actionId: r.actionId,
-        round: r.round,
-      }))
-      .sort((a, b) => (a.round > b.round ? -1 : 1)); // 按轮次倒序
+    // 只提取每个行动的最后一轮
+    const pairs: { actionId: bigint; round: bigint }[] = [];
+    lastRoundByAction.forEach((round, actionIdStr) => {
+      pairs.push({
+        actionId: BigInt(actionIdStr),
+        round,
+      });
+    });
 
     return {
       actionRoundPairs: pairs,
       enabled: pairs.length > 0,
     };
-  }, [rewards]);
+  }, [rewards, lastRoundByAction]);
 
-  // 获取得分数据
+  // 获取最后一轮的得分数据（自动加载）
   const {
     scores: accountScores,
     isLoading: isLoadingScores,
@@ -154,9 +172,11 @@ const ActRewardsPage: React.FC = () => {
     account: account as `0x${string}`,
     tokenAddress: token?.address as `0x${string}`,
     actionRoundPairs: scoreQueryParams.actionRoundPairs,
-    // enabled: scoreQueryParams.enabled && !!account && !!token?.address,
-    enabled: false,
+    enabled: scoreQueryParams.enabled && !!account && !!token?.address,
   });
+
+  // 手动加载请求的轮次（用于非最后一轮的按需加载）
+  const [manualLoadRequests, setManualLoadRequests] = useState<Set<string>>(new Set());
 
   // 铸造行动激励
   const { mintActionReward, isPending, isConfirming, isConfirmed, writeError } = useMintActionReward();
@@ -212,33 +232,62 @@ const ActRewardsPage: React.FC = () => {
     }
   };
 
+  // 获取缓存数据
+  const scoreCache = useMemo(() => {
+    if (!account || !token?.address) return {};
+    return getScoreCache(account, token.address);
+  }, [account, token?.address, accountScores]); // accountScores 变化时重新读取缓存
+
   // 结合本地已铸造集合和得分数据覆盖 UI 展示
   const displayedGroups = useMemo(() => {
     if (!grouped) return [];
-    return grouped.map((g) => ({
-      ...g,
-      rewards: g.rewards.map((r) => {
-        const key = `${BigInt(g.action.action.head.id).toString()}-${r.round.toString()}`;
-        const actionIdStr = g.action.action.head.id.toString();
-        const roundStr = r.round.toString();
+    return grouped.map((g) => {
+      const actionIdStr = g.action.action.head.id.toString();
+      const lastRound = lastRoundByAction.get(actionIdStr);
 
-        // 获取该行动该轮次的得分
-        const score = accountScores?.[actionIdStr]?.[roundStr];
+      return {
+        ...g,
+        rewards: g.rewards.map((r) => {
+          const key = `${actionIdStr}-${r.round.toString()}`;
+          const roundStr = r.round.toString();
+          const cacheKey = `${actionIdStr}_${roundStr}`;
 
-        // 判断该得分是否还在加载中
-        // 如果整体还在加载且该得分不存在，说明还未加载到这个轮次
-        const isScoreLoading = isLoadingScores && !score;
+          // 是否是最后一轮
+          const isLastRound = lastRound !== undefined && r.round === lastRound;
 
-        return {
-          ...r,
-          isMinted: locallyMinted.has(key) || r.isMinted,
-          score: score || '0.0', // 添加得分字段
-          isScoreLoading, // 添加加载状态字段
-          notSelected: r.notSelected, // 保留未抽中标记
-        };
-      }),
-    }));
-  }, [grouped, locallyMinted, accountScores, isLoadingScores]);
+          // 从 accountScores 或缓存中获取得分
+          const score = accountScores?.[actionIdStr]?.[roundStr] ?? scoreCache[cacheKey] ?? null;
+
+          // 判断该得分是否还在加载中（仅对最后一轮适用）
+          const isScoreLoading = isLastRound && isLoadingScores && score === null;
+
+          // 是否需要显示加载按钮（非最后一轮且缓存中没有）
+          const needManualLoad = !isLastRound && score === null && !r.notSelected;
+
+          // 是否正在手动加载
+          const isManualLoading = manualLoadRequests.has(cacheKey);
+
+          return {
+            ...r,
+            isMinted: locallyMinted.has(key) || r.isMinted,
+            score: score ?? null,
+            isScoreLoading,
+            isLastRound,
+            needManualLoad,
+            isManualLoading,
+            notSelected: r.notSelected,
+            cacheKey,
+          };
+        }),
+      };
+    });
+  }, [grouped, locallyMinted, accountScores, isLoadingScores, lastRoundByAction, scoreCache, manualLoadRequests]);
+
+  // 处理手动加载请求
+  const handleManualLoad = (actionId: bigint, round: bigint) => {
+    const cacheKey = `${actionId.toString()}_${round.toString()}`;
+    setManualLoadRequests((prev) => new Set(prev).add(cacheKey));
+  };
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -302,15 +351,15 @@ const ActRewardsPage: React.FC = () => {
                         <thead>
                           <tr className="border-b border-gray-100">
                             <th className="text-left px-0">轮次</th>
-                            {/* <th className="text-center">
+                            <th className="text-center">
                               <div className="flex items-center justify-center gap-1">
                                 估算验证得分
                                 <InfoTooltip
                                   title="验证得分说明"
-                                  content="这个得分，是根据最终激励，估算的平均得分。   （具体算法：将所有地址中实际得分最高者，作为100分，然后将你的实际得分等比例换算到0~100）"
+                                  content="这个得分，是根据最终激励，估算的平均得分。（具体算法：将所有地址中实际得分最高者，作为100分，然后将你的实际得分等比例换算到0~100）"
                                 />
                               </div>
-                            </th> */}
+                            </th>
                             <th className="text-center">可铸造激励</th>
                             <th className="text-center">操作</th>
                           </tr>
@@ -324,25 +373,23 @@ const ActRewardsPage: React.FC = () => {
                               }
                             >
                               <td className="px-1">{formatRoundForDisplay(item.round, token).toString()}</td>
-                              {/* <td className="text-center px-1">
-                                {item.isScoreLoading ? (
-                                  <div className="flex justify-center items-center">
-                                    <LoadingIcon />
-                                  </div>
-                                ) : item.score && parseFloat(item.score) > 0 ? (
-                                  <Link
-                                    href={`/verify/detail?symbol=${
-                                      token?.symbol
-                                    }&id=${group.action.action.head.id.toString()}&round=${item.round.toString()}`}
-                                    rel="noopener noreferrer"
-                                    className="text-secondary hover:text-secondary/80 underline text-sm"
-                                  >
-                                    {item.score}
-                                  </Link>
-                                ) : (
-                                  <span className="text-greyscale-500">-</span>
-                                )}
-                              </td> */}
+                              <td className="text-center px-1">
+                                <ActionRewardScoreCell
+                                  account={account as `0x${string}`}
+                                  tokenAddress={token?.address as `0x${string}`}
+                                  actionId={BigInt(group.action.action.head.id)}
+                                  round={item.round}
+                                  symbol={token?.symbol || ''}
+                                  score={item.score}
+                                  isScoreLoading={item.isScoreLoading}
+                                  needManualLoad={item.needManualLoad}
+                                  isManualLoading={item.isManualLoading}
+                                  notSelected={item.notSelected || false}
+                                  onManualLoad={() =>
+                                    handleManualLoad(BigInt(group.action.action.head.id), item.round)
+                                  }
+                                />
+                              </td>
                               <td className="text-center px-1">
                                 {item.notSelected ? (
                                   <span className="text-greyscale-500">未抽中</span>

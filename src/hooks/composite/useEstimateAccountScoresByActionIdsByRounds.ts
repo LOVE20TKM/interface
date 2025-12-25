@@ -20,8 +20,8 @@ type ScoreCacheData = {
 const buildScoreCacheKey = (account: string, tokenAddress: string) =>
   `love20_score_cache_${account.toLowerCase()}_${tokenAddress.toLowerCase()}`;
 
-// 读取缓存
-const getScoreCache = (account: string, tokenAddress: string): ScoreCacheData => {
+// 读取缓存（导出供外部使用）
+export const getScoreCache = (account: string, tokenAddress: string): ScoreCacheData => {
   if (typeof window === 'undefined') return {};
   try {
     const cached = localStorage.getItem(buildScoreCacheKey(account, tokenAddress));
@@ -432,5 +432,142 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
     isLoading: estimatedScores.isLoading,
     hasError: estimatedScores.hasError,
     allLoaded: estimatedScores.allLoaded,
+  };
+};
+
+// ==================== 单个行动×轮次按需加载 Hook ====================
+
+interface EstimateAccountScoreSingleParams {
+  account: `0x${string}`;
+  tokenAddress: `0x${string}`;
+  actionId: bigint;
+  round: bigint;
+  enabled?: boolean;
+}
+
+/**
+ * 按需加载单个行动×轮次的估算得分
+ * 优先从缓存读取，缓存不存在时调用 RPC 获取
+ */
+export const useEstimateAccountScoreByActionRound = ({
+  account,
+  tokenAddress,
+  actionId,
+  round,
+  enabled = true,
+}: EstimateAccountScoreSingleParams) => {
+  const [score, setScore] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  // 检查缓存
+  const cachedScore = useMemo(() => {
+    if (!enabled || !account || !tokenAddress) return null;
+    const cache = getScoreCache(account, tokenAddress);
+    const cacheKey = `${actionId.toString()}_${round.toString()}`;
+    return cache[cacheKey] ?? null;
+  }, [enabled, account, tokenAddress, actionId, round]);
+
+  // 获取随机账户列表
+  const { data: randomAccountsData, isSuccess: randomAccountsSuccess } = useReadContracts({
+    contracts: [
+      {
+        address: JOIN_CONTRACT_ADDRESS,
+        abi: LOVE20JoinAbi,
+        functionName: 'randomAccounts' as const,
+        args: [tokenAddress, round, actionId],
+      },
+    ],
+    query: {
+      enabled: enabled && cachedScore === null && !!account && !!tokenAddress,
+    },
+  });
+
+  // 当随机账户数据准备好后，获取分数
+  useEffect(() => {
+    if (!enabled || cachedScore !== null || !randomAccountsSuccess || !randomAccountsData?.[0]?.result) {
+      return;
+    }
+
+    const loadScore = async () => {
+      setIsLoading(true);
+      setHasError(false);
+
+      try {
+        const accounts = randomAccountsData[0].result as `0x${string}`[];
+        const accountsToQuery = [...accounts];
+        if (!accountsToQuery.includes(account)) {
+          accountsToQuery.push(account);
+        }
+
+        const contracts = accountsToQuery.map((acc) => ({
+          address: VERIFY_CONTRACT_ADDRESS,
+          abi: LOVE20VerifyAbi,
+          functionName: 'scoreByActionIdByAccount' as const,
+          args: [tokenAddress, round, actionId, acc],
+        }));
+
+        const batchResults = await readContracts(config, { contracts });
+
+        const accountScores: { [account: string]: bigint } = {};
+        let hasFailedRequest = false;
+
+        batchResults.forEach((result, idx) => {
+          if (result?.status === 'success') {
+            accountScores[accountsToQuery[idx]] = (result.result as bigint) || BigInt(0);
+          } else {
+            hasFailedRequest = true;
+          }
+        });
+
+        const targetScore = accountScores[account];
+        if (targetScore === undefined) {
+          setHasError(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // 计算100分制得分
+        const scores = Object.values(accountScores);
+        const maxScore = scores.reduce((max, s) => (s > max ? s : max), BigInt(0));
+
+        let scaledScore = '0';
+        if (maxScore > BigInt(0) && targetScore > BigInt(0)) {
+          const quotient = (targetScore * BigInt(100)) / maxScore;
+          const remainder = (targetScore * BigInt(100)) % maxScore;
+          const scaledValue = remainder * BigInt(2) >= maxScore ? Number(quotient) + 1 : Number(quotient);
+          scaledScore = scaledValue.toString();
+        }
+
+        setScore(scaledScore);
+
+        // 写入缓存
+        if (!hasFailedRequest) {
+          const actionIdStr = actionId.toString();
+          const roundStr = round.toString();
+          batchSetScoreCache(account, tokenAddress, {
+            [actionIdStr]: { [roundStr]: scaledScore },
+          });
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('加载单个得分失败:', error);
+        setHasError(true);
+        setIsLoading(false);
+      }
+    };
+
+    loadScore();
+  }, [enabled, cachedScore, randomAccountsSuccess, randomAccountsData, account, tokenAddress, actionId, round]);
+
+  // 优先返回缓存值
+  const finalScore = cachedScore !== null ? cachedScore : score;
+
+  return {
+    score: finalScore,
+    isLoading: isLoading || (enabled && cachedScore === null && !randomAccountsSuccess),
+    hasError,
+    isCached: cachedScore !== null,
   };
 };
