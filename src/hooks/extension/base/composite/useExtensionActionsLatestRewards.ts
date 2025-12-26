@@ -134,7 +134,7 @@ export const useExtensionActionsLatestRewards = ({
         if (!result?.result) continue;
 
         const [reward, isMinted] = result.result as [bigint, boolean];
-        const round = startRound + BigInt(i);
+        const round = startRound + BigInt(i) - BigInt(1);
 
         // 只保存有激励的轮次
         if (reward > BigInt(0)) {
