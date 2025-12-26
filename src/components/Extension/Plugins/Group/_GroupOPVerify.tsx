@@ -57,7 +57,6 @@ interface GroupOPVerifyProps {
 interface AccountScore {
   account: `0x${string}`;
   score: string; // 百分比，如 "100" 表示 100%
-  ratio: number; // 自动计算的占比
 }
 
 const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
@@ -130,20 +129,10 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         accounts.map((acc) => ({
           account: acc,
           score: '100', // 默认100分
-          ratio: 0,
         })),
       );
     }
   }, [accounts]);
-
-  // 计算占比 - 使用 useMemo 而不是 useEffect 来避免无限循环
-  const accountScoresWithRatio = React.useMemo(() => {
-    const totalScore = accountScores.reduce((sum, item) => sum + parseFloat(item.score || '0'), 0);
-    return accountScores.map((item) => ({
-      ...item,
-      ratio: totalScore > 0 ? parseFloat(item.score || '0') / totalScore : 0,
-    }));
-  }, [accountScores]);
 
   // 打分
   const {
@@ -202,7 +191,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     }
 
     // 检查是否所有分数都有效（0~100 之间）
-    const hasInvalidScore = accountScoresWithRatio.some((item) => {
+    const hasInvalidScore = accountScores.some((item) => {
       const score = parseFloat(item.score || '0');
       return isNaN(score) || score < 0 || score > 100;
     });
@@ -214,7 +203,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
     try {
       // 准备分数数据：直接使用原始整数
-      const scores = accountScoresWithRatio.map((item) => {
+      const scores = accountScores.map((item) => {
         const score = parseInt(item.score);
         return BigInt(isNaN(score) || score < 0 ? 0 : score);
       });
@@ -281,7 +270,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   if (!hasVerifyPermission) {
     return (
       <div className="space-y-4">
-        <LeftTitle title="验证打分" />
+        <LeftTitle title="链群验证" />
 
         <div className="text-center py-12">
           <p className="text-red-500 mb-4">您没有打分权限</p>
@@ -294,7 +283,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   if (!accounts || accounts.length === 0) {
     return (
       <div className="space-y-4">
-        <LeftTitle title="验证打分" />
+        <LeftTitle title="链群验证" />
 
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">暂无待打分的行动者</p>
@@ -345,7 +334,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
       <div className="space-y-6">
         {/* 标题 */}
         <div>
-          <LeftTitle title="验证打分" />
+          <LeftTitle title="链群验证" />
           <p className="text-sm text-gray-600 mt-2">为链群 #{groupId.toString()} 中的行动者打分</p>
         </div>
 
@@ -377,7 +366,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
       <div className="space-y-6">
         {/* 标题 */}
         <div>
-          <LeftTitle title="验证打分" />
+          <LeftTitle title="链群验证" />
           <div className="text-gray-500 mb-2 text-sm">
             <span>链群：</span>
             <span className="text-gray-500 text-xs">#</span>
@@ -393,11 +382,10 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
               <tr className="border-b border-gray-100">
                 <th className="pb-3 text-left text-sm text-greyscale-500">行动者地址</th>
                 <th className="pb-3 text-left whitespace-nowrap w-16 text-sm text-greyscale-500">打分</th>
-                <th className="pb-3 text-center whitespace-nowrap w-12 text-sm text-greyscale-500">占比</th>
               </tr>
             </thead>
             <tbody>
-              {accountScoresWithRatio.map((item, index) => {
+              {accountScores.map((item, index) => {
                 // 获取该地址的验证信息
                 const verificationInfo = verificationInfos.find(
                   (v) => v.account.toLowerCase() === item.account.toLowerCase(),
@@ -448,9 +436,6 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
                           className="w-16 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
-                    </td>
-                    <td className="py-1 text-center w-12 whitespace-nowrap px-0">
-                      <div className="text-sm text-greyscale-600">{(item.ratio * 100).toFixed(2)}%</div>
                     </td>
                   </tr>
                 );
