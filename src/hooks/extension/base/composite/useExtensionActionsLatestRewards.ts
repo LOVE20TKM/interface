@@ -75,18 +75,19 @@ export const useExtensionActionsLatestRewards = ({
   // 步骤2: 构建批量查询合约列表
   // 为每个扩展地址查询最近 lastRounds 轮的激励
   const rewardContracts = useMemo(() => {
-    if (!account || !currentRound || currentRound === BigInt(0) || extensionAddresses.length === 0) {
+    if (!account || !currentRound || currentRound <= BigInt(1) || extensionAddresses.length === 0) {
       return [];
     }
 
+    const endRound = lastRounds - BigInt(1); //当前验证轮的上一轮
     const contracts: any[] = [];
 
     for (const extensionAddress of extensionAddresses) {
       // 计算起始轮次
-      const startRound = currentRound > lastRounds ? currentRound - lastRounds + BigInt(1) : BigInt(1);
+      const startRound = endRound > lastRounds ? endRound - lastRounds + BigInt(1) : BigInt(1);
 
       // 为每一轮创建查询
-      for (let round = startRound; round <= currentRound; round++) {
+      for (let round = startRound; round <= endRound; round++) {
         contracts.push({
           address: extensionAddress,
           abi: ILOVE20ExtensionAbi,

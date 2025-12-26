@@ -8,7 +8,7 @@
 export const ErrorMessages: Record<string, string> = {
   AccountAlreadyJoined: 'AccountAlreadyJoined',
   ActionIdNotExist: '行动ID不存在',
-  ActionIdNotFound: 'ActionIdNotFound',
+  ActionIdNotFound: '行动ID没有找到',
   ActionNotSubmitted: '该行动本轮未被推举，无法投票',
   ActionNotVoted: '该行动本轮没有投票',
   ActionNotVotedInCurrentRound: 'ActionNotVotedInCurrentRound',

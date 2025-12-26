@@ -17,7 +17,7 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { ActionRewardsPageHeader } from '@/src/components/My/ActionRewardsPageHeader';
 import { ActionRewardsList } from '@/src/components/My/ActionRewardsList';
 
-const LAST_ROUNDS = BigInt(6);
+const LAST_ROUNDS = BigInt(7);
 
 const ActRewardsPage: React.FC = () => {
   const router = useRouter();
@@ -123,7 +123,7 @@ const ActRewardsPage: React.FC = () => {
                       </>
                     ) : (
                       <div className="text-center text-greyscale-500 py-4">
-                        该行动最近 {(LAST_ROUNDS + BigInt(1)).toString()} 轮没有获得激励
+                        该行动最近 {LAST_ROUNDS.toString()} 轮没有获得激励
                       </div>
                     )}
 

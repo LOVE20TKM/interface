@@ -77,7 +77,7 @@ export const useActionsLatestRewards = ({
   } = useActionRewardsByAccountOfLastRounds(
     tokenAddress || ('' as `0x${string}`),
     account || ('' as `0x${string}`),
-    lastRounds,
+    lastRounds - BigInt(1), //外围合约从0开始
   );
 
   // 第2步：获取 core 协议中的参与行动
