@@ -163,7 +163,7 @@ const ActRewardsPage: React.FC = () => {
     };
   }, [rewards, lastRoundByAction]);
 
-  // 获取最后一轮的得分数据（自动加载）
+  // 不再自动加载得分数据，全部改为手工加载
   const {
     scores: accountScores,
     isLoading: isLoadingScores,
@@ -172,7 +172,7 @@ const ActRewardsPage: React.FC = () => {
     account: account as `0x${string}`,
     tokenAddress: token?.address as `0x${string}`,
     actionRoundPairs: scoreQueryParams.actionRoundPairs,
-    enabled: scoreQueryParams.enabled && !!account && !!token?.address,
+    enabled: false, // 禁用自动加载，全部改为手工加载
   });
 
   // 手动加载请求的轮次（用于非最后一轮的按需加载）
@@ -252,17 +252,17 @@ const ActRewardsPage: React.FC = () => {
           const roundStr = r.round.toString();
           const cacheKey = `${actionIdStr}_${roundStr}`;
 
-          // 是否是最后一轮
+          // 是否是最后一轮（仅用于显示，不再用于自动加载判断）
           const isLastRound = lastRound !== undefined && r.round === lastRound;
 
           // 从 accountScores 或缓存中获取得分
           const score = accountScores?.[actionIdStr]?.[roundStr] ?? scoreCache[cacheKey] ?? null;
 
-          // 判断该得分是否还在加载中（仅对最后一轮适用）
-          const isScoreLoading = isLastRound && isLoadingScores && score === null;
+          // 判断该得分是否还在加载中（统一使用手动加载状态）
+          const isScoreLoading = false; // 不再自动加载，所以这里始终为 false
 
-          // 是否需要显示加载按钮（非最后一轮且缓存中没有）
-          const needManualLoad = !isLastRound && score === null && !r.notSelected;
+          // 是否需要显示加载按钮（所有轮次，如果缓存中没有都需要手工加载）
+          const needManualLoad = score === null && !r.notSelected;
 
           // 是否正在手动加载
           const isManualLoading = manualLoadRequests.has(cacheKey);
@@ -385,9 +385,7 @@ const ActRewardsPage: React.FC = () => {
                                   needManualLoad={item.needManualLoad}
                                   isManualLoading={item.isManualLoading}
                                   notSelected={item.notSelected || false}
-                                  onManualLoad={() =>
-                                    handleManualLoad(BigInt(group.action.action.head.id), item.round)
-                                  }
+                                  onManualLoad={() => handleManualLoad(BigInt(group.action.action.head.id), item.round)}
                                 />
                               </td>
                               <td className="text-center px-1">
