@@ -79,7 +79,7 @@ export const useExtensionActionsLatestRewards = ({
       return [];
     }
 
-    const endRound = lastRounds - BigInt(1); //当前验证轮的上一轮
+    const endRound = currentRound - BigInt(1); //当前验证轮的上一轮
     const contracts: any[] = [];
 
     for (const extensionAddress of extensionAddresses) {
