@@ -163,7 +163,7 @@ const ActRewardsPage: React.FC = () => {
     };
   }, [rewards, lastRoundByAction]);
 
-  // 不再自动加载得分数据，全部改为手工加载
+  // 自动加载每个行动的最后一轮得分数据
   const {
     scores: accountScores,
     isLoading: isLoadingScores,
@@ -172,7 +172,7 @@ const ActRewardsPage: React.FC = () => {
     account: account as `0x${string}`,
     tokenAddress: token?.address as `0x${string}`,
     actionRoundPairs: scoreQueryParams.actionRoundPairs,
-    enabled: false, // 禁用自动加载，全部改为手工加载
+    enabled: scoreQueryParams.enabled, // 自动加载每个行动的最后一轮
   });
 
   // 手动加载请求的轮次（用于非最后一轮的按需加载）
@@ -252,17 +252,20 @@ const ActRewardsPage: React.FC = () => {
           const roundStr = r.round.toString();
           const cacheKey = `${actionIdStr}_${roundStr}`;
 
-          // 是否是最后一轮（仅用于显示，不再用于自动加载判断）
+          // 是否是最后一轮（用于区分自动加载和手动加载）
           const isLastRound = lastRound !== undefined && r.round === lastRound;
 
           // 从 accountScores 或缓存中获取得分
           const score = accountScores?.[actionIdStr]?.[roundStr] ?? scoreCache[cacheKey] ?? null;
 
-          // 判断该得分是否还在加载中（统一使用手动加载状态）
-          const isScoreLoading = false; // 不再自动加载，所以这里始终为 false
+          // 判断该得分是否还在加载中
+          // 最后一轮：使用批量加载状态；非最后一轮：使用手动加载状态
+          const isScoreLoading = isLastRound ? isLoadingScores : false;
 
-          // 是否需要显示加载按钮（所有轮次，如果缓存中没有都需要手工加载）
-          const needManualLoad = score === null && !r.notSelected;
+          // 是否需要显示加载按钮
+          // 最后一轮：如果正在加载或已有得分则不显示按钮
+          // 非最后一轮：如果没有得分且未被抽中则显示按钮
+          const needManualLoad = isLastRound ? false : score === null && !r.notSelected;
 
           // 是否正在手动加载
           const isManualLoading = manualLoadRequests.has(cacheKey);

@@ -9,6 +9,9 @@ import { config } from '@/src/wagmi';
 const JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`;
 const VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VERIFY as `0x${string}`;
 
+// 每批查询的账户数量
+const ACCOUNTS_PER_BATCH = 100;
+
 // ==================== localStorage 缓存工具函数 ====================
 
 // 缓存数据结构: { "actionId_round": "score" }
@@ -79,7 +82,9 @@ interface EstimateAccountScoresParams {
  *
  * 优化说明：
  * - 每个行动×轮次约有500个随机账户，如果一次性查询所有会导致RPC超时
- * - 采用分批策略：每次只查询一个行动×轮次的所有账户分数
+ * - 采用两级分批策略：
+ *   1) 按行动×轮次分批（外层循环）
+ *   2) 每个行动×轮次内再按 100 个账户分批（内层循环）
  * - 通过 useEffect + async/await 实现串行批量加载，确保稳定性
  * - 只查询传入的 actionRoundPairs，避免查询不必要的轮次
  * - 使用 localStorage 缓存已查询的得分，避免重复请求链上数据
@@ -161,8 +166,6 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
     },
   });
 
-  console.log('randomAccountsData', randomAccountsData);
-
   // 第二步：分批获取所有账户的分数
   // 使用 state 来存储分批加载的结果
   const [batchScoresData, setBatchScoresData] = useState<{
@@ -214,37 +217,53 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
               accountsToQuery.push(account);
             }
 
-            // 为当前行动×轮次的所有账户构建分数查询
-            const contracts = accountsToQuery.map((acc) => ({
-              address: VERIFY_CONTRACT_ADDRESS,
-              abi: LOVE20VerifyAbi,
-              functionName: 'scoreByActionIdByAccount' as const,
-              args: [tokenAddress, round, actionId, acc],
-            }));
-
-            console.log(`正在加载 actionId=${actionId}, round=${round} 的分数数据，共 ${contracts.length} 个账户...`);
-
-            // 执行当前批次的 RPC 调用
-            const batchResults = await readContracts(config, {
-              contracts,
-            });
-
-            // 处理当前批次的结果
+            // 初始化结果存储
             const key = `${actionId.toString()}_${round.toString()}`;
             const accountScores: { [account: string]: bigint } = {};
             let hasFailedRequest = false;
 
-            batchResults.forEach((result, idx) => {
-              if (result?.status === 'success') {
-                const acc = accountsToQuery[idx];
-                const score = (result.result as bigint) || BigInt(0);
-                accountScores[acc] = score;
-              } else {
-                // 记录失败的请求
-                hasFailedRequest = true;
-                console.warn(`获取账户 ${accountsToQuery[idx]} 的得分失败:`, result?.error);
-              }
-            });
+            console.log(
+              `正在加载 actionId=${actionId}, round=${round} 的分数数据，共 ${accountsToQuery.length} 个账户...`,
+            );
+
+            // 将账户分批查询，每批最多 ACCOUNTS_PER_BATCH 个
+            for (let i = 0; i < accountsToQuery.length; i += ACCOUNTS_PER_BATCH) {
+              const batchAccounts = accountsToQuery.slice(i, i + ACCOUNTS_PER_BATCH);
+
+              // 为当前批次的账户构建分数查询
+              const contracts = batchAccounts.map((acc) => ({
+                address: VERIFY_CONTRACT_ADDRESS,
+                abi: LOVE20VerifyAbi,
+                functionName: 'scoreByActionIdByAccount' as const,
+                args: [tokenAddress, round, actionId, acc],
+              }));
+
+              const batchStart = i + 1;
+              const batchEnd = Math.min(i + ACCOUNTS_PER_BATCH, accountsToQuery.length);
+              console.log(
+                `  批次 ${Math.floor(i / ACCOUNTS_PER_BATCH) + 1}: 查询账户 ${batchStart}-${batchEnd}/${
+                  accountsToQuery.length
+                }...`,
+              );
+
+              // 执行当前批次的 RPC 调用
+              const batchResults = await readContracts(config, {
+                contracts,
+              });
+
+              // 处理当前批次的结果
+              batchResults.forEach((result, idx) => {
+                if (result?.status === 'success') {
+                  const acc = batchAccounts[idx];
+                  const score = (result.result as bigint) || BigInt(0);
+                  accountScores[acc] = score;
+                } else {
+                  // 记录失败的请求
+                  hasFailedRequest = true;
+                  console.warn(`获取账户 ${batchAccounts[idx]} 的得分失败:`, result?.error);
+                }
+              });
+            }
 
             // 检查目标账户的得分是否成功获取
             const hasTargetAccountScore = accountScores[account] !== undefined;
@@ -500,25 +519,41 @@ export const useEstimateAccountScoreByActionRound = ({
           accountsToQuery.push(account);
         }
 
-        const contracts = accountsToQuery.map((acc) => ({
-          address: VERIFY_CONTRACT_ADDRESS,
-          abi: LOVE20VerifyAbi,
-          functionName: 'scoreByActionIdByAccount' as const,
-          args: [tokenAddress, round, actionId, acc],
-        }));
-
-        const batchResults = await readContracts(config, { contracts });
-
+        // 初始化结果存储
         const accountScores: { [account: string]: bigint } = {};
         let hasFailedRequest = false;
 
-        batchResults.forEach((result, idx) => {
-          if (result?.status === 'success') {
-            accountScores[accountsToQuery[idx]] = (result.result as bigint) || BigInt(0);
-          } else {
-            hasFailedRequest = true;
-          }
-        });
+        console.log(`正在加载单个得分 actionId=${actionId}, round=${round}，共 ${accountsToQuery.length} 个账户...`);
+
+        // 将账户分批查询，每批最多 ACCOUNTS_PER_BATCH 个
+        for (let i = 0; i < accountsToQuery.length; i += ACCOUNTS_PER_BATCH) {
+          const batchAccounts = accountsToQuery.slice(i, i + ACCOUNTS_PER_BATCH);
+
+          const contracts = batchAccounts.map((acc) => ({
+            address: VERIFY_CONTRACT_ADDRESS,
+            abi: LOVE20VerifyAbi,
+            functionName: 'scoreByActionIdByAccount' as const,
+            args: [tokenAddress, round, actionId, acc],
+          }));
+
+          const batchStart = i + 1;
+          const batchEnd = Math.min(i + ACCOUNTS_PER_BATCH, accountsToQuery.length);
+          console.log(
+            `  批次 ${Math.floor(i / ACCOUNTS_PER_BATCH) + 1}: 查询账户 ${batchStart}-${batchEnd}/${
+              accountsToQuery.length
+            }...`,
+          );
+
+          const batchResults = await readContracts(config, { contracts });
+
+          batchResults.forEach((result, idx) => {
+            if (result?.status === 'success') {
+              accountScores[batchAccounts[idx]] = (result.result as bigint) || BigInt(0);
+            } else {
+              hasFailedRequest = true;
+            }
+          });
+        }
 
         const targetScore = accountScores[account];
         if (targetScore === undefined) {
