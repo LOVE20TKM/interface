@@ -34,7 +34,7 @@ import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
 import { ILOVE20ExtensionAbi } from '@/src/abis/ILOVE20Extension';
 import { LOVE20ExtensionFactoryBaseAbi } from '@/src/abis/LOVE20ExtensionFactoryBase';
 import { isKnownFactory } from '@/src/config/extensionConfig';
-import { TokenExtended } from '@/src/types/love20types';
+import { Token } from '@/src/contexts/TokenContext';
 
 // ==================== 常量定义 ====================
 
@@ -72,7 +72,7 @@ interface CacheItem {
  * Hook 参数接口
  */
 export interface UseExtensionsByActionIdsWithCacheParams {
-  token: TokenExtended;
+  token: Token;
   actionIds: bigint[];
   enabled?: boolean;
 }
@@ -117,10 +117,7 @@ function buildCacheKey(tokenAddress: string, actionId: bigint): string {
 /**
  * 从 localStorage 读取缓存的验证结果
  */
-function getCachedExtensionValidation(
-  tokenAddress: string,
-  actionId: bigint,
-): ExtensionValidationInfo | null {
+function getCachedExtensionValidation(tokenAddress: string, actionId: bigint): ExtensionValidationInfo | null {
   if (typeof window === 'undefined') return null;
 
   try {
@@ -132,9 +129,7 @@ function getCachedExtensionValidation(
     return {
       actionId,
       extensionAddress:
-        item.data.extensionAddress !== ZERO_ADDRESS
-          ? (item.data.extensionAddress as `0x${string}`)
-          : undefined,
+        item.data.extensionAddress !== ZERO_ADDRESS ? (item.data.extensionAddress as `0x${string}`) : undefined,
       isExtension: item.data.isExtension,
     };
   } catch (error) {

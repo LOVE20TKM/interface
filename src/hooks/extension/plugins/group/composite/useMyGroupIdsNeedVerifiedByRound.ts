@@ -96,7 +96,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
   // 步骤1：获取 tokenAddress
   // ==========================================
 
-  const { token } = useContext(TokenContext);
+  const { token } = useContext(TokenContext) || {};
   const tokenAddress = token?.address;
 
   // ==========================================
@@ -108,11 +108,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
     extensions,
     isPending: isVotedPending,
     error: votedError,
-  } = useVotedGroupActions(
-    GROUP_ACTION_FACTORY_ADDRESS,
-    tokenAddress as `0x${string}`,
-    round as bigint,
-  );
+  } = useVotedGroupActions(GROUP_ACTION_FACTORY_ADDRESS, tokenAddress as `0x${string}`, round as bigint);
 
   // ==========================================
   // 步骤3：批量获取每个行动的活跃链群NFT
@@ -239,16 +235,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
 
     // 步骤3: 检查验证状态
     return isVerifiedPending;
-  }, [
-    tokenAddress,
-    account,
-    round,
-    isVotedPending,
-    actionIds,
-    isGroupIdsPending,
-    groupTuples,
-    isVerifiedPending,
-  ]);
+  }, [tokenAddress, account, round, isVotedPending, actionIds, isGroupIdsPending, groupTuples, isVerifiedPending]);
 
   // ==========================================
   // 步骤8：错误处理
