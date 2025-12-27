@@ -17,6 +17,7 @@ import TokenTab from '@/src/components/Token/TokenTab';
 import GovernanceDataPanel from '@/src/components/DataPanel/GovernanceDataPanel';
 import MyVotingPanel from '@/src/components/My/MyVotingPanel';
 import MyVerifingPanel from '@/src/components/My/MyVerifingPanel';
+import MyVerifyingGroupsPanel from '@/src/components/My/MyVerifyingGroupsPanel';
 import Todeploy from '@/src/components/Launch/Todeploy';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import MyGovInfoPanel from '@/src/components/My/MyGovInfoPanel';
@@ -103,7 +104,7 @@ const GovPage = () => {
                     <LoadingIcon />
                   </div>
                 ) : shouldShowGovComponents ? (
-                  // 有治理票时显示三个治理组件
+                  // 有治理票时显示治理组件
                   <>
                     <MyVotingPanel
                       currentRound={currentVoteRound ? currentVoteRound : BigInt(0)}
@@ -111,6 +112,9 @@ const GovPage = () => {
                       isPendingValidGovVotes={isPendingValidGovVotes}
                     />
                     <MyVerifingPanel currentRound={currentVoteRound > 2 ? currentVoteRound - BigInt(2) : BigInt(0)} />
+                    <MyVerifyingGroupsPanel
+                      currentRound={currentVoteRound > 2 ? currentVoteRound - BigInt(2) : BigInt(0)}
+                    />
                     <Todeploy token={currentToken} />
                   </>
                 ) : (

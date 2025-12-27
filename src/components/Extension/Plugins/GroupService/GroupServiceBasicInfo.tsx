@@ -3,7 +3,7 @@
 import React from 'react';
 
 // my hooks
-import { useExtensionParams } from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupServiceFactory';
+import { useExtensionParams } from '@/src/hooks/extension/plugins/group-service/composite/useExtensionParams';
 import { useSymbol } from '@/src/hooks/contracts/useLOVE20Token';
 
 // my components
@@ -28,7 +28,7 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
 }) => {
   // 获取扩展部署参数
   const { tokenAddress, groupActionTokenAddress, groupActionFactoryAddress, maxRecipients, isPending, error } =
-    useExtensionParams(factoryAddress, extensionAddress);
+    useExtensionParams(extensionAddress);
 
   // 获取链群行动代币符号
   const { symbol: groupActionTokenSymbol, isPending: isGroupActionSymbolPending } = useSymbol(

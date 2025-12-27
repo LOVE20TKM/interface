@@ -73,7 +73,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   // 获取当前轮次
   const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
 
-  // 获取链群主地址
+  // 获取链群服务者地址
   const { owner: groupOwner, isPending: isPendingOwner, error: errorOwner } = useOwnerOf(groupId);
 
   // 获取打分代理地址
@@ -83,7 +83,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     error: errorDelegated,
   } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
 
-  // 检查是否有打分权限（链群主或打分代理）
+  // 检查是否有打分权限（链群服务者或打分代理）
   const hasVerifyPermission =
     account &&
     (account.toLowerCase() === groupOwner?.toLowerCase() || account.toLowerCase() === delegatedVerifier?.toLowerCase());
@@ -220,11 +220,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     if (isConfirmedVerify) {
       toast.success('打分提交成功');
       setTimeout(() => {
-        router.push(
-          `/extension/group/?groupId=${groupId.toString()}&actionId=${actionId.toString()}&symbol=${
-            token?.symbol
-          }&tab=scores`,
-        );
+        router.push(`/extension/my_verifying_groups?symbol=${token?.symbol}`);
       }, 1500);
     }
   }, [isConfirmedVerify, router]);
@@ -274,7 +270,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
         <div className="text-center py-12">
           <p className="text-red-500 mb-4">您没有打分权限</p>
-          <p className="text-sm text-gray-600 mb-6">只有链群主和打分代理才能打分</p>
+          <p className="text-sm text-gray-600 mb-6">只有链群服务者和打分代理才能打分</p>
         </div>
       </div>
     );
@@ -344,18 +340,6 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
             <p className="text-lg font-medium text-gray-900 mb-2">打分已完成</p>
             <p className="text-sm text-gray-600">本轮已为 {accounts?.length} 个行动者提交打分</p>
           </div>
-
-          <Button
-            onClick={() => {
-              router.push(
-                `/extension/group/?groupId=${groupId.toString()}&actionId=${actionId.toString()}&symbol=${
-                  token?.symbol
-                }&tab=scores`,
-              );
-            }}
-          >
-            查看打分
-          </Button>
         </div>
       </div>
     );

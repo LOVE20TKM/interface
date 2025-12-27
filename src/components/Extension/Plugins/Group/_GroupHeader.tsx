@@ -114,15 +114,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     if (errorRound) handleError(errorRound);
     if (errorVerify) handleError(errorVerify);
     if (errorJoinedAmount) handleError(errorJoinedAmount);
-  }, [
-    errorDetail,
-    errorAccountsCount,
-    errorDelegated,
-    errorRound,
-    errorVerify,
-    errorJoinedAmount,
-    handleError,
-  ]);
+  }, [errorDetail, errorAccountsCount, errorDelegated, errorRound, errorVerify, errorJoinedAmount, handleError]);
 
   if (!token) {
     return <div>Token信息加载中...</div>;
@@ -155,7 +147,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
 
   return (
     <div className="bg-gray-100 rounded-lg px-4 pt-3 pb-3 text-sm my-4">
-      {/* 第一行：链群NFT/name + 链群主地址 */}
+      {/* 第一行：链群NFT/name + 链群服务者地址 */}
       <div className="mb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline">
@@ -197,6 +189,16 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
             行动详情 &gt;&gt;
           </Link>
 
+          {/* 投不信任票 - 所有人都显示 */}
+          <span
+            onClick={handleDistrustClick}
+            className={`text-sm cursor-pointer ${
+              hasVoted ? 'text-secondary hover:text-secondary/80' : 'text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            投不信任票 &gt;&gt;
+          </span>
+
           {/* 链群打分 - 只有打分代理显示 */}
           {isDelegated && (
             <Link
@@ -207,7 +209,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
             </Link>
           )}
 
-          {/* 管理链群 - 只有链群主显示 */}
+          {/* 管理链群 - 只有链群服务者显示 */}
           {isOwner && (
             <span
               className="text-secondary hover:text-secondary/80 text-sm cursor-pointer"
@@ -216,16 +218,6 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
               管理链群 &gt;&gt;
             </span>
           )}
-
-          {/* 投不信任票 - 所有人都显示 */}
-          <span
-            onClick={handleDistrustClick}
-            className={`text-sm cursor-pointer ${
-              hasVoted ? 'text-secondary hover:text-secondary/80' : 'text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            投不信任票 &gt;&gt;
-          </span>
 
           {/* 加入行动 - 当不能打分时显示 */}
           {!canScore && (

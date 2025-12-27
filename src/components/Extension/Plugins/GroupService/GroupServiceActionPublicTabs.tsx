@@ -20,10 +20,10 @@ import ChangeRound from '@/src/components/Common/ChangeRound';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import { Button } from '@/components/ui/button';
-import RecipientsDetailDialog from './RecipientsDetailDialog';
+import _RewardDetailByVerifier from './_RewardDetailByVerifier';
 
 // my funcs
-import { formatRoundForDisplay, formatTokenAmount, formatPercentage } from '@/src/lib/format';
+import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 
 interface GroupServiceActionPublicTabsProps {
   currentJoinRound: bigint;
@@ -32,6 +32,15 @@ interface GroupServiceActionPublicTabsProps {
   extensionAddress?: `0x${string}`; // Optional, consistent with hook usage if needed later
 }
 
+/**
+ * 链群服务激励公示页面容器组件
+ *
+ * 功能：
+ * - 展示某一轮次所有参与者的激励列表
+ * - 支持轮次切换
+ * - 支持查看二次分配明细
+ * - 支持点击地址查看该服务者的详细激励情况（通过状态切换）
+ */
 const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> = ({
   currentJoinRound,
   actionId,
@@ -42,8 +51,8 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
   const [selectedRound, setSelectedRound] = useState(BigInt(0));
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<`0x${string}` | undefined>(undefined);
+  const [showDetail, setShowDetail] = useState(false);
+  const [selectedVerifier, setSelectedVerifier] = useState<`0x${string}` | undefined>(undefined);
 
   // 从URL获取round参数
   const { round: urlRound } = router.query;
@@ -111,16 +120,32 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
     return { sortedRewards: sorted, totalReward: total };
   }, [accountRewards]);
 
-  // 显示的轮次
-  const displayRound =
-    token && currentJoinRound ? formatRoundForDisplay(currentJoinRound - BigInt(1), token) : BigInt(0);
-
-  // 处理查看明细
-  const handleViewDetail = (account: `0x${string}`) => {
-    setSelectedAccount(account);
-    setDetailDialogOpen(true);
+  // 处理查看服务者详细激励
+  const handleViewDetail = (verifier: `0x${string}`) => {
+    setSelectedVerifier(verifier);
+    setShowDetail(true);
   };
 
+  // 处理返回列表
+  const handleBack = () => {
+    setShowDetail(false);
+    setSelectedVerifier(undefined);
+  };
+
+  // 如果显示详情且有选中的服务者，显示服务者激励明细
+  if (showDetail && selectedVerifier) {
+    return (
+      <_RewardDetailByVerifier
+        extensionAddress={extensionAddress}
+        tokenAddress={token?.address as `0x${string}`}
+        verifier={selectedVerifier}
+        currentJoinRound={currentJoinRound}
+        onBack={handleBack}
+      />
+    );
+  }
+
+  // 否则显示激励列表
   return (
     <div className="relative pb-4">
       {/* 顶部：标题与轮次切换 */}
@@ -159,10 +184,10 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
           <table className="table w-full">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="px-1 text-left">排名</th>
-                <th className="px-1 text-left">地址</th>
-                <th className="px-1 text-right">激励/占比</th>
-                <th className="px-1 text-center">二次分配</th>
+                <th className="px-1 text-left">No.</th>
+                <th className="px-1 text-center">地址</th>
+                <th className="px-1 text-center">激励</th>
+                <th className="px-1 text-center">明细</th>
               </tr>
             </thead>
             <tbody>
@@ -173,13 +198,15 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
                 >
                   <td className="px-1 text-greyscale-400">{index + 1}</td>
                   <td className="px-1">
-                    <AddressWithCopyButton
-                      address={item.account}
-                      showCopyButton={true}
-                      word={item.account === account ? '(我)' : ''}
-                    />
+                    <div onClick={() => handleViewDetail(item.account)} className="cursor-pointer hover:opacity-80">
+                      <AddressWithCopyButton
+                        address={item.account}
+                        showCopyButton={true}
+                        word={item.account === account ? '(我)' : ''}
+                      />
+                    </div>
                   </td>
-                  <td className="px-1 text-right">
+                  <td className="px-1 text-center">
                     <div className="font-mono text-secondary">{formatTokenAmount(item.amount)}</div>
                     <div className="text-greyscale-500 text-xs">
                       (
@@ -210,7 +237,7 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
               <tr className="text-greyscale-900">
                 <td className="px-1 text-left"></td>
                 <td className="px-1 text-left">汇总</td>
-                <td className="px-1 text-right">
+                <td className="px-1 text-center">
                   <div className="font-mono text-secondary">{formatTokenAmount(totalReward)}</div>
                   <div className="text-greyscale-500 text-xs">(100%)</div>
                 </td>
@@ -220,16 +247,6 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
           </table>
         </div>
       )}
-
-      {/* 二次分配明细 Dialog */}
-      <RecipientsDetailDialog
-        extensionAddress={extensionAddress}
-        tokenAddress={token?.address as `0x${string}`}
-        account={selectedAccount}
-        round={selectedRound > BigInt(0) ? selectedRound : undefined}
-        open={detailDialogOpen}
-        onOpenChange={setDetailDialogOpen}
-      />
     </div>
   );
 };

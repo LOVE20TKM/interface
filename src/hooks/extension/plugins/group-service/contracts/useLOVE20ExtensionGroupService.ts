@@ -448,6 +448,29 @@ export const useTokenAddress = (contractAddress: `0x${string}`) => {
   return { tokenAddress: data as `0x${string}` | undefined, isPending, error };
 };
 
+/**
+ * Hook for votedGroupActions - 获取当轮有投票且有激活链群的行动列表
+ * 返回行动ID和对应的扩展地址
+ */
+export const useVotedGroupActions = (contractAddress: `0x${string}`, round: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupServiceAbi,
+    functionName: 'votedGroupActions',
+    args: [round],
+    query: {
+      enabled: !!contractAddress && round !== undefined,
+    },
+  });
+
+  return {
+    actionIds: data ? (data[0] as bigint[]) : undefined,
+    extensions: data ? (data[1] as `0x${string}`[]) : undefined,
+    isPending,
+    error,
+  };
+};
+
 // =====================
 // === 写入 Hook ===
 // =====================

@@ -82,6 +82,175 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "function",
+    "name": "actionIds",
+    "inputs": [
+      {
+        "name": "actionFactory",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "actionIdsAtIndex",
+    "inputs": [
+      {
+        "name": "actionFactory",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "actionIdsByGroupId",
+    "inputs": [
+      {
+        "name": "actionFactory",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "actionIdsByGroupIdAtIndex",
+    "inputs": [
+      {
+        "name": "actionFactory",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "actionIdsByGroupIdCount",
+    "inputs": [
+      {
+        "name": "actionFactory",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "actionIdsCount",
+    "inputs": [
+      {
+        "name": "actionFactory",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "activateGroup",
     "inputs": [
       {
@@ -507,7 +676,7 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "function",
-    "name": "totalStakedByOwner",
+    "name": "totalStakedByActionIdByOwner",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -581,6 +750,40 @@ export const LOVE20GroupManagerAbi = [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "votedGroupActions",
+    "inputs": [
+      {
+        "name": "actionFactory",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "actionIds_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "extensions",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "event",
@@ -765,6 +968,11 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "error",
+    "name": "ExtensionTokenActionMismatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "GroupAlreadyActivated",
     "inputs": []
   },
@@ -796,6 +1004,11 @@ export const LOVE20GroupManagerAbi = [
   {
     "type": "error",
     "name": "NotRegisteredExtension",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotRegisteredExtensionInFactory",
     "inputs": []
   },
   {

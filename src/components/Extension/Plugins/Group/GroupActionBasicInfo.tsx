@@ -3,7 +3,7 @@
 import React from 'react';
 
 // my hooks
-import { useExtensionParams } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupActionFactory';
+import { useExtensionParams } from '@/src/hooks/extension/plugins/group/composite/useExtensionParams';
 import { useSymbol } from '@/src/hooks/contracts/useLOVE20Token';
 
 // my components
@@ -35,7 +35,7 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
     verifyCapacityMultiplier,
     isPending,
     error,
-  } = useExtensionParams(factoryAddress, extensionAddress);
+  } = useExtensionParams(extensionAddress);
 
   // 获取质押代币符号
   const { symbol: stakeTokenSymbol, isPending: isStakeSymbolPending } = useSymbol(

@@ -9,9 +9,45 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
         "name": "center_",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "groupManagerAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupDistrustAddress_",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "GROUP_DISTRUST_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "GROUP_MANAGER_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -32,16 +68,6 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
     "inputs": [
       {
         "name": "tokenAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupManagerAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupDistrustAddress_",
         "type": "address",
         "internalType": "address"
       },
@@ -95,60 +121,6 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
         "name": "",
         "type": "bool",
         "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "extensionParams",
-    "inputs": [
-      {
-        "name": "extension_",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupManagerAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupDistrustAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "stakeTokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "joinTokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "activationStakeAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxJoinAmountMultiplier",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "verifyCapacityMultiplier",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -213,48 +185,6 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
-      },
-      {
-        "name": "groupManagerAddress",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "groupDistrustAddress",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "stakeTokenAddress",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "joinTokenAddress",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "activationStakeAmount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxJoinAmountMultiplier",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "verifyCapacityMultiplier",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
       }
     ],
     "anonymous": false

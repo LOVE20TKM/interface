@@ -84,6 +84,7 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
     isPending: corePending,
     isConfirming: coreConfirming,
     isConfirmed: coreConfirmed,
+    hash: coreHash,
   } = useMintActionReward();
 
   // ========== 扩展行动铸造 Hook ==========
@@ -92,21 +93,25 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
     isPending: extensionPending,
     isConfirming: extensionConfirming,
     isConfirmed: extensionConfirmed,
+    hash: extensionHash,
   } = useClaimRewardFromExtension(extensionAddress);
 
   // ========== 统一状态管理 ==========
   const [mintingTarget, setMintingTarget] = useState<bigint | null>(null);
   const [locallyMinted, setLocallyMinted] = useState<Set<string>>(new Set());
+  const [mintingHash, setMintingHash] = useState<`0x${string}` | undefined>(undefined);
 
   // 使用外部状态或内部状态
   const isPending = externalIsPending !== undefined ? externalIsPending : isExtension ? extensionPending : corePending;
   const isConfirming =
     externalIsConfirming !== undefined ? externalIsConfirming : isExtension ? extensionConfirming : coreConfirming;
   const isConfirmed = isExtension ? extensionConfirmed : coreConfirmed;
+  const hash = isExtension ? extensionHash : coreHash;
 
   // ========== 铸造成功处理 ==========
   useEffect(() => {
-    if (isConfirmed && mintingTarget !== null) {
+    // 增加 hash 匹配检查：只有当前交易的 hash 匹配时才处理
+    if (isConfirmed && mintingTarget !== null && hash && hash === mintingHash) {
       toast.success('铸造成功');
       // 更新本地已铸造状态
       setLocallyMinted((prev) => new Set(prev).add(mintingTarget.toString()));
@@ -118,9 +123,11 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
       if (onMintEnd) {
         onMintEnd();
       }
+      // 清空状态
       setMintingTarget(null);
+      setMintingHash(undefined);
     }
-  }, [isConfirmed, mintingTarget, onMintSuccess, onMintEnd]);
+  }, [isConfirmed, mintingTarget, hash, mintingHash, onMintSuccess, onMintEnd]);
 
   // ========== 铸造处理函数 ==========
   const handleMint = async (round: bigint) => {
@@ -132,6 +139,8 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
     }
 
     try {
+      let txHash: `0x${string}` | undefined;
+
       if (isExtension) {
         // 扩展行动：使用 claimReward
         if (!extensionAddress) {
@@ -142,7 +151,7 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
           }
           return;
         }
-        await extensionClaimReward(round);
+        txHash = await extensionClaimReward(round);
       } else {
         // 普通行动：使用 mintActionReward
         if (!tokenAddress) {
@@ -153,11 +162,17 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
           }
           return;
         }
-        await mintActionReward(tokenAddress, round, actionId ?? BigInt(0));
+        txHash = await mintActionReward(tokenAddress, round, actionId ?? BigInt(0));
+      }
+
+      // 记录当前交易的 hash
+      if (txHash) {
+        setMintingHash(txHash);
       }
     } catch (error) {
       console.error('铸造失败:', error);
       setMintingTarget(null);
+      setMintingHash(undefined);
       // 通知父组件铸造结束
       if (onMintEnd) {
         onMintEnd();

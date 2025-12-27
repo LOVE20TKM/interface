@@ -1,5 +1,5 @@
 /**
- * 获取一个链群主地址在某一轮的二次分配设置明细 Hook
+ * 获取一个链群服务者地址在某一轮的二次分配设置明细 Hook
  *
  * 功能：
  * 1. 获取该地址在某一轮次有二次分配的行动ID列表
@@ -39,7 +39,7 @@ export interface RecipientsDistribution {
   basisPoints: bigint[];
   /** 对应的金额列表 */
   amounts: bigint[];
-  /** 链群主保留的金额 */
+  /** 链群服务者保留的金额 */
   ownerAmount: bigint;
 }
 
@@ -75,7 +75,7 @@ export interface UseRecipientsDetailByAccountByRoundParams {
   extensionAddress: `0x${string}` | undefined;
   /** Token 地址 */
   tokenAddress: `0x${string}` | undefined;
-  /** 链群主账户地址 */
+  /** 链群服务者账户地址 */
   account: `0x${string}` | undefined;
   /** 轮次 */
   round: bigint | undefined;
@@ -96,7 +96,7 @@ export interface UseRecipientsDetailByAccountByRoundResult {
 // ==================== Hook 实现 ====================
 
 /**
- * 获取一个链群主地址在某一轮的二次分配设置明细
+ * 获取一个链群服务者地址在某一轮的二次分配设置明细
  *
  * @param params - Hook 参数
  * @returns 行动信息列表（包含关联的链群列表和二次分配明细）

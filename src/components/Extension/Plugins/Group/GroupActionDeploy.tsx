@@ -43,10 +43,6 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
   const tokenSymbol = context?.token?.symbol || '';
 
-  // 从环境变量中获取固定的合约地址
-  const groupManagerAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
-  const groupDistrustAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_DISTRUST as `0x${string}`;
-
   // 表单状态
   const [stakeTokenAddress, setStakeTokenAddress] = useState(''); // 质押代币地址
   const [joinTokenAddress, setJoinTokenAddress] = useState(''); // 加入代币地址
@@ -135,17 +131,6 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
    * 验证表单数据
    */
   const validateForm = (): boolean => {
-    // 验证环境变量中的合约地址
-    if (!groupManagerAddress || !isAddress(groupManagerAddress)) {
-      toast.error('链群管理合约地址未配置或格式无效');
-      return false;
-    }
-
-    if (!groupDistrustAddress || !isAddress(groupDistrustAddress)) {
-      toast.error('链群不信任合约地址未配置或格式无效');
-      return false;
-    }
-
     // 验证质押代币地址
     if (!stakeTokenAddress) {
       toast.error('请输入质押代币地址');
@@ -237,8 +222,6 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
 
       await createExtension(
         tokenAddress,
-        groupManagerAddress as `0x${string}`,
-        groupDistrustAddress as `0x${string}`,
         stakeTokenAddress as `0x${string}`,
         joinTokenAddress as `0x${string}`,
         activationStakeAmountWei,
@@ -303,7 +286,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 step="0.000001"
                 className="max-w-40 md:max-w-xs"
               />
-              <p className="text-sm text-greyscale-500">链群服务者激活链群时需质押的代币数量</p>
+              {/* <p className="text-sm text-greyscale-500">链群服务者激活链群时需质押的代币数量</p> */}
             </div>
 
             {/* 最大参与代币倍数 */}

@@ -30,12 +30,16 @@ const VerifiedAddressesByAction: React.FC<{
   currentJoinRound: bigint;
   actionId: bigint;
   actionInfo: ActionInfo;
-}> = ({ currentJoinRound, actionId, actionInfo }) => {
+  isExtensionAction?: boolean;
+}> = ({ currentJoinRound, actionId, actionInfo, isExtensionAction = false }) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
   const [selectedRound, setSelectedRound] = useState(BigInt(0));
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  // Define verification round constant for clarity
+  const verifyRound = currentJoinRound - BigInt(1);
 
   // 从URL获取round参数
   const { round: urlRound } = router.query;
@@ -170,6 +174,9 @@ const VerifiedAddressesByAction: React.FC<{
   const verifiedVotesNum = addressVotesNum + (abstainVotes || BigInt(0));
   const verifiedVotesPercent = (Number(verifiedVotesNum) / Number(totalVotesNum || BigInt(0))) * 100;
 
+  // 判断是否应该显示验证信息（决定是否显示展开按钮列）
+  const shouldShowVerificationInfo = !isExtensionAction && actionInfo?.body.verificationKeys.length > 0;
+
   return (
     <div className="relative pb-4">
       {selectedRound === BigInt(0) && (
@@ -219,7 +226,7 @@ const VerifiedAddressesByAction: React.FC<{
         <table className="table w-full">
           <thead>
             <tr className="border-b border-gray-100">
-              <th></th>
+              {shouldShowVerificationInfo && <th></th>}
               <th>
                 <div className="flex items-center gap-1">
                   被抽中地址
@@ -238,7 +245,7 @@ const VerifiedAddressesByAction: React.FC<{
                 </div>
               </th>
               <th className="px-1 text-right">获得验证票</th>
-              <th className="px-1 text-right">验证票占比</th>
+              <th className="px-1 text-right">可铸造激励</th>
             </tr>
           </thead>
           <tbody>
@@ -249,14 +256,16 @@ const VerifiedAddressesByAction: React.FC<{
               return (
                 <React.Fragment key={item.account}>
                   <tr className={`border-b border-gray-100 ${item.account === account ? 'text-secondary' : ''}`}>
-                    <td className="px-1 w-8">
-                      <button
-                        onClick={() => toggleRow(item.account)}
-                        className="text-greyscale-400 hover:text-greyscale-600"
-                      >
-                        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                      </button>
-                    </td>
+                    {shouldShowVerificationInfo && (
+                      <td className="px-1 w-8">
+                        <button
+                          onClick={() => toggleRow(item.account)}
+                          className="text-greyscale-400 hover:text-greyscale-600"
+                        >
+                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        </button>
+                      </td>
+                    )}
                     <td className="px-1">
                       <AddressWithCopyButton
                         address={item.account}
@@ -265,13 +274,18 @@ const VerifiedAddressesByAction: React.FC<{
                       />
                     </td>
 
-                    <td className="px-1 text-right">{formatTokenAmount(item.score)}</td>
                     <td className="px-1 text-right">
-                      {formatPercentage((Number(item.score) / Number(verifiedVotesNum || BigInt(0))) * 100)}
+                      {formatTokenAmount(item.score)}
+                      <span className="text-greyscale-500">
+                        ({formatPercentage((Number(item.score) / Number(verifiedVotesNum || BigInt(0))) * 100)})
+                      </span>
+                    </td>
+                    <td className="px-1 text-right">
+                      {selectedRound === verifyRound ? '-' : formatTokenAmount(item.reward || BigInt(0))}
                     </td>
                   </tr>
 
-                  {verificationInfo && actionInfo && isExpanded && (
+                  {verificationInfo && actionInfo && isExpanded && shouldShowVerificationInfo && (
                     <tr className="border-b border-gray-100 bg-gray-50">
                       <td></td>
                       <td colSpan={3} className="px-1 py-3">
@@ -279,8 +293,7 @@ const VerifiedAddressesByAction: React.FC<{
                           <div className="text-xs text-greyscale-400 mb-2">验证信息:</div>
                           {actionInfo.body.verificationKeys.map((key, i) => (
                             <div key={i} className="mb-1">
-                              <span className="text-greyscale-500">{key}:</span>{' '}
-                              <LinkIfUrl text={verificationInfo.infos[i]} />
+                              <span className="text-greyscale-500">{key}:</span> <LinkIfUrl text={verificationInfo.infos[i]} />
                             </div>
                           ))}
                         </div>
@@ -292,18 +305,18 @@ const VerifiedAddressesByAction: React.FC<{
             })}
 
             <tr>
-              <td className="px-1"></td>
+              {shouldShowVerificationInfo && <td className="px-1"></td>}
               <td className="px-1 text-greyscale-500">弃权票</td>
               <td className="px-1 text-right">{formatTokenAmount(abstainVotes || BigInt(0))}</td>
-              <td className="px-1 text-right">
-                {formatPercentage((Number(abstainVotes || BigInt(0)) / Number(verifiedVotesNum || BigInt(0))) * 100)}
-              </td>
             </tr>
             <tr>
-              <td className="px-1"></td>
+              {shouldShowVerificationInfo && <td className="px-1"></td>}
               <td className="px-1 text-greyscale-500">汇总</td>
-              <td className="px-1 text-right">{formatTokenAmount(verifiedVotesNum || BigInt(0))}</td>
-              <td className="px-1 text-right">100%</td>
+              <td className="px-1 text-right">
+                {formatTokenAmount(verifiedVotesNum || BigInt(0))}
+                <span className="text-greyscale-500">(100%)</span>
+              </td>
+              <td className="px-1 text-right">{formatTokenAmount(totalReward)}</td>
             </tr>
           </tbody>
         </table>

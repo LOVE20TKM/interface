@@ -38,7 +38,7 @@ export interface GroupRecipientData {
   groupName: string | undefined;
   /** 接收地址列表 */
   addrs: `0x${string}`[] | undefined;
-  /** 对应的基点数列表 */
+  /** 对应的分配比例（wei 格式，1e18 = 100%） */
   basisPoints: bigint[] | undefined;
 }
 
@@ -62,7 +62,7 @@ export interface UseActionGroupRecipientsDataParams {
   tokenAddress: `0x${string}` | undefined;
   /** 验证轮次 */
   verifyRound: bigint | undefined;
-  /** 链群主账户地址 */
+  /** 链群服务者账户地址 */
   account: `0x${string}` | undefined;
   /** Extension 合约地址 */
   extensionAddress: `0x${string}` | undefined;

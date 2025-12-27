@@ -52,27 +52,8 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
     account: account as `0x${string}`,
   });
 
-  // // 获取上一轮次的治理奖励（用于计算加速激励倍数）
-  // const {
-  //   rewards: govRewards,
-  //   isPending: isPendingGovRewards,
-  //   error: errorGovRewards,
-  // } = useGovRewardsByAccountByRounds(
-  //   (token?.address as `0x${string}`) || '',
-  //   (account as `0x${string}`) || '',
-  //   currentRound > BigInt(3) ? currentRound - BigInt(3) : BigInt(0),
-  //   currentRound > BigInt(3) ? currentRound - BigInt(3) : BigInt(0),
-  // );
-
   // 我的加速激励的质押占比
   const tokenStakedPercentage = stAmount && govData?.stAmount ? (Number(stAmount) / Number(govData.stAmount)) * 100 : 0;
-
-  // // 计算加速激励倍数
-  // const lastRoundReward = govRewards?.[0];
-  // const boostMultiplier =
-  //   lastRoundReward?.verifyReward && lastRoundReward?.boostReward
-  //     ? (Number(lastRoundReward.boostReward) * 100) / Number(lastRoundReward.verifyReward)
-  //     : 0;
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -84,10 +65,6 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
     if (errorCurrentRound) {
       handleContractError(errorCurrentRound, 'stake');
     }
-
-    // if (errorGovRewards) {
-    //   handleContractError(errorGovRewards, 'stake');
-    // }
 
     if (errorGovData) {
       handleContractError(errorGovData, 'common');

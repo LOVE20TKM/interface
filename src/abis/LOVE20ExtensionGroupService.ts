@@ -654,7 +654,7 @@ export const LOVE20ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "validGroupActions",
+    "name": "votedGroupActions",
     "inputs": [
       {
         "name": "round",
@@ -664,14 +664,14 @@ export const LOVE20ExtensionGroupServiceAbi = [
     ],
     "outputs": [
       {
-        "name": "extensions",
-        "type": "address[]",
-        "internalType": "address[]"
-      },
-      {
         "name": "actionIds",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      },
+      {
+        "name": "extensions",
+        "type": "address[]",
+        "internalType": "address[]"
       }
     ],
     "stateMutability": "view"

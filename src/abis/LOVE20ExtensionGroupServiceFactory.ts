@@ -81,40 +81,6 @@ export const LOVE20ExtensionGroupServiceFactoryAbi = [
   },
   {
     "type": "function",
-    "name": "extensionParams",
-    "inputs": [
-      {
-        "name": "extension_",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupActionTokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupActionFactoryAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "maxRecipients",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "extensions",
     "inputs": [],
     "outputs": [
@@ -173,24 +139,6 @@ export const LOVE20ExtensionGroupServiceFactoryAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
-      },
-      {
-        "name": "groupActionTokenAddress",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "groupActionFactoryAddress",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "maxRecipients",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
       }
     ],
     "anonymous": false

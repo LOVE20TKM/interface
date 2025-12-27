@@ -152,12 +152,13 @@ export const useConfig = (tokenAddress: `0x${string}`, actionId: bigint) => {
     },
   });
 
-  const typedData = data as [string, bigint, bigint] | undefined;
+  const typedData = data as [string, bigint, bigint, bigint] | undefined;
 
   return {
     stakeTokenAddress: typedData ? (typedData[0] as `0x${string}`) : undefined,
     activationStakeAmount: typedData ? safeToBigInt(typedData[1]) : undefined,
     maxJoinAmountMultiplier: typedData ? safeToBigInt(typedData[2]) : undefined,
+    verifyCapacityMultiplier: typedData ? safeToBigInt(typedData[3]) : undefined,
     isPending,
     error,
   };
@@ -252,7 +253,7 @@ export const useTotalStakedByOwner = (tokenAddress: `0x${string}`, actionId: big
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupManagerAbi,
-    functionName: 'totalStakedByOwner',
+    functionName: 'totalStakedByActionIdByOwner',
     args: [tokenAddress, actionId, owner],
     query: {
       enabled: !!tokenAddress && actionId !== undefined && !!owner,
@@ -260,6 +261,144 @@ export const useTotalStakedByOwner = (tokenAddress: `0x${string}`, actionId: big
   });
 
   return { totalStaked: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for actionIds - 获取所有含激活链群的行动ID列表
+ */
+export const useActionIds = (actionFactory: `0x${string}`, tokenAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupManagerAbi,
+    functionName: 'actionIds',
+    args: [actionFactory, tokenAddress],
+    query: {
+      enabled: !!actionFactory && !!tokenAddress,
+    },
+  });
+
+  return { actionIds: data as bigint[] | undefined, isPending, error };
+};
+
+/**
+ * Hook for actionIdsAtIndex - 根据索引获取行动ID
+ */
+export const useActionIdsAtIndex = (actionFactory: `0x${string}`, tokenAddress: `0x${string}`, index: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupManagerAbi,
+    functionName: 'actionIdsAtIndex',
+    args: [actionFactory, tokenAddress, index],
+    query: {
+      enabled: !!actionFactory && !!tokenAddress && index !== undefined,
+    },
+  });
+
+  return { actionId: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for actionIdsByGroupId - 获取链群激活的行动ID列表
+ */
+export const useActionIdsByGroupId = (
+  actionFactory: `0x${string}`,
+  tokenAddress: `0x${string}`,
+  groupId: bigint,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupManagerAbi,
+    functionName: 'actionIdsByGroupId',
+    args: [actionFactory, tokenAddress, groupId],
+    query: {
+      enabled: !!actionFactory && !!tokenAddress && groupId !== undefined,
+    },
+  });
+
+  return { actionIds: data as bigint[] | undefined, isPending, error };
+};
+
+/**
+ * Hook for actionIdsByGroupIdAtIndex - 根据链群和索引获取行动ID
+ */
+export const useActionIdsByGroupIdAtIndex = (
+  actionFactory: `0x${string}`,
+  tokenAddress: `0x${string}`,
+  groupId: bigint,
+  index: bigint,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupManagerAbi,
+    functionName: 'actionIdsByGroupIdAtIndex',
+    args: [actionFactory, tokenAddress, groupId, index],
+    query: {
+      enabled: !!actionFactory && !!tokenAddress && groupId !== undefined && index !== undefined,
+    },
+  });
+
+  return { actionId: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for actionIdsCount - 获取含激活链群的行动数量
+ */
+export const useActionIdsCount = (actionFactory: `0x${string}`, tokenAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupManagerAbi,
+    functionName: 'actionIdsCount',
+    args: [actionFactory, tokenAddress],
+    query: {
+      enabled: !!actionFactory && !!tokenAddress,
+    },
+  });
+
+  return { count: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for actionIdsByGroupIdCount - 获取链群激活的行动数量
+ */
+export const useActionIdsByGroupIdCount = (
+  actionFactory: `0x${string}`,
+  tokenAddress: `0x${string}`,
+  groupId: bigint,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupManagerAbi,
+    functionName: 'actionIdsByGroupIdCount',
+    args: [actionFactory, tokenAddress, groupId],
+    query: {
+      enabled: !!actionFactory && !!tokenAddress && groupId !== undefined,
+    },
+  });
+
+  return { count: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for votedGroupActions - 获取当轮有投票且有激活链群的行动列表
+ * 返回行动ID和对应的扩展地址
+ */
+export const useVotedGroupActions = (actionFactory: `0x${string}`, tokenAddress: `0x${string}`, round: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupManagerAbi,
+    functionName: 'votedGroupActions',
+    args: [actionFactory, tokenAddress, round],
+    query: {
+      enabled: !!actionFactory && !!tokenAddress && round !== undefined,
+    },
+  });
+
+  return {
+    actionIds: data ? (data[0] as bigint[]) : undefined,
+    extensions: data ? (data[1] as `0x${string}`[]) : undefined,
+    isPending,
+    error,
+  };
 };
 
 // =====================
@@ -384,14 +523,16 @@ export function useSetConfig() {
     stakeTokenAddress: `0x${string}`,
     activationStakeAmount: bigint,
     maxJoinAmountMultiplier: bigint,
+    verifyCapacityMultiplier: bigint,
   ) => {
     console.log('提交 setConfig 交易:', {
       stakeTokenAddress,
       activationStakeAmount,
       maxJoinAmountMultiplier,
+      verifyCapacityMultiplier,
       isTukeMode,
     });
-    return await execute([stakeTokenAddress, activationStakeAmount, maxJoinAmountMultiplier]);
+    return await execute([stakeTokenAddress, activationStakeAmount, maxJoinAmountMultiplier, verifyCapacityMultiplier]);
   };
 
   // 错误日志记录

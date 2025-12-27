@@ -1,5 +1,5 @@
 /**
- * 获取一个链群主所有激活链群的行动信息列表（包含链群列表）Hook
+ * 获取一个链群服务者所有激活链群的行动信息列表（包含链群列表）Hook
  *
  * 功能：
  * 1. 通过 useActionIdsWithActiveGroupIdsByOwner 获取行动id、链群NFT 列表
@@ -65,7 +65,7 @@ export interface UseActionInfosWithActiveGroupIdsByOwnerResult {
 // ==================== Hook 实现 ====================
 
 /**
- * 获取一个链群主所有激活链群的行动信息列表（包含链群列表）
+ * 获取一个链群服务者所有激活链群的行动信息列表（包含链群列表）
  *
  * @param params - Hook 参数
  * @returns 行动信息列表（包含关联的链群列表）

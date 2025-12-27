@@ -62,7 +62,12 @@ const GovPublicTabs: React.FC<GovPublicTabsProps> = ({ actionId, currentRound, a
         return <JoinDetails actionId={actionId} />;
       case 'verify':
         return (
-          <VerifiedAddressesByAction currentJoinRound={currentRound} actionId={actionId} actionInfo={actionInfo} />
+          <VerifiedAddressesByAction
+            currentJoinRound={currentRound}
+            actionId={actionId}
+            actionInfo={actionInfo}
+            isExtensionAction={isExtensionAction}
+          />
         );
       default:
         return null;

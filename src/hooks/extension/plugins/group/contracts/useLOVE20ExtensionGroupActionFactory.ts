@@ -33,35 +33,35 @@ export const useExists = (contractAddress: `0x${string}`, extension: `0x${string
 };
 
 /**
- * Hook for extensionParams - 获取扩展参数
+ * Hook for GROUP_MANAGER_ADDRESS - 获取组管理器地址
  */
-export const useExtensionParams = (contractAddress: `0x${string}`, extension: `0x${string}`) => {
+export const useGroupManagerAddress = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: LOVE20ExtensionGroupActionFactoryAbi,
-    functionName: 'extensionParams',
-    args: [extension],
+    functionName: 'GROUP_MANAGER_ADDRESS',
     query: {
-      enabled: !!contractAddress && !!extension,
+      enabled: !!contractAddress,
     },
   });
 
-  const typedData = data as
-    | [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`, bigint, bigint, bigint]
-    | undefined;
+  return { groupManagerAddress: data as `0x${string}` | undefined, isPending, error };
+};
 
-  return {
-    tokenAddress: typedData ? typedData[0] : undefined,
-    groupManagerAddress: typedData ? typedData[1] : undefined,
-    groupDistrustAddress: typedData ? typedData[2] : undefined,
-    stakeTokenAddress: typedData ? typedData[3] : undefined,
-    joinTokenAddress: typedData ? typedData[4] : undefined,
-    activationStakeAmount: typedData ? safeToBigInt(typedData[5]) : undefined,
-    maxJoinAmountMultiplier: typedData ? safeToBigInt(typedData[6]) : undefined,
-    verifyCapacityMultiplier: typedData ? safeToBigInt(typedData[7]) : undefined,
-    isPending,
-    error,
-  };
+/**
+ * Hook for GROUP_DISTRUST_ADDRESS - 获取不信任合约地址
+ */
+export const useGroupDistrustAddress = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupActionFactoryAbi,
+    functionName: 'GROUP_DISTRUST_ADDRESS',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { groupDistrustAddress: data as `0x${string}` | undefined, isPending, error };
 };
 
 /**
@@ -129,8 +129,6 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
 
   const createExtension = async (
     tokenAddress: `0x${string}`,
-    groupManagerAddress: `0x${string}`,
-    groupDistrustAddress: `0x${string}`,
     stakeTokenAddress: `0x${string}`,
     joinTokenAddress: `0x${string}`,
     activationStakeAmount: bigint,
@@ -140,8 +138,6 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
     console.log('提交 createExtension 交易:', {
       contractAddress,
       tokenAddress,
-      groupManagerAddress,
-      groupDistrustAddress,
       stakeTokenAddress,
       joinTokenAddress,
       activationStakeAmount,
@@ -151,8 +147,6 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
     });
     return await execute([
       tokenAddress,
-      groupManagerAddress,
-      groupDistrustAddress,
       stakeTokenAddress,
       joinTokenAddress,
       activationStakeAmount,

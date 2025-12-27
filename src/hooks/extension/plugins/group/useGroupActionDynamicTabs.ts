@@ -2,8 +2,8 @@
  * useGroupActionDynamicTabs - GROUP_ACTION 类型扩展的动态标签 Hook
  *
  * 功能：
- * 1. 判断当前用户是否是链群主
- * 2. 如果是链群主，返回额外的 "链群管理" 标签
+ * 1. 判断当前用户是否是链群服务者
+ * 2. 如果是链群服务者，返回额外的 "链群管理" 标签
  * 3. 否则返回空数组
  */
 
@@ -28,13 +28,13 @@ interface UseGroupActionDynamicTabsParams {
 interface UseGroupActionDynamicTabsResult {
   tabs: { key: string; label: string }[]; // 动态标签列表
   isPending: boolean; // 是否正在加载
-  isGroupOwner: boolean; // 是否是链群主
+  isGroupOwner: boolean; // 是否是链群服务者
 }
 
 /**
  * GROUP_ACTION 类型扩展的动态标签 Hook
  *
- * 根据用户是否是链群主，返回额外的 "链群管理" 标签
+ * 根据用户是否是链群服务者，返回额外的 "链群管理" 标签
  *
  * @param params - Hook 参数
  * @returns 动态标签列表和加载状态
@@ -55,14 +55,14 @@ export const useGroupActionDynamicTabs = (params: UseGroupActionDynamicTabsParam
   // 判断参数是否完整
   const isParamsValid = !!tokenAddress && actionId !== undefined && !!account && enabled;
 
-  // 获取当前用户作为链群主的活跃链群 ID 列表
+  // 获取当前用户作为链群服务者的活跃链群 ID 列表
   const { activeGroupIds, isPending } = useActiveGroupIdsByOwner(
     tokenAddress as `0x${string}`,
     actionId as bigint,
     account as `0x${string}`,
   );
 
-  // 判断是否是链群主（拥有至少一个活跃链群）
+  // 判断是否是链群服务者（拥有至少一个活跃链群）
   const isGroupOwner = useMemo(() => {
     if (!isParamsValid || isPending) {
       return false;
@@ -76,7 +76,7 @@ export const useGroupActionDynamicTabs = (params: UseGroupActionDynamicTabsParam
       return [];
     }
 
-    // 如果是链群主，返回 "链群管理" 标签
+    // 如果是链群服务者，返回 "链群管理" 标签
     if (isGroupOwner) {
       return [{ key: 'group-manage', label: '链群管理' }];
     }
@@ -90,4 +90,3 @@ export const useGroupActionDynamicTabs = (params: UseGroupActionDynamicTabsParam
     isGroupOwner,
   };
 };
-

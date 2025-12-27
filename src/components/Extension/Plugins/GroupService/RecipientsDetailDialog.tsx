@@ -13,7 +13,7 @@ interface RecipientsDetailDialogProps {
   extensionAddress: `0x${string}` | undefined;
   /** Token 地址 */
   tokenAddress: `0x${string}` | undefined;
-  /** 链群主账户地址 */
+  /** 链群服务者账户地址 */
   account: `0x${string}` | undefined;
   /** 轮次 */
   round: bigint | undefined;
@@ -27,7 +27,7 @@ interface RecipientsDetailDialogProps {
  * 二次分配明细展示 Dialog 组件
  *
  * 功能：
- * - 展示链群主在某一轮的二次分配明细
+ * - 展示链群服务者在某一轮的二次分配明细
  * - 按行动分组展示，每个行动包含多个链群的分配明细
  * - 显示接收地址、比例、金额等信息
  */
@@ -117,7 +117,7 @@ export default function RecipientsDetailDialog({
                                 {group.distribution.addrs.map((addr, index) => {
                                   const basisPoints = group.distribution!.basisPoints[index];
                                   const amount = group.distribution!.amounts[index];
-                                  const percentage = basisPoints ? Number(basisPoints) / 100 : 0;
+                                  const percentage = basisPoints ? Number(basisPoints) / 1e16 : 0; // wei 转百分比
 
                                   return (
                                     <TableRow key={`${addr}_${index}`}>
@@ -134,11 +134,11 @@ export default function RecipientsDetailDialog({
                                   );
                                 })}
 
-                                {/* 链群主金额 */}
+                                {/* 链群服务者金额 */}
                                 {group.distribution.ownerAmount > BigInt(0) && (
                                   <TableRow className="bg-gray-50 font-medium">
                                     <TableCell className="px-3 py-2">
-                                      <span className="text-sm text-gray-600">链群主保留</span>
+                                      <span className="text-sm text-gray-600">链群服务者保留</span>
                                     </TableCell>
                                     <TableCell className="px-3 py-2 text-right text-sm text-gray-600">-</TableCell>
                                     <TableCell className="px-3 py-2 text-right text-sm">
@@ -155,7 +155,7 @@ export default function RecipientsDetailDialog({
                                   <TableCell className="px-3 py-2 text-right text-sm">
                                     {formatPercentage(
                                       group.distribution.addrs.reduce(
-                                        (sum, _, idx) => sum + Number(group.distribution!.basisPoints[idx]) / 100,
+                                        (sum, _, idx) => sum + Number(group.distribution!.basisPoints[idx]) / 1e16,
                                         0,
                                       ),
                                     )}

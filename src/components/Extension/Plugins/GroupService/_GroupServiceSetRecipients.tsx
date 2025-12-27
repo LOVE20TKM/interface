@@ -25,10 +25,9 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 const recipientSchema = z.object({
   address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, '无效的地址格式'),
   basisPoints: z.coerce
-    .number({ invalid_type_error: '基点数必须是数字' })
-    .int('基点数必须是整数')
-    .min(0, '基点数不能为负')
-    .max(10000, '基点数不能超过10000'),
+    .number({ invalid_type_error: '百分比必须是数字' })
+    .min(0, '百分比不能为负')
+    .max(100, '百分比不能超过100'),
 });
 
 type FormValues = {
@@ -68,8 +67,9 @@ export default function _GroupServiceSetRecipients({
   const { basisPointsBase } = useBasisPointsBase(extensionAddress);
   const { maxRecipients } = useMaxRecipients(extensionAddress);
 
-  // 计算基础值，用于验证总基点数
-  const base = basisPointsBase ? Number(basisPointsBase) : 10000;
+  // 用户输入的是百分比，最大值是 100
+  // basisPointsBase (1e18) 只在转换为 wei 时使用
+  const base = 100;
 
   // 创建动态 schema，使用 basisPointsBase
   const formSchema = useMemo(
@@ -84,7 +84,7 @@ export default function _GroupServiceSetRecipients({
             return total <= base;
           },
           {
-            message: `所有地址的基点数总和不能超过 ${base} (${base / 100}%)`,
+            message: `所有地址的百分比总和不能超过 ${base}%`,
             path: ['root'],
           },
         )
@@ -122,11 +122,12 @@ export default function _GroupServiceSetRecipients({
   const hasCalledSuccessRef = useRef(false);
 
   // Initialize form with current data when dialog opens
+  // 从合约读取的是 wei，需要转为百分比显示
   useEffect(() => {
     if (open && currentAddrs && currentBasisPoints) {
       const initialData = currentAddrs.map((addr, index) => ({
         address: addr,
-        basisPoints: Number(currentBasisPoints[index]),
+        basisPoints: Number(currentBasisPoints[index]) / 1e16, // wei 转百分比
       }));
       form.reset({ recipients: initialData });
       // 重置成功回调标记
@@ -156,13 +157,19 @@ export default function _GroupServiceSetRecipients({
 
   const onSubmit = async (values: FormValues) => {
     const addrs = values.recipients.map((r) => r.address as `0x${string}`);
-    const basisPoints = values.recipients.map((r) => BigInt(r.basisPoints));
 
-    // Check total percentage - 确保每个行动下，每个链群的所有待分配地址的基点数之和不能超过 base (通常是 10000)
+    // 将百分比转为 wei (percentage = 20 → wei = 0.2 * 1e18)
+    const basisPoints = values.recipients.map((r) => {
+      const percentage = r.basisPoints;
+      const wei = BigInt(Math.floor(percentage * 1e16)); // 1e16 = 1e18 / 100
+      return wei;
+    });
+
+    // Check total percentage - 确保每个行动下，每个链群的所有待分配地址的百分比之和不能超过 100%
     const total = values.recipients.reduce((sum, r) => sum + (r.basisPoints || 0), 0);
 
     if (total > base) {
-      form.setError('root', { message: `总比例不能超过 ${base / 100}% (当前: ${total / 100}%)` });
+      form.setError('root', { message: `总比例不能超过 ${base}% (当前: ${total.toFixed(2)}%)` });
       return;
     }
 
@@ -178,12 +185,12 @@ export default function _GroupServiceSetRecipients({
     await setRecipients(actionId, groupId, addrs, basisPoints);
   };
 
-  // 实时计算总基点数（强制转换为数字类型，避免字符串拼接）
+  // 实时计算总百分比（强制转换为数字类型，避免字符串拼接）
   const watchedRecipients = form.watch('recipients');
   const totalBasisPoints = watchedRecipients.reduce((sum, r) => sum + (Number(r.basisPoints) || 0), 0);
-  const totalPercentage = (totalBasisPoints / 100).toFixed(2);
-  const isTotalExceeded = totalBasisPoints > base;
-  const remainingBasisPoints = base - totalBasisPoints;
+  const totalPercentage = totalBasisPoints.toFixed(2); // 用户输入的就是百分比，不需要除以 100
+  const isTotalExceeded = totalBasisPoints > base; // base = 100
+  const remainingBasisPoints = base - totalBasisPoints; // base = 100
 
   // 检测重复地址
   const getDuplicateAddresses = () => {
@@ -210,7 +217,7 @@ export default function _GroupServiceSetRecipients({
   const duplicateAddressIndices = getDuplicateAddresses();
   const hasDuplicateAddresses = duplicateAddressIndices.size > 0;
 
-  // 基点数输入处理函数 - 限制输入值在合理范围内
+  // 百分比输入处理函数 - 限制输入值在合理范围内
   const handleBasisPointsChange = useCallback(
     (fieldOnChange: (value: any) => void, maxForThisInput: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
@@ -224,7 +231,7 @@ export default function _GroupServiceSetRecipients({
           fieldOnChange(0);
         } else if (numValue > maxForThisInput) {
           fieldOnChange(maxForThisInput);
-          toast.error(`该地址最多可分配 ${maxForThisInput} 基点数`);
+          toast.error(`该地址最多可分配 ${maxForThisInput.toFixed(2)}%`);
         } else {
           fieldOnChange(numValue);
         }
@@ -267,23 +274,19 @@ export default function _GroupServiceSetRecipients({
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-auto px-1 sm:px-2 text-center">地址</TableHead>
-                    <TableHead className="w-16 px-1 sm:px-2 hidden sm:table-cell text-center">基点数</TableHead>
-                    <TableHead className="w-16 px-1 sm:px-0 sm:w-16 text-center">
-                      <span className="sm:hidden">基点数</span>
-                      <span className="hidden sm:inline">占比</span>
-                    </TableHead>
+                    <TableHead className="w-16 px-1 sm:px-2 text-center">百分比</TableHead>
                     <TableHead className="w-10 px-1 sm:px-2"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {fields.map((field, index) => {
                     const currentBasisPoints = form.watch(`recipients.${index}.basisPoints`);
-                    // 计算当前输入框的最大值：剩余基点数 + 当前输入框的值
+                    // 计算当前输入框的最大值：剩余百分比 + 当前输入框的值
                     const otherBasisPointsSum = watchedRecipients.reduce(
                       (sum, r, i) => (i !== index ? sum + (Number(r.basisPoints) || 0) : sum),
                       0,
                     );
-                    const maxForThisInput = base - otherBasisPointsSum;
+                    const maxForThisInput = base - otherBasisPointsSum; // base = 100
                     const isDuplicate = duplicateAddressIndices.has(index);
 
                     return (
@@ -309,7 +312,7 @@ export default function _GroupServiceSetRecipients({
                             )}
                           />
                         </TableCell>
-                        <TableCell className="px-1 sm:px-2 hidden sm:table-cell">
+                        <TableCell className="px-1 sm:px-2">
                           <FormField
                             control={form.control}
                             name={`recipients.${index}.basisPoints`}
@@ -320,6 +323,7 @@ export default function _GroupServiceSetRecipients({
                                     type="number"
                                     min={0}
                                     max={maxForThisInput}
+                                    placeholder="0-100"
                                     {...field}
                                     onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
                                     className="h-8 px-1 sm:px-2 max-w-20"
@@ -329,38 +333,6 @@ export default function _GroupServiceSetRecipients({
                               </FormItem>
                             )}
                           />
-                        </TableCell>
-                        <TableCell className="px-1 sm:px-0">
-                          {/* 小屏幕：显示输入框和比例 */}
-                          <div className="sm:hidden space-y-1">
-                            <FormField
-                              control={form.control}
-                              name={`recipients.${index}.basisPoints`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input
-                                      type="number"
-                                      min={0}
-                                      max={maxForThisInput}
-                                      {...field}
-                                      onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
-                                      placeholder="基点数"
-                                      className="h-8 px-2 text-sm max-w-16"
-                                    />
-                                  </FormControl>
-                                  <FormMessage className="text-xs" />
-                                </FormItem>
-                              )}
-                            />
-                            <div className="text-muted-foreground text-xs text-center">
-                              {currentBasisPoints ? (Number(currentBasisPoints) / 100).toFixed(2) : '0.00'}%
-                            </div>
-                          </div>
-                          {/* 大屏幕：只显示比例 */}
-                          <div className="hidden sm:block text-muted-foreground text-sm">
-                            {currentBasisPoints ? (Number(currentBasisPoints) / 100).toFixed(2) : '0.00'}%
-                          </div>
                         </TableCell>
                         <TableCell className="px-0 sm:px-1">
                           <Button
@@ -378,7 +350,7 @@ export default function _GroupServiceSetRecipients({
                   })}
                   {fields.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground h-24 text-xs sm:text-sm">
+                      <TableCell colSpan={3} className="text-center text-muted-foreground h-24 text-xs sm:text-sm">
                         暂无接收地址，点击下方按钮添加
                       </TableCell>
                     </TableRow>
@@ -387,7 +359,7 @@ export default function _GroupServiceSetRecipients({
               </Table>
             </div>
 
-            {/* 显示总基点数/百分比 */}
+            {/* 显示总百分比 */}
             {fields.length > 0 && (
               <div
                 className={`text-sm p-2 rounded-md border ${
@@ -397,18 +369,16 @@ export default function _GroupServiceSetRecipients({
                 }`}
               >
                 <div className="flex justify-between items-center">
-                  <span>总基点数：</span>
+                  <span>总百分比：</span>
                   <span className="font-semibold">
-                    {totalBasisPoints} / {base} ({totalPercentage}%)
+                    {totalPercentage}% / {base}%
                   </span>
                 </div>
                 {!isTotalExceeded && !hasDuplicateAddresses && remainingBasisPoints > 0 && (
-                  <div className="text-xs mt-1">
-                    剩余可分配：{remainingBasisPoints} ({(remainingBasisPoints / 100).toFixed(2)}%)
-                  </div>
+                  <div className="text-xs mt-1">剩余可分配：{remainingBasisPoints.toFixed(2)}%</div>
                 )}
                 {isTotalExceeded && (
-                  <div className="text-xs mt-1 text-red-600">警告：总比例超过 100%，请调整基点数</div>
+                  <div className="text-xs mt-1 text-red-600">警告：总比例超过 100%，请调整百分比</div>
                 )}
                 {hasDuplicateAddresses && (
                   <div className="text-xs mt-1 text-red-600">警告：存在重复地址，请修改或删除</div>

@@ -30,7 +30,7 @@ export interface UseDistrustVotesOfRoundResult {
  * Hook: 获取指定轮次的不信任投票
  *
  * 算法：
- * 1. 使用 useVerifiers 获取指定轮次的验证者列表（验证者即为链群主）
+ * 1. 使用 useVerifiers 获取指定轮次的验证者列表（验证者即为链群服务者）
  * 2. 批量调用 groupIdsByVerifier 获取每个验证者管理的链群NFT列表
  * 3. 使用 useGroupNamesWithCache 批量获取链群名称（带缓存）
  * 4. 批量 RPC 调用：

@@ -118,11 +118,41 @@ function loadExistingErrorMessages(): Record<string, string> {
   if (fs.existsSync(errorMessagesPath)) {
     try {
       const content = fs.readFileSync(errorMessagesPath, 'utf8');
-      const regex = /(\w+):\s*['"](.+?)['"]/g;
+      // 匹配 key: 'value'、key: "value" 或 key: `value` 格式
+      // 分别处理三种引号类型以确保正确匹配
+
+      // 1. 匹配单引号字符串
+      const singleQuoteRegex = /(\w+):\s*'((?:[^'\\]|\\.)*)'/g;
       let match;
-      while ((match = regex.exec(content)) !== null) {
+      while ((match = singleQuoteRegex.exec(content)) !== null) {
         const [, key, value] = match;
-        messages[key] = value; // errorMessages.ts 优先级更高
+        messages[key] = value.replace(/\\(.)/g, '$1');
+      }
+
+      // 2. 匹配双引号字符串
+      const doubleQuoteRegex = /(\w+):\s*"((?:[^"\\]|\\.)*)"/g;
+      while ((match = doubleQuoteRegex.exec(content)) !== null) {
+        const [, key, value] = match;
+        messages[key] = value.replace(/\\(.)/g, '$1');
+      }
+
+      // 3. 匹配反引号模板字符串（需要特殊处理 ${...} 表达式）
+      // 使用更智能的正则来匹配模板字符串，包括 ${...} 表达式
+      // 策略：使用负向前瞻确保正确匹配到结束反引号，同时处理 ${...} 表达式
+      const backtickRegex = /(\w+):\s*`((?:(?!`)[^\\]|\\.|\$\{[^}]*\})*)`/g;
+      while ((match = backtickRegex.exec(content)) !== null) {
+        const [, key, value] = match;
+        // 处理转义字符，但保留 ${...} 表达式
+        // 注意：模板字符串中的 ${...} 不需要转义，所以直接保留
+        const unescapedValue = value.replace(/\\(.)/g, (_, char) => {
+          if (char === 'n') return '\n';
+          if (char === 't') return '\t';
+          if (char === 'r') return '\r';
+          if (char === '`') return '`';
+          if (char === '\\') return '\\';
+          return char;
+        });
+        messages[key] = unescapedValue; // errorMessages.ts 优先级更高，覆盖之前的
       }
     } catch (error) {
       console.warn('⚠️ 读取 errorMessages.ts 失败');
@@ -225,7 +255,7 @@ function generateErrorSelectors() {
 function generateErrorMessagesFile(
   errorMap: Map<string, ErrorInfo>,
   existingMessages: Record<string, string>,
-  outputPath: string
+  outputPath: string,
 ) {
   const lines: string[] = [
     '/**',
@@ -254,12 +284,27 @@ function generateErrorMessagesFile(
 }
 
 /**
+ * 格式化消息字符串，如果包含 ${...} 表达式则使用反引号，否则使用单引号
+ */
+function formatMessageString(message: string): string {
+  // 检测是否包含 ${...} 表达式
+  const hasTemplateExpression = /\$\{[^}]+\}/.test(message);
+
+  if (hasTemplateExpression) {
+    // 使用反引号，转义反引号和反斜杠
+    const escapedMessage = message.replace(/\\/g, '\\\\').replace(/`/g, '\\`');
+    return `\`${escapedMessage}\``;
+  } else {
+    // 使用单引号，转义单引号
+    const escapedMessage = message.replace(/'/g, "\\'");
+    return `'${escapedMessage}'`;
+  }
+}
+
+/**
  * 生成 unifiedErrorMap.ts 文件
  */
-function generateUnifiedErrorMapFile(
-  errorMap: Map<string, ErrorInfo>,
-  messages: Record<string, string>
-) {
+function generateUnifiedErrorMapFile(errorMap: Map<string, ErrorInfo>, messages: Record<string, string>) {
   const outputPath = path.join(__dirname, '../src/errors/unifiedErrorMap.ts');
 
   const lines: string[] = [
@@ -281,15 +326,12 @@ function generateUnifiedErrorMapFile(
   ];
 
   // 按选择器排序
-  const sortedBySelector = Array.from(errorMap.values()).sort((a, b) =>
-    a.selector.localeCompare(b.selector)
-  );
+  const sortedBySelector = Array.from(errorMap.values()).sort((a, b) => a.selector.localeCompare(b.selector));
 
   for (const error of sortedBySelector) {
     const message = messages[error.name] || error.name;
-    // 转义单引号
-    const escapedMessage = message.replace(/'/g, "\\'");
-    lines.push(`  '${error.selector}': { name: '${error.name}', message: '${escapedMessage}' },`);
+    const formattedMessage = formatMessageString(message);
+    lines.push(`  '${error.selector}': { name: '${error.name}', message: ${formattedMessage} },`);
   }
 
   lines.push('};');
@@ -298,14 +340,12 @@ function generateUnifiedErrorMapFile(
   lines.push('export const ErrorsByName: Record<string, ErrorDef> = {');
 
   // 按错误名称排序
-  const sortedByName = Array.from(errorMap.values()).sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
+  const sortedByName = Array.from(errorMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
   for (const error of sortedByName) {
     const message = messages[error.name] || error.name;
-    const escapedMessage = message.replace(/'/g, "\\'");
-    lines.push(`  '${error.name}': { name: '${error.name}', message: '${escapedMessage}' },`);
+    const formattedMessage = formatMessageString(message);
+    lines.push(`  '${error.name}': { name: '${error.name}', message: ${formattedMessage} },`);
   }
 
   lines.push('};');

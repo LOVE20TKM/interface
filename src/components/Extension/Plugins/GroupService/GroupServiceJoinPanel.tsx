@@ -15,6 +15,7 @@ import { useAccount } from 'wagmi';
 
 // UI 组件
 import { Button } from '@/components/ui/button';
+import { CardHeader } from '@/components/ui/card';
 
 // 类型
 import { ActionInfo } from '@/src/types/love20types';
@@ -104,17 +105,16 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
   return (
     <>
       <div className="px-6 pt-6 pb-2">
-        <LeftTitle title="加入链群服务行动" />
+        <LeftTitle title="加入链群服务行动：" />
 
         {/* 行动信息 */}
-        <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-          <div className="text-sm text-gray-600">
-            <span className="font-medium">行动：</span>
-            <span className="text-gray-800">
-              #{actionId.toString()} {actionInfo.body.title}
-            </span>
+        <CardHeader className="mt-4 px-3 pt-2 pb-1 flex-row justify-between items-baseline">
+          <div className="flex items-baseline">
+            <span className="text-greyscale-400 text-sm">{`No.`}</span>
+            <span className="text-secondary text-xl font-bold mr-2">{String(actionId)}</span>
+            <span className="font-bold text-greyscale-800">{actionInfo.body.title}</span>
           </div>
-        </div>
+        </CardHeader>
 
         {/* 已加入提示 */}
         {isJoined && (

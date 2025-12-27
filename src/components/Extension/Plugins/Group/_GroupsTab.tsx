@@ -95,7 +95,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
     return [...myActivatedGroups, ...myJoinedGroups, ...shuffledOtherGroups];
   }, [groups, account, joinedGroupId]);
 
-  // 跳转到链群主页
+  // 跳转到链群服务者页
   const handleGroupClick = (groupId: bigint) => {
     router.push(
       `/extension/group?groupId=${groupId.toString()}&actionId=${actionId.toString()}&symbol=${token?.symbol}`,

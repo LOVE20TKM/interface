@@ -9,7 +9,7 @@ import { useContractError } from '@/src/errors/useContractError';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
-import { formatTokenAmount } from '@/src/lib/format';
+import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 import { toast } from 'react-hot-toast';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 
@@ -128,7 +128,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
     percentage = Number((BigInt(myParticipation) * BigInt(10000)) / totalJoinedValue) / 100;
   }
 
-  const displayPercentage = totalJoinedValue && totalJoinedValue > 0 ? `${percentage.toFixed(2)}%` : '0.00%';
+  const displayPercentage = formatPercentage(percentage);
 
   const handleExit = async () => {
     if (myParticipation <= 0) {
@@ -247,7 +247,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                                   </div>
                                 </td>
                                 <td className="py-1 px-1 text-right font-mono text-secondary">
-                                  {group.basisPoints ? (Number(group.basisPoints[idx]) / 100).toFixed(2) : '0.00'}%
+                                  {group.basisPoints ? (Number(group.basisPoints[idx]) / 1e16).toFixed(2) : '0.00'}%
                                 </td>
                               </tr>
                             ))}
