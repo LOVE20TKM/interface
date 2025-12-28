@@ -311,7 +311,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
               <Input
                 id="verifyCapacityMultiplier"
                 type="number"
-                placeholder="比如 10"
+                placeholder="比如 1"
                 value={verifyCapacityMultiplier}
                 onChange={(e) => setVerifyCapacityMultiplier(e.target.value)}
                 disabled={approvalStep !== 'idle'}
@@ -396,7 +396,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                   <div className="flex items-center gap-2 mt-2 mb-1">
                     <div className="text-sm font-medium text-gray-700 mb-1">💡 小贴士：</div>
                   </div>
-                  <p className="text-sm text-greyscale-500">需转 1个 {tokenSymbol} 给合约地址，用于加入行动</p>
+                  <p className="text-sm text-greyscale-500">需转 1个 {tokenSymbol} 给合约地址，用于扩展协议初始化</p>
                 </div>
               </>
             )}
