@@ -40,6 +40,7 @@ import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, parseUnits } from '@/src/lib/format';
 
 // 组件
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
@@ -288,12 +289,27 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               name="maxCapacity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>链群容量上限 ({token?.symbol})</FormLabel>
+                  <FormLabel>链群容量上限 ({actionParams?.joinTokenSymbol})</FormLabel>
                   <FormControl>
                     <Input placeholder="请输入链群容量上限" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
                   <FormDescription className="text-xs">
-                    您的最大容量上限：{formatTokenAmount(maxVerifyCapacity || BigInt(0))} {token?.symbol}
+                    <span className="flex items-center gap-1">
+                      您的最大容量上限：{formatTokenAmount(maxVerifyCapacity || BigInt(0))}{' '}
+                      {actionParams?.joinTokenSymbol} &nbsp;
+                      {actionParams?.joinTokenAddress && (
+                        <>
+                          (
+                          <AddressWithCopyButton
+                            address={actionParams.joinTokenAddress}
+                            showCopyButton={true}
+                            showAddress={true}
+                            colorClassName="text-greyscale-500"
+                          />
+                          )
+                        </>
+                      )}
+                    </span>
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -325,7 +341,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               name="minJoinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>最小参与代币数 ({token?.symbol})</FormLabel>
+                  <FormLabel>最小参与代币数 ({actionParams?.joinTokenSymbol})</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="可填0, 表示任何>0的参与量都可以"
@@ -345,7 +361,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               name="maxJoinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>最大参与代币数 ({token?.symbol})</FormLabel>
+                  <FormLabel>最大参与代币数 ({actionParams?.joinTokenSymbol})</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="可填0, 表示与扩展行动默认值保持一致"
@@ -354,7 +370,8 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                     />
                   </FormControl>
                   <FormDescription className="text-xs">
-                    扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)} {token?.symbol}
+                    扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)}{' '}
+                    {actionParams?.joinTokenSymbol}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -385,8 +402,8 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
 
         {/* 小贴士（算法 + 数值） */}
         <_GroupActionTips
-          verifyCapacityMultiplier={actionParams?.verifyCapacityMultiplier}
-          maxJoinAmountMultiplier={actionParams?.maxJoinAmountMultiplier}
+          maxVerifyCapacityFactor={actionParams?.maxVerifyCapacityFactor}
+          maxJoinAmountRatio={actionParams?.maxJoinAmountRatio}
           joinMaxAmount={actionParams?.joinMaxAmount}
           groupActivationStakeAmount={actionParams?.groupActivationStakeAmount}
         />

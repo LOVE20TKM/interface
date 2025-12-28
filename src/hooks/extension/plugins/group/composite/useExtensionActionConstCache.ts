@@ -14,8 +14,8 @@ export interface ExtensionActionConst {
   stakeTokenSymbol: string | undefined;
   joinTokenAddress: `0x${string}`;
   joinTokenSymbol: string | undefined;
-  maxJoinAmountMultiplier: bigint; // 单个行动者最大参与代币数倍数
-  verifyCapacityMultiplier: bigint; // 验证容量倍数
+  maxJoinAmountRatio: bigint; // 单个行动者最大参与代币占比（wei，1e28=100%）
+  maxVerifyCapacityFactor: bigint; // 验证容量系数（wei）
   groupActivationStakeAmount: bigint; // 激活需质押代币数量
 }
 
@@ -63,8 +63,8 @@ export const useExtensionActionConstCache = ({
             stakeTokenSymbol: parsed.stakeTokenSymbol as string | undefined,
             joinTokenAddress: parsed.joinTokenAddress as `0x${string}`,
             joinTokenSymbol: parsed.joinTokenSymbol as string | undefined,
-            maxJoinAmountMultiplier: BigInt(parsed.maxJoinAmountMultiplier),
-            verifyCapacityMultiplier: BigInt(parsed.verifyCapacityMultiplier),
+            maxJoinAmountRatio: BigInt(parsed.maxJoinAmountRatio || parsed.maxJoinAmountMultiplier || 0),
+            maxVerifyCapacityFactor: BigInt(parsed.maxVerifyCapacityFactor || parsed.verifyCapacityMultiplier || 0),
             groupActivationStakeAmount: BigInt(parsed.groupActivationStakeAmount),
           };
         }
@@ -99,12 +99,12 @@ export const useExtensionActionConstCache = ({
       {
         address: extensionAddress,
         abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'MAX_JOIN_AMOUNT_MULTIPLIER',
+        functionName: 'MAX_JOIN_AMOUNT_RATIO',
       },
       {
         address: extensionAddress,
         abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'VERIFY_CAPACITY_MULTIPLIER',
+        functionName: 'MAX_VERIFY_CAPACITY_FACTOR',
       },
       {
         address: extensionAddress,
@@ -158,8 +158,8 @@ export const useExtensionActionConstCache = ({
       joinTokenAddress: joinTokenAddress,
       stakeTokenSymbol: undefined, // 需要单独查询
       joinTokenSymbol: undefined, // 需要单独查询
-      maxJoinAmountMultiplier: safeToBigInt(contractData[3]?.result),
-      verifyCapacityMultiplier: safeToBigInt(contractData[4]?.result),
+      maxJoinAmountRatio: safeToBigInt(contractData[3]?.result),
+      maxVerifyCapacityFactor: safeToBigInt(contractData[4]?.result),
       groupActivationStakeAmount: safeToBigInt(contractData[5]?.result),
     };
   }, [contractData, cachedData, actionId]);
@@ -246,8 +246,8 @@ export const useExtensionActionConstCache = ({
         stakeTokenSymbol: constants.stakeTokenSymbol,
         joinTokenAddress: constants.joinTokenAddress,
         joinTokenSymbol: constants.joinTokenSymbol,
-        maxJoinAmountMultiplier: constants.maxJoinAmountMultiplier?.toString(),
-        verifyCapacityMultiplier: constants.verifyCapacityMultiplier?.toString(),
+        maxJoinAmountRatio: constants.maxJoinAmountRatio?.toString(),
+        maxVerifyCapacityFactor: constants.maxVerifyCapacityFactor?.toString(),
         groupActivationStakeAmount: constants.groupActivationStakeAmount?.toString(),
         timestamp: Date.now(),
       };

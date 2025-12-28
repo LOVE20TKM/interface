@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -64,6 +64,14 @@ export default function _RewardDistributionByGroupDialog({
     addrs && amounts
       ? amounts.reduce((sum, amount) => sum + amount, BigInt(0)) + (ownerAmount || BigInt(0))
       : BigInt(0);
+
+  // 计算服务者保留的百分比
+  const ownerPercentage = useMemo(() => {
+    if (!ownerAmount || ownerAmount === BigInt(0) || totalAmount === BigInt(0)) {
+      return 0;
+    }
+    return (Number(ownerAmount) / Number(totalAmount)) * 100;
+  }, [ownerAmount, totalAmount]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -136,7 +144,9 @@ export default function _RewardDistributionByGroupDialog({
                     <TableCell className="px-3 py-2">
                       <span className="text-sm text-gray-600">服务者保留</span>
                     </TableCell>
-                    <TableCell className="px-3 py-2 text-right text-sm text-gray-600">-</TableCell>
+                    <TableCell className="px-3 py-2 text-right text-sm text-gray-600">
+                      {formatPercentage(ownerPercentage)}
+                    </TableCell>
                     <TableCell className="px-3 py-2 text-right text-sm font-mono">
                       {formatTokenAmount(ownerAmount)}
                     </TableCell>
@@ -150,7 +160,8 @@ export default function _RewardDistributionByGroupDialog({
                   </TableCell>
                   <TableCell className="px-3 py-2 text-right text-sm">
                     {formatPercentage(
-                      addrs.reduce((sum, _, idx) => sum + Number(basisPoints?.[idx] || BigInt(0)) / 1e16, 0),
+                      addrs.reduce((sum, _, idx) => sum + Number(basisPoints?.[idx] || BigInt(0)) / 1e16, 0) +
+                        ownerPercentage,
                     )}
                   </TableCell>
                   <TableCell className="px-3 py-2 text-right text-sm font-mono">
@@ -165,4 +176,3 @@ export default function _RewardDistributionByGroupDialog({
     </Dialog>
   );
 }
-

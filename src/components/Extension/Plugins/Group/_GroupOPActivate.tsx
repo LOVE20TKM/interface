@@ -45,6 +45,7 @@ import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, parseUnits } from '@/src/lib/format';
 
 // 组件
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
@@ -52,11 +53,6 @@ import _GroupActionTips from './_GroupActionTips';
 import _GroupTokenApproveButtons from './_GroupTokenApproveButtons';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-
-function safeParseUnits(val: string | undefined): bigint {
-  if (!val) return BigInt(0);
-  return parseUnits(val);
-}
 
 interface GroupOPActivateProps {
   actionId: bigint;
@@ -132,6 +128,8 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     (account || ZERO_ADDRESS) as `0x${string}`,
     !!actionParams?.stakeTokenAddress && !!account,
   );
+
+  console.log('actionParams', actionParams);
 
   // 表单验证
   const formSchema = useMemo(
@@ -434,8 +432,22 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               userBalance !== undefined && userBalance < stakeAmount ? 'text-red-900' : 'text-blue-900'
             }`}
           >
-            {formatTokenAmount(stakeAmount, 4, 'ceil')}{' '}
-            <span className="text-sm text-gray-600">{actionParams?.stakeTokenSymbol}</span>
+            <span className="flex items-center gap-1">
+              {formatTokenAmount(stakeAmount, 4, 'ceil')}{' '}
+              <span className="text-sm text-gray-600">{actionParams?.stakeTokenSymbol}</span> &nbsp;
+              {actionParams?.stakeTokenAddress && (
+                <span className="gap-0">
+                  <span className="text-xs text-gray-600">(</span>
+                  <AddressWithCopyButton
+                    address={actionParams.stakeTokenAddress}
+                    showCopyButton={true}
+                    showAddress={true}
+                    colorClassName="text-greyscale-500"
+                  />
+                  <span className="text-xs text-gray-600">)</span>
+                </span>
+              )}
+            </span>
           </div>
           <div
             className={`text-xs mt-1 ${
@@ -476,12 +488,27 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               name="maxCapacity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>链群容量上限 ({token?.symbol})</FormLabel>
+                  <FormLabel>链群容量上限 ({actionParams?.joinTokenSymbol})</FormLabel>
                   <FormControl>
                     <Input placeholder="请填写数量" className="!ring-secondary-foreground flex-1" {...field} />
                   </FormControl>
                   <FormDescription className="text-xs">
-                    当前您的最大容量为 {formatTokenAmount(maxVerifyCapacity || BigInt(0))} {token?.symbol}
+                    <span className="flex items-center gap-1">
+                      当前您的最大容量为 {formatTokenAmount(maxVerifyCapacity || BigInt(0))}{' '}
+                      {actionParams?.joinTokenSymbol} &nbsp;
+                      {actionParams?.joinTokenAddress && (
+                        <>
+                          (
+                          <AddressWithCopyButton
+                            address={actionParams.joinTokenAddress}
+                            showCopyButton={true}
+                            showAddress={true}
+                            colorClassName="text-greyscale-500"
+                          />
+                          )
+                        </>
+                      )}
+                    </span>
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -513,7 +540,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               name="minJoinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>最小参与代币数 ({token?.symbol})</FormLabel>
+                  <FormLabel>最小参与代币数 ({actionParams?.joinTokenSymbol})</FormLabel>
                   <FormControl>
                     <Input placeholder="请填写数量" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
@@ -529,12 +556,13 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               name="maxJoinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>最大参与代币数 ({token?.symbol})</FormLabel>
+                  <FormLabel>最大参与代币数 ({actionParams?.joinTokenSymbol})</FormLabel>
                   <FormControl>
                     <Input placeholder="0 为不做限制" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
                   <FormDescription className="text-xs">
-                    扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)} {token?.symbol}
+                    扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)}{' '}
+                    {actionParams?.joinTokenSymbol}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -578,8 +606,8 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
         </Form>
         {/* 小贴士（算法 + 数值） */}
         <_GroupActionTips
-          verifyCapacityMultiplier={actionParams?.verifyCapacityMultiplier}
-          maxJoinAmountMultiplier={actionParams?.maxJoinAmountMultiplier}
+          maxVerifyCapacityFactor={actionParams?.maxVerifyCapacityFactor}
+          maxJoinAmountRatio={actionParams?.maxJoinAmountRatio}
           joinMaxAmount={actionParams?.joinMaxAmount}
           groupActivationStakeAmount={actionParams?.groupActivationStakeAmount}
         />

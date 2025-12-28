@@ -65,6 +65,22 @@ export const useGroupDistrustAddress = (contractAddress: `0x${string}`) => {
 };
 
 /**
+ * Hook for center - 获取 center 合约地址
+ */
+export const useCenter = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupActionFactoryAbi,
+    functionName: 'center',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { centerAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
  * Hook for extensions - 获取所有扩展地址
  */
 export const useExtensions = (contractAddress: `0x${string}`) => {
@@ -132,8 +148,8 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
     stakeTokenAddress: `0x${string}`,
     joinTokenAddress: `0x${string}`,
     activationStakeAmount: bigint,
-    maxJoinAmountMultiplier: bigint,
-    verifyCapacityMultiplier: bigint,
+    maxJoinAmountRatio: bigint,
+    maxVerifyCapacityFactor: bigint,
   ) => {
     console.log('提交 createExtension 交易:', {
       contractAddress,
@@ -141,8 +157,8 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
       stakeTokenAddress,
       joinTokenAddress,
       activationStakeAmount,
-      maxJoinAmountMultiplier,
-      verifyCapacityMultiplier,
+      maxJoinAmountRatio,
+      maxVerifyCapacityFactor,
       isTukeMode,
     });
     return await execute([
@@ -150,8 +166,8 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
       stakeTokenAddress,
       joinTokenAddress,
       activationStakeAmount,
-      maxJoinAmountMultiplier,
-      verifyCapacityMultiplier,
+      maxJoinAmountRatio,
+      maxVerifyCapacityFactor,
     ]);
   };
 

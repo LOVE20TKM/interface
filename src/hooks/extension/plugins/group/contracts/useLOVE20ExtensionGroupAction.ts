@@ -16,19 +16,19 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 // =====================
 
 /**
- * Hook for VERIFY_CAPACITY_MULTIPLIER - 获取验证容量倍数
+ * Hook for MAX_VERIFY_CAPACITY_FACTOR - 获取验证容量系数
  */
-export const useVerifyCapacityMultiplier = (contractAddress: `0x${string}`) => {
+export const useMaxVerifyCapacityFactor = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'VERIFY_CAPACITY_MULTIPLIER',
+    functionName: 'MAX_VERIFY_CAPACITY_FACTOR',
     query: {
       enabled: !!contractAddress,
     },
   });
 
-  return { verifyCapacityMultiplier: safeToBigInt(data), isPending, error };
+  return { maxVerifyCapacityFactor: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -112,19 +112,19 @@ export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for MAX_JOIN_AMOUNT_MULTIPLIER - 获取最大加入数量乘数
+ * Hook for MAX_JOIN_AMOUNT_RATIO - 获取最大加入代币比例
  */
-export const useMaxJoinAmountMultiplier = (contractAddress: `0x${string}`) => {
+export const useMaxJoinAmountRatio = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: LOVE20ExtensionGroupActionAbi,
-    functionName: 'MAX_JOIN_AMOUNT_MULTIPLIER',
+    functionName: 'MAX_JOIN_AMOUNT_RATIO',
     query: {
       enabled: !!contractAddress,
     },
   });
 
-  return { maxJoinAmountMultiplier: safeToBigInt(data), isPending, error };
+  return { maxJoinAmountRatio: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -267,6 +267,23 @@ export const useCanVerify = (contractAddress: `0x${string}`, account: `0x${strin
 };
 
 /**
+ * Hook for capacityReductionByGroupId - 获取指定轮次和组ID的容量削减
+ */
+export const useCapacityReductionByGroupId = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupActionAbi,
+    functionName: 'capacityReductionByGroupId',
+    args: [round, groupId],
+    query: {
+      enabled: !!contractAddress && round !== undefined && groupId !== undefined,
+    },
+  });
+
+  return { capacityReduction: safeToBigInt(data), isPending, error };
+};
+
+/**
  * Hook for center - 获取 center 合约地址
  */
 export const useCenter = (contractAddress: `0x${string}`) => {
@@ -402,6 +419,23 @@ export const useInitialized = (contractAddress: `0x${string}`) => {
   });
 
   return { initialized: data as boolean | undefined, isPending, error };
+};
+
+/**
+ * Hook for isVerified - 检查指定轮次和组ID是否已验证
+ */
+export const useIsVerified = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupActionAbi,
+    functionName: 'isVerified',
+    args: [round, groupId],
+    query: {
+      enabled: !!contractAddress && round !== undefined && groupId !== undefined,
+    },
+  });
+
+  return { isVerified: data as boolean | undefined, isPending, error };
 };
 
 /**
@@ -673,6 +707,23 @@ export const useTotalJoinedAmount = (contractAddress: `0x${string}`) => {
 };
 
 /**
+ * Hook for totalJoinedAmountByGroupId - 获取指定组ID的总加入数量
+ */
+export const useTotalJoinedAmountByGroupId = (contractAddress: `0x${string}`, groupId: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: LOVE20ExtensionGroupActionAbi,
+    functionName: 'totalJoinedAmountByGroupId',
+    args: [groupId],
+    query: {
+      enabled: !!contractAddress && groupId !== undefined,
+    },
+  });
+
+  return { totalJoinedAmount: safeToBigInt(data), isPending, error };
+};
+
+/**
  * Hook for totalJoinedAmountByGroupIdByRound - 获取指定组ID和轮次的总加入数量
  */
 export const useTotalJoinedAmountByGroupIdByRound = (
@@ -811,6 +862,44 @@ export function useBurnUnclaimedReward(contractAddress: `0x${string}`) {
 
   return {
     burnUnclaimedReward,
+    isPending,
+    isConfirming,
+    writeError: error,
+    isConfirmed,
+    hash,
+    isTukeMode,
+  };
+}
+
+/**
+ * Hook for claimReward - 领取奖励
+ */
+export function useClaimReward(contractAddress: `0x${string}`) {
+  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
+    LOVE20ExtensionGroupActionAbi,
+    contractAddress,
+    'claimReward',
+  );
+
+  const claimReward = async (round: bigint) => {
+    console.log('提交 claimReward 交易:', { contractAddress, round, isTukeMode });
+    return await execute([round]);
+  };
+
+  // 错误日志记录
+  useEffect(() => {
+    if (hash) {
+      console.log('claimReward tx hash:', hash);
+    }
+    if (error) {
+      console.log('提交 claimReward 交易错误:');
+      logWeb3Error(error);
+      logError(error);
+    }
+  }, [hash, error]);
+
+  return {
+    claimReward,
     isPending,
     isConfirming,
     writeError: error,

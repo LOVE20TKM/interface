@@ -4,7 +4,7 @@
 'use client';
 
 // React
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
@@ -22,8 +22,11 @@ import { ActionInfo } from '@/src/types/love20types';
 
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
+import { useError } from '@/src/contexts/ErrorContext';
 
 // hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
+import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import {
   useJoin,
   useJoinInfo,
@@ -47,6 +50,17 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
+  const { setError } = useError();
+
+  // 获取当前轮次
+  const { currentRound, isPending: isPendingCurrentRound, error: errorCurrentRound } = useCurrentRound();
+
+  // 获取行动是否已投票
+  const {
+    isActionIdVoted,
+    isPending: isPendingVoted,
+    error: errorVoted,
+  } = useIsActionIdVoted(token?.address as `0x${string}`, currentRound || BigInt(0), actionId);
 
   // 获取加入信息
   const {
@@ -57,6 +71,12 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
 
   // 判断是否已加入（joinedRound > 0 表示已加入）
   const isJoined = joinedRound && joinedRound > BigInt(0);
+
+  // 判断是否有投票（需要等待数据加载完成）
+  const hasVotes = useMemo(() => {
+    if (isPendingCurrentRound || isPendingVoted) return true; // 加载中时默认允许，避免误判
+    return isActionIdVoted === true;
+  }, [isPendingCurrentRound, isPendingVoted, isActionIdVoted]);
 
   // 加入提交
   const {
@@ -91,7 +111,21 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
   useEffect(() => {
     if (errorJoinInfo) handleError(errorJoinInfo);
     if (errorJoin) handleError(errorJoin);
-  }, [errorJoinInfo, errorJoin, handleError]);
+    if (errorCurrentRound) handleError(errorCurrentRound);
+    if (errorVoted) handleError(errorVoted);
+  }, [errorJoinInfo, errorJoin, errorCurrentRound, errorVoted, handleError]);
+
+  // 检查投票状态并显示错误提示
+  useEffect(() => {
+    // 只在数据加载完成且未投票时设置错误
+    if (!isPendingCurrentRound && !isPendingVoted && isActionIdVoted === false) {
+      setError({
+        name: '无法参加',
+        message: '当前行动未投票，不能参加',
+      });
+    }
+    // 注意：有投票时不操作，避免清除其他错误信息
+  }, [isPendingCurrentRound, isPendingVoted, isActionIdVoted, setError]);
 
   if (isPendingJoinInfo) {
     return (
@@ -130,7 +164,7 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
         <div className="flex justify-center pt-6">
           <Button
             className="w-full max-w-md"
-            disabled={isJoined || isPendingJoin || isConfirmingJoin || isConfirmedJoin}
+            disabled={isJoined || isPendingJoin || isConfirmingJoin || isConfirmedJoin || !hasVotes}
             type="button"
             onClick={handleJoin}
           >

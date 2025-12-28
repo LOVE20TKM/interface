@@ -7,21 +7,34 @@
 import React from 'react';
 
 // 工具函数
-import { formatTokenAmount } from '@/src/lib/format';
+import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
+import { formatEther } from 'viem';
 
 interface GroupActionTipsProps {
-  verifyCapacityMultiplier?: bigint;
-  maxJoinAmountMultiplier?: bigint;
+  maxVerifyCapacityFactor?: bigint;
+  maxJoinAmountRatio?: bigint;
   joinMaxAmount?: bigint;
   groupActivationStakeAmount?: bigint;
 }
 
 const _GroupActionTips: React.FC<GroupActionTipsProps> = ({
-  verifyCapacityMultiplier,
-  maxJoinAmountMultiplier,
+  maxVerifyCapacityFactor,
+  maxJoinAmountRatio,
   joinMaxAmount,
   groupActivationStakeAmount,
 }) => {
+  // 比例分母常量 (10^16)
+  const RATIO_DENOMINATOR = BigInt('10000000000000000');
+
+  // 将 wei 格式的系数转换为实数显示
+  const capacityFactorDisplay = maxVerifyCapacityFactor ? formatEther(maxVerifyCapacityFactor) : '0';
+
+  // 将 wei 格式的比例转换为百分比显示 (wei / 1e18 * 100 = %)
+  // 先转换为 Number 再除法，避免 BigInt 整数除法截断小数部分
+  const ratioPercentageDisplay = maxJoinAmountRatio
+    ? formatPercentage(Number(maxJoinAmountRatio) / Number(RATIO_DENOMINATOR))
+    : '0%';
+
   return (
     <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
       <div className="flex items-center gap-2 text-sm font-bold text-blue-800">💡小贴士</div>
@@ -32,13 +45,12 @@ const _GroupActionTips: React.FC<GroupActionTipsProps> = ({
         </div>
         <div className="text-sm text-blue-700 pt-3">容量与质押量：</div>
         <div>
-          1. <b>链群最大容量</b> = (已铸造代币量 - 流动性质押量 - 加速激励质押量) × 治理票占比 × 验证容量倍数（为{' '}
-          {verifyCapacityMultiplier?.toString()}）
+          1. <b>理论最大容量</b> = 治理票占比 × 已铸造代币量 × 验证容量系数（为 {capacityFactorDisplay}）
         </div>
         <div className="text-sm text-blue-700 pt-3">参与代币：</div>
         <div>
-          1. <b>行动最大参与代币量</b> = 已铸造代币总量 / 最大参与代币倍数（为 {maxJoinAmountMultiplier?.toString()}）×
-          该行动投票率= {formatTokenAmount(joinMaxAmount || BigInt(0))}
+          1. <b>行动最大参与代币量</b> = 已铸造代币总量 × 最大参与代币占比（为 {ratioPercentageDisplay}）× 该行动投票率
+          = {formatTokenAmount(joinMaxAmount || BigInt(0))}
         </div>
       </div>
     </div>

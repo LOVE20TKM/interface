@@ -132,8 +132,6 @@ export const useExtensionGroupDetail = ({
     },
   });
 
-  // console.log('Group Detail Data:', detailData);
-
   // 解析数据
   const groupDetail = useMemo(() => {
     if (!detailData || detailData.length < 6) return undefined;

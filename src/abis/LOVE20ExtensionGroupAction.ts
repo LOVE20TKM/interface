@@ -41,12 +41,12 @@ export const LOVE20ExtensionGroupActionAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "maxJoinAmountMultiplier_",
+        "name": "maxJoinAmountRatio_",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "verifyCapacityMultiplier_",
+        "name": "maxVerifyCapacityFactor_",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -120,7 +120,20 @@ export const LOVE20ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "MAX_JOIN_AMOUNT_MULTIPLIER",
+    "name": "MAX_JOIN_AMOUNT_RATIO",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_VERIFY_CAPACITY_FACTOR",
     "inputs": [],
     "outputs": [
       {
@@ -140,19 +153,6 @@ export const LOVE20ExtensionGroupActionAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "VERIFY_CAPACITY_MULTIPLIER",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"

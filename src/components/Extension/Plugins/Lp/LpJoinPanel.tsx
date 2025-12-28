@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useContext, useEffect, useState, useRef } from 'react';
+import { useContext, useEffect, useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 import { toast } from 'react-hot-toast';
@@ -17,6 +17,8 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 // my hooks
 import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/src/lib/format';
 import { useContractError } from '@/src/errors/useContractError';
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
+import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
 import { useJoin, useJoinTokenAddress } from '@/src/hooks/extension/plugins/lp/contracts';
@@ -24,6 +26,7 @@ import { useJoin, useJoinTokenAddress } from '@/src/hooks/extension/plugins/lp/c
 // contexts / types / etc
 import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
+import { useError } from '@/src/contexts/ErrorContext';
 
 // my components
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -49,6 +52,17 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
+  const { setError } = useError();
+
+  // 获取当前轮次
+  const { currentRound, isPending: isPendingCurrentRound, error: errorCurrentRound } = useCurrentRound();
+
+  // 获取行动是否已投票
+  const {
+    isActionIdVoted,
+    isPending: isPendingVoted,
+    error: errorVoted,
+  } = useIsActionIdVoted(token?.address as `0x${string}`, currentRound || BigInt(0), actionId);
 
   // 获取 Join Token 地址（即 LP Token 地址）
   const {
@@ -82,6 +96,12 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
 
   // 判断治理票数是否不足
   const isGovVotesInsufficient = userGovVotes !== undefined && minGovVotes !== undefined && userGovVotes < minGovVotes;
+
+  // 判断是否有投票（需要等待数据加载完成）
+  const hasVotes = useMemo(() => {
+    if (isPendingCurrentRound || isPendingVoted) return true; // 加载中时默认允许，避免误判
+    return isActionIdVoted === true;
+  }, [isPendingCurrentRound, isPendingVoted, isActionIdVoted]);
 
   // 获取 LP Token 余额
   const { balance: lpBalance, error: errorLpBalance } = useBalanceOf(
@@ -259,7 +279,31 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     if (errorJoin) handleError(errorJoin);
     if (errAllowanceLp) handleError(errAllowanceLp);
     if (errorData) handleError(errorData);
-  }, [errorJoinToken, errorLpBalance, errApproveLp, errorJoin, errAllowanceLp, errorData, handleError]);
+    if (errorCurrentRound) handleError(errorCurrentRound);
+    if (errorVoted) handleError(errorVoted);
+  }, [
+    errorJoinToken,
+    errorLpBalance,
+    errApproveLp,
+    errorJoin,
+    errAllowanceLp,
+    errorData,
+    errorCurrentRound,
+    errorVoted,
+    handleError,
+  ]);
+
+  // 检查投票状态并显示错误提示
+  useEffect(() => {
+    // 只在数据加载完成且未投票时设置错误
+    if (!isPendingCurrentRound && !isPendingVoted && isActionIdVoted === false) {
+      setError({
+        name: '无法参加',
+        message: '当前行动未投票，不能参加',
+      });
+    }
+    // 注意：有投票时不操作，避免清除其他错误信息
+  }, [isPendingCurrentRound, isPendingVoted, isActionIdVoted, setError]);
 
   // ------------------------------
   //  组件渲染
@@ -354,7 +398,8 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                   isPendingApproveLp ||
                   isConfirmingApproveLp ||
                   isLpApproved ||
-                  isGovVotesInsufficient
+                  isGovVotesInsufficient ||
+                  !hasVotes
                 }
                 type="button"
                 onClick={() => {
@@ -377,7 +422,12 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
               <Button
                 className="w-1/2"
                 disabled={
-                  !isLpApproved || isPendingJoin || isConfirmingJoin || isConfirmedJoin || isGovVotesInsufficient
+                  !isLpApproved ||
+                  isPendingJoin ||
+                  isConfirmingJoin ||
+                  isConfirmedJoin ||
+                  isGovVotesInsufficient ||
+                  !hasVotes
                 }
                 type="button"
                 onClick={() => {

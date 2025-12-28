@@ -323,9 +323,30 @@ export function parseContractError(error: unknown): ErrorInfo | null {
     }
   }
 
+  // 6.5. 检查原始消息是否为 ERC20 格式错误（直接出现在错误消息中）
+  if (rawMessage.includes('ERC20:')) {
+    // 尝试匹配完整的 ERC20 错误消息
+    const erc20Match = rawMessage.match(/ERC20:\s*[^\n]+/i);
+    if (erc20Match) {
+      const erc20ErrorKey = erc20Match[0].trim();
+      const erc20ErrorDef = ErrorsByName[erc20ErrorKey];
+      if (erc20ErrorDef) {
+        return { name: '交易错误', message: erc20ErrorDef.message };
+      }
+    }
+  }
+
   // 7. 尝试解析原始 revert 消息
   const revertMessage = parseOriginalRevertMessage(rawMessage);
   if (revertMessage) {
+    // 优先检查是否为 ERC20 格式错误（如 "ERC20: insufficient allowance"）
+    if (revertMessage.startsWith('ERC20:')) {
+      const erc20ErrorDef = ErrorsByName[revertMessage.trim()];
+      if (erc20ErrorDef) {
+        return { name: '交易错误', message: erc20ErrorDef.message };
+      }
+    }
+
     // 再次尝试从 revert 消息中提取错误名称
     const revertErrorName = extractErrorName(revertMessage);
     if (revertErrorName) {
@@ -334,6 +355,13 @@ export function parseContractError(error: unknown): ErrorInfo | null {
         return { name: '交易错误', message: errorDef.message };
       }
     }
+
+    // 如果 revert 消息本身在映射表中（支持完整的 ERC20 错误消息）
+    const directErrorDef = ErrorsByName[revertMessage.trim()];
+    if (directErrorDef) {
+      return { name: '交易错误', message: directErrorDef.message };
+    }
+
     return { name: '交易错误', message: revertMessage };
   }
 

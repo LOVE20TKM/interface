@@ -54,6 +54,32 @@ export const useStakeAddress = () => {
 };
 
 /**
+ * Hook for GROUP_ADDRESS - 获取 group 合约地址
+ */
+export const useGroupAddress = () => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupManagerAbi,
+    functionName: 'GROUP_ADDRESS',
+  });
+
+  return { groupAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for PRECISION - 获取精度常量
+ */
+export const usePrecision = () => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupManagerAbi,
+    functionName: 'PRECISION',
+  });
+
+  return { precision: safeToBigInt(data), isPending, error };
+};
+
+/**
  * Hook for activeGroupIds - 获取所有活跃组ID列表
  */
 export const useActiveGroupIds = (tokenAddress: `0x${string}`, actionId: bigint) => {
@@ -152,13 +178,14 @@ export const useConfig = (tokenAddress: `0x${string}`, actionId: bigint) => {
     },
   });
 
-  const typedData = data as [string, bigint, bigint, bigint] | undefined;
+  const typedData = data as [string, string, bigint, bigint, bigint] | undefined;
 
   return {
     stakeTokenAddress: typedData ? (typedData[0] as `0x${string}`) : undefined,
-    activationStakeAmount: typedData ? safeToBigInt(typedData[1]) : undefined,
-    maxJoinAmountMultiplier: typedData ? safeToBigInt(typedData[2]) : undefined,
-    verifyCapacityMultiplier: typedData ? safeToBigInt(typedData[3]) : undefined,
+    joinTokenAddress: typedData ? (typedData[1] as `0x${string}`) : undefined,
+    activationStakeAmount: typedData ? safeToBigInt(typedData[2]) : undefined,
+    maxJoinAmountRatio: typedData ? safeToBigInt(typedData[3]) : undefined,
+    maxVerifyCapacityFactor: typedData ? safeToBigInt(typedData[4]) : undefined,
     isPending,
     error,
   };
@@ -520,19 +547,30 @@ export function useSetConfig() {
   );
 
   const setConfig = async (
+    tokenAddress: `0x${string}`,
     stakeTokenAddress: `0x${string}`,
+    joinTokenAddress: `0x${string}`,
     activationStakeAmount: bigint,
-    maxJoinAmountMultiplier: bigint,
-    verifyCapacityMultiplier: bigint,
+    maxJoinAmountRatio: bigint,
+    maxVerifyCapacityFactor: bigint,
   ) => {
     console.log('提交 setConfig 交易:', {
+      tokenAddress,
       stakeTokenAddress,
+      joinTokenAddress,
       activationStakeAmount,
-      maxJoinAmountMultiplier,
-      verifyCapacityMultiplier,
+      maxJoinAmountRatio,
+      maxVerifyCapacityFactor,
       isTukeMode,
     });
-    return await execute([stakeTokenAddress, activationStakeAmount, maxJoinAmountMultiplier, verifyCapacityMultiplier]);
+    return await execute([
+      tokenAddress,
+      stakeTokenAddress,
+      joinTokenAddress,
+      activationStakeAmount,
+      maxJoinAmountRatio,
+      maxVerifyCapacityFactor,
+    ]);
   };
 
   // 错误日志记录

@@ -14,7 +14,10 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useExtensionGroupsOfAccount } from '@/src/hooks/extension/plugins/group/composite';
-import { useGroupManagerAddress, useTokenAddress } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+import {
+  useGroupManagerAddress,
+  useTokenAddress,
+} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 import {
   useActiveGroupIdsByOwner,
   useMaxVerifyCapacityByOwner,
@@ -162,9 +165,7 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
         <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded mt-6 px-3 py-2">
           <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
-            <div>
-              • 您的最大可验证容量 = (已铸造代币量 - 流动性质押量 - 加速激励质押量) × 您的治理票占比 × 验证容量倍数
-            </div>
+            <div>• 您的最大可验证容量 = 已铸造代币量 × 您的治理票占比 × 验证容量系数</div>
             <div>• 超过最大可验证容量的代币，无法获得激励（这意味着，加入您链群的行动者，收益率可能会降低）</div>
           </div>
         </div>

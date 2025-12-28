@@ -1,6 +1,7 @@
 // components/Extension/Plugins/Group/GroupActionBasicInfo.tsx
 
 import React from 'react';
+import { formatEther } from 'viem';
 
 // my hooks
 import { useExtensionParams } from '@/src/hooks/extension/plugins/group/composite/useExtensionParams';
@@ -11,7 +12,7 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 // my utils
-import { formatTokenAmount } from '@/src/lib/format';
+import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 
 interface GroupActionBasicInfoProps {
   extensionAddress: `0x${string}`;
@@ -25,14 +26,17 @@ interface GroupActionBasicInfoProps {
  * 展示链群行动扩展部署时设置的基础参数
  */
 const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAddress, factoryAddress, actionId }) => {
+  // 比例分母常量 (10^16)
+  const RATIO_DENOMINATOR = BigInt('10000000000000000');
+
   // 获取扩展部署参数
   const {
     tokenAddress,
     stakeTokenAddress,
     joinTokenAddress,
     activationStakeAmount,
-    maxJoinAmountMultiplier,
-    verifyCapacityMultiplier,
+    maxJoinAmountRatio,
+    maxVerifyCapacityFactor,
     isPending,
     error,
   } = useExtensionParams(extensionAddress);
@@ -73,11 +77,18 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
     !stakeTokenAddress ||
     !joinTokenAddress ||
     activationStakeAmount === undefined ||
-    maxJoinAmountMultiplier === undefined ||
-    verifyCapacityMultiplier === undefined
+    maxJoinAmountRatio === undefined ||
+    maxVerifyCapacityFactor === undefined
   ) {
     return null;
   }
+
+  // 将 wei 格式的系数转换为实数显示
+  const capacityFactorDisplay = formatEther(maxVerifyCapacityFactor);
+
+  // 将 wei 格式的比例转换为百分比显示 (wei / 1e18 * 100 = %)
+  // 先转换为 Number 再除法，避免 BigInt 整数除法截断小数部分
+  const ratioPercentageDisplay = formatPercentage(Number(maxJoinAmountRatio) / Number(RATIO_DENOMINATOR));
 
   return (
     <div className="mt-6 bg-gray-50 rounded-lg p-4">
@@ -110,24 +121,24 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
           </div>
         </div>
 
-        {/* 最大参与代币倍数 */}
+        {/* 最大参与代币占比 */}
         <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">最大参与代币倍数:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">{maxJoinAmountMultiplier.toString()}</div>
+          <div className="text-sm font-bold mb-1">最大参与代币占比:</div>
+          <div className="font-mono text-secondary text-sm md:text-base">{ratioPercentageDisplay}</div>
         </div>
 
-        {/* 验证容量倍数 */}
+        {/* 验证容量系数 */}
         <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">验证容量倍数:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">{verifyCapacityMultiplier.toString()}</div>
+          <div className="text-sm font-bold mb-1">验证容量系数:</div>
+          <div className="font-mono text-secondary text-sm md:text-base">{capacityFactorDisplay}</div>
         </div>
       </div>
 
       {/* 说明文字 */}
       <div className="mt-4 text-xs md:text-sm text-gray-600 space-y-1">
         <div className="text-sm font-bold mb-2">小贴士：</div>
-        <p>• 单个行动者最大参与代币数 = 已铸造代币总量 / 最大参与代币倍数</p>
-        <p>• 理论最大容量 = 治理票占比 × (已铸造代币量 - 流动性质押量 - 加速激励质押量) × 验证容量倍数</p>
+        <p>• 单个行动者最大参与代币数 = 已铸造代币总量 × 最大参与代币占比</p>
+        <p>• 理论最大容量 = 治理票占比 × 已铸造代币量 × 验证容量系数</p>
       </div>
     </div>
   );

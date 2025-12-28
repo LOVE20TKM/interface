@@ -69,6 +69,19 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "function",
+    "name": "PRECISION",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "STAKE_ADDRESS",
     "inputs": [],
     "outputs": [
@@ -294,13 +307,7 @@ export const LOVE20GroupManagerAbi = [
         "internalType": "uint256"
       }
     ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -450,22 +457,27 @@ export const LOVE20GroupManagerAbi = [
     ],
     "outputs": [
       {
-        "name": "stakeTokenAddress",
+        "name": "stakeTokenAddress_",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "activationStakeAmount",
+        "name": "joinTokenAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "activationStakeAmount_",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "maxJoinAmountMultiplier",
+        "name": "maxJoinAmountRatio_",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "verifyCapacityMultiplier",
+        "name": "maxVerifyCapacityFactor_",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -627,7 +639,17 @@ export const LOVE20GroupManagerAbi = [
     "name": "setConfig",
     "inputs": [
       {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "stakeTokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "joinTokenAddress",
         "type": "address",
         "internalType": "address"
       },
@@ -637,12 +659,12 @@ export const LOVE20GroupManagerAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "maxJoinAmountMultiplier",
+        "name": "maxJoinAmountRatio",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "verifyCapacityMultiplier",
+        "name": "maxVerifyCapacityFactor",
         "type": "uint256",
         "internalType": "uint256"
       }

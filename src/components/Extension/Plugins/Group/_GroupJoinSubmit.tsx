@@ -28,9 +28,12 @@ import { ActionInfo } from '@/src/types/love20types';
 
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
+import { useError } from '@/src/contexts/ErrorContext';
 
 // hooks
 import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
+import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
@@ -62,6 +65,17 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
+  const { setError } = useError();
+
+  // 获取当前轮次
+  const { currentRound, isPending: isPendingCurrentRound, error: errorCurrentRound } = useCurrentRound();
+
+  // 获取行动是否已投票
+  const {
+    isActionIdVoted,
+    isPending: isPendingVoted,
+    error: errorVoted,
+  } = useIsActionIdVoted(token?.address as `0x${string}`, currentRound || BigInt(0), actionId);
 
   // 获取扩展常量数据（包括 joinTokenAddress 和 joinTokenSymbol）
   const {
@@ -110,6 +124,12 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     if (isJoined || !groupDetail) return false;
     return groupDetail.remainingCapacity <= BigInt(0);
   }, [isJoined, groupDetail]);
+
+  // 判断是否有投票（需要等待数据加载完成）
+  const hasVotes = useMemo(() => {
+    if (isPendingCurrentRound || isPendingVoted) return true; // 加载中时默认允许，避免误判
+    return isActionIdVoted === true;
+  }, [isPendingCurrentRound, isPendingVoted, isActionIdVoted]);
 
   // 获取代币余额
   const { balance, error: errorBalance } = useBalanceOf(
@@ -348,6 +368,8 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     if (errorJoin) handleError(errorJoin);
     if (errorVerificationInfos) handleError(errorVerificationInfos);
     if (errorConstants) handleError(errorConstants);
+    if (errorCurrentRound) handleError(errorCurrentRound);
+    if (errorVoted) handleError(errorVoted);
   }, [
     errorDetail,
     errorJoinInfo,
@@ -357,8 +379,22 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     errorJoin,
     errorVerificationInfos,
     errorConstants,
+    errorCurrentRound,
+    errorVoted,
     handleError,
   ]);
+
+  // 检查投票状态并显示错误提示
+  useEffect(() => {
+    // 只在数据加载完成且未投票时设置错误
+    if (!isPendingCurrentRound && !isPendingVoted && isActionIdVoted === false) {
+      setError({
+        name: '无法参加',
+        message: '当前行动未投票，不能参加',
+      });
+    }
+    // 注意：有投票时不操作，避免清除其他错误信息
+  }, [isPendingCurrentRound, isPendingVoted, isActionIdVoted, setError]);
 
   if (isPendingDetail || isPendingJoinInfo || isPendingConstants) {
     return (
@@ -459,9 +495,21 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                   </FormControl>
                   <FormMessage />
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
+                    <span className="flex items-center gap-1">
                       我的余额：<span className="text-secondary">{formatTokenAmount(balance || BigInt(0), 4)}</span>{' '}
-                      {joinTokenSymbol}
+                      {joinTokenSymbol} &nbsp;
+                      {joinTokenAddress && (
+                        <>
+                          (
+                          <AddressWithCopyButton
+                            address={joinTokenAddress}
+                            showCopyButton={true}
+                            showAddress={true}
+                            colorClassName="text-greyscale-500"
+                          />
+                          )
+                        </>
+                      )}
                     </span>
                     <Button
                       type="button"
@@ -529,7 +577,14 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
               <Button
                 ref={approveButtonRef}
                 className="w-1/2"
-                disabled={isPendingAllowance || isPendingApprove || isConfirmingApprove || isTokenApproved || isGroupFull}
+                disabled={
+                  isPendingAllowance ||
+                  isPendingApprove ||
+                  isConfirmingApprove ||
+                  isTokenApproved ||
+                  isGroupFull ||
+                  !hasVotes
+                }
                 type="button"
                 onClick={() => {
                   form.handleSubmit((values) => handleApprove(values))();
@@ -550,7 +605,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
               <Button
                 className="w-1/2"
-                disabled={!isTokenApproved || isPendingJoin || isConfirmingJoin || isConfirmedJoin || isGroupFull}
+                disabled={
+                  !isTokenApproved || isPendingJoin || isConfirmingJoin || isConfirmedJoin || isGroupFull || !hasVotes
+                }
                 type="button"
                 onClick={() => {
                   form.handleSubmit((values) => handleJoin(values))();

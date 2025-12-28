@@ -4,7 +4,6 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { LOVE20GroupManagerAbi } from '@/src/abis/LOVE20GroupManager';
-import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useExtensionActionConstCache } from './useExtensionActionConstCache';
 
@@ -15,8 +14,8 @@ export interface ExtensionActionParam {
   stakeTokenSymbol: string | undefined;
   joinTokenAddress: `0x${string}`;
   joinTokenSymbol: string | undefined;
-  maxJoinAmountMultiplier: bigint; // 单个行动者最大参与代币数倍数
-  verifyCapacityMultiplier: bigint; // 验证容量倍数
+  maxJoinAmountRatio: bigint; // 单个行动者最大参与代币占比（wei，1e28=100%）
+  maxVerifyCapacityFactor: bigint; // 验证容量系数（wei）
   groupActivationStakeAmount: bigint; // 激活需质押代币数量
   // 实时数据
   joinMaxAmount: bigint; // 单个行动者最大参与代币数

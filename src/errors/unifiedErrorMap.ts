@@ -285,4 +285,14 @@ export const ErrorsByName: Record<string, ErrorDef> = {
   'ZeroAddress': { name: 'ZeroAddress', message: '地址不能为零地址' },
   'ZeroBasisPoints': { name: 'ZeroBasisPoints', message: 'ZeroBasisPoints' },
   'ZeroContribution': { name: 'ZeroContribution', message: '申购数量为零' },
+  // ERC20 标准错误
+  'ERC20: insufficient allowance': { name: '授权不足', message: '代币授权额度不足，请先授权足够的代币数量' },
+  'ERC20: transfer amount exceeds balance': { name: '余额不足', message: '代币余额不足，无法完成转账' },
+  'ERC20: transfer from the zero address': { name: '无效地址', message: '不能从零地址转账' },
+  'ERC20: transfer to the zero address': { name: '无效地址', message: '不能转账到零地址' },
+  'ERC20: mint to the zero address': { name: '无效地址', message: '不能铸造到零地址' },
+  'ERC20: burn from the zero address': { name: '无效地址', message: '不能从零地址销毁' },
+  'ERC20: approve from the zero address': { name: '无效地址', message: '不能从零地址授权' },
+  'ERC20: approve to the zero address': { name: '无效地址', message: '不能授权给零地址' },
+  'ERC20: decreased allowance below zero': { name: '授权不足', message: '减少的授权额度不能小于零' },
 };

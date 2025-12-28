@@ -87,12 +87,12 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "maxJoinAmountMultiplier_",
+        "name": "maxJoinAmountRatio_",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "verifyCapacityMultiplier_",
+        "name": "maxVerifyCapacityFactor_",
         "type": "uint256",
         "internalType": "uint256"
       }

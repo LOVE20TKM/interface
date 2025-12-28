@@ -44,12 +44,12 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
       {
         address: extensionAddress,
         abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'MAX_JOIN_AMOUNT_MULTIPLIER',
+        functionName: 'MAX_JOIN_AMOUNT_RATIO',
       },
       {
         address: extensionAddress,
         abi: LOVE20ExtensionGroupActionAbi,
-        functionName: 'VERIFY_CAPACITY_MULTIPLIER',
+        functionName: 'MAX_VERIFY_CAPACITY_FACTOR',
       },
     ],
     query: {
@@ -64,8 +64,8 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
   const stakeTokenAddress = data?.[3]?.result as `0x${string}` | undefined;
   const joinTokenAddress = data?.[4]?.result as `0x${string}` | undefined;
   const activationStakeAmount = safeToBigInt(data?.[5]?.result);
-  const maxJoinAmountMultiplier = safeToBigInt(data?.[6]?.result);
-  const verifyCapacityMultiplier = safeToBigInt(data?.[7]?.result);
+  const maxJoinAmountRatio = safeToBigInt(data?.[6]?.result);
+  const maxVerifyCapacityFactor = safeToBigInt(data?.[7]?.result);
 
   return {
     tokenAddress,
@@ -74,8 +74,8 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
     stakeTokenAddress,
     joinTokenAddress,
     activationStakeAmount,
-    maxJoinAmountMultiplier,
-    verifyCapacityMultiplier,
+    maxJoinAmountRatio,
+    maxVerifyCapacityFactor,
     isPending,
     error,
   };
