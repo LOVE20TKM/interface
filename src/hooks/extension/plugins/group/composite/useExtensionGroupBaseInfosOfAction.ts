@@ -4,7 +4,7 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
-import { useGroupManagerAddress } from '../contracts';
+import { useGroupManagerAddress } from '../contracts/useLOVE20ExtensionGroupAction';
 import { useActiveGroupIds } from '../contracts/useLOVE20GroupManager';
 
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;

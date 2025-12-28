@@ -37,8 +37,8 @@ const _GroupActionTips: React.FC<GroupActionTipsProps> = ({
         </div>
         <div className="text-sm text-blue-700 pt-3">参与代币：</div>
         <div>
-          1. <b>行动最大参与代币量</b> = 已铸造代币总量 / 最大参与代币倍数（为 {maxJoinAmountMultiplier?.toString()}）={' '}
-          {formatTokenAmount(joinMaxAmount || BigInt(0))}
+          1. <b>行动最大参与代币量</b> = 已铸造代币总量 / 最大参与代币倍数（为 {maxJoinAmountMultiplier?.toString()}）×
+          该行动投票率= {formatTokenAmount(joinMaxAmount || BigInt(0))}
         </div>
       </div>
     </div>

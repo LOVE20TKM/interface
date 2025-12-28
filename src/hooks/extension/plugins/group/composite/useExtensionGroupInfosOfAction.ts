@@ -7,7 +7,7 @@ import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAc
 import { LOVE20GroupManagerAbi } from '@/src/abis/LOVE20GroupManager';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-import { useGroupManagerAddress } from '../contracts';
+import { useGroupManagerAddress } from '../contracts/useLOVE20ExtensionGroupAction';
 
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
 

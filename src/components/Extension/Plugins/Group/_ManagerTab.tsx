@@ -14,7 +14,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useExtensionGroupsOfAccount } from '@/src/hooks/extension/plugins/group/composite';
-import { useGroupManagerAddress, useTokenAddress } from '@/src/hooks/extension/plugins/group/contracts';
+import { useGroupManagerAddress, useTokenAddress } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
 import {
   useActiveGroupIdsByOwner,
   useMaxVerifyCapacityByOwner,
