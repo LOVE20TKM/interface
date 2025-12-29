@@ -289,7 +289,20 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               name="maxCapacity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>链群容量上限 ({actionParams?.joinTokenSymbol})</FormLabel>
+                  <FormLabel>
+                    链群容量上限 ({actionParams?.joinTokenSymbol}
+                    {actionParams?.joinTokenAddress && (
+                      <span className="pl-2">
+                        <AddressWithCopyButton
+                          address={actionParams.joinTokenAddress}
+                          showCopyButton={true}
+                          showAddress={true}
+                          colorClassName="text-greyscale-500"
+                        />
+                      </span>
+                    )}
+                    )
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="请输入链群容量上限" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
@@ -297,18 +310,6 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                     <span className="flex items-center gap-1">
                       您的最大容量上限：{formatTokenAmount(maxVerifyCapacity || BigInt(0))}{' '}
                       {actionParams?.joinTokenSymbol} &nbsp;
-                      {actionParams?.joinTokenAddress && (
-                        <>
-                          (
-                          <AddressWithCopyButton
-                            address={actionParams.joinTokenAddress}
-                            showCopyButton={true}
-                            showAddress={true}
-                            colorClassName="text-greyscale-500"
-                          />
-                          )
-                        </>
-                      )}
                     </span>
                   </FormDescription>
                   <FormMessage />

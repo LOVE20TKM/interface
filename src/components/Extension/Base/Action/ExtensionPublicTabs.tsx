@@ -14,6 +14,7 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LpActionPublicTabs from '@/src/components/Extension/Plugins/Lp/LpActionPublicTabs';
 import GroupActionPublicTabs from '@/src/components/Extension/Plugins/Group/GroupActionPublicTabs';
 import GroupServiceActionPublicTabs from '@/src/components/Extension/Plugins/GroupService/GroupServiceActionPublicTabs';
+import GroupServiceAddressesTab from '@/src/components/Extension/Plugins/GroupService/_GroupServiceAddressesTab';
 import ManagerTab from '@/src/components/Extension/Plugins/Group/_ManagerTab';
 
 // my types
@@ -117,6 +118,12 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
           </div>
         );
       }
+      // 根据 activeTab 渲染不同的组件
+      if (activeTab === 'addresses') {
+        // 渲染地址公示组件
+        return <GroupServiceAddressesTab extensionAddress={extensionAddress} actionId={actionId} />;
+      }
+      // 默认渲染激励公示组件
       return (
         <GroupServiceActionPublicTabs
           extensionAddress={extensionAddress}

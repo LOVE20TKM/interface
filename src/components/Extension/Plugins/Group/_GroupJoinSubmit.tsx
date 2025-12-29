@@ -426,7 +426,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
         <LeftTitle title={isJoined ? '追加代币' : '加入行动'} />
 
         {!isJoined && (
-          <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="mt-4 px-4 pt-4 pb-2 bg-gray-50 border border-gray-200 rounded-lg">
             {/* 链群信息 */}
             <div className="text-sm text-gray-600 flex items-center justify-between">
               <div>
@@ -448,9 +448,27 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
             </div>
 
             {/* 服务者 */}
-            <div className="text-gray-600 mt-2 flex items-center gap-2">
+            <div className="text-gray-600 flex items-center gap-2">
               <span className="text-sm">服务者：</span>
               <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />
+            </div>
+
+            {/* 代币信息  */}
+            <div className="text-gray-600 mt-2 flex items-center gap-2">
+              <span className="text-sm">参与代币：</span>
+              <span className="text-sm">
+                {joinTokenSymbol}{' '}
+                {joinTokenAddress && (
+                  <span className="pl-2">
+                    <AddressWithCopyButton
+                      address={joinTokenAddress}
+                      showCopyButton={true}
+                      showAddress={true}
+                      colorClassName="text-greyscale-500"
+                    />
+                  </span>
+                )}
+              </span>
             </div>
           </div>
         )}
@@ -497,19 +515,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       我的余额：<span className="text-secondary">{formatTokenAmount(balance || BigInt(0), 4)}</span>{' '}
-                      {joinTokenSymbol} &nbsp;
-                      {joinTokenAddress && (
-                        <>
-                          (
-                          <AddressWithCopyButton
-                            address={joinTokenAddress}
-                            showCopyButton={true}
-                            showAddress={true}
-                            colorClassName="text-greyscale-500"
-                          />
-                          )
-                        </>
-                      )}
+                      {joinTokenSymbol}
                     </span>
                     <Button
                       type="button"

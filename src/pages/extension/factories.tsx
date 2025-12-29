@@ -37,7 +37,7 @@ export default function ExtensionFactoriesPage() {
       <main className="flex-grow container mx-auto px-4 py-6 max-w-4xl">
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">行动工厂</h2>
+            <h2 className="text-xl font-semibold">创建扩展行动：</h2>
           </div>
           <div className="space-y-3">
             {configs.map((config) => {
@@ -54,11 +54,12 @@ export default function ExtensionFactoriesPage() {
                         size="sm"
                         className="border-secondary text-secondary hover:text-secondary-foreground px-0"
                       >
-                        添加行动&gt;&gt;
+                        创建行动&gt;&gt;
                       </Button>
                     </Link>
                   </div>
                   <div className="flex items-center">
+                    <span className="text-sm text-greyscale-500">扩展工厂合约：</span>
                     <AddressWithCopyButton address={config.factoryAddress} showAddress={true} />
                   </div>
                 </div>

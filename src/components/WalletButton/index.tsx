@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useAccount, useBalance, useConnect, useDisconnect, useChainId } from 'wagmi';
-import { formatEther } from 'viem';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -37,6 +36,9 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   const [isNetworkMismatch, setIsNetworkMismatch] = useState(false);
   const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
 
+  // 跟踪组件是否已挂载，避免在渲染期间更新状态
+  const mountedRef = useRef(false);
+
   // 获取注入式连接器
   const injectedConnector = connectors.find((c) => c.id === 'injected');
   const chainName = process.env.NEXT_PUBLIC_CHAIN_NAME ?? process.env.NEXT_PUBLIC_CHAIN;
@@ -44,11 +46,17 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
 
   // 检测钱包当前网络
   const detectWalletNetwork = async () => {
+    // 检查组件是否已挂载，避免在卸载后更新状态
+    if (!mountedRef.current) return null;
     if (typeof window === 'undefined' || !window.ethereum) return null;
 
     try {
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
       const numericChainId = parseInt(chainId, 16);
+
+      // 再次检查组件是否仍然挂载
+      if (!mountedRef.current) return null;
+
       setWalletChainId(numericChainId);
 
       // 检查网络是否匹配
@@ -68,6 +76,9 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
       toast.error('未配置目标网络');
       return false;
     }
+
+    // 检查组件是否已挂载
+    if (!mountedRef.current) return false;
 
     try {
       setIsSwitchingNetwork(true);
@@ -91,12 +102,18 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         params: [{ chainId: validChainId }],
       });
 
+      // 检查组件是否仍然挂载
+      if (!mountedRef.current) return false;
+
       toast.success(`已连接到 ${chainName}`);
 
       // 重新检测网络
       await detectWalletNetwork();
       return true;
     } catch (error: any) {
+      // 检查组件是否仍然挂载
+      if (!mountedRef.current) return false;
+
       console.log('网络切换错误:', error);
 
       // 链未添加到钱包，尝试添加
@@ -116,12 +133,18 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
             params: [addParams],
           });
 
+          // 检查组件是否仍然挂载
+          if (!mountedRef.current) return false;
+
           toast.success(`已添加并连接到 ${chainName}`);
 
           // 重新检测网络
           await detectWalletNetwork();
           return true;
         } catch (addError: any) {
+          // 检查组件是否仍然挂载
+          if (!mountedRef.current) return false;
+
           console.error('添加网络失败:', addError);
           toast.error(`添加网络失败: ${addError.message || '未知错误'}`);
           return false;
@@ -134,7 +157,10 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         return false;
       }
     } finally {
-      setIsSwitchingNetwork(false);
+      // 只在组件仍然挂载时更新状态
+      if (mountedRef.current) {
+        setIsSwitchingNetwork(false);
+      }
     }
   };
 
@@ -214,26 +240,50 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
 
   // 处理连接错误
   React.useEffect(() => {
+    if (!mountedRef.current) return;
+
     if (connectError) {
-      if (connectError.message.includes('User rejected')) {
-        toast.error('用户取消了连接请求');
-      } else if (connectError.message.includes('already pending')) {
-        toast.error('已有连接请求在处理中');
-      } else {
-        toast.error('连接失败: ' + connectError.message);
-      }
+      // 延迟显示错误，确保在渲染完成后执行
+      const timeoutId = setTimeout(() => {
+        if (!mountedRef.current) return;
+
+        if (connectError.message.includes('User rejected')) {
+          toast.error('用户取消了连接请求');
+        } else if (connectError.message.includes('already pending')) {
+          toast.error('已有连接请求在处理中');
+        } else {
+          toast.error('连接失败: ' + connectError.message);
+        }
+      }, 0);
+
+      return () => {
+        clearTimeout(timeoutId);
+      };
     }
   }, [connectError]);
 
   // 监听连接成功事件并切换网络
   const prevConnectedRef = useRef(isConnected);
   useEffect(() => {
+    // 检查组件是否已挂载
+    if (!mountedRef.current) {
+      prevConnectedRef.current = isConnected;
+      return;
+    }
+
     const handleNetworkCheck = async () => {
       // 只在从未连接变为已连接时处理
       if (!prevConnectedRef.current && isConnected && address) {
+        // 再次检查组件是否仍然挂载
+        if (!mountedRef.current) return;
+
         if (chainId) {
           const chainName = process.env.NEXT_PUBLIC_CHAIN_NAME || config.chains[0]?.name || '目标网络';
           const switched = await switchToValidNetwork(chainId);
+
+          // 检查组件是否仍然挂载
+          if (!mountedRef.current) return;
+
           if (!switched) {
             toast.error(`网络切换失败，请手动切换到${chainName}`);
           }
@@ -241,17 +291,37 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
       }
     };
 
-    if (!isTukeWallet()) {
-      handleNetworkCheck();
-    }
+    // 延迟执行，确保在渲染完成后执行
+    const timeoutId = setTimeout(() => {
+      if (!isTukeWallet() && mountedRef.current) {
+        handleNetworkCheck();
+      }
+    }, 0);
+
     prevConnectedRef.current = isConnected;
-  }, [isConnected, address]);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [isConnected, address, chainId]);
+
+  // 标记组件已挂载
+  useLayoutEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // 监听钱包网络变化
   useEffect(() => {
     if (typeof window === 'undefined' || !window.ethereum) return;
+    if (!mountedRef.current) return;
 
     const handleChainChanged = async (chainId: string) => {
+      // 检查组件是否仍然挂载
+      if (!mountedRef.current) return;
+
       console.log('钱包网络已切换:', chainId);
       const numericChainId = parseInt(chainId, 16);
       setWalletChainId(numericChainId);
@@ -266,13 +336,26 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
     };
 
     const handleAccountsChanged = async (accounts: string[]) => {
+      // 检查组件是否仍然挂载
+      if (!mountedRef.current) return;
+
       console.log('钱包账户已切换:', accounts);
       if (accounts.length === 0) {
-        // 用户断开连接
+        // 用户断开连接 - 主动断开 wagmi 连接
+        disconnect();
         setWalletChainId(null);
         setIsNetworkMismatch(false);
       } else {
-        // 重新检测网络
+        // 账户切换 - 检查地址是否真的变化了
+        const newAddress = accounts[0]?.toLowerCase();
+        const currentAddress = address?.toLowerCase();
+
+        if (newAddress && newAddress !== currentAddress) {
+          // 地址确实变化了，显示提示
+          toast.success(`账户已切换: ${shortenAddress(accounts[0])}`);
+        }
+
+        // 重新检测网络（wagmi 会自动更新账户状态）
         await detectWalletNetwork();
       }
     };
@@ -281,12 +364,22 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
     window.ethereum.on('chainChanged', handleChainChanged);
     window.ethereum.on('accountsChanged', handleAccountsChanged);
 
-    // 初始检测网络
-    if (isConnected) {
-      detectWalletNetwork();
+    // 延迟初始网络检测，确保在渲染完成后执行
+    // 使用 setTimeout 将状态更新推迟到下一个事件循环
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    if (isConnected && mountedRef.current) {
+      timeoutId = setTimeout(() => {
+        if (mountedRef.current) {
+          detectWalletNetwork();
+        }
+      }, 0);
     }
 
     return () => {
+      // 清理定时器
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       // 清理事件监听器
       if (window.ethereum) {
         window.ethereum.removeListener('chainChanged', handleChainChanged);

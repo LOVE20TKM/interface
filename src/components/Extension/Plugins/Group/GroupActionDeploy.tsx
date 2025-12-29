@@ -236,7 +236,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
       <Card className="border-0 shadow-none">
         <CardHeader className="px-4 md:px-6 pb-4 md:pb-6 pt-4 md:pt-6">
           <CardTitle className="text-xl md:text-2xl">部署链群行动扩展合约</CardTitle>
-          <CardDescription className="text-sm">每1个新的链群行动，都对应1个专属扩展合约</CardDescription>
+          <CardDescription className="text-sm"></CardDescription>
         </CardHeader>
         <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
           <Form {...form}>
@@ -247,12 +247,12 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 name="stakeTokenAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>1. 服务者质押代币合约地址</FormLabel>
+                    <FormLabel>1. 服务者质押代币地址</FormLabel>
                     <FormControl>
                       <Input type="text" placeholder="0x..." disabled={approvalStep !== 'idle'} {...field} />
                     </FormControl>
                     <FormDescription className="text-sm text-greyscale-500">
-                      所在社群的代币合约地址，也可设置为 LP 地址等
+                      所在社群的代币合约地址，或 LP 地址
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -265,7 +265,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 name="joinTokenAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>2. 参与行动时使用的代币地址</FormLabel>
+                    <FormLabel>2. 参与行动代币地址</FormLabel>
                     <FormControl>
                       <Input type="text" placeholder="0x..." disabled={approvalStep !== 'idle'} {...field} />
                     </FormControl>
@@ -283,7 +283,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 name="activationStakeAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>3. 激活链群需质押的代币数</FormLabel>
+                    <FormLabel>3. 激活链群需质押代币数</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -306,7 +306,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 name="maxJoinAmountRatio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>4. 最大参与代币占比（%）</FormLabel>
+                    <FormLabel>4. 最大参与代币占比</FormLabel>
                     <FormControl>
                       <div className="flex items-center gap-2 max-w-40 md:max-w-xs">
                         <Input
@@ -425,11 +425,13 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                     </Button>
                   </div>
 
-                  <div>
-                    <div className="flex items-center gap-2 mt-2 mb-1">
-                      <div className="text-sm font-medium text-gray-700 mb-1">💡 小贴士：</div>
+                  {/* 提示信息 */}
+                  <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
+                    <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
+                    <div className="space-y-1 text-gray-600">
+                      <div>• 每个新的扩展行动，都需部署1个专属扩展合约</div>
+                      <div>• 需将 1个 {tokenSymbol} 转给合约地址，用于扩展合约初始化</div>
                     </div>
-                    <p className="text-sm text-greyscale-500">需转 1个 {tokenSymbol} 给合约地址，用于扩展协议初始化</p>
                   </div>
                 </>
               )}

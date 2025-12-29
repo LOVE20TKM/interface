@@ -28,7 +28,7 @@ interface LpCurrentTabProps {
 const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddress, actionId }) => {
   const { address: account } = useAccount();
 
-  const { participants, govRatioMultiplier, isPending, error } = useLpActionAccounts({
+  const { participants, isPending, error } = useLpActionAccounts({
     extensionAddress,
     tokenAddress,
     actionId,
@@ -72,7 +72,7 @@ const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddr
           <tr className="border-b border-gray-100">
             <th className="px-2 text-left">地址</th>
             <th className="px-2 text-right">治理票/LP</th>
-            <th className="px-2 text-right">激励占比</th>
+            <th className="px-2 text-right">加入轮次</th>
           </tr>
         </thead>
         <tbody>
@@ -96,17 +96,7 @@ const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddr
                   </div>
                 </div>
               </td>
-              <td className="px-2 text-right">
-                {(() => {
-                  // 计算激励占比：min(participant.govVotesRatio * govRatioMultiplier, participant.lpRatio)
-                  if (!govRatioMultiplier) {
-                    return formatPercentage(participant.rewardRatio * 100);
-                  }
-                  const govVotesRatioMultiplied = participant.govVotesRatio * Number(govRatioMultiplier);
-                  const calculatedRewardRatio = Math.min(govVotesRatioMultiplied, participant.lpRatio);
-                  return formatPercentage(calculatedRewardRatio * 100);
-                })()}
-              </td>
+              <td className="px-2 text-right">{formatNumber(participant.joinedRound)}</td>
             </tr>
           ))}
         </tbody>

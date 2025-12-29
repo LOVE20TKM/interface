@@ -116,8 +116,8 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
       <div className="text-center py-6">
         <p className="text-gray-500 mb-2">暂无被激活的链群</p>
         <div className="">
-          <Button asChild className="w-1/2">
-            <Link href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}>激活链群</Link>
+          <Button asChild className="w-1/2 text-secondary border-secondary" variant="outline">
+            <Link href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}>去激活链群 &gt;&gt;</Link>
           </Button>
         </div>
       </div>

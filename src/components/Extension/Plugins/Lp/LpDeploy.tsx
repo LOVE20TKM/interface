@@ -160,7 +160,6 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
     }
   }, [approveError]);
 
-
   /**
    * 步骤1: 授权代币
    */
@@ -209,7 +208,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
       <Card className="border-0 shadow-none">
         <CardHeader className="px-4 md:px-6 pb-4 md:pb-6 pt-4 md:pt-6">
           <CardTitle className="text-xl md:text-2xl">部署LP池行动扩展合约</CardTitle>
-          <CardDescription className="text-sm">每1个新的LP池行动，都对应1个专属扩展合约</CardDescription>
+          <CardDescription className="text-sm"></CardDescription>
         </CardHeader>
         <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
           <Form {...form}>
@@ -238,7 +237,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                 name="waitingBlocks"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>2. 等待区块数</FormLabel>
+                    <FormLabel>2. 退出需等待的区块数</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -277,7 +276,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                       />
                     </FormControl>
                     <FormDescription className="text-sm text-greyscale-500">
-                      "治理票占比" 是 "LP占比" 的多少倍
+                      LP占比超过 (治理票占比 × 治理比率乘数) 的部分，不再有收益
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -290,7 +289,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                 name="minGovVotes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>4. 最小治理票数</FormLabel>
+                    <FormLabel>4. 加入行动所需最小治理票数</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -307,72 +306,85 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                 )}
               />
 
-            {/* 错误信息 */}
-            {writeError && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">错误: {writeError.message}</p>
-              </div>
-            )}
+              {/* 错误信息 */}
+              {writeError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">错误: {writeError.message}</p>
+                </div>
+              )}
 
-            {/* 部署成功 - 显示扩展地址 */}
-            {deployedExtensionAddress && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🎉</span>
-                  <p className="text-base font-semibold text-green-700">扩展部署完成！</p>
+              {/* 部署成功 - 显示扩展地址 */}
+              {deployedExtensionAddress && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">🎉</span>
+                    <p className="text-base font-semibold text-green-700">扩展部署完成！</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-greyscale-600">扩展合约地址:</p>
+                    <AddressWithCopyButton address={deployedExtensionAddress} showAddress={true} />
+                  </div>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded space-y-3">
+                    <p className="text-sm text-blue-700">✨ 扩展已部署！现在可以使用此扩展地址创建行动。</p>
+                    <Button className="w-full" asChild>
+                      <Link
+                        href={`/action/new/?symbol=${tokenSymbol}&extension=${deployedExtensionAddress}`}
+                        rel="noopener noreferrer"
+                      >
+                        立即创建行动
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-greyscale-600">扩展合约地址:</p>
-                  <AddressWithCopyButton address={deployedExtensionAddress} showAddress={true} />
-                </div>
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded space-y-3">
-                  <p className="text-sm text-blue-700">✨ 扩展已部署！现在可以使用此扩展地址创建行动。</p>
-                  <Button className="w-full" asChild>
-                    <Link
-                      href={`/action/new/?symbol=${tokenSymbol}&extension=${deployedExtensionAddress}`}
-                      rel="noopener noreferrer"
+              )}
+
+              {/* 授权和部署按钮 */}
+              {!deployedExtensionAddress && (
+                <>
+                  <div className="flex space-x-4 w-full">
+                    <Button
+                      type="button"
+                      onClick={handleApprove}
+                      className="w-1/2"
+                      disabled={
+                        isApprovePending ||
+                        isApproveConfirming ||
+                        approvalStep === 'approved' ||
+                        approvalStep === 'deploying' ||
+                        approvalStep === 'deployed'
+                      }
                     >
-                      立即创建行动
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            )}
+                      {isApprovePending
+                        ? '1.提交中...'
+                        : isApproveConfirming
+                        ? '1.确认中...'
+                        : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
+                        ? '1.代币已授权'
+                        : '1.授权代币'}
+                    </Button>
 
-            {/* 授权和部署按钮 */}
-            {!deployedExtensionAddress && (
-              <div className="flex space-x-4 w-full">
-                <Button
-                  type="button"
-                  onClick={handleApprove}
-                  className="w-1/2"
-                  disabled={
-                    isApprovePending ||
-                    isApproveConfirming ||
-                    approvalStep === 'approved' ||
-                    approvalStep === 'deploying' ||
-                    approvalStep === 'deployed'
-                  }
-                >
-                  {isApprovePending
-                    ? '1.提交中...'
-                    : isApproveConfirming
-                    ? '1.确认中...'
-                    : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
-                    ? '1.代币已授权'
-                    : '1.授权代币'}
-                </Button>
+                    <Button
+                      type="button"
+                      onClick={() => form.handleSubmit(handleDeploy)()}
+                      className="w-1/2"
+                      disabled={
+                        (approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming
+                      }
+                    >
+                      {isPending ? '2.部署中...' : isConfirming ? '2.确认中...' : '2.部署扩展'}
+                    </Button>
+                  </div>
 
-                <Button
-                  type="button"
-                  onClick={() => form.handleSubmit(handleDeploy)()}
-                  className="w-1/2"
-                  disabled={(approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming}
-                >
-                  {isPending ? '2.部署中...' : isConfirming ? '2.确认中...' : '2.部署扩展'}
-                </Button>
-              </div>
-            )}
+                  {/* 提示信息 */}
+                  <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
+                    <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
+                    <div className="space-y-1 text-gray-600">
+                      <div>• 每个新的扩展行动，都需部署1个专属扩展合约</div>
+                      <div>• 需将 1个 {tokenSymbol} 转给合约地址，用于扩展合约初始化</div>
+                    </div>
+                  </div>
+                </>
+              )}
             </form>
           </Form>
         </CardContent>

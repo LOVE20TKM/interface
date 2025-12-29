@@ -21,7 +21,7 @@ interface _RewardDistributionByGroupDialogProps {
   actionId: bigint;
   /** 行动标题 */
   actionTitle: string;
-  /** 链群 ID */
+  /** 链群NFT */
   groupId: bigint;
   /** 链群名称 */
   groupName: string | undefined;

@@ -31,7 +31,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 export interface UseAccountsByGroupIdByRoundParams {
   /** 扩展合约地址 */
   extensionAddress: `0x${string}`;
-  /** 链群 ID */
+  /** 链群NFT */
   groupId: bigint;
   /** 轮次 */
   round: bigint;

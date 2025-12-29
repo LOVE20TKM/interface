@@ -20,6 +20,7 @@ import { ActionInfo } from '@/src/types/love20types';
 import _GroupDistrustTab from './_GroupDistrustTab';
 import _GroupsTab from './_GroupsTab';
 import _ManagerTab from './_ManagerTab';
+import _GroupRewardTab from './_GroupRewardTab';
 
 interface GroupActionPublicTabsProps {
   actionId: bigint;
@@ -27,7 +28,7 @@ interface GroupActionPublicTabsProps {
   extensionAddress: `0x${string}`;
 }
 
-type GroupSubTab = 'groups' | 'distrust';
+type GroupSubTab = 'groups' | 'distrust' | 'reward';
 
 const GroupActionPublicTabs: React.FC<GroupActionPublicTabsProps> = ({ actionId, actionInfo, extensionAddress }) => {
   const router = useRouter();
@@ -38,7 +39,7 @@ const GroupActionPublicTabs: React.FC<GroupActionPublicTabsProps> = ({ actionId,
 
   // 初始化子tab状态
   useEffect(() => {
-    if (tab2 && ['groups', 'distrust'].includes(tab2 as string)) {
+    if (tab2 && ['groups', 'distrust', 'reward'].includes(tab2 as string)) {
       setActiveTab(tab2 as GroupSubTab);
     }
   }, [tab2]);
@@ -64,9 +65,16 @@ const GroupActionPublicTabs: React.FC<GroupActionPublicTabsProps> = ({ actionId,
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={handleSubTabChange} className="w-full">
-        <TabsList className="grid grid-cols-2 bg-muted rounded-lg p-1 mb-4 mx-16">
-          <TabsTrigger value="groups">链群</TabsTrigger>
-          <TabsTrigger value="distrust">不信任票</TabsTrigger>
+        <TabsList className="grid grid-cols-3 bg-muted rounded-lg p-1 mb-4 mx-8">
+          <TabsTrigger value="groups" className="px-6">
+            链群
+          </TabsTrigger>
+          <TabsTrigger value="distrust" className="px-6">
+            不信任票
+          </TabsTrigger>
+          <TabsTrigger value="reward" className="px-6">
+            激励公示
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="groups" className="mt-0">
@@ -75,6 +83,10 @@ const GroupActionPublicTabs: React.FC<GroupActionPublicTabsProps> = ({ actionId,
 
         <TabsContent value="distrust" className="mt-0">
           <_GroupDistrustTab actionId={actionId} actionInfo={actionInfo} extensionAddress={extensionAddress} />
+        </TabsContent>
+
+        <TabsContent value="reward" className="mt-0">
+          <_GroupRewardTab actionId={actionId} actionInfo={actionInfo} extensionAddress={extensionAddress} />
         </TabsContent>
       </Tabs>
     </div>

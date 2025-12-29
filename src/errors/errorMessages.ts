@@ -83,7 +83,7 @@ export const ErrorMessages: Record<string, string> = {
   MinStakeZero: '最小参与代币数必须大于0',
   ModifierAddressCannotBeZero: '修改者地址不能为零地址',
   MultipleActionIdsFound: 'MultipleActionIdsFound',
-  NoActiveGroups: 'NoActiveGroups',
+  NoActiveGroups: '您当前没有激活的链群，不能参加行动',
   NoContribution: '没有申购记录',
   NoDataForRound: 'NoDataForRound',
   NoJoinedAmount: 'NoJoinedAmount',

@@ -39,7 +39,7 @@ export interface AccountJoinInfo {
   joinedRound: bigint;
   /** 参与的代币数量 */
   amount: bigint;
-  /** 参与的链群 ID */
+  /** 参与的链群NFT */
   groupId: bigint;
 }
 
@@ -49,7 +49,7 @@ export interface AccountJoinInfo {
 export interface UseAccountInfosByGroupIdByRoundParams {
   /** 扩展合约地址 */
   extensionAddress: `0x${string}`;
-  /** 链群 ID */
+  /** 链群NFT */
   groupId: bigint;
   /** 轮次 */
   round: bigint;
@@ -83,7 +83,7 @@ export interface UseAccountInfosByGroupIdByRoundResult {
  * joinInfo 返回值结构：
  * - [0]: joinedRound - 参与的轮次
  * - [1]: amount - 参与的代币数量
- * - [2]: groupId - 参与的链群 ID
+ * - [2]: groupId - 参与的链群NFT
  *
  * @example
  * ```typescript
@@ -100,7 +100,7 @@ export interface UseAccountInfosByGroupIdByRoundResult {
  *     console.log('地址:', info.address);
  *     console.log('参与数量:', info.amount);
  *     console.log('参与轮次:', info.joinedRound);
- *     console.log('链群 ID:', info.groupId);
+ *     console.log('链群NFT:', info.groupId);
  *   });
  * }
  * ```

@@ -22,6 +22,7 @@ export interface LpParticipant {
   lpRatio: number;
   govVotesRatio: number;
   rewardRatio: number;
+  joinedRound: bigint;
 }
 
 export interface UseLpActionAccountsParams {
@@ -220,6 +221,7 @@ export const useLpActionAccounts = ({
       const joinInfoResult = detailData[joinInfoIndex]?.result as [bigint, bigint, bigint, bigint] | undefined;
       const govVotesResult = detailData[govVotesIndex]?.result;
 
+      const joinedRound = joinInfoResult ? safeToBigInt(joinInfoResult[0]) : BigInt(0);
       const lpAmount = joinInfoResult ? safeToBigInt(joinInfoResult[1]) : BigInt(0);
       const govVotes = safeToBigInt(govVotesResult);
 
@@ -242,6 +244,7 @@ export const useLpActionAccounts = ({
         lpRatio: Number(lpRatioBigInt) / Number(LP_RATIO_PRECISION),
         govVotesRatio: Number(govVotes) / Number(totalGovVotes),
         rewardRatio: 0, // 稍后计算
+        joinedRound,
       });
     }
 
@@ -269,5 +272,3 @@ export const useLpActionAccounts = ({
     error: basicError || detailError,
   };
 };
-
-

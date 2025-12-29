@@ -184,7 +184,7 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
         <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
           <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
-            <div>• 在进行中的行动中有激活的链群，才可参加本行动</div>
+            <div>• 有激活链群的地址，才可参加本行动</div>
             <div>• 可在验证阶段设置激励分配地址和比例</div>
           </div>
         </div>

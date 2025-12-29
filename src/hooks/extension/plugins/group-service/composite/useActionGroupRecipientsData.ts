@@ -32,7 +32,7 @@ import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/use
  * 链群的二次分配数据
  */
 export interface GroupRecipientData {
-  /** 链群 ID */
+  /** 链群NFT */
   groupId: bigint;
   /** 链群名称 */
   groupName: string | undefined;

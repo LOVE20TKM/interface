@@ -205,13 +205,9 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
                 <FormItem>
                   <FormLabel>代理地址</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="输入代理打分地址，留空表示取消原打分代理"
-                      className="!ring-secondary-foreground"
-                      {...field}
-                    />
+                    <Input placeholder="输入代理打分地址" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
-                  <FormDescription className="text-xs">不填表示取消代理</FormDescription>
+                  <FormDescription className="text-xs"></FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -240,7 +236,6 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
             <div>• 打分代理可以代替您对链群进行验证打分</div>
             <div>• 代理人不需要是链群所有者</div>
             <div>• 可以随时更换或取消代理</div>
-            <div>• 留空提交或点击"取消代理"按钮可恢复自己打分</div>
           </div>
         </div>
       </div>

@@ -67,8 +67,8 @@ export default function MyGroups() {
 
       {myGroups.length === 0 ? (
         <div className="text-center text-sm text-greyscale-400 p-8">
-          <div className="mb-2">您还没有链群 ID</div>
-          <div className="text-xs">去铸造一个链群 ID 吧！</div>
+          <div className="mb-2">您还没有链群NFT</div>
+          <div className="text-xs">去铸造一个链群NFT 吧！</div>
         </div>
       ) : (
         <div className="overflow-x-auto">

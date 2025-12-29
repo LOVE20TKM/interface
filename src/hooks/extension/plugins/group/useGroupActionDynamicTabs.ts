@@ -55,7 +55,7 @@ export const useGroupActionDynamicTabs = (params: UseGroupActionDynamicTabsParam
   // 判断参数是否完整
   const isParamsValid = !!tokenAddress && actionId !== undefined && !!account && enabled;
 
-  // 获取当前用户作为链群服务者的活跃链群 ID 列表
+  // 获取当前用户作为链群服务者的活跃链群NFT 列表
   const { activeGroupIds, isPending } = useActiveGroupIdsByOwner(
     tokenAddress as `0x${string}`,
     actionId as bigint,

@@ -143,7 +143,7 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
             </div>
             {onBack && (
               <button onClick={onBack} className="text-sm text-secondary hover:underline cursor-pointer">
-                返回列表&gt;&gt;
+                返回&gt;&gt;
               </button>
             )}
           </div>

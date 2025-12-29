@@ -26,7 +26,7 @@ import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/co
  * 链群激励信息
  */
 export interface GroupRewardInfo {
-  /** 链群 ID */
+  /** 链群NFT */
   groupId: bigint;
   /** 链群名称 */
   groupName: string | undefined;

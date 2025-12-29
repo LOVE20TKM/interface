@@ -217,18 +217,14 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
                     </div>
                   </td>
                   <td className="px-1 text-center">
-                    {item.hasRecipients ? (
-                      <Button
-                        variant="link"
-                        className="text-secondary text-sm font-normal"
-                        size="sm"
-                        onClick={() => handleViewDetail(item.account)}
-                      >
-                        查看
-                      </Button>
-                    ) : (
-                      <span className="text-greyscale-400 text-xs">-</span>
-                    )}
+                    <Button
+                      variant="link"
+                      className="text-secondary text-sm font-normal"
+                      size="sm"
+                      onClick={() => handleViewDetail(item.account)}
+                    >
+                      查看
+                    </Button>
                   </td>
                 </tr>
               ))}

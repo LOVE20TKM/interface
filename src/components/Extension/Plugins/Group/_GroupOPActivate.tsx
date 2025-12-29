@@ -413,53 +413,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
         <div>
           <LeftTitle title="激活链群" />
         </div>
-        <div
-          className={`p-4 border rounded-lg ${
-            userBalance !== undefined && userBalance < stakeAmount
-              ? 'bg-red-50 border-red-200'
-              : 'bg-blue-50 border-blue-200'
-          }`}
-        >
-          <div
-            className={`text-sm mb-1 ${
-              userBalance !== undefined && userBalance < stakeAmount ? 'text-red-800' : 'text-gray-800'
-            }`}
-          >
-            激活链群需质押代币：
-          </div>
-          <div
-            className={`text-lg font-semibold ${
-              userBalance !== undefined && userBalance < stakeAmount ? 'text-red-900' : 'text-blue-900'
-            }`}
-          >
-            <span className="flex items-center gap-1">
-              {formatTokenAmount(stakeAmount, 4, 'ceil')}{' '}
-              <span className="text-sm text-gray-600">{actionParams?.stakeTokenSymbol}</span> &nbsp;
-              {actionParams?.stakeTokenAddress && (
-                <span className="gap-0">
-                  <span className="text-xs text-gray-600">(</span>
-                  <AddressWithCopyButton
-                    address={actionParams.stakeTokenAddress}
-                    showCopyButton={true}
-                    showAddress={true}
-                    colorClassName="text-greyscale-500"
-                  />
-                  <span className="text-xs text-gray-600">)</span>
-                </span>
-              )}
-            </span>
-          </div>
-          <div
-            className={`text-xs mt-1 ${
-              userBalance !== undefined && userBalance < stakeAmount ? 'text-red-600' : 'text-gray-600'
-            }`}
-          >
-            当前余额：{formatTokenAmount(userBalance || BigInt(0))} {actionParams?.stakeTokenSymbol}
-          </div>
-          {userBalance !== undefined && userBalance < stakeAmount && (
-            <div className="text-xs text-red-700 font-medium mt-2">⚠️ 余额不足，无法激活链群</div>
-          )}
-        </div>
         {/* 链群选择器（如果没有传入 groupId） */}
         {!groupId && (
           <div className="space-y-2">
@@ -488,26 +441,26 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               name="maxCapacity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>链群容量上限 ({actionParams?.joinTokenSymbol})</FormLabel>
+                  <FormLabel>
+                    链群容量上限 ({actionParams?.joinTokenSymbol}
+                    {actionParams?.stakeTokenAddress && (
+                      <span className="gap-0 pl-2">
+                        <AddressWithCopyButton
+                          address={actionParams.stakeTokenAddress}
+                          showCopyButton={true}
+                          showAddress={true}
+                          colorClassName="text-greyscale-500"
+                        />
+                      </span>
+                    )}
+                    )
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="请填写数量" className="!ring-secondary-foreground flex-1" {...field} />
                   </FormControl>
                   <FormDescription className="text-xs">
                     <span className="flex items-center gap-1">
-                      当前您的最大容量为 {formatTokenAmount(maxVerifyCapacity || BigInt(0))}{' '}
-                      {actionParams?.joinTokenSymbol} &nbsp;
-                      {actionParams?.joinTokenAddress && (
-                        <>
-                          (
-                          <AddressWithCopyButton
-                            address={actionParams.joinTokenAddress}
-                            showCopyButton={true}
-                            showAddress={true}
-                            colorClassName="text-greyscale-500"
-                          />
-                          )
-                        </>
-                      )}
+                      您的最大容量为 {formatTokenAmount(maxVerifyCapacity || BigInt(0))} {actionParams?.joinTokenSymbol}
                     </span>
                   </FormDescription>
                   <FormMessage />
@@ -584,6 +537,43 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                 </FormItem>
               )}
             />
+
+            {/* 质押代币提醒 */}
+            <div
+              className={`p-4 border rounded-lg ${
+                userBalance !== undefined && userBalance < stakeAmount
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-blue-50 border-blue-200'
+              }`}
+            >
+              <div
+                className={`text-sm mb-1 ${
+                  userBalance !== undefined && userBalance < stakeAmount ? 'text-red-800' : 'text-gray-800'
+                }`}
+              >
+                激活链群需质押代币：
+              </div>
+              <div
+                className={`text-lg font-semibold ${
+                  userBalance !== undefined && userBalance < stakeAmount ? 'text-red-900' : 'text-blue-900'
+                }`}
+              >
+                <span className="flex items-center gap-1">
+                  {formatTokenAmount(stakeAmount, 4, 'ceil')}{' '}
+                  <span className="text-sm text-gray-600">{actionParams?.stakeTokenSymbol}</span>
+                </span>
+              </div>
+              <div
+                className={`text-xs mt-1 ${
+                  userBalance !== undefined && userBalance < stakeAmount ? 'text-red-600' : 'text-gray-600'
+                }`}
+              >
+                当前余额：{formatTokenAmount(userBalance || BigInt(0))} {actionParams?.stakeTokenSymbol}
+              </div>
+              {userBalance !== undefined && userBalance < stakeAmount && (
+                <div className="text-xs text-red-700 font-medium mt-2">⚠️ 余额不足，无法激活链群</div>
+              )}
+            </div>
 
             {/* 按钮 */}
             <_GroupTokenApproveButtons
