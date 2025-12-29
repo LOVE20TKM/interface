@@ -24,11 +24,6 @@ export const LOVE20ExtensionGroupServiceAbi = [
         "name": "groupActionFactoryAddress_",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "maxRecipients_",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "nonpayable"
@@ -36,6 +31,19 @@ export const LOVE20ExtensionGroupServiceAbi = [
   {
     "type": "function",
     "name": "BASIS_POINTS_BASE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "DEFAULT_MAX_RECIPIENTS",
     "inputs": [],
     "outputs": [
       {
@@ -68,19 +76,6 @@ export const LOVE20ExtensionGroupServiceAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "MAX_RECIPIENTS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"

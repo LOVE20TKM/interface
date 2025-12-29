@@ -64,13 +64,13 @@ export const useGroupActionFactoryAddress = (contractAddress: `0x${string}`) => 
 };
 
 /**
- * Hook for MAX_RECIPIENTS - 获取最大接收者数量
+ * Hook for DEFAULT_MAX_RECIPIENTS - 获取默认最大接收者数量
  */
 export const useMaxRecipients = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: LOVE20ExtensionGroupServiceAbi,
-    functionName: 'MAX_RECIPIENTS',
+    functionName: 'DEFAULT_MAX_RECIPIENTS',
     query: {
       enabled: !!contractAddress,
     },

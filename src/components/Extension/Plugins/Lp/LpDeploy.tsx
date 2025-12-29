@@ -2,24 +2,66 @@
 
 import { useState, useContext, useEffect } from 'react';
 import Link from 'next/link';
-import { TokenContext } from '@/src/contexts/TokenContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts';
-import { LOVE20ExtensionFactoryLpAbi } from '@/src/abis/LOVE20ExtensionFactoryLp';
-import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
-import { clearContractInfoCache } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
-import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { isAddress, parseEther, parseEventLogs } from 'viem';
 import { useWaitForTransactionReceipt } from 'wagmi';
+import { z } from 'zod';
+import { TokenContext } from '@/src/contexts/TokenContext';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts';
+import { LOVE20ExtensionFactoryLpAbi } from '@/src/abis/LOVE20ExtensionFactoryLp';
+import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 
 interface LpDeployProps {
   factoryAddress: `0x${string}`;
 }
+
+// 表单验证 schema
+const formSchema = z.object({
+  joinTokenAddress: z
+    .string()
+    .min(1, { message: '请输入LP Token地址' })
+    .refine((val): val is string => isAddress(val), { message: 'LP Token地址格式无效' }),
+  waitingBlocks: z
+    .string()
+    .min(1, { message: '请输入等待区块数' })
+    .refine(
+      (val) => {
+        const num = parseFloat(val);
+        return !isNaN(num) && num >= 0 && Number.isInteger(num);
+      },
+      { message: '等待区块数必须是非负整数' },
+    ),
+  govRatioMultiplier: z
+    .string()
+    .min(1, { message: '请输入治理比率乘数' })
+    .refine(
+      (val) => {
+        const num = parseFloat(val);
+        return !isNaN(num) && num >= 0 && Number.isInteger(num);
+      },
+      { message: '治理比率乘数必须是非负整数' },
+    ),
+  minGovVotes: z
+    .string()
+    .min(1, { message: '请输入最小治理票数' })
+    .refine(
+      (val) => {
+        const num = parseFloat(val);
+        return !isNaN(num) && num >= 0;
+      },
+      { message: '最小治理票数必须是非负数' },
+    ),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 /**
  * LP扩展部署组件
@@ -29,11 +71,17 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
   const tokenSymbol = context?.token?.symbol || '';
 
-  // 表单状态
-  const [joinTokenAddress, setJoinTokenAddress] = useState(''); // LP Token地址
-  const [waitingBlocks, setWaitingBlocks] = useState(''); // 等待区块数
-  const [govRatioMultiplier, setGovRatioMultiplier] = useState('');
-  const [minGovVotes, setMinGovVotes] = useState('');
+  // 表单实例
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      joinTokenAddress: '',
+      waitingBlocks: '',
+      govRatioMultiplier: '',
+      minGovVotes: '',
+    },
+    mode: 'onChange', // 实时验证
+  });
 
   const { createExtension, isPending, isConfirming, isConfirmed, writeError, hash } =
     useCreateExtension(factoryAddress);
@@ -112,57 +160,6 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
     }
   }, [approveError]);
 
-  /**
-   * 验证表单数据
-   */
-  const validateForm = (): boolean => {
-    if (!joinTokenAddress) {
-      toast.error('请输入LP Token地址');
-      return false;
-    }
-
-    if (!isAddress(joinTokenAddress)) {
-      toast.error('LP Token地址格式无效');
-      return false;
-    }
-
-    if (!waitingBlocks) {
-      toast.error('请输入等待区块数');
-      return false;
-    }
-
-    if (!govRatioMultiplier) {
-      toast.error('请输入治理比率乘数');
-      return false;
-    }
-
-    if (!minGovVotes) {
-      toast.error('请输入最小治理票数');
-      return false;
-    }
-
-    // 验证数字有效性
-    const waitingBlocksNum = parseFloat(waitingBlocks);
-    const govRatioMultiplierNum = parseFloat(govRatioMultiplier);
-    const minGovVotesNum = parseFloat(minGovVotes);
-
-    if (isNaN(waitingBlocksNum) || waitingBlocksNum < 0) {
-      toast.error('等待区块数必须是非负整数');
-      return false;
-    }
-
-    if (isNaN(govRatioMultiplierNum) || govRatioMultiplierNum < 0) {
-      toast.error('治理比率乘数必须是非负整数');
-      return false;
-    }
-
-    if (isNaN(minGovVotesNum) || minGovVotesNum < 0) {
-      toast.error('最小治理票数必须是非负整数');
-      return false;
-    }
-
-    return true;
-  };
 
   /**
    * 步骤1: 授权代币
@@ -187,21 +184,17 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   /**
    * 步骤2: 部署扩展
    */
-  const handleDeploy = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
+  const handleDeploy = async (values: FormValues) => {
     try {
       setApprovalStep('deploying');
       // 将 minGovVotes 从 eth 转换为 wei
-      const minGovVotesWei = parseEther(minGovVotes);
+      const minGovVotesWei = parseEther(values.minGovVotes);
 
       await createExtension(
         tokenAddress,
-        joinTokenAddress as `0x${string}`,
-        BigInt(waitingBlocks),
-        BigInt(govRatioMultiplier),
+        values.joinTokenAddress as `0x${string}`,
+        BigInt(values.waitingBlocks),
+        BigInt(values.govRatioMultiplier),
         minGovVotesWei,
       );
     } catch (error: any) {
@@ -219,68 +212,100 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
           <CardDescription className="text-sm">每1个新的LP池行动，都对应1个专属扩展合约</CardDescription>
         </CardHeader>
         <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
-          <form className="space-y-4 md:space-y-6">
-            {/* LP Token地址 */}
-            <div className="space-y-2">
-              <Label htmlFor="joinTokenAddress">1. LP代币地址</Label>
-              <Input
-                id="joinTokenAddress"
-                type="text"
-                placeholder="0x..."
-                value={joinTokenAddress}
-                onChange={(e) => setJoinTokenAddress(e.target.value)}
-                disabled={approvalStep !== 'idle'}
+          <Form {...form}>
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-4 md:space-y-6">
+              {/* LP Token地址 */}
+              <FormField
+                control={form.control}
+                name="joinTokenAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>1. LP代币地址</FormLabel>
+                    <FormControl>
+                      <Input type="text" placeholder="0x..." disabled={approvalStep !== 'idle'} {...field} />
+                    </FormControl>
+                    <FormDescription className="text-sm text-greyscale-500">
+                      即 Uniswap V2 Pair 合约地址
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <p className="text-sm text-greyscale-500">即 Uniswap V2 Pair 合约地址</p>
-            </div>
 
-            {/* 等待区块数 */}
-            <div className="space-y-2">
-              <Label htmlFor="waitingBlocks">2.等待区块数</Label>
-              <Input
-                id="waitingBlocks"
-                type="number"
-                placeholder="比如 10"
-                value={waitingBlocks}
-                onChange={(e) => setWaitingBlocks(e.target.value)}
-                disabled={approvalStep !== 'idle'}
-                min="0"
-                className="max-w-40 md:max-w-xs"
+              {/* 等待区块数 */}
+              <FormField
+                control={form.control}
+                name="waitingBlocks"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>2. 等待区块数</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="比如 10"
+                        disabled={approvalStep !== 'idle'}
+                        min="0"
+                        step="1"
+                        className="max-w-40 md:max-w-xs"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription className="text-sm text-greyscale-500">
+                      加入行动后，需等多少区块才能退出
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <p className="text-sm text-greyscale-500">加入行动后，需等多少区块才能退出</p>
-            </div>
 
-            {/* 治理比率乘数 */}
-            <div className="space-y-2">
-              <Label htmlFor="govRatioMultiplier">3.治理比率乘数</Label>
-              <Input
-                id="govRatioMultiplier"
-                type="number"
-                placeholder="比如 2"
-                value={govRatioMultiplier}
-                onChange={(e) => setGovRatioMultiplier(e.target.value)}
-                disabled={approvalStep !== 'idle'}
-                min="0"
-                className="max-w-40 md:max-w-xs"
+              {/* 治理比率乘数 */}
+              <FormField
+                control={form.control}
+                name="govRatioMultiplier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>3. 治理比率乘数</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="比如 2"
+                        disabled={approvalStep !== 'idle'}
+                        min="0"
+                        step="1"
+                        className="max-w-40 md:max-w-xs"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription className="text-sm text-greyscale-500">
+                      "治理票占比" 是 "LP占比" 的多少倍
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <p className="text-sm text-greyscale-500">"治理票占比" 是 "LP占比" 的多少倍</p>
-            </div>
 
-            {/* 最小治理票数 */}
-            <div className="space-y-2">
-              <Label htmlFor="minGovVotes">4.最小治理票数</Label>
-              <Input
-                id="minGovVotes"
-                type="number"
-                placeholder="比如 10,000"
-                value={minGovVotes}
-                onChange={(e) => setMinGovVotes(e.target.value)}
-                disabled={approvalStep !== 'idle'}
-                min="0"
-                step="0.000001"
-                className="max-w-40 md:max-w-xs"
+              {/* 最小治理票数 */}
+              <FormField
+                control={form.control}
+                name="minGovVotes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>4. 最小治理票数</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="比如 10,000"
+                        disabled={approvalStep !== 'idle'}
+                        min="0"
+                        step="0.000001"
+                        className="max-w-40 md:max-w-xs"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
             {/* 错误信息 */}
             {writeError && (
@@ -340,7 +365,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
 
                 <Button
                   type="button"
-                  onClick={handleDeploy}
+                  onClick={() => form.handleSubmit(handleDeploy)()}
                   className="w-1/2"
                   disabled={(approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming}
                 >
@@ -348,7 +373,8 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                 </Button>
               </div>
             )}
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
       <LoadingOverlay

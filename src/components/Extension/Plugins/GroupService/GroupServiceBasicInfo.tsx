@@ -83,9 +83,9 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
           </div>
         </div>
 
-        {/* 激励分配地址数上限 */}
+        {/* 默认激励分配地址数上限 */}
         <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">激励分配地址数上限:</div>
+          <div className="text-sm font-bold mb-1">默认激励分配地址数上限:</div>
           <div className="font-mono text-secondary text-sm md:text-base">{maxRecipients.toString()}</div>
         </div>
       </div>

@@ -44,11 +44,6 @@ export const LOVE20ExtensionGroupServiceFactoryAbi = [
         "name": "groupActionFactoryAddress_",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "maxRecipients_",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [

@@ -29,7 +29,7 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
       {
         address: extensionAddress,
         abi: LOVE20ExtensionGroupServiceAbi,
-        functionName: 'MAX_RECIPIENTS',
+        functionName: 'DEFAULT_MAX_RECIPIENTS',
       },
     ],
     query: {

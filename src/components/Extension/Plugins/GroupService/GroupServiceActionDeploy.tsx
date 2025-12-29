@@ -7,15 +7,18 @@ import { useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
 
 // 第三方库
+import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
 import { isAddress, parseEther, parseEventLogs } from 'viem';
 import { useWaitForTransactionReceipt } from 'wagmi';
+import { z } from 'zod';
 
 // UI 组件
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -35,6 +38,16 @@ interface GroupServiceActionDeployProps {
   factoryAddress: `0x${string}`;
 }
 
+// 表单验证 schema
+const formSchema = z.object({
+  groupActionTokenAddress: z
+    .string()
+    .min(1, { message: '请输入链群行动所在代币地址' })
+    .refine((val): val is string => isAddress(val), { message: '链群行动所在代币地址格式无效' }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 /**
  * 链群服务扩展部署组件
  */
@@ -43,9 +56,14 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
   const tokenSymbol = context?.token?.symbol || '';
 
-  // 表单状态
-  const [groupActionTokenAddress, setGroupActionTokenAddress] = useState(''); // 链群行动所在代币地址
-  const [maxRecipients, setMaxRecipients] = useState(''); // 激励分配地址数上限
+  // 表单实例
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      groupActionTokenAddress: '',
+    },
+    mode: 'onChange', // 实时验证
+  });
 
   // 链群行动扩展协议工厂合约地址（从环境变量获取）
   const groupActionFactoryAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_ACTION ||
@@ -128,43 +146,6 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
     }
   }, [approveError]);
 
-  /**
-   * 验证表单数据
-   */
-  const validateForm = (): boolean => {
-    // 验证链群行动所在代币地址
-    if (!groupActionTokenAddress) {
-      toast.error('请输入链群行动所在代币地址');
-      return false;
-    }
-    if (!isAddress(groupActionTokenAddress)) {
-      toast.error('链群行动所在代币地址格式无效');
-      return false;
-    }
-
-    // 验证链群行动扩展协议工厂合约地址
-    if (!groupActionFactoryAddress) {
-      toast.error('链群行动扩展协议工厂合约地址未配置');
-      return false;
-    }
-    if (!isAddress(groupActionFactoryAddress)) {
-      toast.error('链群行动扩展协议工厂合约地址格式无效');
-      return false;
-    }
-
-    // 验证激励分配地址数上限
-    if (!maxRecipients) {
-      toast.error('请输入激励分配地址数上限');
-      return false;
-    }
-    const maxRecipientsNum = parseFloat(maxRecipients);
-    if (isNaN(maxRecipientsNum) || maxRecipientsNum <= 0 || !Number.isInteger(maxRecipientsNum)) {
-      toast.error('激励分配地址数上限必须是大于0的整数');
-      return false;
-    }
-
-    return true;
-  };
 
   /**
    * 步骤1: 授权代币
@@ -189,8 +170,14 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
   /**
    * 步骤2: 部署扩展
    */
-  const handleDeploy = async () => {
-    if (!validateForm()) {
+  const handleDeploy = async (values: FormValues) => {
+    // 验证链群行动扩展协议工厂合约地址
+    if (!groupActionFactoryAddress) {
+      toast.error('链群行动扩展协议工厂合约地址未配置');
+      return;
+    }
+    if (!isAddress(groupActionFactoryAddress)) {
+      toast.error('链群行动扩展协议工厂合约地址格式无效');
       return;
     }
 
@@ -199,9 +186,8 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
 
       await createExtension(
         tokenAddress,
-        groupActionTokenAddress as `0x${string}`,
+        values.groupActionTokenAddress as `0x${string}`,
         groupActionFactoryAddress as `0x${string}`,
-        BigInt(maxRecipients),
       );
     } catch (error: any) {
       console.error('部署扩展失败:', error);
@@ -218,37 +204,25 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
           <CardDescription className="text-sm">每1个新的链群服务行动，都对应1个专属扩展合约</CardDescription>
         </CardHeader>
         <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
-          <form className="space-y-4 md:space-y-6">
-            {/* 链群行动所在代币地址 */}
-            <div className="space-y-2">
-              <Label htmlFor="groupActionTokenAddress">1. 链群行动所在代币地址</Label>
-              <Input
-                id="groupActionTokenAddress"
-                type="text"
-                placeholder="0x..."
-                value={groupActionTokenAddress}
-                onChange={(e) => setGroupActionTokenAddress(e.target.value)}
-                disabled={approvalStep !== 'idle'}
+          <Form {...form}>
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-4 md:space-y-6">
+              {/* 链群行动所在代币地址 */}
+              <FormField
+                control={form.control}
+                name="groupActionTokenAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>链群行动所在代币地址</FormLabel>
+                    <FormControl>
+                      <Input type="text" placeholder="0x..." disabled={approvalStep !== 'idle'} {...field} />
+                    </FormControl>
+                    <FormDescription className="text-sm text-greyscale-500">
+                      仅限链群服务所在代币地址或其子币地址
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <p className="text-sm text-greyscale-500">仅限链群服务所在代币地址或其子币地址</p>
-            </div>
-
-            {/* 激励分配地址数上限 */}
-            <div className="space-y-2">
-              <Label htmlFor="maxRecipients">2. 激励分配地址数上限</Label>
-              <Input
-                id="maxRecipients"
-                type="number"
-                placeholder="比如 10"
-                value={maxRecipients}
-                onChange={(e) => setMaxRecipients(e.target.value)}
-                disabled={approvalStep !== 'idle'}
-                min="1"
-                step="1"
-                className="max-w-40 md:max-w-xs"
-              />
-              <p className="text-sm text-greyscale-500">设置链群服务激励可分配的最大地址数量</p>
-            </div>
 
             {/* 错误信息 */}
             {writeError && (
@@ -309,7 +283,7 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
 
                   <Button
                     type="button"
-                    onClick={handleDeploy}
+                    onClick={() => form.handleSubmit(handleDeploy)()}
                     className="w-1/2"
                     disabled={
                       (approvalStep !== 'approved' && approvalStep !== 'deploying') || isPending || isConfirming
@@ -327,7 +301,8 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
                 </div>
               </>
             )}
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
       <LoadingOverlay

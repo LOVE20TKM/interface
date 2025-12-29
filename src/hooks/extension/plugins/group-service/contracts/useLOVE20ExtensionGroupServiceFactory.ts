@@ -127,17 +127,15 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
     tokenAddress: `0x${string}`, // 链群服务行动代币地址
     groupActionTokenAddress: `0x${string}`, // 组行动代币地址
     groupActionFactoryAddress: `0x${string}`, // 组行动工厂地址
-    maxRecipients: bigint, // 链群服务激励行动 激励分配地址 上限
   ) => {
     console.log('提交 createExtension 交易:', {
       contractAddress,
       tokenAddress,
       groupActionTokenAddress,
       groupActionFactoryAddress,
-      maxRecipients,
       isTukeMode,
     });
-    return await execute([tokenAddress, groupActionTokenAddress, groupActionFactoryAddress, maxRecipients]);
+    return await execute([tokenAddress, groupActionTokenAddress, groupActionFactoryAddress]);
   };
 
   // 错误日志记录

@@ -5,9 +5,11 @@
  * 1. 使用 GroupManager.votedGroupActions 获取当轮有投票且有激活链群的行动列表
  * 2. 批量调用 activeGroupIdsByOwner 获取每个行动下账户拥有的激活链群NFT列表
  * 3. 批量调用 ExtensionGroupAction.isVerified 检查每个链群是否已验证
+ * 4. 批量调用 ExtensionGroupAction.accountCountByGroupIdByRound 获取每个链群的账户数量
+ * 5. 当账户数量为 0 时，自动将 isVerified 设为 true（因为不需要验证）
  *
  * 性能优化：
- * - 使用批量 RPC 调用，总共约 3 次调用
+ * - 使用批量 RPC 调用，总共约 4 次调用
  * - 所有派生计算使用 useMemo 缓存
  * - 在每个步骤检查数据是否为空，及时返回
  *
@@ -187,12 +189,35 @@ export function useMyGroupIdsNeedVerifiedByRound({
     },
   });
 
+  // 批量读取 accountCountByGroupIdByRound
+  const accountCountContracts = useMemo(() => {
+    if (round === undefined || groupTuples.length === 0) return [];
+
+    return groupTuples.map(({ extensionAddress, groupId }) => ({
+      address: extensionAddress,
+      abi: LOVE20ExtensionGroupActionAbi,
+      functionName: 'accountCountByGroupIdByRound' as const,
+      args: [groupId, round] as const,
+    }));
+  }, [round, groupTuples]);
+
+  const {
+    data: accountCountData,
+    isPending: isAccountCountPending,
+    error: accountCountError,
+  } = useReadContracts({
+    contracts: accountCountContracts as any,
+    query: {
+      enabled: round !== undefined && groupTuples.length > 0,
+    },
+  });
+
   // ==========================================
   // 步骤6：组装最终结果
   // ==========================================
 
   const groups = useMemo(() => {
-    if (!isVerifiedData || groupTuples.length === 0) return [];
+    if (!isVerifiedData || !accountCountData || groupTuples.length === 0) return [];
 
     const result: GroupNeedVerifyInfo[] = [];
 
@@ -201,17 +226,24 @@ export function useMyGroupIdsNeedVerifiedByRound({
         const { actionId, extensionAddress, groupId } = groupTuples[index];
         const isVerified = item.result as boolean;
 
+        // 获取对应的 accountCount
+        const accountCountItem = accountCountData[index];
+        const accountCount = accountCountItem?.status === 'success' ? (accountCountItem.result as bigint) : BigInt(0);
+
+        // 如果 accountCount 为 0，则不需要验证，将 isVerified 设为 true
+        const finalIsVerified = accountCount === BigInt(0) ? true : isVerified;
+
         result.push({
           groupId,
           extensionAddress,
           actionId,
-          isVerified,
+          isVerified: finalIsVerified,
         });
       }
     });
 
     return result;
-  }, [groupTuples, isVerifiedData]);
+  }, [groupTuples, isVerifiedData, accountCountData]);
 
   // ==========================================
   // 步骤7：计算 isPending 状态
@@ -233,15 +265,25 @@ export function useMyGroupIdsNeedVerifiedByRound({
     // 如果没有链群，直接返回 false
     if (groupTuples.length === 0) return false;
 
-    // 步骤3: 检查验证状态
-    return isVerifiedPending;
-  }, [tokenAddress, account, round, isVotedPending, actionIds, isGroupIdsPending, groupTuples, isVerifiedPending]);
+    // 步骤3: 检查验证状态和账户数量
+    return isVerifiedPending || isAccountCountPending;
+  }, [
+    tokenAddress,
+    account,
+    round,
+    isVotedPending,
+    actionIds,
+    isGroupIdsPending,
+    groupTuples,
+    isVerifiedPending,
+    isAccountCountPending,
+  ]);
 
   // ==========================================
   // 步骤8：错误处理
   // ==========================================
 
-  const error = votedError || groupIdsError || isVerifiedError;
+  const error = votedError || groupIdsError || isVerifiedError || accountCountError;
 
   // ==========================================
   // 步骤9：返回结果
