@@ -12,6 +12,50 @@ const VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VERIFY 
 // 每批查询的账户数量
 const ACCOUNTS_PER_BATCH = 100;
 
+// 计算过滤异常高分后的最高分
+// 过滤规则：
+// - 如果 scores 数量 >= 100，过滤掉最高的 1% 的分数
+// - 如果 scores 数量 < 100 但 >= 20，过滤掉最高的 1 个
+// - 如果 scores 数量 < 20，不过滤
+const getFilteredMaxScore = (scores: bigint[]): bigint => {
+  if (scores.length === 0) {
+    return BigInt(0);
+  }
+
+  // 如果分数数量少于20，不过滤
+  if (scores.length < 20) {
+    return scores.reduce((max, score) => (score > max ? score : max), BigInt(0));
+  }
+
+  // 复制并排序（从大到小）
+  const sortedScores = [...scores].sort((a, b) => {
+    if (a > b) return -1;
+    if (a < b) return 1;
+    return 0;
+  });
+
+  // 计算需要过滤的数量
+  let filterCount: number;
+  if (scores.length >= 100) {
+    // 过滤掉最高的 1%
+    filterCount = Math.max(1, Math.floor(scores.length * 0.01));
+  } else {
+    // 过滤掉最高的 1 个
+    filterCount = 1;
+  }
+
+  // 过滤掉最高的 filterCount 个分数
+  const filteredScores = sortedScores.slice(filterCount);
+
+  // 从剩余的分数中取最高分
+  if (filteredScores.length === 0) {
+    // 如果过滤后没有剩余分数，返回原始最高分
+    return sortedScores[0];
+  }
+
+  return filteredScores.reduce((max, score) => (score > max ? score : max), BigInt(0));
+};
+
 // ==================== localStorage 缓存工具函数 ====================
 
 // 缓存数据结构: { "actionId_round": "score" }
@@ -279,7 +323,7 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
             if (!hasFailedRequest && hasTargetAccountScore) {
               // 计算100分制得分准备缓存
               const scores = Object.values(accountScores);
-              const maxScore = scores.reduce((max, score) => (score > max ? score : max), BigInt(0));
+              const maxScore = getFilteredMaxScore(scores);
               const targetScore = accountScores[account] || BigInt(0);
 
               let scaledScore = '0';
@@ -374,9 +418,9 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
     const newScores: { [actionId: string]: { [round: string]: string } } = {};
 
     Object.values(batchScoresData).forEach(({ actionId, round, accountScores }) => {
-      // 找出最高分
+      // 找出最高分（过滤异常高分）
       const scores = Object.values(accountScores);
-      const maxScore = scores.reduce((max, score) => (score > max ? score : max), BigInt(0));
+      const maxScore = getFilteredMaxScore(scores);
 
       // 获取目标账户的分数
       const targetScore = accountScores[account] || BigInt(0);
@@ -562,9 +606,9 @@ export const useEstimateAccountScoreByActionRound = ({
           return;
         }
 
-        // 计算100分制得分
+        // 计算100分制得分（过滤异常高分）
         const scores = Object.values(accountScores);
-        const maxScore = scores.reduce((max, s) => (s > max ? s : max), BigInt(0));
+        const maxScore = getFilteredMaxScore(scores);
 
         let scaledScore = '0';
         if (maxScore > BigInt(0) && targetScore > BigInt(0)) {
