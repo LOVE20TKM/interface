@@ -7,7 +7,7 @@ import { useReadContract } from 'wagmi';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
-import { ILOVE20ExtensionAbi } from '@/src/abis/ILOVE20Extension';
+import { IExtensionAbi } from '@/src/abis/IExtension';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // =====================
@@ -20,7 +20,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 export const useExtensionCenter = (extensionAddress: `0x${string}` | undefined) => {
   const { data, isPending, error } = useReadContract({
     address: extensionAddress,
-    abi: ILOVE20ExtensionAbi,
+    abi: IExtensionAbi,
     functionName: 'center',
     query: {
       enabled: !!extensionAddress,
@@ -36,7 +36,7 @@ export const useExtensionCenter = (extensionAddress: `0x${string}` | undefined) 
 export const useExtensionInitialized = (extensionAddress: `0x${string}` | undefined) => {
   const { data, isPending, error } = useReadContract({
     address: extensionAddress,
-    abi: ILOVE20ExtensionAbi,
+    abi: IExtensionAbi,
     functionName: 'initialized',
     query: {
       enabled: !!extensionAddress,
@@ -52,7 +52,7 @@ export const useExtensionInitialized = (extensionAddress: `0x${string}` | undefi
 export const useExtensionFactory = (extensionAddress: `0x${string}` | undefined) => {
   const { data, isPending, error } = useReadContract({
     address: extensionAddress,
-    abi: ILOVE20ExtensionAbi,
+    abi: IExtensionAbi,
     functionName: 'factory',
     query: {
       enabled: !!extensionAddress,
@@ -68,7 +68,7 @@ export const useExtensionFactory = (extensionAddress: `0x${string}` | undefined)
 export const useExtensionTokenAddress = (extensionAddress: `0x${string}` | undefined) => {
   const { data, isPending, error } = useReadContract({
     address: extensionAddress,
-    abi: ILOVE20ExtensionAbi,
+    abi: IExtensionAbi,
     functionName: 'tokenAddress',
     query: {
       enabled: !!extensionAddress,
@@ -84,7 +84,7 @@ export const useExtensionTokenAddress = (extensionAddress: `0x${string}` | undef
 export const useExtensionActionId = (extensionAddress: `0x${string}` | undefined) => {
   const { data, isPending, error } = useReadContract({
     address: extensionAddress,
-    abi: ILOVE20ExtensionAbi,
+    abi: IExtensionAbi,
     functionName: 'actionId',
     query: {
       enabled: !!extensionAddress,
@@ -100,7 +100,7 @@ export const useExtensionActionId = (extensionAddress: `0x${string}` | undefined
 export const useIsJoinedValueCalculated = (extensionAddress: `0x${string}` | undefined) => {
   const { data, isPending, error } = useReadContract({
     address: extensionAddress,
-    abi: ILOVE20ExtensionAbi,
+    abi: IExtensionAbi,
     functionName: 'isJoinedValueCalculated',
     query: {
       enabled: !!extensionAddress,
@@ -116,7 +116,7 @@ export const useIsJoinedValueCalculated = (extensionAddress: `0x${string}` | und
 export const useJoinedValue = (extensionAddress: `0x${string}` | undefined) => {
   const { data, isPending, error } = useReadContract({
     address: extensionAddress,
-    abi: ILOVE20ExtensionAbi,
+    abi: IExtensionAbi,
     functionName: 'joinedValue',
     query: {
       enabled: !!extensionAddress,
@@ -135,7 +135,7 @@ export const useJoinedValueByAccount = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: extensionAddress,
-    abi: ILOVE20ExtensionAbi,
+    abi: IExtensionAbi,
     functionName: 'joinedValueByAccount',
     args: account ? [account] : undefined,
     query: {
@@ -156,7 +156,7 @@ export const useRewardByAccount = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: extensionAddress,
-    abi: ILOVE20ExtensionAbi,
+    abi: IExtensionAbi,
     functionName: 'rewardByAccount',
     args: round !== undefined && account ? [round, account] : undefined,
     query: {
@@ -180,7 +180,7 @@ export const useRewardByAccount = (
 export const useReward = (extensionAddress: `0x${string}` | undefined, round: bigint | undefined) => {
   const { data, isPending, error } = useReadContract({
     address: extensionAddress,
-    abi: ILOVE20ExtensionAbi,
+    abi: IExtensionAbi,
     functionName: 'reward',
     args: round !== undefined ? [round] : undefined,
     query: {
@@ -200,7 +200,7 @@ export const useReward = (extensionAddress: `0x${string}` | undefined, round: bi
  */
 export const useClaimRewardFromExtension = (extensionAddress: `0x${string}` | undefined) => {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    ILOVE20ExtensionAbi,
+    IExtensionAbi,
     extensionAddress!,
     'claimReward',
   );

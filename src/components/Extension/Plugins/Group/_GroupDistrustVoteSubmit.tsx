@@ -31,8 +31,8 @@ import {
   useScoreByVerifierByActionId,
 } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
-import { useDistrustVote } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
-import { useDistrustVotesByVoterByGroupOwner } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupDistrust';
+import { useDistrustVote } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useDistrustVotesByVoterByGroupOwner } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';

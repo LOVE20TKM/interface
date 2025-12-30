@@ -67,13 +67,14 @@ const JoinPage = () => {
         ) : (
           <>
             {/* 根据是否是扩展行动，显示不同的组件 */}
-            {contractInfo?.isExtension && contractInfo?.extension ? (
+            {contractInfo?.isExtension && contractInfo?.extension && contractInfo?.factory ? (
               <>
                 {/* 扩展行动：显示 ExtensionActionJoinPanel（根据类型自动选择对应组件） */}
                 <ExtensionActionJoinPanel
                   actionId={BigInt(actionId)}
                   actionInfo={actionInfo}
                   extensionAddress={contractInfo.extension}
+                  factory={contractInfo.factory.address}
                 />
               </>
             ) : (

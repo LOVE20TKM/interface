@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
+import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 
 interface VerificationInfosParams {
   tokenAddress: `0x${string}` | undefined;
@@ -26,7 +26,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENT
 /**
  * 批量获取多个地址的验证信息
  * 使用 useReadContracts 将多个 RPC 调用合并成一次批量请求，提高效率
- * 
+ *
  * @param tokenAddress - 代币地址
  * @param actionId - 行动 ID
  * @param accounts - 需要获取验证信息的地址列表
@@ -49,13 +49,13 @@ export const useVerificationInfos = ({
     }
 
     const contractCalls: any[] = [];
-    
+
     // 为每个地址和每个验证 key 创建一个合约调用
     accounts.forEach((account) => {
       verificationKeys.forEach((key) => {
         contractCalls.push({
           address: CONTRACT_ADDRESS,
-          abi: LOVE20ExtensionCenterAbi,
+          abi: ExtensionCenterAbi,
           functionName: 'verificationInfo' as const,
           args: [tokenAddress, actionId, account, key],
         });
@@ -163,4 +163,3 @@ export const useVerificationInfos = ({
     hasValidData: enabled && accounts.length > 0 && verificationKeys.length > 0 && !!tokenAddress,
   };
 };
-

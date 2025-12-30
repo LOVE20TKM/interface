@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20GroupManagerAbi } from '@/src/abis/LOVE20GroupManager';
+import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useExtensionActionConstCache } from './useExtensionActionConstCache';
 
@@ -61,7 +61,7 @@ export const useExtensionActionParam = ({
     return [
       {
         address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER,
-        abi: LOVE20GroupManagerAbi,
+        abi: GroupManagerAbi,
         functionName: 'calculateJoinMaxAmount',
         args: [tokenAddress, actionId],
       },

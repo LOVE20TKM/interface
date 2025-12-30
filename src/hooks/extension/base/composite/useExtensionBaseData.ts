@@ -37,9 +37,9 @@
 
 import { useMemo, useEffect, useState } from 'react';
 import { useReadContracts } from 'wagmi';
-import { ILOVE20ExtensionAbi } from '@/src/abis/ILOVE20Extension';
-import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
-import { LOVE20ExtensionFactoryBaseAbi } from '@/src/abis/LOVE20ExtensionFactoryBase';
+import { IExtensionAbi } from '@/src/abis/IExtension';
+import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
+import { ExtensionFactoryBaseAbi } from '@/src/abis/ExtensionFactoryBase';
 import { getExtensionConfigByFactory, getExtensionConfigs, ExtensionType } from '@/src/config/extensionConfig';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { ActionInfo } from '@/src/types/love20types';
@@ -262,7 +262,7 @@ export const useExtensionsContractInfo = ({
       // 调用白名单地址的 factory() 方法
       contracts.push({
         address: whitelistAddress,
-        abi: ILOVE20ExtensionAbi,
+        abi: IExtensionAbi,
         functionName: 'factory' as const,
         args: [],
       });
@@ -303,7 +303,7 @@ export const useExtensionsContractInfo = ({
       // 调用 factory.exists(whitelistAddress) 验证
       contracts.push({
         address: factoryAddress,
-        abi: LOVE20ExtensionFactoryBaseAbi, // 所有 factory 都有相同的 exists 接口
+        abi: ExtensionFactoryBaseAbi, // 所有 factory 都有相同的 exists 接口
         functionName: 'exists' as const,
         args: [whitelistInfo.whitelistAddress],
       });
@@ -576,7 +576,7 @@ export const useExtensionsBaseData = ({
       // 添加 accountsCount 查询
       contracts.push({
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'accountsCount' as const,
         args: [],
       });
@@ -584,7 +584,7 @@ export const useExtensionsBaseData = ({
       // 添加 joinedValue 查询
       contracts.push({
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'joinedValue' as const,
         args: [],
       });

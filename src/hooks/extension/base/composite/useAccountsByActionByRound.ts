@@ -19,8 +19,8 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
-import { useAccountsByRoundCount } from '@/src/hooks/extension/base/contracts/useLOVE20ExtensionCenter';
+import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
+import { useAccountsByRoundCount } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
 
@@ -85,7 +85,7 @@ export function useAccountsByActionByRound(params: UseAccountsByActionByRoundPar
     const countNum = Number(count);
     return Array.from({ length: countNum }, (_, index) => ({
       address: CONTRACT_ADDRESS,
-      abi: LOVE20ExtensionCenterAbi,
+      abi: ExtensionCenterAbi,
       functionName: 'accountsByRoundAtIndex' as const,
       args:
         tokenAddress && actionId !== undefined && round !== undefined

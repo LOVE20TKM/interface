@@ -21,7 +21,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupServiceAbi } from '@/src/abis/LOVE20ExtensionGroupService';
+import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
 import { useActionIdsWithActiveGroupIdsByOwner } from './useActionIdsWithActiveGroupIdsByOwner';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
@@ -174,7 +174,7 @@ export function useActionGroupRecipientsData({
       groupIds.forEach((groupId) => {
         contracts.push({
           address: extensionAddress,
-          abi: LOVE20ExtensionGroupServiceAbi,
+          abi: ExtensionGroupServiceAbi,
           functionName: 'recipientsLatest' as const,
           args: [account, actionId, groupId] as const,
         });

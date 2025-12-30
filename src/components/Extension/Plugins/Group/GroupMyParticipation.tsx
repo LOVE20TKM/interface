@@ -32,7 +32,7 @@ import {
   useExit,
   useJoinInfo,
   useTotalJoinedAmountByRound,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+} from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';

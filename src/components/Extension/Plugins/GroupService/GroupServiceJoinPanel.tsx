@@ -30,7 +30,7 @@ import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import {
   useJoin,
   useJoinInfo,
-} from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupService';
+} from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useReadContracts, useBlockNumber } from 'wagmi';
-import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
+import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
 
 const STAKE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`;
@@ -82,35 +82,35 @@ export const useMyLpActionData = ({
       // 0. 获取用户加入信息（包含数量、加入区块、可退出区块）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'joinInfo',
         args: [account],
       },
       // 1. 获取总加入数量
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'totalJoinedAmount',
         args: [],
       },
       // 2. 获取治理比率乘数
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'govRatioMultiplier',
         args: [],
       },
       // 3. 获取加入值（用于计算激励占比）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'joinedValue',
         args: [],
       },
       // 4. 获取 Join Token 地址（即 LP Pair 地址）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'joinTokenAddress',
         args: [],
       },
@@ -131,14 +131,14 @@ export const useMyLpActionData = ({
       // 7. 获取需要等待的区块数
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'waitingBlocks',
         args: [],
       },
       // 8. 获取最小治理票数门槛
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'minGovVotes',
         args: [],
       },

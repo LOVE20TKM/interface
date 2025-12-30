@@ -15,8 +15,8 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
-import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
+import { IExtensionAbi } from '@/src/abis/IExtension';
+import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 const EXTENSION_CENTER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
@@ -73,27 +73,27 @@ export function useExtensionParticipationData(
       // 1. 查询参与者数量（公共数据，始终查询）
       {
         address: EXTENSION_CENTER_ADDRESS,
-        abi: LOVE20ExtensionCenterAbi,
+        abi: ExtensionCenterAbi,
         functionName: 'accountsCount' as const,
         args: [tokenAddress, actionId],
       },
       // 2. 查询总参与金额（公共数据，始终查询）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: IExtensionAbi,
         functionName: 'joinedValue' as const,
       },
       // 3. 查询用户参与金额（需要 account）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: IExtensionAbi,
         functionName: 'joinedValueByAccount' as const,
         args: account ? [account] : undefined,
       },
       // 4. 查询用户是否已参与（需要 account + tokenAddress + actionId）
       {
         address: EXTENSION_CENTER_ADDRESS,
-        abi: LOVE20ExtensionCenterAbi,
+        abi: ExtensionCenterAbi,
         functionName: 'isAccountJoined' as const,
         args: tokenAddress && actionId !== undefined && account ? [tokenAddress, actionId, account] : undefined,
       },

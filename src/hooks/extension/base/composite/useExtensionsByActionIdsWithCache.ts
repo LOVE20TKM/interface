@@ -8,7 +8,7 @@
  * 4. 使用 useReadContracts 批量调用优化性能
  *
  * 验证算法（四步骤）：
- * 1. 批量从 LOVE20ExtensionCenter.extension() 获取扩展地址
+ * 1. 批量从 ExtensionCenter.extension() 获取扩展地址
  * 2. 批量调用扩展合约的 factory() 方法获取 factory 地址
  * 3. 检查 factory 地址是否在配置的 factory 列表中
  * 4. 调用 factory.exists(extensionAddress) 方法验证扩展是否合法
@@ -30,9 +30,9 @@
 
 import { useMemo, useEffect, useState } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
-import { ILOVE20ExtensionAbi } from '@/src/abis/ILOVE20Extension';
-import { LOVE20ExtensionFactoryBaseAbi } from '@/src/abis/LOVE20ExtensionFactoryBase';
+import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
+import { IExtensionAbi } from '@/src/abis/IExtension';
+import { ExtensionFactoryBaseAbi } from '@/src/abis/ExtensionFactoryBase';
 import { isKnownFactory } from '@/src/config/extensionConfig';
 import { Token } from '@/src/contexts/TokenContext';
 
@@ -236,7 +236,7 @@ export const useExtensionsByActionIdsWithCache = ({
 
     return uncachedActionIds.map((actionId) => ({
       address: EXTENSION_CENTER_ADDRESS,
-      abi: LOVE20ExtensionCenterAbi,
+      abi: ExtensionCenterAbi,
       functionName: 'extension' as const,
       args: [tokenAddress, actionId] as const,
     }));
@@ -285,7 +285,7 @@ export const useExtensionsByActionIdsWithCache = ({
 
     return validExtensions.map((info) => ({
       address: info.extensionAddress,
-      abi: ILOVE20ExtensionAbi,
+      abi: IExtensionAbi,
       functionName: 'factory' as const,
       args: [],
     }));
@@ -335,7 +335,7 @@ export const useExtensionsByActionIdsWithCache = ({
 
     return knownFactoryExtensions.map((info) => ({
       address: info.factoryAddress,
-      abi: LOVE20ExtensionFactoryBaseAbi,
+      abi: ExtensionFactoryBaseAbi,
       functionName: 'exists' as const,
       args: [info.extensionAddress] as const,
     }));

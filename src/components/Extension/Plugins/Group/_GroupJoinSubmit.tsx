@@ -36,7 +36,7 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';

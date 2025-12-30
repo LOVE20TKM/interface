@@ -25,10 +25,10 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
-import { useCreateExtension } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupActionFactory';
+import { useCreateExtension } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupActionFactory';
 
 // ABI
-import { LOVE20ExtensionGroupActionFactoryAbi } from '@/src/abis/LOVE20ExtensionGroupActionFactory';
+import { ExtensionGroupActionFactoryAbi } from '@/src/abis/ExtensionGroupActionFactory';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -140,7 +140,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
       try {
         // 解析 ExtensionCreate 事件
         const logs = parseEventLogs({
-          abi: LOVE20ExtensionGroupActionFactoryAbi,
+          abi: ExtensionGroupActionFactoryAbi,
           eventName: 'ExtensionCreate',
           logs: receipt.logs,
         });

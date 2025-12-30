@@ -1,7 +1,7 @@
 // hooks/extension/plugins/group-service/composite/useExtensionParams.ts
 
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupServiceAbi } from '@/src/abis/LOVE20ExtensionGroupService';
+import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 /**
@@ -13,22 +13,22 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
     contracts: [
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupServiceAbi,
+        abi: ExtensionGroupServiceAbi,
         functionName: 'tokenAddress',
       },
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupServiceAbi,
+        abi: ExtensionGroupServiceAbi,
         functionName: 'GROUP_ACTION_TOKEN_ADDRESS',
       },
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupServiceAbi,
+        abi: ExtensionGroupServiceAbi,
         functionName: 'GROUP_ACTION_FACTORY_ADDRESS',
       },
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupServiceAbi,
+        abi: ExtensionGroupServiceAbi,
         functionName: 'DEFAULT_MAX_RECIPIENTS',
       },
     ],

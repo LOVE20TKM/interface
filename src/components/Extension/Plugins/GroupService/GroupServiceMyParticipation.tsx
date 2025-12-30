@@ -17,7 +17,7 @@ import {
   useJoinedValueByAccount,
   useJoinedValue,
   useExit,
-} from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupService';
+} from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 
 import { useActionGroupRecipientsData } from '@/src/hooks/extension/plugins/group-service/composite';
 

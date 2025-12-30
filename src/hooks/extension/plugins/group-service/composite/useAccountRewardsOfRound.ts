@@ -24,7 +24,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupServiceAbi } from '@/src/abis/LOVE20ExtensionGroupService';
+import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
 import { useAccountsByActionByRound } from '@/src/hooks/extension/base/composite/useAccountsByActionByRound';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -114,7 +114,7 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
     // 为每个地址构建一个查询配置
     return accounts.map((account) => ({
       address: extensionAddress,
-      abi: LOVE20ExtensionGroupServiceAbi,
+      abi: ExtensionGroupServiceAbi,
       functionName: 'rewardByAccount' as const,
       args: [round, account] as const,
     }));
@@ -153,7 +153,7 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
     // actionIdsWithRecipients 的参数顺序是 (account, round)
     return accounts.map((account) => ({
       address: extensionAddress,
-      abi: LOVE20ExtensionGroupServiceAbi,
+      abi: ExtensionGroupServiceAbi,
       functionName: 'actionIdsWithRecipients' as const,
       args: [account, round] as const,
     }));

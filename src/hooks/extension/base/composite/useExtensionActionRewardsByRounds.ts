@@ -3,7 +3,7 @@
  *
  * 功能：
  * 1. 查询指定扩展行动在指定轮次范围内的激励数据
- * 2. 使用 ILOVE20Extension 标准接口（所有扩展都实现该接口）
+ * 2. 使用 IExtensionAbi 标准接口（所有扩展都实现该接口）
  * 3. 批量查询优化性能
  *
  * 使用示例：
@@ -19,7 +19,7 @@
 
 import { useMemo } from 'react';
 import { useAccount, useReadContracts } from 'wagmi';
-import { ILOVE20ExtensionAbi } from '@/src/abis/ILOVE20Extension';
+import { IExtensionAbi } from '@/src/abis/IExtension';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 /**
@@ -82,7 +82,7 @@ export const useExtensionActionRewardsByRounds = ({
     for (let round = startRound; round <= endRound; round++) {
       calls.push({
         address: extensionAddress,
-        abi: ILOVE20ExtensionAbi,
+        abi: IExtensionAbi,
         functionName: 'rewardByAccount',
         args: [round, account],
       });

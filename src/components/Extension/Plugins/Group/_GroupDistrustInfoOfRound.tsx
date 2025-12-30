@@ -32,7 +32,7 @@ import {
   useDistrustVotesOfRound,
   useDistrustVotesOfGroupOwner,
 } from '@/src/hooks/extension/plugins/group/composite';
-import { useDistrustVotesByVoterByGroupOwner } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupDistrust';
+import { useDistrustVotesByVoterByGroupOwner } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 
 // 工具函数

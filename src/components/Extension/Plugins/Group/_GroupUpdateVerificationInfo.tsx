@@ -31,9 +31,9 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // hooks
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
-import { useUpdateVerificationInfo } from '@/src/hooks/extension/base/contracts/useLOVE20ExtensionCenter';
+import { useUpdateVerificationInfo } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useCenter, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+import { useCenter, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -194,15 +194,7 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     if (errorActionInfo) handleError(errorActionInfo);
     if (errorUpdate) handleError(errorUpdate);
     if (errorVerificationInfos) handleError(errorVerificationInfos);
-  }, [
-    errorDetail,
-    errorCenter,
-    errorJoinInfo,
-    errorActionInfo,
-    errorUpdate,
-    errorVerificationInfos,
-    handleError,
-  ]);
+  }, [errorDetail, errorCenter, errorJoinInfo, errorActionInfo, errorUpdate, errorVerificationInfos, handleError]);
 
   if (isPendingDetail || isPendingCenter || isPendingActionInfo || isPendingVerificationInfos) {
     return (

@@ -4,8 +4,7 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
-import { useGroupManagerAddress } from '../contracts/useLOVE20ExtensionGroupAction';
-import { useActiveGroupIds } from '../contracts/useLOVE20GroupManager';
+import { useActiveGroupIds } from '../contracts/useGroupManager';
 
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
 
@@ -39,11 +38,6 @@ export const useExtensionGroupBaseInfosOfAction = ({
   tokenAddress,
   actionId,
 }: UseExtensionGroupBaseInfosOfActionParams): UseExtensionGroupBaseInfosOfActionResult => {
-  // 获取 GroupManager 合约地址
-  const { groupManagerAddress, isPending: isGroupManagerPending } = useGroupManagerAddress(
-    extensionAddress as `0x${string}`,
-  );
-
   // 获取活跃链群NFT列表
   const {
     activeGroupIds,
@@ -114,14 +108,8 @@ export const useExtensionGroupBaseInfosOfAction = ({
 
   // 计算最终的 isPending 状态
   const isPending = useMemo(() => {
-    // 如果 GroupManager 地址还在加载，返回 true
-    if (isGroupManagerPending) return true;
     // 如果 tokenAddress 或 actionId 不存在，返回 true（等待前置条件）
     if (!tokenAddress || actionId === undefined) return true;
-    // 如果 groupManagerAddress 不存在，且已经加载完成，说明没有 groupManager，返回 false（没有链群）
-    if (!groupManagerAddress && !isGroupManagerPending) {
-      return false;
-    }
     // 如果链群NFT列表还在加载中，返回 true
     if (isGroupIdsPending) return true;
     // 如果没有链群（activeGroupIds 为空或 undefined），且查询已完成，返回 false
@@ -134,15 +122,7 @@ export const useExtensionGroupBaseInfosOfAction = ({
     }
     // 其他情况，返回 true
     return true;
-  }, [
-    isGroupManagerPending,
-    isGroupIdsPending,
-    isDetailPending,
-    activeGroupIds,
-    tokenAddress,
-    actionId,
-    groupManagerAddress,
-  ]);
+  }, [isGroupIdsPending, isDetailPending, activeGroupIds, tokenAddress, actionId]);
 
   return {
     groups,

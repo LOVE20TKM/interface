@@ -3,13 +3,15 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
-import { LOVE20GroupManagerAbi } from '@/src/abis/LOVE20GroupManager';
+import { GroupJoinAbi } from '@/src/abis/GroupJoin';
+import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-import { useGroupManagerAddress, useTokenAddress } from '../contracts/useLOVE20ExtensionGroupAction';
+import { useTokenAddress } from '../contracts/useExtensionGroupAction';
 
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
+const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_MANAGER as `0x${string}`;
+const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_JOIN as `0x${string}`;
 
 export interface GroupDetailInfo {
   // 基本信息
@@ -58,16 +60,13 @@ export const useExtensionGroupDetail = ({
   actionId,
   groupId,
 }: UseExtensionGroupDetailParams): UseExtensionGroupDetailResult => {
-  // 获取 GroupManager 合约地址
-  const { groupManagerAddress } = useGroupManagerAddress(extensionAddress as `0x${string}`);
-
   // 获取 tokenAddress
   const { tokenAddress, isPending: isTokenAddressPending } = useTokenAddress(extensionAddress as `0x${string}`);
 
   // 批量获取链群详细信息
+  // 新版合约：totalJoinedAmountByGroupId 和 accountsByGroupIdCount 移到 GroupJoin
   const detailContracts = useMemo(() => {
-    if (!groupManagerAddress || !extensionAddress || !tokenAddress || actionId === undefined || groupId === undefined)
-      return [];
+    if (!extensionAddress || !tokenAddress || actionId === undefined || groupId === undefined) return [];
 
     return [
       // 获取群组名称
@@ -86,34 +85,34 @@ export const useExtensionGroupDetail = ({
       },
       // 获取行动最大参与代币量
       {
-        address: groupManagerAddress,
-        abi: LOVE20GroupManagerAbi,
+        address: GROUP_MANAGER_ADDRESS,
+        abi: GroupManagerAbi,
         functionName: 'calculateJoinMaxAmount',
         args: [tokenAddress, actionId],
       },
-      // 获取总加入数量
+      // 获取总加入数量（新版合约移到 GroupJoin，需要 tokenAddress, actionId, groupId）
       {
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        address: GROUP_JOIN_ADDRESS,
+        abi: GroupJoinAbi,
         functionName: 'totalJoinedAmountByGroupId',
-        args: [groupId],
+        args: [tokenAddress, actionId, groupId],
       },
-      // 获取群组成员数量
+      // 获取群组成员数量（新版合约移到 GroupJoin，需要 tokenAddress, actionId, groupId）
       {
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        address: GROUP_JOIN_ADDRESS,
+        abi: GroupJoinAbi,
         functionName: 'accountsByGroupIdCount',
-        args: [groupId],
+        args: [tokenAddress, actionId, groupId],
       },
       // 获取群组信息
       {
-        address: groupManagerAddress,
-        abi: LOVE20GroupManagerAbi,
+        address: GROUP_MANAGER_ADDRESS,
+        abi: GroupManagerAbi,
         functionName: 'groupInfo',
         args: [tokenAddress, actionId, groupId],
       },
     ];
-  }, [groupManagerAddress, extensionAddress, tokenAddress, actionId, groupId]);
+  }, [extensionAddress, tokenAddress, actionId, groupId]);
 
   const {
     data: detailData,
@@ -122,13 +121,7 @@ export const useExtensionGroupDetail = ({
   } = useReadContracts({
     contracts: detailContracts as any,
     query: {
-      enabled:
-        !!groupManagerAddress &&
-        !!extensionAddress &&
-        !!tokenAddress &&
-        actionId !== undefined &&
-        groupId !== undefined &&
-        detailContracts.length > 0,
+      enabled: !!extensionAddress && !!tokenAddress && actionId !== undefined && groupId !== undefined && detailContracts.length > 0,
     },
   });
 

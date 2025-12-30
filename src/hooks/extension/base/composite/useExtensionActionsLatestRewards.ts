@@ -18,7 +18,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { ILOVE20ExtensionAbi } from '@/src/abis/ILOVE20Extension';
+import { IExtensionAbi } from '@/src/abis/IExtension';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 
@@ -90,7 +90,7 @@ export const useExtensionActionsLatestRewards = ({
       for (let round = startRound; round <= endRound; round++) {
         contracts.push({
           address: extensionAddress,
-          abi: ILOVE20ExtensionAbi,
+          abi: IExtensionAbi,
           functionName: 'rewardByAccount',
           args: [round, account],
         });

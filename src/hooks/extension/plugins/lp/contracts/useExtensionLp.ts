@@ -1,11 +1,11 @@
-// hooks/useLOVE20ExtensionLp.ts
+// hooks/useExtensionLp.ts
 
 import { useEffect } from 'react';
 import { useReadContract } from 'wagmi';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
-import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
+import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // 注意：ExtensionLp 是动态部署的合约，需要传入合约地址
@@ -21,7 +21,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 export const useFactory = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'factory',
     query: {
       enabled: !!contractAddress,
@@ -37,7 +37,7 @@ export const useFactory = (contractAddress: `0x${string}`) => {
 export const useGovRatioMultiplier = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'govRatioMultiplier',
     query: {
       enabled: !!contractAddress,
@@ -53,7 +53,7 @@ export const useGovRatioMultiplier = (contractAddress: `0x${string}`) => {
 export const useInitialized = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'initialized',
     query: {
       enabled: !!contractAddress,
@@ -69,7 +69,7 @@ export const useInitialized = (contractAddress: `0x${string}`) => {
 export const useIsJoinedValueCalculated = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'isJoinedValueCalculated',
     query: {
       enabled: !!contractAddress,
@@ -85,7 +85,7 @@ export const useIsJoinedValueCalculated = (contractAddress: `0x${string}`) => {
 export const useJoinInfo = (contractAddress: `0x${string}`, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'joinInfo',
     args: [account],
     query: {
@@ -111,7 +111,7 @@ export const useJoinInfo = (contractAddress: `0x${string}`, account: `0x${string
 export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'joinTokenAddress',
     query: {
       enabled: !!contractAddress,
@@ -127,7 +127,7 @@ export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
 export const useJoinedValue = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'joinedValue',
     query: {
       enabled: !!contractAddress,
@@ -143,7 +143,7 @@ export const useJoinedValue = (contractAddress: `0x${string}`) => {
 export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'joinedValueByAccount',
     args: [account],
     query: {
@@ -160,7 +160,7 @@ export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account:
 export const useMinGovVotes = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'minGovVotes',
     query: {
       enabled: !!contractAddress,
@@ -176,7 +176,7 @@ export const useMinGovVotes = (contractAddress: `0x${string}`) => {
 export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'reward',
     args: [round],
     query: {
@@ -193,7 +193,7 @@ export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
 export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'rewardByAccount',
     args: [round, account],
     query: {
@@ -215,7 +215,7 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
 export const useTokenAddress = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'tokenAddress',
     query: {
       enabled: !!contractAddress,
@@ -231,7 +231,7 @@ export const useTokenAddress = (contractAddress: `0x${string}`) => {
 export const useTotalJoinedAmount = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'totalJoinedAmount',
     query: {
       enabled: !!contractAddress,
@@ -247,7 +247,7 @@ export const useTotalJoinedAmount = (contractAddress: `0x${string}`) => {
 export const useWaitingBlocks = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionLpAbi,
+    abi: ExtensionLpAbi,
     functionName: 'waitingBlocks',
     query: {
       enabled: !!contractAddress,
@@ -266,7 +266,7 @@ export const useWaitingBlocks = (contractAddress: `0x${string}`) => {
  */
 export function useExit(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionLpAbi,
+    ExtensionLpAbi,
     contractAddress,
     'exit',
   );
@@ -304,7 +304,7 @@ export function useExit(contractAddress: `0x${string}`) {
  */
 export function useJoin(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionLpAbi,
+    ExtensionLpAbi,
     contractAddress,
     'join',
   );

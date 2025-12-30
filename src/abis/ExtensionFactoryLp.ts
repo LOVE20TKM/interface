@@ -1,12 +1,12 @@
 
 import { Abi } from 'abitype';
 
-export const LOVE20ExtensionGroupServiceFactoryAbi = [
+export const ExtensionFactoryLpAbi = [
   {
     "type": "constructor",
     "inputs": [
       {
-        "name": "center_",
+        "name": "_center",
         "type": "address",
         "internalType": "address"
       }
@@ -31,19 +31,29 @@ export const LOVE20ExtensionGroupServiceFactoryAbi = [
     "name": "createExtension",
     "inputs": [
       {
-        "name": "tokenAddress_",
+        "name": "tokenAddress",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "groupActionTokenAddress_",
+        "name": "joinTokenAddress",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "groupActionFactoryAddress_",
-        "type": "address",
-        "internalType": "address"
+        "name": "waitingBlocks",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "govRatioMultiplier",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minGovVotes",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -70,6 +80,45 @@ export const LOVE20ExtensionGroupServiceFactoryAbi = [
         "name": "",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "extensionParams",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "joinTokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "waitingBlocks",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "govRatioMultiplier",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minGovVotes",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -126,16 +175,45 @@ export const LOVE20ExtensionGroupServiceFactoryAbi = [
       {
         "name": "extension",
         "type": "address",
-        "indexed": true,
+        "indexed": false,
         "internalType": "address"
       },
       {
         "name": "tokenAddress",
         "type": "address",
-        "indexed": true,
+        "indexed": false,
         "internalType": "address"
+      },
+      {
+        "name": "joinTokenAddress",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "waitingBlocks",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "govRatioMultiplier",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "minGovVotes",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "InvalidJoinTokenAddress",
+    "inputs": []
   }
 ] as const satisfies Abi;

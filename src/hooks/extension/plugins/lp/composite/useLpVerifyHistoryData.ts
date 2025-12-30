@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
+import { IExtensionAbi } from '@/src/abis/IExtension';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useAccountsByActionByRound } from '@/src/hooks/extension/base/composite/useAccountsByActionByRound';
 
@@ -71,7 +71,7 @@ export const useLpVerifyHistoryData = ({
 
     return accountsByRound.map((account) => ({
       address: extensionAddress,
-      abi: LOVE20ExtensionLpAbi,
+      abi: IExtensionAbi,
       functionName: 'rewardByAccount',
       args: [round, account],
     }));

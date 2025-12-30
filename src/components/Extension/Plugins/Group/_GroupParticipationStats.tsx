@@ -14,7 +14,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';

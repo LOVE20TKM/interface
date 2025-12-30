@@ -71,17 +71,18 @@ const peripheralFilesToConvert = ['LOVE20TokenViewer', 'LOVE20RoundViewer', 'LOV
 
 const groupFilesToConvert = ['LOVE20Group'];
 
-const extensionsCenterFilesToConvert = ['LOVE20ExtensionCenter', 'ILOVE20Extension', 'LOVE20ExtensionFactoryBase'];
+const extensionsCenterFilesToConvert = ['ExtensionCenter', 'IExtension', 'ExtensionFactoryBase'];
 
-const extensionslpFilesToConvert = ['LOVE20ExtensionFactoryLp', 'LOVE20ExtensionLp'];
+const extensionslpFilesToConvert = ['ExtensionFactoryLp', 'ExtensionLp'];
 
 const extensionsGroupFilesToConvert = [
-  'LOVE20ExtensionGroupAction',
-  'LOVE20ExtensionGroupService',
-  'LOVE20GroupManager',
-  'LOVE20GroupDistrust',
-  'LOVE20ExtensionGroupServiceFactory',
-  'LOVE20ExtensionGroupActionFactory',
+  'ExtensionGroupAction',
+  'ExtensionGroupService',
+  'ExtensionGroupServiceFactory',
+  'ExtensionGroupActionFactory',
+  'GroupManager',
+  'GroupJoin',
+  'GroupVerify',
 ];
 
 // 用于生成 TypeScript 文件的函数

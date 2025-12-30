@@ -17,8 +17,8 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20GroupManagerAbi } from '@/src/abis/LOVE20GroupManager';
-import { useActionIds } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+import { GroupManagerAbi } from '@/src/abis/GroupManager';
+import { useActionIds } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // ==================== 类型定义 ====================
 
@@ -58,7 +58,7 @@ export interface UseActionIdsWithActiveGroupIdsByOwnerResult {
 
 // ==================== 常量定义 ====================
 
-const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
+const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_MANAGER as `0x${string}`;
 const GROUP_ACTION_FACTORY_ADDRESS = process.env
   .NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_ACTION as `0x${string}`;
 
@@ -93,7 +93,7 @@ export function useActionIdsWithActiveGroupIdsByOwner({
     if (!tokenAddress || !account || !actionIds || actionIds.length === 0) return [];
     return actionIds.map((actionId) => ({
       address: GROUP_MANAGER_ADDRESS,
-      abi: LOVE20GroupManagerAbi,
+      abi: GroupManagerAbi,
       functionName: 'activeGroupIdsByOwner' as const,
       args: [tokenAddress, actionId, account] as const,
     }));

@@ -3,7 +3,7 @@
 
 import { useMemo, useEffect } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
+import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
 import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -83,32 +83,32 @@ export const useExtensionActionConstCache = ({
     return [
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        abi: ExtensionGroupActionAbi,
         functionName: 'tokenAddress',
       },
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        abi: ExtensionGroupActionAbi,
         functionName: 'STAKE_TOKEN_ADDRESS',
       },
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        abi: ExtensionGroupActionAbi,
         functionName: 'JOIN_TOKEN_ADDRESS',
       },
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        abi: ExtensionGroupActionAbi,
         functionName: 'MAX_JOIN_AMOUNT_RATIO',
       },
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        abi: ExtensionGroupActionAbi,
         functionName: 'MAX_VERIFY_CAPACITY_FACTOR',
       },
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        abi: ExtensionGroupActionAbi,
         functionName: 'GROUP_ACTIVATION_STAKE_AMOUNT',
       },
     ];

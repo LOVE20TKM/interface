@@ -14,7 +14,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
 
 // 工具函数
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';

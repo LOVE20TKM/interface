@@ -1,11 +1,11 @@
-// hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupService.ts
+// hooks/extension/plugins/group-service/contracts/useExtensionGroupService.ts
 
 import { useEffect } from 'react';
 import { useReadContract } from 'wagmi';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
-import { LOVE20ExtensionGroupServiceAbi } from '@/src/abis/LOVE20ExtensionGroupService';
+import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // 注意：ExtensionGroupService 是动态部署的合约，需要传入合约地址
@@ -21,7 +21,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 export const useBasisPointsBase = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'BASIS_POINTS_BASE',
     query: {
       enabled: !!contractAddress,
@@ -37,7 +37,7 @@ export const useBasisPointsBase = (contractAddress: `0x${string}`) => {
 export const useGroupActionTokenAddress = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'GROUP_ACTION_TOKEN_ADDRESS',
     query: {
       enabled: !!contractAddress,
@@ -53,7 +53,7 @@ export const useGroupActionTokenAddress = (contractAddress: `0x${string}`) => {
 export const useGroupActionFactoryAddress = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'GROUP_ACTION_FACTORY_ADDRESS',
     query: {
       enabled: !!contractAddress,
@@ -69,7 +69,7 @@ export const useGroupActionFactoryAddress = (contractAddress: `0x${string}`) => 
 export const useMaxRecipients = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'DEFAULT_MAX_RECIPIENTS',
     query: {
       enabled: !!contractAddress,
@@ -85,7 +85,7 @@ export const useMaxRecipients = (contractAddress: `0x${string}`) => {
 export const useActionIdsWithRecipients = (contractAddress: `0x${string}`, account: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'actionIdsWithRecipients',
     args: [account, round],
     query: {
@@ -102,7 +102,7 @@ export const useActionIdsWithRecipients = (contractAddress: `0x${string}`, accou
 export const useFactory = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'factory',
     query: {
       enabled: !!contractAddress,
@@ -122,7 +122,7 @@ export const useGeneratedRewardByVerifier = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'generatedRewardByVerifier',
     args: [round, verifier],
     query: {
@@ -149,7 +149,7 @@ export const useGroupIdsWithRecipients = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'groupIdsWithRecipients',
     args: [account, actionId, round],
     query: {
@@ -166,7 +166,7 @@ export const useGroupIdsWithRecipients = (
 export const useHasActiveGroups = (contractAddress: `0x${string}`, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'hasActiveGroups',
     args: [account],
     query: {
@@ -183,7 +183,7 @@ export const useHasActiveGroups = (contractAddress: `0x${string}`, account: `0x$
 export const useInitialized = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'initialized',
     query: {
       enabled: !!contractAddress,
@@ -199,7 +199,7 @@ export const useInitialized = (contractAddress: `0x${string}`) => {
 export const useIsJoinedValueCalculated = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'isJoinedValueCalculated',
     query: {
       enabled: !!contractAddress,
@@ -215,7 +215,7 @@ export const useIsJoinedValueCalculated = (contractAddress: `0x${string}`) => {
 export const useJoinedValue = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'joinedValue',
     query: {
       enabled: !!contractAddress,
@@ -231,7 +231,7 @@ export const useJoinedValue = (contractAddress: `0x${string}`) => {
 export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'joinedValueByAccount',
     args: [account],
     query: {
@@ -248,7 +248,7 @@ export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account:
 export const useJoinInfo = (contractAddress: `0x${string}`, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'joinInfo',
     args: [account],
     query: {
@@ -271,7 +271,7 @@ export const useRecipients = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'recipients',
     args: [groupOwner, actionId, groupId, round],
     query: {
@@ -299,7 +299,7 @@ export const useRecipientsLatest = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'recipientsLatest',
     args: [groupOwner, actionId, groupId],
     query: {
@@ -321,7 +321,7 @@ export const useRecipientsLatest = (
 export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'reward',
     args: [round],
     query: {
@@ -338,7 +338,7 @@ export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
 export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'rewardByAccount',
     args: [round, account],
     query: {
@@ -367,7 +367,7 @@ export const useRewardByRecipient = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'rewardByRecipient',
     args: [round, groupOwner, actionId, groupId, recipient],
     query: {
@@ -396,7 +396,7 @@ export const useRewardDistribution = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'rewardDistribution',
     args: [round, groupOwner, actionId, groupId],
     query: {
@@ -421,7 +421,7 @@ export const useRewardDistribution = (
 export const useRewardDistributionAll = (contractAddress: `0x${string}`, round: bigint, groupOwner: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'rewardDistributionAll',
     args: [round, groupOwner],
     query: {
@@ -438,7 +438,7 @@ export const useRewardDistributionAll = (contractAddress: `0x${string}`, round: 
 export const useTokenAddress = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'tokenAddress',
     query: {
       enabled: !!contractAddress,
@@ -455,7 +455,7 @@ export const useTokenAddress = (contractAddress: `0x${string}`) => {
 export const useVotedGroupActions = (contractAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'votedGroupActions',
     args: [round],
     query: {
@@ -480,7 +480,7 @@ export const useVotedGroupActions = (contractAddress: `0x${string}`, round: bigi
  */
 export function useExit(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupServiceAbi,
+    ExtensionGroupServiceAbi,
     contractAddress,
     'exit',
   );
@@ -518,7 +518,7 @@ export function useExit(contractAddress: `0x${string}`) {
  */
 export function useJoin(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupServiceAbi,
+    ExtensionGroupServiceAbi,
     contractAddress,
     'join',
   );
@@ -556,7 +556,7 @@ export function useJoin(contractAddress: `0x${string}`) {
  */
 export function useSetRecipients(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupServiceAbi,
+    ExtensionGroupServiceAbi,
     contractAddress,
     'setRecipients',
   );
@@ -588,3 +588,4 @@ export function useSetRecipients(contractAddress: `0x${string}`) {
     isTukeMode,
   };
 }
+

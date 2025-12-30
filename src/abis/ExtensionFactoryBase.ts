@@ -1,7 +1,7 @@
 
 import { Abi } from 'abitype';
 
-export const LOVE20ExtensionFactoryBaseAbi = [
+export const ExtensionFactoryBaseAbi = [
   {
     "type": "function",
     "name": "center",

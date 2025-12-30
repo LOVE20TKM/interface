@@ -21,7 +21,7 @@
 
 import { useMemo } from 'react';
 import { useReadContract, useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupServiceAbi } from '@/src/abis/LOVE20ExtensionGroupService';
+import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
 import { ActionBaseInfo } from '@/src/types/love20types';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
@@ -117,7 +117,7 @@ export function useRecipientsDetailByAccountByRound({
     error: actionIdsError,
   } = useReadContract({
     address: extensionAddress,
-    abi: LOVE20ExtensionGroupServiceAbi,
+    abi: ExtensionGroupServiceAbi,
     functionName: 'actionIdsWithRecipients',
     args: account && round !== undefined ? [account, round] : undefined,
     query: {
@@ -143,7 +143,7 @@ export function useRecipientsDetailByAccountByRound({
 
     return actionIds.map((actionId) => ({
       address: extensionAddress,
-      abi: LOVE20ExtensionGroupServiceAbi,
+      abi: ExtensionGroupServiceAbi,
       functionName: 'groupIdsWithRecipients' as const,
       args: [account, actionId, round] as const,
     }));
@@ -205,7 +205,7 @@ export function useRecipientsDetailByAccountByRound({
 
     return actionGroupPairs.map(({ actionId, groupId }) => ({
       address: extensionAddress,
-      abi: LOVE20ExtensionGroupServiceAbi,
+      abi: ExtensionGroupServiceAbi,
       functionName: 'rewardDistribution' as const,
       args: [round, account, actionId, groupId] as const,
     }));

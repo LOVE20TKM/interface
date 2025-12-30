@@ -10,7 +10,7 @@
 import { useMemo } from 'react';
 
 // my hooks
-import { useActiveGroupIdsByOwner } from './contracts/useLOVE20GroupManager';
+import { useActiveGroupIdsByOwner } from './contracts/useGroupManager';
 
 /**
  * Hook 参数接口

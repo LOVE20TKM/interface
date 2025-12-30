@@ -17,7 +17,7 @@ import {
   useSetRecipients,
   useBasisPointsBase,
   useMaxRecipients,
-} from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupService';
+} from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 import { useContractError } from '@/src/errors/useContractError';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 

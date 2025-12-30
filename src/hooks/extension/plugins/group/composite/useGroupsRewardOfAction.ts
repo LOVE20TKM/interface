@@ -25,9 +25,9 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { useActiveGroupIds } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+import { useActiveGroupIds } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
+import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // ==================== 类型定义 ====================
@@ -135,7 +135,7 @@ export function useGroupsRewardOfAction(
 
     return groupIds.map((groupId) => ({
       address: extensionAddress,
-      abi: LOVE20ExtensionGroupActionAbi,
+      abi: ExtensionGroupActionAbi,
       functionName: 'generatedRewardByGroupId' as const,
       args: [round, groupId],
     }));

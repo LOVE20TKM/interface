@@ -3,9 +3,9 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupServiceAbi } from '@/src/abis/LOVE20ExtensionGroupService';
-import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
-import { LOVE20GroupManagerAbi } from '@/src/abis/LOVE20GroupManager';
+import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
+import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
+import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 
@@ -60,7 +60,7 @@ export const useGroupServiceActionAccounts = ({
       // 获取所有参与者地址
       {
         address: CENTER_CONTRACT_ADDRESS,
-        abi: LOVE20ExtensionCenterAbi,
+        abi: ExtensionCenterAbi,
         functionName: 'accounts',
         args: [tokenAddress, actionId],
       },
@@ -99,7 +99,7 @@ export const useGroupServiceActionAccounts = ({
       // 调用 1: 获取 joinInfo
       contracts.push({
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupServiceAbi,
+        abi: ExtensionGroupServiceAbi,
         functionName: 'joinInfo',
         args: [account],
       });
@@ -107,7 +107,7 @@ export const useGroupServiceActionAccounts = ({
       // 调用 2: 获取 activeGroupIdsByOwner
       contracts.push({
         address: GROUP_MANAGER_ADDRESS,
-        abi: LOVE20GroupManagerAbi,
+        abi: GroupManagerAbi,
         functionName: 'activeGroupIdsByOwner',
         args: [tokenAddress, actionId, account],
       });

@@ -13,8 +13,8 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
-import { LOVE20ExtensionGroupServiceAbi } from '@/src/abis/LOVE20ExtensionGroupService';
+import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
+import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
 import { useActionIdsWithActiveGroupIdsByOwner } from '@/src/hooks/extension/plugins/group-service/composite/useActionIdsWithActiveGroupIdsByOwner';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useGroupNames } from '@/src/hooks/extension/base/composite/useGroupNames';
@@ -149,7 +149,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
 
     return actionGroupPairs.map(({ actionId, groupId }) => ({
       address: extensionAddress,
-      abi: LOVE20ExtensionGroupServiceAbi,
+      abi: ExtensionGroupServiceAbi,
       functionName: 'rewardDistribution' as const,
       args: [round, verifier, actionId, groupId] as const,
     }));
@@ -241,7 +241,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
         }
         return {
           address: extensionAddr,
-          abi: LOVE20ExtensionGroupActionAbi,
+          abi: ExtensionGroupActionAbi,
           functionName: 'generatedRewardByGroupId' as const,
           args: [round, groupId] as const,
         };

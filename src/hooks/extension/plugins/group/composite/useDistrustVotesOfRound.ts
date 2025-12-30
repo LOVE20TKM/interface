@@ -3,15 +3,13 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20GroupDistrustAbi } from '@/src/abis/LOVE20GroupDistrust';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
+import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-import { useVerifiers } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+import { useVerifiers } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useGroupNamesWithCache } from '../../../base/composite/useGroupNamesWithCache';
 import type { DistrustVoteInfo } from './useDistrustVotesOfCurrentRound';
 
-const GROUP_DISTRUST_CONTRACT_ADDRESS = process.env
-  .NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_DISTRUST as `0x${string}`;
+const GROUP_VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_VERIFY as `0x${string}`;
 
 export interface UseDistrustVotesOfRoundParams {
   extensionAddress: `0x${string}` | undefined;
@@ -45,28 +43,35 @@ export const useDistrustVotesOfRound = ({
   round,
 }: UseDistrustVotesOfRoundParams): UseDistrustVotesOfRoundResult => {
   // 第一步：获取指定轮次的验证者列表
+  // 新版合约 useVerifiers 需要 tokenAddress 和 actionId 参数
   const {
     verifiers,
     isPending: isVerifiersPending,
     error: verifiersError,
-  } = useVerifiers(extensionAddress as `0x${string}`, round !== undefined ? round : BigInt(0));
+  } = useVerifiers(
+    tokenAddress as `0x${string}`,
+    actionId !== undefined ? actionId : BigInt(0),
+    round !== undefined ? round : BigInt(0),
+  );
 
   // 第二步：批量获取每个验证者的链群NFT列表
+  // 新版合约 groupIdsByVerifier 移到 GroupVerify，参数顺序变为 tokenAddress, actionId, round, verifier
   const groupIdsContracts = useMemo(() => {
-    if (!extensionAddress || round === undefined || !verifiers || verifiers.length === 0) return [];
+    if (!tokenAddress || actionId === undefined || round === undefined || !verifiers || verifiers.length === 0)
+      return [];
 
     const contracts = [];
     for (const verifier of verifiers) {
       contracts.push({
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        address: GROUP_VERIFY_CONTRACT_ADDRESS,
+        abi: GroupVerifyAbi,
         functionName: 'groupIdsByVerifier',
-        args: [round, verifier],
+        args: [tokenAddress, actionId, round, verifier],
       });
     }
 
     return contracts;
-  }, [extensionAddress, round, verifiers]);
+  }, [tokenAddress, actionId, round, verifiers]);
 
   const {
     data: groupIdsData,
@@ -119,8 +124,8 @@ export const useDistrustVotesOfRound = ({
 
     // 首先获取总验证票数（只需要调用一次）
     contracts.push({
-      address: GROUP_DISTRUST_CONTRACT_ADDRESS,
-      abi: LOVE20GroupDistrustAbi,
+      address: GROUP_VERIFY_CONTRACT_ADDRESS,
+      abi: GroupVerifyAbi,
       functionName: 'totalVerifyVotes',
       args: [tokenAddress, actionId, round],
     });
@@ -128,8 +133,8 @@ export const useDistrustVotesOfRound = ({
     // 然后获取每个验证者的不信任票数
     for (const verifier of verifiers) {
       contracts.push({
-        address: GROUP_DISTRUST_CONTRACT_ADDRESS,
-        abi: LOVE20GroupDistrustAbi,
+        address: GROUP_VERIFY_CONTRACT_ADDRESS,
+        abi: GroupVerifyAbi,
         functionName: 'distrustVotesByGroupOwner',
         args: [tokenAddress, actionId, round, verifier],
       });

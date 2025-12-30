@@ -1,11 +1,11 @@
-// hooks/contracts/useLOVE20ExtensionFactoryLp.ts
+// hooks/contracts/useExtensionFactoryLp.ts
 
 import { useEffect } from 'react';
 import { useReadContract } from 'wagmi';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
-import { LOVE20ExtensionFactoryLpAbi } from '@/src/abis/LOVE20ExtensionFactoryLp';
+import { ExtensionFactoryLpAbi } from '@/src/abis/ExtensionFactoryLp';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // 需要在环境变量中配置这个合约地址
@@ -21,7 +21,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACT
 export const useFactoryCenter = (factoryAddress?: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress || CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionFactoryLpAbi,
+    abi: ExtensionFactoryLpAbi,
     functionName: 'center',
     query: {
       enabled: !!(factoryAddress || CONTRACT_ADDRESS),
@@ -37,7 +37,7 @@ export const useFactoryCenter = (factoryAddress?: `0x${string}`) => {
 export const useExtensionExists = (factoryAddress: `0x${string}`, extensionAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: LOVE20ExtensionFactoryLpAbi,
+    abi: ExtensionFactoryLpAbi,
     functionName: 'exists',
     args: [extensionAddress],
     query: {
@@ -54,7 +54,7 @@ export const useExtensionExists = (factoryAddress: `0x${string}`, extensionAddre
 export const useExtensionParams = (factoryAddress: `0x${string}`, extensionAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: LOVE20ExtensionFactoryLpAbi,
+    abi: ExtensionFactoryLpAbi,
     functionName: 'extensionParams',
     args: [extensionAddress],
     query: {
@@ -79,7 +79,7 @@ export const useExtensionParams = (factoryAddress: `0x${string}`, extensionAddre
 export const useFactoryExtensions = (factoryAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: LOVE20ExtensionFactoryLpAbi,
+    abi: ExtensionFactoryLpAbi,
     functionName: 'extensions',
     query: {
       enabled: !!factoryAddress,
@@ -95,7 +95,7 @@ export const useFactoryExtensions = (factoryAddress: `0x${string}`) => {
 export const useFactoryExtensionsAtIndex = (factoryAddress: `0x${string}`, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: LOVE20ExtensionFactoryLpAbi,
+    abi: ExtensionFactoryLpAbi,
     functionName: 'extensionsAtIndex',
     args: [index],
     query: {
@@ -112,7 +112,7 @@ export const useFactoryExtensionsAtIndex = (factoryAddress: `0x${string}`, index
 export const useFactoryExtensionsCount = (factoryAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: LOVE20ExtensionFactoryLpAbi,
+    abi: ExtensionFactoryLpAbi,
     functionName: 'extensionsCount',
     query: {
       enabled: !!factoryAddress,
@@ -129,12 +129,12 @@ export const useFactoryExtensionsCount = (factoryAddress: `0x${string}`) => {
 /**
  * Hook for createExtension - 创建新的 Lp 扩展
  * @param factoryAddress 工厂合约地址，如果不提供则使用环境变量中的默认地址
- * 
+ *
  * 注意：在调用 createExtension 之前，需要先授权 1 个代币给 factory
  */
 export function useCreateExtension(factoryAddress?: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionFactoryLpAbi,
+    ExtensionFactoryLpAbi,
     factoryAddress || CONTRACT_ADDRESS,
     'createExtension',
   );
@@ -179,5 +179,3 @@ export function useCreateExtension(factoryAddress?: `0x${string}`) {
     isTukeMode,
   };
 }
-
-

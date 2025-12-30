@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts';
-import { LOVE20ExtensionFactoryLpAbi } from '@/src/abis/LOVE20ExtensionFactoryLp';
+import { ExtensionFactoryLpAbi } from '@/src/abis/ExtensionFactoryLp';
 import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
@@ -120,7 +120,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
       try {
         // 解析 ExtensionCreate 事件
         const logs = parseEventLogs({
-          abi: LOVE20ExtensionFactoryLpAbi,
+          abi: ExtensionFactoryLpAbi,
           eventName: 'ExtensionCreate',
           logs: receipt.logs,
         });

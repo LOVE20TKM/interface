@@ -1,16 +1,11 @@
 // components/Extension/Base/Action/ExtensionActionJoinPanel.tsx
 
 import React from 'react';
-import { useReadContract } from 'wagmi';
-
-// my abis
-import { ILOVE20ExtensionAbi } from '@/src/abis/ILOVE20Extension';
 
 // my config
 import { ExtensionType, getExtensionConfigByFactory } from '@/src/config/extensionConfig';
 
 // my components
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LpJoinPanel from '@/src/components/Extension/Plugins/Lp/LpJoinPanel';
 import GroupJoinPanel from '@/src/components/Extension/Plugins/Group/GroupJoinPanel';
 import GroupServiceJoinPanel from '@/src/components/Extension/Plugins/GroupService/GroupServiceJoinPanel';
@@ -22,6 +17,7 @@ interface ExtensionActionJoinPanelProps {
   actionId: bigint;
   actionInfo: ActionInfo;
   extensionAddress: `0x${string}`;
+  factory: `0x${string}`;
 }
 
 /**
@@ -40,31 +36,10 @@ const ExtensionActionJoinPanel: React.FC<ExtensionActionJoinPanelProps> = ({
   actionId,
   actionInfo,
   extensionAddress,
+  factory,
 }) => {
-  // 获取扩展合约的 factory 地址，判断类型（使用通用接口 ILOVE20Extension）
-  const { data: factoryAddress, isPending: isFactoryPending } = useReadContract({
-    address: extensionAddress,
-    abi: ILOVE20ExtensionAbi,
-    functionName: 'factory',
-    query: {
-      enabled: !!extensionAddress,
-    },
-  });
-
-  // 如果正在加载工厂地址
-  if (isFactoryPending) {
-    return (
-      <div className="bg-white rounded-lg p-8">
-        <div className="text-center">
-          <LoadingIcon />
-          <p className="mt-4 text-gray-600">加载扩展信息中...</p>
-        </div>
-      </div>
-    );
-  }
-
   // 获取扩展配置
-  const extensionConfig = factoryAddress ? getExtensionConfigByFactory(factoryAddress as `0x${string}`) : null;
+  const extensionConfig = factory ? getExtensionConfigByFactory(factory) : null;
 
   // 如果是未知的扩展类型，显示暂不支持
   if (!extensionConfig) {

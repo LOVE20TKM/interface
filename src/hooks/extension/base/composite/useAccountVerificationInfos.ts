@@ -19,7 +19,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
+import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 
 const CONTRACT_CENTER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
 
@@ -97,7 +97,7 @@ export function useAccountVerificationInfos(
     // 为每个 verificationKey 构建一个查询配置
     return verificationKeys.map((key) => ({
       address: CONTRACT_CENTER_ADDRESS,
-      abi: LOVE20ExtensionCenterAbi,
+      abi: ExtensionCenterAbi,
       functionName: 'verificationInfo' as const,
       args:
         tokenAddress && actionId !== undefined && account && key ? [tokenAddress, actionId, account, key] : undefined,

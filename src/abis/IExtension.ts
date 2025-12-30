@@ -1,7 +1,7 @@
 
 import { Abi } from 'abitype';
 
-export const ILOVE20ExtensionAbi = [
+export const IExtensionAbi = [
   {
     "type": "function",
     "name": "actionId",
@@ -59,6 +59,13 @@ export const ILOVE20ExtensionAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initializeAction",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",

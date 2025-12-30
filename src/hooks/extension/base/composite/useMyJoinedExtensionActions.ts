@@ -18,11 +18,12 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { useActionIdsByAccount } from '@/src/hooks/extension/base/contracts/useLOVE20ExtensionCenter';
+import { useActionIdsByAccount } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useExtensionsContractInfo, ExtensionContractInfo } from './useExtensionBaseData';
 import { LOVE20RoundViewerAbi } from '@/src/abis/LOVE20RoundViewer';
-import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
+import { IExtensionAbi } from '@/src/abis/IExtension';
 import { JoinedAction } from '@/src/types/love20types';
+import { getExtensionConfigs } from '@/src/config/extensionConfig';
 
 const ROUND_VIEWER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_ROUNDVIEWER as `0x${string}`;
 
@@ -55,12 +56,18 @@ export const useMyJoinedExtensionActions = ({
   account,
   currentRound,
 }: UseMyJoinedExtensionActionsParams): UseMyJoinedExtensionActionsResult => {
+  // 从配置中获取所有 factory 地址
+  const factories = useMemo(() => {
+    const configs = getExtensionConfigs();
+    return configs.map((config) => config.factoryAddress);
+  }, []);
+
   // 步骤1: 获取用户在扩展协议中参与的行动ID列表
   const {
     actionIds: extensionActionIds,
     isPending: isPendingExtensionIds,
     error: errorExtensionIds,
-  } = useActionIdsByAccount(tokenAddress || ('' as `0x${string}`), account || ('' as `0x${string}`));
+  } = useActionIdsByAccount(tokenAddress || ('' as `0x${string}`), account || ('' as `0x${string}`), factories);
 
   // 检查是否有扩展行动（但不能提前返回，必须保持 hooks 调用顺序一致）
   const hasExtensionActions = !isPendingExtensionIds && extensionActionIds && extensionActionIds.length > 0;
@@ -143,7 +150,7 @@ export const useMyJoinedExtensionActions = ({
       .filter((info) => info.isExtension && info.extension)
       .map((info) => ({
         address: info.extension!,
-        abi: LOVE20ExtensionLpAbi,
+        abi: IExtensionAbi,
         functionName: 'joinedValueByAccount',
         args: [account],
       }));

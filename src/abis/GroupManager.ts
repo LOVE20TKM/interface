@@ -1,62 +1,15 @@
 
 import { Abi } from 'abitype';
 
-export const LOVE20GroupManagerAbi = [
+export const GroupManagerAbi = [
   {
     "type": "constructor",
-    "inputs": [
-      {
-        "name": "centerAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "stakeAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "joinAddress_",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
+    "inputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "CENTER_ADDRESS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "GROUP_ADDRESS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "JOIN_ADDRESS",
+    "name": "FACTORY_ADDRESS",
     "inputs": [],
     "outputs": [
       {
@@ -76,19 +29,6 @@ export const LOVE20GroupManagerAbi = [
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "STAKE_ADDRESS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -442,50 +382,6 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "function",
-    "name": "config",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "stakeTokenAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "joinTokenAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "activationStakeAmount_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxJoinAmountRatio_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxVerifyCapacityFactor_",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "deactivateGroup",
     "inputs": [
       {
@@ -578,6 +474,48 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "function",
+    "name": "hasActiveGroups",
+    "inputs": [
+      {
+        "name": "actionFactory",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initialize",
+    "inputs": [
+      {
+        "name": "factory_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "isGroupActive",
     "inputs": [
       {
@@ -633,44 +571,6 @@ export const LOVE20GroupManagerAbi = [
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "setConfig",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "stakeTokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "joinTokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "activationStakeAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxJoinAmountRatio",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxVerifyCapacityFactor",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -806,25 +706,6 @@ export const LOVE20GroupManagerAbi = [
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "event",
-    "name": "ConfigSet",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "stakeTokenAddress",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
   },
   {
     "type": "event",
@@ -975,17 +856,12 @@ export const LOVE20GroupManagerAbi = [
   },
   {
     "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "CannotDeactivateInActivatedRound",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ConfigAlreadySet",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ConfigNotSet",
     "inputs": []
   },
   {
@@ -1011,6 +887,11 @@ export const LOVE20GroupManagerAbi = [
   {
     "type": "error",
     "name": "GroupNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidFactory",
     "inputs": []
   },
   {

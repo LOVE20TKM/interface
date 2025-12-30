@@ -1,22 +1,12 @@
 
 import { Abi } from 'abitype';
 
-export const LOVE20ExtensionGroupActionFactoryAbi = [
+export const ExtensionGroupServiceFactoryAbi = [
   {
     "type": "constructor",
     "inputs": [
       {
-        "name": "center_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupManagerAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupDistrustAddress_",
+        "name": "groupActionFactory_",
         "type": "address",
         "internalType": "address"
       }
@@ -25,20 +15,7 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
   },
   {
     "type": "function",
-    "name": "GROUP_DISTRUST_ADDRESS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "GROUP_MANAGER_ADDRESS",
+    "name": "GROUP_ACTION_FACTORY_ADDRESS",
     "inputs": [],
     "outputs": [
       {
@@ -72,29 +49,9 @@ export const LOVE20ExtensionGroupActionFactoryAbi = [
         "internalType": "address"
       },
       {
-        "name": "stakeTokenAddress_",
+        "name": "groupActionTokenAddress_",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "joinTokenAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "activationStakeAmount_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxJoinAmountRatio_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxVerifyCapacityFactor_",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [

@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
-import { useRewardDistribution } from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupService';
+import { useRewardDistribution } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 
 interface _RewardDistributionByGroupDialogProps {
   /** Extension 合约地址 */

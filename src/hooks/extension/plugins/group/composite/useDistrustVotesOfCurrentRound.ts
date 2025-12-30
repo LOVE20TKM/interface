@@ -3,12 +3,11 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20GroupDistrustAbi } from '@/src/abis/LOVE20GroupDistrust';
+import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useExtensionGroupBaseInfosOfAction } from './useExtensionGroupBaseInfosOfAction';
 
-const GROUP_DISTRUST_CONTRACT_ADDRESS = process.env
-  .NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_DISTRUST as `0x${string}`;
+const GROUP_VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_VERIFY as `0x${string}`;
 
 export interface DistrustVoteInfo {
   groupOwner: `0x${string}`;
@@ -87,8 +86,8 @@ export const useDistrustVotesOfCurrentRound = ({
 
     // 首先获取总验证票数（只需要调用一次）
     contracts.push({
-      address: GROUP_DISTRUST_CONTRACT_ADDRESS,
-      abi: LOVE20GroupDistrustAbi,
+      address: GROUP_VERIFY_CONTRACT_ADDRESS,
+      abi: GroupVerifyAbi,
       functionName: 'totalVerifyVotes',
       args: [tokenAddress, actionId, round],
     });
@@ -96,8 +95,8 @@ export const useDistrustVotesOfCurrentRound = ({
     // 然后获取每个群主的不信任票数
     for (const owner of groupOwners) {
       contracts.push({
-        address: GROUP_DISTRUST_CONTRACT_ADDRESS,
-        abi: LOVE20GroupDistrustAbi,
+        address: GROUP_VERIFY_CONTRACT_ADDRESS,
+        abi: GroupVerifyAbi,
         functionName: 'distrustVotesByGroupOwner',
         args: [tokenAddress, actionId, round, owner],
       });

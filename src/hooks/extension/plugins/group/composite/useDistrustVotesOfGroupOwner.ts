@@ -3,15 +3,14 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20GroupDistrustAbi } from '@/src/abis/LOVE20GroupDistrust';
+import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { LOVE20VoteAbi } from '@/src/abis/LOVE20Vote';
 import { LOVE20VerifyAbi } from '@/src/abis/LOVE20Verify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 const VOTE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VOTE as `0x${string}`;
 const VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VERIFY as `0x${string}`;
-const GROUP_DISTRUST_CONTRACT_ADDRESS = process.env
-  .NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_DISTRUST as `0x${string}`;
+const GROUP_VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_VERIFY as `0x${string}`;
 
 export interface VoterDistrustInfo {
   voter: `0x${string}`;
@@ -132,16 +131,16 @@ export const useDistrustVotesOfGroupOwner = ({
 
       // 获取不信任票
       contracts.push({
-        address: GROUP_DISTRUST_CONTRACT_ADDRESS,
-        abi: LOVE20GroupDistrustAbi,
+        address: GROUP_VERIFY_CONTRACT_ADDRESS,
+        abi: GroupVerifyAbi,
         functionName: 'distrustVotesByVoterByGroupOwner',
         args: [tokenAddress, actionId, round, voter, groupOwner],
       });
 
       // 获取原因
       contracts.push({
-        address: GROUP_DISTRUST_CONTRACT_ADDRESS,
-        abi: LOVE20GroupDistrustAbi,
+        address: GROUP_VERIFY_CONTRACT_ADDRESS,
+        abi: GroupVerifyAbi,
         functionName: 'distrustReason',
         args: [tokenAddress, actionId, round, voter, groupOwner],
       });

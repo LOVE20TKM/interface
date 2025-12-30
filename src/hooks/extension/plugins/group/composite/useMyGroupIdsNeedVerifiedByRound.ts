@@ -25,9 +25,10 @@
 import { useMemo, useContext } from 'react';
 import { useReadContracts } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
-import { LOVE20GroupManagerAbi } from '@/src/abis/LOVE20GroupManager';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
-import { useVotedGroupActions } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+import { GroupManagerAbi } from '@/src/abis/GroupManager';
+import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
+import { GroupJoinAbi } from '@/src/abis/GroupJoin';
+import { useVotedGroupActions } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // ==================== 类型定义 ====================
 
@@ -78,7 +79,9 @@ interface GroupTuple {
 
 // ==================== 常量定义 ====================
 
-const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
+const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_MANAGER as `0x${string}`;
+const GROUP_VERIFY_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_VERIFY as `0x${string}`;
+const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_JOIN as `0x${string}`;
 const GROUP_ACTION_FACTORY_ADDRESS = process.env
   .NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_ACTION as `0x${string}`;
 
@@ -121,7 +124,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
 
     return actionIds.map((actionId) => ({
       address: GROUP_MANAGER_ADDRESS,
-      abi: LOVE20GroupManagerAbi,
+      abi: GroupManagerAbi,
       functionName: 'activeGroupIdsByOwner' as const,
       args: [tokenAddress, actionId, account] as const,
     }));
@@ -167,16 +170,17 @@ export function useMyGroupIdsNeedVerifiedByRound({
   // 步骤5：批量检查验证状态
   // ==========================================
 
+  // 新版合约 isVerified 需要 tokenAddress, actionId, round, groupId 参数，移到 GroupVerify 合约
   const isVerifiedContracts = useMemo(() => {
-    if (round === undefined || groupTuples.length === 0) return [];
+    if (!tokenAddress || round === undefined || groupTuples.length === 0) return [];
 
-    return groupTuples.map(({ extensionAddress, groupId }) => ({
-      address: extensionAddress,
-      abi: LOVE20ExtensionGroupActionAbi,
+    return groupTuples.map(({ actionId, groupId }) => ({
+      address: GROUP_VERIFY_ADDRESS,
+      abi: GroupVerifyAbi,
       functionName: 'isVerified' as const,
-      args: [round, groupId] as const,
+      args: [tokenAddress, actionId, round, groupId] as const,
     }));
-  }, [round, groupTuples]);
+  }, [tokenAddress, round, groupTuples]);
 
   const {
     data: isVerifiedData,
@@ -190,16 +194,17 @@ export function useMyGroupIdsNeedVerifiedByRound({
   });
 
   // 批量读取 accountCountByGroupIdByRound
+  // 新版合约 accountCountByGroupIdByRound 需要 tokenAddress, actionId, groupId, round 参数，移到 GroupJoin 合约
   const accountCountContracts = useMemo(() => {
-    if (round === undefined || groupTuples.length === 0) return [];
+    if (!tokenAddress || round === undefined || groupTuples.length === 0) return [];
 
-    return groupTuples.map(({ extensionAddress, groupId }) => ({
-      address: extensionAddress,
-      abi: LOVE20ExtensionGroupActionAbi,
+    return groupTuples.map(({ actionId, groupId }) => ({
+      address: GROUP_JOIN_ADDRESS,
+      abi: GroupJoinAbi,
       functionName: 'accountCountByGroupIdByRound' as const,
-      args: [groupId, round] as const,
+      args: [tokenAddress, actionId, groupId, round] as const,
     }));
-  }, [round, groupTuples]);
+  }, [tokenAddress, round, groupTuples]);
 
   const {
     data: accountCountData,

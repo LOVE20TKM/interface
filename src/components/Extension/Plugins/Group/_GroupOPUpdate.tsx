@@ -32,7 +32,7 @@ import { useExtensionActionParam, useExtensionGroupDetail } from '@/src/hooks/ex
 import {
   useUpdateGroupInfo,
   useMaxVerifyCapacityByOwner,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+} from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 import { useAccount } from 'wagmi';
 
 // 工具函数

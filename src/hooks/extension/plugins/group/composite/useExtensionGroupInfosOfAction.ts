@@ -3,13 +3,14 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
-import { LOVE20GroupManagerAbi } from '@/src/abis/LOVE20GroupManager';
+import { GroupJoinAbi } from '@/src/abis/GroupJoin';
+import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-import { useGroupManagerAddress } from '../contracts/useLOVE20ExtensionGroupAction';
 
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
+const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_MANAGER as `0x${string}`;
+const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_JOIN as `0x${string}`;
 
 export interface GroupBasicInfo {
   groupId: bigint;
@@ -57,32 +58,27 @@ export const useExtensionGroupInfosOfAction = ({
   tokenAddress,
   actionId,
 }: UseExtensionGroupInfosOfActionParams): UseExtensionGroupInfosOfActionResult => {
-  // 获取 GroupManager 合约地址
-  const { groupManagerAddress, isPending: isGroupManagerPending } = useGroupManagerAddress(
-    extensionAddress as `0x${string}`,
-  );
-
   // 第一步：批量获取活跃链群NFT列表和行动最大参与代币量
   const firstBatchContracts = useMemo(() => {
-    if (!groupManagerAddress || !tokenAddress || actionId === undefined) return [];
+    if (!tokenAddress || actionId === undefined) return [];
 
     return [
       // 获取活跃链群NFT列表
       {
-        address: groupManagerAddress,
-        abi: LOVE20GroupManagerAbi,
+        address: GROUP_MANAGER_ADDRESS,
+        abi: GroupManagerAbi,
         functionName: 'activeGroupIds',
         args: [tokenAddress, actionId],
       },
       // 获取行动最大参与代币量
       {
-        address: groupManagerAddress,
-        abi: LOVE20GroupManagerAbi,
+        address: GROUP_MANAGER_ADDRESS,
+        abi: GroupManagerAbi,
         functionName: 'calculateJoinMaxAmount',
         args: [tokenAddress, actionId],
       },
     ];
-  }, [groupManagerAddress, tokenAddress, actionId]);
+  }, [tokenAddress, actionId]);
 
   const {
     data: firstBatchData,
@@ -91,7 +87,7 @@ export const useExtensionGroupInfosOfAction = ({
   } = useReadContracts({
     contracts: firstBatchContracts as any,
     query: {
-      enabled: !!groupManagerAddress && !!tokenAddress && actionId !== undefined && firstBatchContracts.length > 0,
+      enabled: !!tokenAddress && actionId !== undefined && firstBatchContracts.length > 0,
     },
   });
 
@@ -107,16 +103,17 @@ export const useExtensionGroupInfosOfAction = ({
   }, [firstBatchData]);
 
   // 第二步：批量获取每个群组的详细信息
+  // 新版合约：totalJoinedAmountByGroupId 和 accountsByGroupIdCount 移到 GroupJoin
   const detailContracts = useMemo(() => {
-    if (!groupManagerAddress || !tokenAddress || actionId === undefined || groupIds.length === 0) return [];
+    if (!tokenAddress || actionId === undefined || groupIds.length === 0) return [];
 
     const contracts = [];
 
     for (const groupId of groupIds) {
       // 获取群组信息（从 GroupManager）
       contracts.push({
-        address: groupManagerAddress,
-        abi: LOVE20GroupManagerAbi,
+        address: GROUP_MANAGER_ADDRESS,
+        abi: GroupManagerAbi,
         functionName: 'groupInfo',
         args: [tokenAddress, actionId, groupId],
       });
@@ -137,25 +134,25 @@ export const useExtensionGroupInfosOfAction = ({
         args: [groupId],
       });
 
-      // 获取群组总加入数量
+      // 获取群组总加入数量（新版合约移到 GroupJoin）
       contracts.push({
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        address: GROUP_JOIN_ADDRESS,
+        abi: GroupJoinAbi,
         functionName: 'totalJoinedAmountByGroupId',
-        args: [groupId],
+        args: [tokenAddress, actionId, groupId],
       });
 
-      // 获取群组成员数量
+      // 获取群组成员数量（新版合约移到 GroupJoin）
       contracts.push({
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        address: GROUP_JOIN_ADDRESS,
+        abi: GroupJoinAbi,
         functionName: 'accountsByGroupIdCount',
-        args: [groupId],
+        args: [tokenAddress, actionId, groupId],
       });
     }
 
     return contracts;
-  }, [groupManagerAddress, tokenAddress, actionId, extensionAddress, groupIds]);
+  }, [tokenAddress, actionId, groupIds]);
 
   const {
     data: detailData,
@@ -164,12 +161,7 @@ export const useExtensionGroupInfosOfAction = ({
   } = useReadContracts({
     contracts: detailContracts as any,
     query: {
-      enabled:
-        !!groupManagerAddress &&
-        !!tokenAddress &&
-        actionId !== undefined &&
-        !!extensionAddress &&
-        detailContracts.length > 0,
+      enabled: !!tokenAddress && actionId !== undefined && detailContracts.length > 0,
     },
   });
 
@@ -240,36 +232,19 @@ export const useExtensionGroupInfosOfAction = ({
   const isPending = useMemo(() => {
     // 如果第一步（获取活跃链群NFT列表和行动最大参与量）还在加载，返回 true
     if (isFirstBatchPending) return true;
-    // 如果 GroupManager 地址还在加载，返回 true
-    if (isGroupManagerPending) return true;
     // 如果 tokenAddress 或 actionId 不存在，返回 true（等待前置条件）
     if (!tokenAddress || actionId === undefined) return true;
-    // 如果 groupManagerAddress 不存在，且已经加载完成（isGroupManagerPending 为 false），说明没有 groupManager，返回 false（没有链群）
-    if (!groupManagerAddress && !isGroupManagerPending) {
+    // 如果没有链群（groupIds 为空），且查询已完成，返回 false
+    if (groupIds.length === 0 && !isFirstBatchPending) {
       return false;
     }
-    // 如果 groupManagerAddress 存在，检查链群NFT列表的加载状态
-    if (groupManagerAddress) {
-      // 如果没有链群（groupIds 为空），且查询已完成，返回 false
-      if (groupIds.length === 0 && !isFirstBatchPending) {
-        return false;
-      }
-      // 如果有链群，需要等待详细信息加载完成
-      if (groupIds.length > 0) {
-        return isDetailPending;
-      }
+    // 如果有链群，需要等待详细信息加载完成
+    if (groupIds.length > 0) {
+      return isDetailPending;
     }
     // 其他情况，返回 true
     return true;
-  }, [
-    isFirstBatchPending,
-    isGroupManagerPending,
-    isDetailPending,
-    groupIds.length,
-    tokenAddress,
-    actionId,
-    groupManagerAddress,
-  ]);
+  }, [isFirstBatchPending, isDetailPending, groupIds.length, tokenAddress, actionId]);
 
   return {
     groups,

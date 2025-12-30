@@ -1,18 +1,102 @@
-// hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupActionFactory.ts
+// hooks/extension/plugins/group/contracts/useExtensionGroupActionFactory.ts
 
 import { useEffect } from 'react';
 import { useReadContract } from 'wagmi';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
-import { LOVE20ExtensionGroupActionFactoryAbi } from '@/src/abis/LOVE20ExtensionGroupActionFactory';
+import { ExtensionGroupActionFactoryAbi } from '@/src/abis/ExtensionGroupActionFactory';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // 注意：ExtensionGroupActionFactory 是固定地址的合约
 // 需要从配置中获取合约地址
 
 // =====================
-// === 读取 Hook ===
+// === 读取 Hooks - 地址常量 ===
+// =====================
+
+/**
+ * Hook for GROUP_ADDRESS - 获取组合约地址
+ */
+export const useGroupAddress = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: ExtensionGroupActionFactoryAbi,
+    functionName: 'GROUP_ADDRESS',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { groupAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for GROUP_JOIN_ADDRESS - 获取加入合约地址
+ */
+export const useGroupJoinAddress = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: ExtensionGroupActionFactoryAbi,
+    functionName: 'GROUP_JOIN_ADDRESS',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { groupJoinAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for GROUP_MANAGER_ADDRESS - 获取组管理器地址
+ */
+export const useGroupManagerAddress = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: ExtensionGroupActionFactoryAbi,
+    functionName: 'GROUP_MANAGER_ADDRESS',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { groupManagerAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for GROUP_VERIFY_ADDRESS - 获取验证合约地址
+ */
+export const useGroupVerifyAddress = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: ExtensionGroupActionFactoryAbi,
+    functionName: 'GROUP_VERIFY_ADDRESS',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { groupVerifyAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for center - 获取 center 合约地址
+ */
+export const useCenter = (contractAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: ExtensionGroupActionFactoryAbi,
+    functionName: 'center',
+    query: {
+      enabled: !!contractAddress,
+    },
+  });
+
+  return { centerAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+// =====================
+// === 读取 Hooks - 扩展查询 ===
 // =====================
 
 /**
@@ -21,7 +105,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 export const useExists = (contractAddress: `0x${string}`, extension: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupActionFactoryAbi,
+    abi: ExtensionGroupActionFactoryAbi,
     functionName: 'exists',
     args: [extension],
     query: {
@@ -33,60 +117,12 @@ export const useExists = (contractAddress: `0x${string}`, extension: `0x${string
 };
 
 /**
- * Hook for GROUP_MANAGER_ADDRESS - 获取组管理器地址
- */
-export const useGroupManagerAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionFactoryAbi,
-    functionName: 'GROUP_MANAGER_ADDRESS',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { groupManagerAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for GROUP_DISTRUST_ADDRESS - 获取不信任合约地址
- */
-export const useGroupDistrustAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionFactoryAbi,
-    functionName: 'GROUP_DISTRUST_ADDRESS',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { groupDistrustAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for center - 获取 center 合约地址
- */
-export const useCenter = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: LOVE20ExtensionGroupActionFactoryAbi,
-    functionName: 'center',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { centerAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
  * Hook for extensions - 获取所有扩展地址
  */
 export const useExtensions = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupActionFactoryAbi,
+    abi: ExtensionGroupActionFactoryAbi,
     functionName: 'extensions',
     query: {
       enabled: !!contractAddress,
@@ -102,7 +138,7 @@ export const useExtensions = (contractAddress: `0x${string}`) => {
 export const useExtensionsAtIndex = (contractAddress: `0x${string}`, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupActionFactoryAbi,
+    abi: ExtensionGroupActionFactoryAbi,
     functionName: 'extensionsAtIndex',
     args: [index],
     query: {
@@ -119,7 +155,7 @@ export const useExtensionsAtIndex = (contractAddress: `0x${string}`, index: bigi
 export const useExtensionsCount = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
-    abi: LOVE20ExtensionGroupActionFactoryAbi,
+    abi: ExtensionGroupActionFactoryAbi,
     functionName: 'extensionsCount',
     query: {
       enabled: !!contractAddress,
@@ -130,7 +166,7 @@ export const useExtensionsCount = (contractAddress: `0x${string}`) => {
 };
 
 // =====================
-// === 写入 Hook ===
+// === 写入 Hooks ===
 // =====================
 
 /**
@@ -138,7 +174,7 @@ export const useExtensionsCount = (contractAddress: `0x${string}`) => {
  */
 export function useCreateExtension(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionGroupActionFactoryAbi,
+    ExtensionGroupActionFactoryAbi,
     contractAddress,
     'createExtension',
   );

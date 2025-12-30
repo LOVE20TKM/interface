@@ -31,8 +31,8 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import {
   useDelegatedVerifierByGroupId,
   useSetGroupDelegatedVerifier,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
-import { useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+} from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';

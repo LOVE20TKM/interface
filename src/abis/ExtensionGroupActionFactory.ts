@@ -1,17 +1,89 @@
 
 import { Abi } from 'abitype';
 
-export const LOVE20ExtensionFactoryLpAbi = [
+export const ExtensionGroupActionFactoryAbi = [
   {
     "type": "constructor",
     "inputs": [
       {
-        "name": "_center",
+        "name": "center_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupManagerAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupJoinAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupVerifyAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupAddress_",
         "type": "address",
         "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "GROUP_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "GROUP_JOIN_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "GROUP_MANAGER_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "GROUP_VERIFY_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -31,27 +103,32 @@ export const LOVE20ExtensionFactoryLpAbi = [
     "name": "createExtension",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "tokenAddress_",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "joinTokenAddress",
+        "name": "stakeTokenAddress_",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "waitingBlocks",
+        "name": "joinTokenAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "activationStakeAmount_",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "govRatioMultiplier",
+        "name": "maxJoinAmountRatio_",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "minGovVotes",
+        "name": "maxVerifyCapacityFactor_",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -80,45 +157,6 @@ export const LOVE20ExtensionFactoryLpAbi = [
         "name": "",
         "type": "bool",
         "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "extensionParams",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "joinTokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "waitingBlocks",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "govRatioMultiplier",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "minGovVotes",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -175,45 +213,16 @@ export const LOVE20ExtensionFactoryLpAbi = [
       {
         "name": "extension",
         "type": "address",
-        "indexed": false,
+        "indexed": true,
         "internalType": "address"
       },
       {
         "name": "tokenAddress",
         "type": "address",
-        "indexed": false,
+        "indexed": true,
         "internalType": "address"
-      },
-      {
-        "name": "joinTokenAddress",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "waitingBlocks",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "govRatioMultiplier",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "minGovVotes",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
       }
     ],
     "anonymous": false
-  },
-  {
-    "type": "error",
-    "name": "InvalidJoinTokenAddress",
-    "inputs": []
   }
 ] as const satisfies Abi;

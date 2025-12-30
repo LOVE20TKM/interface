@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
+import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useAccountsByGroupIdByRound } from './useAccountsByGroupIdByRound';
 
@@ -15,6 +15,8 @@ export interface AccountRewardInfo {
 
 export interface UseGroupAccountsRewardOfRoundParams {
   extensionAddress: `0x${string}` | undefined;
+  tokenAddress: `0x${string}` | undefined;
+  actionId: bigint | undefined;
   round: bigint | undefined;
   groupId: bigint | undefined;
 }
@@ -34,6 +36,8 @@ export interface UseGroupAccountsRewardOfRoundResult {
  */
 export const useGroupAccountsRewardOfRound = ({
   extensionAddress,
+  tokenAddress,
+  actionId,
   round,
   groupId,
 }: UseGroupAccountsRewardOfRoundParams): UseGroupAccountsRewardOfRoundResult => {
@@ -44,11 +48,14 @@ export const useGroupAccountsRewardOfRound = ({
     error: accountsError,
   } = useAccountsByGroupIdByRound({
     extensionAddress: extensionAddress || '0x0',
+    tokenAddress: tokenAddress || '0x0',
+    actionId: actionId || BigInt(0),
     groupId: groupId || BigInt(0),
     round: round || BigInt(0),
   });
 
   // 第二步：获取每个账户的激励
+  // ExtensionGroupAction.rewardByAccount(round, account) 保持不变
   const rewardsContracts = useMemo(() => {
     if (!extensionAddress || round === undefined || accounts.length === 0) return [];
 
@@ -57,7 +64,7 @@ export const useGroupAccountsRewardOfRound = ({
     for (const account of accounts) {
       contracts.push({
         address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        abi: ExtensionGroupActionAbi,
         functionName: 'rewardByAccount',
         args: [round, account],
       });

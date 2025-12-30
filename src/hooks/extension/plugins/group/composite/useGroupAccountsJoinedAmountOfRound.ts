@@ -3,9 +3,11 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
+import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useAccountsByGroupIdByRound } from './useAccountsByGroupIdByRound';
+
+const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_JOIN as `0x${string}`;
 
 export interface AccountJoinedAmountInfo {
   account: `0x${string}`;
@@ -14,6 +16,8 @@ export interface AccountJoinedAmountInfo {
 
 export interface UseGroupAccountsJoinedAmountOfRoundParams {
   extensionAddress: `0x${string}` | undefined;
+  tokenAddress: `0x${string}` | undefined;
+  actionId: bigint | undefined;
   round: bigint | undefined;
   groupId: bigint | undefined;
 }
@@ -33,6 +37,8 @@ export interface UseGroupAccountsJoinedAmountOfRoundResult {
  */
 export const useGroupAccountsJoinedAmountOfRound = ({
   extensionAddress,
+  tokenAddress,
+  actionId,
   round,
   groupId,
 }: UseGroupAccountsJoinedAmountOfRoundParams): UseGroupAccountsJoinedAmountOfRoundResult => {
@@ -43,27 +49,30 @@ export const useGroupAccountsJoinedAmountOfRound = ({
     error: accountsError,
   } = useAccountsByGroupIdByRound({
     extensionAddress: extensionAddress || '0x0',
+    tokenAddress: tokenAddress || '0x0',
+    actionId: actionId || BigInt(0),
     groupId: groupId || BigInt(0),
     round: round || BigInt(0),
   });
 
   // 第二步：获取每个账户的参与代币数量
+  // 新版合约 amountByAccountByRound 需要 tokenAddress, actionId, account, round 参数
   const amountsContracts = useMemo(() => {
-    if (!extensionAddress || round === undefined || accounts.length === 0) return [];
+    if (!tokenAddress || actionId === undefined || round === undefined || accounts.length === 0) return [];
 
     const contracts = [];
 
     for (const account of accounts) {
       contracts.push({
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        address: GROUP_JOIN_CONTRACT_ADDRESS,
+        abi: GroupJoinAbi,
         functionName: 'amountByAccountByRound',
-        args: [account, round],
+        args: [tokenAddress, actionId, account, round],
       });
     }
 
     return contracts;
-  }, [extensionAddress, round, accounts]);
+  }, [tokenAddress, actionId, round, accounts]);
 
   const {
     data: amountsData,
@@ -72,7 +81,7 @@ export const useGroupAccountsJoinedAmountOfRound = ({
   } = useReadContracts({
     contracts: amountsContracts as any,
     query: {
-      enabled: !!extensionAddress && round !== undefined && amountsContracts.length > 0,
+      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && amountsContracts.length > 0,
     },
   });
 

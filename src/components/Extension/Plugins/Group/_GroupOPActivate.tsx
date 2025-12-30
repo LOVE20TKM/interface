@@ -38,7 +38,7 @@ import {
   useActivateGroup,
   useActiveGroupIdsByOwner,
   useMaxVerifyCapacityByOwner,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+} from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';

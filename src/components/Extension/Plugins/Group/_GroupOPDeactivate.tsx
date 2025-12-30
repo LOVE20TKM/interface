@@ -25,8 +25,8 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
-import { useDeactivateGroup, useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useDeactivateGroup, useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';

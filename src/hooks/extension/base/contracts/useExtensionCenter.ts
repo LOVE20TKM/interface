@@ -1,11 +1,11 @@
-// hooks/useLOVE20ExtensionCenter.ts
+// hooks/useExtensionCenter.ts
 
 import { useEffect } from 'react';
 import { useReadContract } from 'wagmi';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
-import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
+import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
@@ -25,7 +25,7 @@ export const useVerificationInfo = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'verificationInfo',
     args: [tokenAddress, actionId, account, verificationKey],
     query: {
@@ -48,7 +48,7 @@ export const useVerificationInfoByRound = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'verificationInfoByRound',
     args: [tokenAddress, actionId, account, verificationKey, round],
     query: {
@@ -65,7 +65,7 @@ export const useVerificationInfoByRound = (
 export const useAccounts = (tokenAddress: `0x${string}`, actionId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'accounts',
     args: [tokenAddress, actionId],
     query: {
@@ -82,7 +82,7 @@ export const useAccounts = (tokenAddress: `0x${string}`, actionId: bigint) => {
 export const useAccountsAtIndex = (tokenAddress: `0x${string}`, actionId: bigint, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'accountsAtIndex',
     args: [tokenAddress, actionId, index],
     query: {
@@ -104,7 +104,7 @@ export const useAccountsByRoundAtIndex = (
 ) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'accountsByRoundAtIndex',
     args: [tokenAddress, actionId, index, round],
     query: {
@@ -121,7 +121,7 @@ export const useAccountsByRoundAtIndex = (
 export const useAccountsCount = (tokenAddress: `0x${string}`, actionId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'accountsCount',
     args: [tokenAddress, actionId],
     query: {
@@ -138,7 +138,7 @@ export const useAccountsCount = (tokenAddress: `0x${string}`, actionId: bigint) 
 export const useAccountsByRoundCount = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'accountsByRoundCount',
     args: [tokenAddress, actionId, round],
     query: {
@@ -152,52 +152,22 @@ export const useAccountsByRoundCount = (tokenAddress: `0x${string}`, actionId: b
 /**
  * Hook for actionIdsByAccount - 获取用户参与的所有 action ID
  */
-export const useActionIdsByAccount = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
+export const useActionIdsByAccount = (
+  tokenAddress: `0x${string}`,
+  account: `0x${string}`,
+  factories: `0x${string}`[],
+) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'actionIdsByAccount',
-    args: [tokenAddress, account],
+    args: [tokenAddress, account, factories],
     query: {
-      enabled: !!tokenAddress && !!account,
+      enabled: !!tokenAddress && !!account && factories.length > 0,
     },
   });
 
   return { actionIds: data as bigint[] | undefined, isPending, error };
-};
-
-/**
- * Hook for actionIdsByAccountAtIndex - 根据索引获取用户参与的 action ID
- */
-export const useActionIdsByAccountAtIndex = (tokenAddress: `0x${string}`, account: `0x${string}`, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
-    functionName: 'actionIdsByAccountAtIndex',
-    args: [tokenAddress, account, index],
-    query: {
-      enabled: !!tokenAddress && !!account && index !== undefined,
-    },
-  });
-
-  return { actionId: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for actionIdsByAccountCount - 获取用户参与的 action 数量
- */
-export const useActionIdsByAccountCount = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
-    functionName: 'actionIdsByAccountCount',
-    args: [tokenAddress, account],
-    query: {
-      enabled: !!tokenAddress && !!account,
-    },
-  });
-
-  return { count: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -206,7 +176,7 @@ export const useActionIdsByAccountCount = (tokenAddress: `0x${string}`, account:
 export const useExtension = (tokenAddress: `0x${string}`, actionId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'extension',
     args: [tokenAddress, actionId],
     query: {
@@ -223,7 +193,7 @@ export const useExtension = (tokenAddress: `0x${string}`, actionId: bigint) => {
 export const useIsAccountJoined = (tokenAddress: `0x${string}`, actionId: bigint, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'isAccountJoined',
     args: [tokenAddress, actionId, account],
     query: {
@@ -240,7 +210,7 @@ export const useIsAccountJoined = (tokenAddress: `0x${string}`, actionId: bigint
 export const useJoinAddress = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'joinAddress',
   });
 
@@ -253,7 +223,7 @@ export const useJoinAddress = () => {
 export const useLaunchAddress = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'launchAddress',
   });
 
@@ -266,7 +236,7 @@ export const useLaunchAddress = () => {
 export const useMintAddress = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'mintAddress',
   });
 
@@ -279,7 +249,7 @@ export const useMintAddress = () => {
 export const useRandomAddress = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'randomAddress',
   });
 
@@ -292,7 +262,7 @@ export const useRandomAddress = () => {
 export const useStakeAddress = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'stakeAddress',
   });
 
@@ -305,7 +275,7 @@ export const useStakeAddress = () => {
 export const useSubmitAddress = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'submitAddress',
   });
 
@@ -318,7 +288,7 @@ export const useSubmitAddress = () => {
 export const useUniswapV2FactoryAddress = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'uniswapV2FactoryAddress',
   });
 
@@ -331,7 +301,7 @@ export const useUniswapV2FactoryAddress = () => {
 export const useVerifyAddress = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'verifyAddress',
   });
 
@@ -344,7 +314,7 @@ export const useVerifyAddress = () => {
 export const useVoteAddress = () => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
-    abi: LOVE20ExtensionCenterAbi,
+    abi: ExtensionCenterAbi,
     functionName: 'voteAddress',
   });
 
@@ -360,7 +330,7 @@ export const useVoteAddress = () => {
  */
 export function useAddAccount() {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionCenterAbi,
+    ExtensionCenterAbi,
     CONTRACT_ADDRESS,
     'addAccount',
   );
@@ -409,7 +379,7 @@ export function useAddAccount() {
  */
 export function useRemoveAccount() {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionCenterAbi,
+    ExtensionCenterAbi,
     CONTRACT_ADDRESS,
     'removeAccount',
   );
@@ -447,7 +417,7 @@ export function useRemoveAccount() {
  */
 export function useUpdateVerificationInfo() {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    LOVE20ExtensionCenterAbi,
+    ExtensionCenterAbi,
     CONTRACT_ADDRESS,
     'updateVerificationInfo',
   );

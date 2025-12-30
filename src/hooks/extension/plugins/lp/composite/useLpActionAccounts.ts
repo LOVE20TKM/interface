@@ -3,9 +3,9 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { LOVE20ExtensionLpAbi } from '@/src/abis/LOVE20ExtensionLp';
+import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
-import { LOVE20ExtensionCenterAbi } from '@/src/abis/LOVE20ExtensionCenter';
+import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 const STAKE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`;
@@ -69,20 +69,20 @@ export const useLpActionAccounts = ({
       // 获取所有参与者地址
       {
         address: CENTER_CONTRACT_ADDRESS,
-        abi: LOVE20ExtensionCenterAbi,
+        abi: ExtensionCenterAbi,
         functionName: 'accounts',
         args: [tokenAddress, actionId],
       },
       // 获取 Join Token 地址（即 LP pair 地址）
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'joinTokenAddress',
       },
       // 获取 govRatioMultiplier
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'govRatioMultiplier',
       },
       // 获取总治理票数
@@ -95,7 +95,7 @@ export const useLpActionAccounts = ({
       // 获取 LP Token 总参与量
       {
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'totalJoinedAmount',
       },
     ];
@@ -146,7 +146,7 @@ export const useLpActionAccounts = ({
       // 获取加入信息（LP数量）
       contracts.push({
         address: extensionAddress,
-        abi: LOVE20ExtensionLpAbi,
+        abi: ExtensionLpAbi,
         functionName: 'joinInfo',
         args: [account],
       });

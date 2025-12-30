@@ -6,10 +6,11 @@
  * - composite: 组合查询（通过 ./composite 导出）
  *
  * 注意：contracts 相关的 hooks 请直接从具体文件导入，例如：
- * - useLOVE20ExtensionGroupAction
- * - useLOVE20GroupManager
- * - useLOVE20ExtensionGroupActionFactory
- * - useLOVE20GroupDistrust
+ * - useExtensionGroupAction
+ * - useGroupManager
+ * - useGroupJoin
+ * - useGroupVerify
+ * - useExtensionGroupActionFactory
  */
 
 export * from './useGroupActionDynamicTabs';

@@ -17,11 +17,11 @@ import { useExtensionGroupsOfAccount } from '@/src/hooks/extension/plugins/group
 import {
   useGroupManagerAddress,
   useTokenAddress,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20ExtensionGroupAction';
+} from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
 import {
   useActiveGroupIdsByOwner,
   useMaxVerifyCapacityByOwner,
-} from '@/src/hooks/extension/plugins/group/contracts/useLOVE20GroupManager';
+} from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';

@@ -25,10 +25,10 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
-import { useCreateExtension } from '@/src/hooks/extension/plugins/group-service/contracts/useLOVE20ExtensionGroupServiceFactory';
+import { useCreateExtension } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupServiceFactory';
 
 // ABI
-import { LOVE20ExtensionGroupServiceFactoryAbi } from '@/src/abis/LOVE20ExtensionGroupServiceFactory';
+import { ExtensionGroupServiceFactoryAbi } from '@/src/abis/ExtensionGroupServiceFactory';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -65,10 +65,6 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
     mode: 'onChange', // 实时验证
   });
 
-  // 链群行动扩展协议工厂合约地址（从环境变量获取）
-  const groupActionFactoryAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_ACTION ||
-    '') as `0x${string}`;
-
   const { createExtension, isPending, isConfirming, isConfirmed, writeError, hash } =
     useCreateExtension(factoryAddress);
 
@@ -92,11 +88,6 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
     hash,
   });
 
-  // 等待授权的交易回执
-  const { data: approveReceipt } = useWaitForTransactionReceipt({
-    hash: approveHash,
-  });
-
   // 存储部署的扩展地址
   const [deployedExtensionAddress, setDeployedExtensionAddress] = useState<`0x${string}` | null>(null);
 
@@ -106,7 +97,7 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
       try {
         // 解析 ExtensionCreate 事件
         const logs = parseEventLogs({
-          abi: LOVE20ExtensionGroupServiceFactoryAbi,
+          abi: ExtensionGroupServiceFactoryAbi,
           eventName: 'ExtensionCreate',
           logs: receipt.logs,
         });
@@ -170,24 +161,10 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
    * 步骤2: 部署扩展
    */
   const handleDeploy = async (values: FormValues) => {
-    // 验证链群行动扩展协议工厂合约地址
-    if (!groupActionFactoryAddress) {
-      toast.error('链群行动扩展协议工厂合约地址未配置');
-      return;
-    }
-    if (!isAddress(groupActionFactoryAddress)) {
-      toast.error('链群行动扩展协议工厂合约地址格式无效');
-      return;
-    }
-
     try {
       setApprovalStep('deploying');
 
-      await createExtension(
-        tokenAddress,
-        values.groupActionTokenAddress as `0x${string}`,
-        groupActionFactoryAddress as `0x${string}`,
-      );
+      await createExtension(tokenAddress, values.groupActionTokenAddress as `0x${string}`);
     } catch (error: any) {
       console.error('部署扩展失败:', error);
       toast.error(error?.message || '部署扩展失败');

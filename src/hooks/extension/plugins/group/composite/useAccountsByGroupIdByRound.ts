@@ -19,9 +19,11 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { useAccountCountByGroupIdByRound } from '../contracts/useLOVE20ExtensionGroupAction';
-import { LOVE20ExtensionGroupActionAbi } from '@/src/abis/LOVE20ExtensionGroupAction';
+import { GroupJoinAbi } from '@/src/abis/GroupJoin';
+import { useAccountCountByGroupIdByRound } from '../contracts/useGroupJoin';
 import { safeToBigInt } from '@/src/lib/clientUtils';
+
+const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_JOIN as `0x${string}`;
 
 // ==================== 类型定义 ====================
 
@@ -31,6 +33,10 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 export interface UseAccountsByGroupIdByRoundParams {
   /** 扩展合约地址 */
   extensionAddress: `0x${string}`;
+  /** 代币地址 */
+  tokenAddress: `0x${string}`;
+  /** 行动ID */
+  actionId: bigint;
   /** 链群NFT */
   groupId: bigint;
   /** 轮次 */
@@ -80,14 +86,15 @@ export interface UseAccountsByGroupIdByRoundResult {
 export function useAccountsByGroupIdByRound(
   params: UseAccountsByGroupIdByRoundParams,
 ): UseAccountsByGroupIdByRoundResult {
-  const { extensionAddress, groupId, round } = params;
+  const { tokenAddress, actionId, groupId, round } = params;
 
   // 第一步：获取账号总数
+  // 新版合约 useAccountCountByGroupIdByRound 需要 tokenAddress, actionId, groupId, round 参数
   const {
     count,
     isPending: isPendingCount,
     error: errorCount,
-  } = useAccountCountByGroupIdByRound(extensionAddress, groupId, round);
+  } = useAccountCountByGroupIdByRound(tokenAddress, actionId, groupId, round);
 
   // 转换为数字类型
   const accountCount = useMemo(() => {
@@ -96,21 +103,22 @@ export function useAccountsByGroupIdByRound(
   }, [count]);
 
   // 第二步：构建批量查询合约调用
+  // 新版合约的 accountByGroupIdAndIndexByRound 参数顺序变为 tokenAddress, actionId, groupId, index, round
   const accountsContracts = useMemo(() => {
-    if (accountCount === BigInt(0)) return [];
+    if (!tokenAddress || accountCount === BigInt(0)) return [];
 
     const contracts = [];
     for (let i = BigInt(0); i < accountCount; i++) {
       contracts.push({
-        address: extensionAddress,
-        abi: LOVE20ExtensionGroupActionAbi,
+        address: GROUP_JOIN_CONTRACT_ADDRESS,
+        abi: GroupJoinAbi,
         functionName: 'accountByGroupIdAndIndexByRound',
-        args: [groupId, i, round],
+        args: [tokenAddress, actionId, groupId, i, round],
       });
     }
 
     return contracts;
-  }, [extensionAddress, groupId, round, accountCount]);
+  }, [tokenAddress, actionId, groupId, round, accountCount]);
 
   // 第三步：批量获取账号地址
   const {

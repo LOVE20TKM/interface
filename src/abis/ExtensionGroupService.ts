@@ -1,7 +1,7 @@
 
 import { Abi } from 'abitype';
 
-export const LOVE20ExtensionGroupServiceAbi = [
+export const ExtensionGroupServiceAbi = [
   {
     "type": "constructor",
     "inputs": [
@@ -245,6 +245,13 @@ export const LOVE20ExtensionGroupServiceAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initializeAction",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -564,7 +571,7 @@ export const LOVE20ExtensionGroupServiceAbi = [
       {
         "name": "distributions",
         "type": "tuple[]",
-        "internalType": "struct ILOVE20ExtensionGroupService.GroupDistribution[]",
+        "internalType": "struct IExtensionGroupService.GroupDistribution[]",
         "components": [
           {
             "name": "actionId",
@@ -852,6 +859,11 @@ export const LOVE20ExtensionGroupServiceAbi = [
   {
     "type": "error",
     "name": "InvalidBasisPoints",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidExtension",
     "inputs": []
   },
   {
