@@ -31,7 +31,7 @@ import {
   useScoreByVerifierByActionId,
 } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
-import { useDistrustVote } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useDistrustVote } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useDistrustVotesByVoterByGroupOwner } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
 // 工具函数
@@ -213,7 +213,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     isConfirming: isConfirmingVote,
     isConfirmed: isConfirmedVote,
     writeError: errorVote,
-  } = useDistrustVote(extensionAddress);
+  } = useDistrustVote();
 
   async function handleSubmit(values: FormValues) {
     if (!myVerifyVotes || myVerifyVotes === BigInt(0)) {
@@ -232,7 +232,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     }
 
     try {
-      await distrustVote(groupOwner, distrustVotes, values.reason);
+      await distrustVote(token?.address as `0x${string}`, actionId, groupOwner, distrustVotes, values.reason);
     } catch (error) {
       console.error('Distrust vote failed', error);
     }
