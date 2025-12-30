@@ -97,7 +97,7 @@ export const useMyLpActionData = ({
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'govRatioMultiplier',
+        functionName: 'GOV_RATIO_MULTIPLIER',
         args: [],
       },
       // 3. 获取加入值（用于计算激励占比）
@@ -132,14 +132,14 @@ export const useMyLpActionData = ({
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'waitingBlocks',
+        functionName: 'WAITING_BLOCKS',
         args: [],
       },
       // 8. 获取最小治理票数门槛
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'minGovVotes',
+        functionName: 'MIN_GOV_VOTES',
         args: [],
       },
     ];

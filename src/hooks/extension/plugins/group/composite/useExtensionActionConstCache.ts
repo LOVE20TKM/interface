@@ -109,7 +109,7 @@ export const useExtensionActionConstCache = ({
       {
         address: extensionAddress,
         abi: ExtensionGroupActionAbi,
-        functionName: 'GROUP_ACTIVATION_STAKE_AMOUNT',
+        functionName: 'ACTIVATION_STAKE_AMOUNT',
       },
     ];
   }, [extensionAddress, actionId, cachedData]);

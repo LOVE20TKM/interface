@@ -7,7 +7,7 @@ import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useExtensionGroupBaseInfosOfAction } from './useExtensionGroupBaseInfosOfAction';
 
-const GROUP_VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_VERIFY as `0x${string}`;
+const GROUP_VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY as `0x${string}`;
 
 export interface DistrustVoteInfo {
   groupOwner: `0x${string}`;

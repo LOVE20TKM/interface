@@ -36,7 +36,7 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -60,6 +60,8 @@ interface GroupJoinSubmitProps {
   extensionAddress: `0x${string}`;
   groupId: bigint;
 }
+
+const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
 
 const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo, extensionAddress, groupId }) => {
   const router = useRouter();
@@ -92,7 +94,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     amount: joinedAmount,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
-  } = useJoinInfo(extensionAddress, account as `0x${string}`);
+  } = useJoinInfo(token?.address as `0x${string}`, actionId, account as `0x${string}`);
 
   // 判断是否已加入
   const isJoined = joinedAmount && joinedAmount > BigInt(0);
@@ -147,7 +149,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   } = useAllowance(
     joinTokenAddress as `0x${string}`,
     account as `0x${string}`,
-    extensionAddress,
+    GROUP_JOIN_CONTRACT_ADDRESS,
     !!joinTokenAddress && !!account,
   );
 
@@ -279,7 +281,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     }
 
     try {
-      await approve(extensionAddress, joinAmount);
+      await approve(GROUP_JOIN_CONTRACT_ADDRESS, joinAmount);
     } catch (error) {
       console.error('Approve failed', error);
     }
@@ -313,12 +315,18 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     isConfirming: isConfirmingJoin,
     isConfirmed: isConfirmedJoin,
     writeError: errorJoin,
-  } = useJoin(extensionAddress);
+  } = useJoin();
 
   async function handleJoin(values: FormValues) {
     try {
       // 加入时同时提交验证信息
-      await join(groupId, parseUnits(values.joinAmount) ?? BigInt(0), values.verificationInfos || []);
+      await join(
+        token?.address as `0x${string}`,
+        actionId,
+        groupId,
+        parseUnits(values.joinAmount) ?? BigInt(0),
+        values.verificationInfos || [],
+      );
     } catch (error) {
       console.error('Join failed', error);
     }

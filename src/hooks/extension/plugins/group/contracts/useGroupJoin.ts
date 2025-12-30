@@ -9,7 +9,7 @@ import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // GroupJoin 是全局合约，使用环境变量配置地址
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_JOIN as `0x${string}`;
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
 
 // =====================
 // === 读取 Hooks ===

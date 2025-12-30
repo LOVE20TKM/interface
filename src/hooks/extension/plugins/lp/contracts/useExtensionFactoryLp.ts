@@ -49,31 +49,6 @@ export const useExtensionExists = (factoryAddress: `0x${string}`, extensionAddre
 };
 
 /**
- * Hook for extensionParams - 获取扩展的参数
- */
-export const useExtensionParams = (factoryAddress: `0x${string}`, extensionAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: factoryAddress,
-    abi: ExtensionFactoryLpAbi,
-    functionName: 'extensionParams',
-    args: [extensionAddress],
-    query: {
-      enabled: !!factoryAddress && !!extensionAddress,
-    },
-  });
-
-  return {
-    tokenAddress: data ? (data[0] as `0x${string}`) : undefined,
-    joinTokenAddress: data ? (data[1] as `0x${string}`) : undefined,
-    waitingBlocks: data ? safeToBigInt(data[2]) : undefined,
-    govRatioMultiplier: data ? safeToBigInt(data[3]) : undefined,
-    minGovVotes: data ? safeToBigInt(data[4]) : undefined,
-    isPending,
-    error,
-  };
-};
-
-/**
  * Hook for extensions - 获取所有扩展地址
  */
 export const useFactoryExtensions = (factoryAddress: `0x${string}`) => {

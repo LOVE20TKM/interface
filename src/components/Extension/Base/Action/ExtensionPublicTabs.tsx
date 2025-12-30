@@ -4,7 +4,7 @@ import React from 'react';
 import { useAccount } from 'wagmi';
 
 // my hooks
-import { useFactory } from '@/src/hooks/extension/plugins/lp/contracts';
+import { useExtensionFactory } from '@/src/hooks/extension/base/contracts/useIExtension';
 
 // my config
 import { ExtensionType, getExtensionConfigByFactory } from '@/src/config/extensionConfig';
@@ -50,7 +50,7 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
   const { address: account } = useAccount();
 
   // 获取扩展合约的 factory 地址，判断类型
-  const { factoryAddress, isPending: isFactoryPending } = useFactory(extensionAddress);
+  const { factory: factoryAddress, isPending: isFactoryPending } = useExtensionFactory(extensionAddress);
 
   // 如果正在加载工厂地址
   if (isFactoryPending) {

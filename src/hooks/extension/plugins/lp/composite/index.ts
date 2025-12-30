@@ -7,4 +7,5 @@
 export * from './useMyLpActionData';
 export * from './useLpActionAccounts';
 export * from './useLpVerifyHistoryData';
+export * from './useExtensionParams';
 

@@ -3,7 +3,7 @@
 import React from 'react';
 
 // my hooks
-import { useExtensionParams } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionFactoryLp';
+import { useExtensionParams } from '@/src/hooks/extension/plugins/lp/composite/useExtensionParams';
 import { useSymbol } from '@/src/hooks/contracts/useLOVE20Token';
 
 // my components
@@ -27,7 +27,7 @@ interface LpBasicInfoProps {
 const LpBasicInfo: React.FC<LpBasicInfoProps> = ({ extensionAddress, factoryAddress, actionId }) => {
   // 获取扩展部署参数
   const { tokenAddress, joinTokenAddress, waitingBlocks, govRatioMultiplier, minGovVotes, isPending, error } =
-    useExtensionParams(factoryAddress, extensionAddress);
+    useExtensionParams(extensionAddress);
 
   // 获取LP代币符号
   const { symbol: joinTokenSymbol, isPending: isJoinSymbolPending } = useSymbol(

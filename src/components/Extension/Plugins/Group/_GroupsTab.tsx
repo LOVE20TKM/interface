@@ -23,7 +23,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
-import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -57,7 +57,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
     groupId: joinedGroupId,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
-  } = useJoinInfo(extensionAddress, account as `0x${string}`);
+  } = useJoinInfo(token?.address as `0x${string}`, actionId, account as `0x${string}`);
 
   // 错误处理
   const { handleError } = useContractError();

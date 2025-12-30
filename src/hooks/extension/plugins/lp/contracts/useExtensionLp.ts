@@ -32,13 +32,13 @@ export const useFactory = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for govRatioMultiplier - 获取治理比率乘数
+ * Hook for GOV_RATIO_MULTIPLIER - 获取治理比率乘数
  */
 export const useGovRatioMultiplier = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
-    functionName: 'govRatioMultiplier',
+    functionName: 'GOV_RATIO_MULTIPLIER',
     query: {
       enabled: !!contractAddress,
     },
@@ -155,13 +155,13 @@ export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account:
 };
 
 /**
- * Hook for minGovVotes - 获取最小治理投票数
+ * Hook for MIN_GOV_VOTES - 获取最小治理投票数
  */
 export const useMinGovVotes = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
-    functionName: 'minGovVotes',
+    functionName: 'MIN_GOV_VOTES',
     query: {
       enabled: !!contractAddress,
     },
@@ -242,13 +242,13 @@ export const useTotalJoinedAmount = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for waitingBlocks - 获取等待区块数
+ * Hook for WAITING_BLOCKS - 获取等待区块数
  */
 export const useWaitingBlocks = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
-    functionName: 'waitingBlocks',
+    functionName: 'WAITING_BLOCKS',
     query: {
       enabled: !!contractAddress,
     },

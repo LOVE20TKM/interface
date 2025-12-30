@@ -3,11 +3,6 @@ import { Abi } from 'abitype';
 
 export const GroupVerifyAbi = [
   {
-    "type": "constructor",
-    "inputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
     "type": "function",
     "name": "FACTORY_ADDRESS",
     "inputs": [],

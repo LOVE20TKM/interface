@@ -23,7 +23,7 @@ import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { useAccountCountByGroupIdByRound } from '../contracts/useGroupJoin';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
-const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_JOIN as `0x${string}`;
+const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
 
 // ==================== 类型定义 ====================
 

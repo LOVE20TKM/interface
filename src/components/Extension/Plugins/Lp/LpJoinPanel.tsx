@@ -21,7 +21,7 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
-import { useJoin, useJoinTokenAddress } from '@/src/hooks/extension/plugins/lp/contracts';
+import { useJoin, useJoinTokenAddress } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLp';
 
 // contexts / types / etc
 import { ActionInfo } from '@/src/types/love20types';

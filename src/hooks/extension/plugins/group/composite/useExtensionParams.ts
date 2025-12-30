@@ -5,9 +5,9 @@ import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // 从环境变量获取全局合约地址
-const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_MANAGER as `0x${string}`;
-const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_JOIN as `0x${string}`;
-const GROUP_VERIFY_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_VERIFY as `0x${string}`;
+const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
+const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
+const GROUP_VERIFY_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY as `0x${string}`;
 
 /**
  * Hook for getting extension parameters by querying the extension contract directly

@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts';
+import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionFactoryLp';
 import { ExtensionFactoryLpAbi } from '@/src/abis/ExtensionFactoryLp';
 import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';

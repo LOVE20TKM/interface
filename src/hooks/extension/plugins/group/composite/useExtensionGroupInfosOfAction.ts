@@ -9,8 +9,8 @@ import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
-const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_MANAGER as `0x${string}`;
-const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_JOIN as `0x${string}`;
+const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
+const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
 
 export interface GroupBasicInfo {
   groupId: bigint;
@@ -101,6 +101,12 @@ export const useExtensionGroupInfosOfAction = ({
     if (!firstBatchData || !firstBatchData[1]?.result) return BigInt(0);
     return safeToBigInt(firstBatchData[1].result);
   }, [firstBatchData]);
+
+  console.log('actionMaxJoinAmount', actionMaxJoinAmount);
+  console.log('groupIds', groupIds);
+  console.log('firstBatchData', firstBatchData);
+  console.log('firstBatchContracts', firstBatchContracts);
+  console.log('isFirstBatchPending', isFirstBatchPending);
 
   // 第二步：批量获取每个群组的详细信息
   // 新版合约：totalJoinedAmountByGroupId 和 accountsByGroupIdCount 移到 GroupJoin

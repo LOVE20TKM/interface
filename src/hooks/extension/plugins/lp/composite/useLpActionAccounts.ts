@@ -83,7 +83,7 @@ export const useLpActionAccounts = ({
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'govRatioMultiplier',
+        functionName: 'GOV_RATIO_MULTIPLIER',
       },
       // 获取总治理票数
       {

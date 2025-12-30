@@ -9,7 +9,7 @@ import { useVerifiers } from '@/src/hooks/extension/plugins/group/contracts/useG
 import { useGroupNamesWithCache } from '../../../base/composite/useGroupNamesWithCache';
 import type { DistrustVoteInfo } from './useDistrustVotesOfCurrentRound';
 
-const GROUP_VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_VERIFY as `0x${string}`;
+const GROUP_VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY as `0x${string}`;
 
 export interface UseDistrustVotesOfRoundParams {
   extensionAddress: `0x${string}` | undefined;

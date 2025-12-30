@@ -9,7 +9,7 @@ import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // GroupVerify 是全局合约，使用环境变量配置地址
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_VERIFY as `0x${string}`;
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY as `0x${string}`;
 
 // =====================
 // === 读取 Hooks - 验证相关 ===
@@ -126,12 +126,7 @@ export const useVerifiers = (tokenAddress: `0x${string}`, actionId: bigint, roun
 /**
  * Hook for verifiersAtIndex - 根据索引获取指定轮次的验证者
  */
-export const useVerifiersAtIndex = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  round: bigint,
-  index: bigint,
-) => {
+export const useVerifiersAtIndex = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
@@ -165,12 +160,7 @@ export const useVerifiersCount = (tokenAddress: `0x${string}`, actionId: bigint,
 /**
  * Hook for verifierByGroupId - 获取指定轮次和组ID的验证者
  */
-export const useVerifierByGroupId = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  round: bigint,
-  groupId: bigint,
-) => {
+export const useVerifierByGroupId = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
@@ -314,12 +304,7 @@ export const useScoreByAccount = (
 /**
  * Hook for scoreByGroupId - 获取指定组ID的积分
  */
-export const useScoreByGroupId = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
-  round: bigint,
-  groupId: bigint,
-) => {
+export const useScoreByGroupId = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,

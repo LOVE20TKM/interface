@@ -11,7 +11,7 @@
 import { useMemo } from 'react';
 
 // my hooks
-import { useFactory } from '@/src/hooks/extension/plugins/lp/contracts';
+import { useExtensionFactory } from '@/src/hooks/extension/base/contracts/useIExtension';
 import { useGroupActionDynamicTabs } from '@/src/hooks/extension/plugins/group';
 
 // my config
@@ -84,7 +84,9 @@ export const useExtensionActionTabs = (params: UseExtensionActionTabsParams): Us
   const { extensionAddress, isExtensionAction, tokenAddress, actionId, account } = params;
 
   // 获取扩展合约的 factory 地址
-  const { factoryAddress, isPending: isFactoryPending } = useFactory(extensionAddress as `0x${string}`);
+  const { factory: factoryAddress, isPending: isFactoryPending } = useExtensionFactory(
+    extensionAddress as `0x${string}`,
+  );
 
   // 获取扩展配置和类型
   const extensionConfig = useMemo(() => {

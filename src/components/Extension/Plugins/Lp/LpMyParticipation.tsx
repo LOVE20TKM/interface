@@ -9,7 +9,7 @@ import { HelpCircle } from 'lucide-react';
 
 // my hooks
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
-import { useExit } from '@/src/hooks/extension/plugins/lp/contracts';
+import { useExit } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLp';
 import { useContractError } from '@/src/errors/useContractError';
 
 // my contexts

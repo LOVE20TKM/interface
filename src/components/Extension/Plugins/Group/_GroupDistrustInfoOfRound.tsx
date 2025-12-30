@@ -351,8 +351,8 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
         <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
           <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
-            <div>• “投票”给本行动，并完成"验证"的治理者，可对链群服务者投不信任票</div>
-            <div>• 不信任率越高，该服务者管理的链群获得的激励越少</div>
+            <div>• 谁可以投不信任票：“投票”给本行动、并完成"验证"的治理者；</div>
+            <div>• 不信任票的作用：不信票越多，该服务者的链群获得激励越少；</div>
           </div>
         </div>
       </div>

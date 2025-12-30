@@ -9,7 +9,7 @@ import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // GroupManager 是全局合约，使用环境变量配置地址
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_MANAGER as `0x${string}`;
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
 
 // =====================
 // === 读取 Hooks - 常量 ===
@@ -99,11 +99,7 @@ export const useActionIdsCount = (actionFactory: `0x${string}`, tokenAddress: `0
 /**
  * Hook for actionIdsByGroupId - 获取指定组ID的 action ID 列表
  */
-export const useActionIdsByGroupId = (
-  actionFactory: `0x${string}`,
-  tokenAddress: `0x${string}`,
-  groupId: bigint,
-) => {
+export const useActionIdsByGroupId = (actionFactory: `0x${string}`, tokenAddress: `0x${string}`, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
@@ -223,9 +219,7 @@ export const useGroupInfo = (tokenAddress: `0x${string}`, actionId: bigint, grou
     },
   });
 
-  const typedData = data as
-    | [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint, bigint]
-    | undefined;
+  const typedData = data as [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint, bigint] | undefined;
 
   return {
     groupId: typedData ? safeToBigInt(typedData[0]) : undefined,

@@ -86,45 +86,6 @@ export const ExtensionFactoryLpAbi = [
   },
   {
     "type": "function",
-    "name": "extensionParams",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "joinTokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "waitingBlocks",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "govRatioMultiplier",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "minGovVotes",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "extensions",
     "inputs": [],
     "outputs": [

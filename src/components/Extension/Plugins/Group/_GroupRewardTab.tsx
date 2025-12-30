@@ -82,9 +82,11 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, actionInfo, 
   };
 
   // 只有在真正加载中且还没有数据时才显示加载状态
+  // 1. 还在获取轮次且未选择轮次时显示加载
+  // 2. 或者已选择轮次且正在获取激励数据时显示加载
   if (
-    (isPending || isPendingRound) &&
-    (!sortedGroupRewards || sortedGroupRewards.length === 0 || selectedRound === BigInt(0))
+    (isPendingRound && selectedRound === BigInt(0)) ||
+    (isPending && selectedRound > BigInt(0))
   ) {
     return (
       <div className="flex flex-col items-center py-8">

@@ -129,8 +129,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     !!actionParams?.stakeTokenAddress && !!account,
   );
 
-  console.log('actionParams', actionParams);
-
   // 表单验证
   const formSchema = useMemo(
     () =>

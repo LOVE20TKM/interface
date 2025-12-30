@@ -16,11 +16,6 @@ export const ExtensionGroupActionAbi = [
         "internalType": "address"
       },
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "stakeTokenAddress_",
         "type": "address",
         "internalType": "address"
