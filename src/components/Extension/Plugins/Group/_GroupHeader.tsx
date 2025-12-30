@@ -27,10 +27,8 @@ import {
 } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useJoinedAmountByActionIdByAccount } from '@/src/hooks/contracts/useLOVE20Join';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import {
-  useAccountsByGroupIdCount,
-  useDelegatedVerifierByGroupId,
-} from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
+import { useDelegatedVerifierByGroupId } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -71,14 +69,14 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     count: accountsCount,
     isPending: isPendingAccountsCount,
     error: errorAccountsCount,
-  } = useAccountsByGroupIdCount(extensionAddress, groupId);
+  } = useAccountsByGroupIdCount(token?.address as `0x${string}`, actionId, groupId);
 
   // 获取打分代理
   const {
     delegatedVerifier,
     isPending: isPendingDelegated,
     error: errorDelegated,
-  } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
+  } = useDelegatedVerifierByGroupId(token?.address as `0x${string}`, actionId, groupId);
 
   // 获取当前轮次（使用 Verify 合约的 round）
   const { currentRound, isPending: isPendingRound, error: errorRound } = useVerifyCurrentRound();

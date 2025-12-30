@@ -26,6 +26,7 @@ export interface ActionRewardsGroup {
 
 export interface UseActionRewardsDataParams {
   tokenAddress: `0x${string}` | undefined;
+  currentRound: bigint | undefined;
   lastRounds: bigint;
 }
 
@@ -65,6 +66,7 @@ export interface UseActionRewardsDataResult {
  */
 export const useActionsLatestRewards = ({
   tokenAddress,
+  currentRound,
   lastRounds,
 }: UseActionRewardsDataParams): UseActionRewardsDataResult => {
   const { address: account } = useAccount();
@@ -96,7 +98,6 @@ export const useActionsLatestRewards = ({
   } = useMyJoinedExtensionActions({
     tokenAddress,
     account: account as `0x${string}`,
-    currentRound: undefined, // actionrewards 页面不需要投票信息
   });
 
   // 第4步：提取扩展地址，获取扩展协议最近 N 轮的行动激励

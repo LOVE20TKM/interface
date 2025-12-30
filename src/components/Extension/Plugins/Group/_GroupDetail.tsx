@@ -14,7 +14,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
@@ -47,7 +47,7 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
     count: accountsCount,
     isPending: isPendingAccountsCount,
     error: errorAccountsCount,
-  } = useAccountsByGroupIdCount(extensionAddress, groupId);
+  } = useAccountsByGroupIdCount(token?.address as `0x${string}`, actionId, groupId);
 
   // 错误处理
   const { handleError } = useContractError();

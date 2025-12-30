@@ -150,7 +150,8 @@ export const useAccountsByRoundCount = (tokenAddress: `0x${string}`, actionId: b
 };
 
 /**
- * Hook for actionIdsByAccount - 获取用户参与的所有 action ID
+ * Hook for actionIdsByAccount - 获取用户参与的所有 action ID、扩展地址和 factory 地址
+ * @returns 返回 actionIds、extensions 和 factories_ 三个数组
  */
 export const useActionIdsByAccount = (
   tokenAddress: `0x${string}`,
@@ -167,7 +168,16 @@ export const useActionIdsByAccount = (
     },
   });
 
-  return { actionIds: data as bigint[] | undefined, isPending, error };
+  // 解析返回的三个数组：actionIds, extensions, factories_
+  const result = data as [bigint[], `0x${string}`[], `0x${string}`[]] | undefined;
+
+  return {
+    actionIds: result?.[0],
+    extensions: result?.[1],
+    factories_: result?.[2],
+    isPending,
+    error,
+  };
 };
 
 /**

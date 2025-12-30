@@ -33,7 +33,8 @@ import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import { useUpdateVerificationInfo } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useCenter, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useCenter } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -77,7 +78,11 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
   const { centerAddress, isPending: isPendingCenter, error: errorCenter } = useCenter(extensionAddress);
 
   // 获取加入信息
-  const { joinedRound, amount, error: errorJoinInfo } = useJoinInfo(extensionAddress, account as `0x${string}`);
+  const { amount, error: errorJoinInfo } = useJoinInfo(
+    token?.address as `0x${string}`,
+    actionId,
+    account as `0x${string}`,
+  );
 
   // 获取行动详细信息（包含验证字段定义）
   const {

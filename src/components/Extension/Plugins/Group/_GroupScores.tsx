@@ -65,7 +65,9 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extens
     isPending: isPendingScores,
     error: errorScores,
   } = useGroupScoresOfRound({
-    extensionAddress,
+    extensionAddress: extensionAddress as `0x${string}`,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
     round: selectedRound,
     groupId,
   });
@@ -76,7 +78,9 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extens
     isPending: isPendingAmounts,
     error: errorAmounts,
   } = useGroupAccountsJoinedAmountOfRound({
-    extensionAddress,
+    extensionAddress: extensionAddress as `0x${string}`,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
     round: selectedRound,
     groupId,
   });

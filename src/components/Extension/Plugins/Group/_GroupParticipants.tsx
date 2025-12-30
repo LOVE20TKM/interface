@@ -62,7 +62,9 @@ const _GroupParticipants: React.FC<GroupParticipantsProps> = ({ actionId, action
     isPending: isPendingAccounts,
     error: errorAccounts,
   } = useAccountInfosByGroupIdByRound({
-    extensionAddress,
+    extensionAddress: extensionAddress as `0x${string}`,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
     groupId,
     round: selectedRound,
   });

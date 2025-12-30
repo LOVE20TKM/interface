@@ -9,6 +9,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useActionsLatestRewards } from '@/src/hooks/composite/useActionsLatestRewards';
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 
 // my components
 import Header from '@/src/components/Header';
@@ -22,6 +23,7 @@ const LAST_ROUNDS = BigInt(7);
 const ActRewardsPage: React.FC = () => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
+  const { currentRound } = useCurrentRound();
 
   // 铸造状态管理
   const [isMinting, setIsMinting] = useState(false);
@@ -30,6 +32,7 @@ const ActRewardsPage: React.FC = () => {
   // 获取行动激励数据
   const { displayedGroups, isLoading, handleExtensionMintSuccess, errors } = useActionsLatestRewards({
     tokenAddress: token?.address as `0x${string}`,
+    currentRound: currentRound,
     lastRounds: LAST_ROUNDS,
   });
 

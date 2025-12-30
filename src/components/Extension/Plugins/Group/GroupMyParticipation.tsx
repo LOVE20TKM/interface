@@ -32,7 +32,7 @@ import {
   useExit,
   useJoinInfo,
   useTotalJoinedAmountByRound,
-} from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+} from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -69,12 +69,11 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
 
   // 获取加入信息
   const {
-    joinedRound,
     amount: joinedAmount,
     groupId,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
-  } = useJoinInfo(extensionAddress, account as `0x${string}`);
+  } = useJoinInfo(token?.address as `0x${string}`, actionId, account as `0x${string}`);
 
   // 获取链群详情
   const {
@@ -92,7 +91,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     totalJoinedAmount: currentRoundTotalAmount,
     isPending: isPendingTotalAmount,
     error: errorTotalAmount,
-  } = useTotalJoinedAmountByRound(extensionAddress, currentRound || BigInt(0));
+  } = useTotalJoinedAmountByRound(token?.address as `0x${string}`, actionId, currentRound || BigInt(0));
 
   // 获取验证信息
   const verificationKeys = actionInfo?.body?.verificationKeys as string[] | undefined;
@@ -117,14 +116,14 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     isConfirming: isConfirmingExit,
     isConfirmed: isConfirmedExit,
     writeError: errorExit,
-  } = useExit(extensionAddress);
+  } = useExit();
 
   const handleExit = async () => {
     if (!joinedAmount || joinedAmount <= BigInt(0)) {
       toast.error('您还没有参与，无需退出');
       return;
     }
-    await exit();
+    await exit(token?.address as `0x${string}`, actionId);
   };
 
   useEffect(() => {

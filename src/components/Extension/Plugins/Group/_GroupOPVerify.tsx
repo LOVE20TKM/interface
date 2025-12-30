@@ -31,7 +31,7 @@ import {
   useDelegatedVerifierByGroupId,
   useVerifyWithOriginScores,
   useVerifiedAccountCount,
-} from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+} from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -81,7 +81,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     delegatedVerifier,
     isPending: isPendingDelegated,
     error: errorDelegated,
-  } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
+  } = useDelegatedVerifierByGroupId(token?.address as `0x${string}`, actionId, groupId);
 
   // 检查是否有打分权限（链群服务者或打分代理）
   const hasVerifyPermission =
@@ -94,7 +94,9 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     isPending: isPendingGetAccounts,
     error: errorGetAccounts,
   } = useAccountsByGroupIdByRound({
-    extensionAddress,
+    extensionAddress: extensionAddress as `0x${string}`,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
     groupId,
     round: currentRound || BigInt(0),
   });
@@ -104,7 +106,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     verifiedAccountCount,
     isPending: isPendingSubmittedCount,
     error: errorSubmittedCount,
-  } = useVerifiedAccountCount(extensionAddress, currentRound || BigInt(0), groupId);
+  } = useVerifiedAccountCount(token?.address as `0x${string}`, actionId, currentRound || BigInt(0), groupId);
 
   // 批量获取验证信息
   const {
@@ -141,7 +143,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     isConfirming: isConfirmingVerify,
     isConfirmed: isConfirmedVerify,
     writeError: errorVerifyGroup,
-  } = useVerifyWithOriginScores(extensionAddress);
+  } = useVerifyWithOriginScores();
 
   // 从剪贴板粘贴分数
   const handlePasteFromClipboard = async () => {
@@ -210,7 +212,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
       // 使用新的 verifyWithOriginScores 签名：groupId, startIndex, originScores
       // startIndex 设置为 0，表示从第一个账号开始提交
-      await verifyWithOriginScores(groupId, BigInt(0), scores);
+      await verifyWithOriginScores(token?.address as `0x${string}`, actionId, groupId, BigInt(0), scores as bigint[]);
     } catch (error) {
       console.error('Verify group failed', error);
     }

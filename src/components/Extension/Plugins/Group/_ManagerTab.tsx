@@ -14,10 +14,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useExtensionGroupsOfAccount } from '@/src/hooks/extension/plugins/group/composite';
-import {
-  useGroupManagerAddress,
-  useTokenAddress,
-} from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useTokenAddress } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
 import {
   useActiveGroupIdsByOwner,
   useMaxVerifyCapacityByOwner,
@@ -43,9 +40,9 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   const { token } = useContext(TokenContext) || {};
 
   // 获取 GroupManager 合约地址和 tokenAddress
-  const { groupManagerAddress, isPending: isPendingGroupManager } = useGroupManagerAddress(
-    extensionAddress as `0x${string}`,
-  );
+  const groupManagerAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as
+    | `0x${string}`
+    | undefined;
   const { tokenAddress, isPending: isPendingTokenAddress } = useTokenAddress(extensionAddress as `0x${string}`);
 
   // 获取服务者的最大容量上限
@@ -100,8 +97,8 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   }
 
   // 计算总的加载状态
-  // 如果前置条件（groupManagerAddress 和 tokenAddress）还在加载，返回 true
-  if (isPendingGroupManager || isPendingTokenAddress) {
+  // 如果前置条件（tokenAddress）还在加载，返回 true
+  if (isPendingTokenAddress) {
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />

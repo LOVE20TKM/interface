@@ -66,7 +66,9 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
     isPending: isPendingRewards,
     error: errorRewards,
   } = useGroupAccountsRewardOfRound({
-    extensionAddress,
+    extensionAddress: extensionAddress as `0x${string}`,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
     round: selectedRound,
     groupId,
   });
@@ -77,7 +79,9 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
     isPending: isPendingScores,
     error: errorScores,
   } = useGroupScoresOfRound({
-    extensionAddress,
+    extensionAddress: extensionAddress as `0x${string}`,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
     round: selectedRound,
     groupId,
   });
@@ -88,7 +92,9 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
     isPending: isPendingAmounts,
     error: errorAmounts,
   } = useGroupAccountsJoinedAmountOfRound({
-    extensionAddress,
+    extensionAddress: extensionAddress as `0x${string}`,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
     round: selectedRound,
     groupId,
   });

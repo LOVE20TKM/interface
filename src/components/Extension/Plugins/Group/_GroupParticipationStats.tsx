@@ -14,7 +14,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -51,7 +51,7 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
     amount: joinedAmount,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
-  } = useJoinInfo(extensionAddress, account as `0x${string}`);
+  } = useJoinInfo(token?.address as `0x${string}`, actionId, account as `0x${string}`);
 
   // 获取链群详情
   const {

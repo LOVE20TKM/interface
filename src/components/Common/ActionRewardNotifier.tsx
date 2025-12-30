@@ -101,7 +101,6 @@ const ActionRewardNotifier: React.FC = () => {
   } = useMyJoinedExtensionActions({
     tokenAddress: token?.address,
     account: account as `0x${string}`,
-    currentRound: undefined,
   });
 
   // 提取扩展地址

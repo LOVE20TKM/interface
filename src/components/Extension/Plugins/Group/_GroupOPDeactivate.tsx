@@ -25,7 +25,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 import { useDeactivateGroup, useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // 工具函数
@@ -71,7 +71,7 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
     count: accountsCount,
     isPending: isPendingAccountsCount,
     error: errorAccountsCount,
-  } = useAccountsByGroupIdCount(extensionAddress, groupId);
+  } = useAccountsByGroupIdCount(token?.address as `0x${string}`, actionId, groupId);
 
   // 获取当前轮次
   const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();

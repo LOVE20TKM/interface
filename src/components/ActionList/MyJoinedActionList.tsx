@@ -49,7 +49,6 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
   } = useMyJoinedExtensionActions({
     tokenAddress: token?.address as `0x${string}`,
     account: account as `0x${string}`,
-    currentRound, // 传入已获取的 currentRound，避免重复查询
   });
 
   // 合并 core 和扩展行动，过滤掉重复的行动

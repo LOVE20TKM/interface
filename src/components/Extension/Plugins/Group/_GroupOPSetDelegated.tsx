@@ -31,7 +31,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import {
   useDelegatedVerifierByGroupId,
   useSetGroupDelegatedVerifier,
-} from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
+} from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // 工具函数
@@ -71,7 +71,7 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
     delegatedVerifier,
     isPending: isPendingDelegated,
     error: errorDelegated,
-  } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
+  } = useDelegatedVerifierByGroupId(token?.address as `0x${string}`, actionId, groupId);
 
   // 表单验证：允许空值，空值表示取消代理
   const formSchema = z.object({
@@ -110,14 +110,14 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
     isConfirming: isConfirmingSet,
     isConfirmed: isConfirmedSet,
     writeError: errorSet,
-  } = useSetGroupDelegatedVerifier(extensionAddress);
+  } = useSetGroupDelegatedVerifier();
 
   async function handleSetDelegated(values: FormValues) {
     // 如果输入为空，使用零地址（取消代理）
     const address = values.delegatedVerifier?.trim() || '0x0000000000000000000000000000000000000000';
 
     try {
-      await setGroupDelegatedVerifier(groupId, address as `0x${string}`);
+      await setGroupDelegatedVerifier(token?.address as `0x${string}`, actionId, groupId, address as `0x${string}`);
     } catch (error) {
       console.error('Set delegated verifier failed', error);
     }
@@ -126,7 +126,12 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
   // 快速取消代理
   async function handleCancelDelegated() {
     try {
-      await setGroupDelegatedVerifier(groupId, '0x0000000000000000000000000000000000000000' as `0x${string}`);
+      await setGroupDelegatedVerifier(
+        token?.address as `0x${string}`,
+        actionId,
+        groupId,
+        '0x0000000000000000000000000000000000000000' as `0x${string}`,
+      );
     } catch (error) {
       console.error('Cancel delegated verifier failed', error);
     }
