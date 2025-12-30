@@ -358,8 +358,8 @@ const ActRewardsPage: React.FC = () => {
                               <div className="flex items-center justify-center gap-1">
                                 估算验证得分
                                 <InfoTooltip
-                                  title="验证得分说明"
-                                  content="这个得分，是根据最终激励，估算的平均得分。（具体算法：将所有地址中实际得分最高者，作为100分，然后将你的实际得分等比例换算到0~100）"
+                                  title="验证得分估算说明"
+                                  content="这是将你的验证得分标准化为0~100分的相对得分。算法：先过滤异常高分，以剩余最高分为100分基准，将你的得分按比例换算。"
                                 />
                               </div>
                             </th>
