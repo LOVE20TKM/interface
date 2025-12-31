@@ -180,8 +180,9 @@ const ActionGroupOpPage: React.FC = () => {
 
   // 根据操作类型渲染不同组件
   const renderOperation = () => {
+    // 此时 actionId 已经通过校验，不会是 undefined
     const baseProps = {
-      actionId,
+      actionId: actionId!,
       actionInfo,
       extensionAddress,
     };
