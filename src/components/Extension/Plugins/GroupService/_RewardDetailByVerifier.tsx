@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 // my hooks
 import { useContractError } from '@/src/errors/useContractError';
 import { useRewardDetailByVerifier } from '@/src/hooks/extension/plugins/group-service/composite/useRewardDetailByVerifier';
+import { useExtensionParams } from '@/src/hooks/extension/plugins/group-service/composite/useExtensionParams';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -24,8 +25,6 @@ import { formatTokenAmount } from '@/src/lib/format';
 interface _RewardDetailByVerifierProps {
   /** 扩展合约地址 */
   extensionAddress: `0x${string}` | undefined;
-  /** Token 地址 */
-  tokenAddress: `0x${string}` | undefined;
   /** 服务者地址 */
   verifier: `0x${string}`;
   /** 当前加入轮次 */
@@ -45,7 +44,6 @@ interface _RewardDetailByVerifierProps {
  */
 const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
   extensionAddress,
-  tokenAddress,
   verifier,
   currentJoinRound,
   onBack,
@@ -64,6 +62,11 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
     | undefined
   >(undefined);
 
+  // 获取扩展参数，获取链群行动所在代币地址
+  const { groupActionTokenAddress } = useExtensionParams(
+    (extensionAddress || '0x0000000000000000000000000000000000000000') as `0x${string}`,
+  );
+
   // 从URL获取round参数
   const { round: urlRound } = router.query;
 
@@ -80,7 +83,7 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
   // 获取服务者激励明细数据
   const { actionRewards, isPending, error } = useRewardDetailByVerifier({
     extensionAddress,
-    tokenAddress,
+    tokenAddress: groupActionTokenAddress,
     round: selectedRound > BigInt(0) ? selectedRound : undefined,
     verifier,
   });
@@ -309,7 +312,7 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
       {selectedGroup && (
         <_RewardDistributionByGroupDialog
           extensionAddress={extensionAddress}
-          tokenAddress={tokenAddress}
+          tokenAddress={groupActionTokenAddress}
           verifier={verifier}
           round={selectedRound > BigInt(0) ? selectedRound : undefined}
           actionId={selectedGroup.actionId}

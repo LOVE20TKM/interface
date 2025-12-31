@@ -137,7 +137,6 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
     return (
       <_RewardDetailByVerifier
         extensionAddress={extensionAddress}
-        tokenAddress={token?.address as `0x${string}`}
         verifier={selectedVerifier}
         currentJoinRound={currentJoinRound}
         onBack={handleBack}
