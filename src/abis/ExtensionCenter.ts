@@ -865,6 +865,11 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "error",
+    "name": "OnlyExtensionOrAccountCanCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "VerificationInfoLengthMismatch",
     "inputs": []
   }

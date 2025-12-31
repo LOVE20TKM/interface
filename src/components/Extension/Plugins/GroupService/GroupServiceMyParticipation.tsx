@@ -11,6 +11,7 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 import { toast } from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 
 import {
@@ -32,6 +33,7 @@ interface GroupServiceMyParticipationProps {
 export default function GroupServiceMyParticipation({ extensionAddress, actionId }: GroupServiceMyParticipationProps) {
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
+  const queryClient = useQueryClient();
 
   // Data Hooks
   const { joinedValueByAccount, isPending: isJoinedPending } = useJoinedValueByAccount(
@@ -280,7 +282,19 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
           onSuccess={() => {
             toast.success('二次分配设置已更新');
             handleDialogOpenChange(false);
-            // Data will auto-refresh due to wagmi cache invalidation
+            // 刷新所有 readContracts 查询，特别是 recipientsLatest 相关的
+            queryClient.invalidateQueries({
+              predicate: (query) => {
+                const queryKey = query.queryKey;
+                if (Array.isArray(queryKey) && queryKey[0] === 'readContracts') {
+                  const contracts = (queryKey[1] as any)?.contracts;
+                  if (Array.isArray(contracts)) {
+                    return contracts.some((contract: any) => contract?.functionName === 'recipientsLatest');
+                  }
+                }
+                return false;
+              },
+            });
           }}
         />
       )}

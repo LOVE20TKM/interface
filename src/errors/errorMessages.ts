@@ -141,4 +141,9 @@ export const ErrorMessages: Record<string, string> = {
   ZeroAddress: '地址不能为零地址',
   ZeroBasisPoints: 'ZeroBasisPoints',
   ZeroContribution: '申购数量为零',
+  ExtensionNotFoundInFactory: 'ExtensionNotFoundInFactory',
+  InvalidExtension: 'InvalidExtension',
+  InvalidExtensionFactory: 'InvalidExtensionFactory',
+  InvalidFactory: 'InvalidFactory',
+  OnlyExtensionOrAccountCanCall: 'OnlyExtensionOrAccountCanCall',
 };
