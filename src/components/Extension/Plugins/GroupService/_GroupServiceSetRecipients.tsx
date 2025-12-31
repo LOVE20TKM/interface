@@ -319,15 +319,20 @@ export default function _GroupServiceSetRecipients({
                             render={({ field }) => (
                               <FormItem>
                                 <FormControl>
-                                  <Input
-                                    type="number"
-                                    min={0}
-                                    max={maxForThisInput}
-                                    placeholder="0-100"
-                                    {...field}
-                                    onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
-                                    className="h-8 px-1 sm:px-2 max-w-20"
-                                  />
+                                  <div className="relative inline-block">
+                                    <Input
+                                      type="number"
+                                      min={0}
+                                      max={maxForThisInput}
+                                      placeholder="0-100"
+                                      {...field}
+                                      onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
+                                      className="h-8 px-1 sm:px-2 pr-6 max-w-20"
+                                    />
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs sm:text-sm">
+                                      %
+                                    </span>
+                                  </div>
                                 </FormControl>
                                 <FormMessage className="text-xs" />
                               </FormItem>
