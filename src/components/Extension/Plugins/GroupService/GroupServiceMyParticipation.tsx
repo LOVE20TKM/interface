@@ -21,6 +21,7 @@ import {
 } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 
 import { useActionGroupRecipientsData } from '@/src/hooks/extension/plugins/group-service/composite';
+import { useExtensionParams } from '@/src/hooks/extension/plugins/group-service/composite/useExtensionParams';
 
 import _GroupServiceSetRecipients from './_GroupServiceSetRecipients';
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -42,6 +43,9 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   );
   const { joinedValue: totalJoinedValue } = useJoinedValue(extensionAddress);
 
+  // Get extension params to fetch groupActionTokenAddress
+  const { groupActionTokenAddress } = useExtensionParams(extensionAddress);
+
   // Get current round for fetching recipients data
   const { currentRound } = useCurrentRound();
 
@@ -51,7 +55,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
     isPending: isRecipientsPending,
     error: recipientsError,
   } = useActionGroupRecipientsData({
-    tokenAddress: token?.address,
+    tokenAddress: groupActionTokenAddress,
     verifyRound: currentRound,
     account: account as `0x${string}`,
     extensionAddress,
