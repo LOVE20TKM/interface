@@ -92,7 +92,7 @@ const ActionGroupOpPage: React.FC = () => {
   };
 
   // 参数校验
-  if (!actionId || !extensionAddress || !op) {
+  if (!extensionAddress || !op) {
     return (
       <>
         <Header title="链群操作" showBackButton={true} />
