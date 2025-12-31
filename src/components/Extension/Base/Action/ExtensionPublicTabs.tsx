@@ -84,7 +84,7 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
       return <LpActionPublicTabs extensionAddress={extensionAddress} currentRound={currentRound} actionId={actionId} />;
 
     case ExtensionType.GROUP_ACTION:
-      if (!actionId || !actionInfo) {
+      if (!actionInfo) {
         return (
           <div className="bg-white rounded-lg p-8">
             <div className="text-center text-gray-500">
@@ -109,7 +109,7 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
       return <GroupActionPublicTabs extensionAddress={extensionAddress} actionId={actionId} actionInfo={actionInfo} />;
 
     case ExtensionType.GROUP_SERVICE:
-      if (!actionId || !actionInfo) {
+      if (!actionInfo) {
         return (
           <div className="bg-white rounded-lg p-8">
             <div className="text-center text-gray-500">
