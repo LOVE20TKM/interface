@@ -53,7 +53,7 @@ export const useDistrustVotesOfGroupOwner = ({
 }: UseDistrustVotesOfGroupOwnerParams): UseDistrustVotesOfGroupOwnerResult => {
   // 第一步：获取当轮投票者数量
   const voterCountContract = useMemo(() => {
-    if (!tokenAddress || !actionId || round === undefined) return [];
+    if (!tokenAddress || round === undefined) return [];
 
     return [
       {
@@ -83,7 +83,7 @@ export const useDistrustVotesOfGroupOwner = ({
 
   // 第二步：获取所有投票者地址
   const votersContracts = useMemo(() => {
-    if (!tokenAddress || !actionId || round === undefined || voterCount === BigInt(0)) return [];
+    if (!tokenAddress || round === undefined || voterCount === BigInt(0)) return [];
 
     const contracts = [];
     for (let i = BigInt(0); i < voterCount; i++) {
@@ -116,7 +116,7 @@ export const useDistrustVotesOfGroupOwner = ({
 
   // 第三步：获取每个投票者的验证票、不信任票、原因
   const detailContracts = useMemo(() => {
-    if (!tokenAddress || !actionId || round === undefined || !groupOwner || voters.length === 0) return [];
+    if (!tokenAddress || round === undefined || !groupOwner || voters.length === 0) return [];
 
     const contracts = [];
 

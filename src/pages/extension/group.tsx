@@ -88,7 +88,7 @@ const ActionGroupPage: React.FC = () => {
   };
 
   // 参数校验
-  if (!actionId || !groupIdBigInt) {
+  if (!groupIdBigInt) {
     return (
       <div className="container mx-auto px-4 py-8">
         <AlertBox type="error" message="缺少必要参数：需要 actionId 和 groupId" />
