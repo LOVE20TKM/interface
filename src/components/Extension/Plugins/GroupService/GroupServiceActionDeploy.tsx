@@ -60,7 +60,7 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      groupActionTokenAddress: '',
+      groupActionTokenAddress: tokenAddress || '',
     },
     mode: 'onChange', // 实时验证
   });
@@ -82,6 +82,13 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
   const [approvalStep, setApprovalStep] = useState<'idle' | 'approving' | 'approved' | 'deploying' | 'deployed'>(
     'idle',
   );
+
+  // 当tokenAddress变化时，更新表单默认值
+  useEffect(() => {
+    if (tokenAddress) {
+      form.setValue('groupActionTokenAddress', tokenAddress);
+    }
+  }, [tokenAddress, form]);
 
   // 等待交易回执并解析事件获取扩展地址
   const { data: receipt } = useWaitForTransactionReceipt({

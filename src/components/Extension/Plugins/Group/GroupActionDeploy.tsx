@@ -94,8 +94,8 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      stakeTokenAddress: '',
-      joinTokenAddress: '',
+      stakeTokenAddress: tokenAddress || '',
+      joinTokenAddress: tokenAddress || '',
       activationStakeAmount: '',
       maxJoinAmountRatio: '',
       maxVerifyCapacityFactor: '',
@@ -115,6 +115,14 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
     writeError: approveError,
     hash: approveHash,
   } = useApprove(tokenAddress);
+
+  // 当tokenAddress变化时，更新表单默认值
+  useEffect(() => {
+    if (tokenAddress) {
+      form.setValue('stakeTokenAddress', tokenAddress);
+      form.setValue('joinTokenAddress', tokenAddress);
+    }
+  }, [tokenAddress, form]);
 
   // 部署状态管理
   const [approvalStep, setApprovalStep] = useState<'idle' | 'approving' | 'approved' | 'deploying' | 'deployed'>(
