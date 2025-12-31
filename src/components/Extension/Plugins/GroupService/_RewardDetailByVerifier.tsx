@@ -83,7 +83,7 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
   // 获取服务者激励明细数据
   const { actionRewards, isPending, error } = useRewardDetailByVerifier({
     extensionAddress,
-    tokenAddress: groupActionTokenAddress,
+    groupActionTokenAddress,
     round: selectedRound > BigInt(0) ? selectedRound : undefined,
     verifier,
   });

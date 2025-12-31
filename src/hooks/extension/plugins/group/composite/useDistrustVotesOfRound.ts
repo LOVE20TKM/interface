@@ -7,6 +7,7 @@ import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useVerifiers } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useGroupNamesWithCache } from '../../../base/composite/useGroupNamesWithCache';
+import { useVotesNum } from '@/src/hooks/contracts/useLOVE20Vote';
 import type { DistrustVoteInfo } from './useDistrustVotesOfCurrentRound';
 
 const GROUP_VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY as `0x${string}`;
@@ -31,10 +32,10 @@ export interface UseDistrustVotesOfRoundResult {
  * 1. 使用 useVerifiers 获取指定轮次的验证者列表（验证者即为链群服务者）
  * 2. 批量调用 groupIdsByVerifier 获取每个验证者管理的链群NFT列表
  * 3. 使用 useGroupNamesWithCache 批量获取链群名称（带缓存）
- * 4. 批量 RPC 调用：
- *    - 调用一次 totalVerifyVotes 获取总验证票数
+ * 4. 使用 useVotesNum 从 LOVE20Vote 合约获取某轮次的总投票数
+ * 5. 批量 RPC 调用：
  *    - 对每个验证者调用 distrustVotesByGroupOwner 获取不信任票数
- * 5. 计算每个验证者的不信任率并返回
+ * 6. 计算每个验证者的不信任率并返回
  */
 export const useDistrustVotesOfRound = ({
   extensionAddress,
@@ -116,21 +117,20 @@ export const useDistrustVotesOfRound = ({
     enabled: allGroupIds.length > 0,
   });
 
-  // 第四步：批量获取不信任票数据
+  // 第四步：从 LOVE20Vote 合约获取某轮次的总投票数
+  const {
+    votes: totalVotes,
+    isPending: isTotalVotesPending,
+    error: totalVotesError,
+  } = useVotesNum(tokenAddress as `0x${string}`, round !== undefined ? round : BigInt(0));
+
+  // 第五步：批量获取不信任票数据
   const distrustContracts = useMemo(() => {
     if (!tokenAddress || !extensionAddress || round === undefined || !verifiers || verifiers.length === 0) return [];
 
     const contracts = [];
 
-    // 首先获取总验证票数（只需要调用一次）
-    contracts.push({
-      address: GROUP_VERIFY_CONTRACT_ADDRESS,
-      abi: GroupVerifyAbi,
-      functionName: 'totalVerifyVotes',
-      args: [tokenAddress, actionId, round],
-    });
-
-    // 然后获取每个验证者的不信任票数
+    // 获取每个验证者的不信任票数
     for (const verifier of verifiers) {
       contracts.push({
         address: GROUP_VERIFY_CONTRACT_ADDRESS,
@@ -161,23 +161,21 @@ export const useDistrustVotesOfRound = ({
     },
   });
 
-  // 第五步：解析数据并计算不信任率
+  // 第六步：解析数据并计算不信任率
   const distrustVotes = useMemo(() => {
-    if (!distrustData || !verifiers || verifiers.length === 0) return [];
+    if (!distrustData || !verifiers || verifiers.length === 0 || totalVotes === undefined) return [];
 
-    // 第一个调用是 totalVerifyVotes（所有验证者共享）
-    const totalVerifyVotes = safeToBigInt(distrustData[0]?.result);
-
+    const totalVotesBigInt = totalVotes || BigInt(0);
     const result: DistrustVoteInfo[] = [];
 
     for (let i = 0; i < verifiers.length; i++) {
       const verifier = verifiers[i];
 
-      // distrustVotes 从索引 1 开始（索引 0 是 totalVerifyVotes）
-      const distrustVotesNum = safeToBigInt(distrustData[i + 1]?.result);
+      // 获取每个验证者的不信任票数
+      const distrustVotesNum = safeToBigInt(distrustData[i]?.result);
 
       // 计算不信任率
-      const distrustRatio = totalVerifyVotes > BigInt(0) ? Number(distrustVotesNum) / Number(totalVerifyVotes) : 0;
+      const distrustRatio = totalVotesBigInt > BigInt(0) ? Number(distrustVotesNum) / Number(totalVotesBigInt) : 0;
 
       // 获取该验证者管理的链群列表
       const groupIds = verifierGroupMap.get(verifier.toLowerCase()) || [];
@@ -186,13 +184,13 @@ export const useDistrustVotesOfRound = ({
         groupOwner: verifier,
         groupIds,
         distrustVotes: distrustVotesNum,
-        totalVerifyVotes,
+        totalVotes: totalVotesBigInt,
         distrustRatio,
       });
     }
 
     return result;
-  }, [distrustData, verifiers, verifierGroupMap]);
+  }, [distrustData, verifiers, verifierGroupMap, totalVotes]);
 
   // 计算最终的 pending 状态
   const finalIsPending = useMemo(() => {
@@ -204,13 +202,15 @@ export const useDistrustVotesOfRound = ({
     if (isGroupIdsPending) return true;
     // 如果链群名称还在加载中，返回 true
     if (isGroupNamesPending) return true;
+    // 如果总投票数还在加载中，返回 true
+    if (isTotalVotesPending) return true;
     // 如果不信任票数据还在加载中，返回 true
     return isDistrustPending;
-  }, [isVerifiersPending, verifiers, isGroupIdsPending, isGroupNamesPending, isDistrustPending]);
+  }, [isVerifiersPending, verifiers, isGroupIdsPending, isGroupNamesPending, isTotalVotesPending, isDistrustPending]);
 
   return {
     distrustVotes,
     isPending: finalIsPending,
-    error: verifiersError || groupIdsError || groupNamesError || distrustError,
+    error: verifiersError || groupIdsError || groupNamesError || totalVotesError || distrustError,
   };
 };

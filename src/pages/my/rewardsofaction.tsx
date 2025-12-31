@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useContext, useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { useAccount } from 'wagmi';
 import { useRouter } from 'next/router';
-import toast from 'react-hot-toast';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -28,7 +26,6 @@ const ActRewardsPage: React.FC = () => {
   const actionId = router.isReady && typeof id === 'string' && id.trim() !== '' ? BigInt(id) : undefined;
 
   const { token } = useContext(TokenContext) || {};
-  const { address: account } = useAccount();
 
   // 获取当前轮次
   const { currentRound, isPending: isLoadingCurrentRound, error: errorCurrentRound } = useCurrentRound();
@@ -58,6 +55,7 @@ const ActRewardsPage: React.FC = () => {
     isExtensionAction,
     isLoadingExtensionInfo,
     errorExtensionInfo,
+    refetch: refetchRewards,
   } = useActionRewardsByRounds({
     tokenAddress: token?.address as `0x${string}`,
     actionInfo,
@@ -119,9 +117,17 @@ const ActRewardsPage: React.FC = () => {
   }, [rewards, isInitialized]);
 
   // 处理铸造成功（由子组件回调）
-  const handleMintSuccess = useCallback((round: bigint) => {
-    setRewardList((prev) => prev.map((item) => (item.round === round ? { ...item, isMinted: true } : item)));
-  }, []);
+  const handleMintSuccess = useCallback(
+    (round: bigint) => {
+      // 更新本地状态
+      setRewardList((prev) => prev.map((item) => (item.round === round ? { ...item, isMinted: true } : item)));
+      // 刷新底层数据，确保缓存更新
+      if (refetchRewards) {
+        refetchRewards();
+      }
+    },
+    [refetchRewards],
+  );
 
   // 无限滚动加载更多激励：当滚动到底部时更新 startRound
   const loadMoreRewards = useCallback(() => {

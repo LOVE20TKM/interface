@@ -131,42 +131,6 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     return remainingVotes <= BigInt(100000); // 剩余 <= 100000 wei 认为已投完
   }, [remainingVotes]);
 
-  // 调试日志
-  useEffect(() => {
-    console.log('🔍 投票权限检查调试信息:', {
-      token: token?.address,
-      currentRound: currentRound?.toString(),
-      account,
-      actionId: actionId.toString(),
-      myVerifyVotes: myVerifyVotes?.toString(),
-      alreadyVotedAmount: alreadyVotedAmount?.toString(),
-      remainingVotes: remainingVotes?.toString(),
-      hasVotedAll,
-      myVerifyVotesType: typeof myVerifyVotes,
-      isPendingVerify,
-      isPendingRound,
-      isPendingAlreadyVoted,
-      errorVerify,
-      errorAlreadyVoted,
-      // 检查查询是否被启用
-      queryEnabled: !!(token?.address && currentRound !== undefined && account && actionId !== undefined),
-    });
-  }, [
-    token?.address,
-    currentRound,
-    account,
-    actionId,
-    myVerifyVotes,
-    alreadyVotedAmount,
-    remainingVotes,
-    hasVotedAll,
-    isPendingVerify,
-    isPendingRound,
-    isPendingAlreadyVoted,
-    errorVerify,
-    errorAlreadyVoted,
-  ]);
-
   // 获取服务者管理的链群
   const {
     groups,

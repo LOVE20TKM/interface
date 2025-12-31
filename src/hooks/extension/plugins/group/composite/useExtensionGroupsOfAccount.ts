@@ -24,6 +24,7 @@ export interface AccountGroupInfo {
   isActive: boolean;
   activatedRound: bigint;
   deactivatedRound: bigint;
+  accountCount: bigint;
 }
 
 export interface UseExtensionGroupsOfAccountParams {
@@ -46,7 +47,8 @@ export interface UseExtensionGroupsOfAccountResult {
  * 2. 批量获取每个链群的详细信息：
  *    - 链群基本信息（通过 GroupManager.groupInfo）
  *    - 链群名称（通过 Group.groupNameOf）
- *    - 参与代币量（通过 ExtensionGroupAction.totalJoinedAmountByGroupId）
+ *    - 参与代币量（通过 GroupJoin.totalJoinedAmountByGroupId）
+ *    - 参与地址数（通过 GroupJoin.accountsByGroupIdCount）
  */
 export const useExtensionGroupsOfAccount = ({
   extensionAddress,
@@ -118,6 +120,14 @@ export const useExtensionGroupsOfAccount = ({
         functionName: 'totalJoinedAmountByGroupId',
         args: [tokenAddress, actionId, groupId],
       });
+
+      // 获取群组成员数量（新版合约移到 GroupJoin）
+      contracts.push({
+        address: GROUP_JOIN_ADDRESS,
+        abi: GroupJoinAbi,
+        functionName: 'accountsByGroupIdCount',
+        args: [tokenAddress, actionId, groupId],
+      });
     }
 
     return contracts;
@@ -141,13 +151,14 @@ export const useExtensionGroupsOfAccount = ({
     const result: AccountGroupInfo[] = [];
 
     for (let i = 0; i < groupIds.length; i++) {
-      const baseIndex = i * 3;
+      const baseIndex = i * 4;
       // GroupManager 的 groupInfo 返回 9 个字段: [groupId, description, maxCapacity, minJoinAmount, maxJoinAmount, maxAccounts, isActive, activatedRound, deactivatedRound]
       const groupInfoData = detailData[baseIndex]?.result as
         | [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint, bigint]
         | undefined;
       const groupName = detailData[baseIndex + 1]?.result as string | undefined;
       const totalJoinedAmount = detailData[baseIndex + 2]?.result;
+      const accountCount = detailData[baseIndex + 3]?.result;
 
       if (!groupInfoData || !groupName) continue;
 
@@ -163,6 +174,7 @@ export const useExtensionGroupsOfAccount = ({
         isActive: groupInfoData[6],
         activatedRound: safeToBigInt(groupInfoData[7]),
         deactivatedRound: safeToBigInt(groupInfoData[8]),
+        accountCount: safeToBigInt(accountCount),
       });
     }
 

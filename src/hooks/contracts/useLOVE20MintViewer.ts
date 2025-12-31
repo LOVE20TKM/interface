@@ -2,11 +2,7 @@
 
 import { useReadContract } from 'wagmi';
 import { LOVE20MintViewerAbi } from '@/src/abis/LOVE20MintViewer';
-import {
-  RewardInfo,
-  ActionReward,
-  GovReward,
-} from '@/src/types/love20types';
+import { RewardInfo, ActionReward, GovReward } from '@/src/types/love20types';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_MINTVIEWER as `0x${string}`;
 
@@ -103,7 +99,7 @@ export const useActionRewardsByAccountByActionIdByRounds = (
   startRound: bigint,
   endRound: bigint,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintViewerAbi,
     functionName: 'actionRewardsByAccountByActionIdByRounds',
@@ -116,7 +112,7 @@ export const useActionRewardsByAccountByActionIdByRounds = (
     },
   });
   const rewards = (data as RewardInfo[]) || [];
-  return { rewards, isPending, error };
+  return { rewards, isPending, error, refetch };
 };
 
 /**

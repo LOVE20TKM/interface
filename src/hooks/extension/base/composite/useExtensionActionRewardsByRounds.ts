@@ -51,6 +51,8 @@ export interface UseExtensionActionRewardsByRoundsResult {
   isPending: boolean;
   /** 错误信息 */
   error: any;
+  /** 手动刷新函数 */
+  refetch: () => void;
 }
 
 /**
@@ -96,6 +98,7 @@ export const useExtensionActionRewardsByRounds = ({
     data: rewardsData,
     isPending,
     error,
+    refetch,
   } = useReadContracts({
     contracts: contracts as any,
     query: {
@@ -137,5 +140,6 @@ export const useExtensionActionRewardsByRounds = ({
     rewards,
     isPending: finalIsPending,
     error,
+    refetch: refetch || (() => {}),
   };
 };

@@ -8,6 +8,7 @@ import { useRouter } from 'next/router';
 import { HelpCircle } from 'lucide-react';
 
 // my hooks
+import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
 import { useExit } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLp';
 import { useContractError } from '@/src/errors/useContractError';
@@ -67,8 +68,12 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
     account: account as `0x${string}`,
   });
 
-  // 计算是否已加入
-  const isJoined = joinedAmount && joinedAmount > BigInt(0);
+  // 判断是否已加入行动
+  const {
+    isJoined,
+    isPending: isPendingJoined,
+    error: errorJoined,
+  } = useIsAccountJoined(token?.address as `0x${string}`, actionId, account as `0x${string}`);
 
   // 格式化 LP 占比
   const lpRatioStr = formatPercentage(lpRatio);
@@ -113,9 +118,12 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
     if (errorExit) {
       handleError(errorExit);
     }
-  }, [errorData, errorExit, handleError]);
+    if (errorJoined) {
+      handleError(errorJoined);
+    }
+  }, [errorData, errorExit, errorJoined, handleError]);
 
-  if (isPendingData) {
+  if (isPendingData || isPendingJoined) {
     return (
       <div className="bg-white rounded-lg p-8">
         <div className="text-center">

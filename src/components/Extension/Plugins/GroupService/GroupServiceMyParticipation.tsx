@@ -13,6 +13,7 @@ import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 import { toast } from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
+import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 
 import {
   useJoinedValueByAccount,
@@ -35,6 +36,13 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
   const queryClient = useQueryClient();
+
+  // 判断是否已加入行动（仅在 actionId 存在时）
+  const {
+    isJoined,
+    isPending: isPendingJoined,
+    error: errorJoined,
+  } = useIsAccountJoined(token?.address as `0x${string}`, actionId ?? BigInt(0), account as `0x${string}`);
 
   // Data Hooks
   const { joinedValueByAccount, isPending: isJoinedPending } = useJoinedValueByAccount(
@@ -119,6 +127,12 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   }, [recipientsError, handleError]);
 
   useEffect(() => {
+    if (errorJoined) {
+      handleError(errorJoined);
+    }
+  }, [errorJoined, handleError]);
+
+  useEffect(() => {
     if (isExitConfirmed) {
       toast.success('退出行动成功');
     }
@@ -145,8 +159,27 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   };
 
   // Loading state for initial data
-  if (isJoinedPending) {
-    return <div className="p-8 text-center text-muted-foreground">加载中...</div>;
+  if (isJoinedPending || (actionId && isPendingJoined)) {
+    return (
+      <div className="bg-white rounded-lg p-8">
+        <div className="text-center">
+          <LoadingIcon />
+          <p className="mt-4 text-gray-600">加载数据中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果 actionId 存在且用户未加入，显示提示信息
+  if (actionId && !isJoined) {
+    return (
+      <div className="flex flex-col items-center pt-8">
+        <p className="text-gray-600 mb-6">您还没有参与此链群服务行动</p>
+        <Button variant="outline" className="text-secondary border-secondary" asChild>
+          <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol || ''}`}>加入链群服务行动</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (

@@ -25,7 +25,7 @@ import {
   useCurrentRound as useVerifyCurrentRound,
   useScoreByVerifierByActionId,
 } from '@/src/hooks/contracts/useLOVE20Verify';
-import { useJoinedAmountByActionIdByAccount } from '@/src/hooks/contracts/useLOVE20Join';
+import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 import { useDelegatedVerifierByGroupId } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
@@ -93,15 +93,12 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     actionId,
   );
 
-  // 获取当前账户的参与金额，判断是否已加入行动
-  const {
-    joinedAmountByActionIdByAccount,
-    isPending: isPendingJoinedAmount,
-    error: errorJoinedAmount,
-  } = useJoinedAmountByActionIdByAccount(token?.address as `0x${string}`, actionId, account as `0x${string}`);
-
   // 判断是否已加入行动
-  const isJoined = joinedAmountByActionIdByAccount !== undefined && joinedAmountByActionIdByAccount > BigInt(0);
+  const {
+    isJoined,
+    isPending: isPendingJoined,
+    error: errorJoined,
+  } = useIsAccountJoined(token?.address as `0x${string}`, actionId, account as `0x${string}`);
 
   // 错误处理
   const { handleError } = useContractError();
@@ -111,8 +108,8 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     if (errorDelegated) handleError(errorDelegated);
     if (errorRound) handleError(errorRound);
     if (errorVerify) handleError(errorVerify);
-    if (errorJoinedAmount) handleError(errorJoinedAmount);
-  }, [errorDetail, errorAccountsCount, errorDelegated, errorRound, errorVerify, errorJoinedAmount, handleError]);
+    if (errorJoined) handleError(errorJoined);
+  }, [errorDetail, errorAccountsCount, errorDelegated, errorRound, errorVerify, errorJoined, handleError]);
 
   if (!token) {
     return <div>Token信息加载中...</div>;

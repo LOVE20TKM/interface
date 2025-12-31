@@ -273,77 +273,82 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
             <p className="text-sm text-gray-400">该验证轮内没有不信任投票</p>
           </div>
         ) : (
-          <div className="space-y-3 mt-4">
-            {/* 表头 */}
-            <div className="grid grid-cols-12 gap-2 px-2 py-2 bg-gray-100 rounded text-sm font-medium text-gray-700">
-              <div className="col-span-8">服务者信息 / 链群</div>
-              <div className="col-span-3 text-center">不信任率</div>
-              <div className="col-span-1"></div>
-            </div>
+          <div className="overflow-x-auto mt-4">
+            <table className="table w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="px-8 text-left">服务者信息 / 链群</th>
+                  <th className="px-1 text-center">不信任率</th>
+                  <th className="px-1"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {distrustVotes.map((vote, index) => (
+                  <tr
+                    key={`${vote.groupOwner}-${index}`}
+                    onClick={() => handleRowClick(vote.groupOwner, vote.groupIds)}
+                    className="border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-all"
+                  >
+                    {/* 服务者地址 */}
+                    <td className="px-1">
+                      <div className="">
+                        <AddressWithCopyButton address={vote.groupOwner} showCopyButton={true} />
+                      </div>
+                      <div className="flex flex-wrap gap-x-2 gap-y-1">
+                        {vote.groupIds.length > 0 ? (
+                          vote.groupIds.map((id, idx) => {
+                            const name = groupNameMap.get(id);
+                            return (
+                              <span key={id.toString()} className="inline-flex items-center">
+                                {name ? (
+                                  <>
+                                    <span className="text-gray-500 text-xs">#</span>
+                                    <span className="text-sm font-medium ml-1">{id.toString()}</span>
+                                    <span className="text-sm text-gray-800 ml-2">{name}</span>
+                                  </>
+                                ) : (
+                                  <span className="text-xs text-gray-600">#{id.toString()}</span>
+                                )}
+                                {idx < vote.groupIds.length - 1 && <span className="text-gray-400">,</span>}
+                              </span>
+                            );
+                          })
+                        ) : (
+                          <span className="text-xs text-gray-600">-</span>
+                        )}
+                      </div>
+                    </td>
 
-            {/* 列表项 */}
-            {distrustVotes.map((vote, index) => (
-              <div
-                key={`${vote.groupOwner}-${index}`}
-                onClick={() => handleRowClick(vote.groupOwner, vote.groupIds)}
-                className="grid grid-cols-12 gap-2 border border-gray-200 rounded-lg p-2 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all items-center"
-              >
-                {/* 服务者地址 */}
-                <div className="col-span-8">
-                  <div className="">
-                    <AddressWithCopyButton address={vote.groupOwner} showCopyButton={true} />
-                  </div>
-                  <div className="flex flex-wrap gap-x-2 gap-y-1">
-                    {vote.groupIds.length > 0 ? (
-                      vote.groupIds.map((id, idx) => {
-                        const name = groupNameMap.get(id);
-                        return (
-                          <span key={id.toString()} className="inline-flex items-center">
-                            {name ? (
-                              <>
-                                <span className="text-gray-500 text-xs">#</span>
-                                <span className="text-sm">{id.toString()}</span>
-                                <span className="text-xs text-gray-800 pl-1">{name}</span>
-                              </>
-                            ) : (
-                              <span className="text-xs text-gray-600">#{id.toString()}</span>
-                            )}
-                            {idx < vote.groupIds.length - 1 && <span className="text-gray-400">,</span>}
-                          </span>
-                        );
-                      })
-                    ) : (
-                      <span className="text-xs text-gray-600">-</span>
-                    )}
-                  </div>
-                </div>
+                    {/* 不信任率 */}
+                    <td className="px-1 text-center">
+                      <div className="flex flex-col items-center">
+                        <span
+                          className={`font-medium ${
+                            vote.distrustRatio > 0.5
+                              ? 'text-red-600'
+                              : vote.distrustRatio > 0.2
+                              ? 'text-orange-600'
+                              : 'text-gray-800'
+                          }`}
+                        >
+                          {formatPercentage(vote.distrustRatio * 100.0)}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          ({formatTokenAmount(vote.distrustVotes)}/{formatTokenAmount(vote.totalVotes)})
+                        </span>
+                      </div>
+                    </td>
 
-                {/* 不信任率 */}
-                <div className="col-span-3 text-center">
-                  <div className="flex flex-col items-center">
-                    <span
-                      className={`font-medium ${
-                        vote.distrustRatio > 0.5
-                          ? 'text-red-600'
-                          : vote.distrustRatio > 0.2
-                          ? 'text-orange-600'
-                          : 'text-gray-800'
-                      }`}
-                    >
-                      {formatPercentage(vote.distrustRatio * 100.0)}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      ({formatTokenAmount(vote.distrustVotes)}/{formatTokenAmount(vote.totalVerifyVotes)})
-                    </span>
-                  </div>
-                </div>
-
-                {/* 右侧箭头 */}
-                <div className="col-span-1 flex justify-end">
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
-                </div>
-              </div>
-            ))}
+                    {/* 右侧箭头 */}
+                    <td className="px-1">
+                      <div className="flex justify-end">
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
@@ -376,61 +381,70 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
               {/* 服务者信息 */}
               {selectedOwner && (
                 <div className="text-sm text-gray-600">
-                  对服务者：
+                  服务者：
                   <AddressWithCopyButton address={selectedOwner.address} />
                 </div>
               )}
 
-              {/* 投票者列表表头 */}
-              <div className="space-y-2">
-                <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-gray-100 rounded text-xs font-medium text-gray-700">
-                  <div className="col-span-5">投票来源地址</div>
-                  <div className="col-span-3 text-center">不信任票</div>
-                  <div className="col-span-4 text-center">不信任程度</div>
-                </div>
+              {/* 投票者列表 */}
+              <div className="overflow-x-auto">
+                <table className="table w-full">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="px-8 text-left">投票来源地址</th>
+                      <th className="px-1 text-center">所投不信任票</th>
+                      <th className="px-1 text-center">不信任程度</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {voterDistrusts.map((voter, index) => (
+                      <React.Fragment key={`${voter.voter}-${index}`}>
+                        <tr className="border-none pb-0">
+                          {/* 投票地址 */}
+                          <td className="px-1 pb-0">
+                            <AddressWithCopyButton address={voter.voter} showCopyButton={true} />
+                          </td>
 
-                {/* 投票者列表 */}
-                {voterDistrusts.map((voter, index) => (
-                  <div key={`${voter.voter}-${index}`} className="border border-gray-200 rounded-lg p-3">
-                    <div className="grid grid-cols-12 gap-2 items-center mb-2">
-                      {/* 投票地址 */}
-                      <div className="col-span-5">
-                        <AddressWithCopyButton address={voter.voter} showCopyButton={true} />
-                      </div>
+                          {/* 不信任票 */}
+                          <td className="px-1 pb-0 text-center text-sm text-gray-600">
+                            {formatTokenAmount(voter.distrustVotes)}
+                          </td>
 
-                      {/* 不信任票 */}
-                      <div className="col-span-3 text-center text-sm text-gray-600">
-                        {formatTokenAmount(voter.distrustVotes)}
-                      </div>
-
-                      {/* 不信任程度 */}
-                      <div className="col-span-4 text-center">
-                        <span
-                          className={`text-sm font-medium ${
-                            voter.distrustRatio > 0.5
-                              ? 'text-red-600'
-                              : voter.distrustRatio > 0
-                              ? 'text-orange-600'
-                              : 'text-gray-500'
-                          }`}
-                        >
-                          {formatPercentage(voter.distrustRatio * 100.0)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 原因 */}
-                    {voter.reason && (
-                      <div className="text-xs text-gray-600 mt-2 pl-2 border-l-2 border-gray-200">
-                        <span className="font-medium">原因: </span>
-                        {voter.reason}
-                      </div>
-                    )}
-
-                    {/* 验证票信息 */}
-                    <div className="text-xs text-gray-400 mt-1">验证票: {formatTokenAmount(voter.verifyVotes)}</div>
-                  </div>
-                ))}
+                          {/* 不信任程度 */}
+                          <td className="px-1 pb-0 text-center">
+                            <span
+                              className={`text-sm font-medium ${
+                                voter.distrustRatio > 0.5
+                                  ? 'text-red-600'
+                                  : voter.distrustRatio > 0
+                                  ? 'text-orange-600'
+                                  : 'text-gray-500'
+                              }`}
+                            >
+                              {formatPercentage(voter.distrustRatio * 100.0)}
+                            </span>
+                          </td>
+                        </tr>
+                        {/* 原因和验证票信息 */}
+                        {(voter.reason || voter.verifyVotes) && (
+                          <tr className="border-b border-gray-100">
+                            <td colSpan={3} className="px-1 pt-0 pb-2">
+                              {voter.reason && (
+                                <div className="text-xs text-gray-600 mb-1 pl-2 border-l-2 border-gray-200">
+                                  <span className="font-medium">原因: </span>
+                                  {voter.reason}
+                                </div>
+                              )}
+                              <div className="text-xs text-gray-400">
+                                总验证票: {formatTokenAmount(voter.verifyVotes)}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
               {/* 关闭按钮 */}

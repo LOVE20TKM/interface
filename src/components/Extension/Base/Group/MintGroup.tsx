@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,10 +29,10 @@ import { useGroupNameValidation } from '@/src/hooks/extension/base/composite/use
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import { TokenContext } from '@/src/contexts/TokenContext';
 
 const FIRST_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_FIRST_TOKEN as `0x${string}`;
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
+const FIRST_TOKEN_SYMBOL = process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL as string;
 
 // 定义表单验证 Schema
 const getFormSchema = (balance: bigint) =>
@@ -48,7 +48,7 @@ const getFormSchema = (balance: bigint) =>
 export default function MintGroup() {
   const { address: account, isConnected } = useAccount();
   const router = useRouter();
-  const { token } = useContext(TokenContext) || { token: undefined };
+
   // 获取最大名称长度
   const { maxGroupNameLength } = useMaxGroupNameLength();
 
@@ -179,7 +179,7 @@ export default function MintGroup() {
     }
 
     if (balance && balance < mintCost) {
-      toast.error('LOVE20 代币余额不足');
+      toast.error(`${FIRST_TOKEN_SYMBOL} 代币余额不足`);
       return;
     }
 
@@ -293,7 +293,7 @@ export default function MintGroup() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">铸造成本:</span>
                     <span className="font-mono text-secondary font-medium">
-                      {formatTokenAmount(mintCost)} {token?.symbol}
+                      {formatTokenAmount(mintCost)} {FIRST_TOKEN_SYMBOL}
                     </span>
                   </div>
                 )}
@@ -302,14 +302,14 @@ export default function MintGroup() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">我的余额:</span>
                     <span className="font-mono text-greyscale-600">
-                      {formatTokenAmount(balance)} {token?.symbol}
+                      {formatTokenAmount(balance)} {FIRST_TOKEN_SYMBOL}
                     </span>
                   </div>
                 )}
 
                 {isValid && mintCost !== undefined && balance !== undefined && balance < mintCost && (
                   <div className="text-xs text-red-600 mt-1">
-                    余额不足，还需要 {formatTokenAmount(mintCost - balance)} {token?.symbol}
+                    余额不足，还需要 {formatTokenAmount(mintCost - balance)} {FIRST_TOKEN_SYMBOL}
                   </div>
                 )}
               </div>

@@ -98,12 +98,18 @@ const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, onManageClick, token }
             <span className="font-semibold">{group.groupName}</span>
           </div>
 
-          <div className="text-xs mt-2">
-            <span className="text-gray-500">参与量: </span>
-            <span className={percentageColorClass}>
-              {formatTokenAmount(group.totalJoinedAmount, 2)} / {formatTokenAmount(group.maxCapacity, 2)} (
-              {formatPercentage(percentage)})
-            </span>
+          <div className="flex items-center justify-between text-xs mt-2">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500">参与量: </span>
+              <span className={percentageColorClass}>
+                {formatTokenAmount(group.totalJoinedAmount, 2)} / {formatTokenAmount(group.maxCapacity, 2)} (
+                {formatPercentage(percentage)})
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500">参与地址数:</span>
+              <span className="text-gray-500">{group.accountCount.toString()}</span>
+            </div>
           </div>
         </div>
 

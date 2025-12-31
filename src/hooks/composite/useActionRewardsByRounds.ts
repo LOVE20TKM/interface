@@ -29,7 +29,10 @@
 import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { useActionRewardsByAccountByActionIdByRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
-import { useExtensionContractInfo, ExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
+import {
+  useExtensionContractInfo,
+  ExtensionContractInfo,
+} from '@/src/hooks/extension/base/composite/useExtensionBaseData';
 import { useExtensionActionRewardsByRounds } from '@/src/hooks/extension/base/composite';
 import { ActionInfo } from '@/src/types/love20types';
 
@@ -80,6 +83,8 @@ export interface UseActionRewardsByRoundsResult {
   isExtensionAction: boolean;
   /** 总加载状态 */
   isLoading: boolean;
+  /** 手动刷新函数 */
+  refetch: () => void;
 }
 
 /**
@@ -120,6 +125,7 @@ export const useActionRewardsByRounds = ({
     rewards: coreRewards,
     isPending: isLoadingCoreRewards,
     error: errorLoadingCoreRewards,
+    refetch: coreRefetch,
   } = useActionRewardsByAccountByActionIdByRounds(
     !isExtensionAction && enabled && tokenAddress ? tokenAddress : ('0x0' as `0x${string}`),
     !isExtensionAction && enabled && account ? account : ('0x0' as `0x${string}`),
@@ -133,6 +139,7 @@ export const useActionRewardsByRounds = ({
     rewards: extensionRewards,
     isPending: isLoadingExtensionRewards,
     error: errorLoadingExtensionRewards,
+    refetch: extensionRefetch,
   } = useExtensionActionRewardsByRounds({
     extensionAddress: extensionInfo?.extension,
     startRound,
@@ -152,6 +159,17 @@ export const useActionRewardsByRounds = ({
   const errorRewards = isExtensionAction ? errorLoadingExtensionRewards : errorLoadingCoreRewards;
   const isLoading = isLoadingExtensionInfo || isLoadingRewards;
 
+  // 统一的 refetch 函数，根据行动类型调用对应的 refetch
+  const refetch = useMemo(() => {
+    return () => {
+      if (isExtensionAction) {
+        extensionRefetch?.();
+      } else {
+        coreRefetch?.();
+      }
+    };
+  }, [isExtensionAction, extensionRefetch, coreRefetch]);
+
   return {
     extensionInfo,
     isLoadingExtensionInfo,
@@ -161,5 +179,6 @@ export const useActionRewardsByRounds = ({
     errorRewards,
     isExtensionAction,
     isLoading,
+    refetch,
   };
 };

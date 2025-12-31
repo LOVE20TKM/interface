@@ -6,6 +6,7 @@ import { useReadContracts } from 'wagmi';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useExtensionGroupBaseInfosOfAction } from './useExtensionGroupBaseInfosOfAction';
+import { useVotesNum } from '@/src/hooks/contracts/useLOVE20Vote';
 
 const GROUP_VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY as `0x${string}`;
 
@@ -13,7 +14,7 @@ export interface DistrustVoteInfo {
   groupOwner: `0x${string}`;
   groupIds: bigint[]; // 该服务者管理的链群列表
   distrustVotes: bigint;
-  totalVerifyVotes: bigint;
+  totalVotes: bigint;
   distrustRatio: number;
 }
 
@@ -36,8 +37,8 @@ export interface UseDistrustVotesOfCurrentRoundResult {
  * 算法：
  * 1. 使用 useExtensionGroupBaseInfosOfAction 获取链群列表
  * 2. 整理链群群主列表（一个群主可能有多个群）
- * 3. 批量 RPC 调用：
- *    - 调用一次 totalVerifyVotes 获取总验证票数
+ * 3. 使用 useVotesNum 从 LOVE20Vote 合约获取某轮次的总投票数
+ * 4. 批量 RPC 调用：
  *    - 对每个群主调用 distrustVotesByGroupOwner 获取不信任票数
  */
 export const useDistrustVotesOfCurrentRound = ({
@@ -78,21 +79,20 @@ export const useDistrustVotesOfCurrentRound = ({
     return Array.from(groupOwnerMap.keys()).map((addr) => addr as `0x${string}`);
   }, [groupOwnerMap]);
 
-  // 第三步：批量获取每个群主的不信任票数和总验证票数
+  // 第三步：从 LOVE20Vote 合约获取某轮次的总投票数
+  const {
+    votes: totalVotes,
+    isPending: isTotalVotesPending,
+    error: totalVotesError,
+  } = useVotesNum(tokenAddress as `0x${string}`, round !== undefined ? round : BigInt(0));
+
+  // 第四步：批量获取每个群主的不信任票数
   const distrustContracts = useMemo(() => {
     if (!tokenAddress || !extensionAddress || round === undefined || groupOwners.length === 0) return [];
 
     const contracts = [];
 
-    // 首先获取总验证票数（只需要调用一次）
-    contracts.push({
-      address: GROUP_VERIFY_CONTRACT_ADDRESS,
-      abi: GroupVerifyAbi,
-      functionName: 'totalVerifyVotes',
-      args: [tokenAddress, actionId, round],
-    });
-
-    // 然后获取每个群主的不信任票数
+    // 获取每个群主的不信任票数
     for (const owner of groupOwners) {
       contracts.push({
         address: GROUP_VERIFY_CONTRACT_ADDRESS,
@@ -123,25 +123,23 @@ export const useDistrustVotesOfCurrentRound = ({
 
   // 解析数据
   const distrustVotes = useMemo(() => {
-    if (!distrustData || groupOwners.length === 0) return [];
+    if (!distrustData || groupOwners.length === 0 || totalVotes === undefined) return [];
 
-    // 第一个调用是 totalVerifyVotes（所有群主共享）
-    const totalVerifyVotes = safeToBigInt(distrustData[0]?.result);
-
+    const totalVotesBigInt = totalVotes || BigInt(0);
     const result: DistrustVoteInfo[] = [];
 
     for (let i = 0; i < groupOwners.length; i++) {
       const owner = groupOwners[i];
 
-      // distrustVotes 从索引 1 开始（索引 0 是 totalVerifyVotes）
-      const distrustVotesNum = safeToBigInt(distrustData[i + 1]?.result);
+      // 获取每个群主的不信任票数
+      const distrustVotesNum = safeToBigInt(distrustData[i]?.result);
 
       // 如果该群主收到的不信任投票数为0，则过滤掉
       if (distrustVotesNum === BigInt(0)) {
         continue;
       }
 
-      const distrustRatio = totalVerifyVotes > BigInt(0) ? Number(distrustVotesNum) / Number(totalVerifyVotes) : 0;
+      const distrustRatio = totalVotesBigInt > BigInt(0) ? Number(distrustVotesNum) / Number(totalVotesBigInt) : 0;
 
       // 获取该群主管理的链群列表
       const groupIds = groupOwnerMap.get(owner.toLowerCase()) || [];
@@ -150,13 +148,13 @@ export const useDistrustVotesOfCurrentRound = ({
         groupOwner: owner,
         groupIds,
         distrustVotes: distrustVotesNum,
-        totalVerifyVotes,
+        totalVotes: totalVotesBigInt,
         distrustRatio,
       });
     }
 
     return result;
-  }, [distrustData, groupOwners, groupOwnerMap]);
+  }, [distrustData, groupOwners, groupOwnerMap, totalVotes]);
 
   // 计算最终的 pending 状态
   const finalIsPending = useMemo(() => {
@@ -166,13 +164,15 @@ export const useDistrustVotesOfCurrentRound = ({
     if (!groups || groups.length === 0) return false;
     // 如果没有群主（groupOwners 为空），返回 false
     if (groupOwners.length === 0) return false;
+    // 如果总投票数还在加载中，返回 true
+    if (isTotalVotesPending) return true;
     // 如果不信任票数据还在加载中，返回 true
     return isDistrustPending;
-  }, [isGroupsPending, groups, groupOwners.length, isDistrustPending]);
+  }, [isGroupsPending, groups, groupOwners.length, isTotalVotesPending, isDistrustPending]);
 
   return {
     distrustVotes,
     isPending: finalIsPending,
-    error: groupsError || distrustError,
+    error: groupsError || totalVotesError || distrustError,
   };
 };

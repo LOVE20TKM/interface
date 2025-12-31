@@ -134,41 +134,21 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
     );
   }
 
-  const hasParticipants = groupDetail.totalJoinedAmount > BigInt(0);
-
   // 检查是否在激活的同一轮次（不能在激活的同一轮次关闭）
   const isInActivationRound = activatedRound === currentRound;
-  const canDeactivate = !hasParticipants && groupDetail.isActive && !isInActivationRound;
+  const canDeactivate = groupDetail.isActive && !isInActivationRound;
 
   return (
     <>
       <div className="space-y-6">
-        {/* 返回按钮 */}
-        <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          返回
-        </Button>
-
         {/* 标题 */}
         <div>
           <LeftTitle title="关闭链群" />
-          <p className="text-sm text-gray-600 mt-2">关闭链群 #{groupId.toString()} 并取回质押代币</p>
-        </div>
-
-        {/* 警告 */}
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <div className="font-medium text-red-800 mb-1">⚠️ 重要提示</div>
-              <div className="text-sm text-red-700 space-y-1">
-                <div>• 关闭链群后将无法再接受新的参与者</div>
-                <div>• 关闭前必须确保所有参与者已退出</div>
-                <div>• 关闭后可以取回全部质押代币</div>
-                <div>• 此操作不可撤销</div>
-              </div>
-            </div>
-          </div>
+          <p className="text-sm text-gray-600 mt-2">
+            关闭链群 <span className="text-gray-500 text-xs">#</span>
+            <span className="text-secondary text-base font-semibold">{groupId.toString()}</span>
+            <span className="font-semibold text-gray-800 text-sm ml-1">{groupDetail.groupName}</span> 并取回质押代币
+          </p>
         </div>
 
         {/* 链群状态 */}
@@ -176,26 +156,26 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">链群状态:</span>
-              <span className={`font-medium ${groupDetail.isActive ? 'text-green-600' : 'text-gray-500'}`}>
+              <span className={`ftext-sm ${groupDetail.isActive ? 'text-green-600' : 'text-gray-500'}`}>
                 {groupDetail.isActive ? '活跃中' : '已关闭'}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">当前容量:</span>
-              <span className="font-medium">
+              <span className="text-sm">
                 {formatTokenAmount(groupDetail.totalJoinedAmount, 2)} / {formatTokenAmount(groupDetail.maxCapacity, 2)}{' '}
                 {token?.symbol}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">参与人数:</span>
-              <span className="font-medium">{accountsCount?.toString() || '0'} 人</span>
+              <span className="text-sm">{accountsCount?.toString() || '0'} 人</span>
             </div>
           </div>
         </div>
 
         {/* 操作按钮 */}
-        <div className="flex justify-center space-x-4 pt-4">
+        <div className="flex justify-center space-x-4">
           <Button
             variant="outline"
             onClick={() => router.back()}
@@ -221,12 +201,6 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
         </div>
 
         {/* 阻止关闭的原因 */}
-        {hasParticipants && (
-          <div className="text-center text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-            ⚠️ 当前还有参与者，无法关闭链群。请等待所有参与者退出后再关闭。
-          </div>
-        )}
-
         {isInActivationRound && groupDetail.isActive && (
           <div className="text-center text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">
             ⚠️ 在激活链群的同一轮次内无法关闭，请等待下一轮次再操作。
@@ -239,13 +213,17 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
           </div>
         )}
 
-        {/* 说明 */}
-        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 关闭说明</div>
-          <div className="space-y-1 text-gray-600">
-            <div>• 只有活跃的链群才能关闭</div>
-            <div>• 关闭前必须确保没有参与者</div>
-            <div>• 关闭后会自动返还质押代币</div>
+        {/* 警告 */}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <div className="font-medium text-red-800 mb-1">⚠️ 重要提示</div>
+              <div className="text-sm text-red-700 space-y-1">
+                <div>• 链群关闭后将无法再验证，也不再有激励</div>
+                <div>• 链群关闭后，新的参与者无法再加入</div>
+                <div>• 链群关闭后可以取回全部质押代币</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

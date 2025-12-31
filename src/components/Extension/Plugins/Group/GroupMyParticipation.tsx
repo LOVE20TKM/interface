@@ -27,6 +27,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
+import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import {
   useExit,
@@ -106,8 +107,12 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     verificationKeys,
   });
 
-  // 计算是否已加入
-  const isJoined = joinedAmount && joinedAmount > BigInt(0);
+  // 判断是否已加入行动
+  const {
+    isJoined,
+    isPending: isPendingJoined,
+    error: errorJoined,
+  } = useIsAccountJoined(token?.address as `0x${string}`, actionId, account as `0x${string}`);
 
   // 退出
   const {
@@ -143,6 +148,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     if (errorExit) handleError(errorExit);
     if (errorVerificationInfos) handleError(errorVerificationInfos);
     if (errorConstants) handleError(errorConstants);
+    if (errorJoined) handleError(errorJoined);
   }, [
     errorRound,
     errorJoinInfo,
@@ -151,10 +157,18 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     errorExit,
     errorVerificationInfos,
     errorConstants,
+    errorJoined,
     handleError,
   ]);
 
-  if (isPendingRound || isPendingJoinInfo || isPendingDetail || isPendingTotalAmount || isPendingConstants) {
+  if (
+    isPendingRound ||
+    isPendingJoinInfo ||
+    isPendingDetail ||
+    isPendingTotalAmount ||
+    isPendingConstants ||
+    isPendingJoined
+  ) {
     return (
       <div className="bg-white rounded-lg p-8">
         <div className="text-center">

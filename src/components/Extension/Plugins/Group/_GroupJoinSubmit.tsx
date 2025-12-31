@@ -35,6 +35,7 @@ import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/us
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
+import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
@@ -96,8 +97,12 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     error: errorJoinInfo,
   } = useJoinInfo(token?.address as `0x${string}`, actionId, account as `0x${string}`);
 
-  // 判断是否已加入
-  const isJoined = joinedAmount && joinedAmount > BigInt(0);
+  // 判断是否已加入行动
+  const {
+    isJoined,
+    isPending: isPendingJoined,
+    error: errorJoined,
+  } = useIsAccountJoined(token?.address as `0x${string}`, actionId, account as `0x${string}`);
 
   // 获取链群详情
   const {
@@ -378,6 +383,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     if (errorConstants) handleError(errorConstants);
     if (errorCurrentRound) handleError(errorCurrentRound);
     if (errorVoted) handleError(errorVoted);
+    if (errorJoined) handleError(errorJoined);
   }, [
     errorDetail,
     errorJoinInfo,
@@ -389,6 +395,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     errorConstants,
     errorCurrentRound,
     errorVoted,
+    errorJoined,
     handleError,
   ]);
 
@@ -404,7 +411,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     // 注意：有投票时不操作，避免清除其他错误信息
   }, [isPendingCurrentRound, isPendingVoted, isActionIdVoted, setError]);
 
-  if (isPendingDetail || isPendingJoinInfo || isPendingConstants) {
+  if (isPendingDetail || isPendingJoinInfo || isPendingConstants || isPendingJoined) {
     return (
       <div className="flex flex-col items-center px-4 pt-6">
         <LoadingIcon />

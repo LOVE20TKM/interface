@@ -389,23 +389,6 @@ export const useCapacityReductionByGroupId = (
 // =====================
 
 /**
- * Hook for totalVerifyVotes - 获取总验证投票数
- */
-export const useTotalVerifyVotes = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: GroupVerifyAbi,
-    functionName: 'totalVerifyVotes',
-    args: [tokenAddress, actionId, round],
-    query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined,
-    },
-  });
-
-  return { votes: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for distrustVotesByGroupId - 获取指定组ID的不信任投票数
  */
 export const useDistrustVotesByGroupId = (

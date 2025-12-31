@@ -58,8 +58,8 @@ export interface ActionRewardInfo {
 export interface UseRewardDetailByVerifierParams {
   /** 扩展合约地址 */
   extensionAddress: `0x${string}` | undefined;
-  /** Token 地址 */
-  tokenAddress: `0x${string}` | undefined;
+  /** 链群行动代币地址 */
+  groupActionTokenAddress: `0x${string}` | undefined;
   /** 轮次 */
   round: bigint | undefined;
   /** 服务者地址 */
@@ -87,7 +87,7 @@ export interface UseRewardDetailByVerifierResult {
  * @returns 按行动分组的激励数据
  */
 export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParams): UseRewardDetailByVerifierResult {
-  const { extensionAddress, tokenAddress, round, verifier } = params;
+  const { extensionAddress, groupActionTokenAddress, round, verifier } = params;
 
   // ==========================================
   // 第一步：获取服务者的所有激活链群
@@ -97,7 +97,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     isPending: isActionIdsWithGroupIdsPending,
     error: actionIdsWithGroupIdsError,
   } = useActionIdsWithActiveGroupIdsByOwner({
-    tokenAddress: tokenAddress as `0x${string}`,
+    tokenAddress: groupActionTokenAddress as `0x${string}`,
     verifyRound: round,
     account: verifier as `0x${string}`,
   });
@@ -208,9 +208,9 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   // 第三步：批量获取每个 actionId 对应的扩展合约地址
   // ==========================================
   const { extensions, isPending: isExtensionsPending } = useExtensionsByActionIdsWithCache({
-    token: { address: tokenAddress as `0x${string}` } as any,
+    token: { address: groupActionTokenAddress as `0x${string}` } as any,
     actionIds,
-    enabled: !!tokenAddress && actionIds.length > 0,
+    enabled: !!groupActionTokenAddress && actionIds.length > 0,
   });
 
   // 创建 actionId 到扩展合约地址的映射
@@ -264,7 +264,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   // 第五步：批量获取行动名称
   // ==========================================
   const { actionInfos, isPending: isActionInfosPending } = useActionBaseInfosByIdsWithCache({
-    tokenAddress,
+    tokenAddress: groupActionTokenAddress,
     actionIds,
     enabled: actionIds.length > 0,
   });

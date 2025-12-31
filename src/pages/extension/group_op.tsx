@@ -3,11 +3,10 @@
 
 import React, { useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
-import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
-import { useOwnerOf, useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
+import { useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useContractError } from '@/src/errors/useContractError';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import Header from '@/src/components/Header';
@@ -23,7 +22,6 @@ const ActionGroupOpPage: React.FC = () => {
   const router = useRouter();
   const { op, groupId } = router.query;
   const { token } = useContext(TokenContext) || {};
-  const { address: account } = useAccount();
 
   // 从 query 获取必要参数
   const actionId = router.query.actionId ? BigInt(router.query.actionId as string) : undefined;
@@ -50,13 +48,6 @@ const ActionGroupOpPage: React.FC = () => {
   });
   const extensionAddress = contractInfo?.extension;
 
-  // 获取链群所有者（activate 操作不需要，因为会从用户的 group NFT 中选择）
-  const {
-    owner: groupOwner,
-    isPending: isPendingOwner,
-    error: errorOwner,
-  } = useOwnerOf(!isActivate && groupIdBigInt ? groupIdBigInt : BigInt(0));
-
   // 获取链群名称（verify 操作需要）
   const {
     groupName,
@@ -69,9 +60,8 @@ const ActionGroupOpPage: React.FC = () => {
   useEffect(() => {
     if (errorAction) handleError(errorAction);
     if (errorExtension) handleError(errorExtension);
-    if (!isActivate && errorOwner) handleError(errorOwner);
     if (op === 'verify' && errorGroupName) handleError(errorGroupName);
-  }, [errorAction, errorExtension, errorOwner, errorGroupName, handleError, isActivate, op]);
+  }, [errorAction, errorExtension, errorGroupName, handleError, op]);
 
   // 获取页面标题
   const getPageTitle = () => {
@@ -91,8 +81,24 @@ const ActionGroupOpPage: React.FC = () => {
     }
   };
 
-  // 参数校验
-  if (!extensionAddress || !op) {
+  // 先检查是否正在加载中
+  if (isPendingAction || isPendingExtension || (op === 'verify' && isPendingGroupName)) {
+    return (
+      <>
+        <Header title={getPageTitle()} showBackButton={true} />
+        <main className="flex-grow">
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex flex-col items-center py-12">
+              <LoadingIcon />
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  // 参数校验（在加载完成后检查）
+  else if (!extensionAddress || !op) {
     return (
       <>
         <Header title="链群操作" showBackButton={true} />
@@ -106,8 +112,7 @@ const ActionGroupOpPage: React.FC = () => {
         </main>
       </>
     );
-  }
-  if (!isActivate && !groupIdBigInt) {
+  } else if (!isActivate && !groupIdBigInt) {
     return (
       <>
         <Header title={getPageTitle()} showBackButton={true} />
@@ -116,29 +121,6 @@ const ActionGroupOpPage: React.FC = () => {
             <div className="text-center py-12">
               <p className="text-red-500">缺少必要参数</p>
               <p className="text-sm text-gray-600 mt-2">需要: groupId</p>
-            </div>
-          </div>
-        </main>
-      </>
-    );
-  }
-
-  // activate 操作不需要等待 groupOwner 加载
-  // verify 操作需要等待 groupName 加载
-  if (
-    isPendingAction ||
-    isPendingExtension ||
-    (!isActivate && isPendingOwner) ||
-    (op === 'verify' && isPendingGroupName)
-  ) {
-    return (
-      <>
-        <Header title={getPageTitle()} showBackButton={true} />
-        <main className="flex-grow">
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex flex-col items-center py-12">
-              <LoadingIcon />
-              <p className="mt-4 text-gray-600">加载信息...</p>
             </div>
           </div>
         </main>
@@ -160,23 +142,6 @@ const ActionGroupOpPage: React.FC = () => {
       </>
     );
   }
-
-  // // 验证权限（activate 操作不需要验证，因为会从用户的 group NFT 中选择）
-  // if (!isActivate && (!account || !groupOwner || groupOwner.toLowerCase() !== account.toLowerCase())) {
-  //   return (
-  //     <>
-  //       <Header title={getPageTitle()} showBackButton={true} />
-  //       <main className="flex-grow">
-  //         <div className="container mx-auto px-4 py-8">
-  //           <div className="text-center py-12">
-  //             <p className="text-red-500 mb-2">无操作权限</p>
-  //             <p className="text-sm text-gray-600">只有链群所有者才能进行此操作</p>
-  //           </div>
-  //         </div>
-  //       </main>
-  //     </>
-  //   );
-  // }
 
   // 根据操作类型渲染不同组件
   const renderOperation = () => {

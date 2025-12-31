@@ -20,6 +20,7 @@ import { useContractError } from '@/src/errors/useContractError';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
+import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
 import { useJoin, useJoinTokenAddress } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLp';
 
@@ -88,8 +89,12 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     account: account as `0x${string}`,
   });
 
-  // 计算是否已加入
-  const isJoined = joinedAmount && joinedAmount > BigInt(0);
+  // 判断是否已加入行动
+  const {
+    isJoined,
+    isPending: isPendingJoined,
+    error: errorJoined,
+  } = useIsAccountJoined(token?.address as `0x${string}`, actionId, account as `0x${string}`);
 
   // 格式化 LP 占比
   const lpRatioStr = formatPercentage(lpRatio);
@@ -281,6 +286,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     if (errorData) handleError(errorData);
     if (errorCurrentRound) handleError(errorCurrentRound);
     if (errorVoted) handleError(errorVoted);
+    if (errorJoined) handleError(errorJoined);
   }, [
     errorJoinToken,
     errorLpBalance,
@@ -290,6 +296,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     errorData,
     errorCurrentRound,
     errorVoted,
+    errorJoined,
     handleError,
   ]);
 
@@ -308,7 +315,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   // ------------------------------
   //  组件渲染
   // ------------------------------
-  if (isPendingJoinToken || isPendingData) {
+  if (isPendingJoinToken || isPendingData || isPendingJoined) {
     return <LoadingIcon />;
   }
 

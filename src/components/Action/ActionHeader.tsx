@@ -48,7 +48,7 @@ export default function ActionHeader({
 
   return (
     <div
-      className={`bg-gray-100 rounded-lg px-2 pt-2 pb-2 text-sm my-4 ${
+      className={`!bg-gray-100 rounded-lg px-2 pt-2 pb-2 text-sm my-4 ${
         linkToActionInfo ? 'cursor-pointer hover:bg-gray-200 transition-colors' : ''
       }`}
       onClick={handleClick}
