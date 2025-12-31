@@ -121,7 +121,7 @@ const ActionGroupPage: React.FC = () => {
       case 'detail':
         return (
           <_GroupDetail
-            actionId={actionId}
+            actionId={actionId!}
             actionInfo={actionInfo}
             extensionAddress={extensionAddress}
             groupId={groupIdBigInt}
@@ -130,7 +130,7 @@ const ActionGroupPage: React.FC = () => {
       case 'scores':
         return (
           <_GroupScores
-            actionId={actionId}
+            actionId={actionId!}
             actionInfo={actionInfo}
             extensionAddress={extensionAddress}
             groupId={groupIdBigInt}
@@ -139,7 +139,7 @@ const ActionGroupPage: React.FC = () => {
       case 'rewards':
         return (
           <_GroupRewards
-            actionId={actionId}
+            actionId={actionId!}
             actionInfo={actionInfo}
             extensionAddress={extensionAddress}
             groupId={groupIdBigInt}
@@ -148,7 +148,7 @@ const ActionGroupPage: React.FC = () => {
       case 'participants':
         return (
           <_GroupParticipants
-            actionId={actionId}
+            actionId={actionId!}
             actionInfo={actionInfo}
             extensionAddress={extensionAddress}
             groupId={groupIdBigInt}
@@ -166,7 +166,7 @@ const ActionGroupPage: React.FC = () => {
         <div className="px-4 pt-0 pb-3">
           {/* 链群头部 */}
           <_GroupHeader
-            actionId={actionId}
+            actionId={actionId!}
             actionInfo={actionInfo}
             extensionAddress={extensionAddress}
             groupId={groupIdBigInt}
