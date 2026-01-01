@@ -4,7 +4,7 @@
  * 职责：
  * - 获取行动的所有活跃链群 IDs
  * - 批量获取链群名称（带缓存优化）
- * - 批量获取每个链群在指定轮次的激励金额
+ * - 批量获取每个链群在指定轮次的激励金额和参与代币量（合并为一次合约调用）
  *
  * 使用示例：
  * ```typescript
@@ -16,8 +16,8 @@
  * });
  *
  * if (!isPending) {
- *   groupRewards.forEach(({ groupId, groupName, reward }) => {
- *     console.log(`链群 ${groupName} (${groupId}): ${reward} 代币`);
+ *   groupRewards.forEach(({ groupId, groupName, reward, joinedAmount }) => {
+ *     console.log(`链群 ${groupName} (${groupId}): ${reward} 代币, 参与 ${joinedAmount} 代币`);
  *   });
  * }
  * ```
@@ -28,7 +28,10 @@ import { useReadContracts } from 'wagmi';
 import { useActiveGroupIds } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
+import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { safeToBigInt } from '@/src/lib/clientUtils';
+
+const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
 
 // ==================== 类型定义 ====================
 
@@ -44,6 +47,8 @@ export interface GroupRewardInfo {
   reward: bigint | undefined;
   /** 链群铸造代币数量（与 generatedRewardByGroupId 接口保持一致） */
   generatedReward?: bigint;
+  /** 参与代币数量 */
+  joinedAmount?: bigint;
   /** 不信任投票数 */
   distrustVotes?: bigint;
   /** 不信任率 */
@@ -88,8 +93,8 @@ export interface UseGroupsRewardOfActionResult {
  * 分四步获取链群激励信息：
  * 1. 调用 activeGroupIds(tokenAddress, actionId) 获取所有活跃链群 IDs
  * 2. 使用 useGroupNamesWithCache 批量获取链群名称（带缓存）
- * 3. 使用 useReadContracts 批量调用 generatedRewardByGroupId(round, groupId) 获取每个链群的激励
- * 4. 组合链群 ID、名称和激励，返回完整列表
+ * 3. 使用 useReadContracts 批量调用 generatedRewardByGroupId 和 totalJoinedAmountByGroupIdByRound（合并为一次调用）
+ * 4. 组合链群 ID、名称、激励和参与代币量，返回完整列表
  *
  * @example
  * ```typescript
@@ -109,9 +114,7 @@ export interface UseGroupsRewardOfActionResult {
  * }
  * ```
  */
-export function useGroupsRewardOfAction(
-  params: UseGroupsRewardOfActionParams,
-): UseGroupsRewardOfActionResult {
+export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): UseGroupsRewardOfActionResult {
   const { tokenAddress, actionId, round, extensionAddress } = params;
 
   // 第一步：获取所有活跃链群 IDs
@@ -134,28 +137,42 @@ export function useGroupsRewardOfAction(
     enabled: groupIds.length > 0,
   });
 
-  // 第三步：构建批量查询链群激励的合约调用
-  const rewardsContracts = useMemo(() => {
+  // 第三步：构建批量查询链群激励和参与代币量的合约调用（合并为一次调用）
+  const allContracts = useMemo(() => {
     // 如果缺少必要参数或没有链群，返回空数组
-    if (!extensionAddress || round === undefined || groupIds.length === 0) return [];
+    if (!extensionAddress || !tokenAddress || round === undefined || groupIds.length === 0) return [];
 
-    return groupIds.map((groupId) => ({
-      address: extensionAddress,
-      abi: ExtensionGroupActionAbi,
-      functionName: 'generatedRewardByGroupId' as const,
-      args: [round, groupId],
-    }));
-  }, [extensionAddress, round, groupIds]);
+    const contracts = [];
+    // 为每个链群添加两个合约调用：激励和参与代币量
+    for (const groupId of groupIds) {
+      // 获取链群激励
+      contracts.push({
+        address: extensionAddress,
+        abi: ExtensionGroupActionAbi,
+        functionName: 'generatedRewardByGroupId' as const,
+        args: [round, groupId],
+      });
+      // 获取链群参与代币量
+      contracts.push({
+        address: GROUP_JOIN_ADDRESS,
+        abi: GroupJoinAbi,
+        functionName: 'totalJoinedAmountByGroupIdByRound' as const,
+        args: [tokenAddress, actionId || BigInt(0), groupId, round],
+      });
+    }
 
-  // 第四步：批量获取链群激励
+    return contracts;
+  }, [extensionAddress, tokenAddress, actionId, round, groupIds]);
+
+  // 第四步：批量获取链群激励和参与代币量（合并为一次调用）
   const {
-    data: rewardsData,
-    isPending: isPendingRewards,
-    error: errorRewards,
+    data: allData,
+    isPending: isPendingAll,
+    error: errorAll,
   } = useReadContracts({
-    contracts: rewardsContracts as any,
+    contracts: allContracts as any,
     query: {
-      enabled: !!extensionAddress && round !== undefined && rewardsContracts.length > 0,
+      enabled: !!extensionAddress && !!tokenAddress && round !== undefined && allContracts.length > 0,
     },
   });
 
@@ -164,20 +181,27 @@ export function useGroupsRewardOfAction(
     // 如果没有链群数据，返回空数组
     if (groupIds.length === 0) return [];
 
-    // 如果激励数据还未加载完成，返回空数组
-    if (!rewardsData) return [];
+    // 如果数据还未加载完成，返回空数组
+    if (!allData) return [];
 
-    // 组合链群 ID、名称和激励
+    // 组合链群 ID、名称、激励和参与代币量
+    // 每个链群对应两个数据：索引 2*index 是激励，索引 2*index+1 是参与代币量
     return groupIds.map((groupId, index) => {
-      const reward = safeToBigInt(rewardsData[index]?.result);
+      const rewardIndex = index * 2;
+      const joinedAmountIndex = index * 2 + 1;
+      const reward = safeToBigInt(allData[rewardIndex]?.result);
+      const joinedAmount = allData[joinedAmountIndex]?.result
+        ? safeToBigInt(allData[joinedAmountIndex].result)
+        : undefined;
       return {
         groupId,
         groupName: groupNameMap.get(groupId),
         reward,
         generatedReward: reward, // 与 generatedRewardByGroupId 接口保持一致
+        joinedAmount,
       };
     });
-  }, [groupIds, groupNameMap, rewardsData]);
+  }, [groupIds, groupNameMap, allData]);
 
   // 计算最终的 loading 状态
   // 使用智能 loading 状态：如果前一阶段返回空数据，立即返回 false
@@ -189,16 +213,16 @@ export function useGroupsRewardOfAction(
     // 第二阶段：获取链群名称
     if (isPendingNames) return true;
 
-    // 如果没有 extensionAddress 或 round，提前退出
-    if (!extensionAddress || round === undefined) return false;
+    // 如果没有 extensionAddress、tokenAddress 或 round，提前退出
+    if (!extensionAddress || !tokenAddress || round === undefined) return false;
 
-    // 第三阶段：获取激励
-    return isPendingRewards;
-  }, [isPendingIds, groupIds.length, isPendingNames, extensionAddress, round, isPendingRewards]);
+    // 第三阶段：获取激励和参与代币量
+    return isPendingAll;
+  }, [isPendingIds, groupIds.length, isPendingNames, extensionAddress, tokenAddress, round, isPendingAll]);
 
   return {
     groupRewards,
     isPending,
-    error: errorIds || errorNames || errorRewards,
+    error: errorIds || errorNames || errorAll,
   };
 }

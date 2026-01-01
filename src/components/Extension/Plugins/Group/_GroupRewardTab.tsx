@@ -160,13 +160,13 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, actionInfo, 
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-1 text-left">No.</th>
-                <th className="px-8 text-left">
+                <th className="px-1 text-left">
                   <div className="">
                     <span>链群</span>
-                    <span className="md:hidden text-xs text-gray-500 mt-1">/链群铸造代币</span>
+                    <span className="md:hidden text-xs text-gray-500 mt-1">/参与代币</span>
                   </div>
                 </th>
-                <th className="px-1 text-center hidden md:table-cell">链群铸造代币</th>
+                <th className="px-1 text-center hidden md:table-cell">参与代币</th>
                 <th className="px-1 text-center">不信任投票</th>
                 <th className="px-1 text-center">激励</th>
               </tr>
@@ -175,25 +175,25 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, actionInfo, 
               {sortedGroupRewards.map((item, index) => (
                 <tr key={item.groupId.toString()} className="border-b border-gray-100">
                   <td className="px-1 text-greyscale-400">{index + 1}</td>
-                  <td className="px-1">
+                  <td className="px-1 text-left">
                     <div className="flex flex-col">
                       <div className="flex items-center">
                         <span className="text-gray-500 text-xs">#</span>
                         <span className="text-sm font-medium ml-1">{item.groupId.toString()}</span>
                         {item.groupName && <span className="text-sm text-gray-800 ml-1">{item.groupName}</span>}
                       </div>
-                      {/* 手机上显示链群铸造代币 */}
+                      {/* 手机上显示参与代币 */}
                       <div className="md:hidden mt-1">
                         <div className="font-mono text-secondary text-xs">
-                          {item.generatedReward !== undefined ? formatTokenAmount(item.generatedReward) : '-'}
+                          {item.joinedAmount !== undefined ? formatTokenAmount(item.joinedAmount) : '-'}
                         </div>
                       </div>
                     </div>
                   </td>
-                  {/* 电脑上显示链群铸造代币 */}
+                  {/* 电脑上显示参与代币 */}
                   <td className="px-1 text-center hidden md:table-cell">
                     <div className="font-mono text-secondary">
-                      {item.generatedReward !== undefined ? formatTokenAmount(item.generatedReward) : '-'}
+                      {item.joinedAmount !== undefined ? formatTokenAmount(item.joinedAmount) : '-'}
                     </div>
                   </td>
                   <td className="px-1 text-center">
