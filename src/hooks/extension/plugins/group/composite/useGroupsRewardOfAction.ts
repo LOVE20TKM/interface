@@ -42,6 +42,12 @@ export interface GroupRewardInfo {
   groupName: string | undefined;
   /** 激励代币数量 */
   reward: bigint | undefined;
+  /** 链群铸造代币数量（与 generatedRewardByGroupId 接口保持一致） */
+  generatedReward?: bigint;
+  /** 不信任投票数 */
+  distrustVotes?: bigint;
+  /** 不信任率 */
+  distrustRatio?: number;
 }
 
 /**
@@ -162,11 +168,15 @@ export function useGroupsRewardOfAction(
     if (!rewardsData) return [];
 
     // 组合链群 ID、名称和激励
-    return groupIds.map((groupId, index) => ({
-      groupId,
-      groupName: groupNameMap.get(groupId),
-      reward: safeToBigInt(rewardsData[index]?.result),
-    }));
+    return groupIds.map((groupId, index) => {
+      const reward = safeToBigInt(rewardsData[index]?.result);
+      return {
+        groupId,
+        groupName: groupNameMap.get(groupId),
+        reward,
+        generatedReward: reward, // 与 generatedRewardByGroupId 接口保持一致
+      };
+    });
   }, [groupIds, groupNameMap, rewardsData]);
 
   // 计算最终的 loading 状态

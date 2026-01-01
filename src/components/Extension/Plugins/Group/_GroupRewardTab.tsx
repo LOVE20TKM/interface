@@ -15,10 +15,11 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // hooks
 import { useCurrentRound as useVerifyCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useGroupsRewardOfAction } from '@/src/hooks/extension/plugins/group/composite/useGroupsRewardOfAction';
+import { useDistrustVotesOfRound } from '@/src/hooks/extension/plugins/group/composite/useDistrustVotesOfRound';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
-import { formatTokenAmount } from '@/src/lib/format';
+import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -55,26 +56,67 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, actionInfo, 
     extensionAddress,
   });
 
-  // 按激励从高到低排序
+  // 获取不信任投票数据
+  const {
+    distrustVotes: distrustVotesData,
+    isPending: isPendingDistrust,
+    error: errorDistrust,
+  } = useDistrustVotesOfRound({
+    extensionAddress,
+    tokenAddress: token?.address as `0x${string}`,
+    actionId,
+    round: selectedRound > BigInt(0) ? selectedRound : undefined,
+  });
+
+  // 创建不信任投票数据的 Map，按 groupId 映射
+  const distrustVotesMap = useMemo(() => {
+    const map = new Map<bigint, { distrustVotes: bigint; distrustRatio: number }>();
+    if (!distrustVotesData || distrustVotesData.length === 0) return map;
+
+    // 将按 groupOwner 分组的数据展开为按 groupId 分组
+    distrustVotesData.forEach((item) => {
+      item.groupIds.forEach((groupId) => {
+        map.set(groupId, {
+          distrustVotes: item.distrustVotes,
+          distrustRatio: item.distrustRatio,
+        });
+      });
+    });
+
+    return map;
+  }, [distrustVotesData]);
+
+  // 按激励从高到低排序，并合并不信任投票数据
   const sortedGroupRewards = useMemo(() => {
     if (!groupRewards || groupRewards.length === 0) return [];
 
-    return [...groupRewards].sort((a, b) => {
-      const rewardA = a.reward ?? BigInt(0);
-      const rewardB = b.reward ?? BigInt(0);
-      // 从高到低排序
-      if (rewardA > rewardB) return -1;
-      if (rewardA < rewardB) return 1;
-      return 0;
-    });
-  }, [groupRewards]);
+    return [...groupRewards]
+      .map((item) => {
+        // 合并不信任投票数据
+        const distrustData = distrustVotesMap.get(item.groupId);
+        return {
+          ...item,
+          distrustVotes: distrustData?.distrustVotes,
+          distrustRatio: distrustData?.distrustRatio,
+        };
+      })
+      .sort((a, b) => {
+        const rewardA = a.reward ?? BigInt(0);
+        const rewardB = b.reward ?? BigInt(0);
+        // 从高到低排序
+        if (rewardA > rewardB) return -1;
+        if (rewardA < rewardB) return 1;
+        return 0;
+      });
+  }, [groupRewards, distrustVotesMap]);
 
   // 错误处理
   const { handleError } = useContractError();
   useEffect(() => {
     if (error) handleError(error);
     if (errorRound) handleError(errorRound);
-  }, [error, errorRound, handleError]);
+    if (errorDistrust) handleError(errorDistrust);
+  }, [error, errorRound, errorDistrust, handleError]);
 
   // 处理轮次切换
   const handleChangedRound = (round: number) => {
@@ -83,10 +125,10 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, actionInfo, 
 
   // 只有在真正加载中且还没有数据时才显示加载状态
   // 1. 还在获取轮次且未选择轮次时显示加载
-  // 2. 或者已选择轮次且正在获取激励数据时显示加载
+  // 2. 或者已选择轮次且正在获取激励数据或不信任投票数据时显示加载
   if (
     (isPendingRound && selectedRound === BigInt(0)) ||
-    (isPending && selectedRound > BigInt(0))
+    (selectedRound > BigInt(0) && (isPending || isPendingDistrust))
   ) {
     return (
       <div className="flex flex-col items-center py-8">
@@ -118,7 +160,14 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, actionInfo, 
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-1 text-left">No.</th>
-                <th className="px-8 text-left">链群</th>
+                <th className="px-8 text-left">
+                  <div className="">
+                    <span>链群</span>
+                    <span className="md:hidden text-xs text-gray-500 mt-1">/链群铸造代币</span>
+                  </div>
+                </th>
+                <th className="px-1 text-center hidden md:table-cell">链群铸造代币</th>
+                <th className="px-1 text-center">不信任投票</th>
                 <th className="px-1 text-center">激励</th>
               </tr>
             </thead>
@@ -127,10 +176,38 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, actionInfo, 
                 <tr key={item.groupId.toString()} className="border-b border-gray-100">
                   <td className="px-1 text-greyscale-400">{index + 1}</td>
                   <td className="px-1">
-                    <div className="flex items-center">
-                      <span className="text-gray-500 text-xs">#</span>
-                      <span className="text-sm font-medium ml-1">{item.groupId.toString()}</span>
-                      {item.groupName && <span className="text-sm text-gray-800 ml-2">{item.groupName}</span>}
+                    <div className="flex flex-col">
+                      <div className="flex items-center">
+                        <span className="text-gray-500 text-xs">#</span>
+                        <span className="text-sm font-medium ml-1">{item.groupId.toString()}</span>
+                        {item.groupName && <span className="text-sm text-gray-800 ml-1">{item.groupName}</span>}
+                      </div>
+                      {/* 手机上显示链群铸造代币 */}
+                      <div className="md:hidden mt-1">
+                        <div className="font-mono text-secondary text-xs">
+                          {item.generatedReward !== undefined ? formatTokenAmount(item.generatedReward) : '-'}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  {/* 电脑上显示链群铸造代币 */}
+                  <td className="px-1 text-center hidden md:table-cell">
+                    <div className="font-mono text-secondary">
+                      {item.generatedReward !== undefined ? formatTokenAmount(item.generatedReward) : '-'}
+                    </div>
+                  </td>
+                  <td className="px-1 text-center">
+                    <div className="font-mono text-secondary">
+                      {item.distrustRatio !== undefined ? (
+                        <>
+                          {formatPercentage(item.distrustRatio * 100)}
+                          {item.distrustVotes !== undefined && (
+                            <span className="text-gray-400 ml-1">({formatTokenAmount(item.distrustVotes)})</span>
+                          )}
+                        </>
+                      ) : (
+                        '-'
+                      )}
                     </div>
                   </td>
                   <td className="px-1 text-center">
