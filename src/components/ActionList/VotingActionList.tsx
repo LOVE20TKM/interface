@@ -3,7 +3,6 @@
  * 列表：显示正在投票中的行动
  */
 
-import { useRouter } from 'next/router';
 import { ChevronRight, UserPen } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ import React, { useContext, useEffect } from 'react';
 
 // my hooks
 import { VotingAction } from '@/src/types/love20types';
-import { useVotingActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { useVotingActions, useGovData } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my contexts
@@ -34,7 +33,6 @@ interface VotingActionListProps {
 const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => {
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
-  const router = useRouter();
 
   // 获取所有投票中的行动
   const { votingActions, isPending, error } = useVotingActions(
@@ -43,8 +41,14 @@ const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => 
     account as `0x${string}`,
   );
 
+  // 获取总治理票数
+  const { govData, isPending: isPendingGovData } = useGovData((token?.address as `0x${string}`) || '');
+
   // 计算投票总数： 累计
   const totalVotes = votingActions.reduce((acc, votingAction) => acc + votingAction.votesNum, BigInt(0));
+
+  // 计算最小投票比例阈值（以百分比为单位）
+  const minVotePercentage = Number(process.env.NEXT_PUBLIC_ACTION_REWARD_MIN_VOTE_PER_THOUSAND ?? 0) / 10;
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -55,7 +59,7 @@ const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => 
   }, [error, handleContractError]);
 
   // 加载中
-  if (isPending) {
+  if (isPending || isPendingGovData) {
     return (
       <div className="p-4 flex justify-center items-center">
         <LoadingIcon />
@@ -91,8 +95,22 @@ const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => 
                 const action = votingAction.action;
                 // const submitter = votingAction.submitter;
 
+                // 计算占总治理票比例
+                const govPercentage =
+                  !govData?.govVotes || govData.govVotes === BigInt(0)
+                    ? 0
+                    : (Number(votingAction.votesNum) * 100) / Number(govData.govVotes);
+
+                // 判断是否低于最小比例阈值
+                const isBelowMinThreshold = govPercentage < minVotePercentage;
+
                 return (
-                  <Card key={action.head.id} className="shadow-none flex items-center relative">
+                  <Card
+                    key={action.head.id}
+                    className={`shadow-none flex items-center relative ${
+                      isBelowMinThreshold ? 'border-red-500 border-2' : ''
+                    }`}
+                  >
                     <Link
                       href={`/action/info/?id=${action.head.id}&symbol=${token?.symbol}&tab=vote`}
                       key={action.head.id}
@@ -103,7 +121,7 @@ const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => 
                         <span className="text-secondary text-xl font-bold mr-2">{String(action.head.id)}</span>
                         <span className="font-bold text-greyscale-800">{`${action.body.title}`}</span>
                       </CardHeader>
-                      <CardContent className="px-3 pt-1 pb-2">
+                      <CardContent className="px-3 pt-1 pb-2 pr-10">
                         <div className="flex justify-between gap-0 mt-1 text-sm">
                           <span className="flex items-center">
                             <UserPen className="text-greyscale-400 mr-1 h-3 w-3 -translate-y-0.5" />
@@ -119,12 +137,24 @@ const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => 
                             <span className="text-greyscale-400 mr-1">投票数</span>
                             <span className="text-secondary">{formatTokenAmount(votingAction.votesNum)}</span>
                           </span>
+                        </div>
+                        <div className="flex justify-between gap-0 mt-1 text-sm">
                           <span>
-                            <span className="text-greyscale-400 mr-1">占比</span>
+                            <span className="text-greyscale-400 mr-1">占已投票</span>
                             <span className="text-secondary">
                               {totalVotes === BigInt(0)
                                 ? '-'
                                 : formatPercentage((Number(votingAction.votesNum) * 100) / Number(totalVotes))}
+                            </span>
+                          </span>
+                          <span>
+                            <span className={`${isBelowMinThreshold ? 'text-red-500' : 'text-secondary'} mr-1`}>
+                              占总治理票
+                            </span>
+                            <span className={isBelowMinThreshold ? 'text-red-500' : 'text-secondary'}>
+                              {!govData?.govVotes || govData.govVotes === BigInt(0)
+                                ? '-'
+                                : formatPercentage(govPercentage)}
                             </span>
                           </span>
                         </div>
