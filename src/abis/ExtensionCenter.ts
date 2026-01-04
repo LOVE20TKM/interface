@@ -315,30 +315,6 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "function",
-    "name": "extensionByActionId",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "extensionDelegate",
     "inputs": [
       {
@@ -358,7 +334,7 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "function",
-    "name": "factoryByActionId",
+    "name": "factory",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -382,7 +358,7 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "function",
-    "name": "forceExit",
+    "name": "forceRemove",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -478,6 +454,30 @@ export const ExtensionCenterAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "registerActionIfNeeded",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "extensionAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -683,7 +683,7 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "event",
-    "name": "AccountAdded",
+    "name": "AddAccount",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -708,7 +708,7 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "event",
-    "name": "AccountRemoved",
+    "name": "BindAction",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -723,9 +723,15 @@ export const ExtensionCenterAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "account",
+        "name": "extension",
         "type": "address",
         "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "factory",
+        "type": "address",
+        "indexed": false,
         "internalType": "address"
       }
     ],
@@ -743,6 +749,31 @@ export const ExtensionCenterAbi = [
       },
       {
         "name": "delegate",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RemoveAccount",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "account",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -800,17 +831,17 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "error",
+    "name": "ActionAlreadyBoundToOtherAction",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ActionNotVotedInCurrentRound",
     "inputs": []
   },
   {
     "type": "error",
     "name": "ExtensionNotFoundInFactory",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidExtensionFactory",
     "inputs": []
   },
   {
@@ -860,12 +891,12 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "error",
-    "name": "OnlyExtensionCanCall",
+    "name": "OnlyExtensionOrDelegate",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "OnlyExtensionOrAccountCanCall",
+    "name": "OnlyUserOrExtensionOrDelegate",
     "inputs": []
   },
   {

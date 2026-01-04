@@ -81,7 +81,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     delegatedVerifier,
     isPending: isPendingDelegated,
     error: errorDelegated,
-  } = useDelegatedVerifierByGroupId(token?.address as `0x${string}`, actionId, groupId);
+  } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
 
   // 检查是否有打分权限（链群服务者或打分代理）
   const hasVerifyPermission =
@@ -106,7 +106,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     verifiedAccountCount,
     isPending: isPendingSubmittedCount,
     error: errorSubmittedCount,
-  } = useVerifiedAccountCount(token?.address as `0x${string}`, actionId, currentRound || BigInt(0), groupId);
+  } = useVerifiedAccountCount(extensionAddress, currentRound || BigInt(0), groupId);
 
   // 批量获取验证信息
   const {
@@ -212,7 +212,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
       // 使用新的 verifyWithOriginScores 签名：groupId, startIndex, originScores
       // startIndex 设置为 0，表示从第一个账号开始提交
-      await verifyWithOriginScores(token?.address as `0x${string}`, actionId, groupId, BigInt(0), scores as bigint[]);
+      await verifyWithOriginScores(extensionAddress, groupId, BigInt(0), scores as bigint[]);
     } catch (error) {
       console.error('Verify group failed', error);
     }

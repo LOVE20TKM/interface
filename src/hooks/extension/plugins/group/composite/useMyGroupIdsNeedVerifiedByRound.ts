@@ -28,7 +28,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
-import { useVotedGroupActions } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
+import { useVotedGroupActions } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupActionFactory';
 
 // ==================== 类型定义 ====================
 

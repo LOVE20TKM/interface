@@ -57,7 +57,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
     groupId: joinedGroupId,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
-  } = useJoinInfo(token?.address as `0x${string}`, actionId, account as `0x${string}`);
+  } = useJoinInfo(extensionAddress, account as `0x${string}`);
 
   // 错误处理
   const { handleError } = useContractError();

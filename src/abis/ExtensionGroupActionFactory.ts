@@ -207,6 +207,35 @@ export const ExtensionGroupActionFactoryAbi = [
     "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "votedGroupActions",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "actionIds_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "extensions",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
     "type": "event",
     "name": "ExtensionCreate",
     "inputs": [

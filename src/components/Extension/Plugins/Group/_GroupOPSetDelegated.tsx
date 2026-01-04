@@ -61,8 +61,7 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
 
   // 获取链群信息
   const { isPending: isPendingInfo, error: errorInfo } = useGroupInfo(
-    token?.address as `0x${string}`,
-    actionId,
+    extensionAddress,
     groupId,
   );
 
@@ -71,7 +70,7 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
     delegatedVerifier,
     isPending: isPendingDelegated,
     error: errorDelegated,
-  } = useDelegatedVerifierByGroupId(token?.address as `0x${string}`, actionId, groupId);
+  } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
 
   // 表单验证：允许空值，空值表示取消代理
   const formSchema = z.object({
@@ -117,7 +116,7 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
     const address = values.delegatedVerifier?.trim() || '0x0000000000000000000000000000000000000000';
 
     try {
-      await setGroupDelegatedVerifier(token?.address as `0x${string}`, actionId, groupId, address as `0x${string}`);
+      await setGroupDelegatedVerifier(extensionAddress, groupId, address as `0x${string}`);
     } catch (error) {
       console.error('Set delegated verifier failed', error);
     }
@@ -127,8 +126,7 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
   async function handleCancelDelegated() {
     try {
       await setGroupDelegatedVerifier(
-        token?.address as `0x${string}`,
-        actionId,
+        extensionAddress,
         groupId,
         '0x0000000000000000000000000000000000000000' as `0x${string}`,
       );

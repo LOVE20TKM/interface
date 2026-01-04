@@ -86,15 +86,15 @@ export interface UseAccountsByGroupIdByRoundResult {
 export function useAccountsByGroupIdByRound(
   params: UseAccountsByGroupIdByRoundParams,
 ): UseAccountsByGroupIdByRoundResult {
-  const { tokenAddress, actionId, groupId, round } = params;
+  const { extensionAddress, tokenAddress, actionId, groupId, round } = params;
 
   // 第一步：获取账号总数
-  // 新版合约 useAccountCountByGroupIdByRound 需要 tokenAddress, actionId, groupId, round 参数
+  // 新版合约 useAccountCountByGroupIdByRound 需要 extensionAddress, groupId, round 参数
   const {
     count,
     isPending: isPendingCount,
     error: errorCount,
-  } = useAccountCountByGroupIdByRound(tokenAddress, actionId, groupId, round);
+  } = useAccountCountByGroupIdByRound(extensionAddress, groupId, round);
 
   // 转换为数字类型
   const accountCount = useMemo(() => {
@@ -103,9 +103,9 @@ export function useAccountsByGroupIdByRound(
   }, [count]);
 
   // 第二步：构建批量查询合约调用
-  // 新版合约的 accountByGroupIdAndIndexByRound 参数顺序变为 tokenAddress, actionId, groupId, index, round
+  // 新版合约的 accountByGroupIdAndIndexByRound 参数顺序变为 extensionAddress, groupId, index, round
   const accountsContracts = useMemo(() => {
-    if (!tokenAddress || accountCount === BigInt(0)) return [];
+    if (!extensionAddress || accountCount === BigInt(0)) return [];
 
     const contracts = [];
     for (let i = BigInt(0); i < accountCount; i++) {
@@ -113,12 +113,12 @@ export function useAccountsByGroupIdByRound(
         address: GROUP_JOIN_CONTRACT_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'accountByGroupIdAndIndexByRound',
-        args: [tokenAddress, actionId, groupId, i, round],
+        args: [extensionAddress, groupId, i, round],
       });
     }
 
     return contracts;
-  }, [tokenAddress, actionId, groupId, round, accountCount]);
+  }, [extensionAddress, groupId, round, accountCount]);
 
   // 第三步：批量获取账号地址
   const {

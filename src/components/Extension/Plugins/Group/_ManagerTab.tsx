@@ -50,14 +50,14 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
     maxVerifyCapacity,
     isPending: isPendingMaxCapacity,
     error: errorMaxCapacity,
-  } = useMaxVerifyCapacityByOwner(tokenAddress as `0x${string}`, actionId, account as `0x${string}`);
+  } = useMaxVerifyCapacityByOwner(extensionAddress, account as `0x${string}`);
 
   // 获取服务者的活跃链群NFT列表
   const {
     activeGroupIds,
     isPending: isPendingGroupIds,
     error: errorGroupIds,
-  } = useActiveGroupIdsByOwner(tokenAddress as `0x${string}`, actionId, account as `0x${string}`);
+  } = useActiveGroupIdsByOwner(extensionAddress, account as `0x${string}`);
 
   // 获取账号的所有链群数据（只调用一次，数据通过 props 传递给子组件）
   const {

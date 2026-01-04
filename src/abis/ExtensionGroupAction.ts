@@ -229,7 +229,7 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "initializeAction",
+    "name": "initializeIfNeeded",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -249,7 +249,7 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "isJoinedValueCalculated",
+    "name": "isJoinedValueConverted",
     "inputs": [],
     "outputs": [
       {

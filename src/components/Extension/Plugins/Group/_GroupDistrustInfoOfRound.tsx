@@ -126,9 +126,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
     votes: alreadyVotedAmount,
     isPending: isPendingAlreadyVoted,
     error: errorAlreadyVoted,
-  } = useDistrustVotesByVoterByGroupOwner(
-    token?.address as `0x${string}`,
-    actionId,
+  } = useDistrustVotesByVoterByGroupOwner(extensionAddress,
     isCurrentRound ? currentRound || BigInt(0) : BigInt(0),
     account as `0x${string}`,
     isCurrentRound && firstGroupOwner ? firstGroupOwner : '0x0000000000000000000000000000000000000000',

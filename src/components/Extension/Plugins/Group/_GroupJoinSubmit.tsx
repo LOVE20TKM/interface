@@ -95,7 +95,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     amount: joinedAmount,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
-  } = useJoinInfo(token?.address as `0x${string}`, actionId, account as `0x${string}`);
+  } = useJoinInfo(extensionAddress, account as `0x${string}`);
 
   // 判断是否已加入行动
   const {
@@ -325,10 +325,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   async function handleJoin(values: FormValues) {
     try {
       // 加入时同时提交验证信息
-      await join(
-        token?.address as `0x${string}`,
-        actionId,
-        groupId,
+      await join(extensionAddress, groupId,
         parseUnits(values.joinAmount) ?? BigInt(0),
         values.verificationInfos || [],
       );

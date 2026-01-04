@@ -44,21 +44,20 @@ export const useDistrustVotesOfRound = ({
   round,
 }: UseDistrustVotesOfRoundParams): UseDistrustVotesOfRoundResult => {
   // 第一步：获取指定轮次的验证者列表
-  // 新版合约 useVerifiers 需要 tokenAddress 和 actionId 参数
+  // 新版合约 useVerifiers 使用 extensionAddress 参数
   const {
     verifiers,
     isPending: isVerifiersPending,
     error: verifiersError,
   } = useVerifiers(
-    tokenAddress as `0x${string}`,
-    actionId !== undefined ? actionId : BigInt(0),
+    extensionAddress as `0x${string}`,
     round !== undefined ? round : BigInt(0),
   );
 
   // 第二步：批量获取每个验证者的链群NFT列表
-  // 新版合约 groupIdsByVerifier 移到 GroupVerify，参数顺序变为 tokenAddress, actionId, round, verifier
+  // 新版合约 groupIdsByVerifier 使用 extensionAddress, round, verifier 参数
   const groupIdsContracts = useMemo(() => {
-    if (!tokenAddress || actionId === undefined || round === undefined || !verifiers || verifiers.length === 0)
+    if (!extensionAddress || round === undefined || !verifiers || verifiers.length === 0)
       return [];
 
     const contracts = [];
@@ -67,12 +66,12 @@ export const useDistrustVotesOfRound = ({
         address: GROUP_VERIFY_CONTRACT_ADDRESS,
         abi: GroupVerifyAbi,
         functionName: 'groupIdsByVerifier',
-        args: [tokenAddress, actionId, round, verifier],
+        args: [extensionAddress, round, verifier],
       });
     }
 
     return contracts;
-  }, [tokenAddress, actionId, round, verifiers]);
+  }, [extensionAddress, round, verifiers]);
 
   const {
     data: groupIdsData,
@@ -126,7 +125,7 @@ export const useDistrustVotesOfRound = ({
 
   // 第五步：批量获取不信任票数据
   const distrustContracts = useMemo(() => {
-    if (!tokenAddress || !extensionAddress || round === undefined || !verifiers || verifiers.length === 0) return [];
+    if (!extensionAddress || round === undefined || !verifiers || verifiers.length === 0) return [];
 
     const contracts = [];
 
@@ -136,12 +135,12 @@ export const useDistrustVotesOfRound = ({
         address: GROUP_VERIFY_CONTRACT_ADDRESS,
         abi: GroupVerifyAbi,
         functionName: 'distrustVotesByGroupOwner',
-        args: [tokenAddress, actionId, round, verifier],
+        args: [extensionAddress, round, verifier],
       });
     }
 
     return contracts;
-  }, [tokenAddress, extensionAddress, actionId, round, verifiers]);
+  }, [extensionAddress, round, verifiers]);
 
   const {
     data: distrustData,
@@ -151,9 +150,7 @@ export const useDistrustVotesOfRound = ({
     contracts: distrustContracts as any,
     query: {
       enabled:
-        !!tokenAddress &&
         !!extensionAddress &&
-        actionId !== undefined &&
         round !== undefined &&
         !!verifiers &&
         verifiers.length > 0 &&

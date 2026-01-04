@@ -168,7 +168,7 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "function",
-    "name": "initializeAction",
+    "name": "initializeIfNeeded",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -188,7 +188,7 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "function",
-    "name": "isJoinedValueCalculated",
+    "name": "isJoinedValueConverted",
     "inputs": [],
     "outputs": [
       {
@@ -564,12 +564,6 @@ export const ExtensionLpAbi = [
       },
       {
         "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "joinedBlock",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"

@@ -62,7 +62,7 @@ export const IExtensionAbi = [
   },
   {
     "type": "function",
-    "name": "initializeAction",
+    "name": "initializeIfNeeded",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -82,7 +82,7 @@ export const IExtensionAbi = [
   },
   {
     "type": "function",
-    "name": "isJoinedValueCalculated",
+    "name": "isJoinedValueConverted",
     "inputs": [],
     "outputs": [
       {

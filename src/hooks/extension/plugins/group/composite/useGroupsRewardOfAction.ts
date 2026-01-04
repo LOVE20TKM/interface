@@ -122,7 +122,7 @@ export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): 
     activeGroupIds,
     isPending: isPendingIds,
     error: errorIds,
-  } = useActiveGroupIds(tokenAddress || ('0x0' as `0x${string}`), actionId || BigInt(0));
+  } = useActiveGroupIds(extensionAddress || ('0x0' as `0x${string}`));
 
   // 转换为数组，如果没有数据则返回空数组
   const groupIds = useMemo(() => activeGroupIds || [], [activeGroupIds]);

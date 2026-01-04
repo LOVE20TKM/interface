@@ -38,11 +38,6 @@ export const GroupManagerAbi = [
     "name": "actionIds",
     "inputs": [
       {
-        "name": "actionFactory",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "tokenAddress",
         "type": "address",
         "internalType": "address"
@@ -61,11 +56,6 @@ export const GroupManagerAbi = [
     "type": "function",
     "name": "actionIdsAtIndex",
     "inputs": [
-      {
-        "name": "actionFactory",
-        "type": "address",
-        "internalType": "address"
-      },
       {
         "name": "tokenAddress",
         "type": "address",
@@ -91,11 +81,6 @@ export const GroupManagerAbi = [
     "name": "actionIdsByGroupId",
     "inputs": [
       {
-        "name": "actionFactory",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "tokenAddress",
         "type": "address",
         "internalType": "address"
@@ -119,11 +104,6 @@ export const GroupManagerAbi = [
     "type": "function",
     "name": "actionIdsByGroupIdAtIndex",
     "inputs": [
-      {
-        "name": "actionFactory",
-        "type": "address",
-        "internalType": "address"
-      },
       {
         "name": "tokenAddress",
         "type": "address",
@@ -154,11 +134,6 @@ export const GroupManagerAbi = [
     "name": "actionIdsByGroupIdCount",
     "inputs": [
       {
-        "name": "actionFactory",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "tokenAddress",
         "type": "address",
         "internalType": "address"
@@ -183,11 +158,6 @@ export const GroupManagerAbi = [
     "name": "actionIdsCount",
     "inputs": [
       {
-        "name": "actionFactory",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "tokenAddress",
         "type": "address",
         "internalType": "address"
@@ -207,14 +177,9 @@ export const GroupManagerAbi = [
     "name": "activateGroup",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -255,14 +220,9 @@ export const GroupManagerAbi = [
     "name": "activeGroupIds",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -279,14 +239,9 @@ export const GroupManagerAbi = [
     "name": "activeGroupIdsAtIndex",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "index",
@@ -308,14 +263,9 @@ export const GroupManagerAbi = [
     "name": "activeGroupIdsByOwner",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "owner",
@@ -337,14 +287,9 @@ export const GroupManagerAbi = [
     "name": "activeGroupIdsCount",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -361,14 +306,9 @@ export const GroupManagerAbi = [
     "name": "calculateJoinMaxAmount",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -385,14 +325,9 @@ export const GroupManagerAbi = [
     "name": "deactivateGroup",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -408,14 +343,9 @@ export const GroupManagerAbi = [
     "name": "groupInfo",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -477,11 +407,6 @@ export const GroupManagerAbi = [
     "name": "hasActiveGroups",
     "inputs": [
       {
-        "name": "actionFactory",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "tokenAddress",
         "type": "address",
         "internalType": "address"
@@ -519,14 +444,9 @@ export const GroupManagerAbi = [
     "name": "isGroupActive",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -548,14 +468,9 @@ export const GroupManagerAbi = [
     "name": "maxVerifyCapacityByOwner",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "owner",
@@ -577,14 +492,9 @@ export const GroupManagerAbi = [
     "name": "totalStaked",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -601,14 +511,9 @@ export const GroupManagerAbi = [
     "name": "totalStakedByActionIdByOwner",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "owner",
@@ -630,14 +535,9 @@ export const GroupManagerAbi = [
     "name": "updateGroupInfo",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -672,40 +572,6 @@ export const GroupManagerAbi = [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "votedGroupActions",
-    "inputs": [
-      {
-        "name": "actionFactory",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "actionIds_",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      },
-      {
-        "name": "extensions",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "event",
@@ -866,7 +732,7 @@ export const GroupManagerAbi = [
   },
   {
     "type": "error",
-    "name": "ExtensionTokenActionMismatch",
+    "name": "ExtensionNotInitialized",
     "inputs": []
   },
   {

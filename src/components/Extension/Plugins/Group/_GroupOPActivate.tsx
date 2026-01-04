@@ -79,8 +79,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     isPending: isPendingActivatedGroups,
     error: errorActivatedGroups,
   } = useActiveGroupIdsByOwner(
-    (token?.address as `0x${string}`) || ZERO_ADDRESS,
-    actionId,
+    extensionAddress,
     (account || ZERO_ADDRESS) as `0x${string}`,
   );
 
@@ -113,8 +112,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     isPending: isPendingMaxCapacity,
     error: errorMaxCapacity,
   } = useMaxVerifyCapacityByOwner(
-    (actionParams?.tokenAddress || (token?.address as `0x${string}`) || ZERO_ADDRESS) as `0x${string}`,
-    actionId,
+    extensionAddress,
     (account || ZERO_ADDRESS) as `0x${string}`,
   );
 
@@ -317,10 +315,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
       values.maxAccounts && values.maxAccounts !== '0' ? BigInt(parseInt(values.maxAccounts, 10)) : BigInt(0);
 
     try {
-      await activateGroup(
-        actionParams.tokenAddress as `0x${string}`,
-        actionId,
-        finalGroupId,
+      await activateGroup(extensionAddress, finalGroupId,
         values.description,
         maxCapacityBigInt,
         minJoinAmountBigInt,

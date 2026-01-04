@@ -51,7 +51,7 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
     amount: joinedAmount,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
-  } = useJoinInfo(token?.address as `0x${string}`, actionId, account as `0x${string}`);
+  } = useJoinInfo(extensionAddress, account as `0x${string}`);
 
   // 获取链群详情
   const {

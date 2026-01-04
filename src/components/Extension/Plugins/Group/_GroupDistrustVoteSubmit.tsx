@@ -103,9 +103,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     votes: alreadyVotedAmount,
     isPending: isPendingAlreadyVoted,
     error: errorAlreadyVoted,
-  } = useDistrustVotesByVoterByGroupOwner(
-    token?.address as `0x${string}`,
-    actionId,
+  } = useDistrustVotesByVoterByGroupOwner(extensionAddress,
     currentRound || BigInt(0),
     account as `0x${string}`,
     groupOwner,
@@ -196,7 +194,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     }
 
     try {
-      await distrustVote(token?.address as `0x${string}`, actionId, groupOwner, distrustVotes, values.reason);
+      await distrustVote(extensionAddress, groupOwner, distrustVotes, values.reason);
     } catch (error) {
       console.error('Distrust vote failed', error);
     }

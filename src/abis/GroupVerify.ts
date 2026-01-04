@@ -20,14 +20,9 @@ export const GroupVerifyAbi = [
     "name": "canVerify",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "account",
@@ -54,14 +49,9 @@ export const GroupVerifyAbi = [
     "name": "capacityReductionByGroupId",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -88,14 +78,9 @@ export const GroupVerifyAbi = [
     "name": "delegatedVerifierByGroupId",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -117,14 +102,9 @@ export const GroupVerifyAbi = [
     "name": "distrustReason",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -156,14 +136,9 @@ export const GroupVerifyAbi = [
     "name": "distrustVote",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupOwner",
@@ -189,14 +164,9 @@ export const GroupVerifyAbi = [
     "name": "distrustVotesByGroupId",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -223,14 +193,9 @@ export const GroupVerifyAbi = [
     "name": "distrustVotesByGroupOwner",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -257,14 +222,9 @@ export const GroupVerifyAbi = [
     "name": "distrustVotesByVoterByGroupOwner",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -296,14 +256,9 @@ export const GroupVerifyAbi = [
     "name": "groupIdsByVerifier",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -330,14 +285,9 @@ export const GroupVerifyAbi = [
     "name": "groupIdsByVerifierAtIndex",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -369,14 +319,9 @@ export const GroupVerifyAbi = [
     "name": "groupIdsByVerifierCount",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -416,14 +361,9 @@ export const GroupVerifyAbi = [
     "name": "isVerified",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -450,14 +390,9 @@ export const GroupVerifyAbi = [
     "name": "originScoreByAccount",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -484,14 +419,9 @@ export const GroupVerifyAbi = [
     "name": "score",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -513,14 +443,9 @@ export const GroupVerifyAbi = [
     "name": "scoreByAccount",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -547,14 +472,9 @@ export const GroupVerifyAbi = [
     "name": "scoreByGroupId",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -581,14 +501,9 @@ export const GroupVerifyAbi = [
     "name": "setGroupDelegatedVerifier",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -609,14 +524,9 @@ export const GroupVerifyAbi = [
     "name": "totalScoreByGroupId",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -643,14 +553,9 @@ export const GroupVerifyAbi = [
     "name": "verifiedAccountCount",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -677,14 +582,9 @@ export const GroupVerifyAbi = [
     "name": "verifiedGroupIds",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -706,14 +606,9 @@ export const GroupVerifyAbi = [
     "name": "verifierByGroupId",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -740,14 +635,9 @@ export const GroupVerifyAbi = [
     "name": "verifiers",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -769,14 +659,9 @@ export const GroupVerifyAbi = [
     "name": "verifiersAtIndex",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -803,14 +688,9 @@ export const GroupVerifyAbi = [
     "name": "verifiersCount",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -832,14 +712,9 @@ export const GroupVerifyAbi = [
     "name": "verifyWithOriginScores",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -1008,6 +883,11 @@ export const GroupVerifyAbi = [
   {
     "type": "error",
     "name": "DistrustVoteExceedsLimit",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ExtensionNotInitialized",
     "inputs": []
   },
   {

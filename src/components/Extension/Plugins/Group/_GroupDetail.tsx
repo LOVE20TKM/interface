@@ -47,7 +47,7 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extens
     count: accountsCount,
     isPending: isPendingAccountsCount,
     error: errorAccountsCount,
-  } = useAccountsByGroupIdCount(token?.address as `0x${string}`, actionId, groupId);
+  } = useAccountsByGroupIdCount(extensionAddress, groupId);
 
   // 错误处理
   const { handleError } = useContractError();

@@ -79,8 +79,7 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
 
   // 获取加入信息
   const { amount, error: errorJoinInfo } = useJoinInfo(
-    token?.address as `0x${string}`,
-    actionId,
+    extensionAddress,
     account as `0x${string}`,
   );
 

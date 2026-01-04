@@ -32,8 +32,7 @@ export const useFactoryAddress = () => {
  * Hook for canVerify - 检查账户是否可以验证指定组
  */
 export const useCanVerify = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   account: `0x${string}`,
   groupId: bigint,
 ) => {
@@ -41,9 +40,9 @@ export const useCanVerify = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'canVerify',
-    args: [tokenAddress, actionId, account, groupId],
+    args: [extensionAddress, account, groupId],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && !!account && groupId !== undefined,
+      enabled: !!extensionAddress && !!account && groupId !== undefined,
     },
   });
 
@@ -53,14 +52,14 @@ export const useCanVerify = (
 /**
  * Hook for isVerified - 检查指定轮次和组ID是否已验证
  */
-export const useIsVerified = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint, groupId: bigint) => {
+export const useIsVerified = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'isVerified',
-    args: [tokenAddress, actionId, round, groupId],
+    args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
     },
   });
 
@@ -71,8 +70,7 @@ export const useIsVerified = (tokenAddress: `0x${string}`, actionId: bigint, rou
  * Hook for verifiedAccountCount - 获取指定轮次和组ID的已验证账户数量
  */
 export const useVerifiedAccountCount = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   groupId: bigint,
 ) => {
@@ -80,9 +78,9 @@ export const useVerifiedAccountCount = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifiedAccountCount',
-    args: [tokenAddress, actionId, round, groupId],
+    args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
     },
   });
 
@@ -92,14 +90,14 @@ export const useVerifiedAccountCount = (
 /**
  * Hook for verifiedGroupIds - 获取指定轮次已验证的组ID列表
  */
-export const useVerifiedGroupIds = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint) => {
+export const useVerifiedGroupIds = (extensionAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifiedGroupIds',
-    args: [tokenAddress, actionId, round],
+    args: [extensionAddress, round],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined,
+      enabled: !!extensionAddress && round !== undefined,
     },
   });
 
@@ -109,14 +107,14 @@ export const useVerifiedGroupIds = (tokenAddress: `0x${string}`, actionId: bigin
 /**
  * Hook for verifiers - 获取指定轮次的所有验证者
  */
-export const useVerifiers = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint) => {
+export const useVerifiers = (extensionAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifiers',
-    args: [tokenAddress, actionId, round],
+    args: [extensionAddress, round],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined,
+      enabled: !!extensionAddress && round !== undefined,
     },
   });
 
@@ -126,14 +124,14 @@ export const useVerifiers = (tokenAddress: `0x${string}`, actionId: bigint, roun
 /**
  * Hook for verifiersAtIndex - 根据索引获取指定轮次的验证者
  */
-export const useVerifiersAtIndex = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint, index: bigint) => {
+export const useVerifiersAtIndex = (extensionAddress: `0x${string}`, round: bigint, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifiersAtIndex',
-    args: [tokenAddress, actionId, round, index],
+    args: [extensionAddress, round, index],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && index !== undefined,
+      enabled: !!extensionAddress && round !== undefined && index !== undefined,
     },
   });
 
@@ -143,14 +141,14 @@ export const useVerifiersAtIndex = (tokenAddress: `0x${string}`, actionId: bigin
 /**
  * Hook for verifiersCount - 获取指定轮次的验证者数量
  */
-export const useVerifiersCount = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint) => {
+export const useVerifiersCount = (extensionAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifiersCount',
-    args: [tokenAddress, actionId, round],
+    args: [extensionAddress, round],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined,
+      enabled: !!extensionAddress && round !== undefined,
     },
   });
 
@@ -160,14 +158,14 @@ export const useVerifiersCount = (tokenAddress: `0x${string}`, actionId: bigint,
 /**
  * Hook for verifierByGroupId - 获取指定轮次和组ID的验证者
  */
-export const useVerifierByGroupId = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint, groupId: bigint) => {
+export const useVerifierByGroupId = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifierByGroupId',
-    args: [tokenAddress, actionId, round, groupId],
+    args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
     },
   });
 
@@ -177,14 +175,14 @@ export const useVerifierByGroupId = (tokenAddress: `0x${string}`, actionId: bigi
 /**
  * Hook for delegatedVerifierByGroupId - 获取指定组ID的委托验证者
  */
-export const useDelegatedVerifierByGroupId = (tokenAddress: `0x${string}`, actionId: bigint, groupId: bigint) => {
+export const useDelegatedVerifierByGroupId = (extensionAddress: `0x${string}`, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'delegatedVerifierByGroupId',
-    args: [tokenAddress, actionId, groupId],
+    args: [extensionAddress, groupId],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && groupId !== undefined,
     },
   });
 
@@ -195,8 +193,7 @@ export const useDelegatedVerifierByGroupId = (tokenAddress: `0x${string}`, actio
  * Hook for groupIdsByVerifier - 获取指定验证者在指定轮次的组ID列表
  */
 export const useGroupIdsByVerifier = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   verifier: `0x${string}`,
 ) => {
@@ -204,9 +201,9 @@ export const useGroupIdsByVerifier = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'groupIdsByVerifier',
-    args: [tokenAddress, actionId, round, verifier],
+    args: [extensionAddress, round, verifier],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && !!verifier,
+      enabled: !!extensionAddress && round !== undefined && !!verifier,
     },
   });
 
@@ -217,8 +214,7 @@ export const useGroupIdsByVerifier = (
  * Hook for groupIdsByVerifierAtIndex - 根据索引获取指定验证者在指定轮次的组ID
  */
 export const useGroupIdsByVerifierAtIndex = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   verifier: `0x${string}`,
   index: bigint,
@@ -227,9 +223,9 @@ export const useGroupIdsByVerifierAtIndex = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'groupIdsByVerifierAtIndex',
-    args: [tokenAddress, actionId, round, verifier, index],
+    args: [extensionAddress, round, verifier, index],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && !!verifier && index !== undefined,
+      enabled: !!extensionAddress && round !== undefined && !!verifier && index !== undefined,
     },
   });
 
@@ -240,8 +236,7 @@ export const useGroupIdsByVerifierAtIndex = (
  * Hook for groupIdsByVerifierCount - 获取指定验证者在指定轮次的组ID数量
  */
 export const useGroupIdsByVerifierCount = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   verifier: `0x${string}`,
 ) => {
@@ -249,9 +244,9 @@ export const useGroupIdsByVerifierCount = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'groupIdsByVerifierCount',
-    args: [tokenAddress, actionId, round, verifier],
+    args: [extensionAddress, round, verifier],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && !!verifier,
+      enabled: !!extensionAddress && round !== undefined && !!verifier,
     },
   });
 
@@ -265,14 +260,14 @@ export const useGroupIdsByVerifierCount = (
 /**
  * Hook for score - 获取指定轮次的总积分
  */
-export const useScore = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint) => {
+export const useScore = (extensionAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'score',
-    args: [tokenAddress, actionId, round],
+    args: [extensionAddress, round],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined,
+      enabled: !!extensionAddress && round !== undefined,
     },
   });
 
@@ -283,8 +278,7 @@ export const useScore = (tokenAddress: `0x${string}`, actionId: bigint, round: b
  * Hook for scoreByAccount - 获取账户的积分
  */
 export const useScoreByAccount = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   account: `0x${string}`,
 ) => {
@@ -292,9 +286,9 @@ export const useScoreByAccount = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'scoreByAccount',
-    args: [tokenAddress, actionId, round, account],
+    args: [extensionAddress, round, account],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && !!account,
+      enabled: !!extensionAddress && round !== undefined && !!account,
     },
   });
 
@@ -304,14 +298,14 @@ export const useScoreByAccount = (
 /**
  * Hook for scoreByGroupId - 获取指定组ID的积分
  */
-export const useScoreByGroupId = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint, groupId: bigint) => {
+export const useScoreByGroupId = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'scoreByGroupId',
-    args: [tokenAddress, actionId, round, groupId],
+    args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
     },
   });
 
@@ -322,8 +316,7 @@ export const useScoreByGroupId = (tokenAddress: `0x${string}`, actionId: bigint,
  * Hook for totalScoreByGroupId - 获取指定组ID的总积分
  */
 export const useTotalScoreByGroupId = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   groupId: bigint,
 ) => {
@@ -331,9 +324,9 @@ export const useTotalScoreByGroupId = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'totalScoreByGroupId',
-    args: [tokenAddress, actionId, round, groupId],
+    args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
     },
   });
 
@@ -344,8 +337,7 @@ export const useTotalScoreByGroupId = (
  * Hook for originScoreByAccount - 获取账户的原始积分
  */
 export const useOriginScoreByAccount = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   account: `0x${string}`,
 ) => {
@@ -353,9 +345,9 @@ export const useOriginScoreByAccount = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'originScoreByAccount',
-    args: [tokenAddress, actionId, round, account],
+    args: [extensionAddress, round, account],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && !!account,
+      enabled: !!extensionAddress && round !== undefined && !!account,
     },
   });
 
@@ -366,8 +358,7 @@ export const useOriginScoreByAccount = (
  * Hook for capacityReductionByGroupId - 获取指定轮次和组ID的容量削减
  */
 export const useCapacityReductionByGroupId = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   groupId: bigint,
 ) => {
@@ -375,9 +366,9 @@ export const useCapacityReductionByGroupId = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'capacityReductionByGroupId',
-    args: [tokenAddress, actionId, round, groupId],
+    args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
     },
   });
 
@@ -392,8 +383,7 @@ export const useCapacityReductionByGroupId = (
  * Hook for distrustVotesByGroupId - 获取指定组ID的不信任投票数
  */
 export const useDistrustVotesByGroupId = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   groupId: bigint,
 ) => {
@@ -401,9 +391,9 @@ export const useDistrustVotesByGroupId = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'distrustVotesByGroupId',
-    args: [tokenAddress, actionId, round, groupId],
+    args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
     },
   });
 
@@ -414,8 +404,7 @@ export const useDistrustVotesByGroupId = (
  * Hook for distrustVotesByGroupOwner - 获取指定组所有者的不信任投票数
  */
 export const useDistrustVotesByGroupOwner = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   groupOwner: `0x${string}`,
 ) => {
@@ -423,9 +412,9 @@ export const useDistrustVotesByGroupOwner = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'distrustVotesByGroupOwner',
-    args: [tokenAddress, actionId, round, groupOwner],
+    args: [extensionAddress, round, groupOwner],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && !!groupOwner,
+      enabled: !!extensionAddress && round !== undefined && !!groupOwner,
     },
   });
 
@@ -436,8 +425,7 @@ export const useDistrustVotesByGroupOwner = (
  * Hook for distrustVotesByVoterByGroupOwner - 获取指定投票者对组所有者的不信任投票数
  */
 export const useDistrustVotesByVoterByGroupOwner = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   voter: `0x${string}`,
   groupOwner: `0x${string}`,
@@ -446,9 +434,9 @@ export const useDistrustVotesByVoterByGroupOwner = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'distrustVotesByVoterByGroupOwner',
-    args: [tokenAddress, actionId, round, voter, groupOwner],
+    args: [extensionAddress, round, voter, groupOwner],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && !!voter && !!groupOwner,
+      enabled: !!extensionAddress && round !== undefined && !!voter && !!groupOwner,
     },
   });
 
@@ -459,8 +447,7 @@ export const useDistrustVotesByVoterByGroupOwner = (
  * Hook for distrustReason - 获取不信任投票的原因
  */
 export const useDistrustReason = (
-  tokenAddress: `0x${string}`,
-  actionId: bigint,
+  extensionAddress: `0x${string}`,
   round: bigint,
   voter: `0x${string}`,
   groupOwner: `0x${string}`,
@@ -469,9 +456,9 @@ export const useDistrustReason = (
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'distrustReason',
-    args: [tokenAddress, actionId, round, voter, groupOwner],
+    args: [extensionAddress, round, voter, groupOwner],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && !!voter && !!groupOwner,
+      enabled: !!extensionAddress && round !== undefined && !!voter && !!groupOwner,
     },
   });
 
@@ -493,21 +480,19 @@ export function useVerifyWithOriginScores() {
   );
 
   const verifyWithOriginScores = async (
-    tokenAddress: `0x${string}`,
-    actionId: bigint,
+    extensionAddress: `0x${string}`,
     groupId: bigint,
     startIndex: bigint,
     originScores: bigint[],
   ) => {
     console.log('提交 verifyWithOriginScores 交易:', {
-      tokenAddress,
-      actionId,
+      extensionAddress,
       groupId,
       startIndex,
       originScores,
       isTukeMode,
     });
-    return await execute([tokenAddress, actionId, groupId, startIndex, originScores]);
+    return await execute([extensionAddress, groupId, startIndex, originScores]);
   };
 
   // 错误日志记录
@@ -544,19 +529,17 @@ export function useSetGroupDelegatedVerifier() {
   );
 
   const setGroupDelegatedVerifier = async (
-    tokenAddress: `0x${string}`,
-    actionId: bigint,
+    extensionAddress: `0x${string}`,
     groupId: bigint,
     delegatedVerifier: `0x${string}`,
   ) => {
     console.log('提交 setGroupDelegatedVerifier 交易:', {
-      tokenAddress,
-      actionId,
+      extensionAddress,
       groupId,
       delegatedVerifier,
       isTukeMode,
     });
-    return await execute([tokenAddress, actionId, groupId, delegatedVerifier]);
+    return await execute([extensionAddress, groupId, delegatedVerifier]);
   };
 
   // 错误日志记录
@@ -593,14 +576,13 @@ export function useDistrustVote() {
   );
 
   const distrustVote = async (
-    tokenAddress: `0x${string}`,
-    actionId: bigint,
+    extensionAddress: `0x${string}`,
     groupOwner: `0x${string}`,
     amount: bigint,
     reason: string,
   ) => {
-    console.log('提交 distrustVote 交易:', { tokenAddress, actionId, groupOwner, amount, reason, isTukeMode });
-    return await execute([tokenAddress, actionId, groupOwner, amount, reason]);
+    console.log('提交 distrustVote 交易:', { extensionAddress, groupOwner, amount, reason, isTukeMode });
+    return await execute([extensionAddress, groupOwner, amount, reason]);
   };
 
   // 错误日志记录

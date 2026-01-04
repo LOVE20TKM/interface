@@ -88,28 +88,28 @@ export const useExtensionGroupDetail = ({
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
         functionName: 'calculateJoinMaxAmount',
-        args: [tokenAddress, actionId],
+        args: [extensionAddress],
       },
-      // 获取总加入数量（新版合约移到 GroupJoin，需要 tokenAddress, actionId, groupId）
+      // 获取总加入数量（新版合约移到 GroupJoin）
       {
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'totalJoinedAmountByGroupId',
-        args: [tokenAddress, actionId, groupId],
+        args: [extensionAddress, groupId],
       },
-      // 获取群组成员数量（新版合约移到 GroupJoin，需要 tokenAddress, actionId, groupId）
+      // 获取群组成员数量（新版合约移到 GroupJoin）
       {
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'accountsByGroupIdCount',
-        args: [tokenAddress, actionId, groupId],
+        args: [extensionAddress, groupId],
       },
       // 获取群组信息
       {
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
         functionName: 'groupInfo',
-        args: [tokenAddress, actionId, groupId],
+        args: [extensionAddress, groupId],
       },
     ];
   }, [extensionAddress, tokenAddress, actionId, groupId]);

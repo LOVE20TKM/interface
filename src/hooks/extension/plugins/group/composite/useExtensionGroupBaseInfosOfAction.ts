@@ -43,7 +43,7 @@ export const useExtensionGroupBaseInfosOfAction = ({
     activeGroupIds,
     isPending: isGroupIdsPending,
     error: groupIdsError,
-  } = useActiveGroupIds(tokenAddress as `0x${string}`, actionId !== undefined ? actionId : BigInt(0));
+  } = useActiveGroupIds(extensionAddress as `0x${string}`);
 
   // 批量获取每个群组的名称和 owner
   const detailContracts = useMemo(() => {
@@ -108,8 +108,8 @@ export const useExtensionGroupBaseInfosOfAction = ({
 
   // 计算最终的 isPending 状态
   const isPending = useMemo(() => {
-    // 如果 tokenAddress 或 actionId 不存在，返回 true（等待前置条件）
-    if (!tokenAddress || actionId === undefined) return true;
+    // 如果 extensionAddress 不存在，返回 true（等待前置条件）
+    if (!extensionAddress) return true;
     // 如果链群NFT列表还在加载中，返回 true
     if (isGroupIdsPending) return true;
     // 如果没有链群（activeGroupIds 为空或 undefined），且查询已完成，返回 false
@@ -122,7 +122,7 @@ export const useExtensionGroupBaseInfosOfAction = ({
     }
     // 其他情况，返回 true
     return true;
-  }, [isGroupIdsPending, isDetailPending, activeGroupIds, tokenAddress, actionId]);
+  }, [isGroupIdsPending, isDetailPending, activeGroupIds, extensionAddress]);
 
   return {
     groups,

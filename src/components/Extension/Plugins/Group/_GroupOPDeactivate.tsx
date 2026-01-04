@@ -64,14 +64,14 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
     activatedRound,
     isPending: isPendingInfo,
     error: errorInfo,
-  } = useGroupInfo(token?.address as `0x${string}`, actionId, groupId);
+  } = useGroupInfo(extensionAddress, groupId);
 
   // 获取参与人数
   const {
     count: accountsCount,
     isPending: isPendingAccountsCount,
     error: errorAccountsCount,
-  } = useAccountsByGroupIdCount(token?.address as `0x${string}`, actionId, groupId);
+  } = useAccountsByGroupIdCount(extensionAddress, groupId);
 
   // 获取当前轮次
   const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
@@ -92,7 +92,7 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
     }
 
     try {
-      await deactivateGroup(token?.address as `0x${string}`, actionId, groupId);
+      await deactivateGroup(extensionAddress, groupId);
     } catch (error) {
       console.error('Deactivate group failed', error);
     }

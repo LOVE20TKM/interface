@@ -86,7 +86,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     maxVerifyCapacity,
     isPending: isPendingMaxCapacity,
     error: errorMaxCapacity,
-  } = useMaxVerifyCapacityByOwner(token?.address as `0x${string}`, actionId, account as `0x${string}`);
+  } = useMaxVerifyCapacityByOwner(extensionAddress, account as `0x${string}`);
 
   // 表单验证
   const formSchema = useMemo(
@@ -224,8 +224,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
 
     try {
       await updateGroupInfo(
-        token?.address as `0x${string}`,
-        actionId,
+        extensionAddress,
         groupId,
         values.description,
         maxCapacityBigInt,

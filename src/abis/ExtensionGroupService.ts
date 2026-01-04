@@ -248,7 +248,7 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "initializeAction",
+    "name": "initializeIfNeeded",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -268,7 +268,7 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "isJoinedValueCalculated",
+    "name": "isJoinedValueConverted",
     "inputs": [],
     "outputs": [
       {
@@ -650,30 +650,6 @@ export const ExtensionGroupServiceAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "votedGroupActions",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "actionIds",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      },
-      {
-        "name": "extensions",
-        "type": "address[]",
-        "internalType": "address[]"
       }
     ],
     "stateMutability": "view"

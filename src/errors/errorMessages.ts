@@ -146,4 +146,8 @@ export const ErrorMessages: Record<string, string> = {
   InvalidExtensionFactory: 'InvalidExtensionFactory',
   InvalidFactory: 'InvalidFactory',
   OnlyExtensionOrAccountCanCall: 'OnlyExtensionOrAccountCanCall',
+  ActionAlreadyBoundToOtherAction: 'ActionAlreadyBoundToOtherAction',
+  ExtensionNotInitialized: 'ExtensionNotInitialized',
+  OnlyExtensionOrDelegate: 'OnlyExtensionOrDelegate',
+  OnlyUserOrExtensionOrDelegate: 'OnlyUserOrExtensionOrDelegate',
 };

@@ -69,14 +69,14 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     count: accountsCount,
     isPending: isPendingAccountsCount,
     error: errorAccountsCount,
-  } = useAccountsByGroupIdCount(token?.address as `0x${string}`, actionId, groupId);
+  } = useAccountsByGroupIdCount(extensionAddress, groupId);
 
   // 获取打分代理
   const {
     delegatedVerifier,
     isPending: isPendingDelegated,
     error: errorDelegated,
-  } = useDelegatedVerifierByGroupId(token?.address as `0x${string}`, actionId, groupId);
+  } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
 
   // 获取当前轮次（使用 Verify 合约的 round）
   const { currentRound, isPending: isPendingRound, error: errorRound } = useVerifyCurrentRound();

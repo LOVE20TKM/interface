@@ -25,14 +25,9 @@ export const GroupJoinAbi = [
     "name": "accountByGroupIdAndIndexByRound",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -64,14 +59,9 @@ export const GroupJoinAbi = [
     "name": "accountCountByGroupIdByRound",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -98,14 +88,9 @@ export const GroupJoinAbi = [
     "name": "accountsByGroupIdAtIndex",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -132,14 +117,9 @@ export const GroupJoinAbi = [
     "name": "accountsByGroupIdCount",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -161,14 +141,9 @@ export const GroupJoinAbi = [
     "name": "amountByAccountByRound",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "account",
@@ -195,14 +170,9 @@ export const GroupJoinAbi = [
     "name": "exit",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -213,14 +183,9 @@ export const GroupJoinAbi = [
     "name": "groupIdByAccountByRound",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "account",
@@ -260,14 +225,9 @@ export const GroupJoinAbi = [
     "name": "join",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -293,14 +253,9 @@ export const GroupJoinAbi = [
     "name": "joinInfo",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "account",
@@ -332,14 +287,9 @@ export const GroupJoinAbi = [
     "name": "totalJoinedAmount",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -356,14 +306,9 @@ export const GroupJoinAbi = [
     "name": "totalJoinedAmountByGroupId",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -385,14 +330,9 @@ export const GroupJoinAbi = [
     "name": "totalJoinedAmountByGroupIdByRound",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -419,14 +359,9 @@ export const GroupJoinAbi = [
     "name": "totalJoinedAmountByRound",
     "inputs": [
       {
-        "name": "tokenAddress",
+        "name": "extension",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "round",
@@ -552,6 +487,11 @@ export const GroupJoinAbi = [
   {
     "type": "error",
     "name": "CannotJoinDeactivatedGroup",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ExtensionNotInitialized",
     "inputs": []
   },
   {

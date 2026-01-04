@@ -74,7 +74,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     groupId,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
-  } = useJoinInfo(token?.address as `0x${string}`, actionId, account as `0x${string}`);
+  } = useJoinInfo(extensionAddress, account as `0x${string}`);
 
   // 获取链群详情
   const {
@@ -92,7 +92,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     totalJoinedAmount: currentRoundTotalAmount,
     isPending: isPendingTotalAmount,
     error: errorTotalAmount,
-  } = useTotalJoinedAmountByRound(token?.address as `0x${string}`, actionId, currentRound || BigInt(0));
+  } = useTotalJoinedAmountByRound(extensionAddress, currentRound || BigInt(0));
 
   // 获取验证信息
   const verificationKeys = actionInfo?.body?.verificationKeys as string[] | undefined;
@@ -128,7 +128,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
       toast.error('您还没有参与，无需退出');
       return;
     }
-    await exit(token?.address as `0x${string}`, actionId);
+    await exit(extensionAddress);
   };
 
   useEffect(() => {
