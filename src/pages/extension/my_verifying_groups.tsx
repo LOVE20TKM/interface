@@ -18,6 +18,7 @@ import { useContractError } from '@/src/errors/useContractError';
 import Header from '@/src/components/Header';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import RoundLite from '@/src/components/Common/RoundLite';
 
 interface GroupedData {
   actionId: bigint;
@@ -150,14 +151,16 @@ const MyVerifyingGroupsPage: React.FC = () => {
             <LoadingIcon />
           </div>
         ) : groupedData.length === 0 ? (
-          <div className="text-center text-sm text-greyscale-400 p-4 bg-gray-50 rounded-lg mt-4">
-            暂无需要验证的链群
+          <div className="py-4">
+            <LeftTitle title="需要验证的链群" />
+            <div className="text-sm mt-4 text-greyscale-500 text-center">没有要验证的链群，或行动未投票</div>
           </div>
         ) : (
-          <div className="space-y-4">
-            <LeftTitle title="我需验证的链群" />
+          <div>
+            <LeftTitle title="需要验证的链群" />
+            <RoundLite currentRound={verifyRound} roundType="verify" />
             {groupedData.map((action) => (
-              <div key={action.actionId.toString()} className="border rounded-lg p-3">
+              <div key={action.actionId.toString()} className="border rounded-lg p-3 mt-4">
                 {/* Action Header */}
                 <div className="flex items-baseline mb-3">
                   <span className="text-greyscale-400 text-sm">No.</span>
@@ -170,7 +173,9 @@ const MyVerifyingGroupsPage: React.FC = () => {
                   {action.groups.map((group, idx) => (
                     <div
                       key={group.groupId.toString()}
-                      className={`flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer ${idx > 0 ? 'border-t' : ''}`}
+                      className={`flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer ${
+                        idx > 0 ? 'border-t' : ''
+                      }`}
                       onClick={() => handleGroupClick(group, action.actionId)}
                     >
                       <div className="flex-1">

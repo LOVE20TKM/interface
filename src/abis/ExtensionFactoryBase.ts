@@ -4,7 +4,7 @@ import { Abi } from 'abitype';
 export const ExtensionFactoryBaseAbi = [
   {
     "type": "function",
-    "name": "center",
+    "name": "CENTER_ADDRESS",
     "inputs": [],
     "outputs": [
       {
@@ -78,5 +78,24 @@ export const ExtensionFactoryBaseAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "CreateExtension",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
   }
 ] as const satisfies Abi;

@@ -16,19 +16,19 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 // =====================
 
 /**
- * Hook for BASIS_POINTS_BASE - 获取基点基数
+ * Hook for PRECISION - 获取精度常量
  */
-export const useBasisPointsBase = (contractAddress: `0x${string}`) => {
+export const usePrecision = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupServiceAbi,
-    functionName: 'BASIS_POINTS_BASE',
+    functionName: 'PRECISION',
     query: {
       enabled: !!contractAddress,
     },
   });
 
-  return { basisPointsBase: safeToBigInt(data), isPending, error };
+  return { precision: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -97,13 +97,13 @@ export const useActionIdsWithRecipients = (contractAddress: `0x${string}`, accou
 };
 
 /**
- * Hook for factory - 获取工厂地址
+ * Hook for FACTORY_ADDRESS - 获取工厂地址
  */
 export const useFactory = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupServiceAbi,
-    functionName: 'factory',
+    functionName: 'FACTORY_ADDRESS',
     query: {
       enabled: !!contractAddress,
     },
@@ -113,9 +113,9 @@ export const useFactory = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for generatedRewardByVerifier - 获取验证者生成的奖励
+ * Hook for generatedActionRewardByVerifier - 获取验证者生成的行动奖励
  */
-export const useGeneratedRewardByVerifier = (
+export const useGeneratedActionRewardByVerifier = (
   contractAddress: `0x${string}`,
   round: bigint,
   verifier: `0x${string}`,
@@ -123,7 +123,7 @@ export const useGeneratedRewardByVerifier = (
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupServiceAbi,
-    functionName: 'generatedRewardByVerifier',
+    functionName: 'generatedActionRewardByVerifier',
     args: [round, verifier],
     query: {
       enabled: !!contractAddress && round !== undefined && !!verifier,
@@ -131,17 +131,16 @@ export const useGeneratedRewardByVerifier = (
   });
 
   return {
-    accountReward: data ? safeToBigInt(data[0]) : undefined,
-    totalReward: data ? safeToBigInt(data[1]) : undefined,
+    amount: safeToBigInt(data),
     isPending,
     error,
   };
 };
 
 /**
- * Hook for groupIdsWithRecipients - 获取账户在指定行动和轮次设置了接收者的组ID列表
+ * Hook for groupIdsByActionIdWithRecipients - 获取账户在指定行动和轮次设置了接收者的组ID列表
  */
-export const useGroupIdsWithRecipients = (
+export const useGroupIdsByActionIdWithRecipients = (
   contractAddress: `0x${string}`,
   account: `0x${string}`,
   actionId: bigint,
@@ -150,7 +149,7 @@ export const useGroupIdsWithRecipients = (
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupServiceAbi,
-    functionName: 'groupIdsWithRecipients',
+    functionName: 'groupIdsByActionIdWithRecipients',
     args: [account, actionId, round],
     query: {
       enabled: !!contractAddress && !!account && actionId !== undefined && round !== undefined,
@@ -194,52 +193,36 @@ export const useInitialized = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for isJoinedValueCalculated - 检查加入值是否已计算
+ * Hook for joinedAmount - 获取加入值
  */
-export const useIsJoinedValueCalculated = (contractAddress: `0x${string}`) => {
+export const useJoinedAmount = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupServiceAbi,
-    functionName: 'isJoinedValueCalculated',
+    functionName: 'joinedAmount',
     query: {
       enabled: !!contractAddress,
     },
   });
 
-  return { isJoinedValueCalculated: data as boolean | undefined, isPending, error };
+  return { joinedAmount: safeToBigInt(data), isPending, error };
 };
 
 /**
- * Hook for joinedValue - 获取加入值
+ * Hook for joinedAmountByAccount - 获取账户的加入值
  */
-export const useJoinedValue = (contractAddress: `0x${string}`) => {
+export const useJoinedAmountByAccount = (contractAddress: `0x${string}`, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupServiceAbi,
-    functionName: 'joinedValue',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { joinedValue: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for joinedValueByAccount - 获取账户的加入值
- */
-export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupServiceAbi,
-    functionName: 'joinedValueByAccount',
+    functionName: 'joinedAmountByAccount',
     args: [account],
     query: {
       enabled: !!contractAddress && !!account,
     },
   });
 
-  return { joinedValueByAccount: safeToBigInt(data), isPending, error };
+  return { joinedAmountByAccount: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -282,7 +265,7 @@ export const useRecipients = (
 
   return {
     addrs: data ? (data[0] as `0x${string}`[]) : undefined,
-    basisPoints: data ? (data[1] as bigint[]) : undefined,
+    ratios: data ? (data[1] as bigint[]) : undefined,
     isPending,
     error,
   };
@@ -309,7 +292,7 @@ export const useRecipientsLatest = (
 
   return {
     addrs: data ? (data[0] as `0x${string}`[]) : undefined,
-    basisPoints: data ? (data[1] as bigint[]) : undefined,
+    ratios: data ? (data[1] as bigint[]) : undefined,
     isPending,
     error,
   };
@@ -407,7 +390,7 @@ export const useRewardDistribution = (
 
   return {
     addrs: data ? (data[0] as `0x${string}`[]) : undefined,
-    basisPoints: data ? (data[1] as bigint[]) : undefined,
+    ratios: data ? (data[1] as bigint[]) : undefined,
     amounts: data ? (data[2] as bigint[]) : undefined,
     ownerAmount: data ? safeToBigInt(data[3]) : undefined,
     isPending,
@@ -416,59 +399,19 @@ export const useRewardDistribution = (
 };
 
 /**
- * Hook for rewardDistributionAll - 获取组所有者的所有奖励分配信息
- */
-export const useRewardDistributionAll = (contractAddress: `0x${string}`, round: bigint, groupOwner: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupServiceAbi,
-    functionName: 'rewardDistributionAll',
-    args: [round, groupOwner],
-    query: {
-      enabled: !!contractAddress && round !== undefined && !!groupOwner,
-    },
-  });
-
-  return { distributions: data, isPending, error };
-};
-
-/**
- * Hook for tokenAddress - 获取代币地址
+ * Hook for TOKEN_ADDRESS - 获取代币地址
  */
 export const useTokenAddress = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupServiceAbi,
-    functionName: 'tokenAddress',
+    functionName: 'TOKEN_ADDRESS',
     query: {
       enabled: !!contractAddress,
     },
   });
 
   return { tokenAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for votedGroupActions - 获取当轮有投票且有激活链群的行动列表
- * 返回行动ID和对应的扩展地址
- */
-export const useVotedGroupActions = (contractAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupServiceAbi,
-    functionName: 'votedGroupActions',
-    args: [round],
-    query: {
-      enabled: !!contractAddress && round !== undefined,
-    },
-  });
-
-  return {
-    actionIds: data ? (data[0] as bigint[]) : undefined,
-    extensions: data ? (data[1] as `0x${string}`[]) : undefined,
-    isPending,
-    error,
-  };
 };
 
 // =====================
@@ -561,9 +504,9 @@ export function useSetRecipients(contractAddress: `0x${string}`) {
     'setRecipients',
   );
 
-  const setRecipients = async (actionId: bigint, groupId: bigint, addrs: `0x${string}`[], basisPoints: bigint[]) => {
-    console.log('提交 setRecipients 交易:', { contractAddress, actionId, groupId, addrs, basisPoints, isTukeMode });
-    return await execute([actionId, groupId, addrs, basisPoints]);
+  const setRecipients = async (actionId: bigint, groupId: bigint, addrs: `0x${string}`[], ratios: bigint[]) => {
+    console.log('提交 setRecipients 交易:', { contractAddress, actionId, groupId, addrs, ratios, isTukeMode });
+    return await execute([actionId, groupId, addrs, ratios]);
   };
 
   // 错误日志记录
@@ -588,4 +531,3 @@ export function useSetRecipients(contractAddress: `0x${string}`) {
     isTukeMode,
   };
 }
-

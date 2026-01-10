@@ -13,7 +13,8 @@ import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
+import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数

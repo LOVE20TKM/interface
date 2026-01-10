@@ -79,22 +79,6 @@ export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
   return { joinTokenAddress: data as `0x${string}` | undefined, isPending, error };
 };
 
-/**
- * Hook for STAKE_TOKEN_ADDRESS - 获取质押代币地址
- */
-export const useStakeTokenAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupActionAbi,
-    functionName: 'STAKE_TOKEN_ADDRESS',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { stakeTokenAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
 // =====================
 // === 读取 Hooks - 基本信息 ===
 // =====================
@@ -116,29 +100,13 @@ export const useActionId = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for center - 获取 center 合约地址
- */
-export const useCenter = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupActionAbi,
-    functionName: 'center',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { centerAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for factory - 获取工厂地址
+ * Hook for FACTORY_ADDRESS - 获取工厂地址
  */
 export const useFactory = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
-    functionName: 'factory',
+    functionName: 'FACTORY_ADDRESS',
     query: {
       enabled: !!contractAddress,
     },
@@ -148,13 +116,13 @@ export const useFactory = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for tokenAddress - 获取代币地址
+ * Hook for TOKEN_ADDRESS - 获取代币地址
  */
 export const useTokenAddress = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
-    functionName: 'tokenAddress',
+    functionName: 'TOKEN_ADDRESS',
     query: {
       enabled: !!contractAddress,
     },
@@ -184,52 +152,36 @@ export const useInitialized = (contractAddress: `0x${string}`) => {
 // =====================
 
 /**
- * Hook for joinedValue - 获取加入值
+ * Hook for joinedAmount - 获取加入值
  */
-export const useJoinedValue = (contractAddress: `0x${string}`) => {
+export const useJoinedAmount = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
-    functionName: 'joinedValue',
+    functionName: 'joinedAmount',
     query: {
       enabled: !!contractAddress,
     },
   });
 
-  return { joinedValue: safeToBigInt(data), isPending, error };
+  return { joinedAmount: safeToBigInt(data), isPending, error };
 };
 
 /**
- * Hook for joinedValueByAccount - 获取账户的加入值
+ * Hook for joinedAmountByAccount - 获取账户的加入值
  */
-export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account: `0x${string}`) => {
+export const useJoinedAmountByAccount = (contractAddress: `0x${string}`, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
-    functionName: 'joinedValueByAccount',
+    functionName: 'joinedAmountByAccount',
     args: [account],
     query: {
       enabled: !!contractAddress && !!account,
     },
   });
 
-  return { joinedValueByAccount: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for isJoinedValueCalculated - 检查加入值是否已计算
- */
-export const useIsJoinedValueCalculated = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupActionAbi,
-    functionName: 'isJoinedValueCalculated',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { isJoinedValueCalculated: data as boolean | undefined, isPending, error };
+  return { joinedAmountByAccount: safeToBigInt(data), isPending, error };
 };
 
 // =====================
@@ -293,9 +245,9 @@ export const useGeneratedRewardByGroupId = (contractAddress: `0x${string}`, roun
 };
 
 /**
- * Hook for generatedRewardByVerifier - 获取指定验证者的生成奖励
+ * Hook for generatedActionRewardByVerifier - 获取指定验证者的生成行动奖励
  */
-export const useGeneratedRewardByVerifier = (
+export const useGeneratedActionRewardByVerifier = (
   contractAddress: `0x${string}`,
   round: bigint,
   verifier: `0x${string}`,
@@ -303,7 +255,7 @@ export const useGeneratedRewardByVerifier = (
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
-    functionName: 'generatedRewardByVerifier',
+    functionName: 'generatedActionRewardByVerifier',
     args: [round, verifier],
     query: {
       enabled: !!contractAddress && round !== undefined && !!verifier,
@@ -384,44 +336,6 @@ export function useBurnUnclaimedReward(contractAddress: `0x${string}`) {
 
   return {
     burnUnclaimedReward,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}
-
-/**
- * Hook for initializeAction - 初始化行动
- */
-export function useInitializeAction(contractAddress: `0x${string}`) {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    ExtensionGroupActionAbi,
-    contractAddress,
-    'initializeAction',
-  );
-
-  const initializeAction = async () => {
-    console.log('提交 initializeAction 交易:', { contractAddress, isTukeMode });
-    return await execute([]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('initializeAction tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 initializeAction 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    initializeAction,
     isPending,
     isConfirming,
     writeError: error,

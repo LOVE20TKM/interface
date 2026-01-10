@@ -115,9 +115,9 @@ export default function RecipientsDetailDialog({
                               <TableBody>
                                 {/* 接收地址列表 */}
                                 {group.distribution.addrs.map((addr, index) => {
-                                  const basisPoints = group.distribution!.basisPoints[index];
+                                  const ratio = group.distribution!.ratios[index];
                                   const amount = group.distribution!.amounts[index];
-                                  const percentage = basisPoints ? Number(basisPoints) / 1e16 : 0; // wei 转百分比
+                                  const percentage = ratio ? Number(ratio) / 1e16 : 0; // wei 转百分比
 
                                   return (
                                     <TableRow key={`${addr}_${index}`}>
@@ -155,7 +155,7 @@ export default function RecipientsDetailDialog({
                                   <TableCell className="px-3 py-2 text-right text-sm">
                                     {formatPercentage(
                                       group.distribution.addrs.reduce(
-                                        (sum, _, idx) => sum + Number(group.distribution!.basisPoints[idx]) / 1e16,
+                                        (sum, _, idx) => sum + Number(group.distribution!.ratios[idx]) / 1e16,
                                         0,
                                       ),
                                     )}

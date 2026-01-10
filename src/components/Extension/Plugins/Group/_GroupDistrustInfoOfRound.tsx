@@ -27,11 +27,8 @@ import {
   useCurrentRound as useVerifyCurrentRound,
   useScoreByVerifierByActionId,
 } from '@/src/hooks/contracts/useLOVE20Verify';
-import {
-  useDistrustVotesOfCurrentRound,
-  useDistrustVotesOfRound,
-  useDistrustVotesOfGroupOwner,
-} from '@/src/hooks/extension/plugins/group/composite';
+import { useDistrustVotesOfRound } from '@/src/hooks/extension/plugins/group/composite/useDistrustVotesOfRound';
+import { useDistrustVotesOfGroupOwner } from '@/src/hooks/extension/plugins/group/composite/useDistrustVotesOfGroupOwner';
 import { useDistrustVotesByVoterByGroupOwner } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 
@@ -79,34 +76,12 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
     return selectedRound === currentRound && currentRound !== undefined;
   }, [selectedRound, currentRound]);
 
-  // 获取当前轮不信任投票（仅当前轮次使用）
-  const {
-    distrustVotes: currentDistrustVotes,
-    isPending: isPendingCurrent,
-    error: errorCurrent,
-  } = useDistrustVotesOfCurrentRound({
+  // 使用 useDistrustVotesOfRound 获取不信任投票
+  const { distrustVotes, isPending, error } = useDistrustVotesOfRound({
     extensionAddress,
     tokenAddress: token?.address as `0x${string}`,
-    actionId,
-    round: isCurrentRound ? currentRound : undefined,
+    round: selectedRound > BigInt(0) ? selectedRound : undefined,
   });
-
-  // 获取历史轮次不信任投票（仅历史轮次使用）
-  const {
-    distrustVotes: historyDistrustVotes,
-    isPending: isPendingHistory,
-    error: errorHistory,
-  } = useDistrustVotesOfRound({
-    extensionAddress,
-    tokenAddress: token?.address as `0x${string}`,
-    actionId,
-    round: !isCurrentRound && selectedRound > BigInt(0) ? selectedRound : undefined,
-  });
-
-  // 根据是否当前轮次选择数据源
-  const distrustVotes = isCurrentRound ? currentDistrustVotes : historyDistrustVotes;
-  const isPending = isCurrentRound ? isPendingCurrent : isPendingHistory;
-  const error = isCurrentRound ? errorCurrent : errorHistory;
 
   // 获取我的验证票数（仅当前轮次需要）
   const {
@@ -126,7 +101,8 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
     votes: alreadyVotedAmount,
     isPending: isPendingAlreadyVoted,
     error: errorAlreadyVoted,
-  } = useDistrustVotesByVoterByGroupOwner(extensionAddress,
+  } = useDistrustVotesByVoterByGroupOwner(
+    extensionAddress,
     isCurrentRound ? currentRound || BigInt(0) : BigInt(0),
     account as `0x${string}`,
     isCurrentRound && firstGroupOwner ? firstGroupOwner : '0x0000000000000000000000000000000000000000',
@@ -275,7 +251,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
             <table className="table w-full">
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="px-8 text-left">服务者信息 / 链群</th>
+                  <th className="px-8 text-left">服务者 / 验证的链群</th>
                   <th className="px-1 text-center">不信任率</th>
                   <th className="px-1"></th>
                 </tr>

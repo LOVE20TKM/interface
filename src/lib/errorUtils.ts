@@ -140,6 +140,17 @@ function _parseTimeoutError(error: string): string {
  * 检查是否为RPC调用错误（通常因为链上状态变化导致）
  */
 function _parseRpcError(error: string): string {
+  // 优先检查网络连接错误（Failed to fetch）
+  // 这是最常见的网络或RPC节点连接问题
+  if (/Failed to fetch/i.test(error)) {
+    // 如果同时包含 "An internal error was received"，说明是RPC节点内部错误
+    if (/An internal error was received/i.test(error)) {
+      return 'RPC节点临时故障，请稍后重试或刷新页面';
+    }
+    // 单独的 "Failed to fetch" 通常是网络连接问题
+    return '网络连接失败，请检查网络连接后重试';
+  }
+
   // 优先检查 RPC 节点内部错误（错误码 -32603）
   // 这种错误通常是临时性的 RPC 节点问题，不是前端或合约问题
   if (/InternalRpcError/i.test(error) || /code.*-32603/i.test(error) || /Internal error/i.test(error)) {

@@ -15,7 +15,7 @@ export const ExtensionFactoryLpAbi = [
   },
   {
     "type": "function",
-    "name": "center",
+    "name": "CENTER_ADDRESS",
     "inputs": [],
     "outputs": [
       {
@@ -36,7 +36,7 @@ export const ExtensionFactoryLpAbi = [
         "internalType": "address"
       },
       {
-        "name": "joinTokenAddress",
+        "name": "joinLpTokenAddress",
         "type": "address",
         "internalType": "address"
       },
@@ -131,43 +131,19 @@ export const ExtensionFactoryLpAbi = [
   },
   {
     "type": "event",
-    "name": "ExtensionCreate",
+    "name": "CreateExtension",
     "inputs": [
       {
         "name": "extension",
         "type": "address",
-        "indexed": false,
+        "indexed": true,
         "internalType": "address"
       },
       {
         "name": "tokenAddress",
         "type": "address",
-        "indexed": false,
+        "indexed": true,
         "internalType": "address"
-      },
-      {
-        "name": "joinTokenAddress",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "waitingBlocks",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "govRatioMultiplier",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "minGovVotes",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
       }
     ],
     "anonymous": false

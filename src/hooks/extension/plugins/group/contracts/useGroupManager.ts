@@ -48,14 +48,14 @@ export const usePrecision = () => {
 /**
  * Hook for actionIds - 获取指定工厂和代币的 action ID 列表
  */
-export const useActionIds = (actionFactory: `0x${string}`, tokenAddress: `0x${string}`) => {
+export const useActionIds = (tokenAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIds',
-    args: [actionFactory, tokenAddress],
+    args: [tokenAddress],
     query: {
-      enabled: !!actionFactory && !!tokenAddress,
+      enabled: !!tokenAddress,
     },
   });
 
@@ -65,14 +65,14 @@ export const useActionIds = (actionFactory: `0x${string}`, tokenAddress: `0x${st
 /**
  * Hook for actionIdsAtIndex - 获取指定索引的 action ID
  */
-export const useActionIdsAtIndex = (actionFactory: `0x${string}`, tokenAddress: `0x${string}`, index: bigint) => {
+export const useActionIdsAtIndex = (tokenAddress: `0x${string}`, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIdsAtIndex',
-    args: [actionFactory, tokenAddress, index],
+    args: [tokenAddress, index],
     query: {
-      enabled: !!actionFactory && !!tokenAddress && index !== undefined,
+      enabled: !!tokenAddress && index !== undefined,
     },
   });
 
@@ -82,14 +82,14 @@ export const useActionIdsAtIndex = (actionFactory: `0x${string}`, tokenAddress: 
 /**
  * Hook for actionIdsCount - 获取 action ID 数量
  */
-export const useActionIdsCount = (actionFactory: `0x${string}`, tokenAddress: `0x${string}`) => {
+export const useActionIdsCount = (tokenAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIdsCount',
-    args: [actionFactory, tokenAddress],
+    args: [tokenAddress],
     query: {
-      enabled: !!actionFactory && !!tokenAddress,
+      enabled: !!tokenAddress,
     },
   });
 
@@ -99,14 +99,14 @@ export const useActionIdsCount = (actionFactory: `0x${string}`, tokenAddress: `0
 /**
  * Hook for actionIdsByGroupId - 获取指定组ID的 action ID 列表
  */
-export const useActionIdsByGroupId = (actionFactory: `0x${string}`, tokenAddress: `0x${string}`, groupId: bigint) => {
+export const useActionIdsByGroupId = (tokenAddress: `0x${string}`, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIdsByGroupId',
-    args: [actionFactory, tokenAddress, groupId],
+    args: [tokenAddress, groupId],
     query: {
-      enabled: !!actionFactory && !!tokenAddress && groupId !== undefined,
+      enabled: !!tokenAddress && groupId !== undefined,
     },
   });
 
@@ -116,19 +116,14 @@ export const useActionIdsByGroupId = (actionFactory: `0x${string}`, tokenAddress
 /**
  * Hook for actionIdsByGroupIdAtIndex - 获取指定索引的组 action ID
  */
-export const useActionIdsByGroupIdAtIndex = (
-  actionFactory: `0x${string}`,
-  tokenAddress: `0x${string}`,
-  groupId: bigint,
-  index: bigint,
-) => {
+export const useActionIdsByGroupIdAtIndex = (tokenAddress: `0x${string}`, groupId: bigint, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIdsByGroupIdAtIndex',
-    args: [actionFactory, tokenAddress, groupId, index],
+    args: [tokenAddress, groupId, index],
     query: {
-      enabled: !!actionFactory && !!tokenAddress && groupId !== undefined && index !== undefined,
+      enabled: !!tokenAddress && groupId !== undefined && index !== undefined,
     },
   });
 
@@ -138,18 +133,14 @@ export const useActionIdsByGroupIdAtIndex = (
 /**
  * Hook for actionIdsByGroupIdCount - 获取指定组的 action ID 数量
  */
-export const useActionIdsByGroupIdCount = (
-  actionFactory: `0x${string}`,
-  tokenAddress: `0x${string}`,
-  groupId: bigint,
-) => {
+export const useActionIdsByGroupIdCount = (tokenAddress: `0x${string}`, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIdsByGroupIdCount',
-    args: [actionFactory, tokenAddress, groupId],
+    args: [tokenAddress, groupId],
     query: {
-      enabled: !!actionFactory && !!tokenAddress && groupId !== undefined,
+      enabled: !!tokenAddress && groupId !== undefined,
     },
   });
 
@@ -157,44 +148,16 @@ export const useActionIdsByGroupIdCount = (
 };
 
 /**
- * Hook for votedGroupActions - 获取投票通过的链群行动
- */
-export const useVotedGroupActions = (actionFactory: `0x${string}`, tokenAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: GroupManagerAbi,
-    functionName: 'votedGroupActions',
-    args: [actionFactory, tokenAddress, round],
-    query: {
-      enabled: !!actionFactory && !!tokenAddress && round !== undefined,
-    },
-  });
-
-  const typedData = data as [bigint[], `0x${string}`[]] | undefined;
-
-  return {
-    actionIds: typedData ? typedData[0] : undefined,
-    extensions: typedData ? typedData[1] : undefined,
-    isPending,
-    error,
-  };
-};
-
-/**
  * Hook for hasActiveGroups - 检查账户是否有活跃链群
  */
-export const useHasActiveGroups = (
-  actionFactory: `0x${string}`,
-  tokenAddress: `0x${string}`,
-  account: `0x${string}`,
-) => {
+export const useHasActiveGroups = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'hasActiveGroups',
-    args: [actionFactory, tokenAddress, account],
+    args: [tokenAddress, account],
     query: {
-      enabled: !!actionFactory && !!tokenAddress && !!account,
+      enabled: !!tokenAddress && !!account,
     },
   });
 
@@ -326,20 +289,26 @@ export const useActiveGroupIdsByOwner = (extensionAddress: `0x${string}`, owner:
 // =====================
 
 /**
- * Hook for calculateJoinMaxAmount - 计算最大加入金额
+ * Hook for maxJoinAmount - 查询最大加入量
  */
-export const useCalculateJoinMaxAmount = (extensionAddress: `0x${string}`) => {
+export const useMaxJoinAmount = (extensionAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
-    functionName: 'calculateJoinMaxAmount',
+    functionName: 'maxJoinAmount',
     args: [extensionAddress],
     query: {
       enabled: !!extensionAddress,
     },
   });
 
-  return { maxAmount: safeToBigInt(data), isPending, error };
+  return { maxJoinAmount: safeToBigInt(data), isPending, error };
+};
+
+// 向后兼容：保留旧的 hook 名称，但内部调用新方法
+export const useCalculateJoinMaxAmount = (extensionAddress: `0x${string}`) => {
+  const result = useMaxJoinAmount(extensionAddress);
+  return { maxAmount: result.maxJoinAmount, isPending: result.isPending, error: result.error };
 };
 
 /**
@@ -360,16 +329,34 @@ export const useMaxVerifyCapacityByOwner = (extensionAddress: `0x${string}`, own
 };
 
 /**
- * Hook for totalStaked - 获取总质押量
+ * Hook for staked - 获取单个扩展的总质押量
  */
-export const useTotalStaked = (extensionAddress: `0x${string}`) => {
+export const useStaked = (extensionAddress: `0x${string}`) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GroupManagerAbi,
+    functionName: 'staked',
+    args: [extensionAddress],
+    query: {
+      enabled: !!extensionAddress,
+    },
+  });
+
+  return { staked: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for totalStaked - 获取指定代币的总质押量（全局统计，非单个扩展）
+ * @param tokenAddress 代币地址（不是 extensionAddress）
+ */
+export const useTotalStaked = (tokenAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'totalStaked',
-    args: [extensionAddress],
+    args: [tokenAddress],
     query: {
-      enabled: !!extensionAddress,
+      enabled: !!tokenAddress,
     },
   });
 
@@ -377,23 +364,20 @@ export const useTotalStaked = (extensionAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for totalStakedByActionIdByOwner - 获取指定所有者在指定行动的质押量
+ * Hook for stakedByOwner - 获取指定所有者在指定扩展的质押量
  */
-export const useTotalStakedByActionIdByOwner = (
-  extensionAddress: `0x${string}`,
-  owner: `0x${string}`,
-) => {
+export const useStakedByOwner = (extensionAddress: `0x${string}`, owner: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
-    functionName: 'totalStakedByActionIdByOwner',
+    functionName: 'stakedByOwner',
     args: [extensionAddress, owner],
     query: {
       enabled: !!extensionAddress && !!owner,
     },
   });
 
-  return { totalStaked: safeToBigInt(data), isPending, error };
+  return { stakedByOwner: safeToBigInt(data), isPending, error };
 };
 
 // =====================
@@ -416,7 +400,7 @@ export function useActivateGroup() {
     description: string,
     maxCapacity: bigint,
     minJoinAmount: bigint,
-    maxJoinAmount: bigint,
+    maxJoinAmount_: bigint,
     maxAccounts: bigint,
   ) => {
     console.log('提交 activateGroup 交易:', {
@@ -425,7 +409,7 @@ export function useActivateGroup() {
       description,
       maxCapacity,
       minJoinAmount,
-      maxJoinAmount,
+      maxJoinAmount: maxJoinAmount_,
       maxAccounts,
       isTukeMode,
     });
@@ -435,7 +419,7 @@ export function useActivateGroup() {
       description,
       maxCapacity,
       minJoinAmount,
-      maxJoinAmount,
+      maxJoinAmount_,
       maxAccounts,
     ]);
   };
@@ -517,7 +501,7 @@ export function useUpdateGroupInfo() {
     newDescription: string,
     newMaxCapacity: bigint,
     newMinJoinAmount: bigint,
-    newMaxJoinAmount: bigint,
+    newMaxJoinAmount_: bigint,
     newMaxAccounts: bigint,
   ) => {
     console.log('提交 updateGroupInfo 交易:', {
@@ -526,7 +510,7 @@ export function useUpdateGroupInfo() {
       newDescription,
       newMaxCapacity,
       newMinJoinAmount,
-      newMaxJoinAmount,
+      newMaxJoinAmount: newMaxJoinAmount_,
       newMaxAccounts,
       isTukeMode,
     });
@@ -536,7 +520,7 @@ export function useUpdateGroupInfo() {
       newDescription,
       newMaxCapacity,
       newMinJoinAmount,
-      newMaxJoinAmount,
+      newMaxJoinAmount_,
       newMaxAccounts,
     ]);
   };

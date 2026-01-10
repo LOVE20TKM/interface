@@ -3,7 +3,7 @@
  *
  * 功能：
  * 1. 查询指定扩展行动在指定轮次范围内的激励数据
- * 2. 使用 IExtensionAbi 标准接口（所有扩展都实现该接口）
+ * 2. 使用 IRewardAbi 标准接口（所有扩展都实现该接口）
  * 3. 批量查询优化性能
  *
  * 使用示例：
@@ -19,7 +19,7 @@
 
 import { useMemo } from 'react';
 import { useAccount, useReadContracts } from 'wagmi';
-import { IExtensionAbi } from '@/src/abis/IExtension';
+import { IRewardAbi } from '@/src/abis/IReward';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 /**
@@ -84,7 +84,7 @@ export const useExtensionActionRewardsByRounds = ({
     for (let round = startRound; round <= endRound; round++) {
       calls.push({
         address: extensionAddress,
-        abi: IExtensionAbi,
+        abi: IRewardAbi,
         functionName: 'rewardByAccount',
         args: [round, account],
       });

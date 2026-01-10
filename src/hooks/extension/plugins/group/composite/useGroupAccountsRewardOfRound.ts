@@ -15,8 +15,6 @@ export interface AccountRewardInfo {
 
 export interface UseGroupAccountsRewardOfRoundParams {
   extensionAddress: `0x${string}` | undefined;
-  tokenAddress: `0x${string}` | undefined;
-  actionId: bigint | undefined;
   round: bigint | undefined;
   groupId: bigint | undefined;
 }
@@ -36,8 +34,6 @@ export interface UseGroupAccountsRewardOfRoundResult {
  */
 export const useGroupAccountsRewardOfRound = ({
   extensionAddress,
-  tokenAddress,
-  actionId,
   round,
   groupId,
 }: UseGroupAccountsRewardOfRoundParams): UseGroupAccountsRewardOfRoundResult => {
@@ -48,8 +44,6 @@ export const useGroupAccountsRewardOfRound = ({
     error: accountsError,
   } = useAccountsByGroupIdByRound({
     extensionAddress: extensionAddress || '0x0',
-    tokenAddress: tokenAddress || '0x0',
-    actionId: actionId || BigInt(0),
     groupId: groupId || BigInt(0),
     round: round || BigInt(0),
   });

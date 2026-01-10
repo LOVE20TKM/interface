@@ -28,8 +28,6 @@ import {
 interface UseExtensionActionTabsParams {
   extensionAddress?: `0x${string}`; // 扩展合约地址
   isExtensionAction?: boolean; // 是否为扩展行动
-  tokenAddress?: `0x${string}`; // Token 合约地址（用于动态标签判断）
-  actionId?: bigint; // 行动 ID（用于动态标签判断）
   account?: `0x${string}`; // 当前用户地址（用于动态标签判断）
 }
 
@@ -81,7 +79,7 @@ const checkShowCondition = (
  * ```
  */
 export const useExtensionActionTabs = (params: UseExtensionActionTabsParams): UseExtensionActionTabsResult => {
-  const { extensionAddress, isExtensionAction, tokenAddress, actionId, account } = params;
+  const { extensionAddress, isExtensionAction, account } = params;
 
   // 获取扩展合约的 factory 地址
   const { factory: factoryAddress, isPending: isFactoryPending } = useExtensionFactory(
@@ -98,8 +96,7 @@ export const useExtensionActionTabs = (params: UseExtensionActionTabsParams): Us
 
   // 调用 GROUP_ACTION 的动态标签 hook
   const { tabs: groupActionDynamicTabs, isPending: isGroupActionPending } = useGroupActionDynamicTabs({
-    tokenAddress,
-    actionId,
+    extensionAddress,
     account,
     enabled: extensionType === ExtensionType.GROUP_ACTION,
   });

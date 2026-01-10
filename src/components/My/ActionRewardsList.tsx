@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 
 // 导入铸造 hooks
 import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
-import { useClaimRewardFromExtension } from '@/src/hooks/extension/base/contracts';
+import { useClaimReward } from '@/src/hooks/extension/base/contracts/useIReward';
 
 /**
  * 激励数据结构（兼容普通和扩展）
@@ -94,7 +94,7 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
     isConfirming: extensionConfirming,
     isConfirmed: extensionConfirmed,
     hash: extensionHash,
-  } = useClaimRewardFromExtension(extensionAddress);
+  } = useClaimReward((extensionAddress as `0x${string}`) ?? '');
 
   // ========== 统一状态管理 ==========
   const [mintingTarget, setMintingTarget] = useState<bigint | null>(null);

@@ -42,7 +42,6 @@ export interface UseMyLpActionDataResult {
   // 其他信息
   joinTokenAddress: `0x${string}` | undefined;
   govRatioMultiplier: bigint;
-  joinedValue: bigint;
 
   // 加载状态
   isPending: boolean;
@@ -90,7 +89,7 @@ export const useMyLpActionData = ({
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'totalJoinedAmount',
+        functionName: 'joinedAmount',
         args: [],
       },
       // 2. 获取治理比率乘数
@@ -100,42 +99,35 @@ export const useMyLpActionData = ({
         functionName: 'GOV_RATIO_MULTIPLIER',
         args: [],
       },
-      // 3. 获取加入值（用于计算激励占比）
+      // 3. 获取 Join Token 地址（即 LP Pair 地址）
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'joinedValue',
+        functionName: 'JOIN_TOKEN_ADDRESS',
         args: [],
       },
-      // 4. 获取 Join Token 地址（即 LP Pair 地址）
-      {
-        address: extensionAddress,
-        abi: ExtensionLpAbi,
-        functionName: 'joinTokenAddress',
-        args: [],
-      },
-      // 5. 获取用户的有效治理票数
+      // 4. 获取用户的有效治理票数
       {
         address: STAKE_CONTRACT_ADDRESS,
         abi: LOVE20StakeAbi,
         functionName: 'validGovVotes',
         args: [tokenAddress, account],
       },
-      // 6. 获取总治理票数
+      // 5. 获取总治理票数
       {
         address: STAKE_CONTRACT_ADDRESS,
         abi: LOVE20StakeAbi,
         functionName: 'govVotesNum',
         args: [tokenAddress],
       },
-      // 7. 获取需要等待的区块数
+      // 6. 获取需要等待的区块数
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
         functionName: 'WAITING_BLOCKS',
         args: [],
       },
-      // 8. 获取最小治理票数门槛
+      // 7. 获取最小治理票数门槛
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
@@ -155,8 +147,8 @@ export const useMyLpActionData = ({
 
   // 从第一批数据中获取 joinTokenAddress（即 LP pair 地址）
   const joinTokenAddress = useMemo(() => {
-    if (!data || !data[4]?.result) return undefined;
-    return data[4].result as `0x${string}`;
+    if (!data || !data[3]?.result) return undefined;
+    return data[3].result as `0x${string}`;
   }, [data]);
 
   // 解析数据
@@ -173,8 +165,8 @@ export const useMyLpActionData = ({
   }, [data]);
 
   const waitingBlocks = useMemo(() => {
-    if (!data || !data[7]?.result) return BigInt(0);
-    return BigInt(data[7].result.toString());
+    if (!data || !data[6]?.result) return BigInt(0);
+    return BigInt(data[6].result.toString());
   }, [data]);
 
   const exitableBlock = useMemo(() => {
@@ -194,24 +186,19 @@ export const useMyLpActionData = ({
     return BigInt(data[2].result.toString());
   }, [data]);
 
-  const joinedValue = useMemo(() => {
-    if (!data || !data[3]?.result) return BigInt(0);
-    return BigInt(data[3].result.toString());
+  const userGovVotes = useMemo(() => {
+    if (!data || !data[4]?.result) return BigInt(0);
+    return BigInt(data[4].result.toString());
   }, [data]);
 
-  const userGovVotes = useMemo(() => {
+  const totalGovVotes = useMemo(() => {
     if (!data || !data[5]?.result) return BigInt(0);
     return BigInt(data[5].result.toString());
   }, [data]);
 
-  const totalGovVotes = useMemo(() => {
-    if (!data || !data[6]?.result) return BigInt(0);
-    return BigInt(data[6].result.toString());
-  }, [data]);
-
   const minGovVotes = useMemo(() => {
-    if (!data || !data[8]?.result) return BigInt(0);
-    return BigInt(data[8].result.toString());
+    if (!data || !data[7]?.result) return BigInt(0);
+    return BigInt(data[7].result.toString());
   }, [data]);
 
   // 计算激励占比（0-1 的比例值）
@@ -301,7 +288,6 @@ export const useMyLpActionData = ({
     lpRatio,
     joinTokenAddress,
     govRatioMultiplier,
-    joinedValue,
     isPending: finalIsPending,
     error: error,
   };

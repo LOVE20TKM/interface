@@ -6,6 +6,3 @@
 
 export * from './useAccountRewardsOfRound';
 export * from './useActionAccounts';
-export * from './useActionIdsWithActiveGroupIdsByOwner';
-export * from './useActionGroupRecipientsData';
-

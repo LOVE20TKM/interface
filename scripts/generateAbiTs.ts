@@ -71,7 +71,7 @@ const peripheralFilesToConvert = ['LOVE20TokenViewer', 'LOVE20RoundViewer', 'LOV
 
 const groupFilesToConvert = ['LOVE20Group'];
 
-const extensionsCenterFilesToConvert = ['ExtensionCenter', 'IExtension', 'ExtensionFactoryBase'];
+const extensionsCenterFilesToConvert = ['ExtensionCenter', 'IExtension', 'IReward', 'ExtensionFactoryBase'];
 
 const extensionslpFilesToConvert = ['ExtensionFactoryLp', 'ExtensionLp'];
 

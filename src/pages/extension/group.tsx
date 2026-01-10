@@ -119,41 +119,13 @@ const ActionGroupPage: React.FC = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'detail':
-        return (
-          <_GroupDetail
-            actionId={actionId!}
-            actionInfo={actionInfo}
-            extensionAddress={extensionAddress}
-            groupId={groupIdBigInt}
-          />
-        );
-      case 'scores':
-        return (
-          <_GroupScores
-            actionId={actionId!}
-            actionInfo={actionInfo}
-            extensionAddress={extensionAddress}
-            groupId={groupIdBigInt}
-          />
-        );
-      case 'rewards':
-        return (
-          <_GroupRewards
-            actionId={actionId!}
-            actionInfo={actionInfo}
-            extensionAddress={extensionAddress}
-            groupId={groupIdBigInt}
-          />
-        );
+        return <_GroupDetail extensionAddress={extensionAddress} groupId={groupIdBigInt} />;
       case 'participants':
-        return (
-          <_GroupParticipants
-            actionId={actionId!}
-            actionInfo={actionInfo}
-            extensionAddress={extensionAddress}
-            groupId={groupIdBigInt}
-          />
-        );
+        return <_GroupParticipants extensionAddress={extensionAddress} groupId={groupIdBigInt} />;
+      case 'scores':
+        return <_GroupScores extensionAddress={extensionAddress} groupId={groupIdBigInt} />;
+      case 'rewards':
+        return <_GroupRewards extensionAddress={extensionAddress} groupId={groupIdBigInt} />;
       default:
         return null;
     }

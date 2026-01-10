@@ -15,7 +15,7 @@ export const ExtensionGroupServiceFactoryAbi = [
   },
   {
     "type": "function",
-    "name": "GROUP_ACTION_FACTORY_ADDRESS",
+    "name": "CENTER_ADDRESS",
     "inputs": [],
     "outputs": [
       {
@@ -28,7 +28,7 @@ export const ExtensionGroupServiceFactoryAbi = [
   },
   {
     "type": "function",
-    "name": "center",
+    "name": "GROUP_ACTION_FACTORY_ADDRESS",
     "inputs": [],
     "outputs": [
       {
@@ -129,7 +129,7 @@ export const ExtensionGroupServiceFactoryAbi = [
   },
   {
     "type": "event",
-    "name": "ExtensionCreate",
+    "name": "CreateExtension",
     "inputs": [
       {
         "name": "extension",

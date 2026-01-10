@@ -16,13 +16,13 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 // =====================
 
 /**
- * Hook for factory - 获取工厂地址
+ * Hook for FACTORY_ADDRESS - 获取工厂地址
  */
 export const useFactory = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
-    functionName: 'factory',
+    functionName: 'FACTORY_ADDRESS',
     query: {
       enabled: !!contractAddress,
     },
@@ -64,22 +64,6 @@ export const useInitialized = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for isJoinedValueCalculated - 检查加入值是否已计算
- */
-export const useIsJoinedValueCalculated = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionLpAbi,
-    functionName: 'isJoinedValueCalculated',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { isJoinedValueCalculated: data as boolean | undefined, isPending, error };
-};
-
-/**
  * Hook for joinInfo - 获取账户的加入信息
  */
 export const useJoinInfo = (contractAddress: `0x${string}`, account: `0x${string}`) => {
@@ -106,13 +90,13 @@ export const useJoinInfo = (contractAddress: `0x${string}`, account: `0x${string
 };
 
 /**
- * Hook for joinTokenAddress - 获取加入代币地址
+ * Hook for JOIN_TOKEN_ADDRESS - 获取加入代币地址
  */
 export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
-    functionName: 'joinTokenAddress',
+    functionName: 'JOIN_TOKEN_ADDRESS',
     query: {
       enabled: !!contractAddress,
     },
@@ -122,36 +106,36 @@ export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for joinedValue - 获取加入值
+ * Hook for joinedAmount - 获取加入值
  */
-export const useJoinedValue = (contractAddress: `0x${string}`) => {
+export const useJoinedAmount = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
-    functionName: 'joinedValue',
+    functionName: 'joinedAmount',
     query: {
       enabled: !!contractAddress,
     },
   });
 
-  return { joinedValue: safeToBigInt(data), isPending, error };
+  return { joinedAmount: safeToBigInt(data), isPending, error };
 };
 
 /**
- * Hook for joinedValueByAccount - 获取账户的加入值
+ * Hook for joinedAmountByAccount - 获取账户的加入值
  */
-export const useJoinedValueByAccount = (contractAddress: `0x${string}`, account: `0x${string}`) => {
+export const useJoinedAmountByAccount = (contractAddress: `0x${string}`, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
-    functionName: 'joinedValueByAccount',
+    functionName: 'joinedAmountByAccount',
     args: [account],
     query: {
       enabled: !!contractAddress && !!account,
     },
   });
 
-  return { joinedValueByAccount: safeToBigInt(data), isPending, error };
+  return { joinedAmountByAccount: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -210,35 +194,19 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
 };
 
 /**
- * Hook for tokenAddress - 获取代币地址
+ * Hook for TOKEN_ADDRESS - 获取代币地址
  */
 export const useTokenAddress = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
-    functionName: 'tokenAddress',
+    functionName: 'TOKEN_ADDRESS',
     query: {
       enabled: !!contractAddress,
     },
   });
 
   return { tokenAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for totalJoinedAmount - 获取总加入数量
- */
-export const useTotalJoinedAmount = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionLpAbi,
-    functionName: 'totalJoinedAmount',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { totalJoinedAmount: safeToBigInt(data), isPending, error };
 };
 
 /**

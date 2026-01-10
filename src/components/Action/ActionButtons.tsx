@@ -8,11 +8,10 @@ import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 interface ActionButtonsProps {
   isJoined: boolean;
   actionId: bigint;
-  userJoinedAmount?: bigint;
   isPending?: boolean;
 }
 
-export default function ActionButtons({ isJoined, actionId, userJoinedAmount, isPending = false }: ActionButtonsProps) {
+export default function ActionButtons({ isJoined, actionId, isPending = false }: ActionButtonsProps) {
   const { token } = useContext(TokenContext) || {};
 
   // 获取当前轮次

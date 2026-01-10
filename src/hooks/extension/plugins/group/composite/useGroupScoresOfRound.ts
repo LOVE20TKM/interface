@@ -17,8 +17,6 @@ export interface AccountScoreInfo {
 
 export interface UseGroupScoresOfRoundParams {
   extensionAddress: `0x${string}` | undefined;
-  tokenAddress: `0x${string}` | undefined;
-  actionId: bigint | undefined;
   round: bigint | undefined;
   groupId: bigint | undefined;
 }
@@ -38,8 +36,6 @@ export interface UseGroupScoresOfRoundResult {
  */
 export const useGroupScoresOfRound = ({
   extensionAddress,
-  tokenAddress,
-  actionId,
   round,
   groupId,
 }: UseGroupScoresOfRoundParams): UseGroupScoresOfRoundResult => {
@@ -50,16 +46,14 @@ export const useGroupScoresOfRound = ({
     error: accountsError,
   } = useAccountsByGroupIdByRound({
     extensionAddress: extensionAddress || '0x0',
-    tokenAddress: tokenAddress || '0x0',
-    actionId: actionId || BigInt(0),
     groupId: groupId || BigInt(0),
     round: round || BigInt(0),
   });
 
   // 第二步：获取每个账户的原始得分和最终得分
-  // 新版合约的 originScoreByAccount 和 scoreByAccount 需要 tokenAddress, actionId, round, account 参数
+  // 新版合约的 originScoreByAccount 和 scoreByAccount 需要 extensionAddress, round, account 参数
   const scoresContracts = useMemo(() => {
-    if (!tokenAddress || actionId === undefined || round === undefined || accounts.length === 0) return [];
+    if (!extensionAddress || round === undefined || accounts.length === 0) return [];
 
     const contracts = [];
 
@@ -69,19 +63,19 @@ export const useGroupScoresOfRound = ({
         address: GROUP_VERIFY_CONTRACT_ADDRESS,
         abi: GroupVerifyAbi,
         functionName: 'originScoreByAccount',
-        args: [tokenAddress, actionId, round, account],
+        args: [extensionAddress, round, account],
       });
       // 获取最终得分
       contracts.push({
         address: GROUP_VERIFY_CONTRACT_ADDRESS,
         abi: GroupVerifyAbi,
         functionName: 'scoreByAccount',
-        args: [tokenAddress, actionId, round, account],
+        args: [extensionAddress, round, account],
       });
     }
 
     return contracts;
-  }, [tokenAddress, actionId, round, accounts]);
+  }, [extensionAddress, round, accounts]);
 
   const {
     data: scoresData,
@@ -90,7 +84,7 @@ export const useGroupScoresOfRound = ({
   } = useReadContracts({
     contracts: scoresContracts as any,
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined && scoresContracts.length > 0,
+      enabled: !!extensionAddress && round !== undefined && scoresContracts.length > 0,
     },
   });
 

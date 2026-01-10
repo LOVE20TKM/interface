@@ -51,7 +51,7 @@ export default function _RewardDistributionByGroupDialog({
   onOpenChange,
 }: _RewardDistributionByGroupDialogProps) {
   // 获取二次分配明细数据
-  const { addrs, basisPoints, amounts, ownerAmount, isPending, error } = useRewardDistribution(
+  const { addrs, ratios, amounts, ownerAmount, isPending, error } = useRewardDistribution(
     extensionAddress as `0x${string}`,
     round as bigint,
     verifier,
@@ -121,9 +121,9 @@ export default function _RewardDistributionByGroupDialog({
               <TableBody>
                 {/* 接收地址列表 */}
                 {addrs.map((addr, index) => {
-                  const basisPoint = basisPoints?.[index] || BigInt(0);
+                  const ratio = ratios?.[index] || BigInt(0);
                   const amount = amounts?.[index] || BigInt(0);
-                  const percentage = basisPoint ? Number(basisPoint) / 1e16 : 0; // wei 转百分比
+                  const percentage = ratio ? Number(ratio) / 1e16 : 0; // wei 转百分比
 
                   return (
                     <TableRow key={`${addr}_${index}`}>
@@ -160,7 +160,7 @@ export default function _RewardDistributionByGroupDialog({
                   </TableCell>
                   <TableCell className="px-3 py-2 text-right text-sm">
                     {formatPercentage(
-                      addrs.reduce((sum, _, idx) => sum + Number(basisPoints?.[idx] || BigInt(0)) / 1e16, 0) +
+                      addrs.reduce((sum, _, idx) => sum + Number(ratios?.[idx] || BigInt(0)) / 1e16, 0) +
                         ownerPercentage,
                     )}
                   </TableCell>

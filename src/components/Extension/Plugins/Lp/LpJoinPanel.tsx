@@ -21,7 +21,7 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
-import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
+import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite/useMyLpActionData';
 import { useJoin, useJoinTokenAddress } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLp';
 
 // contexts / types / etc
@@ -75,7 +75,6 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   // 获取 Lp 扩展数据（用于显示已参与信息）
   const {
     joinedAmount,
-    totalJoinedAmount,
     rewardRatio,
     userGovVotes,
     totalGovVotes,

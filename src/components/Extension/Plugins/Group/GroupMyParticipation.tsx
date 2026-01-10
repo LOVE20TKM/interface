@@ -28,12 +28,9 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
-import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import {
-  useExit,
-  useJoinInfo,
-  useTotalJoinedAmountByRound,
-} from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
+import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
+import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
+import { useExit, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -87,13 +84,6 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     groupId: groupId || BigInt(0),
   });
 
-  // 获取当前轮次的总参与量（用于计算仓位）
-  const {
-    totalJoinedAmount: currentRoundTotalAmount,
-    isPending: isPendingTotalAmount,
-    error: errorTotalAmount,
-  } = useTotalJoinedAmountByRound(extensionAddress, currentRound || BigInt(0));
-
   // 获取验证信息
   const verificationKeys = actionInfo?.body?.verificationKeys as string[] | undefined;
   const {
@@ -144,7 +134,6 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     if (errorRound) handleError(errorRound);
     if (errorJoinInfo) handleError(errorJoinInfo);
     if (errorDetail) handleError(errorDetail);
-    if (errorTotalAmount) handleError(errorTotalAmount);
     if (errorExit) handleError(errorExit);
     if (errorVerificationInfos) handleError(errorVerificationInfos);
     if (errorConstants) handleError(errorConstants);
@@ -153,7 +142,6 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     errorRound,
     errorJoinInfo,
     errorDetail,
-    errorTotalAmount,
     errorExit,
     errorVerificationInfos,
     errorConstants,
@@ -161,14 +149,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     handleError,
   ]);
 
-  if (
-    isPendingRound ||
-    isPendingJoinInfo ||
-    isPendingDetail ||
-    isPendingTotalAmount ||
-    isPendingConstants ||
-    isPendingJoined
-  ) {
+  if (isPendingRound || isPendingJoinInfo || isPendingDetail || isPendingConstants || isPendingJoined) {
     return (
       <div className="bg-white rounded-lg p-8">
         <div className="text-center">

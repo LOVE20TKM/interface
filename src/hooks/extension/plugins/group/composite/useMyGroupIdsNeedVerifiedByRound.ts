@@ -2,10 +2,10 @@
  * 获取账户在指定轮次内所有待验证的链群信息 Hook
  *
  * 功能：
- * 1. 使用 GroupManager.votedGroupActions 获取当轮有投票且有激活链群的行动列表
- * 2. 批量调用 activeGroupIdsByOwner 获取每个行动下账户拥有的激活链群NFT列表
+ * 1. 使用 ExtensionGroupActionFactory.votedGroupActions 获取当轮有投票且有激活链群的行动列表及扩展地址
+ * 2. 批量调用 activeGroupIdsByOwner 获取每个扩展地址下账户拥有的激活链群NFT列表
  * 3. 批量调用 ExtensionGroupAction.isVerified 检查每个链群是否已验证
- * 4. 批量调用 ExtensionGroupAction.accountCountByGroupIdByRound 获取每个链群的账户数量
+ * 4. 批量调用 ExtensionGroupAction.accountsByGroupIdByRoundCount 获取每个链群的账户数量
  * 5. 当账户数量为 0 时，自动将 isVerified 设为 true（因为不需要验证）
  *
  * 性能优化：
@@ -120,15 +120,15 @@ export function useMyGroupIdsNeedVerifiedByRound({
   // ==========================================
 
   const groupIdsContracts = useMemo(() => {
-    if (!tokenAddress || !account || !actionIds || actionIds.length === 0) return [];
+    if (!account || !extensions || extensions.length === 0) return [];
 
-    return actionIds.map((actionId) => ({
+    return extensions.map((extensionAddress) => ({
       address: GROUP_MANAGER_ADDRESS,
       abi: GroupManagerAbi,
       functionName: 'activeGroupIdsByOwner' as const,
-      args: [tokenAddress, actionId, account] as const,
+      args: [extensionAddress, account] as const,
     }));
-  }, [tokenAddress, account, actionIds]);
+  }, [account, extensions]);
 
   const {
     data: groupIdsData,
@@ -137,7 +137,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
   } = useReadContracts({
     contracts: groupIdsContracts as any,
     query: {
-      enabled: !!tokenAddress && !!account && !!actionIds && actionIds.length > 0,
+      enabled: !!account && !!extensions && extensions.length > 0,
     },
   });
 
@@ -167,55 +167,54 @@ export function useMyGroupIdsNeedVerifiedByRound({
   }, [actionIds, extensions, groupIdsData]);
 
   // ==========================================
-  // 步骤5：批量检查验证状态
+  // 步骤5：批量检查验证状态和账户数量（合并为一次调用）
   // ==========================================
+  const combinedContracts = useMemo(() => {
+    if (round === undefined || groupTuples.length === 0) return [];
 
-  // 新版合约 isVerified 需要 tokenAddress, actionId, round, groupId 参数，移到 GroupVerify 合约
-  const isVerifiedContracts = useMemo(() => {
-    if (!tokenAddress || round === undefined || groupTuples.length === 0) return [];
-
-    return groupTuples.map(({ actionId, groupId }) => ({
+    // 先添加所有 isVerified 调用
+    const isVerifiedContracts = groupTuples.map(({ extensionAddress, groupId }) => ({
       address: GROUP_VERIFY_ADDRESS,
       abi: GroupVerifyAbi,
       functionName: 'isVerified' as const,
-      args: [tokenAddress, actionId, round, groupId] as const,
+      args: [extensionAddress, round, groupId] as const,
     }));
-  }, [tokenAddress, round, groupTuples]);
 
-  const {
-    data: isVerifiedData,
-    isPending: isVerifiedPending,
-    error: isVerifiedError,
-  } = useReadContracts({
-    contracts: isVerifiedContracts as any,
-    query: {
-      enabled: round !== undefined && groupTuples.length > 0,
-    },
-  });
-
-  // 批量读取 accountCountByGroupIdByRound
-  // 新版合约 accountCountByGroupIdByRound 需要 tokenAddress, actionId, groupId, round 参数，移到 GroupJoin 合约
-  const accountCountContracts = useMemo(() => {
-    if (!tokenAddress || round === undefined || groupTuples.length === 0) return [];
-
-    return groupTuples.map(({ actionId, groupId }) => ({
+    // 再添加所有 accountsByGroupIdByRoundCount 调用
+    const accountCountContracts = groupTuples.map(({ extensionAddress, groupId }) => ({
       address: GROUP_JOIN_ADDRESS,
       abi: GroupJoinAbi,
-      functionName: 'accountCountByGroupIdByRound' as const,
-      args: [tokenAddress, actionId, groupId, round] as const,
+      functionName: 'accountsByGroupIdByRoundCount' as const,
+      args: [extensionAddress, round, groupId] as const,
     }));
-  }, [tokenAddress, round, groupTuples]);
+
+    // 合并两个数组
+    return [...isVerifiedContracts, ...accountCountContracts];
+  }, [round, groupTuples]);
 
   const {
-    data: accountCountData,
-    isPending: isAccountCountPending,
-    error: accountCountError,
+    data: combinedData,
+    isPending: isCombinedPending,
+    error: combinedError,
   } = useReadContracts({
-    contracts: accountCountContracts as any,
+    contracts: combinedContracts as any,
     query: {
       enabled: round !== undefined && groupTuples.length > 0,
     },
   });
+
+  // 从合并结果中分离出 isVerified 和 accountCount 数据
+  const isVerifiedData = useMemo(() => {
+    if (!combinedData || groupTuples.length === 0) return undefined;
+    // 前 groupTuples.length 个结果是 isVerified
+    return combinedData.slice(0, groupTuples.length);
+  }, [combinedData, groupTuples.length]);
+
+  const accountCountData = useMemo(() => {
+    if (!combinedData || groupTuples.length === 0) return undefined;
+    // 后 groupTuples.length 个结果是 accountCount
+    return combinedData.slice(groupTuples.length);
+  }, [combinedData, groupTuples.length]);
 
   // ==========================================
   // 步骤6：组装最终结果
@@ -271,24 +270,14 @@ export function useMyGroupIdsNeedVerifiedByRound({
     if (groupTuples.length === 0) return false;
 
     // 步骤3: 检查验证状态和账户数量
-    return isVerifiedPending || isAccountCountPending;
-  }, [
-    tokenAddress,
-    account,
-    round,
-    isVotedPending,
-    actionIds,
-    isGroupIdsPending,
-    groupTuples,
-    isVerifiedPending,
-    isAccountCountPending,
-  ]);
+    return isCombinedPending;
+  }, [tokenAddress, account, round, isVotedPending, actionIds, isGroupIdsPending, groupTuples, isCombinedPending]);
 
   // ==========================================
   // 步骤8：错误处理
   // ==========================================
 
-  const error = votedError || groupIdsError || isVerifiedError || accountCountError;
+  const error = votedError || groupIdsError || combinedError;
 
   // ==========================================
   // 步骤9：返回结果

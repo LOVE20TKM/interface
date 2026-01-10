@@ -30,7 +30,7 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "BASIS_POINTS_BASE",
+    "name": "DEFAULT_MAX_RECIPIENTS",
     "inputs": [],
     "outputs": [
       {
@@ -43,13 +43,13 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "DEFAULT_MAX_RECIPIENTS",
+    "name": "FACTORY_ADDRESS",
     "inputs": [],
     "outputs": [
       {
         "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -70,6 +70,32 @@ export const ExtensionGroupServiceAbi = [
   {
     "type": "function",
     "name": "GROUP_ACTION_TOKEN_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "PRECISION",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "TOKEN_ADDRESS",
     "inputs": [],
     "outputs": [
       {
@@ -119,19 +145,6 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "center",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "claimReward",
     "inputs": [
       {
@@ -158,20 +171,26 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "factory",
-    "inputs": [],
+    "name": "generatedActionReward",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [
       {
         "name": "",
-        "type": "address",
-        "internalType": "address"
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "generatedRewardByVerifier",
+    "name": "generatedActionRewardByVerifier",
     "inputs": [
       {
         "name": "round",
@@ -186,12 +205,7 @@ export const ExtensionGroupServiceAbi = [
     ],
     "outputs": [
       {
-        "name": "accountReward",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "totalReward",
+        "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -200,7 +214,7 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "groupIdsWithRecipients",
+    "name": "groupIdsByActionIdWithRecipients",
     "inputs": [
       {
         "name": "account",
@@ -268,19 +282,6 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "isJoinedValueConverted",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
     "name": "join",
     "inputs": [
       {
@@ -313,7 +314,7 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "joinedValue",
+    "name": "joinedAmount",
     "inputs": [],
     "outputs": [
       {
@@ -326,7 +327,7 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "joinedValueByAccount",
+    "name": "joinedAmountByAccount",
     "inputs": [
       {
         "name": "account",
@@ -339,6 +340,19 @@ export const ExtensionGroupServiceAbi = [
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "joinedAmountTokenAddress",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -375,7 +389,7 @@ export const ExtensionGroupServiceAbi = [
         "internalType": "address[]"
       },
       {
-        "name": "basisPoints",
+        "name": "ratios",
         "type": "uint256[]",
         "internalType": "uint256[]"
       }
@@ -409,7 +423,7 @@ export const ExtensionGroupServiceAbi = [
         "internalType": "address[]"
       },
       {
-        "name": "basisPoints",
+        "name": "ratios",
         "type": "uint256[]",
         "internalType": "uint256[]"
       }
@@ -535,7 +549,7 @@ export const ExtensionGroupServiceAbi = [
         "internalType": "address[]"
       },
       {
-        "name": "basisPoints",
+        "name": "ratios",
         "type": "uint256[]",
         "internalType": "uint256[]"
       },
@@ -548,67 +562,6 @@ export const ExtensionGroupServiceAbi = [
         "name": "ownerAmount",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "rewardDistributionAll",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupOwner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "distributions",
-        "type": "tuple[]",
-        "internalType": "struct IExtensionGroupService.GroupDistribution[]",
-        "components": [
-          {
-            "name": "actionId",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "groupId",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "groupReward",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "recipients",
-            "type": "address[]",
-            "internalType": "address[]"
-          },
-          {
-            "name": "basisPoints",
-            "type": "uint256[]",
-            "internalType": "uint256[]"
-          },
-          {
-            "name": "amounts",
-            "type": "uint256[]",
-            "internalType": "uint256[]"
-          },
-          {
-            "name": "ownerAmount",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
       }
     ],
     "stateMutability": "view"
@@ -633,26 +586,13 @@ export const ExtensionGroupServiceAbi = [
         "internalType": "address[]"
       },
       {
-        "name": "basisPoints",
+        "name": "ratios",
         "type": "uint256[]",
         "internalType": "uint256[]"
       }
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "tokenAddress",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "event",
@@ -755,7 +695,7 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "event",
-    "name": "RecipientsUpdate",
+    "name": "UpdateRecipients",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -794,7 +734,7 @@ export const ExtensionGroupServiceAbi = [
         "internalType": "address[]"
       },
       {
-        "name": "basisPoints",
+        "name": "ratios",
         "type": "uint256[]",
         "indexed": false,
         "internalType": "uint256[]"
@@ -834,17 +774,27 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "error",
-    "name": "InvalidBasisPoints",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidExtension",
     "inputs": []
   },
   {
     "type": "error",
     "name": "InvalidGroupActionTokenAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRatio",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRound",
     "inputs": []
   },
   {
@@ -894,7 +844,7 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "error",
-    "name": "ZeroBasisPoints",
+    "name": "ZeroRatio",
     "inputs": []
   }
 ] as const satisfies Abi;

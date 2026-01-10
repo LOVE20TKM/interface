@@ -9,9 +9,6 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 // Next.js
 import { useRouter } from 'next/router';
 
-// 类型
-import { ActionInfo } from '@/src/types/love20types';
-
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
 
@@ -30,13 +27,11 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 interface GroupParticipantsProps {
-  actionId: bigint;
-  actionInfo: ActionInfo;
   extensionAddress: `0x${string}`;
   groupId: bigint;
 }
 
-const _GroupParticipants: React.FC<GroupParticipantsProps> = ({ actionId, actionInfo, extensionAddress, groupId }) => {
+const _GroupParticipants: React.FC<GroupParticipantsProps> = ({ extensionAddress, groupId }) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
 
@@ -63,8 +58,6 @@ const _GroupParticipants: React.FC<GroupParticipantsProps> = ({ actionId, action
     error: errorAccounts,
   } = useAccountInfosByGroupIdByRound({
     extensionAddress: extensionAddress as `0x${string}`,
-    tokenAddress: token?.address as `0x${string}`,
-    actionId,
     groupId,
     round: selectedRound,
   });

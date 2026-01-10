@@ -35,8 +35,8 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 export interface RecipientsDistribution {
   /** 接收地址列表 */
   addrs: `0x${string}`[];
-  /** 对应的基点数列表 */
-  basisPoints: bigint[];
+  /** 对应的分配比例列表 */
+  ratios: bigint[];
   /** 对应的金额列表 */
   amounts: bigint[];
   /** 链群服务者保留的金额 */
@@ -144,7 +144,7 @@ export function useRecipientsDetailByAccountByRound({
     return actionIds.map((actionId) => ({
       address: extensionAddress,
       abi: ExtensionGroupServiceAbi,
-      functionName: 'groupIdsWithRecipients' as const,
+      functionName: 'groupIdsByActionIdWithRecipients' as const,
       args: [account, actionId, round] as const,
     }));
   }, [extensionAddress, account, round, actionIds]);
@@ -233,7 +233,7 @@ export function useRecipientsDetailByAccountByRound({
     actionGroupPairs.forEach(({ actionId, groupId }, index) => {
       const result = distributionData[index];
       if (result?.status === 'success' && result.result) {
-        const [addrs, basisPoints, amounts, ownerAmount] = result.result as [
+        const [addrs, ratios, amounts, ownerAmount] = result.result as [
           `0x${string}`[],
           bigint[],
           bigint[],
@@ -242,7 +242,7 @@ export function useRecipientsDetailByAccountByRound({
         const key = `${actionId}_${groupId}`;
         map.set(key, {
           addrs,
-          basisPoints,
+          ratios,
           amounts,
           ownerAmount: safeToBigInt(ownerAmount),
         });

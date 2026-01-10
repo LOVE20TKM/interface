@@ -16,13 +16,13 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACT
 // =====================
 
 /**
- * Hook for center - 获取 ExtensionCenter 地址
+ * Hook for CENTER_ADDRESS - 获取 ExtensionCenter 地址
  */
 export const useFactoryCenter = (factoryAddress?: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress || CONTRACT_ADDRESS,
     abi: ExtensionFactoryLpAbi,
-    functionName: 'center',
+    functionName: 'CENTER_ADDRESS',
     query: {
       enabled: !!(factoryAddress || CONTRACT_ADDRESS),
     },

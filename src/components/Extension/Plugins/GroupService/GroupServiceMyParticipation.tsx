@@ -12,17 +12,17 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 import { toast } from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 
 import {
-  useJoinedValueByAccount,
-  useJoinedValue,
+  useJoinedAmountByAccount,
+  useJoinedAmount,
   useExit,
 } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 
-import { useActionGroupRecipientsData } from '@/src/hooks/extension/plugins/group-service/composite';
+import { useActionGroupRecipientsData } from '@/src/hooks/extension/plugins/group-service/composite/useActionGroupRecipientsData';
 import { useExtensionParams } from '@/src/hooks/extension/plugins/group-service/composite/useExtensionParams';
+import { useSymbol } from '@/src/hooks/contracts/useLOVE20Token';
 
 import _GroupServiceSetRecipients from './_GroupServiceSetRecipients';
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -45,17 +45,17 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   } = useIsAccountJoined(token?.address as `0x${string}`, actionId ?? BigInt(0), account as `0x${string}`);
 
   // Data Hooks
-  const { joinedValueByAccount, isPending: isJoinedPending } = useJoinedValueByAccount(
+  const { joinedAmountByAccount, isPending: isJoinedPending } = useJoinedAmountByAccount(
     extensionAddress,
     account as `0x${string}`,
   );
-  const { joinedValue: totalJoinedValue } = useJoinedValue(extensionAddress);
+  const { joinedAmount: totalJoinedAmount } = useJoinedAmount(extensionAddress);
 
   // Get extension params to fetch groupActionTokenAddress
   const { groupActionTokenAddress } = useExtensionParams(extensionAddress);
 
-  // Get current round for fetching recipients data
-  const { currentRound } = useCurrentRound();
+  // Get symbol for groupActionTokenAddress
+  const { symbol: groupActionTokenSymbol } = useSymbol(groupActionTokenAddress || ('0x' as `0x${string}`));
 
   // Fetch all action-group recipients data
   const {
@@ -64,7 +64,6 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
     error: recipientsError,
   } = useActionGroupRecipientsData({
     tokenAddress: groupActionTokenAddress,
-    verifyRound: currentRound,
     account: account as `0x${string}`,
     extensionAddress,
   });
@@ -77,7 +76,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
     groupId: bigint;
     groupName: string | undefined;
     addrs?: `0x${string}`[];
-    basisPoints?: bigint[];
+    ratios?: bigint[];
   } | null>(null);
 
   const handleEditClick = (action: any, group: any) => {
@@ -87,7 +86,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
       groupId: group.groupId,
       groupName: group.groupName,
       addrs: group.addrs,
-      basisPoints: group.basisPoints,
+      ratios: group.ratios,
     });
     setEditDialogOpen(true);
   };
@@ -139,13 +138,13 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   }, [isExitConfirmed]);
 
   // Calculations
-  const myParticipation = joinedValueByAccount || BigInt(0);
-  const totalParticipation = totalJoinedValue || BigInt(1); // avoid div by zero
+  const myParticipation = joinedAmountByAccount || BigInt(0);
+  const totalParticipation = totalJoinedAmount || BigInt(1); // avoid div by zero
 
   // Calculate percentage
   let percentage = 0;
-  if (myParticipation > 0 && totalJoinedValue && totalJoinedValue > 0) {
-    percentage = Number((BigInt(myParticipation) * BigInt(10000)) / totalJoinedValue) / 100;
+  if (myParticipation > 0 && totalJoinedAmount && totalJoinedAmount > 0) {
+    percentage = Number((BigInt(myParticipation) * BigInt(10000)) / totalJoinedAmount) / 100;
   }
 
   const displayPercentage = formatPercentage(percentage);
@@ -190,12 +189,14 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
         <div className="stat place-items-center flex flex-col justify-center">
           <div className="stat-title">我的参与</div>
           <div className="stat-value text-2xl text-secondary">{formatTokenAmount(myParticipation)}</div>
-          <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">{token?.symbol}</div>
+          <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
+            {groupActionTokenSymbol || '-'}
+          </div>
         </div>
 
         {/* 所占比例 */}
         <div className="stat place-items-center flex flex-col justify-center">
-          <div className="stat-title">占总服务量</div>
+          <div className="stat-title">占总参与量</div>
           <div className="stat-value text-2xl text-secondary">{displayPercentage}</div>
           <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
             总量 {formatTokenAmount(totalParticipation)}
@@ -257,13 +258,13 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                           <span>{group.groupName || `链群 #${group.groupId}`}</span>
                         </div>
                         <Button
-                          className="gap-0 px-2"
-                          variant="outline"
+                          className="gap-0 px-2 text-secondary"
+                          variant="link"
                           size="sm"
                           onClick={() => handleEditClick(action, group)}
                         >
                           <Edit className="w-3 h-3 mr-1" />
-                          编辑分配地址
+                          编辑分配地址 &gt;&gt;
                         </Button>
                       </div>
 
@@ -286,7 +287,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                                   </div>
                                 </td>
                                 <td className="py-1 px-1 text-right font-mono text-secondary">
-                                  {group.basisPoints ? (Number(group.basisPoints[idx]) / 1e16).toFixed(2) : '0.00'}%
+                                  {group.ratios ? (Number(group.ratios[idx]) / 1e16).toFixed(2) : '0.00'}%
                                 </td>
                               </tr>
                             ))}
@@ -313,7 +314,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
           groupId={editingGroup.groupId}
           groupName={editingGroup.groupName}
           currentAddrs={editingGroup.addrs}
-          currentBasisPoints={editingGroup.basisPoints}
+          currentRatios={editingGroup.ratios}
           open={editDialogOpen}
           onOpenChange={handleDialogOpenChange}
           onSuccess={() => {

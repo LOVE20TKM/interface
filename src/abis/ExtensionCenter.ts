@@ -334,6 +334,30 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "function",
+    "name": "extensionTokenActionPair",
+    "inputs": [
+      {
+        "name": "extensionAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "factory",
     "inputs": [
       {
@@ -392,6 +416,40 @@ export const ExtensionCenterAbi = [
         "name": "account",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isAccountJoinedByRound",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -708,7 +766,7 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "event",
-    "name": "BindAction",
+    "name": "RegisterAction",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -739,25 +797,6 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "event",
-    "name": "ExtensionDelegateSet",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "delegate",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "RemoveAccount",
     "inputs": [
       {
@@ -774,6 +813,25 @@ export const ExtensionCenterAbi = [
       },
       {
         "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SetExtensionDelegate",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "delegate",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -831,7 +889,7 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "error",
-    "name": "ActionAlreadyBoundToOtherAction",
+    "name": "ActionAlreadyRegisteredToOtherAction",
     "inputs": []
   },
   {
@@ -846,47 +904,22 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "error",
-    "name": "InvalidJoinAddress",
+    "name": "InvalidExtensionAddress",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidLaunchAddress",
+    "name": "InvalidRound",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidMintAddress",
+    "name": "InvalidRound",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidRandomAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidStakeAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidSubmitAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidUniswapV2FactoryAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidVerifyAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidVoteAddress",
+    "name": "InvalidRound",
     "inputs": []
   },
   {
@@ -897,6 +930,11 @@ export const ExtensionCenterAbi = [
   {
     "type": "error",
     "name": "OnlyUserOrExtensionOrDelegate",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RoundExceedsJoinRound",
     "inputs": []
   },
   {

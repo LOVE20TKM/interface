@@ -15,15 +15,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 import {
   useSetRecipients,
-  useBasisPointsBase,
+  usePrecision,
   useMaxRecipients,
 } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 import { useContractError } from '@/src/errors/useContractError';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import { isValidEthAddress, normalizeAddressInput } from '@/src/lib/addressUtils';
 
 // Schema - 优化验证，确保类型正确
 const recipientSchema = z.object({
-  address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, '无效的地址格式'),
+  address: z
+    .string()
+    .trim() // 自动去除前后空格
+    .regex(/^0x[a-fA-F0-9]{40}$/, '无效的地址格式'),
   basisPoints: z.coerce
     .number({ invalid_type_error: '百分比必须是数字' })
     .min(0, '百分比不能为负')
@@ -44,7 +48,7 @@ interface _GroupServiceSetRecipientsProps {
   groupId: bigint;
   groupName: string | undefined;
   currentAddrs?: `0x${string}`[];
-  currentBasisPoints?: bigint[];
+  currentRatios?: bigint[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -57,14 +61,14 @@ export default function _GroupServiceSetRecipients({
   groupId,
   groupName,
   currentAddrs,
-  currentBasisPoints,
+  currentRatios,
   open,
   onOpenChange,
   onSuccess,
 }: _GroupServiceSetRecipientsProps) {
   // Contracts
   const { setRecipients, isPending, isConfirming, isConfirmed, writeError } = useSetRecipients(extensionAddress);
-  const { basisPointsBase } = useBasisPointsBase(extensionAddress);
+  const { precision } = usePrecision(extensionAddress);
   const { maxRecipients } = useMaxRecipients(extensionAddress);
 
   // 用户输入的是百分比，最大值是 100
@@ -124,10 +128,10 @@ export default function _GroupServiceSetRecipients({
   // Initialize form with current data when dialog opens
   // 从合约读取的是 wei，需要转为百分比显示
   useEffect(() => {
-    if (open && currentAddrs && currentBasisPoints) {
+    if (open && currentAddrs && currentRatios) {
       const initialData = currentAddrs.map((addr, index) => ({
         address: addr,
-        basisPoints: Number(currentBasisPoints[index]) / 1e16, // wei 转百分比
+        basisPoints: Number(currentRatios[index]) / 1e16, // wei 转百分比
       }));
       form.reset({ recipients: initialData });
       // 重置成功回调标记
@@ -138,7 +142,7 @@ export default function _GroupServiceSetRecipients({
       // 重置成功回调标记
       hasCalledSuccessRef.current = false;
     }
-  }, [open, currentAddrs, currentBasisPoints, form]);
+  }, [open, currentAddrs, currentRatios, form]);
 
   const { handleError } = useContractError();
 
@@ -156,10 +160,30 @@ export default function _GroupServiceSetRecipients({
   }, [isConfirmed, onSuccess, onOpenChange]);
 
   const onSubmit = async (values: FormValues) => {
-    const addrs = values.recipients.map((r) => r.address as `0x${string}`);
+    // 格式化和验证地址
+    const normalizedAddrs: string[] = [];
+    const invalidAddressIndices: number[] = [];
+
+    values.recipients.forEach((r, index) => {
+      const normalized = normalizeAddressInput(r.address);
+      if (!normalized || !isValidEthAddress(normalized)) {
+        invalidAddressIndices.push(index);
+      } else {
+        normalizedAddrs.push(normalized);
+      }
+    });
+
+    // 检查是否有无效地址
+    if (invalidAddressIndices.length > 0) {
+      form.setError('root', { message: '存在无效的地址格式，请检查并修正所有地址（支持 0x、XE 或 TH 格式）' });
+      return;
+    }
+
+    // 使用格式化后的地址
+    const addrs = normalizedAddrs.map((addr) => addr as `0x${string}`);
 
     // 将百分比转为 wei (percentage = 20 → wei = 0.2 * 1e18)
-    const basisPoints = values.recipients.map((r) => {
+    const ratios = values.recipients.map((r) => {
       const percentage = r.basisPoints;
       const wei = BigInt(Math.floor(percentage * 1e16)); // 1e16 = 1e18 / 100
       return wei;
@@ -181,8 +205,20 @@ export default function _GroupServiceSetRecipients({
       return;
     }
 
+    // 检查每个地址的百分比是否都为 0
+    const zeroPercentageIndices = values.recipients
+      .map((r, index) => {
+        const percentage = Number(r.basisPoints);
+        return percentage === 0 || isNaN(percentage) ? index : -1;
+      })
+      .filter((index) => index !== -1);
+    if (zeroPercentageIndices.length > 0) {
+      form.setError('root', { message: '每个地址的百分比不能为 0，请为所有地址设置有效的百分比' });
+      return;
+    }
+
     // Call contract with actionId and groupId
-    await setRecipients(actionId, groupId, addrs, basisPoints);
+    await setRecipients(actionId, groupId, addrs, ratios);
   };
 
   // 实时计算总百分比（强制转换为数字类型，避免字符串拼接）
@@ -216,6 +252,19 @@ export default function _GroupServiceSetRecipients({
 
   const duplicateAddressIndices = getDuplicateAddresses();
   const hasDuplicateAddresses = duplicateAddressIndices.size > 0;
+
+  // 地址输入处理函数 - 在失去焦点时自动去除前后空格
+  const handleAddressBlur = useCallback(
+    (fieldOnChange: (value: any) => void) => (e: React.FocusEvent<HTMLInputElement>) => {
+      // 失去焦点时自动去除前后空格
+      const value = e.target.value;
+      const trimmed = value.trim();
+      if (trimmed !== value) {
+        fieldOnChange(trimmed);
+      }
+    },
+    [],
+  );
 
   // 百分比输入处理函数 - 限制输入值在合理范围内
   const handleBasisPointsChange = useCallback(
@@ -280,7 +329,6 @@ export default function _GroupServiceSetRecipients({
                 </TableHeader>
                 <TableBody>
                   {fields.map((field, index) => {
-                    const currentBasisPoints = form.watch(`recipients.${index}.basisPoints`);
                     // 计算当前输入框的最大值：剩余百分比 + 当前输入框的值
                     const otherBasisPointsSum = watchedRecipients.reduce(
                       (sum, r, i) => (i !== index ? sum + (Number(r.basisPoints) || 0) : sum),
@@ -301,6 +349,7 @@ export default function _GroupServiceSetRecipients({
                                   <Input
                                     placeholder="0x..."
                                     {...field}
+                                    onBlur={handleAddressBlur(field.onChange)}
                                     className={`font-mono text-xs sm:text-sm h-8 px-1 sm:px-2 ${
                                       isDuplicate ? 'border-red-500 focus-visible:ring-red-500' : ''
                                     }`}

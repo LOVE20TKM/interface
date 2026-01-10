@@ -32,7 +32,6 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
   // 获取扩展部署参数
   const {
     tokenAddress,
-    stakeTokenAddress,
     joinTokenAddress,
     activationStakeAmount,
     maxJoinAmountRatio,
@@ -41,9 +40,9 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
     error,
   } = useExtensionParams(extensionAddress);
 
-  // 获取质押代币符号
+  // 获取质押代币符号（质押代币就是 tokenAddress）
   const { symbol: stakeTokenSymbol, isPending: isStakeSymbolPending } = useSymbol(
-    stakeTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
+    tokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
   );
 
   // 获取加入代币符号
@@ -74,7 +73,7 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
 
   // 数据不完整
   if (
-    !stakeTokenAddress ||
+    !tokenAddress ||
     !joinTokenAddress ||
     activationStakeAmount === undefined ||
     maxJoinAmountRatio === undefined ||
@@ -108,7 +107,7 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
         <div className="md:max-w-2xl">
           <div className="text-sm font-bold mb-1">服务者质押代币地址:</div>
           <div className="flex items-center gap-2">
-            <AddressWithCopyButton address={stakeTokenAddress} showCopyButton={true} colorClassName="text-sm" />
+            <AddressWithCopyButton address={tokenAddress} showCopyButton={true} colorClassName="text-sm" />
             {stakeTokenSymbol && <span className="text-sm text-gray-600">({stakeTokenSymbol})</span>}
           </div>
         </div>

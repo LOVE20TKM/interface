@@ -39,7 +39,6 @@ export default function ActionInfoPage() {
     actionInfo,
     participantCount,
     totalAmount,
-    userJoinedAmount,
     isJoined,
     currentRound,
     isExtensionAction,
@@ -57,8 +56,6 @@ export default function ActionInfoPage() {
   const { tabs: extensionTabs } = useExtensionActionTabs({
     extensionAddress,
     isExtensionAction,
-    tokenAddress: token?.address,
-    actionId,
     account,
   });
 
@@ -233,7 +230,6 @@ export default function ActionInfoPage() {
               participantCount={participantCount}
               totalAmount={totalAmount}
               isJoined={isJoined}
-              userJoinedAmount={userJoinedAmount}
               isPending={isPending}
             />
           )}

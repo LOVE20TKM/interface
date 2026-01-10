@@ -16,11 +16,6 @@ export const ExtensionGroupActionAbi = [
         "internalType": "address"
       },
       {
-        "name": "stakeTokenAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "joinTokenAddress_",
         "type": "address",
         "internalType": "address"
@@ -52,6 +47,19 @@ export const ExtensionGroupActionAbi = [
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "FACTORY_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -97,7 +105,7 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "STAKE_TOKEN_ADDRESS",
+    "name": "TOKEN_ADDRESS",
     "inputs": [],
     "outputs": [
       {
@@ -136,19 +144,6 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "center",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "claimReward",
     "inputs": [
       {
@@ -168,13 +163,24 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "factory",
-    "inputs": [],
-    "outputs": [
+    "name": "generatedActionRewardByVerifier",
+    "inputs": [
       {
-        "name": "",
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifier",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -205,30 +211,6 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "generatedRewardByVerifier",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "verifier",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "initializeIfNeeded",
     "inputs": [],
     "outputs": [],
@@ -249,20 +231,7 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "isJoinedValueConverted",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "joinedValue",
+    "name": "joinedAmount",
     "inputs": [],
     "outputs": [
       {
@@ -275,7 +244,7 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "joinedValueByAccount",
+    "name": "joinedAmountByAccount",
     "inputs": [
       {
         "name": "account",
@@ -288,6 +257,19 @@ export const ExtensionGroupActionAbi = [
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "joinedAmountTokenAddress",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -341,17 +323,35 @@ export const ExtensionGroupActionAbi = [
     "stateMutability": "view"
   },
   {
-    "type": "function",
-    "name": "tokenAddress",
-    "inputs": [],
-    "outputs": [
+    "type": "event",
+    "name": "BurnUnclaimedReward",
+    "inputs": [
       {
-        "name": "",
+        "name": "tokenAddress",
         "type": "address",
+        "indexed": true,
         "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
-    "stateMutability": "view"
+    "anonymous": false
   },
   {
     "type": "event",
@@ -380,37 +380,6 @@ export const ExtensionGroupActionAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "UnclaimedRewardBurn",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
       },
       {
         "name": "amount",

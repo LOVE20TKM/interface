@@ -8,7 +8,7 @@ import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
-import { useLpVerifyHistoryData } from '@/src/hooks/extension/plugins/lp/composite';
+import { useLpVerifyHistoryData } from '@/src/hooks/extension/plugins/lp/composite/useLpVerifyHistoryData';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 
 // my components

@@ -4,12 +4,11 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
-import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
+import { useAccounts } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 
-const CENTER_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
 const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
 
 export interface GroupServiceParticipant {
@@ -51,51 +50,28 @@ export const useGroupServiceActionAccounts = ({
   actionId,
 }: UseGroupServiceActionAccountsParams): UseGroupServiceActionAccountsResult => {
   // ==========================================
-  // 步骤 1: 批量获取基础数据
+  // 步骤 1: 获取所有参与者地址
   // ==========================================
-  const basicContracts = useMemo(() => {
-    if (!extensionAddress || !tokenAddress || actionId === undefined) return [];
-
-    return [
-      // 获取所有参与者地址
-      {
-        address: CENTER_CONTRACT_ADDRESS,
-        abi: ExtensionCenterAbi,
-        functionName: 'accounts',
-        args: [tokenAddress, actionId],
-      },
-    ];
-  }, [extensionAddress, tokenAddress, actionId]);
-
   const {
-    data: basicData,
+    accounts,
     isPending: isBasicPending,
     error: basicError,
-  } = useReadContracts({
-    contracts: basicContracts as any,
-    query: {
-      enabled: !!extensionAddress && !!tokenAddress && actionId !== undefined && basicContracts.length > 0,
-    },
-  });
+  } = useAccounts(tokenAddress as `0x${string}`, actionId as bigint);
 
-  // 解析基础数据
-  const accounts = useMemo(() => {
-    if (!basicData || basicData.length === 0) {
-      return [] as `0x${string}`[];
-    }
-
-    return (basicData[0]?.result as `0x${string}`[]) || [];
-  }, [basicData]);
+  // 处理 accounts 可能为 undefined 的情况
+  const accountsList = useMemo(() => {
+    return accounts || [];
+  }, [accounts]);
 
   // ==========================================
   // 步骤 2: 批量获取每个参与者的详细数据（joinInfo 和 activeGroupIdsByOwner）
   // ==========================================
   const detailContracts = useMemo(() => {
-    if (!extensionAddress || !tokenAddress || actionId === undefined || accounts.length === 0) return [];
+    if (!extensionAddress || accountsList.length === 0) return [];
 
     const contracts = [];
 
-    for (const account of accounts) {
+    for (const account of accountsList) {
       // 调用 1: 获取 joinInfo
       contracts.push({
         address: extensionAddress,
@@ -109,12 +85,12 @@ export const useGroupServiceActionAccounts = ({
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
         functionName: 'activeGroupIdsByOwner',
-        args: [tokenAddress, actionId, account],
+        args: [extensionAddress, account],
       });
     }
 
     return contracts;
-  }, [extensionAddress, tokenAddress, actionId, accounts]);
+  }, [extensionAddress, accountsList]);
 
   const {
     data: detailData,
@@ -127,20 +103,17 @@ export const useGroupServiceActionAccounts = ({
     },
   });
 
-  console.log('detailData', detailData);
-  console.log('detailContracts', detailContracts);
-
   // ==========================================
   // 步骤 3: 提取所有唯一的 groupIds 并获取链群名称
   // ==========================================
   const allGroupIds = useMemo(() => {
-    if (!detailData || accounts.length === 0) {
+    if (!detailData || accountsList.length === 0) {
       return [];
     }
 
     const uniqueGroupIds = new Set<bigint>();
 
-    for (let i = 0; i < accounts.length; i++) {
+    for (let i = 0; i < accountsList.length; i++) {
       const baseIndex = i * 2;
       const groupIdsResult = detailData[baseIndex + 1];
 
@@ -151,7 +124,7 @@ export const useGroupServiceActionAccounts = ({
     }
 
     return Array.from(uniqueGroupIds);
-  }, [detailData, accounts]);
+  }, [detailData, accountsList]);
 
   // 使用缓存 hook 获取链群名称
   const {
@@ -167,7 +140,7 @@ export const useGroupServiceActionAccounts = ({
   // 步骤 4: 组合参与者数据
   // ==========================================
   const participants = useMemo(() => {
-    if (!detailData || accounts.length === 0) {
+    if (!detailData || accountsList.length === 0) {
       return [] as GroupServiceParticipant[];
     }
 
@@ -180,8 +153,8 @@ export const useGroupServiceActionAccounts = ({
     const result: GroupServiceParticipant[] = [];
 
     // 处理每个参与者
-    for (let i = 0; i < accounts.length; i++) {
-      const accountAddress = accounts[i];
+    for (let i = 0; i < accountsList.length; i++) {
+      const accountAddress = accountsList[i];
       const baseIndex = i * 2;
 
       // 解析 joinedRound (CRITICAL: GroupService 的 joinInfo 返回单个 uint256 值，不是元组)
@@ -210,10 +183,10 @@ export const useGroupServiceActionAccounts = ({
     }
 
     return result;
-  }, [detailData, accounts, allGroupIds, isGroupNamesPending, groupNameMap]);
+  }, [detailData, accountsList, allGroupIds, isGroupNamesPending, groupNameMap]);
 
   // 如果基础数据已加载完成，且没有参与者，则不需要等待详细数据
-  const shouldWaitForDetail = accounts && accounts.length > 0;
+  const shouldWaitForDetail = accountsList && accountsList.length > 0;
   const shouldWaitForGroupNames = allGroupIds.length > 0 && isGroupNamesPending;
 
   const isPending = isBasicPending || (shouldWaitForDetail && isDetailPending) || shouldWaitForGroupNames;

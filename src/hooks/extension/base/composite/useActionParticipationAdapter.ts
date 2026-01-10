@@ -17,7 +17,6 @@
  *   {
  *     participantCount: basicData.participantCount,
  *     totalAmount: basicData.totalAmount,
- *     userJoinedAmount: basicData.userJoinedAmount,
  *     isJoined: basicData.isJoined,
  *   }
  * );
@@ -42,8 +41,6 @@ export interface CoreParticipationData {
   participantCount?: bigint;
   /** 总参与金额 */
   totalAmount?: bigint;
-  /** 用户参与金额 */
-  userJoinedAmount?: bigint;
   /** 用户是否已参与 */
   isJoined?: boolean;
 }
@@ -62,8 +59,6 @@ export interface ActionParticipationData {
   participantCount: bigint | undefined;
   /** 总参与金额 */
   totalAmount: bigint | undefined;
-  /** 用户参与金额 */
-  userJoinedAmount: bigint | undefined;
   /** 用户是否已参与 */
   isJoined: boolean;
   /** 加载状态 */
@@ -147,7 +142,6 @@ export function useActionParticipationAdapter(
       totalAmount: isExtensionAction ? extensionData.totalAmount : coreData?.totalAmount,
 
       // 用户参与状态（扩展优先，回退到 core）
-      userJoinedAmount: isExtensionAction ? extensionData.userJoinedAmount : coreData?.userJoinedAmount,
       isJoined: isExtensionAction ? extensionData.isJoined : coreData?.isJoined ?? false,
 
       // 加载状态（包括：扩展判断、扩展数据查询）

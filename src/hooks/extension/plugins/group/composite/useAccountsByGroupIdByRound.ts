@@ -3,8 +3,8 @@
  *
  * 职责：
  * - 获取指定轮次、指定链群的所有参与账号地址
- * - 先通过 accountCountByGroupIdByRound 获取账号总数
- * - 再通过 accountByGroupIdAndIndexByRound 批量获取每个账号地址
+ * - 先通过 accountsByGroupIdByRoundCount 获取账号总数
+ * - 再通过 accountsByGroupIdByRoundAtIndex 批量获取每个账号地址
  *
  * 使用示例：
  * ```typescript
@@ -20,7 +20,7 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
-import { useAccountCountByGroupIdByRound } from '../contracts/useGroupJoin';
+import { useAccountsByGroupIdByRoundCount } from '../contracts/useGroupJoin';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
@@ -33,10 +33,6 @@ const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXT
 export interface UseAccountsByGroupIdByRoundParams {
   /** 扩展合约地址 */
   extensionAddress: `0x${string}`;
-  /** 代币地址 */
-  tokenAddress: `0x${string}`;
-  /** 行动ID */
-  actionId: bigint;
   /** 链群NFT */
   groupId: bigint;
   /** 轮次 */
@@ -65,8 +61,8 @@ export interface UseAccountsByGroupIdByRoundResult {
  *
  * @description
  * 分两步获取账号列表：
- * 1. 调用 accountCountByGroupIdByRound(groupId, round) 获取账号总数 count
- * 2. 使用 useReadContracts 批量调用 accountByGroupIdAndIndexByRound(groupId, index, round) 获取从 0 到 count-1 位置的所有账号
+ * 1. 调用 accountsByGroupIdByRoundCount(round, groupId) 获取账号总数 count
+ * 2. 使用 useReadContracts 批量调用 accountsByGroupIdByRoundAtIndex(groupId, round, index) 获取从 0 到 count-1 位置的所有账号
  *
  * @example
  * ```typescript
@@ -86,15 +82,15 @@ export interface UseAccountsByGroupIdByRoundResult {
 export function useAccountsByGroupIdByRound(
   params: UseAccountsByGroupIdByRoundParams,
 ): UseAccountsByGroupIdByRoundResult {
-  const { extensionAddress, tokenAddress, actionId, groupId, round } = params;
+  const { extensionAddress, groupId, round } = params;
 
   // 第一步：获取账号总数
-  // 新版合约 useAccountCountByGroupIdByRound 需要 extensionAddress, groupId, round 参数
+  // 新版合约 useAccountsByGroupIdByRoundCount 需要 extensionAddress, groupId, round 参数
   const {
     count,
     isPending: isPendingCount,
     error: errorCount,
-  } = useAccountCountByGroupIdByRound(extensionAddress, groupId, round);
+  } = useAccountsByGroupIdByRoundCount(extensionAddress, round, groupId);
 
   // 转换为数字类型
   const accountCount = useMemo(() => {
@@ -103,7 +99,7 @@ export function useAccountsByGroupIdByRound(
   }, [count]);
 
   // 第二步：构建批量查询合约调用
-  // 新版合约的 accountByGroupIdAndIndexByRound 参数顺序变为 extensionAddress, groupId, index, round
+  // 新版合约的 accountsByGroupIdByRoundAtIndex 参数顺序为 extensionAddress, groupId, round, index
   const accountsContracts = useMemo(() => {
     if (!extensionAddress || accountCount === BigInt(0)) return [];
 
@@ -112,13 +108,13 @@ export function useAccountsByGroupIdByRound(
       contracts.push({
         address: GROUP_JOIN_CONTRACT_ADDRESS,
         abi: GroupJoinAbi,
-        functionName: 'accountByGroupIdAndIndexByRound',
-        args: [extensionAddress, groupId, i, round],
+        functionName: 'accountsByGroupIdByRoundAtIndex',
+        args: [extensionAddress, round, groupId, i],
       });
     }
 
     return contracts;
-  }, [extensionAddress, groupId, round, accountCount]);
+  }, [extensionAddress, round, groupId, accountCount]);
 
   // 第三步：批量获取账号地址
   const {

@@ -13,7 +13,6 @@ interface ActionHeaderProps {
   participantCount: bigint | undefined;
   totalAmount: bigint | undefined;
   isJoined: boolean;
-  userJoinedAmount: bigint | undefined;
   isPending: boolean;
   showActionButtons?: boolean;
   linkToActionInfo?: boolean;
@@ -24,7 +23,6 @@ export default function ActionHeader({
   participantCount,
   totalAmount,
   isJoined,
-  userJoinedAmount,
   isPending,
   showActionButtons = true,
   linkToActionInfo = false,
@@ -74,12 +72,7 @@ export default function ActionHeader({
       </div>
 
       {showActionButtons && actionInfo && account && (
-        <ActionButtons
-          isJoined={isJoined}
-          actionId={actionInfo.head.id}
-          userJoinedAmount={userJoinedAmount}
-          isPending={isPending}
-        />
+        <ActionButtons isJoined={isJoined} actionId={actionInfo.head.id} isPending={isPending} />
       )}
       {!showActionButtons && (
         <div className="mt-4 flex justify-center">

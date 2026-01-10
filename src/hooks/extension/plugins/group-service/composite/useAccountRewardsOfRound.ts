@@ -132,14 +132,6 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
     },
   });
 
-  console.log('extensionAddress', extensionAddress);
-  console.log('round', round);
-  console.log('accounts', accounts);
-  console.log('rewardsContracts', rewardsContracts);
-  console.log('rewardsData', rewardsData);
-  console.log('isRewardsPending', isRewardsPending);
-  console.log('rewardsError', rewardsError);
-
   // ==========================================
   // 第三步：批量查询每个地址的二次分配地址设置情况
   // ==========================================

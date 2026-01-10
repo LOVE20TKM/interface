@@ -82,13 +82,13 @@ export const useExtensionsCount = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for center - 获取 center 合约地址
+ * Hook for CENTER_ADDRESS - 获取 center 合约地址
  */
 export const useCenter = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupServiceFactoryAbi,
-    functionName: 'center',
+    functionName: 'CENTER_ADDRESS',
     query: {
       enabled: !!contractAddress,
     },

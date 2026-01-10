@@ -102,10 +102,10 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
   useEffect(() => {
     if (receipt && receipt.logs) {
       try {
-        // 解析 ExtensionCreate 事件
+        // 解析 CreateExtension 事件
         const logs = parseEventLogs({
           abi: ExtensionGroupServiceFactoryAbi,
-          eventName: 'ExtensionCreate',
+          eventName: 'CreateExtension',
           logs: receipt.logs,
         });
 

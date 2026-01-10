@@ -28,7 +28,7 @@ import {
 import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
-import { useDelegatedVerifierByGroupId } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
+import { useDelegateByGroupId } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -76,7 +76,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     delegatedVerifier,
     isPending: isPendingDelegated,
     error: errorDelegated,
-  } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
+  } = useDelegateByGroupId(extensionAddress, groupId);
 
   // 获取当前轮次（使用 Verify 合约的 round）
   const { currentRound, isPending: isPendingRound, error: errorRound } = useVerifyCurrentRound();

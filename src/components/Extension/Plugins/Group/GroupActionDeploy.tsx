@@ -40,10 +40,6 @@ interface GroupActionDeployProps {
 
 // 表单验证 schema
 const formSchema = z.object({
-  stakeTokenAddress: z
-    .string()
-    .min(1, { message: '请输入质押代币地址' })
-    .refine((val): val is string => isAddress(val), { message: '质押代币地址格式无效' }),
   joinTokenAddress: z
     .string()
     .min(1, { message: '请输入加入代币地址' })
@@ -94,7 +90,6 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      stakeTokenAddress: tokenAddress || '',
       joinTokenAddress: tokenAddress || '',
       activationStakeAmount: '',
       maxJoinAmountRatio: '',
@@ -119,7 +114,6 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
   // 当tokenAddress变化时，更新表单默认值
   useEffect(() => {
     if (tokenAddress) {
-      form.setValue('stakeTokenAddress', tokenAddress);
       form.setValue('joinTokenAddress', tokenAddress);
     }
   }, [tokenAddress, form]);
@@ -135,7 +129,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
   });
 
   // 等待授权的交易回执
-  const { data: approveReceipt } = useWaitForTransactionReceipt({
+  useWaitForTransactionReceipt({
     hash: approveHash,
   });
 
@@ -146,10 +140,10 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
   useEffect(() => {
     if (receipt && receipt.logs) {
       try {
-        // 解析 ExtensionCreate 事件
+        // 解析 CreateExtension 事件
         const logs = parseEventLogs({
           abi: ExtensionGroupActionFactoryAbi,
-          eventName: 'ExtensionCreate',
+          eventName: 'CreateExtension',
           logs: receipt.logs,
         });
 
@@ -226,7 +220,6 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
 
       await createExtension(
         tokenAddress,
-        values.stakeTokenAddress as `0x${string}`,
         values.joinTokenAddress as `0x${string}`,
         activationStakeAmountWei,
         maxJoinAmountRatioWei,
@@ -249,31 +242,13 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
         <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
           <Form {...form}>
             <form onSubmit={(e) => e.preventDefault()} className="space-y-4 md:space-y-6">
-              {/* 质押代币地址 */}
-              <FormField
-                control={form.control}
-                name="stakeTokenAddress"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>1. 服务者质押代币地址</FormLabel>
-                    <FormControl>
-                      <Input type="text" placeholder="0x..." disabled={approvalStep !== 'idle'} {...field} />
-                    </FormControl>
-                    <FormDescription className="text-sm text-greyscale-500">
-                      所在社群的代币合约地址，或 LP 地址
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               {/* 加入代币地址 */}
               <FormField
                 control={form.control}
                 name="joinTokenAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>2. 参与行动代币地址</FormLabel>
+                    <FormLabel>1. 参与行动代币地址</FormLabel>
                     <FormControl>
                       <Input type="text" placeholder="0x..." disabled={approvalStep !== 'idle'} {...field} />
                     </FormControl>
@@ -291,7 +266,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 name="activationStakeAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>3. 激活链群需质押代币数</FormLabel>
+                    <FormLabel>2. 激活链群需质押代币数</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -314,12 +289,12 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 name="maxJoinAmountRatio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>4. 最大参与代币占比</FormLabel>
+                    <FormLabel>3. 最大参与代币占比</FormLabel>
                     <FormControl>
                       <div className="flex items-center gap-2 max-w-40 md:max-w-xs">
                         <Input
                           type="number"
-                          placeholder="0.1 表示 0.1%"
+                          placeholder="例如 0.1"
                           disabled={approvalStep !== 'idle'}
                           min="0.001"
                           max="100"
@@ -344,7 +319,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 name="maxVerifyCapacityFactor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>5. 最大验证容量系数</FormLabel>
+                    <FormLabel>4. 最大验证容量系数</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

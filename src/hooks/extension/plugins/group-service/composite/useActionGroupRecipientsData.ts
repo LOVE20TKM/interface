@@ -12,7 +12,6 @@
  * ```typescript
  * const { actionGroupRecipientsData, isPending, error } = useActionGroupRecipientsData({
  *   tokenAddress: '0x...',
- *   verifyRound: BigInt(10),
  *   account: '0x...',
  *   extensionAddress: '0x...'
  * });
@@ -22,7 +21,7 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
-import { useActionIdsWithActiveGroupIdsByOwner } from './useActionIdsWithActiveGroupIdsByOwner';
+import { useActionIdsWithActiveGroupIdsByOwner } from '@/src/hooks/extension/plugins/group-service/composite/useActionIdsWithActiveGroupIdsByOwner';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 
@@ -39,7 +38,7 @@ export interface GroupRecipientData {
   /** 接收地址列表 */
   addrs: `0x${string}`[] | undefined;
   /** 对应的分配比例（wei 格式，1e18 = 100%） */
-  basisPoints: bigint[] | undefined;
+  ratios: bigint[] | undefined;
 }
 
 /**
@@ -60,8 +59,6 @@ export interface ActionGroupRecipientsData {
 export interface UseActionGroupRecipientsDataParams {
   /** Token 地址 */
   tokenAddress: `0x${string}` | undefined;
-  /** 验证轮次 */
-  verifyRound: bigint | undefined;
   /** 链群服务者账户地址 */
   account: `0x${string}` | undefined;
   /** Extension 合约地址 */
@@ -90,7 +87,6 @@ export interface UseActionGroupRecipientsDataResult {
  */
 export function useActionGroupRecipientsData({
   tokenAddress,
-  verifyRound,
   account,
   extensionAddress,
 }: UseActionGroupRecipientsDataParams): UseActionGroupRecipientsDataResult {
@@ -104,7 +100,6 @@ export function useActionGroupRecipientsData({
     error: actionIdsError,
   } = useActionIdsWithActiveGroupIdsByOwner({
     tokenAddress,
-    verifyRound,
     account,
   });
 
@@ -200,7 +195,7 @@ export function useActionGroupRecipientsData({
   // ==========================================
 
   const recipientsMap = useMemo(() => {
-    const map = new Map<string, { addrs: `0x${string}`[]; basisPoints: bigint[] }>();
+    const map = new Map<string, { addrs: `0x${string}`[]; ratios: bigint[] }>();
 
     if (!recipientsData || actionIdsWithGroupIds.length === 0) return map;
 
@@ -209,9 +204,9 @@ export function useActionGroupRecipientsData({
       groupIds.forEach((groupId) => {
         const data = recipientsData[index];
         if (data?.status === 'success' && data.result) {
-          const [addrs, basisPoints] = data.result as [`0x${string}`[], bigint[]];
+          const [addrs, ratios] = data.result as [`0x${string}`[], bigint[]];
           const key = `${actionId}_${groupId}`;
-          map.set(key, { addrs, basisPoints });
+          map.set(key, { addrs, ratios });
         }
         index++;
       });
@@ -249,7 +244,7 @@ export function useActionGroupRecipientsData({
           groupId,
           groupName: groupNameMap.get(groupId),
           addrs: recipients?.addrs,
-          basisPoints: recipients?.basisPoints,
+          ratios: recipients?.ratios,
         };
       });
 
@@ -269,7 +264,7 @@ export function useActionGroupRecipientsData({
 
   const isPending = useMemo(() => {
     // 等待参数
-    if (!tokenAddress || verifyRound === undefined || !account || !extensionAddress) {
+    if (!tokenAddress || !account || !extensionAddress) {
       return true;
     }
 
@@ -287,7 +282,6 @@ export function useActionGroupRecipientsData({
     return isRecipientsPending;
   }, [
     tokenAddress,
-    verifyRound,
     account,
     extensionAddress,
     isActionIdsPending,

@@ -103,7 +103,8 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     votes: alreadyVotedAmount,
     isPending: isPendingAlreadyVoted,
     error: errorAlreadyVoted,
-  } = useDistrustVotesByVoterByGroupOwner(extensionAddress,
+  } = useDistrustVotesByVoterByGroupOwner(
+    extensionAddress,
     currentRound || BigInt(0),
     account as `0x${string}`,
     groupOwner,
@@ -136,8 +137,6 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     error: errorGroups,
   } = useExtensionGroupInfosOfAction({
     extensionAddress,
-    tokenAddress: token?.address,
-    actionId,
   });
 
   const ownerGroups = useMemo(() => {

@@ -4,16 +4,10 @@
 'use client';
 
 // React
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
-
-// 类型
-import { ActionInfo } from '@/src/types/love20types';
-
-// 上下文
-import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
@@ -24,7 +18,7 @@ import {
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
-import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+import { formatTokenAmount } from '@/src/lib/format';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -33,15 +27,12 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 interface GroupScoresProps {
-  actionId: bigint;
-  actionInfo: ActionInfo;
   extensionAddress: `0x${string}`;
   groupId: bigint;
 }
 
-const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extensionAddress, groupId }) => {
+const _GroupScores: React.FC<GroupScoresProps> = ({ extensionAddress, groupId }) => {
   const router = useRouter();
-  const { token } = useContext(TokenContext) || {};
 
   // 获取当前轮次
   const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
@@ -66,8 +57,6 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extens
     error: errorScores,
   } = useGroupScoresOfRound({
     extensionAddress: extensionAddress as `0x${string}`,
-    tokenAddress: token?.address as `0x${string}`,
-    actionId,
     round: selectedRound,
     groupId,
   });
@@ -79,8 +68,6 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extens
     error: errorAmounts,
   } = useGroupAccountsJoinedAmountOfRound({
     extensionAddress: extensionAddress as `0x${string}`,
-    tokenAddress: token?.address as `0x${string}`,
-    actionId,
     round: selectedRound,
     groupId,
   });
@@ -121,10 +108,6 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ actionId, actionInfo, extens
         </div>
       </div>
     );
-  }
-
-  if (!token) {
-    return <div>Token信息加载中...</div>;
   }
 
   // 创建一个地图来快速查找参与代币数

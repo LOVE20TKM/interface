@@ -73,11 +73,7 @@ export const useAccountsByGroupIdCount = (extensionAddress: `0x${string}`, group
 /**
  * Hook for accountsByGroupIdAtIndex - 根据索引获取指定组ID的账户
  */
-export const useAccountsByGroupIdAtIndex = (
-  extensionAddress: `0x${string}`,
-  groupId: bigint,
-  index: bigint,
-) => {
+export const useAccountsByGroupIdAtIndex = (extensionAddress: `0x${string}`, groupId: bigint, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
@@ -89,23 +85,6 @@ export const useAccountsByGroupIdAtIndex = (
   });
 
   return { accountAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for totalJoinedAmount - 获取总加入数量
- */
-export const useTotalJoinedAmount = (extensionAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: GroupJoinAbi,
-    functionName: 'totalJoinedAmount',
-    args: [extensionAddress],
-    query: {
-      enabled: !!extensionAddress,
-    },
-  });
-
-  return { totalJoinedAmount: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -126,20 +105,20 @@ export const useTotalJoinedAmountByGroupId = (extensionAddress: `0x${string}`, g
 };
 
 /**
- * Hook for totalJoinedAmountByRound - 获取指定轮次的总加入数量
+ * Hook for joinedAmountByRound - 获取指定轮次的总加入数量
  */
-export const useTotalJoinedAmountByRound = (extensionAddress: `0x${string}`, round: bigint) => {
+export const useJoinedAmountByRound = (extensionAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
-    functionName: 'totalJoinedAmountByRound',
+    functionName: 'joinedAmountByRound',
     args: [extensionAddress, round],
     query: {
       enabled: !!extensionAddress && round !== undefined,
     },
   });
 
-  return { totalJoinedAmount: safeToBigInt(data), isPending, error };
+  return { joinedAmount: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -147,14 +126,14 @@ export const useTotalJoinedAmountByRound = (extensionAddress: `0x${string}`, rou
  */
 export const useTotalJoinedAmountByGroupIdByRound = (
   extensionAddress: `0x${string}`,
-  groupId: bigint,
   round: bigint,
+  groupId: bigint,
 ) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'totalJoinedAmountByGroupIdByRound',
-    args: [extensionAddress, groupId, round],
+    args: [extensionAddress, round, groupId],
     query: {
       enabled: !!extensionAddress && groupId !== undefined && round !== undefined,
     },
@@ -164,22 +143,21 @@ export const useTotalJoinedAmountByGroupIdByRound = (
 };
 
 /**
- * Hook for accountByGroupIdAndIndexByRound - 根据轮次和索引获取指定组ID的账户
+ * Hook for accountsByGroupIdByRoundAtIndex - 根据轮次和索引获取指定组ID的账户
  */
-export const useAccountByGroupIdAndIndexByRound = (
+export const useAccountsByGroupIdByRoundAtIndex = (
   extensionAddress: `0x${string}`,
+  round: bigint,
   groupId: bigint,
   index: bigint,
-  round: bigint,
 ) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
-    functionName: 'accountByGroupIdAndIndexByRound',
-    args: [extensionAddress, groupId, index, round],
+    functionName: 'accountsByGroupIdByRoundAtIndex',
+    args: [extensionAddress, round, groupId, index],
     query: {
-      enabled:
-        !!extensionAddress && groupId !== undefined && index !== undefined && round !== undefined,
+      enabled: !!extensionAddress && groupId !== undefined && index !== undefined && round !== undefined,
     },
   });
 
@@ -187,18 +165,14 @@ export const useAccountByGroupIdAndIndexByRound = (
 };
 
 /**
- * Hook for accountCountByGroupIdByRound - 获取指定轮次和组ID的账户数量
+ * Hook for accountsByGroupIdByRoundCount - 获取指定轮次和组ID的账户数量
  */
-export const useAccountCountByGroupIdByRound = (
-  extensionAddress: `0x${string}`,
-  groupId: bigint,
-  round: bigint,
-) => {
+export const useAccountsByGroupIdByRoundCount = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
-    functionName: 'accountCountByGroupIdByRound',
-    args: [extensionAddress, groupId, round],
+    functionName: 'accountsByGroupIdByRoundCount',
+    args: [extensionAddress, round, groupId],
     query: {
       enabled: !!extensionAddress && groupId !== undefined && round !== undefined,
     },
@@ -208,39 +182,14 @@ export const useAccountCountByGroupIdByRound = (
 };
 
 /**
- * Hook for amountByAccountByRound - 获取指定账户在指定轮次的参与代币量
- */
-export const useAmountByAccountByRound = (
-  extensionAddress: `0x${string}`,
-  account: `0x${string}`,
-  round: bigint,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: GroupJoinAbi,
-    functionName: 'amountByAccountByRound',
-    args: [extensionAddress, account, round],
-    query: {
-      enabled: !!extensionAddress && !!account && round !== undefined,
-    },
-  });
-
-  return { amount: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for groupIdByAccountByRound - 获取指定账户在指定轮次的组ID
  */
-export const useGroupIdByAccountByRound = (
-  extensionAddress: `0x${string}`,
-  account: `0x${string}`,
-  round: bigint,
-) => {
+export const useGroupIdByAccountByRound = (extensionAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'groupIdByAccountByRound',
-    args: [extensionAddress, account, round],
+    args: [extensionAddress, round, account as `0x${string}`],
     query: {
       enabled: !!extensionAddress && !!account && round !== undefined,
     },

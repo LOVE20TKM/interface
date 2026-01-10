@@ -24,7 +24,6 @@ export interface ActionDetailData {
   totalAmount: bigint | undefined;
 
   // 用户参与状态（自动支持扩展行动）
-  userJoinedAmount: bigint | undefined;
   isJoined: boolean;
 
   // 当前轮次
@@ -112,7 +111,6 @@ export const useActionDetailData = ({
         actionInfo: undefined,
         participantCount: undefined,
         totalAmount: undefined,
-        userJoinedAmount: undefined,
         isJoined: false,
         currentRound: undefined,
       };
@@ -126,16 +124,13 @@ export const useActionDetailData = ({
     const participantCount = participantCountResult?.result ? safeToBigInt(participantCountResult.result) : undefined;
     const currentRound = currentRoundResult?.result ? safeToBigInt(currentRoundResult.result) : undefined;
 
-    // 用户参与金额（只有在提供account时才有数据）
-    const userJoinedAmount = userJoinedAmountResult?.result ? safeToBigInt(userJoinedAmountResult.result) : undefined;
-
-    const isJoined = userJoinedAmount ? userJoinedAmount > BigInt(0) : false;
+    // 用户是否已参与（只有在提供account时才有数据）
+    const isJoined = userJoinedAmountResult?.result ? safeToBigInt(userJoinedAmountResult.result) > BigInt(0) : false;
 
     return {
       actionInfo,
       participantCount,
       totalAmount,
-      userJoinedAmount,
       isJoined,
       currentRound,
     };
@@ -151,7 +146,6 @@ export const useActionDetailData = ({
     {
       participantCount: basicData.participantCount,
       totalAmount: basicData.totalAmount,
-      userJoinedAmount: basicData.userJoinedAmount,
       isJoined: basicData.isJoined,
     },
   );
@@ -168,7 +162,6 @@ export const useActionDetailData = ({
       // 参与统计（自动使用扩展数据或基础数据）
       participantCount: participationData.participantCount,
       totalAmount: participationData.totalAmount,
-      userJoinedAmount: participationData.userJoinedAmount,
       isJoined: participationData.isJoined,
 
       // 扩展行动信息

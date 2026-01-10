@@ -118,10 +118,10 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   useEffect(() => {
     if (receipt && receipt.logs) {
       try {
-        // 解析 ExtensionCreate 事件
+        // 解析 CreateExtension 事件
         const logs = parseEventLogs({
           abi: ExtensionFactoryLpAbi,
-          eventName: 'ExtensionCreate',
+          eventName: 'CreateExtension',
           logs: receipt.logs,
         });
 

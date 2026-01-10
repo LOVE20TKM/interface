@@ -36,12 +36,11 @@ const VerifyDetailPage = () => {
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
   // 获取页面数据
-  const { actionInfo, participantCount, totalAmount, userJoinedAmount, isJoined, isPending, error, currentRound } =
-    useActionDetailData({
-      tokenAddress: token?.address,
-      actionId,
-      account,
-    });
+  const { actionInfo, participantCount, totalAmount, isJoined, isPending, error, currentRound } = useActionDetailData({
+    tokenAddress: token?.address,
+    actionId,
+    account,
+  });
 
   // 初始化selectedRound
   useEffect(() => {
@@ -567,7 +566,6 @@ const VerifyDetailPage = () => {
               participantCount={participantCount}
               totalAmount={totalAmount}
               isJoined={isJoined}
-              userJoinedAmount={userJoinedAmount}
               isPending={isPending}
               showActionButtons={false}
               linkToActionInfo={true}

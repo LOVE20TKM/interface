@@ -80,13 +80,13 @@ export const useGroupVerifyAddress = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for center - 获取 center 合约地址
+ * Hook for CENTER_ADDRESS - 获取 center 合约地址
  */
 export const useCenter = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionFactoryAbi,
-    functionName: 'center',
+    functionName: 'CENTER_ADDRESS',
     query: {
       enabled: !!contractAddress,
     },
@@ -168,11 +168,7 @@ export const useExtensionsCount = (contractAddress: `0x${string}`) => {
 /**
  * Hook for votedGroupActions - 获取投票通过的链群行动
  */
-export const useVotedGroupActions = (
-  contractAddress: `0x${string}`,
-  tokenAddress: `0x${string}`,
-  round: bigint,
-) => {
+export const useVotedGroupActions = (contractAddress: `0x${string}`, tokenAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionFactoryAbi,
@@ -209,7 +205,6 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
 
   const createExtension = async (
     tokenAddress: `0x${string}`,
-    stakeTokenAddress: `0x${string}`,
     joinTokenAddress: `0x${string}`,
     activationStakeAmount: bigint,
     maxJoinAmountRatio: bigint,
@@ -218,7 +213,6 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
     console.log('提交 createExtension 交易:', {
       contractAddress,
       tokenAddress,
-      stakeTokenAddress,
       joinTokenAddress,
       activationStakeAmount,
       maxJoinAmountRatio,
@@ -227,7 +221,6 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
     });
     return await execute([
       tokenAddress,
-      stakeTokenAddress,
       joinTokenAddress,
       activationStakeAmount,
       maxJoinAmountRatio,

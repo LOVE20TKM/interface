@@ -51,10 +51,6 @@ export interface AccountJoinInfo {
 export interface UseAccountInfosByGroupIdByRoundParams {
   /** 扩展合约地址 */
   extensionAddress: `0x${string}`;
-  /** 代币地址 */
-  tokenAddress: `0x${string}`;
-  /** 行动ID */
-  actionId: bigint;
   /** 链群NFT */
   groupId: bigint;
   /** 轮次 */
@@ -114,7 +110,7 @@ export interface UseAccountInfosByGroupIdByRoundResult {
 export function useAccountInfosByGroupIdByRound(
   params: UseAccountInfosByGroupIdByRoundParams,
 ): UseAccountInfosByGroupIdByRoundResult {
-  const { extensionAddress, tokenAddress, actionId, groupId, round } = params;
+  const { extensionAddress, groupId, round } = params;
 
   // 第一步：获取所有参与账号地址列表
   const {
@@ -123,24 +119,22 @@ export function useAccountInfosByGroupIdByRound(
     error: errorAccounts,
   } = useAccountsByGroupIdByRound({
     extensionAddress,
-    tokenAddress,
-    actionId,
     groupId,
     round,
   });
 
   // 第二步：构建批量查询 joinInfo 的合约调用
-  // 新版合约 joinInfo 需要 tokenAddress, actionId, account 参数
+  // 新版合约 joinInfo 需要 extensionAddress, account 参数
   const joinInfoContracts = useMemo(() => {
-    if (!tokenAddress || !accounts || accounts.length === 0) return [];
+    if (!extensionAddress || !accounts || accounts.length === 0) return [];
 
     return accounts.map((account) => ({
       address: GROUP_JOIN_CONTRACT_ADDRESS,
       abi: GroupJoinAbi,
       functionName: 'joinInfo',
-      args: [tokenAddress, actionId, account],
+      args: [extensionAddress, account],
     }));
-  }, [tokenAddress, actionId, accounts]);
+  }, [extensionAddress, accounts]);
 
   // 第三步：批量获取每个账号的 joinInfo
   const {

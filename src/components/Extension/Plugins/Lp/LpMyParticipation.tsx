@@ -9,7 +9,7 @@ import { HelpCircle } from 'lucide-react';
 
 // my hooks
 import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
-import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite';
+import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite/useMyLpActionData';
 import { useExit } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLp';
 import { useContractError } from '@/src/errors/useContractError';
 
@@ -47,7 +47,6 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
   // 获取我的 LP 扩展数据
   const {
     joinedAmount,
-    totalJoinedAmount,
     rewardRatio,
     userGovVotes,
     totalGovVotes,

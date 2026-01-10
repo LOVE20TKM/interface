@@ -8,7 +8,6 @@ export * from './useExtensionBaseData';
 export * from './useExtensionsByActionIdsWithCache';
 export * from './useExtensionActionsLatestRewards';
 export * from './useExtensionActionRewardsByRounds';
-export * from './useMyJoinedExtensionActions';
 export * from './useExtensionParticipationData';
 export * from './useAccountVerificationInfos';
 export * from './useAccountsByActionByRound';

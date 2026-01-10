@@ -331,6 +331,52 @@ export const useVoteAddress = () => {
   return { voteAddress: data as `0x${string}` | undefined, isPending, error };
 };
 
+/**
+ * Hook for extensionTokenActionPair - 通过 extension 地址反向查询 token 和 actionId
+ */
+export const useExtensionTokenActionPair = (extensionAddress: `0x${string}` | undefined) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: ExtensionCenterAbi,
+    functionName: 'extensionTokenActionPair',
+    args: extensionAddress ? [extensionAddress] : undefined,
+    query: {
+      enabled: !!extensionAddress,
+    },
+  });
+
+  const result = data as [`0x${string}`, bigint] | undefined;
+
+  return {
+    tokenAddress: result?.[0],
+    actionId: safeToBigInt(result?.[1]),
+    isPending,
+    error,
+  };
+};
+
+/**
+ * Hook for isAccountJoinedByRound - 检查账户在特定轮次是否已加入
+ */
+export const useIsAccountJoinedByRound = (
+  tokenAddress: `0x${string}` | undefined,
+  actionId: bigint | undefined,
+  account: `0x${string}` | undefined,
+  round: bigint | undefined,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: ExtensionCenterAbi,
+    functionName: 'isAccountJoinedByRound',
+    args: tokenAddress && actionId !== undefined && account && round !== undefined ? [tokenAddress, actionId, account, round] : undefined,
+    query: {
+      enabled: !!tokenAddress && actionId !== undefined && !!account && round !== undefined,
+    },
+  });
+
+  return { isJoined: data as boolean | undefined, isPending, error };
+};
+
 // =====================
 // === 写入 Hook ===
 // =====================

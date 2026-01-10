@@ -3,7 +3,7 @@ import { useAccount } from 'wagmi';
 import toast from 'react-hot-toast';
 import { useActionRewardsByAccountOfLastRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
 import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
-import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite';
+import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite/useMyJoinedExtensionActions';
 import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
 import {
   useExtensionActionsLatestRewards,

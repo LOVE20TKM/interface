@@ -26,19 +26,14 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 interface GroupDetailProps {
-  actionId: bigint;
-  actionInfo: ActionInfo;
   extensionAddress: `0x${string}`;
   groupId: bigint;
 }
 
-const _GroupDetail: React.FC<GroupDetailProps> = ({ actionId, actionInfo, extensionAddress, groupId }) => {
-  const { token } = useContext(TokenContext) || {};
-
+const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId }) => {
   // 获取链群详情
   const { groupDetail, isPending, error } = useExtensionGroupDetail({
     extensionAddress,
-    actionId,
     groupId,
   });
 

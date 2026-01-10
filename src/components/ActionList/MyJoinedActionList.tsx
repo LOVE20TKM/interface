@@ -9,7 +9,7 @@ import { useAccount } from 'wagmi';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
-import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite';
+import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite/useMyJoinedExtensionActions';
 
 // my contexts
 import { Token } from '@/src/contexts/TokenContext';

@@ -31,11 +31,7 @@ export const useFactoryAddress = () => {
 /**
  * Hook for canVerify - 检查账户是否可以验证指定组
  */
-export const useCanVerify = (
-  extensionAddress: `0x${string}`,
-  account: `0x${string}`,
-  groupId: bigint,
-) => {
+export const useCanVerify = (extensionAddress: `0x${string}`, account: `0x${string}`, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
@@ -69,11 +65,7 @@ export const useIsVerified = (extensionAddress: `0x${string}`, round: bigint, gr
 /**
  * Hook for verifiedAccountCount - 获取指定轮次和组ID的已验证账户数量
  */
-export const useVerifiedAccountCount = (
-  extensionAddress: `0x${string}`,
-  round: bigint,
-  groupId: bigint,
-) => {
+export const useVerifiedAccountCount = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
@@ -173,13 +165,13 @@ export const useVerifierByGroupId = (extensionAddress: `0x${string}`, round: big
 };
 
 /**
- * Hook for delegatedVerifierByGroupId - 获取指定组ID的委托验证者
+ * Hook for delegateByGroupId - 获取指定组ID的委托验证者
  */
-export const useDelegatedVerifierByGroupId = (extensionAddress: `0x${string}`, groupId: bigint) => {
+export const useDelegateByGroupId = (extensionAddress: `0x${string}`, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
-    functionName: 'delegatedVerifierByGroupId',
+    functionName: 'delegateByGroupId',
     args: [extensionAddress, groupId],
     query: {
       enabled: !!extensionAddress && groupId !== undefined,
@@ -192,11 +184,7 @@ export const useDelegatedVerifierByGroupId = (extensionAddress: `0x${string}`, g
 /**
  * Hook for groupIdsByVerifier - 获取指定验证者在指定轮次的组ID列表
  */
-export const useGroupIdsByVerifier = (
-  extensionAddress: `0x${string}`,
-  round: bigint,
-  verifier: `0x${string}`,
-) => {
+export const useGroupIdsByVerifier = (extensionAddress: `0x${string}`, round: bigint, verifier: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
@@ -208,6 +196,23 @@ export const useGroupIdsByVerifier = (
   });
 
   return { groupIds: data as bigint[] | undefined, isPending, error };
+};
+
+/**
+ * Hook for actionIdsByVerifier - 获取指定验证者在指定轮次验证的行动ID列表
+ */
+export const useActionIdsByVerifier = (round: bigint | undefined, verifier: `0x${string}` | undefined) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GroupVerifyAbi,
+    functionName: 'actionIdsByVerifier',
+    args: [round!, verifier!],
+    query: {
+      enabled: round !== undefined && !!verifier,
+    },
+  });
+
+  return { actionIds: data as bigint[] | undefined, isPending, error };
 };
 
 /**
@@ -235,11 +240,7 @@ export const useGroupIdsByVerifierAtIndex = (
 /**
  * Hook for groupIdsByVerifierCount - 获取指定验证者在指定轮次的组ID数量
  */
-export const useGroupIdsByVerifierCount = (
-  extensionAddress: `0x${string}`,
-  round: bigint,
-  verifier: `0x${string}`,
-) => {
+export const useGroupIdsByVerifierCount = (extensionAddress: `0x${string}`, round: bigint, verifier: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
@@ -258,13 +259,13 @@ export const useGroupIdsByVerifierCount = (
 // =====================
 
 /**
- * Hook for score - 获取指定轮次的总积分
+ * Hook for totalGroupScore - 获取指定轮次的总积分
  */
-export const useScore = (extensionAddress: `0x${string}`, round: bigint) => {
+export const useTotalGroupScore = (extensionAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
-    functionName: 'score',
+    functionName: 'totalGroupScore',
     args: [extensionAddress, round],
     query: {
       enabled: !!extensionAddress && round !== undefined,
@@ -275,17 +276,13 @@ export const useScore = (extensionAddress: `0x${string}`, round: bigint) => {
 };
 
 /**
- * Hook for scoreByAccount - 获取账户的积分
+ * Hook for accountScore - 获取账户的积分
  */
-export const useScoreByAccount = (
-  extensionAddress: `0x${string}`,
-  round: bigint,
-  account: `0x${string}`,
-) => {
+export const useAccountScore = (extensionAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
-    functionName: 'scoreByAccount',
+    functionName: 'accountScore',
     args: [extensionAddress, round, account],
     query: {
       enabled: !!extensionAddress && round !== undefined && !!account,
@@ -296,13 +293,13 @@ export const useScoreByAccount = (
 };
 
 /**
- * Hook for scoreByGroupId - 获取指定组ID的积分
+ * Hook for groupScore - 获取指定组ID的积分
  */
-export const useScoreByGroupId = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
+export const useGroupScore = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
-    functionName: 'scoreByGroupId',
+    functionName: 'groupScore',
     args: [extensionAddress, round, groupId],
     query: {
       enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
@@ -313,17 +310,14 @@ export const useScoreByGroupId = (extensionAddress: `0x${string}`, round: bigint
 };
 
 /**
- * Hook for totalScoreByGroupId - 获取指定组ID的总积分
+ * Hook for totalAccountScore - 获取指定组ID的总账户积分
+ * 注意：此方法在新 ABI 中对应 totalAccountScore，而不是之前的 totalScoreByGroupId
  */
-export const useTotalScoreByGroupId = (
-  extensionAddress: `0x${string}`,
-  round: bigint,
-  groupId: bigint,
-) => {
+export const useTotalAccountScore = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
-    functionName: 'totalScoreByGroupId',
+    functionName: 'totalAccountScore',
     args: [extensionAddress, round, groupId],
     query: {
       enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
@@ -336,11 +330,7 @@ export const useTotalScoreByGroupId = (
 /**
  * Hook for originScoreByAccount - 获取账户的原始积分
  */
-export const useOriginScoreByAccount = (
-  extensionAddress: `0x${string}`,
-  round: bigint,
-  account: `0x${string}`,
-) => {
+export const useOriginScoreByAccount = (extensionAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
@@ -357,11 +347,7 @@ export const useOriginScoreByAccount = (
 /**
  * Hook for capacityReductionByGroupId - 获取指定轮次和组ID的容量削减
  */
-export const useCapacityReductionByGroupId = (
-  extensionAddress: `0x${string}`,
-  round: bigint,
-  groupId: bigint,
-) => {
+export const useCapacityReductionByGroupId = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
@@ -382,11 +368,7 @@ export const useCapacityReductionByGroupId = (
 /**
  * Hook for distrustVotesByGroupId - 获取指定组ID的不信任投票数
  */
-export const useDistrustVotesByGroupId = (
-  extensionAddress: `0x${string}`,
-  round: bigint,
-  groupId: bigint,
-) => {
+export const useDistrustVotesByGroupId = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
@@ -465,27 +447,65 @@ export const useDistrustReason = (
   return { reason: data as string | undefined, isPending, error };
 };
 
+/**
+ * Hook for distrustGroupOwners - 获取指定轮次的不信任组所有者列表
+ */
+export const useDistrustGroupOwners = (extensionAddress: `0x${string}`, round: bigint) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GroupVerifyAbi,
+    functionName: 'distrustGroupOwners',
+    args: [extensionAddress, round],
+    query: {
+      enabled: !!extensionAddress && round !== undefined,
+    },
+  });
+
+  return { groupOwners: data as `0x${string}`[] | undefined, isPending, error };
+};
+
+/**
+ * Hook for distrustVotersByGroupOwner - 获取指定组所有者的不信任投票者列表
+ */
+export const useDistrustVotersByGroupOwner = (
+  extensionAddress: `0x${string}` | undefined,
+  round: bigint | undefined,
+  groupOwner: `0x${string}` | undefined,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GroupVerifyAbi,
+    functionName: 'distrustVotersByGroupOwner',
+    args: [extensionAddress!, round!, groupOwner!],
+    query: {
+      enabled: !!extensionAddress && round !== undefined && !!groupOwner,
+    },
+  });
+
+  return { voters: data as `0x${string}`[] | undefined, isPending, error };
+};
+
 // =====================
 // === 写入 Hooks ===
 // =====================
 
 /**
- * Hook for verifyWithOriginScores - 提交原始积分验证
+ * Hook for submitOriginScores - 提交原始积分验证
  */
-export function useVerifyWithOriginScores() {
+export function useSubmitOriginScores() {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
     GroupVerifyAbi,
     CONTRACT_ADDRESS,
-    'verifyWithOriginScores',
+    'submitOriginScores',
   );
 
-  const verifyWithOriginScores = async (
+  const submitOriginScores = async (
     extensionAddress: `0x${string}`,
     groupId: bigint,
     startIndex: bigint,
     originScores: bigint[],
   ) => {
-    console.log('提交 verifyWithOriginScores 交易:', {
+    console.log('提交 submitOriginScores 交易:', {
       extensionAddress,
       groupId,
       startIndex,
@@ -498,17 +518,17 @@ export function useVerifyWithOriginScores() {
   // 错误日志记录
   useEffect(() => {
     if (hash) {
-      console.log('verifyWithOriginScores tx hash:', hash);
+      console.log('submitOriginScores tx hash:', hash);
     }
     if (error) {
-      console.log('提交 verifyWithOriginScores 交易错误:');
+      console.log('提交 submitOriginScores 交易错误:');
       logWeb3Error(error);
       logError(error);
     }
   }, [hash, error]);
 
   return {
-    verifyWithOriginScores,
+    submitOriginScores,
     isPending,
     isConfirming,
     writeError: error,
@@ -519,43 +539,39 @@ export function useVerifyWithOriginScores() {
 }
 
 /**
- * Hook for setGroupDelegatedVerifier - 设置组的委托验证者
+ * Hook for setGroupDelegate - 设置组的委托验证者
  */
-export function useSetGroupDelegatedVerifier() {
+export function useSetGroupDelegate() {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
     GroupVerifyAbi,
     CONTRACT_ADDRESS,
-    'setGroupDelegatedVerifier',
+    'setGroupDelegate',
   );
 
-  const setGroupDelegatedVerifier = async (
-    extensionAddress: `0x${string}`,
-    groupId: bigint,
-    delegatedVerifier: `0x${string}`,
-  ) => {
-    console.log('提交 setGroupDelegatedVerifier 交易:', {
+  const setGroupDelegate = async (extensionAddress: `0x${string}`, groupId: bigint, delegate: `0x${string}`) => {
+    console.log('提交 setGroupDelegate 交易:', {
       extensionAddress,
       groupId,
-      delegatedVerifier,
+      delegate,
       isTukeMode,
     });
-    return await execute([extensionAddress, groupId, delegatedVerifier]);
+    return await execute([extensionAddress, groupId, delegate]);
   };
 
   // 错误日志记录
   useEffect(() => {
     if (hash) {
-      console.log('setGroupDelegatedVerifier tx hash:', hash);
+      console.log('setGroupDelegate tx hash:', hash);
     }
     if (error) {
-      console.log('提交 setGroupDelegatedVerifier 交易错误:');
+      console.log('提交 setGroupDelegate 交易错误:');
       logWeb3Error(error);
       logError(error);
     }
   }, [hash, error]);
 
   return {
-    setGroupDelegatedVerifier,
+    setGroupDelegate,
     isPending,
     isConfirming,
     writeError: error,

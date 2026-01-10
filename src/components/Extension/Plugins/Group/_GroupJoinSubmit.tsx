@@ -36,7 +36,8 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
-import { useExtensionActionConstCache, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
+import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
@@ -325,10 +326,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   async function handleJoin(values: FormValues) {
     try {
       // 加入时同时提交验证信息
-      await join(extensionAddress, groupId,
-        parseUnits(values.joinAmount) ?? BigInt(0),
-        values.verificationInfos || [],
-      );
+      await join(extensionAddress, groupId, parseUnits(values.joinAmount) ?? BigInt(0), values.verificationInfos || []);
     } catch (error) {
       console.error('Join failed', error);
     }

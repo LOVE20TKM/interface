@@ -15,7 +15,6 @@ import { useAccount } from 'wagmi';
 
 // UI 组件
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 // 类型
 import { ActionInfo } from '@/src/types/love20types';
@@ -25,11 +24,10 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
-import { useOwnerOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useAccountsByGroupIdByRound } from '@/src/hooks/extension/plugins/group/composite/useAccountsByGroupIdByRound';
 import {
-  useDelegatedVerifierByGroupId,
-  useVerifyWithOriginScores,
+  useCanVerify,
+  useSubmitOriginScores,
   useVerifiedAccountCount,
 } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
@@ -73,20 +71,12 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   // 获取当前轮次
   const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
 
-  // 获取链群服务者地址
-  const { owner: groupOwner, isPending: isPendingOwner, error: errorOwner } = useOwnerOf(groupId);
-
-  // 获取打分代理地址
+  // 检查是否有打分权限
   const {
-    delegatedVerifier,
-    isPending: isPendingDelegated,
-    error: errorDelegated,
-  } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
-
-  // 检查是否有打分权限（链群服务者或打分代理）
-  const hasVerifyPermission =
-    account &&
-    (account.toLowerCase() === groupOwner?.toLowerCase() || account.toLowerCase() === delegatedVerifier?.toLowerCase());
+    canVerify,
+    isPending: isPendingCanVerify,
+    error: errorCanVerify,
+  } = useCanVerify(extensionAddress, account || ('0x' as `0x${string}`), groupId);
 
   // 获取被验证者地址列表
   const {
@@ -95,8 +85,6 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     error: errorGetAccounts,
   } = useAccountsByGroupIdByRound({
     extensionAddress: extensionAddress as `0x${string}`,
-    tokenAddress: token?.address as `0x${string}`,
-    actionId,
     groupId,
     round: currentRound || BigInt(0),
   });
@@ -138,32 +126,53 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
   // 打分
   const {
-    verifyWithOriginScores,
+    submitOriginScores,
     isPending: isPendingVerifyGroup,
     isConfirming: isConfirmingVerify,
     isConfirmed: isConfirmedVerify,
     writeError: errorVerifyGroup,
-  } = useVerifyWithOriginScores();
+  } = useSubmitOriginScores();
 
   // 从剪贴板粘贴分数
   const handlePasteFromClipboard = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      const lines = text.trim().split('\n');
+      const lines = text
+        .trim()
+        .split('\n')
+        .filter((line) => line.trim().length > 0);
 
       const newScores = [...accountScores];
       let updated = 0;
 
-      for (const line of lines) {
+      // 检查格式：如果所有行都只有1个部分（只有分数），则按顺序匹配
+      const allLinesHaveOnePart = lines.every((line) => {
         const parts = line.trim().split(/[\t,\s]+/);
-        if (parts.length >= 2) {
-          const address = parts[0].toLowerCase();
-          const score = parts[1];
+        return parts.length === 1;
+      });
 
-          const index = newScores.findIndex((s) => s.account.toLowerCase() === address);
-          if (index !== -1 && !isNaN(parseFloat(score))) {
-            newScores[index].score = score;
+      if (allLinesHaveOnePart && lines.length === newScores.length) {
+        // 格式2：只有分数，按顺序匹配
+        for (let i = 0; i < lines.length && i < newScores.length; i++) {
+          const score = lines[i].trim();
+          if (!isNaN(parseFloat(score))) {
+            newScores[i].score = score;
             updated++;
+          }
+        }
+      } else {
+        // 格式1：地址 分数
+        for (const line of lines) {
+          const parts = line.trim().split(/[\t,\s]+/);
+          if (parts.length >= 2) {
+            const address = parts[0].toLowerCase();
+            const score = parts[1];
+
+            const index = newScores.findIndex((s) => s.account.toLowerCase() === address);
+            if (index !== -1 && !isNaN(parseFloat(score))) {
+              newScores[index].score = score;
+              updated++;
+            }
           }
         }
       }
@@ -172,7 +181,11 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         setAccountScores(newScores);
         toast.success(`成功导入 ${updated} 个地址的分数`);
       } else {
-        toast.error('未找到匹配的地址');
+        if (allLinesHaveOnePart) {
+          toast.error(`分数行数（${lines.length}）与地址数量（${newScores.length}）不匹配`);
+        } else {
+          toast.error('未找到匹配的地址，请确保格式为：分数（每行一个）');
+        }
       }
     } catch (error) {
       toast.error('粘贴失败，请检查剪贴板内容');
@@ -181,7 +194,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   };
 
   async function handleVerify() {
-    if (!hasVerifyPermission) {
+    if (!canVerify) {
       toast.error('您没有打分权限');
       return;
     }
@@ -210,9 +223,9 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         return BigInt(isNaN(score) || score < 0 ? 0 : score);
       });
 
-      // 使用新的 verifyWithOriginScores 签名：groupId, startIndex, originScores
+      // 使用新的 submitOriginScores 签名：extensionAddress, groupId, startIndex, originScores
       // startIndex 设置为 0，表示从第一个账号开始提交
-      await verifyWithOriginScores(extensionAddress, groupId, BigInt(0), scores as bigint[]);
+      await submitOriginScores(extensionAddress, groupId, BigInt(0), scores as bigint[]);
     } catch (error) {
       console.error('Verify group failed', error);
     }
@@ -231,16 +244,14 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   const { handleError } = useContractError();
   useEffect(() => {
     if (errorRound) handleError(errorRound);
-    if (errorOwner) handleError(errorOwner);
-    if (errorDelegated) handleError(errorDelegated);
+    if (errorCanVerify) handleError(errorCanVerify);
     if (errorGetAccounts) handleError(errorGetAccounts);
     if (errorSubmittedCount) handleError(errorSubmittedCount);
     if (errorVerifyGroup) handleError(errorVerifyGroup);
     if (errorVerificationInfos) handleError(errorVerificationInfos);
   }, [
     errorRound,
-    errorOwner,
-    errorDelegated,
+    errorCanVerify,
     errorGetAccounts,
     errorSubmittedCount,
     errorVerifyGroup,
@@ -250,8 +261,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
   if (
     isPendingRound ||
-    isPendingOwner ||
-    isPendingDelegated ||
+    isPendingCanVerify ||
     isPendingGetAccounts ||
     isPendingSubmittedCount ||
     isPendingVerificationInfos
@@ -265,7 +275,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   }
 
   // 检查是否有打分权限
-  if (!hasVerifyPermission) {
+  if (!canVerify) {
     return (
       <div className="space-y-4">
         <LeftTitle title="链群验证" />

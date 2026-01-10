@@ -2,11 +2,13 @@
  * Hook: 获取服务者在某轮次的激励明细
  *
  * 功能：
- * 1. 使用 useActionIdsWithActiveGroupIdsByOwner 获取服务者的所有激活链群
- * 2. 批量调用 rewardDistribution 获取每个链群的激励分配明细
- * 3. 批量调用 generatedRewardByGroupId 获取各链群总铸币量
- * 4. 批量获取行动名称（使用缓存）
- * 5. 批量获取链群名称
+ * 1. 使用 actionIdsByVerifier 获取该验证者在指定轮次验证的行动ID
+ * 2. 获取每个行动的扩展合约地址
+ * 3. 使用 GroupVerify.groupIdsByVerifier 获取服务者在指定轮次验证的链群
+ * 4. 批量调用 rewardDistribution 获取每个链群的激励分配明细
+ * 5. 批量调用 generatedRewardByGroupId 获取各链群总铸币量
+ * 6. 批量获取行动名称（使用缓存）
+ * 7. 批量获取链群名称
  *
  * 返回按行动分组的激励数据结构
  */
@@ -15,10 +17,15 @@ import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
 import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
-import { useActionIdsWithActiveGroupIdsByOwner } from '@/src/hooks/extension/plugins/group-service/composite/useActionIdsWithActiveGroupIdsByOwner';
+import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
+import { useActionIdsByVerifier } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useGroupNames } from '@/src/hooks/extension/base/composite/useGroupNames';
 import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
+
+// ==================== 常量定义 ====================
+
+const GROUP_VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY as `0x${string}`;
 
 // ==================== 类型定义 ====================
 
@@ -90,21 +97,66 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   const { extensionAddress, groupActionTokenAddress, round, verifier } = params;
 
   // ==========================================
-  // 第一步：获取服务者的所有激活链群
+  // 第一步：使用 actionIdsByVerifier 获取该验证者在指定轮次验证的行动ID
   // ==========================================
   const {
-    actionIdsWithGroupIds,
-    isPending: isActionIdsWithGroupIdsPending,
-    error: actionIdsWithGroupIdsError,
-  } = useActionIdsWithActiveGroupIdsByOwner({
-    tokenAddress: groupActionTokenAddress as `0x${string}`,
-    verifyRound: round,
-    account: verifier as `0x${string}`,
+    actionIds: allActionIds,
+    isPending: isActionIdsPending,
+    error: actionIdsError,
+  } = useActionIdsByVerifier(round, verifier);
+
+  // ==========================================
+  // 第二步：获取每个行动的扩展合约地址
+  // ==========================================
+  const { extensions, isPending: isExtensionsPending } = useExtensionsByActionIdsWithCache({
+    token: { address: groupActionTokenAddress as `0x${string}` } as any,
+    actionIds: allActionIds || [],
+    enabled: !!groupActionTokenAddress && !!allActionIds && allActionIds.length > 0,
+  });
+
+  // 创建 actionId 到扩展合约地址的映射
+  const extensionAddressMap = useMemo(() => {
+    const map = new Map<bigint, `0x${string}`>();
+    extensions.forEach((ext) => {
+      if (ext.isExtension && ext.extensionAddress) {
+        map.set(ext.actionId, ext.extensionAddress);
+      }
+    });
+    return map;
+  }, [extensions]);
+
+  // ==========================================
+  // 第三步：批量获取服务者在指定轮次验证的链群
+  // ==========================================
+  const groupIdsContracts = useMemo(() => {
+    if (!round || !verifier || !extensions || extensions.length === 0) {
+      return [];
+    }
+
+    return extensions
+      .filter((ext) => ext.isExtension && ext.extensionAddress)
+      .map((ext) => ({
+        address: GROUP_VERIFY_CONTRACT_ADDRESS,
+        abi: GroupVerifyAbi,
+        functionName: 'groupIdsByVerifier' as const,
+        args: [ext.extensionAddress!, round, verifier] as const,
+      }));
+  }, [round, verifier, extensions]);
+
+  const {
+    data: groupIdsData,
+    isPending: isGroupIdsPending,
+    error: groupIdsError,
+  } = useReadContracts({
+    contracts: groupIdsContracts,
+    query: {
+      enabled: !!round && !!verifier && groupIdsContracts.length > 0 && !isActionIdsPending && !isExtensionsPending,
+    },
   });
 
   // 解析数据，提取所有唯一的 actionId 和 groupIdsByAction
   const { actionIds, groupIdsByAction, actionGroupPairs } = useMemo(() => {
-    if (!actionIdsWithGroupIds || actionIdsWithGroupIds.length === 0) {
+    if (!groupIdsData || !extensions || extensions.length === 0) {
       return {
         actionIds: [],
         groupIdsByAction: new Map<bigint, bigint[]>(),
@@ -116,20 +168,28 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     const groupMap = new Map<bigint, bigint[]>();
     const pairs: Array<{ actionId: bigint; groupId: bigint }> = [];
 
-    actionIdsWithGroupIds.forEach((item) => {
-      const actionId = item.actionId;
-      const groupIds = item.groupIds;
+    // 遍历查询结果，建立 actionId -> groupIds 映射
+    groupIdsData.forEach((result, index) => {
+      if (result?.status === 'success' && result.result) {
+        const extension = extensions.filter((ext) => ext.isExtension && ext.extensionAddress)[index];
+        if (!extension) return;
 
-      actionSet.add(actionId);
+        const actionId = extension.actionId;
+        const groupIds = result.result as bigint[];
 
-      if (!groupMap.has(actionId)) {
-        groupMap.set(actionId, []);
+        if (groupIds.length > 0) {
+          actionSet.add(actionId);
+
+          if (!groupMap.has(actionId)) {
+            groupMap.set(actionId, []);
+          }
+
+          groupIds.forEach((groupId) => {
+            groupMap.get(actionId)!.push(groupId);
+            pairs.push({ actionId, groupId });
+          });
+        }
       }
-
-      groupIds.forEach((groupId) => {
-        groupMap.get(actionId)!.push(groupId);
-        pairs.push({ actionId, groupId });
-      });
     });
 
     return {
@@ -137,10 +197,10 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
       groupIdsByAction: groupMap,
       actionGroupPairs: pairs,
     };
-  }, [actionIdsWithGroupIds]);
+  }, [groupIdsData, extensions]);
 
   // ==========================================
-  // 第二步：批量获取每个链群的激励分配明细
+  // 第四步：批量获取每个链群的激励分配明细
   // ==========================================
   const rewardDistributionContracts = useMemo(() => {
     if (!extensionAddress || !round || !verifier || actionGroupPairs.length === 0) {
@@ -163,11 +223,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     contracts: rewardDistributionContracts,
     query: {
       enabled:
-        !!extensionAddress &&
-        !!round &&
-        !!verifier &&
-        rewardDistributionContracts.length > 0 &&
-        !isActionIdsWithGroupIdsPending,
+        !!extensionAddress && !!round && !!verifier && rewardDistributionContracts.length > 0 && !isGroupIdsPending,
     },
   });
 
@@ -205,27 +261,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   }, [rewardDistributionData, actionGroupPairs]);
 
   // ==========================================
-  // 第三步：批量获取每个 actionId 对应的扩展合约地址
-  // ==========================================
-  const { extensions, isPending: isExtensionsPending } = useExtensionsByActionIdsWithCache({
-    token: { address: groupActionTokenAddress as `0x${string}` } as any,
-    actionIds,
-    enabled: !!groupActionTokenAddress && actionIds.length > 0,
-  });
-
-  // 创建 actionId 到扩展合约地址的映射
-  const extensionAddressMap = useMemo(() => {
-    const map = new Map<bigint, `0x${string}`>();
-    extensions.forEach((ext) => {
-      if (ext.isExtension && ext.extensionAddress) {
-        map.set(ext.actionId, ext.extensionAddress);
-      }
-    });
-    return map;
-  }, [extensions]);
-
-  // ==========================================
-  // 第四步：批量获取链群总铸币量
+  // 第五步：批量获取链群总铸币量
   // ==========================================
   const generatedRewardContracts = useMemo(() => {
     if (!round || actionGroupPairs.length === 0 || extensionAddressMap.size === 0) {
@@ -256,12 +292,12 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   } = useReadContracts({
     contracts: generatedRewardContracts,
     query: {
-      enabled: !!round && actionGroupPairs.length > 0 && generatedRewardContracts.length > 0 && !isExtensionsPending,
+      enabled: !!round && actionGroupPairs.length > 0 && generatedRewardContracts.length > 0 && !isGroupIdsPending,
     },
   });
 
   // ==========================================
-  // 第五步：批量获取行动名称
+  // 第六步：批量获取行动名称
   // ==========================================
   const { actionInfos, isPending: isActionInfosPending } = useActionBaseInfosByIdsWithCache({
     tokenAddress: groupActionTokenAddress,
@@ -270,7 +306,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   });
 
   // ==========================================
-  // 第六步：批量获取链群名称
+  // 第七步：批量获取链群名称
   // ==========================================
   const allGroupIds = useMemo(() => {
     if (actionGroupPairs.length === 0) return [];
@@ -280,7 +316,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   const { groupNameMap, isPending: isGroupNamesPending } = useGroupNames(allGroupIds, allGroupIds.length > 0);
 
   // ==========================================
-  // 第七步：组装数据
+  // 第八步：组装数据
   // ==========================================
   // 创建 (actionId, groupId) 到 generatedRewardsData 索引的映射
   const actionGroupToRewardIndexMap = useMemo(() => {
@@ -383,29 +419,35 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   // 计算最终状态
   // ==========================================
   const isPending = useMemo(() => {
-    // 获取所有激活链群数据加载中
-    if (isActionIdsWithGroupIdsPending) return true;
+    // 如果 allActionIds 为空数组，说明查询已完成，直接返回 false
+    if (!allActionIds || allActionIds.length === 0) {
+      // 但需要确保第一步的查询已完成
+      return isActionIdsPending;
+    }
+
+    // 第一步：获取行动ID
+    if (isActionIdsPending) return true;
+    // 第二步：获取扩展地址
+    if (isExtensionsPending) return true;
+    // 第三步：获取验证的链群
+    if (isGroupIdsPending) return true;
     // 如果没有链群数据，不需要等待其他查询
     if (actionGroupPairs.length === 0) return false;
-    // 等待激励分配明细、扩展合约地址、链群总铸币量、行动信息、链群名称查询完成
-    return (
-      isRewardDistributionPending ||
-      isExtensionsPending ||
-      isGeneratedRewardsPending ||
-      isActionInfosPending ||
-      isGroupNamesPending
-    );
+    // 等待激励分配明细、链群总铸币量、行动信息、链群名称查询完成
+    return isRewardDistributionPending || isGeneratedRewardsPending || isActionInfosPending || isGroupNamesPending;
   }, [
-    isActionIdsWithGroupIdsPending,
+    allActionIds,
+    isActionIdsPending,
+    isExtensionsPending,
+    isGroupIdsPending,
     actionGroupPairs.length,
     isRewardDistributionPending,
-    isExtensionsPending,
     isGeneratedRewardsPending,
     isActionInfosPending,
     isGroupNamesPending,
   ]);
 
-  const error = actionIdsWithGroupIdsError || rewardDistributionError || generatedRewardsError || null;
+  const error = actionIdsError || groupIdsError || rewardDistributionError || generatedRewardsError || null;
 
   // ==========================================
   // 返回结果

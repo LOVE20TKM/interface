@@ -35,8 +35,6 @@ export interface GroupBasicInfo {
 
 export interface UseExtensionGroupInfosOfActionParams {
   extensionAddress: `0x${string}` | undefined;
-  tokenAddress: `0x${string}` | undefined;
-  actionId: bigint | undefined;
 }
 
 export interface UseExtensionGroupInfosOfActionResult {
@@ -55,12 +53,10 @@ export interface UseExtensionGroupInfosOfActionResult {
  */
 export const useExtensionGroupInfosOfAction = ({
   extensionAddress,
-  tokenAddress,
-  actionId,
 }: UseExtensionGroupInfosOfActionParams): UseExtensionGroupInfosOfActionResult => {
   // 第一步：批量获取活跃链群NFT列表和行动最大参与代币量
   const firstBatchContracts = useMemo(() => {
-    if (!tokenAddress || actionId === undefined) return [];
+    if (!extensionAddress) return [];
 
     return [
       // 获取活跃链群NFT列表
@@ -68,17 +64,17 @@ export const useExtensionGroupInfosOfAction = ({
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
         functionName: 'activeGroupIds',
-        args: [tokenAddress, actionId],
+        args: [extensionAddress],
       },
       // 获取行动最大参与代币量
       {
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
-        functionName: 'calculateJoinMaxAmount',
-        args: [tokenAddress, actionId],
+        functionName: 'maxJoinAmount',
+        args: [extensionAddress],
       },
     ];
-  }, [tokenAddress, actionId]);
+  }, [extensionAddress]);
 
   const {
     data: firstBatchData,
@@ -87,7 +83,7 @@ export const useExtensionGroupInfosOfAction = ({
   } = useReadContracts({
     contracts: firstBatchContracts as any,
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && firstBatchContracts.length > 0,
+      enabled: !!extensionAddress && firstBatchContracts.length > 0,
     },
   });
 
@@ -102,16 +98,10 @@ export const useExtensionGroupInfosOfAction = ({
     return safeToBigInt(firstBatchData[1].result);
   }, [firstBatchData]);
 
-  console.log('actionMaxJoinAmount', actionMaxJoinAmount);
-  console.log('groupIds', groupIds);
-  console.log('firstBatchData', firstBatchData);
-  console.log('firstBatchContracts', firstBatchContracts);
-  console.log('isFirstBatchPending', isFirstBatchPending);
-
   // 第二步：批量获取每个群组的详细信息
   // 新版合约：totalJoinedAmountByGroupId 和 accountsByGroupIdCount 移到 GroupJoin
   const detailContracts = useMemo(() => {
-    if (!tokenAddress || actionId === undefined || groupIds.length === 0) return [];
+    if (!extensionAddress || groupIds.length === 0) return [];
 
     const contracts = [];
 
@@ -121,7 +111,7 @@ export const useExtensionGroupInfosOfAction = ({
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
         functionName: 'groupInfo',
-        args: [tokenAddress, actionId, groupId],
+        args: [extensionAddress, groupId],
       });
 
       // 获取群组名称（通过 LOVE20Group 合约）
@@ -145,7 +135,7 @@ export const useExtensionGroupInfosOfAction = ({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'totalJoinedAmountByGroupId',
-        args: [tokenAddress, actionId, groupId],
+        args: [extensionAddress, groupId],
       });
 
       // 获取群组成员数量（新版合约移到 GroupJoin）
@@ -153,12 +143,12 @@ export const useExtensionGroupInfosOfAction = ({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'accountsByGroupIdCount',
-        args: [tokenAddress, actionId, groupId],
+        args: [extensionAddress, groupId],
       });
     }
 
     return contracts;
-  }, [tokenAddress, actionId, groupIds]);
+  }, [extensionAddress, groupIds]);
 
   const {
     data: detailData,
@@ -167,7 +157,7 @@ export const useExtensionGroupInfosOfAction = ({
   } = useReadContracts({
     contracts: detailContracts as any,
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && detailContracts.length > 0,
+      enabled: !!extensionAddress && detailContracts.length > 0,
     },
   });
 
@@ -239,7 +229,7 @@ export const useExtensionGroupInfosOfAction = ({
     // 如果第一步（获取活跃链群NFT列表和行动最大参与量）还在加载，返回 true
     if (isFirstBatchPending) return true;
     // 如果 tokenAddress 或 actionId 不存在，返回 true（等待前置条件）
-    if (!tokenAddress || actionId === undefined) return true;
+    if (!extensionAddress) return true;
     // 如果没有链群（groupIds 为空），且查询已完成，返回 false
     if (groupIds.length === 0 && !isFirstBatchPending) {
       return false;
@@ -250,7 +240,7 @@ export const useExtensionGroupInfosOfAction = ({
     }
     // 其他情况，返回 true
     return true;
-  }, [isFirstBatchPending, isDetailPending, groupIds.length, tokenAddress, actionId]);
+  }, [isFirstBatchPending, isDetailPending, groupIds.length, extensionAddress]);
 
   return {
     groups,

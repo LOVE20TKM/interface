@@ -35,7 +35,7 @@ export interface UseActingPageDataResult {
  *
  * 功能：
  * 1. 获取用户可参与的行动列表
- * 2. 自动查询扩展行动的基础数据（accountsCount, joinedValue）
+ * 2. 自动查询扩展行动的基础数据（accountsCount, convertedJoinedValue）
  * 3. 用扩展数据增强行动列表（覆盖 joinedAmount）
  * 4. 提供统一的加载状态和错误处理
  *
@@ -58,7 +58,7 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
     return rawActions?.map((action) => action.action) || [];
   }, [rawActions]);
 
-  // 获取扩展行动的基础数据（accountsCount, joinedValue）
+  // 获取扩展行动的基础数据（accountsCount, convertedJoinedValue）
   const {
     baseData: extensionData,
     isPending: isPendingExtension,
@@ -68,7 +68,7 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
     actionInfos,
   });
 
-  // 增强 joinableActions 数据：用扩展的 joinedValue 覆盖原始 joinedAmount
+  // 增强 joinableActions 数据：用扩展的 convertedJoinedValue 覆盖原始 joinedAmount
   const joinableActions = useMemo(() => {
     if (!rawActions) return undefined;
     if (!extensionData || extensionData.length === 0) return rawActions;
@@ -76,11 +76,11 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
     return rawActions.map((action, index) => {
       const extension = extensionData[index];
 
-      // 如果是扩展行动且有 joinedValue 数据，使用扩展数据覆盖
-      if (extension?.isExtension && extension.joinedValue !== undefined) {
+      // 如果是扩展行动且有 convertedJoinedValue 数据，使用扩展数据覆盖
+      if (extension?.isExtension && extension.convertedJoinedValue !== undefined) {
         return {
           ...action,
-          joinedAmount: extension.joinedValue, // 使用扩展的参与值
+          joinedAmount: extension.convertedJoinedValue, // 使用扩展的转换后参与值
           accountsCount: extension.accountsCount, // 添加参与人数
           isExtension: true,
           extensionAddress: extension.extension,

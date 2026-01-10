@@ -48,8 +48,6 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
   // 获取链群列表
   const { groups, isPending, error } = useExtensionGroupInfosOfAction({
     extensionAddress,
-    tokenAddress: token?.address,
-    actionId,
   });
 
   // 获取当前用户加入的链群信息

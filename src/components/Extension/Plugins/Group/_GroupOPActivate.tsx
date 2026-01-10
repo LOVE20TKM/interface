@@ -122,9 +122,9 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     isPending: isPendingBalance,
     error: errorBalance,
   } = useBalanceOf(
-    (actionParams?.stakeTokenAddress || ZERO_ADDRESS) as `0x${string}`,
+    (actionParams?.tokenAddress || ZERO_ADDRESS) as `0x${string}`,
     (account || ZERO_ADDRESS) as `0x${string}`,
-    !!actionParams?.stakeTokenAddress && !!account,
+    !!actionParams?.tokenAddress && !!account,
   );
 
   // 表单验证
@@ -237,10 +237,10 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     error: errorAllowance,
     refetch: refetchAllowance,
   } = useAllowance(
-    (actionParams?.stakeTokenAddress || ZERO_ADDRESS) as `0x${string}`,
+    (actionParams?.tokenAddress || ZERO_ADDRESS) as `0x${string}`,
     (account || ZERO_ADDRESS) as `0x${string}`,
     process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`,
-    !!actionParams?.stakeTokenAddress && !!account,
+    !!actionParams?.tokenAddress && !!account,
   );
 
   const isTokenApproved = allowance !== undefined && allowance >= stakeAmount;
@@ -252,7 +252,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     isConfirming: isConfirmingApprove,
     isConfirmed: isConfirmedApprove,
     writeError: errorApprove,
-  } = useApprove((actionParams?.stakeTokenAddress || ZERO_ADDRESS) as `0x${string}`);
+  } = useApprove((actionParams?.tokenAddress || ZERO_ADDRESS) as `0x${string}`);
 
   async function handleApprove(values: FormValues) {
     if (!stakeAmount || stakeAmount === BigInt(0)) {
@@ -436,10 +436,10 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                 <FormItem>
                   <FormLabel>
                     链群容量上限 ({actionParams?.joinTokenSymbol}
-                    {actionParams?.stakeTokenAddress && (
+                    {actionParams?.tokenAddress && (
                       <span className="gap-0 pl-2">
                         <AddressWithCopyButton
-                          address={actionParams.stakeTokenAddress}
+                          address={actionParams.tokenAddress}
                           showCopyButton={true}
                           showAddress={true}
                           colorClassName="text-greyscale-500"

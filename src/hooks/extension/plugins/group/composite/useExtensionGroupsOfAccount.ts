@@ -7,7 +7,6 @@ import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-import { useTokenAddress } from '../contracts/useExtensionGroupAction';
 
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
 const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
@@ -29,7 +28,6 @@ export interface AccountGroupInfo {
 
 export interface UseExtensionGroupsOfAccountParams {
   extensionAddress: `0x${string}` | undefined;
-  actionId: bigint | undefined;
   account: `0x${string}` | undefined;
 }
 
@@ -52,25 +50,21 @@ export interface UseExtensionGroupsOfAccountResult {
  */
 export const useExtensionGroupsOfAccount = ({
   extensionAddress,
-  actionId,
   account,
 }: UseExtensionGroupsOfAccountParams): UseExtensionGroupsOfAccountResult => {
-  // 获取 tokenAddress
-  const { tokenAddress, isPending: isTokenAddressPending } = useTokenAddress(extensionAddress as `0x${string}`);
-
   // 第一步：获取账号的所有活跃链群NFT列表
   const groupIdsContract = useMemo(() => {
-    if (!tokenAddress || actionId === undefined || !account) return [];
+    if (!extensionAddress || !account) return [];
 
     return [
       {
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
         functionName: 'activeGroupIdsByOwner',
-        args: [tokenAddress, actionId, account],
+        args: [extensionAddress, account],
       },
     ];
-  }, [tokenAddress, actionId, account]);
+  }, [extensionAddress, account]);
 
   const {
     data: groupIdsData,
@@ -79,7 +73,7 @@ export const useExtensionGroupsOfAccount = ({
   } = useReadContracts({
     contracts: groupIdsContract as any,
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && !!account && groupIdsContract.length > 0,
+      enabled: !!extensionAddress && !!account && groupIdsContract.length > 0,
     },
   });
 
@@ -90,9 +84,9 @@ export const useExtensionGroupsOfAccount = ({
   }, [groupIdsData]);
 
   // 第二步：批量获取每个链群的详细信息
-  // 新版合约：totalJoinedAmountByGroupId 移到 GroupJoin，需要 tokenAddress, actionId, groupId
+  // 新版合约：totalJoinedAmountByGroupId 移到 GroupJoin，需要 extensionAddress, groupId
   const detailContracts = useMemo(() => {
-    if (!tokenAddress || !extensionAddress || actionId === undefined || groupIds.length === 0) return [];
+    if (!extensionAddress || groupIds.length === 0) return [];
 
     const contracts = [];
 
@@ -102,7 +96,7 @@ export const useExtensionGroupsOfAccount = ({
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
         functionName: 'groupInfo',
-        args: [tokenAddress, actionId, groupId],
+        args: [extensionAddress, groupId],
       });
 
       // 获取链群名称（通过 LOVE20Group 合约）
@@ -118,7 +112,7 @@ export const useExtensionGroupsOfAccount = ({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'totalJoinedAmountByGroupId',
-        args: [tokenAddress, actionId, groupId],
+        args: [extensionAddress, groupId],
       });
 
       // 获取群组成员数量（新版合约移到 GroupJoin）
@@ -126,12 +120,12 @@ export const useExtensionGroupsOfAccount = ({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'accountsByGroupIdCount',
-        args: [tokenAddress, actionId, groupId],
+        args: [extensionAddress, groupId],
       });
     }
 
     return contracts;
-  }, [tokenAddress, extensionAddress, actionId, groupIds]);
+  }, [extensionAddress, groupIds]);
 
   const {
     data: detailData,
@@ -140,7 +134,7 @@ export const useExtensionGroupsOfAccount = ({
   } = useReadContracts({
     contracts: detailContracts as any,
     query: {
-      enabled: !!tokenAddress && !!extensionAddress && actionId !== undefined && detailContracts.length > 0,
+      enabled: !!extensionAddress && detailContracts.length > 0,
     },
   });
 
@@ -183,10 +177,8 @@ export const useExtensionGroupsOfAccount = ({
 
   // 计算最终的 isPending 状态
   const isPending = useMemo(() => {
-    // 如果 tokenAddress 还在加载，返回 true
-    if (isTokenAddressPending) return true;
-    // 如果 tokenAddress、actionId 或 account 不存在，返回 true（等待前置条件）
-    if (!tokenAddress || actionId === undefined || !account) return true;
+    // 如果 extensionAddress 或 account 不存在，返回 true（等待前置条件）
+    if (!extensionAddress || !account) return true;
     // 如果链群NFT列表还在加载，返回 true
     if (isGroupIdsPending) return true;
     // 如果没有链群（groupIds 为空），且链群NFT列表查询已完成，返回 false
@@ -199,7 +191,7 @@ export const useExtensionGroupsOfAccount = ({
     }
     // 其他情况，返回 true
     return true;
-  }, [isTokenAddressPending, isGroupIdsPending, isDetailPending, groupIds.length, tokenAddress, actionId, account]);
+  }, [isGroupIdsPending, isDetailPending, groupIds.length, extensionAddress, account]);
 
   return {
     groups,

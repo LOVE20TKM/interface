@@ -21,12 +21,7 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
       {
         address: extensionAddress,
         abi: ExtensionGroupActionAbi,
-        functionName: 'tokenAddress',
-      },
-      {
-        address: extensionAddress,
-        abi: ExtensionGroupActionAbi,
-        functionName: 'STAKE_TOKEN_ADDRESS',
+        functionName: 'TOKEN_ADDRESS',
       },
       {
         address: extensionAddress,
@@ -56,11 +51,10 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
 
   // 提取查询结果
   const tokenAddress = data?.[0]?.result as `0x${string}` | undefined;
-  const stakeTokenAddress = data?.[1]?.result as `0x${string}` | undefined;
-  const joinTokenAddress = data?.[2]?.result as `0x${string}` | undefined;
-  const activationStakeAmount = safeToBigInt(data?.[3]?.result);
-  const maxJoinAmountRatio = safeToBigInt(data?.[4]?.result);
-  const maxVerifyCapacityFactor = safeToBigInt(data?.[5]?.result);
+  const joinTokenAddress = data?.[1]?.result as `0x${string}` | undefined;
+  const activationStakeAmount = safeToBigInt(data?.[2]?.result);
+  const maxJoinAmountRatio = safeToBigInt(data?.[3]?.result);
+  const maxVerifyCapacityFactor = safeToBigInt(data?.[4]?.result);
 
   return {
     tokenAddress,
@@ -68,7 +62,6 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
     groupManagerAddress: GROUP_MANAGER_ADDRESS,
     groupJoinAddress: GROUP_JOIN_ADDRESS,
     groupVerifyAddress: GROUP_VERIFY_ADDRESS,
-    stakeTokenAddress,
     joinTokenAddress,
     activationStakeAmount,
     maxJoinAmountRatio,

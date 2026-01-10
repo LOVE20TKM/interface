@@ -10,8 +10,8 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 export interface ExtensionActionConst {
   tokenAddress: `0x${string}`;
   actionId: bigint;
-  stakeTokenAddress: `0x${string}`;
-  stakeTokenSymbol: string | undefined;
+  // stakeTokenAddress 已删除 - 质押代币就是 tokenAddress
+  stakeTokenSymbol: string | undefined; // tokenAddress 的 symbol
   joinTokenAddress: `0x${string}`;
   joinTokenSymbol: string | undefined;
   maxJoinAmountRatio: bigint; // 单个行动者最大参与代币占比（wei，1e28=100%）
@@ -59,7 +59,7 @@ export const useExtensionActionConstCache = ({
           return {
             tokenAddress: parsed.tokenAddress as `0x${string}`,
             actionId: BigInt(parsed.actionId),
-            stakeTokenAddress: parsed.stakeTokenAddress as `0x${string}`,
+            // stakeTokenAddress 已删除，质押代币就是 tokenAddress
             stakeTokenSymbol: parsed.stakeTokenSymbol as string | undefined,
             joinTokenAddress: parsed.joinTokenAddress as `0x${string}`,
             joinTokenSymbol: parsed.joinTokenSymbol as string | undefined,
@@ -84,12 +84,7 @@ export const useExtensionActionConstCache = ({
       {
         address: extensionAddress,
         abi: ExtensionGroupActionAbi,
-        functionName: 'tokenAddress',
-      },
-      {
-        address: extensionAddress,
-        abi: ExtensionGroupActionAbi,
-        functionName: 'STAKE_TOKEN_ADDRESS',
+        functionName: 'TOKEN_ADDRESS',
       },
       {
         address: extensionAddress,
@@ -146,21 +141,21 @@ export const useExtensionActionConstCache = ({
     if (actionId === undefined) return undefined;
 
     // 如果没有合约数据，返回 undefined
-    if (!contractData || contractData.length < 6) return undefined;
+    if (!contractData || contractData.length < 5) return undefined;
 
-    const stakeTokenAddress = contractData[1]?.result as `0x${string}` | undefined;
-    const joinTokenAddress = contractData[2]?.result as `0x${string}` | undefined;
+    const tokenAddress = contractData[0]?.result as `0x${string}`;
+    const joinTokenAddress = contractData[1]?.result as `0x${string}` | undefined;
 
     return {
-      tokenAddress: contractData[0]?.result as `0x${string}`,
+      tokenAddress: tokenAddress,
       actionId: actionId,
-      stakeTokenAddress: stakeTokenAddress,
+      // stakeTokenAddress 字段已删除
+      stakeTokenSymbol: undefined, // tokenAddress 的 symbol，需要单独查询
       joinTokenAddress: joinTokenAddress,
-      stakeTokenSymbol: undefined, // 需要单独查询
       joinTokenSymbol: undefined, // 需要单独查询
-      maxJoinAmountRatio: safeToBigInt(contractData[3]?.result),
-      maxVerifyCapacityFactor: safeToBigInt(contractData[4]?.result),
-      groupActivationStakeAmount: safeToBigInt(contractData[5]?.result),
+      maxJoinAmountRatio: safeToBigInt(contractData[2]?.result),
+      maxVerifyCapacityFactor: safeToBigInt(contractData[3]?.result),
+      groupActivationStakeAmount: safeToBigInt(contractData[4]?.result),
     };
   }, [contractData, cachedData, actionId]);
 
@@ -172,9 +167,10 @@ export const useExtensionActionConstCache = ({
     }
 
     const contracts: any[] = [];
-    if (baseConstants.stakeTokenAddress) {
+    // 使用 tokenAddress 查询 symbol（因为 stake 和 token 现在是同一个）
+    if (baseConstants.tokenAddress) {
       contracts.push({
-        address: baseConstants.stakeTokenAddress,
+        address: baseConstants.tokenAddress,
         abi: LOVE20TokenAbi,
         functionName: 'symbol',
       });
@@ -242,7 +238,7 @@ export const useExtensionActionConstCache = ({
       const cacheValue = {
         tokenAddress: constants.tokenAddress,
         actionId: constants.actionId?.toString(),
-        stakeTokenAddress: constants.stakeTokenAddress,
+        // stakeTokenAddress 已删除，不再缓存此字段
         stakeTokenSymbol: constants.stakeTokenSymbol,
         joinTokenAddress: constants.joinTokenAddress,
         joinTokenSymbol: constants.joinTokenSymbol,

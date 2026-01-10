@@ -526,7 +526,7 @@ export const LOVE20GroupAbi = [
   },
   {
     "type": "function",
-    "name": "totalBurnedForMint",
+    "name": "totalMintCost",
     "inputs": [],
     "outputs": [
       {
@@ -625,7 +625,7 @@ export const LOVE20GroupAbi = [
   },
   {
     "type": "event",
-    "name": "GroupMint",
+    "name": "Mint",
     "inputs": [
       {
         "name": "tokenId",
@@ -652,7 +652,7 @@ export const LOVE20GroupAbi = [
         "internalType": "string"
       },
       {
-        "name": "mintCost",
+        "name": "cost",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -703,16 +703,6 @@ export const LOVE20GroupAbi = [
   {
     "type": "error",
     "name": "InvalidGroupName",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidParameter",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidTokenAddress",
     "inputs": []
   }
 ] as const satisfies Abi;

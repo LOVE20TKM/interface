@@ -13,7 +13,7 @@ import Header from '@/src/components/Header';
 import _GroupOPActivate from '@/src/components/Extension/Plugins/Group/_GroupOPActivate';
 import _GroupOPDeactivate from '@/src/components/Extension/Plugins/Group/_GroupOPDeactivate';
 import _GroupOPUpdate from '@/src/components/Extension/Plugins/Group/_GroupOPUpdate';
-import _GroupOPSetDelegated from '@/src/components/Extension/Plugins/Group/_GroupOPSetDelegated';
+import _GroupOPSetDelegate from '@/src/components/Extension/Plugins/Group/_GroupOPSetDelegate';
 import _GroupOPVerify from '@/src/components/Extension/Plugins/Group/_GroupOPVerify';
 
 type OpType = 'activate' | 'deactivate' | 'update' | 'set_delegated' | 'verify';
@@ -160,7 +160,7 @@ const ActionGroupOpPage: React.FC = () => {
       case 'update':
         return <_GroupOPUpdate {...baseProps} groupId={groupIdBigInt!} />;
       case 'set_delegated':
-        return <_GroupOPSetDelegated {...baseProps} groupId={groupIdBigInt!} />;
+        return <_GroupOPSetDelegate {...baseProps} groupId={groupIdBigInt!} />;
       case 'verify':
         return <_GroupOPVerify {...baseProps} groupId={groupIdBigInt!} groupName={groupName || ''} />;
       default:

@@ -4,16 +4,10 @@
 'use client';
 
 // React
-import React, { useContext, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 // UI 组件
 import { Button } from '@/components/ui/button';
-
-// 类型
-import { ActionInfo } from '@/src/types/love20types';
-
-// 上下文
-import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
@@ -27,27 +21,19 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 interface GroupDistrustVoteSelectProps {
-  actionId: bigint;
-  actionInfo: ActionInfo;
   extensionAddress: `0x${string}`;
   onSelectOwner: (owner: `0x${string}`) => void;
   onCancel: () => void;
 }
 
 const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
-  actionId,
-  actionInfo,
   extensionAddress,
   onSelectOwner,
   onCancel,
 }) => {
-  const { token } = useContext(TokenContext) || {};
-
   // 获取链群列表
   const { groups, isPending, error } = useExtensionGroupInfosOfAction({
     extensionAddress,
-    tokenAddress: token?.address,
-    actionId,
   });
 
   // 错误处理

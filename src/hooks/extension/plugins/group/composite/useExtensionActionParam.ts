@@ -5,13 +5,12 @@ import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-import { useExtensionActionConstCache } from './useExtensionActionConstCache';
+import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
 
 export interface ExtensionActionParam {
   // 常量数据
   tokenAddress: `0x${string}`;
-  stakeTokenAddress: `0x${string}`;
-  stakeTokenSymbol: string | undefined;
+  stakeTokenSymbol: string | undefined; // tokenAddress 的 symbol（质押代币就是当前代币）
   joinTokenAddress: `0x${string}`;
   joinTokenSymbol: string | undefined;
   maxJoinAmountRatio: bigint; // 单个行动者最大参与代币占比（wei，1e28=100%）
@@ -54,19 +53,15 @@ export const useExtensionActionParam = ({
   // 一次批量读取：joinMaxAmount
   const realtimeContracts = useMemo(() => {
     if (!extensionAddress) return [];
-    if (!constants?.tokenAddress) return [];
-    if (actionId === undefined) return [];
-
-    const tokenAddress = constants.tokenAddress;
     return [
       {
         address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER,
         abi: GroupManagerAbi,
-        functionName: 'calculateJoinMaxAmount',
-        args: [tokenAddress, actionId],
+        functionName: 'maxJoinAmount',
+        args: [extensionAddress],
       },
     ];
-  }, [extensionAddress, constants?.tokenAddress, actionId]);
+  }, [extensionAddress]);
 
   const {
     data: realtimeData,

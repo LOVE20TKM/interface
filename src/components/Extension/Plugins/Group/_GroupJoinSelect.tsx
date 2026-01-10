@@ -57,8 +57,6 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
     error: errorGroups,
   } = useExtensionGroupInfosOfAction({
     extensionAddress,
-    tokenAddress: token?.address,
-    actionId,
   });
 
   // 用户输入的链群名称

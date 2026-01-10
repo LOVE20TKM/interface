@@ -33,7 +33,6 @@ import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import { useUpdateVerificationInfo } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useCenter } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupAction';
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
@@ -74,14 +73,8 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     groupId,
   });
 
-  // 获取 center 地址
-  const { centerAddress, isPending: isPendingCenter, error: errorCenter } = useCenter(extensionAddress);
-
   // 获取加入信息
-  const { amount, error: errorJoinInfo } = useJoinInfo(
-    extensionAddress,
-    account as `0x${string}`,
-  );
+  const { amount, error: errorJoinInfo } = useJoinInfo(extensionAddress, account as `0x${string}`);
 
   // 获取行动详细信息（包含验证字段定义）
   const {
@@ -165,7 +158,7 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
   } = useUpdateVerificationInfo();
 
   async function handleSubmit(values: FormValues) {
-    if (!centerAddress || !token?.address || !account) {
+    if (!token?.address || !account) {
       console.error('Missing required parameters');
       return;
     }
@@ -193,14 +186,13 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
   const { handleError } = useContractError();
   useEffect(() => {
     if (errorDetail) handleError(errorDetail);
-    if (errorCenter) handleError(errorCenter);
     if (errorJoinInfo) handleError(errorJoinInfo);
     if (errorActionInfo) handleError(errorActionInfo);
     if (errorUpdate) handleError(errorUpdate);
     if (errorVerificationInfos) handleError(errorVerificationInfos);
-  }, [errorDetail, errorCenter, errorJoinInfo, errorActionInfo, errorUpdate, errorVerificationInfos, handleError]);
+  }, [errorDetail, errorJoinInfo, errorActionInfo, errorUpdate, errorVerificationInfos, handleError]);
 
-  if (isPendingDetail || isPendingCenter || isPendingActionInfo || isPendingVerificationInfos) {
+  if (isPendingDetail || isPendingActionInfo || isPendingVerificationInfos) {
     return (
       <div className="flex flex-col items-center px-4 pt-6">
         <LoadingIcon />

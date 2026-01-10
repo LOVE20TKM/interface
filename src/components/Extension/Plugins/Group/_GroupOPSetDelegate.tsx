@@ -1,4 +1,4 @@
-// components/Extension/Plugins/Group/_GroupOPSetDelegated.tsx
+// components/Extension/Plugins/Group/_GroupOPSetDelegate.tsx
 // 设置打分代理操作
 
 'use client';
@@ -29,8 +29,8 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import {
-  useDelegatedVerifierByGroupId,
-  useSetGroupDelegatedVerifier,
+  useDelegateByGroupId,
+  useSetGroupDelegate,
 } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
@@ -50,7 +50,7 @@ interface GroupOPSetDelegatedProps {
   groupId: bigint;
 }
 
-const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
+const _GroupOPSetDelegate: React.FC<GroupOPSetDelegatedProps> = ({
   actionId,
   actionInfo,
   extensionAddress,
@@ -70,7 +70,7 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
     delegatedVerifier,
     isPending: isPendingDelegated,
     error: errorDelegated,
-  } = useDelegatedVerifierByGroupId(extensionAddress, groupId);
+  } = useDelegateByGroupId(extensionAddress, groupId);
 
   // 表单验证：允许空值，空值表示取消代理
   const formSchema = z.object({
@@ -104,34 +104,34 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
 
   // 设置打分代理
   const {
-    setGroupDelegatedVerifier,
+    setGroupDelegate,
     isPending: isPendingSet,
     isConfirming: isConfirmingSet,
     isConfirmed: isConfirmedSet,
     writeError: errorSet,
-  } = useSetGroupDelegatedVerifier();
+  } = useSetGroupDelegate();
 
   async function handleSetDelegated(values: FormValues) {
     // 如果输入为空，使用零地址（取消代理）
     const address = values.delegatedVerifier?.trim() || '0x0000000000000000000000000000000000000000';
 
     try {
-      await setGroupDelegatedVerifier(extensionAddress, groupId, address as `0x${string}`);
+      await setGroupDelegate(extensionAddress, groupId, address as `0x${string}`);
     } catch (error) {
-      console.error('Set delegated verifier failed', error);
+      console.error('Set delegate failed', error);
     }
   }
 
   // 快速取消代理
   async function handleCancelDelegated() {
     try {
-      await setGroupDelegatedVerifier(
+      await setGroupDelegate(
         extensionAddress,
         groupId,
         '0x0000000000000000000000000000000000000000' as `0x${string}`,
       );
     } catch (error) {
-      console.error('Cancel delegated verifier failed', error);
+      console.error('Cancel delegate failed', error);
     }
   }
 
@@ -248,4 +248,4 @@ const _GroupOPSetDelegated: React.FC<GroupOPSetDelegatedProps> = ({
   );
 };
 
-export default _GroupOPSetDelegated;
+export default _GroupOPSetDelegate;

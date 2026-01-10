@@ -17,8 +17,6 @@ import { useActiveGroupIdsByOwner } from './contracts/useGroupManager';
  */
 interface UseGroupActionDynamicTabsParams {
   extensionAddress?: `0x${string}`; // 扩展合约地址
-  tokenAddress?: `0x${string}`; // Token 合约地址（已废弃，保留以兼容）
-  actionId?: bigint; // 行动 ID（已废弃，保留以兼容）
   account?: `0x${string}`; // 当前用户地址
   enabled?: boolean; // 是否启用（用于条件调用）
 }
@@ -43,24 +41,20 @@ interface UseGroupActionDynamicTabsResult {
  * @example
  * ```tsx
  * const { tabs, isPending, isGroupOwner } = useGroupActionDynamicTabs({
- *   tokenAddress: '0x...',
- *   actionId: BigInt(1),
+ *   extensionAddress: '0x...',
  *   account: '0x...',
  *   enabled: true,
  * });
  * ```
  */
 export const useGroupActionDynamicTabs = (params: UseGroupActionDynamicTabsParams): UseGroupActionDynamicTabsResult => {
-  const { extensionAddress, tokenAddress, actionId, account, enabled = true } = params;
+  const { extensionAddress, account, enabled = true } = params;
 
   // 判断参数是否完整（优先使用 extensionAddress，兼容旧的 tokenAddress + actionId）
-  const isParamsValid = (!!extensionAddress || (!!tokenAddress && actionId !== undefined)) && !!account && enabled;
+  const isParamsValid = !!extensionAddress && !!account && enabled;
 
   // 获取当前用户作为链群服务者的活跃链群NFT 列表
-  const { activeGroupIds, isPending } = useActiveGroupIdsByOwner(
-    (extensionAddress || tokenAddress) as `0x${string}`,
-    account as `0x${string}`,
-  );
+  const { activeGroupIds, isPending } = useActiveGroupIdsByOwner(extensionAddress!, account as `0x${string}`);
 
   // 判断是否是链群服务者（拥有至少一个活跃链群）
   const isGroupOwner = useMemo(() => {

@@ -13,12 +13,12 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'tokenAddress',
+        functionName: 'TOKEN_ADDRESS',
       },
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'joinTokenAddress',
+        functionName: 'JOIN_TOKEN_ADDRESS',
       },
       {
         address: extensionAddress,

@@ -3,7 +3,7 @@
  *
  * 功能概述：
  * 1. 根据 actionIds 批量验证是否为扩展行动
- * 2. 返回扩展地址和验证结果
+ * 2. 返回扩展地址、factory地址、参与代币信息和验证结果
  * 3. 使用 LocalStorage 永久缓存验证结果
  * 4. 使用 useReadContracts 批量调用优化性能
  *
@@ -11,7 +11,7 @@
  * 1. 批量从 ExtensionCenter.extension() 获取扩展地址
  * 2. 批量调用扩展合约的 factory() 方法获取 factory 地址
  * 3. 检查 factory 地址是否在配置的 factory 列表中
- * 4. 调用 factory.exists(extensionAddress) 方法验证扩展是否合法
+ * 4. 批量获取 joinedAmountTokenAddress 和判断是否为 LP token
  *
  * 使用示例：
  * ```typescript
@@ -21,9 +21,16 @@
  * });
  *
  * // extensions: [
- * //   { actionId: 1n, extensionAddress: '0x...', isExtension: true },
+ * //   {
+ * //     actionId: 1n,
+ * //     extensionAddress: '0x...',
+ * //     isExtension: true,
+ * //     factoryAddress: '0x...',
+ * //     joinedAmountTokenAddress: '0x...',
+ * //     joinedAmountTokenIsLP: false
+ * //   },
  * //   { actionId: 2n, isExtension: false },
- * //   { actionId: 3n, extensionAddress: '0x...', isExtension: true }
+ * //   { actionId: 3n, extensionAddress: '0x...', isExtension: true, ... }
  * // ]
  * ```
  */
@@ -32,7 +39,7 @@ import { useMemo, useEffect, useState } from 'react';
 import { useReadContracts } from 'wagmi';
 import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 import { IExtensionAbi } from '@/src/abis/IExtension';
-import { ExtensionFactoryBaseAbi } from '@/src/abis/ExtensionFactoryBase';
+import { UniswapV2PairAbi } from '@/src/abis/UniswapV2Pair';
 import { isKnownFactory } from '@/src/config/extensionConfig';
 import { Token } from '@/src/contexts/TokenContext';
 
@@ -56,6 +63,9 @@ export interface ExtensionValidationInfo {
   actionId: bigint;
   extensionAddress?: `0x${string}`;
   isExtension: boolean;
+  factoryAddress?: `0x${string}`;
+  joinedAmountTokenAddress?: `0x${string}`; // 参与金额计价代币地址
+  joinedAmountTokenIsLP?: boolean; // 该代币是否为 UniswapV2 LP token
 }
 
 /**
@@ -65,6 +75,9 @@ interface CacheItem {
   data: {
     extensionAddress: string; // "0x0..." 表示非扩展
     isExtension: boolean;
+    factoryAddress?: string;
+    joinedAmountTokenAddress?: string;
+    joinedAmountTokenIsLP?: boolean;
   };
 }
 
@@ -131,6 +144,11 @@ function getCachedExtensionValidation(tokenAddress: string, actionId: bigint): E
       extensionAddress:
         item.data.extensionAddress !== ZERO_ADDRESS ? (item.data.extensionAddress as `0x${string}`) : undefined,
       isExtension: item.data.isExtension,
+      factoryAddress: item.data.factoryAddress ? (item.data.factoryAddress as `0x${string}`) : undefined,
+      joinedAmountTokenAddress: item.data.joinedAmountTokenAddress
+        ? (item.data.joinedAmountTokenAddress as `0x${string}`)
+        : undefined,
+      joinedAmountTokenIsLP: item.data.joinedAmountTokenIsLP,
     };
   } catch (error) {
     console.error('读取扩展验证缓存失败:', error);
@@ -146,6 +164,9 @@ function setCachedExtensionValidation(
   actionId: bigint,
   extensionAddress: `0x${string}`,
   isExtension: boolean,
+  factoryAddress?: `0x${string}`,
+  joinedAmountTokenAddress?: `0x${string}`,
+  joinedAmountTokenIsLP?: boolean,
 ): void {
   if (typeof window === 'undefined') return;
 
@@ -155,6 +176,9 @@ function setCachedExtensionValidation(
       data: {
         extensionAddress,
         isExtension,
+        factoryAddress,
+        joinedAmountTokenAddress,
+        joinedAmountTokenIsLP,
       },
     };
     localStorage.setItem(key, JSON.stringify(item));
@@ -215,6 +239,16 @@ export const useExtensionsByActionIdsWithCache = ({
     actionIds.forEach((actionId) => {
       const cachedInfo = getCachedExtensionValidation(tokenAddress, actionId);
       if (cachedInfo !== null) {
+        // 验证缓存完整性（向后兼容）
+        if (cachedInfo.isExtension) {
+          // 如果是扩展行动，必须有完整的新字段
+          if (!cachedInfo.factoryAddress || cachedInfo.joinedAmountTokenAddress === undefined) {
+            console.log(`⚠️ ActionId ${actionId} 缓存不完整（缺少新字段），清除缓存重新查询`);
+            clearExtensionValidationCache(tokenAddress, actionId);
+            uncached.push(actionId);
+            return;
+          }
+        }
         cached.set(actionId, cachedInfo);
       } else {
         uncached.push(actionId);
@@ -286,7 +320,7 @@ export const useExtensionsByActionIdsWithCache = ({
     return validExtensions.map((info) => ({
       address: info.extensionAddress,
       abi: IExtensionAbi,
-      functionName: 'factory' as const,
+      functionName: 'FACTORY_ADDRESS' as const,
       args: [],
     }));
   }, [validExtensions]);
@@ -328,27 +362,66 @@ export const useExtensionsByActionIdsWithCache = ({
     return extensions;
   }, [factoryAddressesData, validExtensions]);
 
-  // ==================== 阶段 3: 批量验证扩展存在性 ====================
+  // ==================== 阶段 3: 批量获取 joinedAmountTokenAddress 和 LP 标识 ====================
 
-  const existsContracts = useMemo(() => {
+  // 阶段 3.1: 批量获取 joinedAmountTokenAddress（只对 knownFactoryExtensions 查询）
+  const joinedAmountTokenAddressContracts = useMemo(() => {
     if (knownFactoryExtensions.length === 0) return [];
 
     return knownFactoryExtensions.map((info) => ({
-      address: info.factoryAddress,
-      abi: ExtensionFactoryBaseAbi,
-      functionName: 'exists' as const,
-      args: [info.extensionAddress] as const,
+      address: info.extensionAddress,
+      abi: IExtensionAbi,
+      functionName: 'joinedAmountTokenAddress' as const,
+      args: [],
     }));
   }, [knownFactoryExtensions]);
 
   const {
-    data: existsData,
+    data: joinedAmountTokenAddressData,
     isPending: isPending3,
     error: error3,
   } = useReadContracts({
-    contracts: existsContracts as any,
+    contracts: joinedAmountTokenAddressContracts as any,
     query: {
-      enabled: existsContracts.length > 0,
+      enabled: joinedAmountTokenAddressContracts.length > 0,
+    },
+  });
+
+  // 阶段 3.2: 批量检查 LP token（只对非零 joinedAmountTokenAddress 调用）
+  const lpFactoryCheckContracts = useMemo(() => {
+    if (!joinedAmountTokenAddressData || joinedAmountTokenAddressData.length === 0) return [];
+
+    const uniswapV2FactoryAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY;
+    if (!uniswapV2FactoryAddress) {
+      console.warn('⚠️ NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY 未配置，跳过 LP 检测');
+      return [];
+    }
+
+    const contracts: any[] = [];
+    joinedAmountTokenAddressData.forEach((result) => {
+      const tokenAddress = result?.result as `0x${string}` | undefined;
+      // 跳过零地址
+      if (!tokenAddress || tokenAddress === ZERO_ADDRESS) return;
+
+      contracts.push({
+        address: tokenAddress,
+        abi: UniswapV2PairAbi,
+        functionName: 'factory' as const,
+        args: [],
+      });
+    });
+
+    return contracts;
+  }, [joinedAmountTokenAddressData]);
+
+  const {
+    data: lpFactoryData,
+    isPending: isPending4,
+    error: error4,
+  } = useReadContracts({
+    contracts: lpFactoryCheckContracts as any,
+    query: {
+      enabled: lpFactoryCheckContracts.length > 0,
     },
   });
 
@@ -363,31 +436,38 @@ export const useExtensionsByActionIdsWithCache = ({
     // 等待 factory 地址查询完成
     if (factoryContracts.length > 0 && isPending2) return;
 
-    // 等待 exists 验证完成
-    if (existsContracts.length > 0 && isPending3) return;
+    // 等待 joinedAmountTokenAddress 查询完成
+    if (joinedAmountTokenAddressContracts.length > 0 && isPending3) return;
+
+    // 等待 LP factory 检查完成
+    if (lpFactoryCheckContracts.length > 0 && isPending4) return;
 
     let cachedCount = 0;
 
     // 构建验证结果的映射（用于快速查找）
     const validExtensionMap = new Map<number, ExtensionInfo>();
-    validExtensions.forEach((info, index) => {
+    validExtensions.forEach((info) => {
       validExtensionMap.set(info.arrayIndex, info);
     });
 
-    const knownFactoryMap = new Map<number, FactoryInfo>();
-    knownFactoryExtensions.forEach((info, index) => {
-      knownFactoryMap.set(info.arrayIndex, info);
+    // 构建 knownFactory 的映射，包含其在 knownFactoryExtensions 数组中的索引
+    const knownFactoryMap = new Map<number, FactoryInfo & { knownFactoryIndex: number }>();
+    knownFactoryExtensions.forEach((info, knownFactoryIndex) => {
+      knownFactoryMap.set(info.arrayIndex, { ...info, knownFactoryIndex });
     });
 
-    const existsResultMap = new Map<number, boolean>();
-    if (existsData) {
-      existsData.forEach((result, index) => {
-        if (result?.status === 'success') {
-          const factoryInfo = knownFactoryExtensions[index];
-          existsResultMap.set(factoryInfo.arrayIndex, result.result as boolean);
-        }
-      });
-    }
+    // 构建 LP 检查的映射（从 joinedToken 索引到 LP 数据索引）
+    const lpCheckIndexMap = new Map<number, number>();
+    let lpDataIndex = 0;
+    joinedAmountTokenAddressData?.forEach((result, knownFactoryIdx) => {
+      const tokenAddr = result?.result as `0x${string}` | undefined;
+      if (tokenAddr && tokenAddr !== ZERO_ADDRESS) {
+        lpCheckIndexMap.set(knownFactoryIdx, lpDataIndex);
+        lpDataIndex++;
+      }
+    });
+
+    const uniswapV2FactoryAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY?.toLowerCase();
 
     // 遍历所有未缓存的 actionIds，构建验证结果并缓存
     uncachedActionIds.forEach((actionId, index) => {
@@ -413,28 +493,55 @@ export const useExtensionsByActionIdsWithCache = ({
       }
 
       // 情况 4: 有扩展地址，但 factory 不在已知列表中，标记为非扩展并缓存
-      if (!knownFactoryMap.has(index)) {
+      const knownFactoryInfo = knownFactoryMap.get(index);
+      if (!knownFactoryInfo) {
         setCachedExtensionValidation(tokenAddress, actionId, ZERO_ADDRESS, false);
         cachedCount++;
         return;
       }
 
-      // 情况 5: factory 已知，但 exists 验证失败或返回 false，标记为非扩展并缓存
-      const existsResult = existsResultMap.get(index);
-      if (existsResult !== true) {
-        setCachedExtensionValidation(tokenAddress, actionId, ZERO_ADDRESS, false);
-        cachedCount++;
+      // 情况 5: factory 已知，获取完整信息
+      const knownFactoryIdx = knownFactoryInfo.knownFactoryIndex;
+
+      // 获取 joinedAmountTokenAddress
+      const joinedTokenResult = joinedAmountTokenAddressData?.[knownFactoryIdx];
+      if (!joinedTokenResult || joinedTokenResult.status !== 'success') {
+        // 查询失败，不缓存
+        console.warn(`⚠️ ActionId ${actionId} 的 joinedAmountTokenAddress 查询失败，跳过缓存`);
         return;
       }
 
-      // 情况 6: 所有验证通过，标记为扩展并缓存
-      setCachedExtensionValidation(tokenAddress, actionId, extensionAddress, true);
+      const joinedAmountTokenAddress = joinedTokenResult.result as `0x${string}`;
+
+      // 判断是否为 LP token
+      let joinedAmountTokenIsLP = false;
+      if (joinedAmountTokenAddress && joinedAmountTokenAddress !== ZERO_ADDRESS && uniswapV2FactoryAddress) {
+        const lpCheckIndex = lpCheckIndexMap.get(knownFactoryIdx);
+        if (lpCheckIndex !== undefined) {
+          const lpFactoryResult = lpFactoryData?.[lpCheckIndex];
+          if (lpFactoryResult?.status === 'success' && lpFactoryResult.result) {
+            const lpFactory = (lpFactoryResult.result as string).toLowerCase();
+            joinedAmountTokenIsLP = lpFactory === uniswapV2FactoryAddress;
+          }
+        }
+      }
+
+      // 情况 6: 所有验证通过，标记为扩展并缓存完整信息
+      setCachedExtensionValidation(
+        tokenAddress,
+        actionId,
+        extensionAddress,
+        true,
+        knownFactoryInfo.factoryAddress,
+        joinedAmountTokenAddress,
+        joinedAmountTokenIsLP,
+      );
       cachedCount++;
     });
 
     // 缓存更新后，触发重新读取
     if (cachedCount > 0) {
-      console.log(`✅ 成功缓存 ${cachedCount} 个扩展验证结果`);
+      console.log(`✅ 成功缓存 ${cachedCount} 个扩展验证结果（含新字段）`);
       setRefreshKey((prev) => prev + 1);
     }
   }, [
@@ -442,14 +549,17 @@ export const useExtensionsByActionIdsWithCache = ({
     uncachedActionIds,
     extensionContracts.length,
     factoryContracts.length,
-    existsContracts.length,
+    joinedAmountTokenAddressContracts.length,
+    lpFactoryCheckContracts.length,
     extensionAddressesData,
     validExtensions,
     knownFactoryExtensions,
-    existsData,
+    joinedAmountTokenAddressData,
+    lpFactoryData,
     isPending1,
     isPending2,
     isPending3,
+    isPending4,
   ]);
 
   // ==================== 合并缓存数据和新数据 ====================
@@ -497,8 +607,11 @@ export const useExtensionsByActionIdsWithCache = ({
     // 如果没有已知 factory，提前返回 false
     if (knownFactoryExtensions.length === 0) return false;
 
-    // 阶段 3：等待 exists 验证
-    return existsContracts.length > 0 && isPending3;
+    // 阶段 3.1：等待 joinedAmountTokenAddress 查询
+    if (joinedAmountTokenAddressContracts.length > 0 && isPending3) return true;
+
+    // 阶段 3.2：等待 LP factory 检查
+    return lpFactoryCheckContracts.length > 0 && isPending4;
   }, [
     enabled,
     hasActionIds,
@@ -509,11 +622,13 @@ export const useExtensionsByActionIdsWithCache = ({
     factoryContracts.length,
     isPending2,
     knownFactoryExtensions.length,
-    existsContracts.length,
+    joinedAmountTokenAddressContracts.length,
     isPending3,
+    lpFactoryCheckContracts.length,
+    isPending4,
   ]);
 
-  const error = error1 || error2 || error3 || null;
+  const error = error1 || error2 || error3 || error4 || null;
 
   return {
     extensions,

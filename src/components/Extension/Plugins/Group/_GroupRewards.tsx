@@ -34,13 +34,11 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 interface GroupRewardsProps {
-  actionId: bigint;
-  actionInfo: ActionInfo;
   extensionAddress: `0x${string}`;
   groupId: bigint;
 }
 
-const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, extensionAddress, groupId }) => {
+const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId }) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
 
@@ -67,8 +65,6 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
     error: errorRewards,
   } = useGroupAccountsRewardOfRound({
     extensionAddress: extensionAddress as `0x${string}`,
-    tokenAddress: token?.address as `0x${string}`,
-    actionId,
     round: selectedRound,
     groupId,
   });
@@ -80,8 +76,6 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
     error: errorScores,
   } = useGroupScoresOfRound({
     extensionAddress: extensionAddress as `0x${string}`,
-    tokenAddress: token?.address as `0x${string}`,
-    actionId,
     round: selectedRound,
     groupId,
   });
@@ -93,8 +87,6 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ actionId, actionInfo, exte
     error: errorAmounts,
   } = useGroupAccountsJoinedAmountOfRound({
     extensionAddress: extensionAddress as `0x${string}`,
-    tokenAddress: token?.address as `0x${string}`,
-    actionId,
     round: selectedRound,
     groupId,
   });

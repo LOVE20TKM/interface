@@ -35,6 +35,19 @@ export const ExtensionGroupActionFactoryAbi = [
   },
   {
     "type": "function",
+    "name": "CENTER_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "GROUP_ADDRESS",
     "inputs": [],
     "outputs": [
@@ -87,28 +100,10 @@ export const ExtensionGroupActionFactoryAbi = [
   },
   {
     "type": "function",
-    "name": "center",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "createExtension",
     "inputs": [
       {
         "name": "tokenAddress_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "stakeTokenAddress_",
         "type": "address",
         "internalType": "address"
       },
@@ -237,7 +232,7 @@ export const ExtensionGroupActionFactoryAbi = [
   },
   {
     "type": "event",
-    "name": "ExtensionCreate",
+    "name": "CreateExtension",
     "inputs": [
       {
         "name": "extension",

@@ -12,7 +12,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // my hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useHasUnmintedActionRewardOfLastRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
-import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite';
+import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite/useMyJoinedExtensionActions';
 import { useExtensionActionsLatestRewards } from '@/src/hooks/extension/base/composite/useExtensionActionsLatestRewards';
 
 // my components
@@ -94,20 +94,16 @@ const ActionRewardNotifier: React.FC = () => {
   );
 
   // 获取扩展行动列表（用于检查扩展激励，同时获取扩展合约信息）
-  const {
-    joinedExtensionActions,
-    extensionContractInfos: contractInfos,
-    isPending: isPendingExtensionActions,
-  } = useMyJoinedExtensionActions({
+  const { extensionContractInfos: contractInfos, isPending: isPendingExtensionActions } = useMyJoinedExtensionActions({
     tokenAddress: token?.address,
     account: account as `0x${string}`,
   });
 
   // 提取扩展地址
   const extensionAddresses = useMemo(() => {
-    if (!shouldTriggerCheck) return [];
+    // 即使 shouldTriggerCheck 为 false，也应该提取扩展地址，因为 contractInfos 可能在其他地方使用
     return contractInfos.filter((info) => info.isExtension && info.extension).map((info) => info.extension!);
-  }, [shouldTriggerCheck, contractInfos]);
+  }, [contractInfos]);
 
   // 检查扩展行动激励
   const { rewardsMap: extensionRewardsMap, isPending: isPendingExtensionRewards } = useExtensionActionsLatestRewards({

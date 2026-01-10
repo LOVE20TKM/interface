@@ -28,21 +28,12 @@ const ActRewardsPage = () => {
   const { token } = useContext(TokenContext) || {};
 
   // 获取页面数据
-  const {
-    actionInfo,
-    participantCount,
-    totalAmount,
-    userJoinedAmount,
-    isJoined,
-    isExtensionAction,
-    extensionAddress,
-    isPending,
-    error,
-  } = useActionDetailData({
-    tokenAddress: token?.address,
-    actionId,
-    account,
-  });
+  const { actionInfo, participantCount, totalAmount, isJoined, isExtensionAction, isPending, error } =
+    useActionDetailData({
+      tokenAddress: token?.address,
+      actionId,
+      account,
+    });
 
   // 错误处理
   const { handleContractError } = useHandleContractError();
@@ -78,7 +69,6 @@ const ActRewardsPage = () => {
               participantCount={participantCount}
               totalAmount={totalAmount}
               isJoined={isJoined}
-              userJoinedAmount={userJoinedAmount}
               isPending={isPending}
               showActionButtons={false}
               linkToActionInfo={true}

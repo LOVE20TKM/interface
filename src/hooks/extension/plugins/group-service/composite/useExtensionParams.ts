@@ -14,7 +14,7 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
       {
         address: extensionAddress,
         abi: ExtensionGroupServiceAbi,
-        functionName: 'tokenAddress',
+        functionName: 'TOKEN_ADDRESS',
       },
       {
         address: extensionAddress,

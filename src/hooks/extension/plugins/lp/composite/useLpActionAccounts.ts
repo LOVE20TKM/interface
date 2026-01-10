@@ -77,7 +77,7 @@ export const useLpActionAccounts = ({
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'joinTokenAddress',
+        functionName: 'JOIN_TOKEN_ADDRESS',
       },
       // 获取 govRatioMultiplier
       {
@@ -96,7 +96,7 @@ export const useLpActionAccounts = ({
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'totalJoinedAmount',
+        functionName: 'joinedAmount',
       },
     ];
   }, [extensionAddress, tokenAddress]);

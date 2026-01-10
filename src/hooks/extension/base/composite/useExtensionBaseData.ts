@@ -40,9 +40,11 @@ import { useReadContracts } from 'wagmi';
 import { IExtensionAbi } from '@/src/abis/IExtension';
 import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { ExtensionFactoryBaseAbi } from '@/src/abis/ExtensionFactoryBase';
+import { UniswapV2PairAbi } from '@/src/abis/UniswapV2Pair';
 import { getExtensionConfigByFactory, getExtensionConfigs, ExtensionType } from '@/src/config/extensionConfig';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { ActionInfo } from '@/src/types/love20types';
+import { useConvertTokenAmounts, UseConvertTokenAmountParams } from '@/src/hooks/composite/useConvertTokenAmount';
 
 // ==================== 类型定义 ====================
 
@@ -63,6 +65,8 @@ export interface ExtensionContractInfo {
   isExtension: boolean;
   factory?: FactoryInfo;
   extension?: `0x${string}`;
+  joinedAmountTokenAddress?: `0x${string}`; // 参与金额计价代币地址
+  joinedAmountTokenIsLP?: boolean; // 该代币是否为 UniswapV2 LP token
 }
 
 /**
@@ -73,7 +77,17 @@ export interface ExtensionBaseData {
   isExtension: boolean;
   extension?: `0x${string}`;
   accountsCount?: bigint;
-  joinedValue?: bigint;
+  joinedAmount?: bigint; // 原始的 joinedAmount
+  convertedJoinedValue?: bigint; // 转换后的参与值
+}
+
+/**
+ * 转换映射 (追踪哪个转换对应哪个行动)
+ */
+interface ConversionMapping {
+  actionId: bigint; // 原始行动 ID
+  extensionIndex: number; // 在 extensionAddresses 数组中的索引
+  conversionIndex: number; // 在 conversions 数组中的索引
 }
 
 // ==================== 缓存相关 ====================
@@ -90,6 +104,8 @@ interface ContractCacheItem {
     factoryAddress: string;
     factoryName: string;
     factoryType: string;
+    joinedAmountTokenAddress?: string;
+    joinedAmountTokenIsLP?: boolean;
   };
 }
 
@@ -129,6 +145,8 @@ function setCachedContractInfo(
   factoryAddress: string,
   factoryName: string,
   factoryType: string,
+  joinedAmountTokenAddress?: string,
+  joinedAmountTokenIsLP?: boolean,
 ): void {
   if (typeof window === 'undefined') return;
 
@@ -140,6 +158,8 @@ function setCachedContractInfo(
         factoryAddress,
         factoryName,
         factoryType,
+        joinedAmountTokenAddress,
+        joinedAmountTokenIsLP,
       },
     };
     localStorage.setItem(key, JSON.stringify(item));
@@ -214,7 +234,15 @@ export const useExtensionsContractInfo = ({
 
         // 验证缓存完整性：如果有扩展地址但没有 factory 地址，认为缓存无效
         if (!isExtensionZero && !cacheItem.data.factoryAddress) {
-          console.log(`⚠️ ActionId ${actionId} 合约信息缓存不完整，清除缓存重新查询`);
+          console.log(`⚠️ ActionId ${actionId} 合约信息缓存不完整（缺少factory），清除缓存重新查询`);
+          clearContractInfoCache(tokenAddress, actionId);
+          uncached.push(actionInfo);
+          continue;
+        }
+
+        // 验证缓存完整性：如果是扩展但缺少 joinedAmountTokenAddress，认为缓存无效
+        if (!isExtensionZero && cacheItem.data.joinedAmountTokenAddress === undefined) {
+          console.log(`⚠️ ActionId ${actionId} 合约信息缓存缺少 joinedAmountTokenAddress，清除缓存重新查询`);
           clearContractInfoCache(tokenAddress, actionId);
           uncached.push(actionInfo);
           continue;
@@ -231,6 +259,11 @@ export const useExtensionsContractInfo = ({
               }
             : undefined,
           extension: !isExtensionZero ? (cacheItem.data.extensionAddress as `0x${string}`) : undefined,
+          joinedAmountTokenAddress:
+            !isExtensionZero && cacheItem.data.joinedAmountTokenAddress
+              ? (cacheItem.data.joinedAmountTokenAddress as `0x${string}`)
+              : undefined,
+          joinedAmountTokenIsLP: !isExtensionZero ? cacheItem.data.joinedAmountTokenIsLP : undefined,
         });
       } else {
         uncached.push(actionInfo);
@@ -263,7 +296,7 @@ export const useExtensionsContractInfo = ({
       contracts.push({
         address: whitelistAddress,
         abi: IExtensionAbi,
-        functionName: 'factory' as const,
+        functionName: 'FACTORY_ADDRESS' as const,
         args: [],
       });
     }
@@ -324,6 +357,99 @@ export const useExtensionsContractInfo = ({
     },
   });
 
+  // 步骤5.5: 构建 joinedAmountTokenAddress 查询（仅查询 exists 验证通过的扩展）
+  const joinedAmountTokenAddressContracts = useMemo(() => {
+    if (!existsData || existsData.length === 0 || !factoryAddressesData) return [];
+
+    const configuredFactories = getExtensionConfigs();
+    const factoryAddressSet = new Set(configuredFactories.map((c) => c.factoryAddress.toLowerCase()));
+    const contracts: any[] = [];
+    let existsIndex = 0;
+
+    for (let i = 0; i < factoryAddressesData.length; i++) {
+      const factoryAddress = factoryAddressesData[i]?.result as `0x${string}` | undefined;
+      const whitelistInfo = validWhitelistInfos[i];
+
+      // 跳过不在配置中的 factory
+      if (!factoryAddress || !factoryAddressSet.has(factoryAddress.toLowerCase())) {
+        continue;
+      }
+
+      // 检查 exists 验证结果
+      const existsResult = existsData[existsIndex]?.result as boolean | undefined;
+      existsIndex++;
+
+      // 只为 exists 返回 true 的扩展查询 joinedAmountTokenAddress
+      if (existsResult === true && whitelistInfo.whitelistAddress) {
+        contracts.push({
+          address: whitelistInfo.whitelistAddress,
+          abi: IExtensionAbi,
+          functionName: 'joinedAmountTokenAddress' as const,
+          args: [],
+        });
+      }
+    }
+
+    return contracts;
+  }, [existsData, factoryAddressesData, validWhitelistInfos]);
+
+  // 步骤5.6: 批量查询 joinedAmountTokenAddress
+  const {
+    data: joinedAmountTokenAddressData,
+    isPending: isPending3,
+    error: error3,
+  } = useReadContracts({
+    contracts: joinedAmountTokenAddressContracts as any,
+    query: {
+      enabled: joinedAmountTokenAddressContracts.length > 0,
+    },
+  });
+
+  // 步骤5.7: 构建 LP factory 检查查询（仅检查非零的 joinedAmountTokenAddress）
+  const lpFactoryCheckContracts = useMemo(() => {
+    if (!joinedAmountTokenAddressData || joinedAmountTokenAddressData.length === 0) return [];
+
+    const uniswapV2FactoryAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY;
+    // 如果未配置 UniswapV2 factory 地址，跳过 LP 检查
+    if (!uniswapV2FactoryAddress) {
+      console.warn('⚠️ NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY 未配置，跳过 LP 检测');
+      return [];
+    }
+
+    const contracts: any[] = [];
+
+    for (let i = 0; i < joinedAmountTokenAddressData.length; i++) {
+      const tokenAddress = joinedAmountTokenAddressData[i]?.result as `0x${string}` | undefined;
+
+      // 跳过零地址或 undefined
+      if (!tokenAddress || tokenAddress === '0x0000000000000000000000000000000000000000') {
+        continue;
+      }
+
+      // 调用 factory() 方法检查是否为 UniswapV2Pair
+      contracts.push({
+        address: tokenAddress,
+        abi: UniswapV2PairAbi,
+        functionName: 'factory' as const,
+        args: [],
+      });
+    }
+
+    return contracts;
+  }, [joinedAmountTokenAddressData]);
+
+  // 步骤5.8: 批量查询 LP token 的 factory 地址
+  const {
+    data: lpFactoryData,
+    isPending: isPending4,
+    error: error4,
+  } = useReadContracts({
+    contracts: lpFactoryCheckContracts as any,
+    query: {
+      enabled: lpFactoryCheckContracts.length > 0,
+    },
+  });
+
   // 步骤6: 组合结果并缓存
   useEffect(() => {
     if (!tokenAddress || uncachedActionInfos.length === 0) return;
@@ -334,12 +460,21 @@ export const useExtensionsContractInfo = ({
     // 等待 exists 验证完成
     if (existsContracts.length > 0 && isPending2) return;
 
+    // 等待 joinedAmountTokenAddress 查询完成
+    if (joinedAmountTokenAddressContracts.length > 0 && isPending3) return;
+
+    // 等待 LP factory 检查完成
+    if (lpFactoryCheckContracts.length > 0 && isPending4) return;
+
     const configuredFactories = getExtensionConfigs();
     const factoryAddressSet = new Set(configuredFactories.map((c) => c.factoryAddress.toLowerCase()));
+    const uniswapV2FactoryAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY?.toLowerCase();
 
     let cachedCount = 0;
     let validWhitelistIndex = 0;
     let existsIndex = 0;
+    let joinedTokenIndex = 0;
+    let lpFactoryCheckIndex = 0;
 
     for (const actionInfo of uncachedActionInfos) {
       const actionId = actionInfo.head.id;
@@ -354,6 +489,8 @@ export const useExtensionsContractInfo = ({
           '0x0000000000000000000000000000000000000000',
           '',
           '',
+          undefined,
+          undefined,
         );
         cachedCount++;
         continue;
@@ -372,6 +509,8 @@ export const useExtensionsContractInfo = ({
           '0x0000000000000000000000000000000000000000',
           '',
           '',
+          undefined,
+          undefined,
         );
         cachedCount++;
         continue;
@@ -390,6 +529,8 @@ export const useExtensionsContractInfo = ({
           '0x0000000000000000000000000000000000000000',
           '',
           '',
+          undefined,
+          undefined,
         );
         cachedCount++;
         continue;
@@ -400,13 +541,57 @@ export const useExtensionsContractInfo = ({
       const factoryName = config?.name || '未知类型';
       const factoryType = config?.type || ExtensionType.LP;
 
-      setCachedContractInfo(tokenAddress, actionId, whitelistAddress, factoryAddress, factoryName, factoryType);
+      // 获取 joinedAmountTokenAddress
+      const joinedTokenResult = joinedAmountTokenAddressData?.[joinedTokenIndex];
+
+      // 检查 joinedAmountTokenAddress 查询是否成功
+      if (!joinedTokenResult || joinedTokenResult.status !== 'success') {
+        // 查询失败，不缓存此 action，下次重新查询
+        console.warn(`⚠️ ActionId ${actionId} 的 joinedAmountTokenAddress 查询失败，跳过缓存`);
+        joinedTokenIndex++;
+        continue;
+      }
+
+      const joinedAmountTokenAddress = joinedTokenResult.result as `0x${string}` | undefined;
+      joinedTokenIndex++;
+
+      // 判断是否为 LP token
+      let joinedAmountTokenIsLP = false;
+      if (
+        joinedAmountTokenAddress &&
+        joinedAmountTokenAddress !== '0x0000000000000000000000000000000000000000' &&
+        uniswapV2FactoryAddress
+      ) {
+        const lpFactoryResult = lpFactoryData?.[lpFactoryCheckIndex];
+
+        // 检查 LP factory 查询是否成功
+        if (lpFactoryResult && lpFactoryResult.status === 'success' && lpFactoryResult.result) {
+          const lpFactory = (lpFactoryResult.result as `0x${string}`).toLowerCase();
+          if (lpFactory === uniswapV2FactoryAddress) {
+            joinedAmountTokenIsLP = true;
+          }
+        }
+        // 无论成功失败都要递增索引
+        lpFactoryCheckIndex++;
+      }
+
+      // 缓存完整信息
+      setCachedContractInfo(
+        tokenAddress,
+        actionId,
+        whitelistAddress,
+        factoryAddress,
+        factoryName,
+        factoryType,
+        joinedAmountTokenAddress,
+        joinedAmountTokenIsLP,
+      );
       cachedCount++;
     }
 
     // 缓存更新后，触发重新读取
     if (cachedCount > 0) {
-      console.log(`✅ 成功缓存 ${cachedCount} 个扩展合约信息`);
+      console.log(`✅ 成功缓存 ${cachedCount} 个扩展合约信息（含 LP 标识）`);
       setRefreshKey((prev) => prev + 1);
     }
   }, [
@@ -414,10 +599,16 @@ export const useExtensionsContractInfo = ({
     uncachedActionInfos,
     factoryContracts,
     existsContracts,
+    joinedAmountTokenAddressContracts,
+    lpFactoryCheckContracts,
     factoryAddressesData,
     existsData,
+    joinedAmountTokenAddressData,
+    lpFactoryData,
     isPending1,
     isPending2,
+    isPending3,
+    isPending4,
   ]);
 
   // 步骤7: 合并缓存数据和新数据
@@ -444,11 +635,16 @@ export const useExtensionsContractInfo = ({
     return results;
   }, [actionInfos, cachedData]);
 
+  // 计算 isPending：只有当对应的 contracts 数组不为空时，才检查对应的 isPending 状态
+  // 如果 contracts 数组为空，则认为该阶段已完成（isPending 为 false）
   const isPending =
     uncachedActionInfos.length > 0
-      ? (factoryContracts.length > 0 && isPending1) || (existsContracts.length > 0 && isPending2)
+      ? (factoryContracts.length > 0 ? isPending1 : false) ||
+        (existsContracts.length > 0 ? isPending2 : false) ||
+        (joinedAmountTokenAddressContracts.length > 0 ? isPending3 : false) ||
+        (lpFactoryCheckContracts.length > 0 ? isPending4 : false)
       : false;
-  const error = error1 || error2;
+  const error = error1 || error2 || error3 || error4;
 
   return {
     contractInfos,
@@ -502,6 +698,15 @@ export const useExtensionContractInfo = ({
   };
 };
 
+// ==================== 辅助函数 ====================
+
+/**
+ * 根据扩展地址查找索引
+ */
+function findExtensionIndex(extensionAddress: `0x${string}`, extensionAddresses: `0x${string}`[]): number {
+  return extensionAddresses.findIndex((addr) => addr === extensionAddress);
+}
+
 // ==================== Hook 3: 批量获取扩展基础数据 ====================
 
 export interface UseExtensionsBaseDataParams {
@@ -541,29 +746,21 @@ export const useExtensionsBaseData = ({
   });
 
   // 步骤2: 构建扩展地址列表（只处理有扩展的行动）
-  const { extensionAddresses, actionIdMap } = useMemo(() => {
+  const extensionAddresses = useMemo(() => {
     if (!tokenAddress || actionInfos.length === 0 || contractInfos.length === 0) {
-      return {
-        extensionAddresses: [],
-        actionIdMap: new Map<number, bigint>(),
-      };
+      return [];
     }
 
     const extensions: `0x${string}`[] = [];
-    const idMap = new Map<number, bigint>();
 
     for (const contractInfo of contractInfos) {
       // 只处理扩展行动
       if (contractInfo.isExtension && contractInfo.extension) {
-        idMap.set(extensions.length, contractInfo.actionId);
         extensions.push(contractInfo.extension);
       }
     }
 
-    return {
-      extensionAddresses: extensions,
-      actionIdMap: idMap,
-    };
+    return extensions;
   }, [tokenAddress, actionInfos, contractInfos]);
 
   // 步骤3: 构建批量合约调用列表
@@ -573,19 +770,16 @@ export const useExtensionsBaseData = ({
     const contracts: any[] = [];
 
     for (const extensionAddress of extensionAddresses) {
-      // 添加 accountsCount 查询
       contracts.push({
         address: extensionAddress,
         abi: ExtensionLpAbi,
         functionName: 'accountsCount' as const,
         args: [],
       });
-
-      // 添加 joinedValue 查询
       contracts.push({
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'joinedValue' as const,
+        functionName: 'joinedAmount' as const,
         args: [],
       });
     }
@@ -605,7 +799,67 @@ export const useExtensionsBaseData = ({
     },
   });
 
-  // 步骤5: 解析查询结果并组合数据
+  // 步骤4.5: 构建代币转换请求数组
+  const { conversions, conversionMappings } = useMemo(() => {
+    if (!tokenAddress || extensionAddresses.length === 0 || !dynamicContractsData) {
+      return { conversions: [], conversionMappings: [] };
+    }
+
+    const conversionArray: UseConvertTokenAmountParams[] = [];
+    const mappings: ConversionMapping[] = [];
+
+    for (const actionInfo of actionInfos) {
+      const actionId = actionInfo.head.id;
+      const contractInfo = contractInfos.find((info) => info.actionId === actionId);
+
+      // 跳过非扩展行动
+      if (!contractInfo?.isExtension || !contractInfo.extension) {
+        continue;
+      }
+
+      // 查找扩展索引
+      const extensionIndex = findExtensionIndex(contractInfo.extension, extensionAddresses);
+      if (extensionIndex === -1) continue;
+
+      // 获取 joinedAmount
+      const joinedAmountResult = dynamicContractsData[extensionIndex * 2 + 1];
+      if (!joinedAmountResult?.result) continue;
+      const joinedAmount = safeToBigInt(joinedAmountResult.result);
+
+      // 获取转换参数
+      const fromToken = contractInfo.joinedAmountTokenAddress;
+      const isFromTokenLP = contractInfo.joinedAmountTokenIsLP ?? false;
+
+      // 跳过: 无源代币或源代币与目标代币相同
+      if (!fromToken || fromToken === tokenAddress) continue;
+
+      // 添加到转换数组
+      conversionArray.push({
+        fromToken,
+        isFromTokenLP,
+        fromAmount: joinedAmount,
+        toToken: tokenAddress,
+      });
+
+      // 记录映射
+      mappings.push({
+        actionId,
+        extensionIndex,
+        conversionIndex: conversionArray.length - 1,
+      });
+    }
+
+    return { conversions: conversionArray, conversionMappings: mappings };
+  }, [tokenAddress, actionInfos, contractInfos, extensionAddresses, dynamicContractsData]);
+
+  // 步骤4.6: 批量执行代币转换
+  const {
+    results: conversionResults,
+    isPending: isPendingConversion,
+    error: errorConversion,
+  } = useConvertTokenAmounts({ conversions });
+
+  // 步骤5: 解析查询结果并组合数据 (集成代币转换)
   const baseData = useMemo(() => {
     const results: ExtensionBaseData[] = [];
 
@@ -623,26 +877,45 @@ export const useExtensionsBaseData = ({
       }
 
       // 找到对应的扩展地址索引
-      let extensionIndex = -1;
-      for (let i = 0; i < extensionAddresses.length; i++) {
-        const mappedActionId = actionIdMap.get(i);
-        if (mappedActionId === actionId) {
-          extensionIndex = i;
-          break;
-        }
-      }
+      const extensionIndex = findExtensionIndex(contractInfo.extension, extensionAddresses);
 
       // 如果找到了扩展地址且有查询结果
       if (extensionIndex !== -1 && dynamicContractsData) {
         const accountsCountResult = dynamicContractsData[extensionIndex * 2];
-        const joinedValueResult = dynamicContractsData[extensionIndex * 2 + 1];
+        const joinedAmountResult = dynamicContractsData[extensionIndex * 2 + 1];
+
+        const accountsCount = safeToBigInt(accountsCountResult?.result);
+        const joinedAmount = safeToBigInt(joinedAmountResult?.result);
+
+        // 查找转换结果
+        const mapping = conversionMappings.find((m) => m.actionId === actionId);
+        let convertedJoinedValue: bigint | undefined;
+
+        if (mapping !== undefined) {
+          // 需要转换
+          const conversionResult = conversionResults?.[mapping.conversionIndex];
+          if (conversionResult?.isSuccess) {
+            convertedJoinedValue = conversionResult.convertedAmount;
+          } else if (!isPendingConversion) {
+            // 转换失败，使用原始金额并记录警告
+            console.warn(
+              `⚠️ ActionId ${actionId} 的代币转换失败，使用原始金额. ` + `Error: ${conversionResult?.error}`,
+            );
+            convertedJoinedValue = joinedAmount;
+          }
+          // else: 转换中，保持 undefined
+        } else {
+          // 不需要转换 (相同代币或无转换数据)
+          convertedJoinedValue = joinedAmount;
+        }
 
         results.push({
           actionId,
           isExtension: true,
           extension: contractInfo.extension,
-          accountsCount: safeToBigInt(accountsCountResult?.result),
-          joinedValue: safeToBigInt(joinedValueResult?.result),
+          accountsCount,
+          joinedAmount,
+          convertedJoinedValue,
         });
       } else {
         // 数据还在加载中
@@ -655,10 +928,22 @@ export const useExtensionsBaseData = ({
     }
 
     return results;
-  }, [actionInfos, contractInfos, extensionAddresses, actionIdMap, dynamicContractsData]);
+  }, [
+    actionInfos,
+    contractInfos,
+    extensionAddresses,
+    dynamicContractsData,
+    conversionMappings,
+    conversionResults,
+    isPendingConversion,
+  ]);
 
-  const isPending = isPendingContract || (dynamicContracts.length > 0 && isPendingDynamic);
-  const error = errorContract || errorDynamic;
+  const isPending =
+    isPendingContract ||
+    (dynamicContracts.length > 0 && isPendingDynamic) ||
+    (conversions.length > 0 && isPendingConversion);
+
+  const error = errorContract || errorDynamic || errorConversion;
 
   return {
     baseData,

@@ -7,7 +7,6 @@ import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-import { useTokenAddress } from '../contracts/useExtensionGroupAction';
 
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
 const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
@@ -38,7 +37,6 @@ export interface GroupDetailInfo {
 
 export interface UseExtensionGroupDetailParams {
   extensionAddress: `0x${string}` | undefined;
-  actionId: bigint | undefined;
   groupId: bigint | undefined;
 }
 
@@ -57,16 +55,12 @@ export interface UseExtensionGroupDetailResult {
  */
 export const useExtensionGroupDetail = ({
   extensionAddress,
-  actionId,
   groupId,
 }: UseExtensionGroupDetailParams): UseExtensionGroupDetailResult => {
-  // 获取 tokenAddress
-  const { tokenAddress, isPending: isTokenAddressPending } = useTokenAddress(extensionAddress as `0x${string}`);
-
   // 批量获取链群详细信息
   // 新版合约：totalJoinedAmountByGroupId 和 accountsByGroupIdCount 移到 GroupJoin
   const detailContracts = useMemo(() => {
-    if (!extensionAddress || !tokenAddress || actionId === undefined || groupId === undefined) return [];
+    if (!extensionAddress || groupId === undefined) return [];
 
     return [
       // 获取群组名称
@@ -87,7 +81,7 @@ export const useExtensionGroupDetail = ({
       {
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
-        functionName: 'calculateJoinMaxAmount',
+        functionName: 'maxJoinAmount',
         args: [extensionAddress],
       },
       // 获取总加入数量（新版合约移到 GroupJoin）
@@ -112,7 +106,7 @@ export const useExtensionGroupDetail = ({
         args: [extensionAddress, groupId],
       },
     ];
-  }, [extensionAddress, tokenAddress, actionId, groupId]);
+  }, [extensionAddress, groupId]);
 
   const {
     data: detailData,
@@ -121,12 +115,7 @@ export const useExtensionGroupDetail = ({
   } = useReadContracts({
     contracts: detailContracts as any,
     query: {
-      enabled:
-        !!extensionAddress &&
-        !!tokenAddress &&
-        actionId !== undefined &&
-        groupId !== undefined &&
-        detailContracts.length > 0,
+      enabled: !!extensionAddress && groupId !== undefined && detailContracts.length > 0,
     },
   });
 
@@ -190,7 +179,7 @@ export const useExtensionGroupDetail = ({
 
   return {
     groupDetail: groupDetail as GroupDetailInfo | undefined,
-    isPending: isTokenAddressPending || isDetailPending,
+    isPending: isDetailPending,
     error: detailError,
   };
 };

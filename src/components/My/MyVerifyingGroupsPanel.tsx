@@ -24,11 +24,7 @@ const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ current
   const { address: account } = useAccount();
 
   // Fetch groups that need verification
-  const {
-    groups,
-    isPending,
-    error,
-  } = useMyGroupIdsNeedVerifiedByRound({
+  const { groups, isPending, error } = useMyGroupIdsNeedVerifiedByRound({
     account: account as `0x${string}`,
     round: currentRound,
   });

@@ -5,7 +5,7 @@ import React from 'react';
 import { useAccount } from 'wagmi';
 
 // my hooks
-import { useLpActionAccounts } from '@/src/hooks/extension/plugins/lp/composite';
+import { useLpActionAccounts } from '@/src/hooks/extension/plugins/lp/composite/useLpActionAccounts';
 
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';

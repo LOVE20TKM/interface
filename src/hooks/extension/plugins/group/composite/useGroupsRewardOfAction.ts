@@ -2,15 +2,13 @@
  * 获取一个行动下所有链群的激励信息
  *
  * 职责：
- * - 获取行动的所有活跃链群 IDs
+ * - 获取当轮有验证的链群 IDs
  * - 批量获取链群名称（带缓存优化）
  * - 批量获取每个链群在指定轮次的激励金额和参与代币量（合并为一次合约调用）
  *
  * 使用示例：
  * ```typescript
  * const { groupRewards, isPending, error } = useGroupsRewardOfAction({
- *   tokenAddress: '0x123...',
- *   actionId: BigInt(1),
  *   round: BigInt(5),
  *   extensionAddress: '0xabc...',
  * });
@@ -25,7 +23,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { useActiveGroupIds } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
+import { useVerifiedGroupIds } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
@@ -59,10 +57,6 @@ export interface GroupRewardInfo {
  * Hook 参数
  */
 export interface UseGroupsRewardOfActionParams {
-  /** 代币地址 */
-  tokenAddress: `0x${string}` | undefined;
-  /** 行动 ID */
-  actionId: bigint | undefined;
   /** 轮次 */
   round: bigint | undefined;
   /** 扩展合约地址（必填） */
@@ -91,7 +85,7 @@ export interface UseGroupsRewardOfActionResult {
  *
  * @description
  * 分四步获取链群激励信息：
- * 1. 调用 activeGroupIds(tokenAddress, actionId) 获取所有活跃链群 IDs
+ * 1. 调用 verifiedGroupIds(extensionAddress, round) 获取当轮有验证的链群 IDs
  * 2. 使用 useGroupNamesWithCache 批量获取链群名称（带缓存）
  * 3. 使用 useReadContracts 批量调用 generatedRewardByGroupId 和 totalJoinedAmountByGroupIdByRound（合并为一次调用）
  * 4. 组合链群 ID、名称、激励和参与代币量，返回完整列表
@@ -100,8 +94,6 @@ export interface UseGroupsRewardOfActionResult {
  * ```typescript
  * // 获取第5轮、行动1下所有链群的激励
  * const { groupRewards, isPending } = useGroupsRewardOfAction({
- *   tokenAddress: '0x123...',
- *   actionId: BigInt(1),
  *   round: BigInt(5),
  *   extensionAddress: '0xabc...',
  * });
@@ -115,17 +107,17 @@ export interface UseGroupsRewardOfActionResult {
  * ```
  */
 export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): UseGroupsRewardOfActionResult {
-  const { tokenAddress, actionId, round, extensionAddress } = params;
+  const { round, extensionAddress } = params;
 
-  // 第一步：获取所有活跃链群 IDs
+  // 第一步：获取当轮有验证的链群 IDs
   const {
-    activeGroupIds,
+    verifiedGroupIds,
     isPending: isPendingIds,
     error: errorIds,
-  } = useActiveGroupIds(extensionAddress || ('0x0' as `0x${string}`));
+  } = useVerifiedGroupIds(extensionAddress || ('0x0' as `0x${string}`), round || BigInt(0));
 
   // 转换为数组，如果没有数据则返回空数组
-  const groupIds = useMemo(() => activeGroupIds || [], [activeGroupIds]);
+  const groupIds = useMemo(() => verifiedGroupIds || [], [verifiedGroupIds]);
 
   // 第二步：批量获取链群名称（带缓存）
   const {
@@ -140,7 +132,7 @@ export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): 
   // 第三步：构建批量查询链群激励和参与代币量的合约调用（合并为一次调用）
   const allContracts = useMemo(() => {
     // 如果缺少必要参数或没有链群，返回空数组
-    if (!extensionAddress || !tokenAddress || round === undefined || groupIds.length === 0) return [];
+    if (!extensionAddress || round === undefined || groupIds.length === 0) return [];
 
     const contracts = [];
     // 为每个链群添加两个合约调用：激励和参与代币量
@@ -157,12 +149,12 @@ export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): 
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'totalJoinedAmountByGroupIdByRound' as const,
-        args: [tokenAddress, actionId || BigInt(0), groupId, round],
+        args: [extensionAddress, round, groupId],
       });
     }
 
     return contracts;
-  }, [extensionAddress, tokenAddress, actionId, round, groupIds]);
+  }, [extensionAddress, round, groupIds]);
 
   // 第四步：批量获取链群激励和参与代币量（合并为一次调用）
   const {
@@ -172,7 +164,7 @@ export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): 
   } = useReadContracts({
     contracts: allContracts as any,
     query: {
-      enabled: !!extensionAddress && !!tokenAddress && round !== undefined && allContracts.length > 0,
+      enabled: !!extensionAddress && round !== undefined && allContracts.length > 0,
     },
   });
 
@@ -213,12 +205,12 @@ export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): 
     // 第二阶段：获取链群名称
     if (isPendingNames) return true;
 
-    // 如果没有 extensionAddress、tokenAddress 或 round，提前退出
-    if (!extensionAddress || !tokenAddress || round === undefined) return false;
+    // 如果没有 extensionAddress 或 round，提前退出
+    if (!extensionAddress || round === undefined) return false;
 
     // 第三阶段：获取激励和参与代币量
     return isPendingAll;
-  }, [isPendingIds, groupIds.length, isPendingNames, extensionAddress, tokenAddress, round, isPendingAll]);
+  }, [isPendingIds, groupIds.length, isPendingNames, extensionAddress, round, isPendingAll]);
 
   return {
     groupRewards,
