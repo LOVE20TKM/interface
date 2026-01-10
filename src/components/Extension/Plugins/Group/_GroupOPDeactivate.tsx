@@ -55,16 +55,11 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
     error: errorDetail,
   } = useExtensionGroupDetail({
     extensionAddress,
-    actionId,
     groupId,
   });
 
   // 获取链群信息（用于获取激活轮次）
-  const {
-    activatedRound,
-    isPending: isPendingInfo,
-    error: errorInfo,
-  } = useGroupInfo(extensionAddress, groupId);
+  const { activatedRound, isPending: isPendingInfo, error: errorInfo } = useGroupInfo(extensionAddress, groupId);
 
   // 获取参与人数
   const {

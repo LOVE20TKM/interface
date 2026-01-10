@@ -69,7 +69,6 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     error: errorDetail,
   } = useExtensionGroupDetail({
     extensionAddress,
-    actionId,
     groupId,
   });
 

@@ -112,7 +112,6 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     error: errorDetail,
   } = useExtensionGroupDetail({
     extensionAddress,
-    actionId,
     groupId,
   });
 

@@ -80,7 +80,6 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     error: errorDetail,
   } = useExtensionGroupDetail({
     extensionAddress,
-    actionId,
     groupId: groupId || BigInt(0),
   });
 

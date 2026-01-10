@@ -61,7 +61,6 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
     error: errorDetail,
   } = useExtensionGroupDetail({
     extensionAddress,
-    actionId,
     groupId,
   });
 
