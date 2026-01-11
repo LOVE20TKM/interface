@@ -24,6 +24,8 @@ export function useGroupNameValidation({
   const frontendValidation = validateGroupName(groupName, maxGroupNameLength);
 
   // 批量查询: isGroupNameUsed 和 calculateMintCost
+  // 只有在前端验证通过时才执行链上查询
+  const shouldQuery = enabled && !!groupName && frontendValidation.isValid;
   const { data, isPending, error } = useReadContracts({
     contracts: [
       {
@@ -40,7 +42,7 @@ export function useGroupNameValidation({
       },
     ],
     query: {
-      enabled: enabled && !!groupName && frontendValidation.isValid,
+      enabled: shouldQuery,
     },
   });
 
@@ -51,17 +53,20 @@ export function useGroupNameValidation({
   // 综合验证结果
   const isValid = frontendValidation.isValid && !isGroupNameUsed;
   let validationError = frontendValidation.error;
-  
+
   if (frontendValidation.isValid && isGroupNameUsed) {
     validationError = '该群名称已被使用';
   }
+
+  // 如果前端验证失败，不需要等待链上查询，isPending 应该为 false
+  const finalIsPending = shouldQuery ? isPending : false;
 
   return {
     isValid,
     validationError,
     isGroupNameUsed,
     mintCost,
-    isPending,
+    isPending: finalIsPending,
     error,
   };
 }
