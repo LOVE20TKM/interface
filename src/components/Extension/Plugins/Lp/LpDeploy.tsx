@@ -237,7 +237,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                 name="waitingBlocks"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>2. 退出需等待的区块数</FormLabel>
+                    <FormLabel>2. 退出行动需等待的区块数</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -360,7 +360,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                         ? '1.确认中...'
                         : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
                         ? '1.代币已授权'
-                        : '1.授权代币'}
+                        : '1.激活代币授权'}
                     </Button>
 
                     <Button
@@ -380,7 +380,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                     <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
                     <div className="space-y-1 text-gray-600">
                       <div>• 每个新的扩展行动，都需部署1个专属扩展合约</div>
-                      <div>• 需将 1个 {tokenSymbol} 转给合约地址，用于扩展合约初始化</div>
+                      <div>• 部署时会将 1个 {tokenSymbol} 转给扩展合约，用于扩展合约初始化</div>
                     </div>
                   </div>
                 </>

@@ -339,8 +339,8 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
           <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2 mt-3 w-full">
             <div className="font-medium">⚠️ 治理票数不足</div>
             <div className="mt-1">
-              你的治理票数 <span className="font-semibold">{userGovVotes.toString()}</span> 低于最小限制{' '}
-              <span className="font-semibold">{formatTokenAmount(minGovVotes)}</span>，无法参与行动。
+              你的治理票数 <span className="font-semibold">{formatTokenAmount(userGovVotes || BigInt(0))}</span>{' '}
+              低于最小限制 <span className="font-semibold">{formatTokenAmount(minGovVotes)}</span>，无法参与行动。
             </div>
             <div className="text-xs text-red-600 mt-1">您可以增加治理票数，再重新参与行动。</div>
           </div>

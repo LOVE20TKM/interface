@@ -396,7 +396,7 @@ export default function NewAction() {
                       {...field}
                     />
                   </FormControl>
-                  {isValidExtension && <FormDescription>由扩展地址自动设置为 1</FormDescription>}
+                  <FormDescription></FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -419,7 +419,7 @@ export default function NewAction() {
                       {...field}
                     />
                   </FormControl>
-                  {isValidExtension && <FormDescription>由扩展地址自动设置为 1</FormDescription>}
+                  <FormDescription></FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -441,7 +441,7 @@ export default function NewAction() {
                       {...field}
                     />
                   </FormControl>
-                  {isValidExtension && <FormDescription>由扩展地址自动设置</FormDescription>}
+                  <FormDescription></FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
