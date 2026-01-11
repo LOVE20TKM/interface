@@ -162,7 +162,7 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ extensionAddress }) =>
                   </div>
                 </th>
                 <th className="px-1 text-center hidden md:table-cell">参与代币</th>
-                <th className="px-1 text-center">不信任投票</th>
+                <th className="px-1 text-center">不信任率</th>
                 <th className="px-1 text-center">激励</th>
               </tr>
             </thead>
@@ -193,16 +193,7 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ extensionAddress }) =>
                   </td>
                   <td className="px-1 text-center">
                     <div className="font-mono text-secondary">
-                      {item.distrustRatio !== undefined ? (
-                        <>
-                          {formatPercentage(item.distrustRatio * 100)}
-                          {item.distrustVotes !== undefined && (
-                            <span className="text-gray-400 ml-1">({formatTokenAmount(item.distrustVotes)})</span>
-                          )}
-                        </>
-                      ) : (
-                        '-'
-                      )}
+                      {item.distrustRatio !== undefined ? <>{formatPercentage(item.distrustRatio * 100)}</> : '-'}
                     </div>
                   </td>
                   <td className="px-1 text-center">

@@ -41,16 +41,15 @@ const _GroupActionTips: React.FC<GroupActionTipsProps> = ({
       <div className="flex flex-col space-y-2 text-gray-700 ">
         <div className="text-sm text-blue-700 pt-3">激活要求：</div>
         <div>
-          1. 激活链群需质押代币数量：<b>{formatTokenAmount(groupActivationStakeAmount || BigInt(0), 4, 'ceil')}</b>
+          激活链群需质押代币数量：<b>{formatTokenAmount(groupActivationStakeAmount || BigInt(0), 4, 'ceil')}</b>
         </div>
         <div className="text-sm text-blue-700 pt-3">容量与质押量：</div>
         <div>
-          1. <b>理论最大容量</b> = 治理票占比 × 已铸造代币量 × 验证容量系数（为 {capacityFactorDisplay}）
+          <b>理论最大容量</b> = 治理票占比 × 已铸造代币量 × 验证容量系数
         </div>
         <div className="text-sm text-blue-700 pt-3">参与代币：</div>
         <div>
-          1. <b>行动最大参与代币量</b> = 已铸造代币总量 × 最大参与代币占比（为 {ratioPercentageDisplay}）× 该行动投票率
-          = {formatTokenAmount(joinMaxAmount || BigInt(0))}
+          <b>行动最大参与代币量</b> = 已铸造代币总量 × 最大参与代币占比 × 该行动投票率
         </div>
       </div>
     </div>

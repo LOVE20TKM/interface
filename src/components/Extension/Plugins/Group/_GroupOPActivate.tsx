@@ -78,10 +78,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     activeGroupIds: activatedGroupIds,
     isPending: isPendingActivatedGroups,
     error: errorActivatedGroups,
-  } = useActiveGroupIdsByOwner(
-    extensionAddress,
-    (account || ZERO_ADDRESS) as `0x${string}`,
-  );
+  } = useActiveGroupIdsByOwner(extensionAddress, (account || ZERO_ADDRESS) as `0x${string}`);
 
   // 过滤掉已经激活的 groupId
   const availableGroups = useMemo(() => {
@@ -111,10 +108,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     maxVerifyCapacity,
     isPending: isPendingMaxCapacity,
     error: errorMaxCapacity,
-  } = useMaxVerifyCapacityByOwner(
-    extensionAddress,
-    (account || ZERO_ADDRESS) as `0x${string}`,
-  );
+  } = useMaxVerifyCapacityByOwner(extensionAddress, (account || ZERO_ADDRESS) as `0x${string}`);
 
   // 获取用户余额（用于授权验证）
   const {
@@ -142,7 +136,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               },
               { message: '请输入有效的容量上限' },
             ),
-          description: z.string().max(500, { message: '描述不能超过500字' }),
+          description: z.string().max(2000, { message: '描述不能超过2000字' }),
           minJoinAmount: z
             .string()
             .refine(
@@ -315,7 +309,9 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
       values.maxAccounts && values.maxAccounts !== '0' ? BigInt(parseInt(values.maxAccounts, 10)) : BigInt(0);
 
     try {
-      await activateGroup(extensionAddress, finalGroupId,
+      await activateGroup(
+        extensionAddress,
+        finalGroupId,
         values.description,
         maxCapacityBigInt,
         minJoinAmountBigInt,
