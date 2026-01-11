@@ -6,7 +6,7 @@
  * 2. 批量调用 activeGroupIdsByOwner 获取每个扩展地址下账户拥有的激活链群NFT列表
  * 3. 批量调用 ExtensionGroupAction.isVerified 检查每个链群是否已验证
  * 4. 批量调用 ExtensionGroupAction.accountsByGroupIdByRoundCount 获取每个链群的账户数量
- * 5. 当账户数量为 0 时，自动将 isVerified 设为 true（因为不需要验证）
+ * 5. 计算 needToVerify：如果未验证且人数>0，则为true（参与人数为空时，虽然未验证但也不需要验证）
  *
  * 性能优化：
  * - 使用批量 RPC 调用，总共约 4 次调用
@@ -44,6 +44,8 @@ export interface GroupNeedVerifyInfo {
   actionId: bigint;
   /** 是否已验证 */
   isVerified: boolean;
+  /** 是否需要验证：如果未验证且人数>0，则为true */
+  needToVerify: boolean;
 }
 
 /**
@@ -234,14 +236,15 @@ export function useMyGroupIdsNeedVerifiedByRound({
         const accountCountItem = accountCountData[index];
         const accountCount = accountCountItem?.status === 'success' ? (accountCountItem.result as bigint) : BigInt(0);
 
-        // 如果 accountCount 为 0，则不需要验证，将 isVerified 设为 true
-        const finalIsVerified = accountCount === BigInt(0) ? true : isVerified;
+        // needToVerify: 如果未验证且人数>0，则为true
+        const needToVerify = !isVerified && accountCount > BigInt(0);
 
         result.push({
           groupId,
           extensionAddress,
           actionId,
-          isVerified: finalIsVerified,
+          isVerified,
+          needToVerify,
         });
       }
     });

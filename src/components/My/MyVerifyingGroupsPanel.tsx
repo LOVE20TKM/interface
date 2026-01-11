@@ -32,9 +32,9 @@ const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ current
   // Calculate counts
   const verifiedCount = useMemo(() => groups.filter((g) => g.isVerified).length, [groups]);
 
-  const unverifiedCount = useMemo(() => groups.filter((g) => g.isVerified === false).length, [groups]);
+  const unverifiedCount = useMemo(() => groups.filter((g) => g.needToVerify).length, [groups]);
 
-  const firstUnverifiedGroup = useMemo(() => groups.find((g) => g.isVerified === false), [groups]);
+  const firstUnverifiedGroup = useMemo(() => groups.find((g) => g.needToVerify), [groups]);
 
   // Determine button configuration
   const getButtonConfig = () => {

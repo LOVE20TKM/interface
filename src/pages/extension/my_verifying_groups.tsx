@@ -28,6 +28,7 @@ interface GroupedData {
     groupName: string | undefined;
     extensionAddress: `0x${string}`;
     isVerified: boolean;
+    needToVerify: boolean;
   }[];
 }
 
@@ -108,6 +109,7 @@ const MyVerifyingGroupsPage: React.FC = () => {
         groupName: groupNameMap?.get(group.groupId),
         extensionAddress: group.extensionAddress,
         isVerified: group.isVerified,
+        needToVerify: group.needToVerify,
       });
     });
 
@@ -187,8 +189,10 @@ const MyVerifyingGroupsPage: React.FC = () => {
                         <div className="mt-1">
                           {group.isVerified ? (
                             <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">已验证</span>
-                          ) : (
+                          ) : group.needToVerify ? (
                             <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">待验证</span>
+                          ) : (
+                            <span className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">无需验证</span>
                           )}
                         </div>
                       </div>
