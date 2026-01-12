@@ -147,6 +147,23 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
           </div>
         </div>
 
+        {/* 地址数信息 */}
+        <div className="mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="flex items-center justify-between md:max-w-xs">
+              <span className="text-sm">当前参与地址数:</span>
+              <span className="font-mono">{accountsCount?.toString() || '0'}</span>
+            </div>
+
+            <div className="flex items-center justify-between md:max-w-xs">
+              <span className="text-sm">最大地址数限制:</span>
+              <span className="font-mono">
+                {groupDetail.maxAccounts > BigInt(0) ? groupDetail.maxAccounts.toString() : '不限'}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* 说明 */}
         {/* <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
           <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
