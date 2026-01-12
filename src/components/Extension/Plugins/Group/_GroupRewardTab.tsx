@@ -216,14 +216,22 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ extensionAddress }) =>
                   <td className="px-1 text-center">
                     <div className="font-mono text-secondary">
                       <span>
-                        {item.distrustRatio !== undefined ? <> {formatPercentage(item.distrustRatio * 100)}</> : <>-</>}
+                        {item.distrustRatio !== undefined ? (
+                          <span className="text-red-500">-{formatPercentage(item.distrustRatio * 100)}</span>
+                        ) : (
+                          <>-</>
+                        )}
                       </span>{' '}
                       <span className="text-gray-500">/</span>{' '}
                       <span className="mt-1">
                         {item.capacityReduction !== undefined ? (
                           (() => {
                             const reductionRate = (1 - parseFloat(formatUnits(item.capacityReduction))) * 100;
-                            return <>{reductionRate === 0 ? '-' : formatPercentage(reductionRate)}</>;
+                            return reductionRate === 0 ? (
+                              <>-</>
+                            ) : (
+                              <span className="text-red-500">-{formatPercentage(reductionRate)}</span>
+                            );
                           })()
                         ) : (
                           <>-</>
