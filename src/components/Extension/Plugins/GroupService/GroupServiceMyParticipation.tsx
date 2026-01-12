@@ -294,7 +294,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                           </tbody>
                         </table>
                       ) : (
-                        <div className="text-sm text-greyscale-400 p-2 bg-gray-50 rounded">暂未设置二次分配地址</div>
+                        <div className="text-sm text-greyscale-400 p-2 bg-gray-50 rounded">未设置分配地址</div>
                       )}
                     </div>
                   ))}

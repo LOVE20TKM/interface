@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { ArrowUpDown, HelpCircle, Settings, Zap, RefreshCw, Search, ExternalLink } from 'lucide-react';
+import { ArrowUpDown, HelpCircle, Settings, Zap } from 'lucide-react';
 import Link from 'next/link';
 
 // UI components
@@ -18,13 +18,7 @@ import { Form, FormField, FormItem, FormControl, FormMessage } from '@/component
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 // my funcs
-import {
-  formatIntegerStringWithCommas,
-  formatTokenAmount,
-  formatUnits,
-  parseUnits,
-  formatPercentage,
-} from '@/src/lib/format';
+import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/src/lib/format';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my hooks
@@ -218,14 +212,12 @@ const LiquidityPanel = () => {
   // 根据流动性池储备量计算另一个代币的数量
   // 当用户修改基础代币数量时，计算需要的目标代币数量
   useEffect(() => {
-    if (
-      isBaseTokenChangedByUser &&
-      parsedBaseAmount &&
-      parsedBaseAmount > BigInt(0) &&
-      pairExists &&
-      baseReserve &&
-      targetReserve
-    ) {
+    // 如果池子不存在，不执行任何自动计算，让用户自由输入
+    if (!pairExists) {
+      return;
+    }
+
+    if (isBaseTokenChangedByUser && parsedBaseAmount && parsedBaseAmount > BigInt(0) && baseReserve && targetReserve) {
       // 使用 AMM 公式：ratio = baseAmount / targetAmount
       const calculatedTokenAmount = (parsedBaseAmount * targetReserve) / baseReserve;
       const calculatedStr = Number(formatUnits(calculatedTokenAmount))
@@ -234,35 +226,23 @@ const LiquidityPanel = () => {
       form.setValue('tokenAmount', calculatedStr, { shouldValidate: true });
       setIsBaseTokenChangedByUser(false);
       setIsTokenChangedByUser(false);
-    } else if (isBaseTokenChangedByUser && (!pairExists || !baseReserve || !targetReserve)) {
-      // 如果池子不存在，可以自由设置比例
-      form.setValue('tokenAmount', '', { shouldValidate: true });
-      setIsBaseTokenChangedByUser(false);
-      setIsTokenChangedByUser(false);
     }
   }, [isBaseTokenChangedByUser, parsedBaseAmount, pairExists, baseReserve, targetReserve, form]);
 
   // 当用户修改目标代币数量时，计算需要的基础代币数量
   useEffect(() => {
-    if (
-      isTokenChangedByUser &&
-      parsedTokenAmount &&
-      parsedTokenAmount > BigInt(0) &&
-      pairExists &&
-      baseReserve &&
-      targetReserve
-    ) {
+    // 如果池子不存在，不执行任何自动计算，让用户自由输入
+    if (!pairExists) {
+      return;
+    }
+
+    if (isTokenChangedByUser && parsedTokenAmount && parsedTokenAmount > BigInt(0) && baseReserve && targetReserve) {
       // 使用 AMM 公式：ratio = baseAmount / targetAmount
       const calculatedBaseAmount = (parsedTokenAmount * baseReserve) / targetReserve;
       const calculatedStr = Number(formatUnits(calculatedBaseAmount))
         .toFixed(12)
         .replace(/\.?0+$/, '');
       form.setValue('baseTokenAmount', calculatedStr, { shouldValidate: true });
-      setIsBaseTokenChangedByUser(false);
-      setIsTokenChangedByUser(false);
-    } else if (isTokenChangedByUser && (!pairExists || !baseReserve || !targetReserve)) {
-      // 如果池子不存在，可以自由设置比例
-      form.setValue('baseTokenAmount', '', { shouldValidate: true });
       setIsBaseTokenChangedByUser(false);
       setIsTokenChangedByUser(false);
     }
