@@ -81,6 +81,7 @@ export default function MyGroups() {
               <tr className="border-b border-gray-100">
                 <th className="px-2 text-left">ID</th>
                 <th className="px-2 text-left">名称</th>
+                <th className="pr-6 text-right w-auto">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -89,6 +90,11 @@ export default function MyGroups() {
                   <td className="px-2 font-mono text-secondary">{group.tokenId.toString()}</td>
                   <td className="px-2">
                     <span className="font-medium">{group.groupName}</span>
+                  </td>
+                  <td className="px-2 text-right w-auto">
+                    <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
+                      <Link href={`/group/transfer?tokenId=${group.tokenId.toString()}`}>转移</Link>
+                    </Button>
                   </td>
                 </tr>
               ))}

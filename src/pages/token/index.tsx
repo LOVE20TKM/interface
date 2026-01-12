@@ -52,11 +52,19 @@ function Field({
 }
 
 // 地址展示卡片
-function AddressItem({ name, address }: { name: string; address?: string }) {
+function AddressItem({
+  name,
+  address,
+  nameClassName = 'text-base',
+}: {
+  name: string;
+  address?: string;
+  nameClassName?: string;
+}) {
   return (
     <div className="rounded-lg">
       <div className="flex items-center justify-between gap-2">
-        <div className="text-base">{name}</div>
+        <div className={nameClassName}>{name}</div>
         <AddressWithCopyButton address={address as `0x${string}`} />
       </div>
     </div>
@@ -166,12 +174,14 @@ const TokenPage = () => {
     RoundViewer: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_ROUNDVIEWER,
     MintViewer: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_MINTVIEWER,
     Hub: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB,
+    Group: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP,
     ExtensionCenter: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER,
     ExtensionGroupManager: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER,
-    ExtensionGroupDistrust: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_DISTRUST,
+    ExtensionGroupJoin: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN,
+    ExtensionGroupVerify: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY,
     ExtensionGroupActionFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_ACTION,
     ExtensionGroupServiceFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_SERVICE,
-    StakeLpExtensionFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP,
+    ExtensionFactoryLp: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP,
   } as const;
 
   // 当前代币相关地址
@@ -469,19 +479,26 @@ const TokenPage = () => {
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
                       <CardTitle className="flex items-center justify-between text-lg">
-                        <span>LOVE20 扩展合约地址：</span>
+                        <span>LOVE20 生态合约地址：</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
-                      <AddressItem name="Center" address={constantsAddresses.ExtensionCenter} />
+                      <AddressItem name="Group" address={constantsAddresses.Group} />
+                      <AddressItem name="ExtensionCenter" address={constantsAddresses.ExtensionCenter} />
+                      <AddressItem name="ExtensionFactoryLp" address={constantsAddresses.ExtensionFactoryLp} />
                       <AddressItem name="GroupManager" address={constantsAddresses.ExtensionGroupManager} />
-                      <AddressItem name="GroupDistrust" address={constantsAddresses.ExtensionGroupDistrust} />
-                      <AddressItem name="GroupActionFactory" address={constantsAddresses.ExtensionGroupActionFactory} />
+                      <AddressItem name="GroupJoin" address={constantsAddresses.ExtensionGroupJoin} />
+                      <AddressItem name="GroupVerify" address={constantsAddresses.ExtensionGroupVerify} />
                       <AddressItem
-                        name="GroupServiceFactory"
+                        name="ExtensionGroupActionFactory"
+                        nameClassName="text-sm"
+                        address={constantsAddresses.ExtensionGroupActionFactory}
+                      />
+                      <AddressItem
+                        name="ExtensionGroupServiceFactory"
+                        nameClassName="text-sm"
                         address={constantsAddresses.ExtensionGroupServiceFactory}
                       />
-                      <AddressItem name="StakeLpFactory" address={constantsAddresses.StakeLpExtensionFactory} />
                     </CardContent>
                   </Card>
                 </div>
