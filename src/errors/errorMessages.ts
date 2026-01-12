@@ -110,7 +110,7 @@ export const ErrorMessages: Record<string, string> = {
   OnlyExtensionCanCall: 'OnlyExtensionCanCall',
   OnlyGroupOwner: 'OnlyGroupOwner',
   OnlyOneSubmitPerRound: '每个轮次，1个地址只能提交1个行动',
-  OwnerCapacityExceeded: '超出了链群服务者的最大可验证容量',
+  OwnerCapacityExceeded: '超出了该链群服务者的最大可验证容量',
   ParentTokenNotSet: '父代币未设置',
   PromisedWaitingPhasesMustBeGreaterOrEqualThanBefore: '承诺等待的阶段数必须大于或等于之前的阶段数',
   PromisedWaitingPhasesOutOfRange: '承诺等待的阶段数超出许可范围',

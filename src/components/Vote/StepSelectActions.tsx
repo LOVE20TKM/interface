@@ -6,16 +6,7 @@ import { toast } from 'react-hot-toast';
 import { UserPen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
 // my hooks
 import { useVotingActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
@@ -44,9 +35,7 @@ export interface StepSelectActionsProps {
 const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onNext }) => {
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
-  const router = useRouter();
   const [selectedActions, setSelectedActions] = useState<Set<bigint>>(new Set());
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // 获取所有投票中的行动
   const { votingActions, isPending, error } = useVotingActions(
@@ -89,16 +78,6 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
     onNext(selectedIds);
   };
 
-  // 处理行动类型选择
-  const handleSelectActionType = (type: 'base' | 'extension') => {
-    setIsDialogOpen(false);
-    if (type === 'base') {
-      router.push(`/action/new/?symbol=${token?.symbol}`);
-    } else {
-      router.push('/extension/factories/');
-    }
-  };
-
   // 加载中
   if (isPending || !token) {
     return (
@@ -114,13 +93,8 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
         <LeftTitle title="投票中的行动" />
         {token && (
           <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-secondary border-secondary"
-              onClick={() => setIsDialogOpen(true)}
-            >
-              推举新行动
+            <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
+              <Link href="/extension/factories/">推举新行动</Link>
             </Button>
             <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
               <Link href={`/submit/actions?symbol=${token?.symbol}`}>推举历史行动</Link>
@@ -198,32 +172,6 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
           </div>
         )}
       </div>
-
-      {/* 行动类型选择对话框 */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>选择新建行动类型</DialogTitle>
-            <DialogDescription>请选择您要创建的行动类型</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              className="text-secondary border-secondary w-full sm:w-auto"
-              onClick={() => handleSelectActionType('base')}
-            >
-              基础行动
-            </Button>
-            <Button
-              variant="outline"
-              className="text-secondary border-secondary w-full sm:w-auto"
-              onClick={() => handleSelectActionType('extension')}
-            >
-              扩展协议行动
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

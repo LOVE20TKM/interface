@@ -1,17 +1,8 @@
 'use client';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
 // my hooks
 import { useActionInfosByPage, useActionSubmits } from '@/src/hooks/contracts/useLOVE20RoundViewer';
@@ -33,8 +24,6 @@ interface SubmitingActionListProps {
 
 const SubmitingActionList: React.FC<SubmitingActionListProps> = ({ currentRound }) => {
   const { token } = useContext(TokenContext) || {};
-  const router = useRouter();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const {
     actionInfos,
@@ -59,16 +48,6 @@ const SubmitingActionList: React.FC<SubmitingActionListProps> = ({ currentRound 
     }
   }, [errorActionInfosByPage, errorActionSubmits]);
 
-  // 处理行动类型选择
-  const handleSelectActionType = (type: 'base' | 'extension') => {
-    setIsDialogOpen(false);
-    if (type === 'base') {
-      router.push(`/action/new?symbol=${token?.symbol}`);
-    } else {
-      router.push('/extension/factories/');
-    }
-  };
-
   if (!token) {
     return <LoadingIcon />;
   }
@@ -77,14 +56,11 @@ const SubmitingActionList: React.FC<SubmitingActionListProps> = ({ currentRound 
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
         <LeftTitle title="未推举的行动" />
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-secondary border-secondary"
-          onClick={() => setIsDialogOpen(true)}
-        >
-          发起新行动
-        </Button>
+        <Link href="/extension/factories/">
+          <Button variant="outline" size="sm" className="text-secondary border-secondary">
+            发起新行动
+          </Button>
+        </Link>
       </div>
       {isPendingActionInfosByPage || isPendingActionSubmits ? (
         <LoadingIcon />
@@ -134,32 +110,6 @@ const SubmitingActionList: React.FC<SubmitingActionListProps> = ({ currentRound 
               })}
         </div>
       )}
-
-      {/* 行动类型选择对话框 */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>选择新建行动类型</DialogTitle>
-            <DialogDescription>请选择您要创建的行动类型</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              className="text-secondary border-secondary w-full sm:w-auto"
-              onClick={() => handleSelectActionType('base')}
-            >
-              基础行动
-            </Button>
-            <Button
-              variant="outline"
-              className="text-secondary border-secondary w-full sm:w-auto"
-              onClick={() => handleSelectActionType('extension')}
-            >
-              扩展协议行动
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

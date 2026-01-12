@@ -92,8 +92,8 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
     defaultValues: {
       joinTokenAddress: tokenAddress || '',
       activationStakeAmount: '',
-      maxJoinAmountRatio: '',
-      maxVerifyCapacityFactor: '',
+      maxJoinAmountRatio: '0.1',
+      maxVerifyCapacityFactor: '1',
     },
     mode: 'onChange', // 实时验证
   });

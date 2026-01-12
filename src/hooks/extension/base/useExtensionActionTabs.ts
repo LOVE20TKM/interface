@@ -4,15 +4,13 @@
  * 功能：
  * 1. 根据扩展地址获取 factory 地址
  * 2. 根据 factory 地址从配置中获取静态标签配置
- * 3. 根据扩展类型调用对应的动态标签 hook
- * 4. 合并静态标签和动态标签
+ * 3. 根据显示条件过滤并返回静态标签
  */
 
 import { useMemo } from 'react';
 
 // my hooks
 import { useExtensionFactory } from '@/src/hooks/extension/base/contracts/useIExtension';
-import { useGroupActionDynamicTabs } from '@/src/hooks/extension/plugins/group';
 
 // my config
 import {
@@ -28,7 +26,7 @@ import {
 interface UseExtensionActionTabsParams {
   extensionAddress?: `0x${string}`; // 扩展合约地址
   isExtensionAction?: boolean; // 是否为扩展行动
-  account?: `0x${string}`; // 当前用户地址（用于动态标签判断）
+  account?: `0x${string}`; // 当前用户地址
 }
 
 /**
@@ -94,13 +92,6 @@ export const useExtensionActionTabs = (params: UseExtensionActionTabsParams): Us
 
   const extensionType = extensionConfig?.type || null;
 
-  // 调用 GROUP_ACTION 的动态标签 hook
-  const { tabs: groupActionDynamicTabs, isPending: isGroupActionPending } = useGroupActionDynamicTabs({
-    extensionAddress,
-    account,
-    enabled: extensionType === ExtensionType.GROUP_ACTION,
-  });
-
   // 计算静态标签
   const staticTabs = useMemo(() => {
     // 如果没有扩展地址或不是扩展行动，返回空数组
@@ -130,29 +121,15 @@ export const useExtensionActionTabs = (params: UseExtensionActionTabsParams): Us
       }));
   }, [extensionAddress, isExtensionAction, isFactoryPending, factoryAddress, extensionConfig]);
 
-  // 合并静态标签和动态标签
+  // 返回静态标签
   const tabs = useMemo(() => {
-    const allTabs = [...staticTabs];
-
-    // 根据扩展类型添加动态标签
-    if (extensionType === ExtensionType.GROUP_ACTION) {
-      allTabs.push(...groupActionDynamicTabs);
-    }
-
-    // 未来其他扩展类型的动态标签可以在这里添加
-    // if (extensionType === ExtensionType.GROUP_SERVICE) {
-    //   allTabs.push(...groupServiceDynamicTabs);
-    // }
-
-    return allTabs;
-  }, [staticTabs, extensionType, groupActionDynamicTabs]);
+    return staticTabs;
+  }, [staticTabs]);
 
   // 计算是否正在加载
   const isPending = useMemo(() => {
-    if (isFactoryPending) return true;
-    if (extensionType === ExtensionType.GROUP_ACTION && isGroupActionPending) return true;
-    return false;
-  }, [isFactoryPending, extensionType, isGroupActionPending]);
+    return isFactoryPending;
+  }, [isFactoryPending]);
 
   return {
     tabs,

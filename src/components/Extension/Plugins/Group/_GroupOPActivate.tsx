@@ -373,14 +373,13 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   if (!isPendingActivate && !groupId && (!availableGroups || availableGroups.length === 0)) {
     return (
       <div className="text-center py-12">
-        <p className="mb-4">
-          {myGroups && myGroups.length > 0 ? '您的所有链群已激活，没有未激活链群' : '您当前没有未激活的链群NFT'}
+        <p className="mb-4 text-gray-500">
+          {myGroups && myGroups.length > 0 ? '您的所有链群已激活，没有未激活链群' : '没有未激活的 链群NFT'}
         </p>
         <p className="mb-4">
-          请先
           <Link href="/extension/groupids/">
-            <Button variant="link" className="text-secondary font-normal px-1 text-base">
-              铸造链群NFT &gt;&gt;
+            <Button variant="outline" className="w-1/2 text-secondary border-secondary">
+              去铸造链群NFT &gt;&gt;
             </Button>
           </Link>
         </p>

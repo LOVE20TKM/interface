@@ -35,6 +35,18 @@ export default function ExtensionFactoriesPage() {
     <>
       <Header title="扩展类别" />
       <main className="flex-grow container mx-auto px-4 py-6 max-w-4xl">
+        <div className="space-y-4 mb-10">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">创建普通行动：</h2>
+          </div>
+          <div className="space-y-3 text-center">
+            <Link href={`/action/new/`}>
+              <Button variant="outline" size="default" className="w-1/2 text-secondary border-secondary">
+                <span className="text-secondary">创建行动 &gt;&gt;</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">创建扩展行动：</h2>
@@ -50,11 +62,11 @@ export default function ExtensionFactoriesPage() {
                     <span className="text-base text-greyscale-900 font-bold">{config.name}</span>
                     <Link href={`/extension/deploy?factory=${config.factoryAddress}`}>
                       <Button
-                        variant="link"
+                        variant="outline"
                         size="sm"
-                        className="border-secondary text-secondary hover:text-secondary-foreground px-0"
+                        className="border-secondary text-secondary hover:text-secondary-foreground"
                       >
-                        创建行动&gt;&gt;
+                        创建行动 &gt;&gt;
                       </Button>
                     </Link>
                   </div>

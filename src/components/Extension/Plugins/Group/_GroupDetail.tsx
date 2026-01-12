@@ -101,22 +101,23 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
             </div>
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">最大容量:</span>
-              <span className="font-mono">{formatTokenAmount(groupDetail.maxCapacity)}</span>
+              <span className="font-mono">
+                {groupDetail.maxCapacity > BigInt(0) ? formatTokenAmount(groupDetail.maxCapacity) : '不限'}
+              </span>
             </div>
 
-            <div className="col-span-1 md:col-span-2  text-gray-600 bg-gray-100 rounded ">
-              <div className="text-xs px-3 pt-2 pb-1">
-                剩余容量 {formatTokenAmount(groupDetail.remainingCapacity)} (
-                {formatPercentage(remainingCapacityRatio * 100)})
+            {groupDetail.maxCapacity > BigInt(0) && (
+              <div className="col-span-1 md:col-span-2  text-gray-600 bg-gray-100 rounded ">
+                <div className="text-xs px-3 pt-2 pb-1">
+                  剩余容量 {formatTokenAmount(groupDetail.remainingCapacity)} (
+                  {formatPercentage(remainingCapacityRatio * 100)})
+                </div>
+                <div className="text-xs px-3 pt-0 pb-2">
+                  已参与代币 {formatTokenAmount(groupDetail.totalJoinedAmount)} ({formatPercentage(capacityRatio * 100)}
+                  )
+                </div>
               </div>
-              <div className="text-xs px-3 pt-0 pb-2">
-                已参与代币 {formatTokenAmount(groupDetail.totalJoinedAmount)} ({formatPercentage(capacityRatio * 100)})
-              </div>
-            </div>
-            {/* <div className="flex items-center justify-between md:max-w-xs">
-              <span className="text-sm">总参与地址:</span>
-              <span className="font-mono">{accountsCount?.toString() || '0'}</span>
-            </div> */}
+            )}
           </div>
         </div>
 

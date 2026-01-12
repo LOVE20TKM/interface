@@ -58,7 +58,10 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
       type: ExtensionType.GROUP_ACTION,
       name: '链群行动',
       factoryAddress: groupActionFactory as `0x${string}`,
-      actionDetailTabs: [{ key: 'public', label: '链群公示', showCondition: 'hasExtension' }],
+      actionDetailTabs: [
+        { key: 'public', label: '链群公示', showCondition: 'hasExtension' },
+        { key: 'group-manage', label: '链群管理', showCondition: 'hasExtension' },
+      ],
     });
   }
 

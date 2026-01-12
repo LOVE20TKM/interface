@@ -180,10 +180,11 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
                       <span className="text-gray-500">参与代币数:</span>
                       {/* 容量百分比显示 */}
                       {(() => {
-                        const capacityRatio =
-                          group.maxCapacity > BigInt(0)
-                            ? Number(group.totalJoinedAmount) / Number(group.maxCapacity)
-                            : 0;
+                        // 如果 maxCapacity <= 0，链群没有容量限制，不显示百分比
+                        if (group.maxCapacity <= BigInt(0)) {
+                          return <span className="text-gray-500">{formatTokenAmount(group.totalJoinedAmount)}</span>;
+                        }
+                        const capacityRatio = Number(group.totalJoinedAmount) / Number(group.maxCapacity);
                         const percentage = capacityRatio * 100;
                         const colorClass =
                           percentage > 95 ? 'text-red-600' : percentage >= 90 ? 'text-yellow-600' : 'text-gray-500';

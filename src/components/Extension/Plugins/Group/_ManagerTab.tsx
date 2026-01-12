@@ -6,6 +6,9 @@
 // React
 import React, { useEffect, useState } from 'react';
 
+// Next.js
+import Link from 'next/link';
+
 // 类型
 import { ActionInfo } from '@/src/types/love20types';
 
@@ -18,6 +21,7 @@ import { useContractError } from '@/src/errors/useContractError';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import { Button } from '@/components/ui/button';
 import _GroupManagementDialog from './_GroupManagementDialog';
 import _ManagerDataPanel from './_ManagerDataPanel';
 import _MyGroups from './_MyGroups';
@@ -86,9 +90,11 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
 
   if (!isOwner) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500 mb-2">您还不是链群服务者</p>
-        <p className="text-sm text-gray-400">激活链群后即可成为服务者</p>
+      <div className="text-center py-10">
+        <p className="text-gray-500 mb-6">您还不是链群服务者</p>
+        <Button variant="outline" asChild className="w-1/2 text-secondary border-secondary">
+          <Link href={`/extension/group_op/?actionId=${actionId}&op=activate`}>去激活链群 &gt;&gt;</Link>
+        </Button>
       </div>
     );
   }
