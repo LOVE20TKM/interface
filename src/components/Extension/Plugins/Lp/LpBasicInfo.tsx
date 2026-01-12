@@ -81,20 +81,21 @@ const LpBasicInfo: React.FC<LpBasicInfoProps> = ({ extensionAddress, factoryAddr
 
         {/* 等待区块数 */}
         <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">等待区块数:</div>
+          <div className="text-sm font-bold mb-1">退出行动需等待的区块数:</div>
           <div className="font-mono text-secondary text-sm md:text-base">{waitingBlocks.toString()}</div>
+        </div>
+
+        {/* 最小治理票数 */}
+        <div className="md:max-w-2xl">
+          <div className="text-sm font-bold mb-1">加入行动所需最小治理票数:</div>
+          <div className="font-mono text-secondary text-sm md:text-base">{formatTokenAmount(minGovVotes)}</div>
         </div>
 
         {/* 治理比率乘数 */}
         <div className="md:max-w-2xl">
           <div className="text-sm font-bold mb-1">治理比率乘数:</div>
           <div className="font-mono text-secondary text-sm md:text-base">{govRatioMultiplier.toString()}</div>
-        </div>
-
-        {/* 最小治理票数 */}
-        <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">最小治理票数:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">{formatTokenAmount(minGovVotes)}</div>
+          <div className="text-xs text-gray-600">LP占比超过 (治理票占比 × 治理比率乘数) 的部分，不再有收益</div>
         </div>
       </div>
 

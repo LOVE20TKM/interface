@@ -124,20 +124,17 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
         <div className="md:max-w-2xl">
           <div className="text-sm font-bold mb-1">最大参与代币占比:</div>
           <div className="font-mono text-secondary text-sm md:text-base">{ratioPercentageDisplay}</div>
+          <div className="text-xs text-gray-600">
+            行动者最大参与代币数 = 已铸造代币总量 × 最大参与代币占比 × 该行动投票率
+          </div>
         </div>
 
         {/* 验证容量系数 */}
         <div className="md:max-w-2xl">
           <div className="text-sm font-bold mb-1">验证容量系数:</div>
           <div className="font-mono text-secondary text-sm md:text-base">{capacityFactorDisplay}</div>
+          <div className="text-xs text-gray-600">理论最大容量 = 治理票占比 × 已铸造代币量 × 验证容量系数</div>
         </div>
-      </div>
-
-      {/* 说明文字 */}
-      <div className="mt-4 text-xs md:text-sm text-gray-600 space-y-1">
-        <div className="text-sm font-bold mb-2">小贴士：</div>
-        <p>• 单个行动者最大参与代币数 = 已铸造代币总量 × 最大参与代币占比</p>
-        <p>• 理论最大容量 = 治理票占比 × 已铸造代币量 × 验证容量系数</p>
       </div>
     </div>
   );

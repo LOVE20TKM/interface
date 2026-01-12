@@ -101,10 +101,14 @@ const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, onManageClick, token }
           <div className="flex items-center justify-between text-xs mt-2">
             <div className="flex items-center gap-2">
               <span className="text-gray-500">参与量: </span>
-              <span className={percentageColorClass}>
-                {formatTokenAmount(group.totalJoinedAmount, 2)} / {formatTokenAmount(group.maxCapacity, 2)} (
-                {formatPercentage(percentage)})
-              </span>
+              {group.maxCapacity <= BigInt(0) ? (
+                <span className="text-gray-500">{formatTokenAmount(group.totalJoinedAmount, 2)}</span>
+              ) : (
+                <span className={percentageColorClass}>
+                  {formatTokenAmount(group.totalJoinedAmount, 2)} / {formatTokenAmount(group.maxCapacity, 2)} (
+                  {formatPercentage(percentage)})
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-500">参与地址数:</span>

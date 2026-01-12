@@ -330,8 +330,8 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
         <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
           <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
-            <div>• 谁可以投不信任票：“投票”给本行动、并完成"验证"的治理者；</div>
-            <div>• 不信任票的作用：不信票越多，该服务者的链群获得激励越少；</div>
+            <div>• “投票”给本行动、并完成"验证"的治理者，可以投不信任票；</div>
+            <div>• 不信任票越多，该服务者的链群获得激励越少；</div>
           </div>
         </div>
       </div>
@@ -354,7 +354,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
             <div className="space-y-2">
               {/* 服务者信息 */}
               {selectedOwner && (
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 text-center">
                   服务者：
                   <AddressWithCopyButton address={selectedOwner.address} />
                 </div>
