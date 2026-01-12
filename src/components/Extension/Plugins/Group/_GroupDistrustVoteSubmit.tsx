@@ -164,7 +164,14 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
   // 计算不信任票数（基于剩余可投票数）
   const distrustVotes = useMemo(() => {
     if (!remainingVotes || remainingVotes === BigInt(0) || selectedRatio === 0) return BigInt(0);
-    return BigInt(Math.floor(Number(remainingVotes) * selectedRatio));
+
+    // 使用 BigInt 进行精确计算，避免精度丢失
+    // selectedRatio 是 0.1-1.0 的浮点数，转换为整数比例（乘以 10000 以保留 4 位小数精度）
+    const ratioMultiplier = BigInt(Math.floor(selectedRatio * 10000));
+    const calculatedVotes = (remainingVotes * ratioMultiplier) / BigInt(10000);
+
+    // 确保不会超过剩余票数（安全保护）
+    return calculatedVotes > remainingVotes ? remainingVotes : calculatedVotes;
   }, [remainingVotes, selectedRatio]);
 
   // 提交不信任投票
