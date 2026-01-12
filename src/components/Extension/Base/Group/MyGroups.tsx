@@ -5,6 +5,7 @@
 'use client';
 
 import { useAccount } from 'wagmi';
+import Link from 'next/link';
 
 // my hooks
 import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
@@ -12,6 +13,7 @@ import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
 // my components
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import { Button } from '@/components/ui/button';
 
 export default function MyGroups() {
   const { address: account, isConnected } = useAccount();
@@ -66,9 +68,11 @@ export default function MyGroups() {
       </div>
 
       {myGroups.length === 0 ? (
-        <div className="text-center text-sm text-greyscale-400 p-8">
-          <div className="mb-2">您还没有链群NFT</div>
-          <div className="text-xs">去铸造一个链群NFT 吧！</div>
+        <div className="text-center text-sm text-greyscale-500 p-8">
+          <div className="mb-8">您还没有链群NFT</div>
+          <Button variant="outline" className="w-1/2 text-secondary border-secondary" asChild>
+            <Link href="/extension/groupids/?tab=mint">去铸造NFT &gt;&gt;</Link>
+          </Button>
         </div>
       ) : (
         <div className="overflow-x-auto">

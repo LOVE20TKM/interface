@@ -74,27 +74,7 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
             {groupActionTokenSymbol && <span className="text-sm text-gray-600">({groupActionTokenSymbol})</span>}
           </div>
         </div>
-
-        {/* 链群行动工厂地址 */}
-        <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">链群行动工厂地址:</div>
-          <div className="flex items-center gap-2">
-            <AddressWithCopyButton address={groupActionFactoryAddress} showCopyButton={true} colorClassName="text-sm" />
-          </div>
-        </div>
-
-        {/* 默认激励分配地址数上限 */}
-        <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">默认激励分配地址数上限:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">{maxRecipients.toString()}</div>
-        </div>
       </div>
-
-      {/* 说明文字 */}
-      {/* <div className="mt-4 text-xs md:text-sm text-gray-600 space-y-1">
-        <div className="text-sm font-bold mb-2">小贴士：</div>
-        <p>• 仅限链群服务所在代币地址或其子币地址</p>
-      </div> */}
     </div>
   );
 };
