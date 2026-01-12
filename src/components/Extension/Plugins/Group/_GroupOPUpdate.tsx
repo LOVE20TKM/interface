@@ -153,6 +153,14 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                 }
               }
             }),
+          maxAccounts: z.string().refine(
+            (val) => {
+              if (!val || val === '0') return true;
+              const num = parseInt(val, 10);
+              return !isNaN(num) && num >= 0 && Number.isInteger(num);
+            },
+            { message: '请输入有效的非负整数' },
+          ),
         })
         .refine(
           (data) => {
@@ -178,6 +186,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
       description: '',
       minJoinAmount: '',
       maxJoinAmount: '',
+      maxAccounts: '',
     },
     mode: 'onChange',
   });
@@ -197,6 +206,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
           groupDetail.maxJoinAmount > BigInt(0)
             ? formatTokenAmount(groupDetail.maxJoinAmount, token?.decimals || 18)
             : '',
+        maxAccounts: groupDetail.maxAccounts > BigInt(0) ? groupDetail.maxAccounts.toString() : '',
       });
     }
   }, [groupDetail, form, token?.decimals]);
@@ -220,6 +230,9 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     const maxCapacityBigInt = values.maxCapacity ? parseUnits(values.maxCapacity) : BigInt(0);
     const minJoinAmountBigInt = values.minJoinAmount ? parseUnits(values.minJoinAmount) : BigInt(0);
     const maxJoinAmountBigInt = values.maxJoinAmount ? parseUnits(values.maxJoinAmount) : BigInt(0);
+    // maxAccounts 是地址数量（整数），不是代币数量，所以直接转换为 BigInt
+    const maxAccountsBigInt =
+      values.maxAccounts && values.maxAccounts !== '0' ? BigInt(parseInt(values.maxAccounts, 10)) : BigInt(0);
 
     try {
       await updateGroupInfo(
@@ -229,7 +242,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
         maxCapacityBigInt,
         minJoinAmountBigInt,
         maxJoinAmountBigInt,
-        BigInt(0),
+        maxAccountsBigInt,
       );
     } catch (error) {
       console.error('Update group failed', error);
@@ -372,6 +385,22 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                     扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)}{' '}
                     {actionParams?.joinTokenSymbol}
                   </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* 行动者最大地址数 */}
+            <FormField
+              control={form.control}
+              name="maxAccounts"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>行动者最大地址数</FormLabel>
+                  <FormControl>
+                    <Input placeholder="0 为不做限制" className="!ring-secondary-foreground" {...field} />
+                  </FormControl>
+                  {/* <FormDescription className="text-xs">设置为0表示不做限制</FormDescription> */}
                   <FormMessage />
                 </FormItem>
               )}
