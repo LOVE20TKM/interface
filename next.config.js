@@ -53,6 +53,7 @@ const nextConfig = {
       '/acting/join': { page: '/acting/join' },
       '/action/new': { page: '/action/new' },
       '/action/info': { page: '/action/info' },
+      '/apps': { page: '/apps' },
       '/dex': { page: '/dex' },
       '/dex/deposit': { page: '/dex/deposit' },
       '/dex/swap': { page: '/dex/swap' },
