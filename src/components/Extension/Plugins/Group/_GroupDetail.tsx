@@ -101,7 +101,7 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
             </div>
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">最大容量:</span>
-              <span className="font-mono">
+              <span className="font-mono pr-2">
                 {groupDetail.maxCapacity > BigInt(0) ? formatTokenAmount(groupDetail.maxCapacity) : '不限'}
               </span>
             </div>
@@ -126,12 +126,12 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">最小参与代币数:</span>
-              <span className="font-mono ">{formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')}</span>
+              <span className="font-mono pr-2">{formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')}</span>
             </div>
 
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">最大参与代币数:</span>
-              <span className="font-mono">
+              <span className="font-mono pr-2">
                 {groupDetail.maxJoinAmount > BigInt(0) ? formatTokenAmount(groupDetail.maxJoinAmount) : '不限'}
               </span>
             </div>
@@ -152,12 +152,12 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">当前参与地址数:</span>
-              <span className="font-mono">{accountsCount?.toString() || '0'}</span>
+              <span className="font-mono pr-2">{accountsCount?.toString() || '0'}</span>
             </div>
 
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="text-sm">最大地址数限制:</span>
-              <span className="font-mono">
+              <span className="font-mono pr-2">
                 {groupDetail.maxAccounts > BigInt(0) ? groupDetail.maxAccounts.toString() : '不限'}
               </span>
             </div>

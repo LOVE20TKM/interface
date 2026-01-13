@@ -163,6 +163,7 @@ const TokenPage = () => {
     TokenFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_TOKEN_FACTORY,
     Launch: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_LAUNCH,
     Stake: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE,
+    Submit: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_SUBMIT,
     Vote: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VOTE,
     Join: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN,
     Verify: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VERIFY,
@@ -429,6 +430,7 @@ const TokenPage = () => {
                       <AddressItem name="TokenFactory" address={constantsAddresses.TokenFactory} />
                       <AddressItem name="Launch" address={constantsAddresses.Launch} />
                       <AddressItem name="Stake" address={constantsAddresses.Stake} />
+                      <AddressItem name="Submit" address={constantsAddresses.Submit} />
                       <AddressItem name="Vote" address={constantsAddresses.Vote} />
                       <AddressItem name="Join" address={constantsAddresses.Join} />
                       <AddressItem name="Verify" address={constantsAddresses.Verify} />
