@@ -105,14 +105,21 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
             .string()
             .refine(
               (val) => {
-                if (!val || val === '0') return true;
+                if (!val || val.trim() === '') return false;
+                if (val === '0') return false;
                 const amount = parseFloat(val);
-                return !isNaN(amount) && amount >= 0;
+                return !isNaN(amount) && amount > 0;
               },
-              { message: '请输入有效的代币数' },
+              { message: '最小参与代币数不能为空且必须大于0' },
             )
             .superRefine((val, ctx) => {
-              if (!val || val === '0') return;
+              if (!val || val === '0') {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: '最小参与代币数不能为0',
+                });
+                return;
+              }
               const amount = parseUnits(val);
               if (amount > BigInt(0)) {
                 // 不能大于行动的单个行动者最大参与代币数
@@ -162,9 +169,10 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
         })
         .refine(
           (data) => {
-            // 交叉验证：最大参与量不能小于最小参与量
+            // 交叉验证：最大参与量不能小于最小参与量（最小参与量必须大于0，最大参与量为0表示无限制）
             const minAmount = parseUnits(data.minJoinAmount || '0');
             const maxAmount = parseUnits(data.maxJoinAmount || '0');
+            // 如果最大参与量不为0（有限制），则必须大于等于最小参与量
             return !(minAmount > BigInt(0) && maxAmount > BigInt(0) && maxAmount < minAmount);
           },
           {
@@ -192,14 +200,16 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   // 当链群详情加载完成后，填充表单
   useEffect(() => {
     if (groupDetail) {
+      // 最小参与代币数必须大于0，如果链群详情中的值为0，则使用空字符串（需要用户重新填写）
+      const minJoinAmountValue =
+        groupDetail.minJoinAmount > BigInt(0)
+          ? formatTokenAmount(groupDetail.minJoinAmount, token?.decimals || 18)
+          : '';
       form.reset({
         maxCapacity:
           groupDetail.maxCapacity > BigInt(0) ? formatTokenAmount(groupDetail.maxCapacity, token?.decimals || 18) : '',
         description: groupDetail.description || '',
-        minJoinAmount:
-          groupDetail.minJoinAmount > BigInt(0)
-            ? formatTokenAmount(groupDetail.minJoinAmount, token?.decimals || 18)
-            : '',
+        minJoinAmount: minJoinAmountValue,
         maxJoinAmount:
           groupDetail.maxJoinAmount > BigInt(0)
             ? formatTokenAmount(groupDetail.maxJoinAmount, token?.decimals || 18)
@@ -226,7 +236,16 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
 
     // 转换参数为 BigInt（formSchema 已经完成验证）
     const maxCapacityBigInt = values.maxCapacity ? parseUnits(values.maxCapacity) : BigInt(0);
-    const minJoinAmountBigInt = values.minJoinAmount ? parseUnits(values.minJoinAmount) : BigInt(0);
+    // 最小参与代币数不能为0，必须提供有效值
+    if (!values.minJoinAmount || values.minJoinAmount === '0') {
+      toast.error('最小参与代币数不能为0');
+      return;
+    }
+    const minJoinAmountBigInt = parseUnits(values.minJoinAmount);
+    if (minJoinAmountBigInt <= BigInt(0)) {
+      toast.error('最小参与代币数必须大于0');
+      return;
+    }
     const maxJoinAmountBigInt = values.maxJoinAmount ? parseUnits(values.maxJoinAmount) : BigInt(0);
     // maxAccounts 是地址数量（整数），不是代币数量，所以直接转换为 BigInt
     const maxAccountsBigInt =
@@ -353,13 +372,9 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                 <FormItem>
                   <FormLabel>最小参与代币数 ({actionParams?.joinTokenSymbol})</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="可填0, 表示任何>0的参与量都可以"
-                      className="!ring-secondary-foreground"
-                      {...field}
-                    />
+                    <Input placeholder="请填写数量，必须大于0" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
-                  <FormDescription className="text-xs">设置为0表示任何大于0的参与量都可以</FormDescription>
+                  <FormDescription className="text-xs">最小参与代币数必须大于0</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

@@ -239,7 +239,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
               <tr className="border-b border-gray-100">
                 <th className="px-1 text-left">成员地址</th>
                 <th className="px-1 text-right">得分(代币数×原始得分)</th>
-                <th className="px-1 text-right">激励(占比)</th>
+                <th className="px-1 text-right">激励</th>
               </tr>
             </thead>
             <tbody>

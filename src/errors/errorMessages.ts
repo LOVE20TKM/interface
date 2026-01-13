@@ -56,7 +56,7 @@ export const ErrorMessages: Record<string, string> = {
   InvalidJoinTokenAddress: 'InvalidJoinTokenAddress',
   InvalidLaunchAddress: 'InvalidLaunchAddress',
   InvalidMaxAccounts: 'InvalidMaxAccounts',
-  InvalidMinMaxJoinAmount: 'InvalidMinMaxJoinAmount',
+  InvalidMinMaxJoinAmount: '最小参与代币数不能为0',
   InvalidMintAddress: 'InvalidMintAddress',
   InvalidParameter: 'InvalidParameter',
   InvalidParentToken: '无效的父代币',
