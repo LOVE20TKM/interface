@@ -51,7 +51,7 @@ export const useGroupScoresOfRound = ({
   });
 
   // 第二步：获取每个账户的原始得分和最终得分
-  // 新版合约的 originScoreByAccount 和 scoreByAccount 需要 extensionAddress, round, account 参数
+  // 新版合约的 originScoreByAccount 和 accountScore 需要 extensionAddress, round, account 参数
   const scoresContracts = useMemo(() => {
     if (!extensionAddress || round === undefined || accounts.length === 0) return [];
 
@@ -69,7 +69,7 @@ export const useGroupScoresOfRound = ({
       contracts.push({
         address: GROUP_VERIFY_CONTRACT_ADDRESS,
         abi: GroupVerifyAbi,
-        functionName: 'scoreByAccount',
+        functionName: 'accountScore',
         args: [extensionAddress, round, account],
       });
     }

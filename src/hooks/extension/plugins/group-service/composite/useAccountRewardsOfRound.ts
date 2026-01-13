@@ -42,6 +42,8 @@ export interface AccountRewardInfo {
   isMinted: boolean;
   /** 是否设置了二次分配地址 */
   hasRecipients: boolean;
+  /** 链群铸币量 */
+  generatedAmount: bigint;
 }
 
 /**
@@ -103,85 +105,79 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
   });
 
   // ==========================================
-  // 第二步：批量查询每个地址的激励
+  // 第二步：批量查询每个地址的激励、二次分配设置、链群铸币量（合并为一次查询）
   // ==========================================
-  const rewardsContracts = useMemo(() => {
+  const allContracts = useMemo(() => {
     // 如果扩展地址未获取到，或参与者列表为空，返回空数组
     if (!extensionAddress || !round || accounts.length === 0) {
       return [];
     }
 
-    // 为每个地址构建一个查询配置
-    return accounts.map((account) => ({
-      address: extensionAddress,
-      abi: ExtensionGroupServiceAbi,
-      functionName: 'rewardByAccount' as const,
-      args: [round, account] as const,
-    }));
-  }, [extensionAddress, round, accounts]);
-
-  const {
-    data: rewardsData,
-    isPending: isRewardsPending,
-    error: rewardsError,
-  } = useReadContracts({
-    contracts: rewardsContracts,
-    query: {
-      // 只有在扩展地址、轮次、账户列表都就绪时才启用
-      enabled: !!extensionAddress && !!round && accounts.length > 0 && rewardsContracts.length > 0,
-    },
-  });
-
-  // ==========================================
-  // 第三步：批量查询每个地址的二次分配地址设置情况
-  // ==========================================
-  const recipientsContracts = useMemo(() => {
-    // 如果扩展地址未获取到，或参与者列表为空，返回空数组
-    if (!extensionAddress || !round || accounts.length === 0) {
-      return [];
+    // 为每个账户构建三个查询：激励信息、二次分配设置、链群铸币量
+    const contracts = [];
+    for (const account of accounts) {
+      // 1. rewardByAccount - 获取激励信息
+      contracts.push({
+        address: extensionAddress,
+        abi: ExtensionGroupServiceAbi,
+        functionName: 'rewardByAccount' as const,
+        args: [round, account] as const,
+      });
+      // 2. actionIdsWithRecipients - 获取二次分配设置
+      contracts.push({
+        address: extensionAddress,
+        abi: ExtensionGroupServiceAbi,
+        functionName: 'actionIdsWithRecipients' as const,
+        args: [account, round] as const,
+      });
+      // 3. generatedActionRewardByVerifier - 获取链群铸币量
+      contracts.push({
+        address: extensionAddress,
+        abi: ExtensionGroupServiceAbi,
+        functionName: 'generatedActionRewardByVerifier' as const,
+        args: [round, account] as const,
+      });
     }
-
-    // 为每个地址构建一个查询配置
-    // actionIdsWithRecipients 的参数顺序是 (account, round)
-    return accounts.map((account) => ({
-      address: extensionAddress,
-      abi: ExtensionGroupServiceAbi,
-      functionName: 'actionIdsWithRecipients' as const,
-      args: [account, round] as const,
-    }));
+    return contracts;
   }, [extensionAddress, round, accounts]);
 
   const {
-    data: recipientsData,
-    isPending: isRecipientsPending,
-    error: recipientsError,
+    data: allData,
+    isPending: isAllDataPending,
+    error: allDataError,
   } = useReadContracts({
-    contracts: recipientsContracts,
+    contracts: allContracts,
     query: {
       // 只有在扩展地址、轮次、账户列表都就绪时才启用
-      enabled: !!extensionAddress && !!round && accounts.length > 0 && recipientsContracts.length > 0,
+      enabled: !!extensionAddress && !!round && accounts.length > 0 && allContracts.length > 0,
     },
   });
 
   // ==========================================
-  // 解析激励数据和二次分配地址设置情况
+  // 解析激励数据、二次分配设置和链群铸币量
   // ==========================================
   const accountRewards = useMemo(() => {
     // 如果没有数据或账户列表为空，返回空数组
-    if (!rewardsData || accounts.length === 0) {
+    if (!allData || accounts.length === 0) {
       return [];
     }
 
-    // 解析每个查询结果
+    // 解析每个账户的查询结果
+    // 每个账户对应 3 个连续的查询结果：rewardByAccount, actionIdsWithRecipients, generatedActionRewardByVerifier
     const result: AccountRewardInfo[] = [];
     for (let i = 0; i < accounts.length; i++) {
-      const rewardData = rewardsData[i];
-      const recipientData = recipientsData?.[i];
+      const rewardIndex = i * 3; // 激励信息索引
+      const recipientIndex = i * 3 + 1; // 二次分配设置索引
+      const generatedIndex = i * 3 + 2; // 链群铸币量索引
+
+      const rewardData = allData[rewardIndex];
+      const recipientData = allData[recipientIndex];
+      const generatedData = allData[generatedIndex];
 
       if (rewardData?.status === 'success' && rewardData.result) {
         const [amount, isMinted] = rewardData.result as [bigint, boolean];
 
-        // 检查是否设置了二次分配地址
+        // 解析二次分配设置
         // 如果 actionIdsWithRecipients 返回的列表不为空，就是设置了
         let hasRecipients = false;
         if (recipientData?.status === 'success' && recipientData.result) {
@@ -189,16 +185,23 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
           hasRecipients = Array.isArray(actionIds) && actionIds.length > 0;
         }
 
+        // 解析链群铸币量
+        let generatedAmount = BigInt(0);
+        if (generatedData?.status === 'success' && generatedData.result) {
+          generatedAmount = safeToBigInt(generatedData.result);
+        }
+
         result.push({
           account: accounts[i],
           amount: safeToBigInt(amount),
           isMinted,
           hasRecipients,
+          generatedAmount,
         });
       }
     }
     return result;
-  }, [rewardsData, recipientsData, accounts]);
+  }, [allData, accounts]);
 
   // ==========================================
   // 计算最终状态
@@ -206,13 +209,13 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
   const isPending = useMemo(() => {
     // 账户列表加载中
     if (isAccountsPending) return true;
-    // 账户列表为空，无需等待激励查询
+    // 账户列表为空，无需等待数据查询
     if (accounts.length === 0) return false;
-    // 等待激励数据和二次分配地址查询完成
-    return isRewardsPending || isRecipientsPending;
-  }, [isAccountsPending, accounts.length, isRewardsPending, isRecipientsPending]);
+    // 等待合并后的批量数据查询完成
+    return isAllDataPending;
+  }, [isAccountsPending, accounts.length, isAllDataPending]);
 
-  const error = accountsError || rewardsError || recipientsError;
+  const error = accountsError || allDataError;
 
   // ==========================================
   // 返回结果

@@ -134,7 +134,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
     return <div>Token信息加载中...</div>;
   }
 
-  // 创建地图来快速查找参与代币数和得分
+  // 创建地图来快速查找数据
   const amountMap = new Map<string, bigint>();
   if (accountJoinedAmounts) {
     accountJoinedAmounts.forEach((item) => {
@@ -142,27 +142,42 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
     });
   }
 
-  const scoreMap = new Map<string, bigint>();
+  const scoreInfoMap = new Map<string, { originScore: bigint; finalScore: bigint }>();
   if (accountScores) {
     accountScores.forEach((scoreInfo) => {
-      scoreMap.set(scoreInfo.account.toLowerCase(), scoreInfo.originScore);
+      scoreInfoMap.set(scoreInfo.account.toLowerCase(), {
+        originScore: scoreInfo.originScore,
+        finalScore: scoreInfo.finalScore,
+      });
     });
   }
 
   // 计算总激励
   const totalReward = accountRewards?.reduce((sum, item) => sum + item.reward, BigInt(0)) || BigInt(0);
 
-  // 合并数据：为每个激励记录添加参与代币数和得分
+  // 计算总 finalScore（用于计算百分比）
+  const totalFinalScore = accountScores?.reduce((sum, scoreInfo) => sum + scoreInfo.finalScore, BigInt(0)) || BigInt(0);
+
+  // 计算总参与代币数（用于汇总行）
+  const totalJoinedAmount =
+    accountJoinedAmounts?.reduce((sum, item) => sum + item.joinedAmount, BigInt(0)) || BigInt(0);
+
+  // 合并数据：为每个激励记录添加参与代币数和得分信息
   const combinedData =
     accountRewards?.map((accountReward) => {
-      const joinedAmount = amountMap.get(accountReward.account.toLowerCase()) || BigInt(0);
-      const score = scoreMap.get(accountReward.account.toLowerCase()) || BigInt(0);
+      const accountLower = accountReward.account.toLowerCase();
+      const joinedAmount = amountMap.get(accountLower) || BigInt(0);
+      const scoreInfo = scoreInfoMap.get(accountLower) || { originScore: BigInt(0), finalScore: BigInt(0) };
       const rewardPercentage = totalReward > BigInt(0) ? (Number(accountReward.reward) / Number(totalReward)) * 100 : 0;
+      const finalScorePercentage =
+        totalFinalScore > BigInt(0) ? (Number(scoreInfo.finalScore) / Number(totalFinalScore)) * 100 : 0;
 
       return {
         account: accountReward.account,
         joinedAmount,
-        score,
+        originScore: scoreInfo.originScore,
+        finalScore: scoreInfo.finalScore,
+        finalScorePercentage,
         reward: accountReward.reward,
         rewardPercentage,
       };
@@ -223,8 +238,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-1 text-left">成员地址</th>
-                <th className="px-1 text-right">参与币数</th>
-                <th className="px-1 text-right">得分</th>
+                <th className="px-1 text-right">得分(代币数×原始得分)</th>
                 <th className="px-1 text-right">激励(占比)</th>
               </tr>
             </thead>
@@ -234,14 +248,36 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
                   <td className="px-1">
                     <AddressWithCopyButton address={item.account} showCopyButton={true} />
                   </td>
-                  <td className="px-1 text-right font-mono text-secondary">{formatTokenAmount(item.joinedAmount)}</td>
-                  <td className="px-1 text-right text-greyscale-700">{Number(item.score).toString()}</td>
+                  <td className="px-1 text-right">
+                    <div className="font-mono text-secondary">{formatTokenAmount(item.finalScore)}</div>
+                    {/* <div className="text-xs text-greyscale-500">{item.finalScorePercentage.toFixed(2)}%</div> */}
+                    <div className="mt-0 text-xs text-greyscale-400">
+                      <span className="font-mono">{formatTokenAmount(item.joinedAmount)}</span>
+                      <span className="mx-1">×</span>
+                      <span>{Number(item.originScore).toString()}</span>
+                    </div>
+                  </td>
                   <td className="px-1 text-right">
                     <div className="font-mono text-secondary">{formatTokenAmount(item.reward)}</div>
-                    <div className="text-xs text-greyscale-500">{item.rewardPercentage.toFixed(2)}%</div>
+                    {/* <div className="text-xs text-greyscale-500">{item.rewardPercentage.toFixed(2)}%</div> */}
                   </td>
                 </tr>
               ))}
+              {/* 汇总行 */}
+              <tr className="border-t-1 border-gray-300">
+                <td className="px-1 text-left">合计</td>
+                <td className="px-1 text-right">
+                  <div className="font-mono">{formatTokenAmount(totalFinalScore)}</div>
+                  {/* <div className="text-xs text-greyscale-500">100.00%</div> */}
+                  <div className="mt-0 text-xs text-greyscale-400">
+                    <span className="font-mono">{formatTokenAmount(totalJoinedAmount)}</span>
+                  </div>
+                </td>
+                <td className="px-1 text-right">
+                  <div className="font-mono">{formatTokenAmount(totalReward)}</div>
+                  {/* <div className="text-xs text-greyscale-500">100.00%</div> */}
+                </td>
+              </tr>
             </tbody>
           </table>
         ))}

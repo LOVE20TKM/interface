@@ -39,9 +39,11 @@ export default function GroupTransferPage() {
     return (
       <>
         <Header title="转移链群NFT" showBackButton={true} />
-        <main className="flex-grow">
-          <div className="flex justify-center py-8">
-            <LoadingIcon />
+        <main className="flex-grow px-3 sm:px-0">
+          <div className="w-full max-w-2xl mx-auto">
+            <div className="flex justify-center py-8">
+              <LoadingIcon />
+            </div>
           </div>
         </main>
       </>
@@ -51,8 +53,10 @@ export default function GroupTransferPage() {
   return (
     <>
       <Header title="转移链群NFT" showBackButton={true} />
-      <main className="flex-grow">
-        <GroupTransfer tokenId={tokenId} />
+      <main className="flex-grow px-3 sm:px-0">
+        <div className="w-full max-w-2xl mx-auto">
+          <GroupTransfer tokenId={tokenId} />
+        </div>
       </main>
     </>
   );

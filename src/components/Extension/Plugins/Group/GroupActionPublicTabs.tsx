@@ -86,7 +86,7 @@ const GroupActionPublicTabs: React.FC<GroupActionPublicTabsProps> = ({ actionId,
         </TabsContent>
 
         <TabsContent value="reward" className="mt-0">
-          <_GroupRewardTab extensionAddress={extensionAddress} />
+          <_GroupRewardTab actionId={actionId} extensionAddress={extensionAddress} />
         </TabsContent>
       </Tabs>
     </div>

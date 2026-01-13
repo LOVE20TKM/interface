@@ -200,7 +200,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   return (
     <div className="p-6">
       <LeftTitle title="转移链群NFT" />
-      <div className="w-full max-w-md mt-4">
+      <div className="w-full max-w-md mx-auto mt-4">
         <Form {...form}>
           <form className="space-y-4">
             {/* NFT 名称显示 */}

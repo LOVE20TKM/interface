@@ -62,6 +62,7 @@ const nextConfig = {
       '/extension/groupids': { page: '/extension/groupids' },
       '/extension/group': { page: '/extension/group' },
       '/extension/group_op': { page: '/extension/group_op' },
+      '/group/transfer': { page: '/group/transfer' },
       '/gov': { page: '/gov' },
       '/launch': { page: '/launch' },
       '/launch/burn': { page: '/launch/burn' },

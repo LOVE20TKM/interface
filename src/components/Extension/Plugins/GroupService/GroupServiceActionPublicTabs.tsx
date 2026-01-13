@@ -19,7 +19,6 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import ChangeRound from '@/src/components/Common/ChangeRound';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import { Button } from '@/components/ui/button';
 import _RewardDetailByVerifier from './_RewardDetailByVerifier';
 
 // my funcs
@@ -102,13 +101,14 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
     );
   };
 
-  // 数据处理：计算总激励、排序
-  const { sortedRewards, totalReward } = useMemo(() => {
+  // 数据处理：计算总激励、总链群铸币量、排序
+  const { sortedRewards, totalReward, totalGeneratedReward } = useMemo(() => {
     if (!accountRewards || accountRewards.length === 0) {
-      return { sortedRewards: [], totalReward: BigInt(0) };
+      return { sortedRewards: [], totalReward: BigInt(0), totalGeneratedReward: BigInt(0) };
     }
 
     const total = accountRewards.reduce((sum, item) => sum + item.amount, BigInt(0));
+    const totalGenerated = accountRewards.reduce((sum, item) => sum + item.generatedAmount, BigInt(0));
 
     // 按激励从高到低排序
     const sorted = [...accountRewards].sort((a, b) => {
@@ -117,7 +117,7 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
       return 0;
     });
 
-    return { sortedRewards: sorted, totalReward: total };
+    return { sortedRewards: sorted, totalReward: total, totalGeneratedReward: totalGenerated };
   }, [accountRewards]);
 
   // 处理查看服务者详细激励
@@ -185,8 +185,8 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
               <tr className="border-b border-gray-100">
                 <th className="px-1 text-left">No.</th>
                 <th className="px-1 text-center">地址</th>
-                <th className="px-1 text-center">激励</th>
-                <th className="px-1 text-center">明细</th>
+                <th className="px-1 text-center">链群铸币量</th>
+                <th className="px-1 text-center">服务者激励</th>
               </tr>
             </thead>
             <tbody>
@@ -206,24 +206,22 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
                     </div>
                   </td>
                   <td className="px-1 text-center">
-                    <div className="font-mono text-secondary">{formatTokenAmount(item.amount)}</div>
-                    <div className="text-greyscale-500 text-xs">
+                    <div className="font-mono text-sm">{formatTokenAmount(item.generatedAmount)}</div>
+                  </td>
+                  <td className="px-1 text-center">
+                    <div
+                      className="font-mono text-secondary underline cursor-pointer hover:opacity-70"
+                      onClick={() => handleViewDetail(item.account)}
+                    >
+                      {formatTokenAmount(item.amount)}
+                    </div>
+                    {/* <div className="text-greyscale-500 text-xs">
                       (
                       {totalReward > BigInt(0)
                         ? formatPercentage(Number((BigInt(item.amount) * BigInt(10000)) / totalReward) / 100)
                         : '0%'}
                       )
-                    </div>
-                  </td>
-                  <td className="px-1 text-center">
-                    <Button
-                      variant="link"
-                      className="text-secondary text-sm font-normal"
-                      size="sm"
-                      onClick={() => handleViewDetail(item.account)}
-                    >
-                      查看
-                    </Button>
+                    </div> */}
                   </td>
                 </tr>
               ))}
@@ -233,10 +231,12 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
                 <td className="px-1 text-left"></td>
                 <td className="px-1 text-left">汇总</td>
                 <td className="px-1 text-center">
-                  <div className="font-mono text-secondary">{formatTokenAmount(totalReward)}</div>
-                  <div className="text-greyscale-500 text-xs">(100%)</div>
+                  <div className="font-mono text-sm">{formatTokenAmount(totalGeneratedReward)}</div>
                 </td>
-                <td className="px-1"></td>
+                <td className="px-1 text-center">
+                  <div className="font-mono text-secondary">{formatTokenAmount(totalReward)}</div>
+                  {/* <div className="text-greyscale-500 text-xs">(100%)</div> */}
+                </td>
               </tr>
             </tbody>
           </table>

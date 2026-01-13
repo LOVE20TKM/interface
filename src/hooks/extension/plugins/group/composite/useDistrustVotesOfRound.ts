@@ -1,12 +1,13 @@
 // hooks/extension/plugins/group/composite/useDistrustVotesOfRound.ts
 // 获取指定轮次的不信任投票
+// TODO: 有多个RPC可以合并
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useDistrustGroupOwners } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
-import { useVotesNum } from '@/src/hooks/contracts/useLOVE20Vote';
+import { useVotesNumByActionId } from '@/src/hooks/contracts/useLOVE20Vote';
 
 const GROUP_VERIFY_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY as `0x${string}`;
 
@@ -19,6 +20,7 @@ export interface DistrustVoteInfo {
 }
 
 export interface UseDistrustVotesOfRoundParams {
+  actionId: bigint;
   extensionAddress: `0x${string}` | undefined;
   tokenAddress: `0x${string}` | undefined;
   round: bigint | undefined;
@@ -42,6 +44,7 @@ export interface UseDistrustVotesOfRoundResult {
  * 5. 计算每个群主的不信任率并返回
  */
 export const useDistrustVotesOfRound = ({
+  actionId,
   extensionAddress,
   tokenAddress,
   round,
@@ -97,10 +100,10 @@ export const useDistrustVotesOfRound = ({
 
   // 第三步：从 LOVE20Vote 合约获取某轮次的总投票数
   const {
-    votes: totalVotes,
+    votesNumByActionId: totalVotes,
     isPending: isTotalVotesPending,
     error: totalVotesError,
-  } = useVotesNum(tokenAddress as `0x${string}`, round !== undefined ? round : BigInt(0));
+  } = useVotesNumByActionId(tokenAddress as `0x${string}`, round !== undefined ? round : BigInt(0), actionId);
 
   // 第四步：批量获取不信任票数据
   const distrustContracts = useMemo(() => {

@@ -78,6 +78,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
 
   // 使用 useDistrustVotesOfRound 获取不信任投票
   const { distrustVotes, isPending, error } = useDistrustVotesOfRound({
+    actionId,
     extensionAddress,
     tokenAddress: token?.address as `0x${string}`,
     round: selectedRound > BigInt(0) ? selectedRound : undefined,

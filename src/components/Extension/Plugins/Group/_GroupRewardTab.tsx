@@ -28,10 +28,11 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import ChangeRound from '@/src/components/Common/ChangeRound';
 
 interface GroupRewardTabProps {
+  actionId: bigint;
   extensionAddress: `0x${string}`;
 }
 
-const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ extensionAddress }) => {
+const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAddress }) => {
   const { token } = useContext(TokenContext) || {};
 
   // 获取当前轮次
@@ -59,6 +60,7 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ extensionAddress }) =>
     isPending: isPendingDistrust,
     error: errorDistrust,
   } = useDistrustVotesOfRound({
+    actionId,
     extensionAddress,
     tokenAddress: token?.address as `0x${string}`,
     round: selectedRound > BigInt(0) ? selectedRound : undefined,
