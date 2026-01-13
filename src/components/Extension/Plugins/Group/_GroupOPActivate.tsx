@@ -126,16 +126,14 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     () =>
       z
         .object({
-          maxCapacity: z
-            .string()
-            .min(1, { message: '请输入链群容量上限' })
-            .refine(
-              (val) => {
-                const amount = parseFloat(val);
-                return !isNaN(amount) && amount > 0;
-              },
-              { message: '请输入有效的容量上限' },
-            ),
+          maxCapacity: z.string().refine(
+            (val) => {
+              if (!val || val === '0') return true;
+              const amount = parseFloat(val);
+              return !isNaN(amount) && amount >= 0;
+            },
+            { message: '请输入有效的容量上限' },
+          ),
           description: z.string().max(2000, { message: '描述不能超过2000字' }),
           minJoinAmount: z
             .string()
@@ -405,7 +403,10 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
         {!groupId && (
           <div className="space-y-2">
             <label className="text-sm font-medium">选择链群NFT</label>
-            <Select value={selectedGroupId?.toString() || ''} onValueChange={(value) => setSelectedGroupId(BigInt(value))}>
+            <Select
+              value={selectedGroupId?.toString() || ''}
+              onValueChange={(value) => setSelectedGroupId(BigInt(value))}
+            >
               <SelectTrigger className="!ring-secondary-foreground">
                 <SelectValue placeholder="请选择要激活的链群" />
               </SelectTrigger>
@@ -444,11 +445,12 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                     )
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="请填写数量" className="!ring-secondary-foreground flex-1" {...field} />
+                    <Input placeholder="0 为不限制" className="!ring-secondary-foreground flex-1" {...field} />
                   </FormControl>
                   <FormDescription className="text-xs">
                     <span className="flex items-center gap-1">
-                      您的最大容量为 {formatTokenAmount(maxVerifyCapacity || BigInt(0))} {actionParams?.joinTokenSymbol}
+                      您的最大可验证容量为：{formatTokenAmount(maxVerifyCapacity || BigInt(0))}{' '}
+                      {actionParams?.joinTokenSymbol}
                     </span>
                   </FormDescription>
                   <FormMessage />

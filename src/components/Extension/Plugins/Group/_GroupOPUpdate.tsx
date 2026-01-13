@@ -92,16 +92,14 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     () =>
       z
         .object({
-          maxCapacity: z
-            .string()
-            .min(1, { message: '请输入链群容量上限' })
-            .refine(
-              (val) => {
-                const amount = parseFloat(val);
-                return !isNaN(amount) && amount > 0;
-              },
-              { message: '请输入有效的容量上限' },
-            ),
+          maxCapacity: z.string().refine(
+            (val) => {
+              if (!val || val === '0') return true;
+              const amount = parseFloat(val);
+              return !isNaN(amount) && amount >= 0;
+            },
+            { message: '请输入有效的容量上限' },
+          ),
           description: z.string().max(500, { message: '描述不能超过500字' }),
           minJoinAmount: z
             .string()
@@ -315,12 +313,12 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                     )
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="请输入链群容量上限" className="!ring-secondary-foreground" {...field} />
+                    <Input placeholder="0 为不限制" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
                   <FormDescription className="text-xs">
                     <span className="flex items-center gap-1">
-                      您的最大容量上限：{formatTokenAmount(maxVerifyCapacity || BigInt(0))}{' '}
-                      {actionParams?.joinTokenSymbol} &nbsp;
+                      您的最大可验证容量为：{formatTokenAmount(maxVerifyCapacity || BigInt(0))}{' '}
+                      {actionParams?.joinTokenSymbol}
                     </span>
                   </FormDescription>
                   <FormMessage />
