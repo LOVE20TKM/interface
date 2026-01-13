@@ -43,6 +43,7 @@ import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contra
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
+import { getMaxJoinAmount, getMaxIncreaseAmount } from '@/src/lib/extensionGroup';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -115,40 +116,60 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     groupId,
   });
 
-  // 计算有效最大值（首次加入时使用）
-  // 如果 maxCapacity <= 0，链群没有容量限制，只使用 actualMaxJoinAmount
-  // 否则取 actualMaxJoinAmount 和 remainingCapacity 的最小值
-  const getEffectiveMaxAmount = useMemo(() => {
-    if (!groupDetail) return BigInt(0);
-    if (groupDetail.maxCapacity <= BigInt(0)) {
-      return groupDetail.actualMaxJoinAmount;
-    }
-    return groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
-      ? groupDetail.actualMaxJoinAmount
-      : groupDetail.remainingCapacity;
+  // 计算新用户最大参与量
+  const maxJoinResult = useMemo(() => {
+    if (!groupDetail) return { amount: BigInt(0), reason: '' };
+    return getMaxJoinAmount(groupDetail);
   }, [groupDetail]);
 
-  // 计算还可以追加的代币数量（仅在追加参与时使用）
-  // 如果 maxCapacity <= 0，只使用 actualMaxJoinAmount - joinedAmount
-  // 否则 remainingQuota = min(actualMaxJoinAmount - joinedAmount, remainingCapacity)
-  const remainingQuota = useMemo(() => {
+  // 计算老用户最大追加量
+  const maxIncreaseResult = useMemo(() => {
     if (!isJoined || !groupDetail || !joinedAmount) {
-      return BigInt(0);
+      return { amount: BigInt(0), reason: '' };
     }
-    const maxByLimit = groupDetail.actualMaxJoinAmount - joinedAmount;
-    // 如果 maxCapacity <= 0，链群没有容量限制，只使用 maxByLimit
-    if (groupDetail.maxCapacity <= BigInt(0)) {
-      return maxByLimit;
-    }
-    const maxByCapacity = groupDetail.remainingCapacity;
-    return maxByLimit < maxByCapacity ? maxByLimit : maxByCapacity;
+    return getMaxIncreaseAmount(groupDetail, joinedAmount);
   }, [isJoined, groupDetail, joinedAmount]);
 
-  // 判断链群是否已满（仅在首次加入时检查）
-  const isGroupFull = useMemo(() => {
-    if (isJoined || !groupDetail || groupDetail.maxCapacity <= BigInt(0)) return false;
-    return groupDetail.remainingCapacity <= BigInt(0);
+  // 根据场景选择使用哪个结果
+  const effectiveMaxAmount = isJoined ? maxIncreaseResult.amount : maxJoinResult.amount;
+  const effectiveReason = isJoined ? maxIncreaseResult.reason : maxJoinResult.reason;
+
+  // 检查新加入时地址数是否已满
+  const isAccountsFull = useMemo(() => {
+    if (isJoined || !groupDetail) return false;
+    // maxAccounts 为 0 表示不限制
+    if (groupDetail.maxAccounts === BigInt(0)) return false;
+    return groupDetail.accountCount >= groupDetail.maxAccounts;
   }, [isJoined, groupDetail]);
+
+  // 综合检查是否可以加入（仅在首次加入时检查）
+  const cannotJoin = useMemo(() => {
+    if (isJoined || !groupDetail) return { blocked: false, reason: '' };
+
+    // 检查地址数限制
+    if (isAccountsFull) {
+      return { blocked: true, reason: '链群人数已达到上限' };
+    }
+
+    // 检查可参与代币量
+    if (maxJoinResult.amount <= BigInt(0)) {
+      return { blocked: true, reason: maxJoinResult.reason };
+    }
+
+    return { blocked: false, reason: '' };
+  }, [isJoined, groupDetail, isAccountsFull, maxJoinResult]);
+
+  // 综合检查是否可以追加（仅在追加代币时检查）
+  const cannotIncrease = useMemo(() => {
+    if (!isJoined || !groupDetail) return { blocked: false, reason: '' };
+
+    // 检查可追加代币量
+    if (maxIncreaseResult.amount <= BigInt(0)) {
+      return { blocked: true, reason: maxIncreaseResult.reason || '无法追加代币' };
+    }
+
+    return { blocked: false, reason: '' };
+  }, [isJoined, groupDetail, maxIncreaseResult]);
 
   // 判断是否有投票（需要等待数据加载完成）
   const hasVotes = useMemo(() => {
@@ -226,37 +247,11 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
         (val) => {
           if (!groupDetail) return true;
           const inputVal = parseUnits(val);
-
-          if (isJoined) {
-            // 追加参与：使用剩余配额
-            return inputVal !== null && inputVal <= remainingQuota;
-          } else {
-            // 首次加入：如果 maxCapacity <= 0，链群没有容量限制，只使用 actualMaxJoinAmount
-            // 否则取 actualMaxJoinAmount 和 remainingCapacity 的最小值
-            const effectiveMaxAmount =
-              groupDetail.maxCapacity <= BigInt(0)
-                ? groupDetail.actualMaxJoinAmount
-                : groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
-                ? groupDetail.actualMaxJoinAmount
-                : groupDetail.remainingCapacity;
-            return inputVal !== null && inputVal <= effectiveMaxAmount;
-          }
+          return inputVal !== null && inputVal <= effectiveMaxAmount;
         },
         {
           message: `参与代币数不能大于最大值 ${
-            groupDetail
-              ? isJoined
-                ? formatTokenAmount(remainingQuota, 2)
-                : (() => {
-                    const effectiveMaxAmount =
-                      groupDetail.maxCapacity <= BigInt(0)
-                        ? groupDetail.actualMaxJoinAmount
-                        : groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
-                        ? groupDetail.actualMaxJoinAmount
-                        : groupDetail.remainingCapacity;
-                    return effectiveMaxAmount > BigInt(0) ? formatTokenAmount(effectiveMaxAmount, 2) : '不限';
-                  })()
-              : '0'
+            effectiveMaxAmount > BigInt(0) ? formatTokenAmount(effectiveMaxAmount, 2) : '不限'
           }`,
         },
       ),
@@ -361,23 +356,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   const handleSetMaxAmount = () => {
     if (!balance || balance <= BigInt(0) || !groupDetail) return;
 
-    let maxAmount: bigint;
-
-    if (isJoined) {
-      // 追加场景：min(余额, 剩余配额)
-      maxAmount = balance < remainingQuota ? balance : remainingQuota;
-    } else {
-      // 首次加入：如果 maxCapacity <= 0，链群没有容量限制，只使用 actualMaxJoinAmount
-      // 否则取 actualMaxJoinAmount 和 remainingCapacity 的最小值
-      const effectiveMaxAmount =
-        groupDetail.maxCapacity <= BigInt(0)
-          ? groupDetail.actualMaxJoinAmount
-          : groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
-          ? groupDetail.actualMaxJoinAmount
-          : groupDetail.remainingCapacity;
-      maxAmount = balance < effectiveMaxAmount ? balance : effectiveMaxAmount;
-    }
-
+    const maxAmount = balance < effectiveMaxAmount ? balance : effectiveMaxAmount;
     form.setValue('joinAmount', formatUnits(maxAmount));
   };
 
@@ -518,36 +497,37 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
               name="joinAmount"
               render={({ field }) => (
                 <FormItem>
-                  {!isJoined && (
-                    <FormLabel className="text-greyscale-500 font-normal">
+                  <FormLabel className="text-greyscale-500 font-normal">
+                    {!isJoined ? (
                       <>
                         参与代币数：{' '}
-                        {isGroupFull ? (
-                          <span className="text-red-600 text-sm">链群已满，无法加入</span>
+                        {cannotJoin.blocked ? (
+                          <span className="text-red-600 text-sm">{cannotJoin.reason}</span>
                         ) : (
                           <span className="text-xs text-gray-500">
-                            (限 {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
-                            {(() => {
-                              // 如果 maxCapacity <= 0，链群没有容量限制，只使用 actualMaxJoinAmount
-                              const effectiveMaxAmount =
-                                groupDetail.maxCapacity <= BigInt(0)
-                                  ? groupDetail.actualMaxJoinAmount
-                                  : groupDetail.actualMaxJoinAmount < groupDetail.remainingCapacity
-                                  ? groupDetail.actualMaxJoinAmount
-                                  : groupDetail.remainingCapacity;
-                              return effectiveMaxAmount > BigInt(0) ? formatTokenAmount(effectiveMaxAmount) : '不限';
-                            })()}
-                            )
+                            限 {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
+                            {formatTokenAmount(maxJoinResult.amount)} ({maxJoinResult.reason})
                           </span>
                         )}
                       </>
-                    </FormLabel>
-                  )}
+                    ) : (
+                      <>
+                        追加代币数：{' '}
+                        {cannotIncrease.blocked ? (
+                          <span className="text-red-600 text-sm">{cannotIncrease.reason}</span>
+                        ) : (
+                          <span className="text-xs text-gray-500">
+                            最大 {formatTokenAmount(maxIncreaseResult.amount)} ({maxIncreaseResult.reason})
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder={`请输入参与代币数量`}
                       type="number"
-                      disabled={!balance || balance <= BigInt(0) || isGroupFull}
+                      disabled={!balance || balance <= BigInt(0) || cannotJoin.blocked || cannotIncrease.blocked}
                       className="!ring-secondary-foreground"
                       {...field}
                     />
@@ -564,7 +544,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                       size="sm"
                       onClick={handleSetMaxAmount}
                       className="text-secondary p-0 h-auto"
-                      disabled={!balance || balance <= BigInt(0) || isGroupFull}
+                      disabled={!balance || balance <= BigInt(0) || cannotJoin.blocked || cannotIncrease.blocked}
                     >
                       最高
                     </Button>
@@ -629,7 +609,8 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                   isPendingApprove ||
                   isConfirmingApprove ||
                   isTokenApproved ||
-                  isGroupFull ||
+                  cannotJoin.blocked ||
+                  cannotIncrease.blocked ||
                   !hasVotes
                 }
                 type="button"
@@ -653,7 +634,13 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
               <Button
                 className="w-1/2"
                 disabled={
-                  !isTokenApproved || isPendingJoin || isConfirmingJoin || isConfirmedJoin || isGroupFull || !hasVotes
+                  !isTokenApproved ||
+                  isPendingJoin ||
+                  isConfirmingJoin ||
+                  isConfirmedJoin ||
+                  cannotJoin.blocked ||
+                  cannotIncrease.blocked ||
+                  !hasVotes
                 }
                 type="button"
                 onClick={() => {

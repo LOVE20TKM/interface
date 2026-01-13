@@ -351,7 +351,7 @@ export const useCapacityReductionByGroupId = (extensionAddress: `0x${string}`, r
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
-    functionName: 'capacityReductionByGroupId',
+    functionName: 'capacityReductionRate',
     args: [extensionAddress, round, groupId],
     query: {
       enabled: !!extensionAddress && round !== undefined && groupId !== undefined,

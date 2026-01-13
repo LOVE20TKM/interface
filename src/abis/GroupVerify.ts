@@ -152,36 +152,7 @@ export const GroupVerifyAbi = [
   },
   {
     "type": "function",
-    "name": "capacityReduction",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "capacityReductionByGroupId",
+    "name": "capacityReductionRate",
     "inputs": [
       {
         "name": "extension",

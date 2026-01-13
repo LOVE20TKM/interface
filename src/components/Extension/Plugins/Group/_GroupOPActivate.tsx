@@ -405,7 +405,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
         {!groupId && (
           <div className="space-y-2">
             <label className="text-sm font-medium">选择链群NFT</label>
-            <Select value={selectedGroupId?.toString()} onValueChange={(value) => setSelectedGroupId(BigInt(value))}>
+            <Select value={selectedGroupId?.toString() || ''} onValueChange={(value) => setSelectedGroupId(BigInt(value))}>
               <SelectTrigger className="!ring-secondary-foreground">
                 <SelectValue placeholder="请选择要激活的链群" />
               </SelectTrigger>
@@ -501,10 +501,12 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                   <FormControl>
                     <Input placeholder="0 为不做限制" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
-                  <FormDescription className="text-xs">
-                    扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)}{' '}
-                    {actionParams?.joinTokenSymbol}
-                  </FormDescription>
+                  {actionParams?.joinMaxAmount && actionParams.joinMaxAmount > BigInt(0) && (
+                    <FormDescription className="text-xs">
+                      扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)}{' '}
+                      {actionParams?.joinTokenSymbol}
+                    </FormDescription>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

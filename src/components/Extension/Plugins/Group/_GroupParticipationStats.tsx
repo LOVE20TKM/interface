@@ -8,6 +8,7 @@ import React, { useContext, useEffect } from 'react';
 
 // 第三方库
 import { useAccount } from 'wagmi';
+import { useMemo } from 'react';
 
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -20,6 +21,7 @@ import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGr
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+import { getMaxIncreaseAmount } from '@/src/lib/extensionGroup';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -64,16 +66,15 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
     groupId,
   });
 
-  // 计算还可以追加的代币数（考虑链群剩余容量）
-  // additionalAllowed = min(actualMaxJoinAmount - joinedAmount, remainingCapacity)
-  const additionalAllowed =
-    groupDetail && joinedAmount
-      ? (() => {
-          const maxByLimit = groupDetail.actualMaxJoinAmount - joinedAmount;
-          const maxByCapacity = groupDetail.remainingCapacity;
-          return maxByLimit < maxByCapacity ? maxByLimit : maxByCapacity;
-        })()
-      : BigInt(0);
+  // 计算还可以追加的代币数及原因
+  const increaseResult = useMemo(() => {
+    if (!groupDetail || !joinedAmount) {
+      return { amount: BigInt(0), reason: '' };
+    }
+    return getMaxIncreaseAmount(groupDetail, joinedAmount);
+  }, [groupDetail, joinedAmount]);
+
+  const additionalAllowed = increaseResult.amount;
 
   // 错误处理
   const { handleError } = useContractError();

@@ -381,10 +381,12 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription className="text-xs">
-                    扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)}{' '}
-                    {actionParams?.joinTokenSymbol}
-                  </FormDescription>
+                  {actionParams?.joinMaxAmount && actionParams.joinMaxAmount > BigInt(0) && (
+                    <FormDescription className="text-xs">
+                      扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)}{' '}
+                      {actionParams?.joinTokenSymbol}
+                    </FormDescription>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

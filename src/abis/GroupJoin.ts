@@ -1555,6 +1555,30 @@ export const GroupJoinAbi = [
     "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "totalJoinedAmountByGroupOwner",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
     "type": "event",
     "name": "Exit",
     "inputs": [

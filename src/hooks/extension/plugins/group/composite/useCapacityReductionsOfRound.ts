@@ -41,7 +41,7 @@ export const useCapacityReductionsOfRound = ({
       contracts.push({
         address: GROUP_VERIFY_CONTRACT_ADDRESS,
         abi: GroupVerifyAbi,
-        functionName: 'capacityReductionByGroupId' as const,
+        functionName: 'capacityReductionRate' as const,
         args: [extensionAddress, round, groupId],
       });
     }
