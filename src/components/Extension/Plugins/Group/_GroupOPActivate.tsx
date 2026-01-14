@@ -224,7 +224,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     defaultValues: {
       maxCapacity: '',
       description: '',
-      minJoinAmount: '',
+      minJoinAmount: '1000',
       maxJoinAmount: '',
       maxAccounts: '',
     },

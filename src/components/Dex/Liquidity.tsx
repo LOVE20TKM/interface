@@ -44,8 +44,8 @@ interface TokenConfig {
   isNative: boolean;
 }
 
-// 构建支持的基础代币列表 (TUSDT, TKM20)
-const buildBaseTokens = (): TokenConfig[] => {
+// 构建支持的基础代币列表 (TUSDT, 父代币)
+const buildBaseTokens = (parentTokenAddress?: `0x${string}`, parentTokenSymbol?: string): TokenConfig[] => {
   const supportedTokens: TokenConfig[] = [];
 
   // 1. TUSDT (如果配置了地址)
@@ -60,13 +60,11 @@ const buildBaseTokens = (): TokenConfig[] => {
     });
   }
 
-  // 2. TKM20 (父代币)
-  const parentSymbol = process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
-  const parentAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN;
-  if (parentSymbol && parentAddress) {
+  // 2. 父代币 (使用真实的父币信息)
+  if (parentTokenSymbol && parentTokenAddress) {
     supportedTokens.push({
-      symbol: parentSymbol,
-      address: parentAddress as `0x${string}`,
+      symbol: parentTokenSymbol,
+      address: parentTokenAddress,
       decimals: 18,
       isNative: false,
     });
@@ -125,11 +123,16 @@ type LiquidityFormValues = z.infer<ReturnType<typeof getLiquidityFormSchema>>;
 const LiquidityPanel = () => {
   const { address: account } = useAccount();
   const { token } = useTokenContext();
+  const parentTokenAddress = token?.parentTokenAddress;
+  const parentTokenSymbol = token?.parentTokenSymbol;
 
   // --------------------------------------------------
   // 1. 构建支持的代币列表
   // --------------------------------------------------
-  const baseTokens = useMemo(() => buildBaseTokens(), []);
+  const baseTokens = useMemo(
+    () => buildBaseTokens(parentTokenAddress, parentTokenSymbol),
+    [parentTokenAddress, parentTokenSymbol],
+  );
 
   // 选中的基础代币状态
   const [baseToken, setBaseToken] = useState<TokenConfig>(() => {
@@ -137,15 +140,29 @@ const LiquidityPanel = () => {
     const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol);
     return (
       defaultToken || {
-        symbol: process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL || '',
-        address:
-          (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as `0x${string}`) ||
-          '0x0000000000000000000000000000000000000000',
+        symbol: parentTokenSymbol || '',
+        address: parentTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
         decimals: 18,
         isNative: false,
       }
     );
   });
+
+  // 当 baseTokens 更新时，同步更新 baseToken
+  useEffect(() => {
+    if (baseTokens.length === 0) return;
+
+    // 检查当前选中的 baseToken 是否还在 baseTokens 列表中
+    const currentTokenExists = baseTokens.some((t) => t.address === baseToken.address);
+    if (!currentTokenExists) {
+      // 如果当前代币不存在，优先选择 TUSDT，否则选择第一个
+      const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+      const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol) || baseTokens[0];
+      if (defaultToken) {
+        setBaseToken(defaultToken);
+      }
+    }
+  }, [baseTokens, baseToken.address]);
 
   // 目标代币 (当前token)
   const targetToken = useMemo(() => {
@@ -619,7 +636,7 @@ const LiquidityPanel = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex space-x-1">
-                            {[25, 50, 75].map((percentage) => (
+                            {[25, 50].map((percentage) => (
                               <Button
                                 key={percentage}
                                 variant="outline"
