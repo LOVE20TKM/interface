@@ -347,21 +347,6 @@ export const useNormalizedNameOf = (groupName: string) => {
 };
 
 /**
- * Hook for totalBurnedForMint
- * 获取铸造时销毁的总代币数
- */
-export const useTotalBurnedForMint = () => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: LOVE20GroupAbi,
-    functionName: 'totalBurnedForMint',
-    args: [],
-  });
-
-  return { totalBurnedForMint: data ? safeToBigInt(data) : undefined, isPending, error };
-};
-
-/**
  * Hook for getApproved
  * 获取已批准的地址
  */
