@@ -44,7 +44,10 @@ const _GroupScores: React.FC<GroupScoresProps> = ({ extensionAddress, groupId })
   // 初始化轮次状态
   useEffect(() => {
     if (urlRound && !isNaN(Number(urlRound))) {
-      setSelectedRound(BigInt(urlRound as string));
+      const urlRoundBigInt = BigInt(urlRound as string);
+      if (currentRound && urlRoundBigInt <= currentRound) {
+        setSelectedRound(urlRoundBigInt);
+      }
     } else if (currentRound) {
       setSelectedRound(currentRound);
     }
