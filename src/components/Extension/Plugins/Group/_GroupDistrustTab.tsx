@@ -66,8 +66,6 @@ const _GroupDistrustTab: React.FC<GroupDistrustTabProps> = ({ actionId, actionIn
   if (viewMode === 'select') {
     return (
       <_GroupDistrustVoteSelect
-        actionId={actionId}
-        actionInfo={actionInfo}
         extensionAddress={extensionAddress}
         onSelectOwner={handleSelectOwner}
         onCancel={handleCancel}
