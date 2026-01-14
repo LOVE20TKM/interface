@@ -228,7 +228,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
         {/* 标题和投票按钮 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <LeftTitle title={`第 ${selectedRound?.toString() || '0'} 轮不信任票`} />
+            <LeftTitle title={`第 ${selectedRound?.toString() || '0'} 轮`} />
             <span className="text-sm text-greyscale-500 ml-2">(</span>
             <ChangeRound currentRound={currentRound || BigInt(0)} handleChangedRound={handleChangedRound} />
             <span className="text-sm text-greyscale-500">)</span>
