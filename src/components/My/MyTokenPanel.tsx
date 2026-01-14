@@ -73,7 +73,6 @@ const MyTokenPanel: React.FC<{ token: Token | null | undefined }> = ({ token }) 
         <div className="stat place-items-center pb-3">
           <div className="stat-title text-sm flex items-center font-mono">
             持有 {token?.symbol}
-            <AddressWithCopyButton address={token.address as `0x${string}`} showAddress={false} />
             <AddToMetamask
               tokenAddress={token.address as `0x${string}`}
               tokenSymbol={token.symbol}
@@ -88,7 +87,6 @@ const MyTokenPanel: React.FC<{ token: Token | null | undefined }> = ({ token }) 
         <div className="stat place-items-center pb-3">
           <div className="stat-title text-sm flex items-center font-mono">
             持有 {token?.parentTokenSymbol}
-            <AddressWithCopyButton address={token.parentTokenAddress as `0x${string}`} showAddress={false} />
             <AddToMetamask
               tokenAddress={token.parentTokenAddress as `0x${string}`}
               tokenSymbol={token.parentTokenSymbol}

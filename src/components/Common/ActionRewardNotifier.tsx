@@ -19,8 +19,7 @@ import { useExtensionActionsLatestRewards } from '@/src/hooks/extension/base/com
 import AlertBox from '@/src/components/Common/AlertBox';
 
 // 最近检查的轮数范围
-const LAST_ROUNDS = BigInt(6);
-
+const LAST_ROUNDS = BigInt(7);
 type RewardNoticeState = {
   round: number;
   needMinted: boolean;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useMemo } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 import { useAccount, useBlockNumber } from 'wagmi';
 import { formatUnits as viemFormatUnits } from 'viem';
 import Link from 'next/link';
@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { HandCoins, TableOfContents, Pickaxe, Blocks, BarChart2, Users, Rocket } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { HandCoins, TableOfContents, Pickaxe, Blocks, BarChart2, Users, Rocket, Info } from 'lucide-react';
 
 // my context
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -43,6 +44,52 @@ function Field({
   return (
     <div className="flex flex-col gap-1">
       <div className={`text-sm text-muted-foreground ${font}`}>{label}</div>
+      <div className={`text-sm font-medium break-all text-secondary ${font}`}>
+        {value}
+        {percentage && <span className="text-sm text-muted-foreground ml-1">({percentage})</span>}
+      </div>
+    </div>
+  );
+}
+
+// 带信息图标的字段组件
+function FieldWithInfo({
+  label,
+  value,
+  percentage,
+  font,
+  infoTitle,
+  infoContent,
+}: {
+  label: string;
+  value: string;
+  percentage?: string;
+  font?: string;
+  infoTitle: string;
+  infoContent: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className={`flex items-center gap-1 text-sm text-muted-foreground ${font}`}>
+        <span>{label}</span>
+        <Dialog>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex items-center p-0.5 rounded hover:bg-gray-100 transition-colors"
+              aria-label={`查看${infoTitle}`}
+            >
+              <Info className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700" />
+            </button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">{infoTitle}</DialogTitle>
+            </DialogHeader>
+            <div className="pt-2 pb-4 text-sm text-gray-700">{infoContent}</div>
+          </DialogContent>
+        </Dialog>
+      </div>
       <div className={`text-sm font-medium break-all text-secondary ${font}`}>
         {value}
         {percentage && <span className="text-sm text-muted-foreground ml-1">({percentage})</span>}
@@ -153,6 +200,8 @@ const TokenPage = () => {
   const unminted = maxSupply > totalSupply ? maxSupply - totalSupply : BigInt(0);
   const usdtPairBalance = tokenBalanceInUSDTPair ?? BigInt(0);
   const otherBalance = totalSupply - joinedTokenAmount - tokenAmountForSl - stakedTokenAmountForSt - usdtPairBalance;
+  // 计算 TVL：流动性质押*2 + 加速激励质押 + U池*2 + 行动参与
+  const tvl = tokenAmountForSl * BigInt(2) + stakedTokenAmountForSt + usdtPairBalance * BigInt(2) + joinedTokenAmount;
 
   // 发射区块
   const startBlock = launchInfo?.startBlock;
@@ -324,7 +373,20 @@ const TokenPage = () => {
                       </CardHeader>
                       <CardContent className="px-4 pt-2 pb-4">
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-                          <Field label="已铸造（总流通量）" value={formatAmount(totalSupply, decimals)} />
+                          <FieldWithInfo
+                            label="TVL"
+                            value={formatAmount(tvl, decimals)}
+                            percentage={formatPercentage((Number(tvl) / Number(totalSupply)) * 100)}
+                            infoTitle="TVL 计算公式"
+                            infoContent={
+                              <div className="space-y-2">
+                                <p className="font-medium">LOVE20 TVL 计算公式：</p>
+                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                  <div>TVL = 流动性质押 × 2 + 加速激励质押 + U池 × 2 + 行动参与</div>
+                                </div>
+                              </div>
+                            }
+                          />
                           <Field
                             label="行动参与量"
                             value={formatAmount(joinedTokenAmount, decimals)}

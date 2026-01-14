@@ -5,6 +5,8 @@
 import React, { useContext, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/router';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -310,10 +312,16 @@ const VoteRecordsPage: React.FC = () => {
           <LoadingIcon />
         ) : (
           <div className="flex flex-col space-y-4 p-4">
-            <LeftTitle
-              title={`${targetAccount !== account ? ` 投票记录（${formatAddress(targetAccount)}）` : '我的投票记录'}`}
-            />
-
+            <div className="flex justify-between items-center mb-2">
+              <LeftTitle
+                title={`${targetAccount !== account ? ` 投票记录（${formatAddress(targetAccount)}）` : '我的投票记录'}`}
+              />{' '}
+              {currentRound >= BigInt(1) && (
+                <Button variant="link" className="text-secondary border-secondary" asChild>
+                  <Link href={`/vote/actions/?symbol=${token?.symbol}`}>投票中的行动 &gt;&gt;</Link>
+                </Button>
+              )}
+            </div>
             {isLoadingCurrentRound ? (
               <LoadingIcon />
             ) : allRoundsData.length === 0 && !isLoadingHistory ? (

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useAccount } from 'wagmi';
+import { ArrowUpDown } from 'lucide-react';
 
 // UI components
 import { Button } from '@/components/ui/button';
@@ -91,6 +92,7 @@ const LiquidityQueryPanel: React.FC = () => {
   const { address: account, isConnected } = useAccount();
   const [hasQueried, setHasQueried] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showTokenToBase, setShowTokenToBase] = useState(true);
 
   // 构建基础代币列表
   const baseTokens = useMemo(() => buildBaseTokens(), []);
@@ -347,21 +349,32 @@ const LiquidityQueryPanel: React.FC = () => {
 
                       {/* 价格信息 */}
                       <div className="border-t pt-4">
-                        <div className="">
-                          <div className="text-sm">
-                            <span className="text-gray-600">1 {baseToken.symbol} = </span>
-                            <span className="font-medium">
-                              <span className="text-secondary">{formatTokenAmount(baseToTargetPrice)}</span>{' '}
-                              {targetToken.symbol}
-                            </span>
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm text-gray-600">
+                            {showTokenToBase ? (
+                              <>
+                                1 {targetToken.symbol} ={' '}
+                                <span className="font-medium">{formatTokenAmount(targetToBasePrice, 5)}</span>{' '}
+                                {baseToken.symbol}
+                              </>
+                            ) : (
+                              <>
+                                1 {baseToken.symbol} ={' '}
+                                <span className="font-medium">{formatTokenAmount(baseToTargetPrice)}</span>{' '}
+                                {targetToken.symbol}
+                              </>
+                            )}
                           </div>
-                          <div className="text-sm">
-                            <span className="text-gray-600">1 {targetToken.symbol} = </span>
-                            <span className="font-medium">
-                              <span className="text-secondary">{formatTokenAmount(targetToBasePrice, 5)}</span>{' '}
-                              {baseToken.symbol}
-                            </span>
-                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowTokenToBase(!showTokenToBase)}
+                            className="h-6 w-6 p-0 hover:bg-gray-100 transition-colors"
+                            title="切换价格显示"
+                          >
+                            <ArrowUpDown className="h-3 w-3 text-gray-500" />
+                          </Button>
                         </div>
                       </div>
                     </div>

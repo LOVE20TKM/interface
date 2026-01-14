@@ -22,7 +22,6 @@ import Todeploy from '@/src/components/Launch/Todeploy';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import MyGovInfoPanel from '@/src/components/My/MyGovInfoPanel';
 import GovQueryPanel from '@/src/components/My/GovQueryPanel';
-import LeftTitle from '@/src/components/Common/LeftTitle';
 import { Card, CardTitle, CardHeader, CardContent } from '@/components/ui/card';
 
 const GovPage = () => {
