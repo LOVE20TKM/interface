@@ -21,6 +21,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 // my hooks
 import { formatTokenAmount } from '@/src/lib/format';
 import { useContractError } from '@/src/errors/useContractError';
+import { useError } from '@/src/contexts/ErrorContext';
 import { useBalanceOf, useAllowance, useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import { useMint, useMaxGroupNameLength } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useGroupNameValidation } from '@/src/hooks/extension/base/composite/useGroupNameValidation';
@@ -48,6 +49,7 @@ const getFormSchema = (balance: bigint) =>
 export default function MintGroup() {
   const { address: account, isConnected } = useAccount();
   const router = useRouter();
+  const { setError } = useError();
 
   // 获取最大名称长度
   const { maxGroupNameLength } = useMaxGroupNameLength();
@@ -211,6 +213,16 @@ export default function MintGroup() {
     }
   }, [isConfirmedMint, router]);
 
+  // 余额不足错误提示
+  useEffect(() => {
+    if (balance === undefined && !isBalancePending && isValid && mintCost !== undefined) {
+      setError({ name: '余额不足', message: `${FIRST_TOKEN_SYMBOL} 不足` });
+    } else if (balance !== undefined && mintCost !== undefined && balance >= mintCost) {
+      // 当余额充足时，清除余额不足错误
+      setError(null);
+    }
+  }, [balance, isBalancePending, isValid, mintCost, setError, FIRST_TOKEN_SYMBOL]);
+
   // 错误处理
   const { handleError } = useContractError();
   useEffect(() => {
@@ -307,6 +319,7 @@ export default function MintGroup() {
                   </div>
                 )}
 
+                {/* 余额不足提示 */}
                 {isValid && mintCost !== undefined && balance !== undefined && balance < mintCost && (
                   <div className="text-xs text-red-600 mt-1">
                     余额不足，还需要 {formatTokenAmount(mintCost - balance)} {FIRST_TOKEN_SYMBOL}
@@ -328,6 +341,7 @@ export default function MintGroup() {
                   !isValid ||
                   !mintCost ||
                   mintCost <= BigInt(0) ||
+                  (balance === undefined && !isBalancePending) ||
                   (balance !== undefined && balance < mintCost)
                 }
               >
@@ -347,7 +361,14 @@ export default function MintGroup() {
               <Button
                 className="w-1/2 text-white py-2 rounded-lg"
                 onClick={form.handleSubmit(onMint)}
-                disabled={!isTokenApproved || isPendingMint || isConfirmingMint || isConfirmedMint}
+                disabled={
+                  !isTokenApproved ||
+                  isPendingMint ||
+                  isConfirmingMint ||
+                  isConfirmedMint ||
+                  (balance === undefined && !isBalancePending) ||
+                  (balance !== undefined && balance < (mintCost || BigInt(0)))
+                }
               >
                 {isPendingMint
                   ? '2.铸造中...'
