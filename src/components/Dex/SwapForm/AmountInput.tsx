@@ -51,7 +51,7 @@ const AmountInput = ({
         <div className="flex items-center justify-between">
           {showPercentageButtons && onSetPercentage && onSetMax ? (
             <div className="flex space-x-1">
-              {[25, 50, 75].map((percentage) => (
+              {[25, 50].map((percentage) => (
                 <Button
                   key={percentage}
                   variant="outline"

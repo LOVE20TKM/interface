@@ -149,8 +149,8 @@ export default function TokenList({ parentTokenAddress }: TokenListProps) {
                   ) : (
                     <span className="flex items-center justify-between">
                       <span className="text-secondary">发射中</span>
-                      <span className="text-greyscale-500 pl-4">
-                        (募资进度：{' '}
+                      <span className="text-greyscale-500 pl-2">
+                        (进度:{' '}
                         {token.totalContributed !== undefined && token.parentTokenFundraisingGoal
                           ? formatPercentage(
                               (Number(token.totalContributed) / Number(token.parentTokenFundraisingGoal)) * 100,

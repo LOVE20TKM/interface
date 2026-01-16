@@ -6,7 +6,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { WalletButton } from '@/src/components/WalletButton';
 import { ErrorAlert } from '@/src/components/Common/ErrorAlert';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useAccount, useChainId } from 'wagmi';
 import { useError } from '@/src/contexts/ErrorContext';

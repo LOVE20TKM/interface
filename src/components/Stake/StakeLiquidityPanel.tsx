@@ -506,7 +506,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                                 </div>
                                 <div className="flex items-center justify-between">
                                   <div className="flex gap-1">
-                                    {[25, 50, 75].map((percentage) => (
+                                    {[25, 50].map((percentage) => (
                                       <Button
                                         key={percentage}
                                         variant="outline"
@@ -578,7 +578,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                                 </div>
                                 <div className="flex items-center justify-between">
                                   <div className="flex gap-1">
-                                    {[25, 50, 75].map((percentage) => (
+                                    {[25, 50].map((percentage) => (
                                       <Button
                                         key={percentage}
                                         variant="outline"
