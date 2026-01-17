@@ -100,7 +100,7 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
         {token && (
           <div className="flex space-x-2">
             <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
-              <Link href="/extension/factories/">推举新行动</Link>
+              <Link href="/extension/factories/">发起新行动</Link>
             </Button>
             <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
               <Link href={`/submit/actions?symbol=${token?.symbol}`}>推举历史行动</Link>

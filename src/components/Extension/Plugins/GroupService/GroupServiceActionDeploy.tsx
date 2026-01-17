@@ -197,7 +197,16 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
                   <FormItem>
                     <FormLabel>链群行动所在代币地址</FormLabel>
                     <FormControl>
-                      <Input type="text" placeholder="0x..." disabled={approvalStep !== 'idle'} {...field} />
+                      <Input
+                        type="text"
+                        placeholder="0x..."
+                        disabled={approvalStep !== 'idle'}
+                        {...field}
+                        onChange={(event) => {
+                          const nextValue = event.target.value.replace(/\s+/g, '');
+                          field.onChange(nextValue);
+                        }}
+                      />
                     </FormControl>
                     <FormDescription className="text-sm text-greyscale-500">
                       仅限链群服务所在代币地址或其子币地址
@@ -261,7 +270,7 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
                         ? '1.确认中...'
                         : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
                         ? '1.代币已授权'
-                        : '1.激活代币授权'}
+                        : '1.代币授权'}
                     </Button>
 
                     <Button

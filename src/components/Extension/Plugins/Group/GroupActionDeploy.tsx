@@ -250,7 +250,16 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                   <FormItem>
                     <FormLabel>1. 参与行动代币地址</FormLabel>
                     <FormControl>
-                      <Input type="text" placeholder="0x..." disabled={approvalStep !== 'idle'} {...field} />
+                      <Input
+                        type="text"
+                        placeholder="0x..."
+                        disabled={approvalStep !== 'idle'}
+                        {...field}
+                        onChange={(event) => {
+                          const nextValue = event.target.value.replace(/\s+/g, '');
+                          field.onChange(nextValue);
+                        }}
+                      />
                     </FormControl>
                     <FormDescription className="text-sm text-greyscale-500">
                       可以是普通代币地址或 LP 代币地址
@@ -393,7 +402,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                         ? '1.确认中...'
                         : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
                         ? '1.代币已授权'
-                        : '1.激活代币授权'}
+                        : '1.代币授权'}
                     </Button>
 
                     <Button

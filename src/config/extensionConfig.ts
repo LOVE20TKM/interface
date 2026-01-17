@@ -45,7 +45,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
   if (stakeLpFactory) {
     configs.push({
       type: ExtensionType.LP,
-      name: 'LP池行动',
+      name: 'LP行动',
       factoryAddress: stakeLpFactory as `0x${string}`,
       actionDetailTabs: [{ key: 'public', label: 'LP公示', showCondition: 'hasExtension' }],
     });

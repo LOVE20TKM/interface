@@ -221,10 +221,19 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                   <FormItem>
                     <FormLabel>1. LP代币地址</FormLabel>
                     <FormControl>
-                      <Input type="text" placeholder="0x..." disabled={approvalStep !== 'idle'} {...field} />
+                      <Input
+                        type="text"
+                        placeholder="0x..."
+                        disabled={approvalStep !== 'idle'}
+                        {...field}
+                        onChange={(event) => {
+                          const nextValue = event.target.value.replace(/\s+/g, '');
+                          field.onChange(nextValue);
+                        }}
+                      />
                     </FormControl>
                     <FormDescription className="text-sm text-greyscale-500">
-                      即 Uniswap V2 Pair 合约地址
+                      包含当前行动所在代币的 LP 代币（Uniswap V2 Pair）合约地址
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -360,7 +369,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                         ? '1.确认中...'
                         : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
                         ? '1.代币已授权'
-                        : '1.激活代币授权'}
+                        : '1.代币授权'}
                     </Button>
 
                     <Button
