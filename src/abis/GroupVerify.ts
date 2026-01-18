@@ -49,6 +49,11 @@ export const GroupVerifyAbi = [
     "name": "actionIdsByVerifier",
     "inputs": [
       {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "round",
         "type": "uint256",
         "internalType": "uint256"
@@ -72,6 +77,11 @@ export const GroupVerifyAbi = [
     "type": "function",
     "name": "actionIdsByVerifierAtIndex",
     "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
       {
         "name": "round",
         "type": "uint256",
@@ -101,6 +111,11 @@ export const GroupVerifyAbi = [
     "type": "function",
     "name": "actionIdsByVerifierCount",
     "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
       {
         "name": "round",
         "type": "uint256",
@@ -1245,6 +1260,11 @@ export const GroupVerifyAbi = [
   {
     "type": "error",
     "name": "ExtensionNotInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GroupNotActive",
     "inputs": []
   },
   {

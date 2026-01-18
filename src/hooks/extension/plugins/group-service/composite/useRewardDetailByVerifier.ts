@@ -103,7 +103,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     actionIds: allActionIds,
     isPending: isActionIdsPending,
     error: actionIdsError,
-  } = useActionIdsByVerifier(round, verifier);
+  } = useActionIdsByVerifier(groupActionTokenAddress, round, verifier);
 
   // ==========================================
   // 第二步：获取每个行动的扩展合约地址

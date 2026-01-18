@@ -4,11 +4,12 @@
 'use client';
 
 // React
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 // 第三方库
 import { useAccount } from 'wagmi';
 import { useMemo } from 'react';
+import { useMediaQuery } from '@mui/material';
 
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -25,6 +26,10 @@ import { getMaxIncreaseAmount } from '@/src/lib/extensionGroup';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import { Button } from '@/components/ui/button';
+import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { DialogTitle, Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 interface _GroupParticipationStatsProps {
   actionId: bigint;
@@ -52,6 +57,7 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
   // 获取加入信息
   const {
     amount: joinedAmount,
+    provider: trialProviderAddress,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
   } = useJoinInfo(extensionAddress, account as `0x${string}`);
@@ -75,6 +81,10 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
   }, [groupDetail, joinedAmount]);
 
   const additionalAllowed = increaseResult.amount;
+
+  // 控制对话框的显隐
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const [isOpen, setIsOpen] = useState(false);
 
   // 错误处理
   const { handleError } = useContractError();
@@ -103,7 +113,17 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
       {/* 我的参与 */}
       <div className="stat place-items-center flex flex-col justify-center">
         <div className="stat-title">我的参与</div>
-        <div className="stat-value text-2xl text-secondary">{formatTokenAmount(joinedAmount || BigInt(0))}</div>
+        <div className="stat-value text-2xl text-secondary flex items-center gap-2">
+          {formatTokenAmount(joinedAmount || BigInt(0))}
+          {trialProviderAddress && trialProviderAddress !== '0x0000000000000000000000000000000000000000' && (
+            <span
+              className="text-xs px-2 py-1 bg-secondary/20 text-secondary rounded cursor-pointer hover:bg-secondary/30 transition-colors"
+              onClick={() => setIsOpen(true)}
+            >
+              体验
+            </span>
+          )}
+        </div>
         <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
           占链群{' '}
           {groupDetail?.totalJoinedAmount && groupDetail.totalJoinedAmount > BigInt(0)
@@ -120,6 +140,53 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
           {joinTokenSymbol || token?.symbol || ''}
         </div>
       </div>
+
+      {/* 体验模式说明对话框 - 桌面端 */}
+      {isDesktop && (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger> </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogTitle>体验模式</DialogTitle>
+            <div className="px-12 pt-2 pb-4 text-gray-800">
+              <p>当前行动参与模式为体验模式</p>
+              <p>- 可以铸造激励</p>
+              <p>- 无法追加参与数量</p>
+              <p className="mt-2">
+                <span className="font-bold text-sm">添加人：</span>
+                {trialProviderAddress && <AddressWithCopyButton address={trialProviderAddress} showCopyButton={true} />}
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* 体验模式说明对话框 - 移动端 */}
+      {!isDesktop && (
+        <Drawer open={isOpen} onOpenChange={setIsOpen}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>体验模式</DrawerTitle>
+              <DrawerClose />
+            </DrawerHeader>
+            <div className="px-12 pt-2 pb-4 text-gray-800 text-lg">
+              <p>当前行动参与模式为体验模式</p>
+              <p>- 可以铸造激励</p>
+              <p>- 无法增加参与代币数量</p>
+              <p className="mt-2">
+                <span className="font-bold text-sm">添加人：</span>
+                {trialProviderAddress && <AddressWithCopyButton address={trialProviderAddress} showCopyButton={true} />}
+              </p>
+            </div>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline" className="w-1/2 mx-auto text-secondary border-secondary">
+                  关闭
+                </Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      )}
     </div>
   );
 };

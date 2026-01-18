@@ -187,7 +187,7 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
                 </th>
                 <th className="px-1 text-center hidden md:table-cell">参与代币</th>
                 <th className="px-1 text-center">不信任率/容量衰减率</th>
-                <th className="px-1 text-center">激励</th>
+                <th className="px-1 text-center">激励总数</th>
               </tr>
             </thead>
             <tbody>

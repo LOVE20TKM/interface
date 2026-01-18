@@ -29,6 +29,7 @@ import { ActionInfo } from '@/src/types/love20types';
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useError } from '@/src/contexts/ErrorContext';
+import { useTrialMode } from '@/src/contexts/TrialModeContext';
 
 // hooks
 import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
@@ -38,7 +39,7 @@ import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composit
 import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
-import { useJoin, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
+import { useJoin, useJoinInfo, useTrialJoin } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -71,6 +72,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
   const { setError } = useError();
+
+  // 获取体验模式状态
+  const { isTrialMode, provider, trialAmount } = useTrialMode();
 
   // 获取当前轮次
   const { currentRound, isPending: isPendingCurrentRound, error: errorCurrentRound } = useCurrentRound();
@@ -132,7 +136,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
   // 根据场景选择使用哪个结果
   const effectiveMaxAmount = isJoined ? maxIncreaseResult.amount : maxJoinResult.amount;
-  const effectiveReason = isJoined ? maxIncreaseResult.reason : maxJoinResult.reason;
+  // const effectiveReason = isJoined ? maxIncreaseResult.reason : maxJoinResult.reason;
 
   // 检查新加入时地址数是否已满
   const isAccountsFull = useMemo(() => {
@@ -224,6 +228,8 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
       .refine((val) => val !== '0', { message: '参与代币数不能为 0' })
       .refine(
         (val) => {
+          // 体验模式下跳过余额检查
+          if (isTrialMode) return true;
           const inputVal = parseUnits(val);
           return inputVal !== null && balance !== undefined && inputVal <= balance;
         },
@@ -264,11 +270,18 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      joinAmount: '',
+      joinAmount: isTrialMode ? formatUnits(trialAmount) : '',
       verificationInfos: defaultVerificationInfos,
     },
     mode: 'onChange',
   });
+
+  // 体验模式下，当 trialAmount 变化时更新表单
+  useEffect(() => {
+    if (isTrialMode && trialAmount > BigInt(0)) {
+      form.setValue('joinAmount', formatUnits(trialAmount));
+    }
+  }, [isTrialMode, trialAmount, form]);
 
   // 当已有验证信息加载完成时，更新表单默认值
   useEffect(() => {
@@ -341,10 +354,29 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     writeError: errorJoin,
   } = useJoin();
 
+  // 体验加入提交
+  const {
+    trialJoin,
+    isPending: isPendingTrialJoin,
+    isConfirming: isConfirmingTrialJoin,
+    isConfirmed: isConfirmedTrialJoin,
+    writeError: errorTrialJoin,
+  } = useTrialJoin();
+
   async function handleJoin(values: FormValues) {
     try {
-      // 加入时同时提交验证信息
-      await join(extensionAddress, groupId, parseUnits(values.joinAmount) ?? BigInt(0), values.verificationInfos || []);
+      // 体验模式：使用 trialJoin
+      if (isTrialMode && provider) {
+        await trialJoin(extensionAddress, groupId, provider, values.verificationInfos || []);
+      } else {
+        // 普通模式：加入时同时提交验证信息
+        await join(
+          extensionAddress,
+          groupId,
+          parseUnits(values.joinAmount) ?? BigInt(0),
+          values.verificationInfos || [],
+        );
+      }
     } catch (error) {
       console.error('Join failed', error);
     }
@@ -362,13 +394,13 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
   // 加入成功后跳转到我的页面
   useEffect(() => {
-    if (isConfirmedJoin) {
-      toast.success('加入链群成功');
+    if (isConfirmedJoin || isConfirmedTrialJoin) {
+      toast.success(isTrialMode ? '体验加入成功' : '加入链群成功');
       setTimeout(() => {
         router.push(`/my/myaction?id=${actionId.toString()}&symbol=${joinTokenSymbol || token?.symbol || ''}`);
       }, 1000);
     }
-  }, [isConfirmedJoin, router, actionId, joinTokenSymbol, token?.symbol]);
+  }, [isConfirmedJoin, isConfirmedTrialJoin, isTrialMode, router, actionId, joinTokenSymbol, token?.symbol]);
 
   // 错误处理
   const { handleError } = useContractError();
@@ -379,6 +411,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     if (errorAllowance) handleError(errorAllowance);
     if (errorApprove) handleError(errorApprove);
     if (errorJoin) handleError(errorJoin);
+    if (errorTrialJoin) handleError(errorTrialJoin);
     if (errorVerificationInfos) handleError(errorVerificationInfos);
     if (errorConstants) handleError(errorConstants);
     if (errorCurrentRound) handleError(errorCurrentRound);
@@ -391,6 +424,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     errorAllowance,
     errorApprove,
     errorJoin,
+    errorTrialJoin,
     errorVerificationInfos,
     errorConstants,
     errorCurrentRound,
@@ -441,51 +475,63 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
         <LeftTitle title={isJoined ? '追加代币' : '加入行动'} />
 
         {!isJoined && (
-          <div className="mt-4 px-4 pt-4 pb-2 bg-gray-50 border border-gray-200 rounded-lg">
-            {/* 链群信息 */}
-            <div className="text-sm text-gray-600 flex items-center justify-between">
-              <div>
-                <span className="text-sm">链群：</span>
-                <span className="text-gray-500 text-xs">#</span>
-                <span className="text-secondary text-base font-semibold ">{groupDetail.groupId.toString()}</span>{' '}
-                <span className="font-semibold text-gray-800">{groupDetail.groupName}</span>
+          <>
+            {/* 体验模式标识 */}
+            {isTrialMode && (
+              <div className="mt-4 px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <span className="text-orange-600 font-semibold">🎉 体验模式</span>
+                </div>
+                <div className="text-xs text-orange-600 mt-1">您已获得体验资格，可免费体验 LOVE20 功能</div>
               </div>
-              {!isJoined && (
-                <Button
-                  variant="link"
-                  size="sm"
-                  onClick={() => router.push(`/acting/join?id=${actionId}&symbol=${token?.symbol || ''}`)}
-                  className="text-secondary p-0 h-auto"
-                >
-                  切换链群
-                </Button>
-              )}
-            </div>
+            )}
 
-            {/* 服务者 */}
-            <div className="text-gray-600 flex items-center gap-2">
-              <span className="text-sm">服务者：</span>
-              <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />
-            </div>
-
-            {/* 代币信息  */}
-            <div className="text-gray-600 mt-2 flex items-center gap-2">
-              <span className="text-sm">参与代币：</span>
-              <span className="text-sm">
-                {joinTokenSymbol}{' '}
-                {joinTokenAddress && (
-                  <span className="pl-2">
-                    <AddressWithCopyButton
-                      address={joinTokenAddress}
-                      showCopyButton={true}
-                      showAddress={true}
-                      colorClassName="text-greyscale-500"
-                    />
-                  </span>
+            {/* 链群信息 */}
+            <div className="mt-4 px-4 pt-4 pb-2 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="text-sm text-gray-600 flex items-center justify-between">
+                <div>
+                  <span className="text-sm">链群：</span>
+                  <span className="text-gray-500 text-xs">#</span>
+                  <span className="text-secondary text-base font-semibold ">{groupDetail.groupId.toString()}</span>{' '}
+                  <span className="font-semibold text-gray-800">{groupDetail.groupName}</span>
+                </div>
+                {!isJoined && !isTrialMode && (
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => router.push(`/acting/join?id=${actionId}&symbol=${token?.symbol || ''}`)}
+                    className="text-secondary p-0 h-auto"
+                  >
+                    切换链群
+                  </Button>
                 )}
-              </span>
+              </div>
+
+              {/* 服务者 */}
+              <div className="text-gray-600 flex items-center gap-2">
+                <span className="text-sm">服务者：</span>
+                <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />
+              </div>
+
+              {/* 代币信息  */}
+              <div className="text-gray-600 mt-2 flex items-center gap-2">
+                <span className="text-sm">参与代币：</span>
+                <span className="text-sm">
+                  {joinTokenSymbol}{' '}
+                  {joinTokenAddress && (
+                    <span className="pl-2">
+                      <AddressWithCopyButton
+                        address={joinTokenAddress}
+                        showCopyButton={true}
+                        showAddress={true}
+                        colorClassName="text-greyscale-500"
+                      />
+                    </span>
+                  )}
+                </span>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* 表单 */}
@@ -500,8 +546,10 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                   <FormLabel className="text-greyscale-500 font-normal">
                     {!isJoined ? (
                       <>
-                        参与代币数：{' '}
-                        {cannotJoin.blocked ? (
+                        {isTrialMode ? '体验代币数：' : '参与代币数：'}{' '}
+                        {isTrialMode ? (
+                          <span className="text-sm text-blue-600">（体验模式，无需支付代币）</span>
+                        ) : cannotJoin.blocked ? (
                           <span className="text-red-600 text-sm">{cannotJoin.reason}</span>
                         ) : (
                           <span className="text-xs text-gray-500">
@@ -527,28 +575,32 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                     <Input
                       placeholder={`请输入参与代币数量`}
                       type="number"
-                      disabled={!balance || balance <= BigInt(0) || cannotJoin.blocked || cannotIncrease.blocked}
-                      className="!ring-secondary-foreground"
+                      disabled={
+                        isTrialMode || !balance || balance <= BigInt(0) || cannotJoin.blocked || cannotIncrease.blocked
+                      }
+                      className={`!ring-secondary-foreground ${isTrialMode ? 'bg-gray-100 text-gray-600' : ''}`}
                       {...field}
                     />
                   </FormControl>
                   <FormMessage />
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      我的余额：<span className="text-secondary">{formatTokenAmount(balance || BigInt(0), 4)}</span>{' '}
-                      {joinTokenSymbol}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      onClick={handleSetMaxAmount}
-                      className="text-secondary p-0 h-auto"
-                      disabled={!balance || balance <= BigInt(0) || cannotJoin.blocked || cannotIncrease.blocked}
-                    >
-                      最高
-                    </Button>
-                  </div>
+                  {!isTrialMode && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        我的余额：<span className="text-secondary">{formatTokenAmount(balance || BigInt(0), 4)}</span>{' '}
+                        {joinTokenSymbol}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        onClick={handleSetMaxAmount}
+                        className="text-secondary p-0 h-auto"
+                        disabled={!balance || balance <= BigInt(0) || cannotJoin.blocked || cannotIncrease.blocked}
+                      >
+                        最高
+                      </Button>
+                    </div>
+                  )}
                 </FormItem>
               )}
             />
@@ -601,43 +653,50 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
             {/* 操作按钮 */}
             <div className="flex justify-center space-x-4 pt-2">
-              <Button
-                ref={approveButtonRef}
-                className="w-1/2"
-                disabled={
-                  isPendingAllowance ||
-                  isPendingApprove ||
-                  isConfirmingApprove ||
-                  isTokenApproved ||
-                  cannotJoin.blocked ||
-                  cannotIncrease.blocked ||
-                  !hasVotes
-                }
-                type="button"
-                onClick={() => {
-                  form.handleSubmit((values) => handleApprove(values))();
-                }}
-              >
-                {isPendingAllowance ? (
-                  <Loader2 className="animate-spin" />
-                ) : isPendingApprove ? (
-                  '1.提交中...'
-                ) : isConfirmingApprove ? (
-                  '1.确认中...'
-                ) : isTokenApproved ? (
-                  `1.${joinTokenSymbol || token?.symbol || ''}已授权`
-                ) : (
-                  `1.授权${joinTokenSymbol || token?.symbol || ''}`
-                )}
-              </Button>
+              {/* 体验模式下隐藏授权按钮 */}
+              {!isTrialMode && (
+                <Button
+                  ref={approveButtonRef}
+                  className="w-1/2"
+                  disabled={
+                    isPendingAllowance ||
+                    isPendingApprove ||
+                    isConfirmingApprove ||
+                    isTokenApproved ||
+                    cannotJoin.blocked ||
+                    cannotIncrease.blocked ||
+                    !hasVotes
+                  }
+                  type="button"
+                  onClick={() => {
+                    form.handleSubmit((values) => handleApprove(values))();
+                  }}
+                >
+                  {isPendingAllowance ? (
+                    <Loader2 className="animate-spin" />
+                  ) : isPendingApprove ? (
+                    '1.提交中...'
+                  ) : isConfirmingApprove ? (
+                    '1.确认中...'
+                  ) : isTokenApproved ? (
+                    `1.${joinTokenSymbol || token?.symbol || ''}已授权`
+                  ) : (
+                    `1.授权${joinTokenSymbol || token?.symbol || ''}`
+                  )}
+                </Button>
+              )}
 
               <Button
-                className="w-1/2"
+                className={isTrialMode ? 'w-full' : 'w-1/2'}
                 disabled={
-                  !isTokenApproved ||
+                  // 体验模式下不检查授权状态
+                  (!isTrialMode && !isTokenApproved) ||
                   isPendingJoin ||
                   isConfirmingJoin ||
                   isConfirmedJoin ||
+                  isPendingTrialJoin ||
+                  isConfirmingTrialJoin ||
+                  isConfirmedTrialJoin ||
                   cannotJoin.blocked ||
                   cannotIncrease.blocked ||
                   !hasVotes
@@ -647,12 +706,20 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                   form.handleSubmit((values) => handleJoin(values))();
                 }}
               >
-                {isPendingJoin
-                  ? '2.提交中...'
-                  : isConfirmingJoin
-                  ? '2.确认中...'
-                  : isConfirmedJoin
-                  ? '2.已加入'
+                {isPendingJoin || isPendingTrialJoin
+                  ? isTrialMode
+                    ? '提交中...'
+                    : '2.提交中...'
+                  : isConfirmingJoin || isConfirmingTrialJoin
+                  ? isTrialMode
+                    ? '确认中...'
+                    : '2.确认中...'
+                  : isConfirmedJoin || isConfirmedTrialJoin
+                  ? isTrialMode
+                    ? '已加入'
+                    : '2.已加入'
+                  : isTrialMode
+                  ? '加入'
                   : '2.加入'}
               </Button>
             </div>
@@ -663,16 +730,34 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
         <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
           <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
           <div className="space-y-1 text-gray-600">
-            {verificationKeys && verificationKeys.length > 0 && <div>• 验证信息用于链群服务者验证您的行动完成情况</div>}
-            <div>• 可以随时取回参与的代币</div>
-            {verificationKeys && verificationKeys.length > 0 && <div>• 加入后可以随时修改验证信息</div>}
+            {isTrialMode ? (
+              <>
+                <div>• 体验模式，无需支付代币即可体验 LOVE20 功能</div>
+                <div>• 体验代币，与正式参与享有相同的权益</div>
+              </>
+            ) : (
+              <>
+                {verificationKeys && verificationKeys.length > 0 && (
+                  <div>• 验证信息用于链群服务者验证您的行动完成情况</div>
+                )}
+                <div>• 可以随时取回参与的代币</div>
+                {verificationKeys && verificationKeys.length > 0 && <div>• 加入后可以随时修改验证信息</div>}
+              </>
+            )}
           </div>
         </div>
       </div>
 
       <LoadingOverlay
-        isLoading={isPendingApprove || isConfirmingApprove || isPendingJoin || isConfirmingJoin}
-        text={isPendingApprove || isPendingJoin ? '提交交易...' : '确认交易...'}
+        isLoading={
+          isPendingApprove ||
+          isConfirmingApprove ||
+          isPendingJoin ||
+          isConfirmingJoin ||
+          isPendingTrialJoin ||
+          isConfirmingTrialJoin
+        }
+        text={isPendingApprove || isPendingJoin || isPendingTrialJoin ? '提交交易...' : '确认交易...'}
       />
     </>
   );

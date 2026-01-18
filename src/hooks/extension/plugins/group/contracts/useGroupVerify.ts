@@ -201,14 +201,18 @@ export const useGroupIdsByVerifier = (extensionAddress: `0x${string}`, round: bi
 /**
  * Hook for actionIdsByVerifier - 获取指定验证者在指定轮次验证的行动ID列表
  */
-export const useActionIdsByVerifier = (round: bigint | undefined, verifier: `0x${string}` | undefined) => {
+export const useActionIdsByVerifier = (
+  tokenAddress: `0x${string}` | undefined,
+  round: bigint | undefined,
+  verifier: `0x${string}` | undefined,
+) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'actionIdsByVerifier',
-    args: [round!, verifier!],
+    args: [tokenAddress!, round!, verifier!],
     query: {
-      enabled: round !== undefined && !!verifier,
+      enabled: !!tokenAddress && round !== undefined && !!verifier,
     },
   });
 

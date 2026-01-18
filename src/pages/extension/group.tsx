@@ -13,11 +13,12 @@ import AlertBox from '@/src/components/Common/AlertBox';
 import Header from '@/src/components/Header';
 import _GroupHeader from '@/src/components/Extension/Plugins/Group/_GroupHeader';
 import _GroupDetail from '@/src/components/Extension/Plugins/Group/_GroupDetail';
-import _GroupScores from '@/src/components/Extension/Plugins/Group/_GroupScores';
 import _GroupRewards from '@/src/components/Extension/Plugins/Group/_GroupRewards';
-import _GroupParticipants from '@/src/components/Extension/Plugins/Group/_GroupParticipants';
+import _GroupApps from '@/src/components/Extension/Plugins/Group/_GroupApps';
+import _GroupManagement from '@/src/components/Extension/Plugins/Group/_GroupManagement';
+import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 
-type TabType = 'detail' | 'scores' | 'rewards' | 'participants';
+type TabType = 'detail' | 'rewards' | 'apps' | 'management';
 
 const ActionGroupPage: React.FC = () => {
   const router = useRouter();
@@ -48,26 +49,56 @@ const ActionGroupPage: React.FC = () => {
   });
   const extensionAddress = contractInfo?.extension;
 
+  // 获取链群详情（用于判断是否是owner）
+  const {
+    groupDetail,
+    isPending: isPendingGroupDetail,
+    error: errorGroupDetail,
+  } = useExtensionGroupDetail({
+    extensionAddress,
+    groupId: groupIdBigInt,
+  });
+
   // 错误处理
   const { handleError } = useContractError();
   useEffect(() => {
     if (errorAction) handleError(errorAction);
     if (errorExtension) handleError(errorExtension);
-  }, [errorAction, errorExtension, handleError]);
+    if (errorGroupDetail) handleError(errorGroupDetail);
+  }, [errorAction, errorExtension, errorGroupDetail, handleError]);
+
+  // 判断是否是owner
+  const isOwner = account && groupDetail && groupDetail.owner.toLowerCase() === account.toLowerCase();
 
   // 初始化tab状态
   useEffect(() => {
-    if (tab && ['detail', 'scores', 'rewards', 'participants'].includes(tab as string)) {
-      setActiveTab(tab as TabType);
+    if (tab && ['detail', 'rewards', 'apps', 'management'].includes(tab as string)) {
+      // 如果尝试访问 management tab 但不是 owner，重定向到 detail
+      if (tab === 'management' && !isOwner) {
+        setActiveTab('detail');
+        const currentQuery = { ...router.query };
+        currentQuery.tab = 'detail';
+        router.replace(
+          {
+            pathname: router.pathname,
+            query: currentQuery,
+          },
+          undefined,
+          { shallow: true },
+        );
+      } else {
+        setActiveTab(tab as TabType);
+      }
     }
-  }, [tab]);
+  }, [tab, isOwner, router]);
 
   // Tab配置
   const tabs: { key: TabType; label: string }[] = [
     { key: 'detail', label: '链群详情' },
-    { key: 'participants', label: '地址公示' },
-    { key: 'scores', label: '验证公示' },
-    { key: 'rewards', label: '激励公示' },
+    { key: 'rewards', label: '信息公示' },
+    { key: 'apps', label: '链群应用' },
+    // 只有owner可以看到链群管理tab
+    ...(isOwner ? [{ key: 'management' as TabType, label: '链群管理' }] : []),
   ];
 
   // 处理tab切换
@@ -96,7 +127,7 @@ const ActionGroupPage: React.FC = () => {
     );
   }
 
-  if (isPendingAction || isPendingExtension) {
+  if (isPendingAction || isPendingExtension || isPendingGroupDetail) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col items-center py-12">
@@ -120,12 +151,14 @@ const ActionGroupPage: React.FC = () => {
     switch (activeTab) {
       case 'detail':
         return <_GroupDetail extensionAddress={extensionAddress} groupId={groupIdBigInt} />;
-      case 'participants':
-        return <_GroupParticipants extensionAddress={extensionAddress} groupId={groupIdBigInt} />;
-      case 'scores':
-        return <_GroupScores extensionAddress={extensionAddress} groupId={groupIdBigInt} />;
       case 'rewards':
         return <_GroupRewards extensionAddress={extensionAddress} groupId={groupIdBigInt} />;
+      case 'apps': {
+        return <_GroupApps extensionAddress={extensionAddress} groupId={groupIdBigInt} actionId={actionId!} />;
+      }
+      case 'management': {
+        return <_GroupManagement actionId={actionId!} groupId={groupIdBigInt} />;
+      }
       default:
         return null;
     }

@@ -14,6 +14,7 @@ import { ActionInfo } from '@/src/types/love20types';
 
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
+import { TrialModeProvider } from '@/src/contexts/TrialModeContext';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -32,6 +33,9 @@ const GroupJoinPanel: React.FC<GroupJoinPanelProps> = ({ actionId, actionInfo, e
   const { token } = useContext(TokenContext) || {};
   const { tab, groupId } = router.query;
 
+  // 解析 groupId
+  const groupIdBigInt = groupId && typeof groupId === 'string' ? BigInt(groupId) : undefined;
+
   // 根据 tab 参数决定显示哪个步骤
   // tab 没有或为 'select' 时显示第一步
   // tab 为 'join' 时显示第二步
@@ -41,30 +45,29 @@ const GroupJoinPanel: React.FC<GroupJoinPanelProps> = ({ actionId, actionInfo, e
     return <LoadingIcon />;
   }
 
-  if (tab === 'join' && groupId) {
-    return (
-      <_GroupJoinSubmit
-        actionId={actionId}
-        actionInfo={actionInfo}
-        extensionAddress={extensionAddress}
-        groupId={BigInt(groupId as string)}
-      />
-    );
-  }
-
-  if (tab === 'update_verification_info' && groupId) {
-    return (
-      <_GroupUpdateVerificationInfo
-        actionId={actionId}
-        actionInfo={actionInfo}
-        extensionAddress={extensionAddress}
-        groupId={BigInt(groupId as string)}
-      />
-    );
-  }
-
-  // 默认显示第一步：选择链群
-  return <_GroupJoinSelect actionId={actionId} actionInfo={actionInfo} extensionAddress={extensionAddress} />;
+  // 包装 TrialModeProvider 以支持体验模式
+  return (
+    <TrialModeProvider extensionAddress={extensionAddress} groupId={groupIdBigInt}>
+      {tab === 'join' && groupId ? (
+        <_GroupJoinSubmit
+          actionId={actionId}
+          actionInfo={actionInfo}
+          extensionAddress={extensionAddress}
+          groupId={BigInt(groupId as string)}
+        />
+      ) : tab === 'update_verification_info' && groupId ? (
+        <_GroupUpdateVerificationInfo
+          actionId={actionId}
+          actionInfo={actionInfo}
+          extensionAddress={extensionAddress}
+          groupId={BigInt(groupId as string)}
+        />
+      ) : (
+        // 默认显示第一步：选择链群
+        <_GroupJoinSelect actionId={actionId} actionInfo={actionInfo} extensionAddress={extensionAddress} />
+      )}
+    </TrialModeProvider>
+  );
 };
 
 export default GroupJoinPanel;

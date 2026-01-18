@@ -8,6 +8,7 @@ import React, { useContext } from 'react';
 
 // Next.js
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // 第三方库
 import { ChevronRight } from 'lucide-react';
@@ -30,7 +31,6 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 interface MyGroupsProps {
   groups: AccountGroupInfo[];
   actionId: bigint;
-  onManageClick: (groupId: bigint) => void;
 }
 
 /**
@@ -41,7 +41,7 @@ interface MyGroupsProps {
  * 2. 显示每个链群的基本信息
  * 3. 容量使用百分比计算：分子使用 totalJoinedAmount（参与量）
  */
-const _MyGroups: React.FC<MyGroupsProps> = ({ groups, actionId, onManageClick }) => {
+const _MyGroups: React.FC<MyGroupsProps> = ({ groups, actionId }) => {
   const { token } = useContext(TokenContext) || {};
 
   return (
@@ -59,7 +59,7 @@ const _MyGroups: React.FC<MyGroupsProps> = ({ groups, actionId, onManageClick })
       {groups.length > 0 ? (
         <div className="space-y-3 mt-4">
           {groups.map((group) => (
-            <MyGroupItem key={group.groupId.toString()} group={group} onManageClick={onManageClick} token={token} />
+            <MyGroupItem key={group.groupId.toString()} group={group} actionId={actionId} token={token} />
           ))}
         </div>
       ) : (
@@ -72,11 +72,21 @@ const _MyGroups: React.FC<MyGroupsProps> = ({ groups, actionId, onManageClick })
 // 链群项组件
 interface MyGroupItemProps {
   group: AccountGroupInfo;
-  onManageClick: (groupId: bigint) => void;
+  actionId: bigint;
   token: any;
 }
 
-const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, onManageClick, token }) => {
+const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, actionId, token }) => {
+  const router = useRouter();
+
+  // 跳转到链群详情页
+  const handleGroupClick = () => {
+    router.push(
+      `/extension/group?groupId=${group.groupId.toString()}&actionId=${actionId.toString()}&symbol=${
+        token?.symbol
+      }&tab=rewards`,
+    );
+  };
   // 计算容量使用百分比：参与量 / 容量上限
   const capacityRatio = group.maxCapacity > BigInt(0) ? Number(group.totalJoinedAmount) / Number(group.maxCapacity) : 0;
   const percentage = capacityRatio * 100;
@@ -87,7 +97,7 @@ const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, onManageClick, token }
 
   return (
     <div
-      onClick={() => onManageClick(group.groupId)}
+      onClick={handleGroupClick}
       className="border border-gray-200 rounded-lg py-3 pl-3 pr-0 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all"
     >
       <div className="flex items-center justify-between">

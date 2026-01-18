@@ -105,7 +105,7 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
 
         {/* 质押代币地址 */}
         <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">服务者质押代币地址:</div>
+          <div className="text-sm font-bold mb-1">激活链群需质押的代币地址:</div>
           <div className="flex items-center gap-2">
             <AddressWithCopyButton address={tokenAddress} showCopyButton={true} colorClassName="text-sm" />
             {stakeTokenSymbol && <span className="text-sm text-gray-600">({stakeTokenSymbol})</span>}

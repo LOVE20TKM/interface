@@ -2,9 +2,9 @@
  * 扩展类型枚举
  */
 export enum ExtensionType {
-  LP = 'LP',
   GROUP_ACTION = 'GROUP_ACTION',
   GROUP_SERVICE = 'GROUP_SERVICE',
+  LP = 'LP',
 }
 
 /**
@@ -40,17 +40,6 @@ export interface ExtensionConfig {
 export const getExtensionConfigs = (): ExtensionConfig[] => {
   const configs: ExtensionConfig[] = [];
 
-  // LP 扩展配置
-  const stakeLpFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP;
-  if (stakeLpFactory) {
-    configs.push({
-      type: ExtensionType.LP,
-      name: 'LP行动',
-      factoryAddress: stakeLpFactory as `0x${string}`,
-      actionDetailTabs: [{ key: 'public', label: 'LP公示', showCondition: 'hasExtension' }],
-    });
-  }
-
   // 链群行动 扩展配置
   const groupActionFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_ACTION;
   if (groupActionFactory) {
@@ -60,7 +49,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
       factoryAddress: groupActionFactory as `0x${string}`,
       actionDetailTabs: [
         { key: 'public', label: '链群公示', showCondition: 'hasExtension' },
-        { key: 'group-manage', label: '链群管理', showCondition: 'hasExtension' },
+        { key: 'group-manage', label: '我的链群', showCondition: 'hasExtension' },
       ],
     });
   }
@@ -76,6 +65,17 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
         { key: 'addresses', label: '服务者公示', showCondition: 'hasExtension' },
         { key: 'public', label: '激励公示', showCondition: 'hasExtension' },
       ],
+    });
+  }
+
+  // LP 扩展配置
+  const stakeLpFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP;
+  if (stakeLpFactory) {
+    configs.push({
+      type: ExtensionType.LP,
+      name: 'LP行动',
+      factoryAddress: stakeLpFactory as `0x${string}`,
+      actionDetailTabs: [{ key: 'public', label: 'LP公示', showCondition: 'hasExtension' }],
     });
   }
 

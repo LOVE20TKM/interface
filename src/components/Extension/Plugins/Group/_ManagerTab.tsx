@@ -4,7 +4,7 @@
 'use client';
 
 // React
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 // Next.js
 import Link from 'next/link';
@@ -22,7 +22,6 @@ import { useContractError } from '@/src/errors/useContractError';
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import { Button } from '@/components/ui/button';
-import _GroupManagementDialog from './_GroupManagementDialog';
 import _ManagerDataPanel from './_ManagerDataPanel';
 import _MyGroups from './_MyGroups';
 
@@ -51,10 +50,6 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
     account,
   });
 
-  // 管理面板弹窗
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedGroupId, setSelectedGroupId] = useState<bigint | null>(null);
-
   // 错误处理
   const { handleError } = useContractError();
   useEffect(() => {
@@ -62,12 +57,6 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
 
     if (groupsError) handleError(groupsError);
   }, [errorMaxCapacity, groupsError, handleError]);
-
-  // 打开管理面板
-  const handleManageClick = (groupId: bigint) => {
-    setSelectedGroupId(groupId);
-    setIsDialogOpen(true);
-  };
 
   if (!account) {
     return (
@@ -100,34 +89,21 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   }
 
   return (
-    <>
-      <div>
-        {/* 服务者数据面板 */}
-        <_ManagerDataPanel groups={groups} maxVerifyCapacity={maxVerifyCapacity} />
+    <div>
+      {/* 服务者数据面板 */}
+      <_ManagerDataPanel groups={groups} maxVerifyCapacity={maxVerifyCapacity} />
 
-        {/* 我的链群列表 */}
-        <_MyGroups groups={groups} actionId={actionId} onManageClick={handleManageClick} />
+      {/* 我的链群列表 */}
+      <_MyGroups groups={groups} actionId={actionId} />
 
-        {/* 说明 */}
-        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded mt-6 px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
-          <div className="space-y-1 text-gray-600">
-            <div>• 您的最大可验证容量 = 已铸造代币量 × 您的治理票占比 × 验证容量系数</div>
-          </div>
+      {/* 说明 */}
+      <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded mt-6 px-3 py-2">
+        <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
+        <div className="space-y-1 text-gray-600">
+          <div>• 您的最大可验证容量 = 已铸造代币量 × 您的治理票占比 × 验证容量系数</div>
         </div>
       </div>
-
-      {/* 管理面板弹窗 */}
-      {selectedGroupId && (
-        <_GroupManagementDialog
-          open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          actionId={actionId}
-          groupId={selectedGroupId}
-          showViewGroup={true}
-        />
-      )}
-    </>
+    </div>
   );
 };
 

@@ -10,6 +10,7 @@ import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
+import { TrialModeProvider } from '@/src/contexts/TrialModeContext';
 
 // my components
 import Header from '@/src/components/Header';
@@ -20,7 +21,7 @@ import ExtensionActionJoinPanel from '@/src/components/Extension/Base/Action/Ext
 
 const JoinPage = () => {
   const router = useRouter();
-  const { id } = router.query;
+  const { id, groupId } = router.query;
   const actionId = id as string;
   const [stakedAmount, setStakedAmount] = useState<bigint | undefined>(undefined);
   function onStakedAmountChange(stakedAmount: bigint) {
@@ -28,7 +29,6 @@ const JoinPage = () => {
   }
 
   const { token } = useContext(TokenContext) || {};
-  // const { currentRound, isPending: isPendingCurrentRound, error: errorCurrentRound } = useCurrentRound();
 
   // 获取行动详情
   const {
@@ -58,6 +58,9 @@ const JoinPage = () => {
     }
   }, [errorActionInfo, errorExtension]);
 
+  // 解析 groupId (如果有)
+  const groupIdBigInt = groupId && typeof groupId === 'string' ? BigInt(groupId) : undefined;
+
   return (
     <>
       <Header title="加入行动" showBackButton={true} />
@@ -65,7 +68,7 @@ const JoinPage = () => {
         {!id || Array.isArray(id) || isPendingActionInfo || isPendingExtension ? (
           <LoadingIcon />
         ) : (
-          <>
+          <TrialModeProvider extensionAddress={contractInfo?.extension} groupId={groupIdBigInt}>
             {/* 根据是否是扩展行动，显示不同的组件 */}
             {contractInfo?.isExtension && contractInfo?.extension && contractInfo?.factory ? (
               <>
@@ -89,9 +92,7 @@ const JoinPage = () => {
                 <SubmitJoin actionInfo={actionInfo} stakedAmount={stakedAmount} />
               </>
             )}
-
-            {/* <ActionDetail actionId={BigInt(actionId)} round={currentRound} showSubmitter={false} /> */}
-          </>
+          </TrialModeProvider>
         )}
       </main>
     </>

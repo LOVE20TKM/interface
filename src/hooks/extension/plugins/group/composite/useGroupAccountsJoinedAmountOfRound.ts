@@ -12,6 +12,7 @@ const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXT
 export interface AccountJoinedAmountInfo {
   account: `0x${string}`;
   joinedAmount: bigint;
+  joinedRound: bigint;
 }
 
 export interface UseGroupAccountsJoinedAmountOfRoundParams {
@@ -68,34 +69,57 @@ export const useGroupAccountsJoinedAmountOfRound = ({
     return contracts;
   }, [extensionAddress, round, accounts]);
 
+  // 第三步：获取每个账户的参与轮次
+  // 新版合约 joinInfo 需要 extensionAddress, account 参数
+  const joinInfoContracts = useMemo(() => {
+    if (!extensionAddress || accounts.length === 0) return [];
+
+    return accounts.map((account) => ({
+      address: GROUP_JOIN_CONTRACT_ADDRESS,
+      abi: GroupJoinAbi,
+      functionName: 'joinInfo',
+      args: [extensionAddress, account],
+    }));
+  }, [extensionAddress, accounts]);
+
+  const mergedContracts = useMemo(() => {
+    if (!extensionAddress || round === undefined) return [];
+    if (amountsContracts.length === 0 && joinInfoContracts.length === 0) return [];
+    return [...amountsContracts, ...joinInfoContracts];
+  }, [extensionAddress, round, amountsContracts, joinInfoContracts]);
+
   const {
-    data: amountsData,
-    isPending: isAmountsPending,
-    error: amountsError,
+    data: mergedData,
+    isPending: isMergedPending,
+    error: mergedError,
   } = useReadContracts({
-    contracts: amountsContracts as any,
+    contracts: mergedContracts as any,
     query: {
-      enabled: !!extensionAddress && round !== undefined && amountsContracts.length > 0,
+      enabled: mergedContracts.length > 0,
     },
   });
 
   // 解析数据
   const accountJoinedAmounts = useMemo(() => {
-    if (!amountsData || accounts.length === 0) return [];
+    if (!mergedData || accounts.length === 0) return [];
 
     const result: AccountJoinedAmountInfo[] = [];
+    const amountDataEndIndex = accounts.length;
 
     for (let i = 0; i < accounts.length; i++) {
-      const joinedAmount = safeToBigInt(amountsData[i]?.result);
+      const joinedAmount = safeToBigInt(mergedData[i]?.result);
+      const joinInfoResult = mergedData[amountDataEndIndex + i]?.result as [bigint, bigint, bigint] | undefined;
+      const joinedRound = joinInfoResult ? safeToBigInt(joinInfoResult[0]) : BigInt(0);
 
       result.push({
         account: accounts[i],
         joinedAmount,
+        joinedRound,
       });
     }
 
     return result;
-  }, [amountsData, accounts]);
+  }, [mergedData, accounts]);
 
   // 计算最终的 pending 状态
   // 如果账户列表还在加载中，返回 true
@@ -104,12 +128,12 @@ export const useGroupAccountsJoinedAmountOfRound = ({
   const finalIsPending = useMemo(() => {
     if (isAccountsPending) return true;
     if (accounts.length === 0) return false;
-    return isAmountsPending;
-  }, [isAccountsPending, accounts.length, isAmountsPending]);
+    return isMergedPending;
+  }, [isAccountsPending, accounts.length, isMergedPending]);
 
   return {
     accountJoinedAmounts,
     isPending: finalIsPending,
-    error: accountsError || amountsError,
+    error: accountsError || mergedError,
   };
 };

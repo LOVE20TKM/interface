@@ -14,11 +14,8 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
-import {
-  useGroupAccountsJoinedAmountOfRound,
-  useGroupAccountsRewardOfRound,
-  useGroupScoresOfRound,
-} from '@/src/hooks/extension/plugins/group/composite';
+import { useGroupAccountsRewardOfRound } from '@/src/hooks/extension/plugins/group/composite/useGroupAccountsRewardOfRound';
+import { useVerifiedAccountCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -58,34 +55,19 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
     }
   }, [urlRound, currentRound]);
 
+  // 获取指定轮次的已验证账户数量
+  const {
+    verifiedAccountCount,
+    isPending: isPendingVerifiedAccountCount,
+    error: errorVerifiedAccountCount,
+  } = useVerifiedAccountCount(extensionAddress, selectedRound, groupId);
+
   // 获取指定轮次的激励记录
   const {
-    accountRewards,
-    isPending: isPendingRewards,
-    error: errorRewards,
+    accountRewardRecords,
+    isPending: isPendingRecords,
+    error: errorRecords,
   } = useGroupAccountsRewardOfRound({
-    extensionAddress: extensionAddress as `0x${string}`,
-    round: selectedRound,
-    groupId,
-  });
-
-  // 获取打分记录
-  const {
-    accountScores,
-    isPending: isPendingScores,
-    error: errorScores,
-  } = useGroupScoresOfRound({
-    extensionAddress: extensionAddress as `0x${string}`,
-    round: selectedRound,
-    groupId,
-  });
-
-  // 获取参与代币数明细
-  const {
-    accountJoinedAmounts,
-    isPending: isPendingAmounts,
-    error: errorAmounts,
-  } = useGroupAccountsJoinedAmountOfRound({
     extensionAddress: extensionAddress as `0x${string}`,
     round: selectedRound,
     groupId,
@@ -95,10 +77,9 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
   const { handleError } = useContractError();
   useEffect(() => {
     if (errorRound) handleError(errorRound);
-    if (errorRewards) handleError(errorRewards);
-    if (errorScores) handleError(errorScores);
-    if (errorAmounts) handleError(errorAmounts);
-  }, [errorRound, errorRewards, errorScores, errorAmounts, handleError]);
+    if (errorRecords) handleError(errorRecords);
+    if (errorVerifiedAccountCount) handleError(errorVerifiedAccountCount);
+  }, [errorRound, errorRecords, errorVerifiedAccountCount, handleError]);
 
   const handleChangedRound = (round: number) => {
     const newRound = BigInt(round);
@@ -118,8 +99,14 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
     );
   };
 
-  // 只有在初次加载且还没有数据时才显示整页加载状态
-  if (isPendingRound) {
+  // 显示整页加载状态
+  const isInitialLoading =
+    isPendingRound ||
+    !currentRound ||
+    (isPendingRecords && accountRewardRecords === undefined) ||
+    (isPendingVerifiedAccountCount && accountRewardRecords === undefined);
+
+  if (isInitialLoading) {
     return (
       <div className="bg-white rounded-lg p-8">
         <div className="flex flex-col items-center py-8">
@@ -134,54 +121,44 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
     return <div>Token信息加载中...</div>;
   }
 
-  // 创建地图来快速查找数据
-  const amountMap = new Map<string, bigint>();
-  if (accountJoinedAmounts) {
-    accountJoinedAmounts.forEach((item) => {
-      amountMap.set(item.account.toLowerCase(), item.joinedAmount);
-    });
-  }
-
-  const scoreInfoMap = new Map<string, { originScore: bigint; finalScore: bigint }>();
-  if (accountScores) {
-    accountScores.forEach((scoreInfo) => {
-      scoreInfoMap.set(scoreInfo.account.toLowerCase(), {
-        originScore: scoreInfo.originScore,
-        finalScore: scoreInfo.finalScore,
-      });
-    });
-  }
-
   // 计算总激励
-  const totalReward = accountRewards?.reduce((sum, item) => sum + item.reward, BigInt(0)) || BigInt(0);
+  const totalReward = accountRewardRecords?.reduce((sum, item) => sum + item.reward, BigInt(0)) || BigInt(0);
 
   // 计算总 finalScore（用于计算百分比）
-  const totalFinalScore = accountScores?.reduce((sum, scoreInfo) => sum + scoreInfo.finalScore, BigInt(0)) || BigInt(0);
+  const totalFinalScore =
+    accountRewardRecords?.reduce((sum, scoreInfo) => sum + scoreInfo.finalScore, BigInt(0)) || BigInt(0);
 
   // 计算总参与代币数（用于汇总行）
   const totalJoinedAmount =
-    accountJoinedAmounts?.reduce((sum, item) => sum + item.joinedAmount, BigInt(0)) || BigInt(0);
+    accountRewardRecords?.reduce((sum, item) => sum + item.joinedAmount, BigInt(0)) || BigInt(0);
 
-  // 合并数据：为每个激励记录添加参与代币数和得分信息
+  // 计算展示数据
   const combinedData =
-    accountRewards?.map((accountReward) => {
-      const accountLower = accountReward.account.toLowerCase();
-      const joinedAmount = amountMap.get(accountLower) || BigInt(0);
-      const scoreInfo = scoreInfoMap.get(accountLower) || { originScore: BigInt(0), finalScore: BigInt(0) };
-      const rewardPercentage = totalReward > BigInt(0) ? (Number(accountReward.reward) / Number(totalReward)) * 100 : 0;
-      const finalScorePercentage =
-        totalFinalScore > BigInt(0) ? (Number(scoreInfo.finalScore) / Number(totalFinalScore)) * 100 : 0;
+    accountRewardRecords
+      ?.map((record, originalIndex) => {
+        const rewardPercentage = totalReward > BigInt(0) ? (Number(record.reward) / Number(totalReward)) * 100 : 0;
+        const finalScorePercentage =
+          totalFinalScore > BigInt(0) ? (Number(record.finalScore) / Number(totalFinalScore)) * 100 : 0;
 
-      return {
-        account: accountReward.account,
-        joinedAmount,
-        originScore: scoreInfo.originScore,
-        finalScore: scoreInfo.finalScore,
-        finalScorePercentage,
-        reward: accountReward.reward,
-        rewardPercentage,
-      };
-    }) || [];
+        return {
+          account: record.account,
+          joinedAmount: record.joinedAmount,
+          joinedRound: record.joinedRound,
+          originScore: record.originScore,
+          finalScore: record.finalScore,
+          finalScorePercentage,
+          reward: record.reward,
+          rewardPercentage,
+          trialProvider: record.trialProvider,
+          originalIndex, // 保存原始索引，用于验证状态判断
+        };
+      })
+      .sort((a, b) => {
+        // 按 finalScore 从大到小排序
+        if (a.finalScore > b.finalScore) return -1;
+        if (a.finalScore < b.finalScore) return 1;
+        return 0;
+      }) || [];
 
   return (
     <div className="relative pb-4">
@@ -193,23 +170,27 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
       <div className="flex items-center">
         {selectedRound > 0 && (
           <>
-            <LeftTitle title={`第 ${selectedRound.toString()} 轮激励结果`} />
+            <LeftTitle title={`第 ${selectedRound.toString()} 轮 成员列表`} />
             <span className="text-sm text-greyscale-500 ml-2">(</span>
-            <ChangeRound currentRound={currentRound - BigInt(1) || BigInt(0)} handleChangedRound={handleChangedRound} />
+            <ChangeRound
+              currentRound={currentRound - BigInt(1) || BigInt(0)}
+              maxRound={currentRound + BigInt(1)}
+              handleChangedRound={handleChangedRound}
+            />
             <span className="text-sm text-greyscale-500">)</span>
           </>
         )}
       </div>
 
       {/* 加载状态 */}
-      {(isPendingRewards || isPendingScores || isPendingAmounts) && (
+      {isPendingRecords && (
         <div className="flex justify-center py-8">
           <LoadingIcon />
         </div>
       )}
 
       {/* 错误状态 */}
-      {(errorRewards || errorScores || errorAmounts) && (
+      {errorRecords && (
         <div className="alert alert-error">
           <svg className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
             <path
@@ -224,45 +205,75 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
       )}
 
       {/* 激励详情列表 */}
-      {!isPendingRewards &&
-        !isPendingScores &&
-        !isPendingAmounts &&
-        !errorRewards &&
-        !errorScores &&
-        !errorAmounts &&
+      {!isPendingRecords &&
+        !errorRecords &&
         selectedRound > 0 &&
         (combinedData.length === 0 ? (
-          <div className="text-center text-sm text-greyscale-400 p-4">该轮次暂无激励记录</div>
+          <div className="text-center text-sm text-greyscale-400 p-4">该轮次没有地址记录</div>
         ) : (
           <table className="table w-full">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="px-1 text-left">成员地址</th>
-                <th className="px-1 text-right">得分(代币数×原始得分)</th>
+                <th className="px-1 text-left">成员 / 加入轮次</th>
+                <th className="px-1 text-right">得分 / 代币数×原始得分</th>
                 <th className="px-1 text-right">激励</th>
               </tr>
             </thead>
             <tbody>
-              {combinedData.map((item, index) => (
-                <tr key={`${item.account}-${index}`} className="border-b border-gray-100">
-                  <td className="px-1">
-                    <AddressWithCopyButton address={item.account} showCopyButton={true} />
-                  </td>
-                  <td className="px-1 text-right">
-                    <div className="font-mono text-secondary">{formatTokenAmount(item.finalScore)}</div>
-                    {/* <div className="text-xs text-greyscale-500">{item.finalScorePercentage.toFixed(2)}%</div> */}
-                    <div className="mt-0 text-xs text-greyscale-400">
-                      <span className="font-mono">{formatTokenAmount(item.joinedAmount)}</span>
-                      <span className="mx-1">×</span>
-                      <span>{Number(item.originScore).toString()}</span>
-                    </div>
-                  </td>
-                  <td className="px-1 text-right">
-                    <div className="font-mono text-secondary">{formatTokenAmount(item.reward)}</div>
-                    {/* <div className="text-xs text-greyscale-500">{item.rewardPercentage.toFixed(2)}%</div> */}
-                  </td>
-                </tr>
-              ))}
+              {combinedData.map((item, index) => {
+                // 判断是否为体验用户
+                const isTrialUser =
+                  item.trialProvider &&
+                  item.trialProvider !== '0x0000000000000000000000000000000000000000' &&
+                  item.trialProvider !== '0x0';
+                // 判断是否显示未生成
+                const shouldShowNotGenerated = selectedRound >= currentRound;
+                // 判断是否显示未验证（使用原始索引，不破坏验证逻辑）
+                const shouldShowNotVerified =
+                  selectedRound > currentRound ||
+                  (selectedRound === currentRound &&
+                    verifiedAccountCount !== undefined &&
+                    item.originalIndex >= Number(verifiedAccountCount));
+
+                return (
+                  <tr key={`${item.account}-${index}`} className="border-b border-gray-100">
+                    <td className="px-1">
+                      <div className="flex items-center gap-2">
+                        <AddressWithCopyButton address={item.account} showCopyButton={true} />
+                      </div>
+                      <div className="text-xs text-greyscale-400 mt-0.5">
+                        第{item.joinedRound.toString()}轮
+                        {isTrialUser && (
+                          <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded">体验</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-1 text-right">
+                      {shouldShowNotVerified ? (
+                        <div className="text-greyscale-500">未验证</div>
+                      ) : (
+                        <>
+                          <div className="font-mono text-secondary">{formatTokenAmount(item.finalScore)}</div>
+                          {/* <div className="text-xs text-greyscale-500">{item.finalScorePercentage.toFixed(2)}%</div> */}
+                          <div className="mt-0 text-xs text-greyscale-400">
+                            <span className="font-mono">{formatTokenAmount(item.joinedAmount)}</span>
+                            <span className="mx-1">×</span>
+                            <span>{Number(item.originScore).toString()}</span>
+                          </div>
+                        </>
+                      )}
+                    </td>
+                    <td className="px-1 text-right">
+                      {shouldShowNotGenerated ? (
+                        <div className="text-greyscale-500">未生成</div>
+                      ) : (
+                        <div className="font-mono text-secondary">{formatTokenAmount(item.reward)}</div>
+                      )}
+                      {/* <div className="text-xs text-greyscale-500">{item.rewardPercentage.toFixed(2)}%</div> */}
+                    </td>
+                  </tr>
+                );
+              })}
               {/* 汇总行 */}
               <tr className="border-t-1 border-gray-300">
                 <td className="px-1 text-left">合计</td>
@@ -274,7 +285,11 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
                   </div>
                 </td>
                 <td className="px-1 text-right">
-                  <div className="font-mono">{formatTokenAmount(totalReward)}</div>
+                  {selectedRound >= currentRound ? (
+                    <div className="text-greyscale-500">未生成</div>
+                  ) : (
+                    <div className="font-mono">{formatTokenAmount(totalReward)}</div>
+                  )}
                   {/* <div className="text-xs text-greyscale-500">100.00%</div> */}
                 </td>
               </tr>

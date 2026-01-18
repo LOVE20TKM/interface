@@ -69,11 +69,11 @@ const GroupActionPublicTabs: React.FC<GroupActionPublicTabsProps> = ({ actionId,
           <TabsTrigger value="groups" className="px-6">
             链群
           </TabsTrigger>
-          <TabsTrigger value="distrust" className="px-6">
-            不信任票
-          </TabsTrigger>
           <TabsTrigger value="reward" className="px-6">
             激励公示
+          </TabsTrigger>
+          <TabsTrigger value="distrust" className="px-6">
+            不信任票
           </TabsTrigger>
         </TabsList>
 

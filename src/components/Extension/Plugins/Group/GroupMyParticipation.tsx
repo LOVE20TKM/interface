@@ -68,6 +68,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   // 获取加入信息
   const {
     amount: joinedAmount,
+    provider: trialProviderAddress,
     groupId,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
@@ -266,15 +267,21 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
         </Button>
 
         {/* 增加参与代币 */}
-        <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
-          <Link
-            href={`/acting/join?tab=join&groupId=${groupId?.toString()}&id=${actionId}&symbol=${
-              joinTokenSymbol || token?.symbol || ''
-            }`}
-          >
+        {trialProviderAddress && trialProviderAddress !== '0x0000000000000000000000000000000000000000' ? (
+          <Button variant="outline" className="flex-1 text-secondary border-secondary" disabled>
             增加代币
-          </Link>
-        </Button>
+          </Button>
+        ) : (
+          <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
+            <Link
+              href={`/acting/join?tab=join&groupId=${groupId?.toString()}&id=${actionId}&symbol=${
+                joinTokenSymbol || token?.symbol || ''
+              }`}
+            >
+              增加代币
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* 说明 */}

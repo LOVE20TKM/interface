@@ -13,15 +13,17 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 
-const ChangeRound: React.FC<{ currentRound: bigint; handleChangedRound: (round: number) => void }> = ({
-  currentRound,
-  handleChangedRound,
-}) => {
+const ChangeRound: React.FC<{
+  currentRound: bigint;
+  maxRound?: bigint;
+  handleChangedRound: (round: number) => void;
+}> = ({ currentRound, maxRound, handleChangedRound }) => {
   const [isOpen, setIsOpen] = useState(false);
   const handleSelectRound = (round: number) => {
     handleChangedRound(round);
     setIsOpen(false);
   };
+  const displayMaxRound = maxRound ?? currentRound;
 
   // 触摸滚动检测，避免滑动松手误触发选择
   const touchStartYRef = useRef<number | null>(null);
@@ -42,8 +44,8 @@ const ChangeRound: React.FC<{ currentRound: bigint; handleChangedRound: (round: 
         </DrawerHeader>
         <div className="px-4 flex-grow">
           <div className="max-h-64 overflow-y-auto">
-            {Array.from({ length: Number(currentRound) }, (_, i) => {
-              const round = Number(currentRound) - i;
+            {Array.from({ length: Number(displayMaxRound) }, (_, i) => {
+              const round = Number(displayMaxRound) - i;
               return (
                 <Button
                   key={round}

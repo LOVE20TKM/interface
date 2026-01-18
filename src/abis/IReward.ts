@@ -23,6 +23,35 @@ export const IRewardAbi = [
   },
   {
     "type": "function",
+    "name": "claimRewards",
+    "inputs": [
+      {
+        "name": "rounds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "claimedRounds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "rewards",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "total",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "reward",
     "inputs": [
       {
@@ -62,7 +91,7 @@ export const IRewardAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "isMinted",
+        "name": "claimed",
         "type": "bool",
         "internalType": "bool"
       }

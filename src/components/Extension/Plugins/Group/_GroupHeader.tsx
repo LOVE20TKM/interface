@@ -194,23 +194,13 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
           </span>
 
           {/* 链群打分 - 只有打分代理显示 */}
-          {isDelegated && (
+          {canScore && (
             <Link
               className="text-secondary hover:text-secondary/80 text-sm cursor-pointer"
               href={`/extension/group_op?actionId=${actionId}&extensionAddress=${extensionAddress}&groupId=${groupId}&op=verify&symbol=${token?.symbol}`}
             >
               链群打分 &gt;&gt;
             </Link>
-          )}
-
-          {/* 管理链群 - 只有链群服务者显示 */}
-          {isOwner && (
-            <span
-              className="text-secondary hover:text-secondary/80 text-sm cursor-pointer"
-              onClick={() => setIsManageDialogOpen(true)}
-            >
-              管理链群 &gt;&gt;
-            </span>
           )}
 
           {/* 加入行动 - 当不能打分时显示 */}
