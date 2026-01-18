@@ -83,8 +83,8 @@ const GroupTrialPage: React.FC = () => {
   const handleCopyShareLink = async () => {
     try {
       const baseUrl = window.location.origin;
-      const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS || '';
-      const shareUrl = `${baseUrl}${usdtAddress}/acting/join/?tab=join&groupId=${groupId}&id=${actionId}&provider=${account}&symbol=${
+      const basePath = process.env.NEXT_PUBLIC_BASE_PATH ? '/' + process.env.NEXT_PUBLIC_BASE_PATH : '';
+      const shareUrl = `${baseUrl}${basePath}/acting/join/?tab=join&groupId=${groupId}&id=${actionId}&provider=${account}&symbol=${
         token?.symbol || ''
       }`;
 
