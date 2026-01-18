@@ -195,7 +195,7 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
                 name="groupActionTokenAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>链群行动所在代币地址</FormLabel>
+                    <FormLabel>链群行动所在代币合约地址</FormLabel>
                     <FormControl>
                       <Input
                         type="text"

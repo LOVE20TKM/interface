@@ -170,7 +170,7 @@ const Burn: React.FC<{ token: Token | null | undefined; launchInfo: LaunchInfo }
               <span className="text-greyscale-500 font-normal text-sm ml-2">{token.parentTokenSymbol}</span>
             </div>
             <div className="stat-desc text-sm mt-2">
-              销毁 {token.symbol}，可从父币托底池取回 {token.parentTokenSymbol}
+              销毁 {token.symbol}，可从托底池取回 {token.parentTokenSymbol}
             </div>
           </div>
         </div>
@@ -180,7 +180,8 @@ const Burn: React.FC<{ token: Token | null | undefined; launchInfo: LaunchInfo }
             <form onSubmit={(e) => e.preventDefault()}>
               <div className="flex items-center text-sm my-0">
                 <span className="text-greyscale-400">
-                  我的 {token.symbol}: <span className="text-secondary">{formatTokenAmount(balanceOfToken || BigInt(0))}</span>
+                  我的 {token.symbol}:{' '}
+                  <span className="text-secondary">{formatTokenAmount(balanceOfToken || BigInt(0))}</span>
                 </span>
                 <Button
                   variant="link"

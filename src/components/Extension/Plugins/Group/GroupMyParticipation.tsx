@@ -74,6 +74,9 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     error: errorJoinInfo,
   } = useJoinInfo(extensionAddress, account as `0x${string}`);
 
+  // 判断是否是体验模式
+  const isTrialMode = trialProviderAddress && trialProviderAddress !== '0x0000000000000000000000000000000000000000';
+
   // 获取链群详情
   const {
     groupDetail,
@@ -256,7 +259,17 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
           onClick={handleExit}
           disabled={!joinedAmount || joinedAmount <= BigInt(0) || isPendingExit || isConfirmingExit || isConfirmedExit}
         >
-          {isPendingExit ? '提交中' : isConfirmingExit ? '确认中' : isConfirmedExit ? '已取回' : '取回代币'}
+          {isPendingExit
+            ? '提交中'
+            : isConfirmingExit
+            ? '确认中'
+            : isConfirmedExit
+            ? isTrialMode
+              ? '已退出'
+              : '已取回'
+            : isTrialMode
+            ? '退出体验'
+            : '取回代币'}
         </Button>
 
         {/* 查看激励 */}
@@ -267,9 +280,9 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
         </Button>
 
         {/* 增加参与代币 */}
-        {trialProviderAddress && trialProviderAddress !== '0x0000000000000000000000000000000000000000' ? (
+        {isTrialMode ? (
           <Button variant="outline" className="flex-1 text-secondary border-secondary" disabled>
-            增加代币
+            追加代币
           </Button>
         ) : (
           <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
@@ -278,7 +291,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
                 joinTokenSymbol || token?.symbol || ''
               }`}
             >
-              增加代币
+              追加代币
             </Link>
           </Button>
         )}

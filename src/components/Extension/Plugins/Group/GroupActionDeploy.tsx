@@ -248,7 +248,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 name="joinTokenAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>1. 参与行动代币地址</FormLabel>
+                    <FormLabel>1. 参与行动代币合约地址</FormLabel>
                     <FormControl>
                       <Input
                         type="text"

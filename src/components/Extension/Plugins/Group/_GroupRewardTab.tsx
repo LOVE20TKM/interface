@@ -6,6 +6,9 @@
 // React
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
+// Next.js
+import Link from 'next/link';
+
 // 类型
 import { ActionInfo } from '@/src/types/love20types';
 
@@ -178,7 +181,7 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
           <table className="table w-full">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="px-1 text-left">No.</th>
+                <th className="px-1 text-left hidden md:table-cell">No</th>
                 <th className="px-1 text-left">
                   <div className="">
                     <span>链群</span>
@@ -193,12 +196,12 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
             <tbody>
               {sortedGroupRewards.map((item, index) => (
                 <tr key={item.groupId.toString()} className="border-b border-gray-100">
-                  <td className="px-1 text-greyscale-400">{index + 1}</td>
+                  <td className="px-1 text-greyscale-400 hidden md:table-cell">{index + 1}</td>
                   <td className="px-1 text-left">
                     <div className="flex flex-col">
                       <div className="flex items-center">
                         <span className="text-gray-500 text-xs">#</span>
-                        <span className="text-sm font-medium ml-1">{item.groupId.toString()}</span>
+                        <span className="text-sm font-medium">{item.groupId.toString()}</span>
                         {item.groupName && <span className="text-sm text-gray-800 ml-1">{item.groupName}</span>}
                       </div>
                       {/* 手机上显示参与代币 */}
@@ -243,7 +246,27 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
                   </td>
                   <td className="px-1 text-center">
                     <div className="font-mono text-secondary">
-                      {item.reward !== undefined ? formatTokenAmount(item.reward) : '-'}
+                      {(() => {
+                        const rewardText = item.reward !== undefined ? formatTokenAmount(item.reward) : '-';
+                        const tokenSymbol = token?.symbol;
+                        const canNavigate =
+                          item.reward !== undefined &&
+                          item.reward !== BigInt(0) &&
+                          typeof tokenSymbol === 'string' &&
+                          tokenSymbol.length > 0;
+
+                        if (!canNavigate) return <span>{rewardText}</span>;
+
+                        const href = `/extension/group/?groupId=${item.groupId.toString()}&actionId=${actionId.toString()}&symbol=${encodeURIComponent(
+                          tokenSymbol,
+                        )}&tab=rewards`;
+
+                        return (
+                          <Link href={href} className="underline underline-offset-2 hover:text-secondary/80">
+                            {rewardText}
+                          </Link>
+                        );
+                      })()}
                     </div>
                   </td>
                 </tr>

@@ -219,7 +219,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                 name="joinTokenAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>1. LP代币地址</FormLabel>
+                    <FormLabel>1. LP代币合约地址</FormLabel>
                     <FormControl>
                       <Input
                         type="text"

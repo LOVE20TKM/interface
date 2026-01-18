@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
 
 // 类型
 import { ActionInfo } from '@/src/types/love20types';
@@ -155,8 +156,14 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
       <div className="flex flex-col items-center px-6 pt-6">
         <LeftTitle title="输入要加入的链群" />
         <div className="text-center py-8 text-gray-500">
-          <p>暂无可加入的链群</p>
-          <p className="text-sm mt-2">请等待链群服务者激活链群</p>
+          <p>没有已激活的链群</p>
+          <div className="mt-4 flex justify-center">
+            <Link href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}>
+              <Button className="text-secondary border-secondary" variant="outline">
+                去激活链群 &gt;&gt;
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
