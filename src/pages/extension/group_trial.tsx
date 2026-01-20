@@ -1,7 +1,7 @@
 // pages/extension/group_trial.tsx
 // 体验列表页面
 
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useRouter } from 'next/router';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
@@ -12,15 +12,18 @@ import AlertBox from '@/src/components/Common/AlertBox';
 import Header from '@/src/components/Header';
 import _GroupTrial from '@/src/components/Extension/Plugins/Group/_GroupTrial';
 import LeftTitle from '@/src/components/Common/LeftTitle';
-import { Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAccount } from 'wagmi';
+import ManualCopyDialog from '@/src/components/Common/ManualCopyDialog';
+import { copyWithToast } from '@/src/lib/clipboardUtils';
 
 const GroupTrialPage: React.FC = () => {
   const router = useRouter();
   const { groupId, actionId: actionIdParam } = router.query;
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
+  const [showManualCopyDialog, setShowManualCopyDialog] = useState(false);
+  const [copyText, setCopyText] = useState('');
 
   // 从 query 获取必要参数
   const actionIdParamStr = Array.isArray(actionIdParam) ? actionIdParam[0] : actionIdParam;
@@ -85,18 +88,21 @@ const GroupTrialPage: React.FC = () => {
 
   // 复制分享链接到剪贴板
   const handleCopyShareLink = async () => {
-    try {
-      const baseUrl = window.location.origin;
-      const basePath = process.env.NEXT_PUBLIC_BASE_PATH ? process.env.NEXT_PUBLIC_BASE_PATH : '';
-      const shareUrl = `${baseUrl}${basePath}/acting/join/?tab=join&groupId=${groupIdParamStr}&id=${actionId}&provider=${account}&symbol=${
-        token?.symbol || ''
-      }`;
+    const baseUrl = window.location.origin;
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH ? process.env.NEXT_PUBLIC_BASE_PATH : '';
+    const shareUrl = `${baseUrl}${basePath}/acting/join/?tab=join&groupId=${groupIdParamStr}&id=${actionId}&provider=${account}&symbol=${
+      token?.symbol || ''
+    }`;
 
-      await navigator.clipboard.writeText(shareUrl);
-      alert('分享链接已复制到剪贴板');
+    try {
+      await copyWithToast(shareUrl, '分享链接已复制到剪贴板', (text) => {
+        setCopyText(text);
+        setShowManualCopyDialog(true);
+      });
     } catch (error) {
       console.error('复制失败:', error);
-      alert('复制失败，请重试');
+      setCopyText(shareUrl);
+      setShowManualCopyDialog(true);
     }
   };
 
@@ -120,6 +126,15 @@ const GroupTrialPage: React.FC = () => {
           <_GroupTrial extensionAddress={extensionAddress} groupId={groupIdBigInt} actionId={actionId} />
         </div>
       </main>
+
+      {/* 手动复制对话框 */}
+      <ManualCopyDialog
+        isOpen={showManualCopyDialog}
+        onClose={() => setShowManualCopyDialog(false)}
+        text={copyText}
+        title="请手动复制分享链接"
+        description="自动复制功能不可用，请选择以下链接并手动复制："
+      />
     </>
   );
 };
