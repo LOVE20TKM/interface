@@ -162,8 +162,15 @@ const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ current
               <div className="space-y-1 text-red-600">
                 {warningActionInfos.map((info) => (
                   <div key={info.actionId.toString()}>
-                    你在行动“No.{info.actionId.toString()} {info.actionTitle}”中被投不信任票，不信任率
-                    {formatPercentage(info.distrustRatioPercent)}；
+                    <Link
+                      href={`/action/info/?symbol=${encodeURIComponent(
+                        token?.symbol || '',
+                      )}&id=${info.actionId.toString()}&tab=public&tab2=distrust`}
+                      className="underline underline-offset-2 hover:text-red-700"
+                    >
+                      你在行动“No.{info.actionId.toString()} {info.actionTitle}”中被投不信任票，不信任率
+                      {formatPercentage(info.distrustRatioPercent)}；
+                    </Link>
                   </div>
                 ))}
               </div>

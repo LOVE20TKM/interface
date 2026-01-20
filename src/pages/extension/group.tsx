@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
@@ -214,6 +215,14 @@ const ActionGroupPage: React.FC = () => {
             const showCapacityDecayWarn = capacityDecayRatePercent > 0;
             if (!showDistrustWarn && !showCapacityDecayWarn) return null;
 
+            const actionIdForLink = actionInfo?.head?.id;
+            const symbolForLink = token?.symbol || (router.query.symbol as string) || '';
+            const distrustHref = actionIdForLink
+              ? `/action/info/?symbol=${encodeURIComponent(
+                  symbolForLink,
+                )}&id=${actionIdForLink.toString()}&tab=public&tab2=distrust`
+              : undefined;
+
             return (
               <div className="my-3">
                 <AlertBox
@@ -222,8 +231,17 @@ const ActionGroupPage: React.FC = () => {
                     <div className="space-y-1 text-red-600">
                       {showDistrustWarn && (
                         <div>
-                          本链群第 {verifyCurrentRound.toString()} 轮，被投不信任票，不信任率
-                          {formatPercentage(distrustRatePercent)}
+                          {distrustHref ? (
+                            <Link href={distrustHref} className="underline underline-offset-2 hover:text-red-700">
+                              本链群第 {verifyCurrentRound.toString()} 轮，被投不信任票，不信任率
+                              {formatPercentage(distrustRatePercent)}
+                            </Link>
+                          ) : (
+                            <>
+                              本链群第 {verifyCurrentRound.toString()} 轮，被投不信任票，不信任率
+                              {formatPercentage(distrustRatePercent)}
+                            </>
+                          )}
                         </div>
                       )}
                       {showCapacityDecayWarn && (

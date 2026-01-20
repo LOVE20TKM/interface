@@ -23,15 +23,19 @@ const GroupTrialPage: React.FC = () => {
   const { address: account } = useAccount();
 
   // 从 query 获取必要参数
-  const actionId = actionIdParam ? BigInt(actionIdParam as string) : undefined;
-  const groupIdBigInt = groupId ? BigInt(groupId as string) : undefined;
+  const actionIdParamStr = Array.isArray(actionIdParam) ? actionIdParam[0] : actionIdParam;
+  const groupIdParamStr = Array.isArray(groupId) ? groupId[0] : groupId;
+
+  // 注意：actionId 允许为 0，因此不能用 `!actionId` 这种方式校验
+  const actionId = actionIdParamStr !== undefined && actionIdParamStr !== '' ? BigInt(actionIdParamStr) : undefined;
+  const groupIdBigInt = groupIdParamStr !== undefined && groupIdParamStr !== '' ? BigInt(groupIdParamStr) : undefined;
 
   // 获取行动信息
   const {
     actionInfo,
     isPending: isPendingAction,
     error: errorAction,
-  } = useActionInfo(token?.address as `0x${string}`, actionId || BigInt(0));
+  } = useActionInfo(token?.address as `0x${string}`, actionId ?? BigInt(0));
 
   // 获取扩展合约地址
   const {
@@ -52,7 +56,7 @@ const GroupTrialPage: React.FC = () => {
   }, [errorAction, errorExtension, handleError]);
 
   // 参数校验
-  if (!groupIdBigInt || !actionId) {
+  if (groupIdBigInt === undefined || actionId === undefined) {
     return (
       <div className="container mx-auto px-4 py-8">
         <AlertBox type="error" message="缺少必要参数：需要 actionId 和 groupId" />
@@ -84,7 +88,7 @@ const GroupTrialPage: React.FC = () => {
     try {
       const baseUrl = window.location.origin;
       const basePath = process.env.NEXT_PUBLIC_BASE_PATH ? '/' + process.env.NEXT_PUBLIC_BASE_PATH : '';
-      const shareUrl = `${baseUrl}${basePath}/acting/join/?tab=join&groupId=${groupId}&id=${actionId}&provider=${account}&symbol=${
+      const shareUrl = `${baseUrl}${basePath}/acting/join/?tab=join&groupId=${groupIdParamStr}&id=${actionId}&provider=${account}&symbol=${
         token?.symbol || ''
       }`;
 
