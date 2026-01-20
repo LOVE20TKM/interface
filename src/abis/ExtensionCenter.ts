@@ -382,24 +382,6 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "function",
-    "name": "forceRemove",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "isAccountJoined",
     "inputs": [
       {
@@ -557,7 +539,13 @@ export const ExtensionCenterAbi = [
         "internalType": "address"
       }
     ],
-    "outputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -750,6 +738,12 @@ export const ExtensionCenterAbi = [
         "internalType": "address"
       },
       {
+        "name": "round",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
         "name": "actionId",
         "type": "uint256",
         "indexed": true,
@@ -760,6 +754,12 @@ export const ExtensionCenterAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
+      },
+      {
+        "name": "accountCount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -806,6 +806,12 @@ export const ExtensionCenterAbi = [
         "internalType": "address"
       },
       {
+        "name": "round",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
         "name": "actionId",
         "type": "uint256",
         "indexed": true,
@@ -816,6 +822,12 @@ export const ExtensionCenterAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
+      },
+      {
+        "name": "accountCount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -935,11 +947,33 @@ export const ExtensionCenterAbi = [
   {
     "type": "error",
     "name": "RoundExceedsJoinRound",
-    "inputs": []
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "currentRound",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",
     "name": "VerificationInfoLengthMismatch",
-    "inputs": []
+    "inputs": [
+      {
+        "name": "expected",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "actual",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   }
 ] as const satisfies Abi;

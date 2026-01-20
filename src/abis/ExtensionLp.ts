@@ -539,6 +539,25 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "event",
+    "name": "Initialize",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Join",
     "inputs": [
       {
@@ -622,7 +641,18 @@ export const ExtensionLpAbi = [
   {
     "type": "error",
     "name": "NotEnoughWaitingBlocks",
-    "inputs": []
+    "inputs": [
+      {
+        "name": "currentBlock",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "exitableBlock",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",
@@ -632,6 +662,17 @@ export const ExtensionLpAbi = [
   {
     "type": "error",
     "name": "RoundNotFinished",
-    "inputs": []
+    "inputs": [
+      {
+        "name": "currentRound",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "requestedRound",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   }
 ] as const satisfies Abi;

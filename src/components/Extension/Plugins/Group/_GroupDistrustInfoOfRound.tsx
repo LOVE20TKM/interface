@@ -244,8 +244,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
         {/* 不信任投票列表 */}
         {!distrustVotes || distrustVotes.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 mb-2">暂无记录</p>
-            <p className="text-sm text-gray-400">该验证轮内没有不信任投票</p>
+            <p className="text-gray-500 mb-2">该验证轮，没有不信任投票</p>
           </div>
         ) : (
           <div className="overflow-x-auto mt-4">

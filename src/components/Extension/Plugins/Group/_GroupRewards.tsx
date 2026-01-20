@@ -170,7 +170,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
       <div className="flex items-center">
         {selectedRound > 0 && (
           <>
-            <LeftTitle title={`第 ${selectedRound.toString()} 轮 成员列表`} />
+            <LeftTitle title={`第 ${selectedRound.toString()} 轮`} />
             <span className="text-sm text-greyscale-500 ml-2">(</span>
             <ChangeRound
               currentRound={currentRound - BigInt(1) || BigInt(0)}

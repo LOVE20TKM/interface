@@ -17,6 +17,9 @@ import _GroupRewards from '@/src/components/Extension/Plugins/Group/_GroupReward
 import _GroupApps from '@/src/components/Extension/Plugins/Group/_GroupApps';
 import _GroupManagement from '@/src/components/Extension/Plugins/Group/_GroupManagement';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+import { useGroupWarningRatesOfRound } from '@/src/hooks/extension/plugins/group/composite/useGroupWarningRatesOfRound';
+import { useCurrentRound as useVerifyCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
+import { formatPercentage, formatUnits } from '@/src/lib/format';
 
 type TabType = 'detail' | 'rewards' | 'apps' | 'management';
 
@@ -59,13 +62,33 @@ const ActionGroupPage: React.FC = () => {
     groupId: groupIdBigInt,
   });
 
+  // 当前验证轮（用于链群不信任率/验证衰减率提示）
+  const {
+    currentRound: verifyCurrentRound,
+    isPending: isPendingVerifyRound,
+    error: errorVerifyRound,
+  } = useVerifyCurrentRound();
+
+  const {
+    distrustRate,
+    capacityDecayRate,
+    isPending: isPendingWarningRates,
+    error: errorWarningRates,
+  } = useGroupWarningRatesOfRound({
+    extensionAddress,
+    round: verifyCurrentRound,
+    groupId: groupIdBigInt,
+  });
+
   // 错误处理
   const { handleError } = useContractError();
   useEffect(() => {
     if (errorAction) handleError(errorAction);
     if (errorExtension) handleError(errorExtension);
     if (errorGroupDetail) handleError(errorGroupDetail);
-  }, [errorAction, errorExtension, errorGroupDetail, handleError]);
+    if (errorVerifyRound) handleError(errorVerifyRound);
+    if (errorWarningRates) handleError(errorWarningRates);
+  }, [errorAction, errorExtension, errorGroupDetail, errorVerifyRound, errorWarningRates, handleError]);
 
   // 判断是否是owner
   const isOwner = account && groupDetail && groupDetail.owner.toLowerCase() === account.toLowerCase();
@@ -177,6 +200,44 @@ const ActionGroupPage: React.FC = () => {
             groupId={groupIdBigInt}
             account={account}
           />
+
+          {/* 链群警告（当前验证轮） */}
+          {(() => {
+            if (!verifyCurrentRound || verifyCurrentRound <= BigInt(0)) return null;
+            if (isPendingVerifyRound || isPendingWarningRates) return null;
+
+            const distrustRatePercent = distrustRate !== undefined ? parseFloat(formatUnits(distrustRate)) * 100 : 0;
+            const capacityDecayRatePercent =
+              capacityDecayRate !== undefined ? parseFloat(formatUnits(capacityDecayRate)) * 100 : 0;
+
+            const showDistrustWarn = distrustRatePercent > 0;
+            const showCapacityDecayWarn = capacityDecayRatePercent > 0;
+            if (!showDistrustWarn && !showCapacityDecayWarn) return null;
+
+            return (
+              <div className="my-3">
+                <AlertBox
+                  type="error"
+                  message={
+                    <div className="space-y-1 text-red-600">
+                      {showDistrustWarn && (
+                        <div>
+                          本链群第 {verifyCurrentRound.toString()} 轮，被投不信任票，不信任率
+                          {formatPercentage(distrustRatePercent)}
+                        </div>
+                      )}
+                      {showCapacityDecayWarn && (
+                        <div>
+                          本链群第 {verifyCurrentRound.toString()} 轮，服务者容量不足，验证衰减率
+                          {formatPercentage(capacityDecayRatePercent)}
+                        </div>
+                      )}
+                    </div>
+                  }
+                />
+              </div>
+            );
+          })()}
 
           {/* Tab导航 */}
           <div className="flex border-b border-gray-200 mb-4">

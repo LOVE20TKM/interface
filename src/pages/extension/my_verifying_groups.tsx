@@ -13,6 +13,7 @@ import { useMyGroupIdsNeedVerifiedByRound } from '@/src/hooks/extension/plugins/
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 import { useContractError } from '@/src/errors/useContractError';
+import { formatPercentage, formatUnits } from '@/src/lib/format';
 
 // Components
 import Header from '@/src/components/Header';
@@ -29,6 +30,7 @@ interface GroupedData {
     extensionAddress: `0x${string}`;
     isVerified: boolean;
     needToVerify: boolean;
+    capacityDecayRate: bigint | undefined;
   }[];
 }
 
@@ -110,6 +112,7 @@ const MyVerifyingGroupsPage: React.FC = () => {
         extensionAddress: group.extensionAddress,
         isVerified: group.isVerified,
         needToVerify: group.needToVerify,
+        capacityDecayRate: group.capacityDecayRate,
       });
     });
 
@@ -193,6 +196,14 @@ const MyVerifyingGroupsPage: React.FC = () => {
                             <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">待验证</span>
                           ) : (
                             <span className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">无需验证</span>
+                          )}
+                          {group.capacityDecayRate !== undefined && group.capacityDecayRate > BigInt(0) && (
+                            <span className="ml-2 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                              {(() => {
+                                const percent = parseFloat(formatUnits(group.capacityDecayRate!)) * 100;
+                                return `验证衰减 ${formatPercentage(percent)}`;
+                              })()}
+                            </span>
                           )}
                         </div>
                       </div>

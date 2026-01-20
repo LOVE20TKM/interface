@@ -40,6 +40,18 @@ const _ManagerDataPanel: React.FC<ManagerDataPanelProps> = ({ groups, maxVerifyC
   // 计算所有链群的容量总和
   const totalCapacity = groups.reduce((sum, group) => sum + group.maxCapacity, BigInt(0));
 
+  // 最大容量使用率（百分比数值，如 95 表示 95%）
+  const maxCapacityUsagePercent =
+    maxVerifyCapacity && maxVerifyCapacity > BigInt(0)
+      ? (Number(totalJoinedAmount) * 100) / Number(maxVerifyCapacity)
+      : 0;
+
+  // > 90% 橙色警告，>= 100% 红色警告
+  const maxCapacityUsageWarnClass =
+    maxCapacityUsagePercent >= 100 ? 'text-red-600' : maxCapacityUsagePercent > 90 ? 'text-yellow-600' : '';
+  const maxCapacityUsageValueClass = maxCapacityUsageWarnClass || 'text-secondary';
+  const maxCapacityUsageLabelClass = maxCapacityUsageWarnClass || 'text-greyscale-500';
+
   return (
     <div>
       <LeftTitle title="我的服务数据" />
@@ -54,15 +66,15 @@ const _ManagerDataPanel: React.FC<ManagerDataPanelProps> = ({ groups, maxVerifyC
           <div className="text-xs text-greyscale-500 mt-1">{token?.symbol}</div>
         </div>
         <div className="stat place-items-center p-1">
-          <div className="stat-title text-sm">最大容量使用率</div>
+          <div className={`stat-title text-sm ${maxCapacityUsageWarnClass}`}>最大容量使用率</div>
           <div className="stat-value h-6 flex items-center">
-            <span className="text-xl text-secondary">
+            <span className={`text-xl ${maxCapacityUsageValueClass}`}>
               {maxVerifyCapacity && maxVerifyCapacity > BigInt(0)
                 ? formatPercentage((Number(totalJoinedAmount) * 100) / Number(maxVerifyCapacity))
                 : '0%'}
             </span>
           </div>
-          <div className="text-xs text-greyscale-500 mt-1">
+          <div className={`text-xs mt-1 ${maxCapacityUsageLabelClass}`}>
             最大容量: {formatTokenAmount(maxVerifyCapacity || BigInt(0))}
           </div>
         </div>

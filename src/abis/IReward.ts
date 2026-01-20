@@ -14,7 +14,7 @@ export const IRewardAbi = [
     ],
     "outputs": [
       {
-        "name": "reward",
+        "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -86,7 +86,7 @@ export const IRewardAbi = [
     ],
     "outputs": [
       {
-        "name": "reward",
+        "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
       },

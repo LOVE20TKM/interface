@@ -349,42 +349,25 @@ export const useOriginScoreByAccount = (extensionAddress: `0x${string}`, round: 
 };
 
 /**
- * Hook for capacityReductionByGroupId - 获取指定轮次和组ID的容量削减
+ * Hook for capacityDecayRate - 获取指定轮次和组ID的容量削减
  */
-export const useCapacityReductionByGroupId = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
+export const useCapacityDecayRate = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
-    functionName: 'capacityReductionRate',
+    functionName: 'capacityDecayRate',
     args: [extensionAddress, round, groupId],
     query: {
       enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
     },
   });
 
-  return { capacityReduction: safeToBigInt(data), isPending, error };
+  return { capacityDecayRate: safeToBigInt(data), isPending, error };
 };
 
 // =====================
 // === 读取 Hooks - 不信任投票相关 ===
 // =====================
-
-/**
- * Hook for distrustVotesByGroupId - 获取指定组ID的不信任投票数
- */
-export const useDistrustVotesByGroupId = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: GroupVerifyAbi,
-    functionName: 'distrustVotesByGroupId',
-    args: [extensionAddress, round, groupId],
-    query: {
-      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
-    },
-  });
-
-  return { votes: safeToBigInt(data), isPending, error };
-};
 
 /**
  * Hook for distrustVotesByGroupOwner - 获取指定组所有者的不信任投票数
@@ -427,6 +410,27 @@ export const useDistrustVotesByVoterByGroupOwner = (
   });
 
   return { votes: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook for distrustRateByGroupId - 获取指定轮次和组ID的不信任比例
+ */
+export const useDistrustRateByGroupId = (
+  extensionAddress: `0x${string}` | undefined,
+  round: bigint | undefined,
+  groupId: bigint | undefined,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: GroupVerifyAbi,
+    functionName: 'distrustRateByGroupId',
+    args: [extensionAddress!, round!, groupId!],
+    query: {
+      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
+    },
+  });
+
+  return { distrustRate: safeToBigInt(data), isPending, error };
 };
 
 /**

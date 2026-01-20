@@ -814,11 +814,6 @@ export const GroupManagerAbi = [
   },
   {
     "type": "error",
-    "name": "GroupNotFound",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidMinMaxJoinAmount",
     "inputs": []
   },

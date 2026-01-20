@@ -420,6 +420,25 @@ export const ExtensionGroupActionAbi = [
     "anonymous": false
   },
   {
+    "type": "event",
+    "name": "Initialize",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
     "type": "error",
     "name": "ActionIdNotFound",
     "inputs": []
@@ -457,6 +476,17 @@ export const ExtensionGroupActionAbi = [
   {
     "type": "error",
     "name": "RoundNotFinished",
-    "inputs": []
+    "inputs": [
+      {
+        "name": "currentRound",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "requestedRound",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   }
 ] as const satisfies Abi;

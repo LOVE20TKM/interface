@@ -141,6 +141,13 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
 
   return (
     <div className="bg-gray-100 rounded-lg px-4 pt-3 pb-3 text-sm my-4">
+      {/* 链群关闭提示 */}
+      {!groupDetail.isActive && (
+        <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+          当前链群已关闭！ 请及时取回代币。
+        </div>
+      )}
+
       {/* 第一行：链群NFT/name + 链群服务者地址 */}
       <div className="mb-2">
         <div className="flex items-center justify-between">
@@ -148,7 +155,6 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
             <span className="text-gray-500 text-sm">#</span>
             <span className="text-secondary text-xl font-semibold">{groupId.toString()}</span>
             <span className="font-semibold text-gray-800 text-lg ml-1">{groupDetail.groupName}</span>
-            {!groupDetail.isActive && <span className="text-red-600 font-medium text-xs ml-2">(已关闭)</span>}
           </div>
           <div className="text-sm text-gray-600 flex items-center gap-1">
             <User className="text-greyscale-400 h-3 w-3" />

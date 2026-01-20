@@ -175,4 +175,6 @@ export const ErrorMessages: Record<string, string> = {
   TrialAccountNotInWaitingList: 'TrialAccountNotInWaitingList',
   TrialAlreadyJoined: 'TrialAlreadyJoined',
   TrialArrayLengthMismatch: 'TrialArrayLengthMismatch',
+  GroupNameInvalidCharacters: '链群名称中含有无效字符',
+  GroupNameTooLong: '链群名称过长',
 };

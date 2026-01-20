@@ -791,6 +791,25 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "event",
+    "name": "Initialize",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Join",
     "inputs": [
       {
@@ -901,6 +920,11 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "error",
+    "name": "GroupNotActive",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidExtension",
     "inputs": []
   },
@@ -957,7 +981,18 @@ export const ExtensionGroupServiceAbi = [
   {
     "type": "error",
     "name": "RoundNotFinished",
-    "inputs": []
+    "inputs": [
+      {
+        "name": "currentRound",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "requestedRound",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",

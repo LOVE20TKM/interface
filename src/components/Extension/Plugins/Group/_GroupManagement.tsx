@@ -99,7 +99,7 @@ const _GroupManagement: React.FC<GroupManagementProps> = ({ actionId, groupId, s
       </div>
       <div
         onClick={() => handleNavigateToOp('deactivate')}
-        className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg hover:border-red-600 hover:bg-red-50 transition-all group cursor-pointer"
+        className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg transition-all group cursor-pointer"
       >
         <div className="flex items-center gap-3">
           <XCircle className="w-5 h-5 text-red-600" />
@@ -107,7 +107,7 @@ const _GroupManagement: React.FC<GroupManagementProps> = ({ actionId, groupId, s
             <div className="text-base font-medium text-red-600">关闭链群</div>
           </div>
         </div>
-        <ArrowRight className="w-5 h-5 text-greyscale-400 group-hover:text-red-600 group-hover:translate-x-1 transition-all" />
+        <ArrowRight className="w-5 h-5 text-greyscale-400" />
       </div>
     </div>
   );

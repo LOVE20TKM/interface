@@ -178,6 +178,13 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
 
   return (
     <div className="flex flex-col items-center pt-1">
+      {/* 链群关闭提示 */}
+      {groupDetail && !groupDetail.isActive && (
+        <div className="w-full mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+          当前链群已关闭！ 请及时取回代币。
+        </div>
+      )}
+
       {/* 数据区 - 我的参与统计 */}
       <_GroupParticipationStats
         actionId={actionId}

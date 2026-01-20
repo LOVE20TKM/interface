@@ -526,7 +526,7 @@ export const LOVE20GroupAbi = [
   },
   {
     "type": "function",
-    "name": "totalMintCost",
+    "name": "totalBurnedForMint",
     "inputs": [],
     "outputs": [
       {
@@ -572,6 +572,25 @@ export const LOVE20GroupAbi = [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "AddHolder",
+    "inputs": [
+      {
+        "name": "holder",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "totalHolders",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
   },
   {
     "type": "event",
@@ -662,6 +681,25 @@ export const LOVE20GroupAbi = [
   },
   {
     "type": "event",
+    "name": "RemoveHolder",
+    "inputs": [
+      {
+        "name": "holder",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "totalHolders",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Transfer",
     "inputs": [
       {
@@ -688,7 +726,18 @@ export const LOVE20GroupAbi = [
   {
     "type": "error",
     "name": "GroupNameAlreadyExists",
-    "inputs": []
+    "inputs": [
+      {
+        "name": "groupName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "existingTokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",
@@ -697,12 +746,45 @@ export const LOVE20GroupAbi = [
   },
   {
     "type": "error",
-    "name": "HolderIndexOutOfBounds",
-    "inputs": []
+    "name": "GroupNameInvalidCharacters",
+    "inputs": [
+      {
+        "name": "groupName",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
   },
   {
     "type": "error",
-    "name": "InvalidGroupName",
-    "inputs": []
+    "name": "GroupNameTooLong",
+    "inputs": [
+      {
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxLength",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "HolderIndexOutOfBounds",
+    "inputs": [
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   }
 ] as const satisfies Abi;
