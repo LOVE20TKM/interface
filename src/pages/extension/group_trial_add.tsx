@@ -483,7 +483,7 @@ const GroupTrialAddPage: React.FC = () => {
                         {maxJoinResult.amount > BigInt(0) ? formatTokenAmount(maxJoinResult.amount) : '不限'}
                       </span>
                     </div>
-                    {maxJoinResult.reason && (
+                    {maxJoinResult.reason && maxJoinResult.amount && (
                       <div className="text-xs text-gray-500 mt-1">限制: {maxJoinResult.reason}</div>
                     )}
                   </div>

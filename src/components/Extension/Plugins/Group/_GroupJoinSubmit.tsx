@@ -543,29 +543,31 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                     {!isJoined ? (
                       <>
                         {isTrialMode ? '体验代币数：' : '参与代币数：'}{' '}
-                        {isTrialMode ? (
-                          <span className="text-sm text-blue-600">（体验模式，无需支付代币）</span>
-                        ) : cannotJoin.blocked ? (
-                          <span className="text-red-600 text-sm">{cannotJoin.reason}</span>
-                        ) : (
-                          <span className="text-xs text-gray-500 inline-flex items-center gap-1">
-                            限 {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
-                            {formatTokenAmount(maxJoinResult.amount)}
-                            <InfoTooltip title="参与上限说明" content={maxJoinResult.reason} />
-                          </span>
-                        )}
+                        {hasVotes &&
+                          (isTrialMode ? (
+                            <span className="text-sm text-blue-600">（体验模式，无需支付代币）</span>
+                          ) : cannotJoin.blocked ? (
+                            <span className="text-red-600 text-sm">{cannotJoin.reason}</span>
+                          ) : (
+                            <span className="text-xs text-gray-500 inline-flex items-center gap-1">
+                              限 {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
+                              {formatTokenAmount(maxJoinResult.amount)}
+                              <InfoTooltip title="参与上限说明" content={maxJoinResult.reason} />
+                            </span>
+                          ))}
                       </>
                     ) : (
                       <>
                         追加代币数：{' '}
-                        {cannotIncrease.blocked ? (
-                          <span className="text-red-600 text-sm">{cannotIncrease.reason}</span>
-                        ) : (
-                          <span className="text-xs text-gray-500 inline-flex items-center gap-1">
-                            最大 {formatTokenAmount(maxIncreaseResult.amount)}
-                            <InfoTooltip title="追加上限说明" content={maxIncreaseResult.reason} />
-                          </span>
-                        )}
+                        {hasVotes &&
+                          (cannotIncrease.blocked ? (
+                            <span className="text-red-600 text-sm">{cannotIncrease.reason}</span>
+                          ) : (
+                            <span className="text-xs text-gray-500 inline-flex items-center gap-1">
+                              最大 {formatTokenAmount(maxIncreaseResult.amount)}
+                              <InfoTooltip title="追加上限说明" content={maxIncreaseResult.reason} />
+                            </span>
+                          ))}
                       </>
                     )}
                   </FormLabel>

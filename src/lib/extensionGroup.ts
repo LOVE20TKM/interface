@@ -36,7 +36,7 @@ export const getMaxJoinAmount = (groupDetail: GroupDetailInfo): JoinAmountResult
     });
   }
 
-  // 2. 行动最大参与代币量
+  // 2. 行动最大参与代币量（为0时表示无限制，不添加）
   limits.push({
     amount: groupDetail.actionMaxJoinAmount,
     reason: `行动参与代币上限 ${formatTokenAmount(groupDetail.actionMaxJoinAmount)}`,
