@@ -163,10 +163,10 @@ export default function TokenList({ parentTokenAddress }: TokenListProps) {
                 </p>
               </div>
               <div className="flex items-center space-x-2">
-                <span>
+                {/* <span>
                   <span className="text-greyscale-500 text-sm">父币 </span>
                   <span className="text-sm font-mono">{token.parentTokenSymbol}</span>
-                </span>
+                </span> */}
                 <Button variant="ghost" size="icon">
                   <ChevronRight className="h-4 w-4" />
                 </Button>
