@@ -158,7 +158,8 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">当前容量:</span>
               <span className="text-sm">
-                {formatTokenAmount(groupDetail.totalJoinedAmount, 2)} / {formatTokenAmount(groupDetail.maxCapacity, 2)}{' '}
+                {formatTokenAmount(groupDetail.totalJoinedAmount, 2)} /{' '}
+                {groupDetail.maxCapacity > BigInt(0) ? formatTokenAmount(groupDetail.maxCapacity, 2) : '不限'}{' '}
                 {token?.symbol}
               </span>
             </div>
