@@ -16,7 +16,7 @@ const Footer: React.FC<FooterProps> = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="p-4 border rounded-lg bg-slate-50 dark:bg-slate-900 flex flex-col items-center space-y-2">
           <p className="text-center text-sm text-slate-700 dark:text-slate-300">
-            LOVE20 所有合约 以及 前端代码，都在全球最大开源平台 GitHub 上开源。地址是：
+            LOVE20 所有合约 及 前端代码，都在全球最大开源平台 GitHub 上开源。地址：
           </p>
           <a
             href="https://love20tkm.github.io/docs/"

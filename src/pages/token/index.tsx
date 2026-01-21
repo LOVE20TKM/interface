@@ -464,12 +464,25 @@ const TokenPage = () => {
                             <Blocks className="h-5 w-5 text-primary" />
                             子币情况
                           </div>
-                          <Link
-                            href={`/tokens/children/?symbol=${currentToken.symbol}`}
-                            className="text-sm text-secondary hover:text-secondary/80 transition-colors"
-                          >
-                            子币列表 &gt;&gt;
-                          </Link>
+                          <div>
+                            {currentToken.parentTokenAddress &&
+                              currentToken.parentTokenAddress !== '0x0000000000000000000000000000000000000000' &&
+                              currentToken.parentTokenSymbol &&
+                              currentToken.parentTokenSymbol !== process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL && (
+                                <Link
+                                  href={`/acting/?symbol=${currentToken.parentTokenSymbol}`}
+                                  className="text-sm text-secondary hover:text-secondary/80 transition-colors mr-4"
+                                >
+                                  返回父币 &gt;&gt;
+                                </Link>
+                              )}
+                            <Link
+                              href={`/tokens/children/?symbol=${currentToken.symbol}`}
+                              className="text-sm text-secondary hover:text-secondary/80 transition-colors"
+                            >
+                              子币列表 &gt;&gt;
+                            </Link>
+                          </div>
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="grid grid-cols-2 gap-4 px-4 pt-2 pb-4">
