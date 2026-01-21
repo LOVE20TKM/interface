@@ -16,7 +16,7 @@ import GroupMyParticipation from '@/src/components/Extension/Plugins/Group/Group
 import GroupServiceMyParticipation from '@/src/components/Extension/Plugins/GroupService/GroupServiceMyParticipation';
 
 // my hooks
-import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
+import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 
 interface ExtensionMyParticipationProps {
   actionId: bigint;
@@ -39,7 +39,7 @@ interface ExtensionMyParticipationProps {
 const ExtensionMyParticipation: React.FC<ExtensionMyParticipationProps> = ({ actionId, actionInfo, tokenAddress }) => {
   // 获取行动的扩展信息
 
-  const { contractInfo, isPending } = useExtensionContractInfo({
+  const { contractInfo, isPending } = useExtensionByActionInfoWithCache({
     tokenAddress,
     actionInfo,
   });

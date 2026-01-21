@@ -410,10 +410,10 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     if (isConfirmedJoin || isConfirmedTrialJoin) {
       toast.success(uiIsTrialMode ? '体验加入成功' : '加入链群成功');
       setTimeout(() => {
-        router.push(`/my/myaction?id=${actionId.toString()}&symbol=${joinTokenSymbol || token?.symbol || ''}`);
+        router.push(`/my/myaction?id=${actionId.toString()}&symbol=${token?.symbol || ''}`);
       }, 1000);
     }
-  }, [isConfirmedJoin, isConfirmedTrialJoin, uiIsTrialMode, router, actionId, joinTokenSymbol, token?.symbol]);
+  }, [isConfirmedJoin, isConfirmedTrialJoin, uiIsTrialMode, router, actionId, token?.symbol]);
 
   // 错误处理
   const { handleError } = useContractError();

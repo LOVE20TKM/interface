@@ -152,7 +152,9 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound, joi
                           <span className="text-secondary text-xs">{formatPercentage(voteRatio * 100)}</span>
                         </span>
                         <span>
-                          <span className="text-greyscale-400 text-xs mr-1">参与代币</span>
+                          <span className="text-greyscale-400 text-xs mr-1">
+                            参与代币{actionDetail.isConvertedJoinedValueSuccess ? '(估)' : ''}
+                          </span>
                           <span className="text-secondary text-xs">{formatTokenAmount(joinedAmount)}</span>
                         </span>
                         {!actionDetail.hasReward ? (

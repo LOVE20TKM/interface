@@ -35,7 +35,7 @@ export interface UseActingPageDataResult {
  *
  * 功能：
  * 1. 获取用户可参与的行动列表
- * 2. 自动查询扩展行动的基础数据（accountsCount, convertedJoinedValue）
+ * 2. 自动查询扩展行动的基础数据（accountsCount, convertedJoinedValue, isConvertedJoinedValueSuccess）
  * 3. 用扩展数据增强行动列表（覆盖 joinedAmount）
  * 4. 提供统一的加载状态和错误处理
  *
@@ -82,6 +82,7 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
           ...action,
           joinedAmount: extension.convertedJoinedValue, // 使用扩展的转换后参与值
           accountsCount: extension.accountsCount, // 添加参与人数
+          isConvertedJoinedValueSuccess: extension.isConvertedJoinedValueSuccess, // 标记是否为“转换成功”的结果
           isExtension: true,
           extensionAddress: extension.extension,
         };

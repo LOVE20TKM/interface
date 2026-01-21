@@ -2,7 +2,7 @@
  * 行动参与数据适配器（支持扩展）
  *
  * 职责：
- * - 自动判断行动是否为扩展行动（使用 useExtensionContractInfo）
+ * - 自动判断行动是否为扩展行动（使用 useExtensionByActionInfoWithCache）
  * - 扩展行动：从扩展合约获取数据
  * - 普通行动：使用传入的基础数据
  * - 返回统一的数据接口
@@ -25,10 +25,10 @@
 
 import { useMemo } from 'react';
 import {
-  useExtensionParticipationData,
-  useExtensionContractInfo,
+  useExtensionByActionInfoWithCache,
   type FactoryInfo,
-} from '@/src/hooks/extension/base/composite';
+} from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
+import { useExtensionParticipationData } from '@/src/hooks/extension/base/composite/useExtensionParticipationData';
 import { ActionInfo } from '@/src/types/love20types';
 
 // ==================== 类型定义 ====================
@@ -59,6 +59,12 @@ export interface ActionParticipationData {
   participantCount: bigint | undefined;
   /** 总参与金额 */
   totalAmount: bigint | undefined;
+  /** joinedAmount 对应的代币地址（扩展行动可能不同于当前 token） */
+  joinedAmountTokenAddress: `0x${string}` | undefined;
+  /** joinedAmount 对应的代币 symbol（扩展行动可能不同于当前 token） */
+  joinedAmountTokenSymbol: string | undefined;
+  /** joinedAmount 对应代币是否为 LP */
+  joinedAmountTokenIsLP: boolean;
   /** 用户是否已参与 */
   isJoined: boolean;
   /** 加载状态 */
@@ -80,13 +86,13 @@ export interface ActionParticipationData {
  *
  * @description
  * 工作流程：
- * 1. 使用 useExtensionContractInfo 判断该行动是否为扩展行动
+ * 1. 使用 useExtensionByActionInfoWithCache 判断该行动是否为扩展行动
  * 2. 如果是扩展行动：调用 useExtensionParticipationData 获取扩展数据
  * 3. 如果是普通行动：直接使用传入的 coreData
  * 4. 返回统一的数据结构
  *
  * 设计理念：
- * - 使用统一的扩展判断逻辑（useExtensionContractInfo）
+ * - 使用统一的扩展判断逻辑（useExtensionByActionInfoWithCache）
  * - 这个 Hook 不负责查询普通行动的数据
  * - 普通行动的数据由调用者查询后通过 coreData 传入
  * - 这样避免重复查询，提高性能
@@ -98,9 +104,9 @@ export function useActionParticipationAdapter(
   coreData?: CoreParticipationData,
 ): ActionParticipationData {
   // ==========================================
-  // 步骤 1: 使用 useExtensionContractInfo 判断是否为扩展行动
+  // 步骤 1: 使用 useExtensionByActionInfoWithCache 判断是否为扩展行动
   // ==========================================
-  const { contractInfo, isPending: isExtensionCheckPending } = useExtensionContractInfo({
+  const { contractInfo, isPending: isExtensionCheckPending } = useExtensionByActionInfoWithCache({
     tokenAddress,
     actionInfo,
   });
@@ -141,6 +147,11 @@ export function useActionParticipationAdapter(
       participantCount: isExtensionAction ? extensionData.participantCount : coreData?.participantCount,
       totalAmount: isExtensionAction ? extensionData.totalAmount : coreData?.totalAmount,
 
+      // joinedAmount 口径代币信息（扩展优先；普通行动默认等同于当前 token）
+      joinedAmountTokenAddress: isExtensionAction ? extensionData.joinedAmountTokenAddress : tokenAddress,
+      joinedAmountTokenSymbol: isExtensionAction ? extensionData.joinedAmountTokenSymbol : undefined,
+      joinedAmountTokenIsLP: isExtensionAction ? extensionData.joinedAmountTokenIsLP : false,
+
       // 用户参与状态（扩展优先，回退到 core）
       isJoined: isExtensionAction ? extensionData.isJoined : coreData?.isJoined ?? false,
 
@@ -150,7 +161,15 @@ export function useActionParticipationAdapter(
       // 错误信息（仅在扩展行动时传递扩展数据的错误）
       error: isExtensionAction ? extensionData.error : null,
     };
-  }, [isExtensionAction, extensionAddress, contractInfo, extensionData, coreData, isExtensionCheckPending]);
+  }, [
+    isExtensionAction,
+    extensionAddress,
+    contractInfo,
+    extensionData,
+    coreData,
+    isExtensionCheckPending,
+    tokenAddress,
+  ]);
 
   return finalData;
 }

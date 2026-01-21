@@ -4,6 +4,7 @@
  * 提供扩展协议的高级查询功能
  */
 
+export * from './useExtensionsByActionInfosWithCache';
 export * from './useExtensionBaseData';
 export * from './useExtensionsByActionIdsWithCache';
 export * from './useExtensionActionsLatestRewards';

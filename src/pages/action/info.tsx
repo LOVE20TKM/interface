@@ -39,6 +39,8 @@ export default function ActionInfoPage() {
     actionInfo,
     participantCount,
     totalAmount,
+    joinedAmountTokenSymbol,
+    joinedAmountTokenIsLP,
     isJoined,
     currentRound,
     isExtensionAction,
@@ -229,6 +231,8 @@ export default function ActionInfoPage() {
               actionInfo={actionInfo}
               participantCount={participantCount}
               totalAmount={totalAmount}
+              joinedAmountTokenSymbol={joinedAmountTokenSymbol}
+              joinedAmountTokenIsLP={joinedAmountTokenIsLP}
               isJoined={isJoined}
               isPending={isPending}
             />

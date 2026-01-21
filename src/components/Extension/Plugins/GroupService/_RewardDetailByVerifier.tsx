@@ -191,7 +191,11 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                       <tr className="border-b border-gray-100">
                         <th className="px-2 py-2 text-left text-sm">链群</th>
                         <th className="px-2 py-2 text-right text-sm">链群铸币量</th>
-                        <th className="px-2 py-2 text-right text-sm">激励(服务者/二次分配)</th>
+                        <th className="px-2 py-2 text-right text-sm">
+                          服务激励
+                          <br />
+                          <span className="text-greyscale-400 text-xs">(服务者/二次分配)</span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>

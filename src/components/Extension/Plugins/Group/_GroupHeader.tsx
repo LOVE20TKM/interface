@@ -169,11 +169,11 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
       <div className="space-y-2 text-sm text-gray-500 mb-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="">总参与代币:</span>
+            <span className="">参与代币数:</span>
             <span className="">{formattedTotalAmount}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-gray-500">总参与地址:</span>
+            <span className="text-gray-500">参与地址数:</span>
             <span className="">{isPendingAccountsCount ? '...' : accountsCount?.toString() || '0'}</span>
           </div>
         </div>

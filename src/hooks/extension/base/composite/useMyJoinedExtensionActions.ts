@@ -28,14 +28,13 @@
 import { useMemo } from 'react';
 import { useReadContracts, useReadContract } from 'wagmi';
 import { useActionIdsByAccount } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
-import { ExtensionContractInfo } from './useExtensionBaseData';
+import { ExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 import { LOVE20RoundViewerAbi } from '@/src/abis/LOVE20RoundViewer';
 import { LOVE20JoinAbi } from '@/src/abis/LOVE20Join';
 import { IExtensionAbi } from '@/src/abis/IExtension';
 import { JoinedAction, ActionInfo, ActionBaseInfo } from '@/src/types/love20types';
 import { getExtensionConfigs, getExtensionConfigByFactory, ExtensionType } from '@/src/config/extensionConfig';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-import { useConvertTokenAmounts, UseConvertTokenAmountParams } from '@/src/hooks/composite/useConvertTokenAmount';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useExtensionsByActionIdsWithCache } from './useExtensionsByActionIdsWithCache';
 import { Token } from '@/src/contexts/TokenContext';
@@ -45,15 +44,6 @@ const JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${strin
 
 // 行动激励的最小投票占比（千分比）
 const ACTION_REWARD_MIN_VOTE_PER_THOUSAND = BigInt(process.env.NEXT_PUBLIC_ACTION_REWARD_MIN_VOTE_PER_THOUSAND || '0');
-
-/**
- * 转换映射 (追踪哪个转换对应哪个行动)
- */
-interface ConversionMapping {
-  actionIndex: number; // 在 extensionActionIds 数组中的索引
-  joinedValueIndex: number; // 在 joinedValuesData 数组中的索引
-  conversionIndex: number; // 在 conversions 数组中的索引
-}
 
 export interface UseMyJoinedExtensionActionsParams {
   tokenAddress: `0x${string}` | undefined;
@@ -310,70 +300,6 @@ export const useMyJoinedExtensionActions = ({
     return mergedDynamicData.slice(offset);
   }, [mergedDynamicData, tokenAddress, currentRound]);
 
-  // 步骤5.5: 构建代币转换请求数组
-  const { conversions, conversionMappings } = useMemo(() => {
-    if (!tokenAddress || !extensionActionIds || !contractInfos || contractInfos.length === 0 || !joinedValuesData) {
-      return { conversions: [], conversionMappings: [] };
-    }
-
-    const conversionArray: UseConvertTokenAmountParams[] = [];
-    const mappings: ConversionMapping[] = [];
-    let joinedValueIndex = 0;
-
-    for (let i = 0; i < extensionActionIds.length; i++) {
-      const contractInfo = contractInfos[i];
-
-      // 跳过非扩展行动
-      if (!contractInfo?.isExtension || !contractInfo.extension) {
-        continue;
-      }
-
-      // 获取原始 joinedAmount
-      const joinedValueResult = joinedValuesData[joinedValueIndex];
-      if (!joinedValueResult?.result) {
-        joinedValueIndex++;
-        continue;
-      }
-      const joinedAmount = BigInt(joinedValueResult.result.toString());
-
-      // 获取转换参数
-      const fromToken = contractInfo.joinedAmountTokenAddress;
-      const isFromTokenLP = contractInfo.joinedAmountTokenIsLP ?? false;
-
-      // 跳过: 无源代币、源代币为零地址、或源代币与目标代币相同
-      if (!fromToken || fromToken === '0x0000000000000000000000000000000000000000' || fromToken === tokenAddress) {
-        joinedValueIndex++;
-        continue;
-      }
-
-      // 添加到转换数组
-      conversionArray.push({
-        fromToken,
-        isFromTokenLP,
-        fromAmount: joinedAmount,
-        toToken: tokenAddress,
-      });
-
-      // 记录映射
-      mappings.push({
-        actionIndex: i,
-        joinedValueIndex,
-        conversionIndex: conversionArray.length - 1,
-      });
-
-      joinedValueIndex++;
-    }
-
-    return { conversions: conversionArray, conversionMappings: mappings };
-  }, [tokenAddress, extensionActionIds, contractInfos, joinedValuesData]);
-
-  // 步骤5.6: 批量执行代币转换
-  const {
-    results: conversionResults,
-    isPending: isPendingConversion,
-    error: errorConversion,
-  } = useConvertTokenAmounts({ conversions });
-
   // 步骤6: 构建投票数据映射
   const votesMap = useMemo(() => {
     if (!votesNumsData || votesNumsData.length === 0 || !votesNumsData[0]?.result) {
@@ -415,7 +341,13 @@ export const useMyJoinedExtensionActions = ({
     }
 
     const actions: JoinedAction[] = [];
-    let joinedValueIndex = 0;
+    // joinedValuesData 只包含扩展行动的结果，因此这里用游标按顺序消费即可
+    let extensionJoinedValueCursor = 0;
+    const consumeNextJoinedAmountOfAccount = (): bigint => {
+      const next = joinedValuesData?.[extensionJoinedValueCursor];
+      extensionJoinedValueCursor += 1;
+      return safeToBigInt(next?.result);
+    };
 
     for (let i = 0; i < extensionActionIds.length; i++) {
       const actionInfo = actionInfos[i];
@@ -424,38 +356,10 @@ export const useMyJoinedExtensionActions = ({
       const actionId = extensionActionIds[i];
       const contractInfo = contractInfos[i];
 
-      // 获取用户参与代币数（原始值和转换值）
+      // 获取用户参与代币数：直接取 extension.joinedAmountByAccount(account) 的返回值即可
       let joinedAmountOfAccount = BigInt(0);
-      let convertedJoinedAmountOfAccount: bigint | undefined;
-
       if (contractInfo?.isExtension && contractInfo.extension) {
-        const joinedValueResult = joinedValuesData?.[joinedValueIndex];
-        if (joinedValueResult?.result != null) {
-          joinedAmountOfAccount = BigInt(joinedValueResult.result.toString());
-
-          // 查找转换结果
-          const mapping = conversionMappings.find((m) => m.actionIndex === i);
-
-          if (mapping !== undefined) {
-            // 需要转换
-            const conversionResult = conversionResults?.[mapping.conversionIndex];
-            if (conversionResult?.isSuccess) {
-              convertedJoinedAmountOfAccount = conversionResult.convertedAmount;
-            } else if (!isPendingConversion) {
-              // 转换失败，使用原始金额并记录警告
-              console.warn(
-                `⚠️ ActionId ${actionId} 的 joinedAmountOfAccount 代币转换失败，使用原始金额. ` +
-                  `Error: ${conversionResult?.error}`,
-              );
-              convertedJoinedAmountOfAccount = joinedAmountOfAccount;
-            }
-            // else: 转换中，保持 undefined
-          } else {
-            // 不需要转换（相同代币或无转换数据）
-            convertedJoinedAmountOfAccount = joinedAmountOfAccount;
-          }
-        }
-        joinedValueIndex++;
+        joinedAmountOfAccount = consumeNextJoinedAmountOfAccount();
       }
 
       // 获取投票信息
@@ -478,48 +382,25 @@ export const useMyJoinedExtensionActions = ({
         votesNum,
         votePercentPerTenThousand,
         hasReward,
-        joinedAmountOfAccount: convertedJoinedAmountOfAccount ?? joinedAmountOfAccount,
+        joinedAmountOfAccount,
       });
     }
 
     return actions;
-  }, [
-    extensionActionIds,
-    actionInfos,
-    contractInfos,
-    joinedValuesData,
-    votesMap,
-    conversionMappings,
-    conversionResults,
-    isPendingConversion,
-  ]);
+  }, [extensionActionIds, actionInfos, contractInfos, joinedValuesData, votesMap]);
 
   // 计算总的加载状态
   // 如果没有扩展行动，则不需要等待其他查询完成
-  // 注意：对于转换，如果所有转换结果都已成功（isSuccess: true），即使 isPendingConversion 为 true，也不应该阻塞整体状态
-  const allConversionsSuccess = useMemo(() => {
-    if (conversions.length === 0) return true;
-    if (!conversionResults || conversionResults.length === 0) return false;
-    return conversionResults.every((result) => result.isSuccess && !result.isPending);
-  }, [conversions.length, conversionResults]);
-
   const isPending = !hasExtensionActions
     ? isPendingExtensionIds || isPendingCurrentRound
     : isPendingExtensionIds ||
       isPendingCurrentRound ||
       isPendingContractInfo ||
       isPendingActionInfos ||
-      (mergedDynamicContracts.length > 0 && isPendingMergedDynamic) ||
-      (conversions.length > 0 && isPendingConversion && !allConversionsSuccess);
+      (mergedDynamicContracts.length > 0 && isPendingMergedDynamic);
 
   // 合并错误信息
-  const error =
-    errorExtensionIds ||
-    errorCurrentRound ||
-    errorContractInfo ||
-    errorActionInfos ||
-    errorMergedDynamic ||
-    errorConversion;
+  const error = errorExtensionIds || errorCurrentRound || errorContractInfo || errorActionInfos || errorMergedDynamic;
 
   return {
     joinedExtensionActions: joinedExtensionActions || [], // 确保总是返回数组

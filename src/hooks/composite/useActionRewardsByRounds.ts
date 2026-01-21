@@ -30,9 +30,9 @@ import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { useActionRewardsByAccountByActionIdByRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
 import {
-  useExtensionContractInfo,
+  useExtensionByActionInfoWithCache,
   ExtensionContractInfo,
-} from '@/src/hooks/extension/base/composite/useExtensionBaseData';
+} from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 import { useExtensionActionRewardsByRounds } from '@/src/hooks/extension/base/composite';
 import { ActionInfo } from '@/src/types/love20types';
 
@@ -113,7 +113,7 @@ export const useActionRewardsByRounds = ({
     contractInfo: extensionInfo,
     isPending: isLoadingExtensionInfo,
     error: errorExtensionInfo,
-  } = useExtensionContractInfo({
+  } = useExtensionByActionInfoWithCache({
     tokenAddress,
     actionInfo,
   });

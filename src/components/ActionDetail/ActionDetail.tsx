@@ -14,7 +14,7 @@ import { formatTokenAmount } from '@/src/lib/format';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 import SafeText from '@/src/components/Common/SafeText';
 import InfoTooltip from '@/src/components/Common/InfoTooltip';
-import { FactoryInfo } from '@/src/hooks/extension/base/composite';
+import { FactoryInfo } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';

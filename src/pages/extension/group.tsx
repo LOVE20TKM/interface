@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
+import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 import { useContractError } from '@/src/errors/useContractError';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AlertBox from '@/src/components/Common/AlertBox';
@@ -47,7 +47,7 @@ const ActionGroupPage: React.FC = () => {
     contractInfo,
     isPending: isPendingExtension,
     error: errorExtension,
-  } = useExtensionContractInfo({
+  } = useExtensionByActionInfoWithCache({
     tokenAddress: token?.address as `0x${string}`,
     actionInfo,
   });

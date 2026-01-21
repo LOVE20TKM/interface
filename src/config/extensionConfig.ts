@@ -62,8 +62,8 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
       name: '链群服务行动',
       factoryAddress: groupServiceFactory as `0x${string}`,
       actionDetailTabs: [
-        { key: 'addresses', label: '服务者公示', showCondition: 'hasExtension' },
         { key: 'public', label: '激励公示', showCondition: 'hasExtension' },
+        { key: 'addresses', label: '服务者', showCondition: 'hasExtension' },
       ],
     });
   }

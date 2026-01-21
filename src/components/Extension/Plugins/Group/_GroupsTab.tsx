@@ -140,7 +140,6 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
           // 判断是否为我的链群（我激活的或我参与的）
           const isMyActivated = account && group.owner.toLowerCase() === account.toLowerCase();
           const isMyJoined = joinedGroupId !== undefined && group.groupId === joinedGroupId;
-          const isMyGroup = isMyActivated || isMyJoined;
 
           return (
             <div
@@ -155,7 +154,11 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
                       <span className="text-gray-500 text-xs">#</span>
                       <span className="text-secondary text-base font-semibold">{group.groupId.toString()}</span>{' '}
                       <span className="font-semibold ml-1">{group.groupName}</span>
-                      {isMyGroup && <span className="text-secondary text-xs ml-1">(我的)</span>}
+                      {isMyActivated ? (
+                        <span className="text-secondary text-xs ml-1">(我的)</span>
+                      ) : isMyJoined ? (
+                        <span className="text-secondary text-xs ml-1">(我参与)</span>
+                      ) : null}
                     </div>
                     <div className="text-sm text-gray-600 flex items-center gap-1">
                       <User className="text-greyscale-400 h-3 w-3" />
@@ -214,7 +217,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
       <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
         <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
         <div className="space-y-1 text-gray-600">
-          <div>• 每个链群，由服务者来对成员进行验证和打分</div>
+          <div>• 每个链群，由所属服务者对成员进行验证和打分</div>
           <div>• 加入链群后，您的激励将基于服务者的验证打分</div>
         </div>
       </div>

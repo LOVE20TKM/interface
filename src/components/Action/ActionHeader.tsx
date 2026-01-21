@@ -12,6 +12,8 @@ interface ActionHeaderProps {
   actionInfo: ActionInfo;
   participantCount: bigint | undefined;
   totalAmount: bigint | undefined;
+  joinedAmountTokenSymbol?: string | undefined;
+  joinedAmountTokenIsLP?: boolean | undefined;
   isJoined: boolean;
   isPending: boolean;
   showActionButtons?: boolean;
@@ -22,6 +24,8 @@ export default function ActionHeader({
   actionInfo,
   participantCount,
   totalAmount,
+  joinedAmountTokenSymbol,
+  joinedAmountTokenIsLP,
   isJoined,
   isPending,
   showActionButtons = true,
@@ -36,6 +40,10 @@ export default function ActionHeader({
   }
 
   const formattedTotalAmount = totalAmount ? formatTokenAmount(totalAmount) : '0';
+  const shouldShowJoinedTokenSymbol = Boolean(
+    joinedAmountTokenSymbol && token?.symbol && joinedAmountTokenSymbol !== token.symbol,
+  );
+  const joinedTokenSymbolForDisplay = joinedAmountTokenIsLP ? 'LP' : joinedAmountTokenSymbol;
 
   // 处理点击跳转
   const handleClick = () => {
@@ -63,7 +71,12 @@ export default function ActionHeader({
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center">
           <span className="text-gray-500 mr-2">总参与代币:</span>
-          <span className="font-mono text-secondary">{formattedTotalAmount} </span>
+          <span className="font-mono text-secondary">
+            {formattedTotalAmount}
+            {shouldShowJoinedTokenSymbol && (
+              <span className="ml-1 text-xs text-gray-500">{joinedTokenSymbolForDisplay}</span>
+            )}{' '}
+          </span>
         </div>
         <div className="flex items-center">
           <span className="text-gray-500 mr-2">总参与地址:</span>

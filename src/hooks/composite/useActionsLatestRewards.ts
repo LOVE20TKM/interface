@@ -9,7 +9,7 @@ import {
   useExtensionActionsLatestRewards,
   ExtensionActionRewardWithAddress,
 } from '@/src/hooks/extension/base/composite';
-import { ExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
+import { ExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 import { JoinedAction, ActionReward } from '@/src/types/love20types';
 import {
   setActionRewardNeedMinted,

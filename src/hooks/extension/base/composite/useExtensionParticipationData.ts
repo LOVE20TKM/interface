@@ -5,7 +5,6 @@
  * - 查询扩展合约的公共统计数据（参与人数、总金额）
  * - 查询用户在扩展行动中的参与状态（参与金额、是否已参与）
  * - 使用批量调用优化性能
- * - 支持代币金额转换（将 joinedAmount 转换为目标代币金额）
  *
  * 使用示例：
  * ```typescript
@@ -16,12 +15,13 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
+import type { Abi } from 'abitype';
 import { IExtensionAbi } from '@/src/abis/IExtension';
 import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
+import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
-import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
-import { useConvertTokenAmount } from '@/src/hooks/composite/useConvertTokenAmount';
+import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 import { ActionInfo } from '@/src/types/love20types';
 
 const EXTENSION_CENTER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
@@ -36,6 +36,12 @@ export interface ExtensionParticipationData {
   participantCount: bigint | undefined;
   /** 总参与金额 */
   totalAmount: bigint | undefined;
+  /** joinedAmount 对应的代币地址*/
+  joinedAmountTokenAddress: `0x${string}` | undefined;
+  /** joinedAmount 对应的代币 symbol */
+  joinedAmountTokenSymbol: string | undefined;
+  /** joinedAmount 对应代币是否为 LP*/
+  joinedAmountTokenIsLP: boolean;
   /** 用户是否已参与 */
   isJoined: boolean;
   /** 加载状态 */
@@ -56,12 +62,11 @@ export interface ExtensionParticipationData {
  * @returns 扩展行动的参与数据
  *
  * @description
- * 批量查询 3 个合约方法：
- * 1. accountsCount - 参与者数量（从扩展合约）
+ * 批量查询（按条件可选）最多 4 个合约方法：
+ * 1. accountsCount - 参与者数量（从 ExtensionCenter）
  * 2. joinedAmount - 总参与金额（从扩展合约）
  * 3. isAccountJoined - 是否已参与（从 ExtensionCenter，需要 account）
- *
- * 如果扩展行动的 joinedAmountTokenAddress 与 tokenAddress 不同，会自动进行代币转换
+ * 4. symbol - joinedAmountTokenAddress 对应的代币符号（需要 joinedAmountTokenAddress）
  */
 export function useExtensionParticipationData(
   extensionAddress: `0x${string}` | undefined,
@@ -98,7 +103,7 @@ export function useExtensionParticipationData(
     contractInfo,
     isPending: isPendingContractInfo,
     error: errorContractInfo,
-  } = useExtensionContractInfo({
+  } = useExtensionByActionInfoWithCache({
     tokenAddress,
     actionInfo,
   });
@@ -106,32 +111,71 @@ export function useExtensionParticipationData(
   // ==========================================
   // 步骤3: 构建批量查询合约配置
   // ==========================================
-  const contracts = useMemo(() => {
-    const contractCalls = [
-      // 1. 查询参与者数量（公共数据，始终查询）
-      {
+  const joinedAmountTokenSymbolAddress = contractInfo?.joinedAmountTokenAddress;
+
+  const { contracts, contractIndex, isContractsEnabled } = useMemo(() => {
+    const nextContracts: Array<{
+      address: `0x${string}`;
+      abi: Abi;
+      functionName: string;
+      args?: readonly unknown[];
+    }> = [];
+
+    const nextIndex = {
+      accountsCount: -1,
+      joinedAmount: -1,
+      isAccountJoined: -1,
+      joinedAmountTokenSymbol: -1,
+    };
+
+    // 1) accountsCount: 需要 tokenAddress + actionId
+    if (tokenAddress && actionId !== undefined) {
+      nextIndex.accountsCount = nextContracts.length;
+      nextContracts.push({
         address: EXTENSION_CENTER_ADDRESS,
         abi: ExtensionCenterAbi,
-        functionName: 'accountsCount' as const,
+        functionName: 'accountsCount',
         args: [tokenAddress, actionId],
-      },
-      // 2. 查询总参与金额（公共数据，始终查询）
-      {
+      });
+    }
+
+    // 2) joinedAmount: 需要 extensionAddress
+    if (extensionAddress) {
+      nextIndex.joinedAmount = nextContracts.length;
+      nextContracts.push({
         address: extensionAddress,
         abi: IExtensionAbi,
-        functionName: 'joinedAmount' as const,
-      },
-      // 3. 查询用户是否已参与（需要 account + tokenAddress + actionId）
-      {
+        functionName: 'joinedAmount',
+      });
+    }
+
+    // 3) isAccountJoined: 需要 tokenAddress + actionId + account
+    if (tokenAddress && actionId !== undefined && account) {
+      nextIndex.isAccountJoined = nextContracts.length;
+      nextContracts.push({
         address: EXTENSION_CENTER_ADDRESS,
         abi: ExtensionCenterAbi,
-        functionName: 'isAccountJoined' as const,
-        args: tokenAddress && actionId !== undefined && account ? [tokenAddress, actionId, account] : undefined,
-      },
-    ];
+        functionName: 'isAccountJoined',
+        args: [tokenAddress, actionId, account],
+      });
+    }
 
-    return contractCalls;
-  }, [extensionAddress, tokenAddress, actionId, account]);
+    // 4) joinedAmountTokenSymbol: 仅取 contractInfo.joinedAmountTokenAddress
+    if (joinedAmountTokenSymbolAddress) {
+      nextIndex.joinedAmountTokenSymbol = nextContracts.length;
+      nextContracts.push({
+        address: joinedAmountTokenSymbolAddress,
+        abi: LOVE20TokenAbi,
+        functionName: 'symbol',
+      });
+    }
+
+    return {
+      contracts: nextContracts,
+      contractIndex: nextIndex,
+      isContractsEnabled: nextContracts.length > 0,
+    };
+  }, [tokenAddress, actionId, extensionAddress, account, joinedAmountTokenSymbolAddress]);
 
   // ==========================================
   // 步骤4: 批量调用合约
@@ -143,7 +187,7 @@ export function useExtensionParticipationData(
   } = useReadContracts({
     contracts,
     query: {
-      enabled: !!extensionAddress,
+      enabled: isContractsEnabled,
     },
   });
 
@@ -151,89 +195,56 @@ export function useExtensionParticipationData(
   // 步骤5: 解析返回数据
   // ==========================================
   const participantCount = useMemo(() => {
-    return data?.[0]?.status === 'success' ? safeToBigInt(data[0].result) : undefined;
-  }, [data]);
+    const idx = contractIndex.accountsCount;
+    if (idx < 0) return undefined;
+    return data?.[idx]?.status === 'success' ? safeToBigInt(data[idx].result) : undefined;
+  }, [data, contractIndex.accountsCount]);
 
   // 获取原始的 joinedAmount
   const joinedAmount = useMemo(() => {
-    return data?.[1]?.status === 'success' ? safeToBigInt(data[1].result) : undefined;
-  }, [data]);
+    const idx = contractIndex.joinedAmount;
+    if (idx < 0) return undefined;
+    return data?.[idx]?.status === 'success' ? safeToBigInt(data[idx].result) : undefined;
+  }, [data, contractIndex.joinedAmount]);
 
   const isJoined = useMemo(() => {
-    // 如果没有传 account 或必要参数，返回 false
-    if (!account || !tokenAddress || actionId === undefined) return false;
-    return data?.[2]?.status === 'success' ? (data[2].result as boolean) : false;
-  }, [data, account, tokenAddress, actionId]);
+    const idx = contractIndex.isAccountJoined;
+    if (idx < 0) return false;
+    return data?.[idx]?.status === 'success' ? (data[idx].result as boolean) : false;
+  }, [data, contractIndex.isAccountJoined]);
 
   // ==========================================
-  // 步骤6: 代币金额转换
-  // ==========================================
-  // 判断是否需要转换：需要合约信息、joinedAmount、且源代币与目标代币不同
-  const needsConversion = useMemo(() => {
-    return (
-      !!tokenAddress &&
-      !!contractInfo?.isExtension &&
-      !!contractInfo?.joinedAmountTokenAddress &&
-      contractInfo.joinedAmountTokenAddress !== tokenAddress &&
-      joinedAmount !== undefined
-    );
-  }, [tokenAddress, contractInfo, joinedAmount]);
-
-  const {
-    convertedAmount,
-    isSuccess: isConversionSuccess,
-    isPending: isPendingConversion,
-    error: errorConversion,
-  } = useConvertTokenAmount({
-    fromToken: (contractInfo?.joinedAmountTokenAddress || tokenAddress) as `0x${string}`,
-    isFromTokenLP: contractInfo?.joinedAmountTokenIsLP ?? false,
-    fromAmount: joinedAmount || BigInt(0),
-    toToken: tokenAddress as `0x${string}`,
-  });
-
-  // ==========================================
-  // 步骤7: 计算最终的 totalAmount（转换后的金额）
+  // 步骤6: 计算最终的 totalAmount（真实金额，不做转换）
   // ==========================================
   const totalAmount = useMemo(() => {
-    // 如果没有 joinedAmount，返回 undefined
-    if (joinedAmount === undefined) return undefined;
-
-    // 如果不需要转换（相同代币或没有合约信息），直接返回原始金额
-    if (!needsConversion) {
-      return joinedAmount;
-    }
-
-    // 如果需要转换，等待转换完成
-    if (isPendingConversion) return undefined;
-
-    // 转换成功，返回转换后的金额
-    if (isConversionSuccess) {
-      return convertedAmount;
-    }
-
-    // 转换失败，返回原始金额（降级处理）
-    console.warn(`⚠️ ActionId ${actionId} 的代币转换失败，使用原始金额. ` + `Error: ${errorConversion}`);
     return joinedAmount;
-  }, [
-    joinedAmount,
-    needsConversion,
-    isPendingConversion,
-    isConversionSuccess,
-    convertedAmount,
-    errorConversion,
-    actionId,
-  ]);
+  }, [joinedAmount]);
+
+  // joinedAmount 的真实口径代币信息（不做转换）
+  const joinedAmountTokenAddress = useMemo(() => {
+    return (contractInfo?.joinedAmountTokenAddress || tokenAddress) as `0x${string}` | undefined;
+  }, [contractInfo?.joinedAmountTokenAddress, tokenAddress]);
+
+  const joinedAmountTokenIsLP = useMemo(() => {
+    return contractInfo?.joinedAmountTokenIsLP ?? false;
+  }, [contractInfo?.joinedAmountTokenIsLP]);
+
+  const joinedAmountTokenSymbol = useMemo(() => {
+    const idx = contractIndex.joinedAmountTokenSymbol;
+    if (idx < 0) return undefined;
+    return data?.[idx]?.status === 'success' ? (data[idx].result as string) : undefined;
+  }, [data, contractIndex.joinedAmountTokenSymbol]);
 
   // ==========================================
   // 聚合加载状态和错误
   // ==========================================
   const isPending = useMemo(() => {
-    return isPendingActionInfo || isPendingContractInfo || isPendingContracts || isPendingConversion;
-  }, [isPendingActionInfo, isPendingContractInfo, isPendingContracts, isPendingConversion]);
+    return isPendingActionInfo || isPendingContractInfo || isPendingContracts;
+  }, [isPendingActionInfo, isPendingContractInfo, isPendingContracts]);
 
   const error = useMemo(() => {
-    return errorContracts || errorContractInfo || errorConversion || null;
-  }, [errorContracts, errorContractInfo, errorConversion]);
+    return errorContracts || errorContractInfo || null;
+  }, [errorContracts, errorContractInfo]);
 
   // ==========================================
   // 返回结果
@@ -241,6 +252,9 @@ export function useExtensionParticipationData(
   return {
     participantCount,
     totalAmount,
+    joinedAmountTokenAddress,
+    joinedAmountTokenSymbol,
+    joinedAmountTokenIsLP,
     isJoined,
     isPending,
     error,

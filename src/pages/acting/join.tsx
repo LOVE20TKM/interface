@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 
 // my hooks
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite';
+import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my contexts
@@ -42,7 +42,7 @@ const JoinPage = () => {
     contractInfo,
     isPending: isPendingExtension,
     error: errorExtension,
-  } = useExtensionContractInfo({
+  } = useExtensionByActionInfoWithCache({
     tokenAddress: token?.address as `0x${string}`,
     actionInfo,
   });

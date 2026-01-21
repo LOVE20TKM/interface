@@ -11,7 +11,7 @@
  * 1. 批量从 ExtensionCenter.extension() 获取扩展地址
  * 2. 批量调用扩展合约的 factory() 方法获取 factory 地址
  * 3. 检查 factory 地址是否在配置的 factory 列表中
- * 4. 批量获取 joinedAmountTokenAddress 和判断是否为 LP token
+ * 4. 批量获取 joinedAmountTokenAddress、判断是否为 LP token，并补齐 joinedAmountTokenSymbol
  *
  * 使用示例：
  * ```typescript
@@ -27,7 +27,8 @@
  * //     isExtension: true,
  * //     factoryAddress: '0x...',
  * //     joinedAmountTokenAddress: '0x...',
- * //     joinedAmountTokenIsLP: false
+ * //     joinedAmountTokenIsLP: false,
+ * //     joinedAmountTokenSymbol: 'USDT'
  * //   },
  * //   { actionId: 2n, isExtension: false },
  * //   { actionId: 3n, extensionAddress: '0x...', isExtension: true, ... }
@@ -39,6 +40,7 @@ import { useMemo, useEffect, useState } from 'react';
 import { useReadContracts } from 'wagmi';
 import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 import { IExtensionAbi } from '@/src/abis/IExtension';
+import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { UniswapV2PairAbi } from '@/src/abis/UniswapV2Pair';
 import { isKnownFactory } from '@/src/config/extensionConfig';
 import { Token } from '@/src/contexts/TokenContext';
@@ -66,6 +68,7 @@ export interface ExtensionValidationInfo {
   factoryAddress?: `0x${string}`;
   joinedAmountTokenAddress?: `0x${string}`; // 参与金额计价代币地址
   joinedAmountTokenIsLP?: boolean; // 该代币是否为 UniswapV2 LP token
+  joinedAmountTokenSymbol?: string; // 参与金额计价代币 Symbol（LP: LP(token0Symbol,token1Symbol)）
 }
 
 /**
@@ -78,6 +81,7 @@ interface CacheItem {
     factoryAddress?: string;
     joinedAmountTokenAddress?: string;
     joinedAmountTokenIsLP?: boolean;
+    joinedAmountTokenSymbol?: string;
   };
 }
 
@@ -149,6 +153,7 @@ function getCachedExtensionValidation(tokenAddress: string, actionId: bigint): E
         ? (item.data.joinedAmountTokenAddress as `0x${string}`)
         : undefined,
       joinedAmountTokenIsLP: item.data.joinedAmountTokenIsLP,
+      joinedAmountTokenSymbol: item.data.joinedAmountTokenSymbol,
     };
   } catch (error) {
     console.error('读取扩展验证缓存失败:', error);
@@ -167,6 +172,7 @@ function setCachedExtensionValidation(
   factoryAddress?: `0x${string}`,
   joinedAmountTokenAddress?: `0x${string}`,
   joinedAmountTokenIsLP?: boolean,
+  joinedAmountTokenSymbol?: string,
 ): void {
   if (typeof window === 'undefined') return;
 
@@ -179,6 +185,7 @@ function setCachedExtensionValidation(
         factoryAddress,
         joinedAmountTokenAddress,
         joinedAmountTokenIsLP,
+        joinedAmountTokenSymbol,
       },
     };
     localStorage.setItem(key, JSON.stringify(item));
@@ -242,7 +249,11 @@ export const useExtensionsByActionIdsWithCache = ({
         // 验证缓存完整性（向后兼容）
         if (cachedInfo.isExtension) {
           // 如果是扩展行动，必须有完整的新字段
-          if (!cachedInfo.factoryAddress || cachedInfo.joinedAmountTokenAddress === undefined) {
+          if (
+            !cachedInfo.factoryAddress ||
+            cachedInfo.joinedAmountTokenAddress === undefined ||
+            cachedInfo.joinedAmountTokenSymbol === undefined
+          ) {
             console.log(`⚠️ ActionId ${actionId} 缓存不完整（缺少新字段），清除缓存重新查询`);
             clearExtensionValidationCache(tokenAddress, actionId);
             uncached.push(actionId);
@@ -362,7 +373,24 @@ export const useExtensionsByActionIdsWithCache = ({
     return extensions;
   }, [factoryAddressesData, validExtensions]);
 
-  // ==================== 阶段 3: 批量获取 joinedAmountTokenAddress 和 LP 标识 ====================
+  // 将阶段结果提前映射，减少 useEffect 内部样板代码
+  const validExtensionMap = useMemo(() => {
+    const map = new Map<number, ExtensionInfo>();
+    validExtensions.forEach((info) => {
+      map.set(info.arrayIndex, info);
+    });
+    return map;
+  }, [validExtensions]);
+
+  const knownFactoryMap = useMemo(() => {
+    const map = new Map<number, FactoryInfo & { knownFactoryIndex: number }>();
+    knownFactoryExtensions.forEach((info, knownFactoryIndex) => {
+      map.set(info.arrayIndex, { ...info, knownFactoryIndex });
+    });
+    return map;
+  }, [knownFactoryExtensions]);
+
+  // ==================== 阶段 3: 批量获取 joinedAmountToken 信息（地址/LP/符号） ====================
 
   // 阶段 3.1: 批量获取 joinedAmountTokenAddress（只对 knownFactoryExtensions 查询）
   const joinedAmountTokenAddressContracts = useMemo(() => {
@@ -387,12 +415,13 @@ export const useExtensionsByActionIdsWithCache = ({
     },
   });
 
-  // 阶段 3.2: 批量检查 LP token（只对非零 joinedAmountTokenAddress 调用）
-  const lpFactoryCheckContracts = useMemo(() => {
+  // 阶段 3.2: 批量读取 joinedAmountToken 的 factory（用于判断是否为 UniswapV2 LP）
+  const uniswapV2FactoryAddressLower = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY?.toLowerCase();
+
+  const joinedTokenFactoryCheckContracts = useMemo(() => {
     if (!joinedAmountTokenAddressData || joinedAmountTokenAddressData.length === 0) return [];
 
-    const uniswapV2FactoryAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY;
-    if (!uniswapV2FactoryAddress) {
+    if (!uniswapV2FactoryAddressLower) {
       console.warn('⚠️ NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY 未配置，跳过 LP 检测');
       return [];
     }
@@ -412,16 +441,203 @@ export const useExtensionsByActionIdsWithCache = ({
     });
 
     return contracts;
-  }, [joinedAmountTokenAddressData]);
+  }, [joinedAmountTokenAddressData, uniswapV2FactoryAddressLower]);
 
   const {
-    data: lpFactoryData,
+    data: joinedTokenFactoryData,
     isPending: isPending4,
     error: error4,
   } = useReadContracts({
-    contracts: lpFactoryCheckContracts as any,
+    contracts: joinedTokenFactoryCheckContracts as any,
     query: {
-      enabled: lpFactoryCheckContracts.length > 0,
+      enabled: joinedTokenFactoryCheckContracts.length > 0,
+    },
+  });
+
+  // joinedAmountTokenAddressData 里仅非零地址会被打包进 joinedTokenFactoryCheckContracts，所以需要一个索引回溯映射
+  const joinedTokenNonZeroIndexMap = useMemo(() => {
+    const map = new Map<number, number>();
+    let nonZeroIndex = 0;
+    joinedAmountTokenAddressData?.forEach((result, knownFactoryIdx) => {
+      const tokenAddr = result?.result as `0x${string}` | undefined;
+      if (tokenAddr && tokenAddr !== ZERO_ADDRESS) {
+        map.set(knownFactoryIdx, nonZeroIndex);
+        nonZeroIndex++;
+      }
+    });
+    return map;
+  }, [joinedAmountTokenAddressData]);
+
+  // 计算“哪些 knownFactoryIdx 对应的是 LP”，并为后续 token0/token1 批量读取分配 lpIndex（0..n-1）
+  const lpKnownFactoryIndexToLpIndexMap = useMemo(() => {
+    const map = new Map<number, number>();
+    if (!uniswapV2FactoryAddressLower || !joinedTokenFactoryData) return map;
+
+    let lpIndex = 0;
+    joinedAmountTokenAddressData?.forEach((joinedTokenResult, knownFactoryIdx) => {
+      const joinedAmountTokenAddress = joinedTokenResult?.result as `0x${string}` | undefined;
+      if (!joinedAmountTokenAddress || joinedAmountTokenAddress === ZERO_ADDRESS) return;
+
+      const nonZeroIndex = joinedTokenNonZeroIndexMap.get(knownFactoryIdx);
+      if (nonZeroIndex === undefined) return;
+
+      const factoryResult = joinedTokenFactoryData?.[nonZeroIndex];
+      if (factoryResult?.status !== 'success' || !factoryResult.result) return;
+
+      const factoryAddress = (factoryResult.result as string).toLowerCase();
+      if (factoryAddress === uniswapV2FactoryAddressLower) {
+        map.set(knownFactoryIdx, lpIndex);
+        lpIndex++;
+      }
+    });
+
+    return map;
+  }, [joinedAmountTokenAddressData, joinedTokenFactoryData, joinedTokenNonZeroIndexMap, uniswapV2FactoryAddressLower]);
+
+  // 阶段 3.3: 批量读取 LP 的 token0/token1（仅对已确认的 LP token）
+  const lpToken0Token1Contracts = useMemo(() => {
+    if (!joinedAmountTokenAddressData || joinedAmountTokenAddressData.length === 0) return [];
+    if (lpKnownFactoryIndexToLpIndexMap.size === 0) return [];
+
+    const contracts: any[] = [];
+    joinedAmountTokenAddressData.forEach((result, knownFactoryIdx) => {
+      if (!lpKnownFactoryIndexToLpIndexMap.has(knownFactoryIdx)) return;
+
+      const pairAddress = result?.result as `0x${string}` | undefined;
+      if (!pairAddress || pairAddress === ZERO_ADDRESS) return;
+
+      // 顺序固定：token0 -> token1（便于索引回溯：2*i / 2*i+1）
+      contracts.push({
+        address: pairAddress,
+        abi: UniswapV2PairAbi,
+        functionName: 'token0' as const,
+        args: [],
+      });
+      contracts.push({
+        address: pairAddress,
+        abi: UniswapV2PairAbi,
+        functionName: 'token1' as const,
+        args: [],
+      });
+    });
+
+    return contracts;
+  }, [joinedAmountTokenAddressData, lpKnownFactoryIndexToLpIndexMap]);
+
+  const {
+    data: lpToken0Token1Data,
+    isPending: isPending5,
+    error: error5,
+  } = useReadContracts({
+    contracts: lpToken0Token1Contracts as any,
+    query: {
+      enabled: lpToken0Token1Contracts.length > 0,
+    },
+  });
+
+  // 阶段 3.4: 批量读取 symbol（非 LP: joinedAmountToken；LP: token0+token1）
+  const {
+    tokenSymbolContracts,
+    nonLpSymbolIndexMap,
+    lpUnderlyingSymbolIndexMap,
+    needsTokenSymbolRead,
+    canBuildTokenSymbolContracts,
+  } = useMemo(() => {
+    const contracts: any[] = [];
+    const nonLpSymbolIndexMap = new Map<number, number>();
+    const lpUnderlyingSymbolIndexMap = new Map<number, { token0?: number; token1?: number }>();
+
+    const hasLpTokens = lpKnownFactoryIndexToLpIndexMap.size > 0;
+
+    // 统计非 LP 且非零 joinedAmountToken 的数量（用于决定是否需要 symbol 读取）
+    let nonLpTokenCount = 0;
+    joinedAmountTokenAddressData?.forEach((result, knownFactoryIdx) => {
+      const tokenAddr = result?.result as `0x${string}` | undefined;
+      if (!tokenAddr || tokenAddr === ZERO_ADDRESS) return;
+      if (hasLpTokens && lpKnownFactoryIndexToLpIndexMap.has(knownFactoryIdx)) return;
+      nonLpTokenCount++;
+    });
+
+    const needsTokenSymbolRead = nonLpTokenCount > 0 || hasLpTokens;
+    const canBuildTokenSymbolContracts = !hasLpTokens || !!lpToken0Token1Data;
+
+    // LP 存在时，为保证“一个 symbol 批量调用覆盖所有需求”，这里会等待 token0/token1 数据准备好再构建 contracts
+    if (!needsTokenSymbolRead || !canBuildTokenSymbolContracts) {
+      return {
+        tokenSymbolContracts: [],
+        nonLpSymbolIndexMap,
+        lpUnderlyingSymbolIndexMap,
+        needsTokenSymbolRead,
+        canBuildTokenSymbolContracts,
+      };
+    }
+
+    // 非 LP：直接读取 joinedAmountToken.symbol
+    joinedAmountTokenAddressData?.forEach((result, knownFactoryIdx) => {
+      const tokenAddr = result?.result as `0x${string}` | undefined;
+      if (!tokenAddr || tokenAddr === ZERO_ADDRESS) return;
+      if (hasLpTokens && lpKnownFactoryIndexToLpIndexMap.has(knownFactoryIdx)) return;
+
+      nonLpSymbolIndexMap.set(knownFactoryIdx, contracts.length);
+      contracts.push({
+        address: tokenAddr,
+        abi: LOVE20TokenAbi,
+        functionName: 'symbol' as const,
+        args: [],
+      });
+    });
+
+    // LP：读取 token0/token1 的 symbol
+    const lpTokenCount = lpKnownFactoryIndexToLpIndexMap.size;
+    for (let lpIndex = 0; lpIndex < lpTokenCount; lpIndex++) {
+      const token0Res = lpToken0Token1Data?.[lpIndex * 2];
+      const token1Res = lpToken0Token1Data?.[lpIndex * 2 + 1];
+
+      const token0Addr = token0Res?.status === 'success' ? (token0Res.result as `0x${string}` | undefined) : undefined;
+      const token1Addr = token1Res?.status === 'success' ? (token1Res.result as `0x${string}` | undefined) : undefined;
+
+      const indexInfo: { token0?: number; token1?: number } = {};
+
+      if (token0Addr && token0Addr !== ZERO_ADDRESS) {
+        indexInfo.token0 = contracts.length;
+        contracts.push({
+          address: token0Addr,
+          abi: LOVE20TokenAbi,
+          functionName: 'symbol' as const,
+          args: [],
+        });
+      }
+
+      if (token1Addr && token1Addr !== ZERO_ADDRESS) {
+        indexInfo.token1 = contracts.length;
+        contracts.push({
+          address: token1Addr,
+          abi: LOVE20TokenAbi,
+          functionName: 'symbol' as const,
+          args: [],
+        });
+      }
+
+      lpUnderlyingSymbolIndexMap.set(lpIndex, indexInfo);
+    }
+
+    return {
+      tokenSymbolContracts: contracts,
+      nonLpSymbolIndexMap,
+      lpUnderlyingSymbolIndexMap,
+      needsTokenSymbolRead,
+      canBuildTokenSymbolContracts,
+    };
+  }, [joinedAmountTokenAddressData, lpKnownFactoryIndexToLpIndexMap, lpToken0Token1Data]);
+
+  const {
+    data: tokenSymbolData,
+    isPending: isPending6,
+    error: error6,
+  } = useReadContracts({
+    contracts: tokenSymbolContracts as any,
+    query: {
+      enabled: tokenSymbolContracts.length > 0,
     },
   });
 
@@ -439,35 +655,28 @@ export const useExtensionsByActionIdsWithCache = ({
     // 等待 joinedAmountTokenAddress 查询完成
     if (joinedAmountTokenAddressContracts.length > 0 && isPending3) return;
 
-    // 等待 LP factory 检查完成
-    if (lpFactoryCheckContracts.length > 0 && isPending4) return;
+    // 等待 joinedAmountToken factory 检查完成（用于判断 LP）
+    if (joinedTokenFactoryCheckContracts.length > 0 && isPending4) return;
+
+    // 等待 LP 的 token0/token1 读取完成
+    if (lpToken0Token1Contracts.length > 0 && isPending5) return;
+
+    // LP 存在但 token0/token1 还没返回时，不要继续（否则无法构建 LP(...)）
+    if (lpKnownFactoryIndexToLpIndexMap.size > 0 && !lpToken0Token1Data) return;
+
+    // 等待 symbol 批量读取完成（如果需要）
+    if (needsTokenSymbolRead && !canBuildTokenSymbolContracts) return;
+    if (tokenSymbolContracts.length > 0 && isPending6) return;
 
     let cachedCount = 0;
 
-    // 构建验证结果的映射（用于快速查找）
-    const validExtensionMap = new Map<number, ExtensionInfo>();
-    validExtensions.forEach((info) => {
-      validExtensionMap.set(info.arrayIndex, info);
-    });
-
-    // 构建 knownFactory 的映射，包含其在 knownFactoryExtensions 数组中的索引
-    const knownFactoryMap = new Map<number, FactoryInfo & { knownFactoryIndex: number }>();
-    knownFactoryExtensions.forEach((info, knownFactoryIndex) => {
-      knownFactoryMap.set(info.arrayIndex, { ...info, knownFactoryIndex });
-    });
-
-    // 构建 LP 检查的映射（从 joinedToken 索引到 LP 数据索引）
-    const lpCheckIndexMap = new Map<number, number>();
-    let lpDataIndex = 0;
-    joinedAmountTokenAddressData?.forEach((result, knownFactoryIdx) => {
-      const tokenAddr = result?.result as `0x${string}` | undefined;
-      if (tokenAddr && tokenAddr !== ZERO_ADDRESS) {
-        lpCheckIndexMap.set(knownFactoryIdx, lpDataIndex);
-        lpDataIndex++;
-      }
-    });
-
-    const uniswapV2FactoryAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY?.toLowerCase();
+    const readSymbolOrUnknown = (symbolResult: any): string => {
+      if (!symbolResult || symbolResult.status !== 'success') return 'UNKNOWN';
+      const value = symbolResult.result;
+      if (typeof value !== 'string') return 'UNKNOWN';
+      const trimmed = value.trim();
+      return trimmed ? trimmed : 'UNKNOWN';
+    };
 
     // 遍历所有未缓存的 actionIds，构建验证结果并缓存
     uncachedActionIds.forEach((actionId, index) => {
@@ -514,16 +723,31 @@ export const useExtensionsByActionIdsWithCache = ({
       const joinedAmountTokenAddress = joinedTokenResult.result as `0x${string}`;
 
       // 判断是否为 LP token
-      let joinedAmountTokenIsLP = false;
-      if (joinedAmountTokenAddress && joinedAmountTokenAddress !== ZERO_ADDRESS && uniswapV2FactoryAddress) {
-        const lpCheckIndex = lpCheckIndexMap.get(knownFactoryIdx);
-        if (lpCheckIndex !== undefined) {
-          const lpFactoryResult = lpFactoryData?.[lpCheckIndex];
-          if (lpFactoryResult?.status === 'success' && lpFactoryResult.result) {
-            const lpFactory = (lpFactoryResult.result as string).toLowerCase();
-            joinedAmountTokenIsLP = lpFactory === uniswapV2FactoryAddress;
-          }
+      const joinedAmountTokenIsLP =
+        !!uniswapV2FactoryAddressLower &&
+        joinedAmountTokenAddress !== ZERO_ADDRESS &&
+        lpKnownFactoryIndexToLpIndexMap.has(knownFactoryIdx);
+
+      // 生成 joinedAmountTokenSymbol
+      let joinedAmountTokenSymbol = 'UNKNOWN';
+      if (!joinedAmountTokenAddress || joinedAmountTokenAddress === ZERO_ADDRESS) {
+        joinedAmountTokenSymbol = 'UNKNOWN';
+      } else if (joinedAmountTokenIsLP) {
+        const lpIndex = lpKnownFactoryIndexToLpIndexMap.get(knownFactoryIdx);
+        if (lpIndex !== undefined) {
+          const indexInfo = lpUnderlyingSymbolIndexMap.get(lpIndex);
+          const token0Symbol =
+            indexInfo?.token0 !== undefined ? readSymbolOrUnknown(tokenSymbolData?.[indexInfo.token0]) : 'UNKNOWN';
+          const token1Symbol =
+            indexInfo?.token1 !== undefined ? readSymbolOrUnknown(tokenSymbolData?.[indexInfo.token1]) : 'UNKNOWN';
+          joinedAmountTokenSymbol = `LP(${token0Symbol},${token1Symbol})`;
+        } else {
+          joinedAmountTokenSymbol = 'UNKNOWN';
         }
+      } else {
+        const symbolIndex = nonLpSymbolIndexMap.get(knownFactoryIdx);
+        joinedAmountTokenSymbol =
+          symbolIndex !== undefined ? readSymbolOrUnknown(tokenSymbolData?.[symbolIndex]) : 'UNKNOWN';
       }
 
       // 情况 6: 所有验证通过，标记为扩展并缓存完整信息
@@ -535,6 +759,7 @@ export const useExtensionsByActionIdsWithCache = ({
         knownFactoryInfo.factoryAddress,
         joinedAmountTokenAddress,
         joinedAmountTokenIsLP,
+        joinedAmountTokenSymbol,
       );
       cachedCount++;
     });
@@ -550,16 +775,28 @@ export const useExtensionsByActionIdsWithCache = ({
     extensionContracts.length,
     factoryContracts.length,
     joinedAmountTokenAddressContracts.length,
-    lpFactoryCheckContracts.length,
+    joinedTokenFactoryCheckContracts.length,
+    lpToken0Token1Contracts.length,
+    tokenSymbolContracts.length,
     extensionAddressesData,
-    validExtensions,
-    knownFactoryExtensions,
+    validExtensionMap,
+    knownFactoryMap,
     joinedAmountTokenAddressData,
-    lpFactoryData,
+    joinedTokenFactoryData,
+    lpToken0Token1Data,
+    tokenSymbolData,
+    uniswapV2FactoryAddressLower,
+    lpKnownFactoryIndexToLpIndexMap,
+    nonLpSymbolIndexMap,
+    lpUnderlyingSymbolIndexMap,
+    needsTokenSymbolRead,
+    canBuildTokenSymbolContracts,
     isPending1,
     isPending2,
     isPending3,
     isPending4,
+    isPending5,
+    isPending6,
   ]);
 
   // ==================== 合并缓存数据和新数据 ====================
@@ -610,8 +847,15 @@ export const useExtensionsByActionIdsWithCache = ({
     // 阶段 3.1：等待 joinedAmountTokenAddress 查询
     if (joinedAmountTokenAddressContracts.length > 0 && isPending3) return true;
 
-    // 阶段 3.2：等待 LP factory 检查
-    return lpFactoryCheckContracts.length > 0 && isPending4;
+    // 阶段 3.2：等待 joinedAmountToken factory 检查（用于判断 LP）
+    if (joinedTokenFactoryCheckContracts.length > 0 && isPending4) return true;
+
+    // 阶段 3.3：等待 LP token0/token1 读取
+    if (lpToken0Token1Contracts.length > 0 && isPending5) return true;
+
+    // 阶段 3.4：等待 symbol 批量读取
+    if (needsTokenSymbolRead && !canBuildTokenSymbolContracts) return true;
+    return tokenSymbolContracts.length > 0 && isPending6;
   }, [
     enabled,
     hasActionIds,
@@ -624,11 +868,17 @@ export const useExtensionsByActionIdsWithCache = ({
     knownFactoryExtensions.length,
     joinedAmountTokenAddressContracts.length,
     isPending3,
-    lpFactoryCheckContracts.length,
+    joinedTokenFactoryCheckContracts.length,
     isPending4,
+    lpToken0Token1Contracts.length,
+    isPending5,
+    needsTokenSymbolRead,
+    canBuildTokenSymbolContracts,
+    tokenSymbolContracts.length,
+    isPending6,
   ]);
 
-  const error = error1 || error2 || error3 || error4 || null;
+  const error = error1 || error2 || error3 || error4 || error5 || error6 || null;
 
   return {
     extensions,

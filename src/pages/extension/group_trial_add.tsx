@@ -31,7 +31,7 @@ import { useTrialWaitingListAdd } from '@/src/hooks/extension/plugins/group/cont
 import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionBaseData';
+import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useApprove, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 
@@ -67,7 +67,7 @@ const GroupTrialAddPage: React.FC = () => {
     contractInfo,
     isPending: isPendingExtension,
     error: errorExtension,
-  } = useExtensionContractInfo({
+  } = useExtensionByActionInfoWithCache({
     tokenAddress: token?.address as `0x${string}`,
     actionInfo,
   });

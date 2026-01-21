@@ -52,6 +52,8 @@ export interface JoinableAction {
   hasReward: boolean;
   joinedAmount: bigint;
   joinedAmountOfAccount: bigint;
+  // 扩展行动在前端聚合后的增强字段（可选）
+  isConvertedJoinedValueSuccess?: boolean; // joinedAmount 是否来自“转换成功”的 convertedJoinedValue（用于 UI 标记）
 }
 
 export interface JoinedAction {

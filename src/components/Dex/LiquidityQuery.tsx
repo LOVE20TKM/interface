@@ -41,7 +41,7 @@ interface TokenConfig {
 }
 
 // 构建支持的基础代币列表
-const buildBaseTokens = (): TokenConfig[] => {
+const buildBaseTokens = (parentToken?: { symbol: string; address: `0x${string}` } | null): TokenConfig[] => {
   const supportedTokens: TokenConfig[] = [];
 
   // 1. TUSDT (如果配置了地址)
@@ -56,13 +56,11 @@ const buildBaseTokens = (): TokenConfig[] => {
     });
   }
 
-  // 2. TKM20 (父代币)
-  const parentSymbol = process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
-  const parentAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN;
-  if (parentSymbol && parentAddress) {
+  // 2. 父代币（从 TokenContext 获取）
+  if (parentToken?.symbol && parentToken?.address) {
     supportedTokens.push({
-      symbol: parentSymbol,
-      address: parentAddress as `0x${string}`,
+      symbol: parentToken.symbol,
+      address: parentToken.address,
       decimals: 18,
       isNative: false,
     });
@@ -95,7 +93,13 @@ const LiquidityQueryPanel: React.FC = () => {
   const [showTokenToBase, setShowTokenToBase] = useState(true);
 
   // 构建基础代币列表
-  const baseTokens = useMemo(() => buildBaseTokens(), []);
+  const baseTokens = useMemo(() => {
+    const parentToken =
+      token?.parentTokenSymbol && token?.parentTokenAddress
+        ? { symbol: token.parentTokenSymbol, address: token.parentTokenAddress }
+        : null;
+    return buildBaseTokens(parentToken);
+  }, [token?.parentTokenSymbol, token?.parentTokenAddress]);
 
   // 选中的基础代币状态
   const [baseToken, setBaseToken] = useState<TokenConfig>(() => {
@@ -103,10 +107,8 @@ const LiquidityQueryPanel: React.FC = () => {
     const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol);
     return (
       defaultToken || {
-        symbol: process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL || '',
-        address:
-          (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as `0x${string}`) ||
-          '0x0000000000000000000000000000000000000000',
+        symbol: baseTokens[0]?.symbol || '',
+        address: baseTokens[0]?.address || '0x0000000000000000000000000000000000000000',
         decimals: 18,
         isNative: false,
       }
@@ -133,6 +135,21 @@ const LiquidityQueryPanel: React.FC = () => {
     },
     mode: 'onChange',
   });
+
+  // 当 token 异步加载导致 baseTokens 变化时，确保当前选中的 baseToken 仍然有效
+  useEffect(() => {
+    if (baseTokens.length === 0) return;
+
+    const isCurrentValid = baseTokens.some((t) => t.address === baseToken.address);
+    if (isCurrentValid) return;
+
+    const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+    const preferred = (usdtSymbol ? baseTokens.find((t) => t.symbol === usdtSymbol) : undefined) || baseTokens[0];
+    if (!preferred) return;
+
+    setBaseToken(preferred);
+    form.setValue('baseTokenAddress', preferred.address, { shouldValidate: true });
+  }, [baseTokens, baseToken.address, form]);
 
   // 同步表单值与代币状态
   const watchedBaseTokenAddress = form.watch('baseTokenAddress');

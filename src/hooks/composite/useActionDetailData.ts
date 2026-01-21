@@ -4,7 +4,8 @@ import { LOVE20SubmitAbi } from '@/src/abis/LOVE20Submit';
 import { LOVE20JoinAbi } from '@/src/abis/LOVE20Join';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { ActionInfo } from '@/src/types/love20types';
-import { useActionParticipationAdapter, type FactoryInfo } from '@/src/hooks/extension/base/composite';
+import { useActionParticipationAdapter } from '@/src/hooks/extension/base/composite';
+import { FactoryInfo } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 
 const SUBMIT_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_SUBMIT as `0x${string}`;
 const JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`;
@@ -22,6 +23,9 @@ export interface ActionDetailData {
   // 参与统计（自动支持扩展行动）
   participantCount: bigint | undefined;
   totalAmount: bigint | undefined;
+  joinedAmountTokenAddress: `0x${string}` | undefined;
+  joinedAmountTokenSymbol: string | undefined;
+  joinedAmountTokenIsLP: boolean;
 
   // 用户参与状态（自动支持扩展行动）
   isJoined: boolean;
@@ -162,6 +166,9 @@ export const useActionDetailData = ({
       // 参与统计（自动使用扩展数据或基础数据）
       participantCount: participationData.participantCount,
       totalAmount: participationData.totalAmount,
+      joinedAmountTokenAddress: participationData.joinedAmountTokenAddress,
+      joinedAmountTokenSymbol: participationData.joinedAmountTokenSymbol,
+      joinedAmountTokenIsLP: participationData.joinedAmountTokenIsLP,
       isJoined: participationData.isJoined,
 
       // 扩展行动信息

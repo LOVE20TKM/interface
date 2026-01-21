@@ -7,9 +7,11 @@
 import React, { useContext, useEffect, useMemo } from 'react';
 
 // Next.js
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 // 第三方库
+import { HelpCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAccount } from 'wagmi';
 
@@ -28,6 +30,7 @@ import { useError } from '@/src/contexts/ErrorContext';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import {
+  useHasActiveGroups,
   useJoin,
   useJoinInfo,
 } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
@@ -69,8 +72,24 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
     error: errorJoinInfo,
   } = useJoinInfo(extensionAddress, account as `0x${string}`);
 
+  // 检查当前地址是否有已激活链群
+  const {
+    hasActiveGroups,
+    isPending: isPendingHasActiveGroups,
+    error: errorHasActiveGroups,
+  } = useHasActiveGroups(extensionAddress, account as `0x${string}`);
+
   // 判断是否已加入（joinedRound > 0 表示已加入）
   const isJoined = joinedRound && joinedRound > BigInt(0);
+
+  // 是否没有激活链群（只有明确为 false 才判定没有）
+  const hasNoActiveGroups = useMemo(() => hasActiveGroups === false, [hasActiveGroups]);
+
+  // 质押入口链接（symbol 来自 TokenContext）
+  const stakeHref = useMemo(() => {
+    const symbol = token?.symbol ? encodeURIComponent(token.symbol) : '';
+    return `/stake/stakelp/?symbol=${symbol}`;
+  }, [token?.symbol]);
 
   // 判断是否有投票（需要等待数据加载完成）
   const hasVotes = useMemo(() => {
@@ -113,7 +132,8 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
     if (errorJoin) handleError(errorJoin);
     if (errorCurrentRound) handleError(errorCurrentRound);
     if (errorVoted) handleError(errorVoted);
-  }, [errorJoinInfo, errorJoin, errorCurrentRound, errorVoted, handleError]);
+    if (errorHasActiveGroups) handleError(errorHasActiveGroups);
+  }, [errorJoinInfo, errorJoin, errorCurrentRound, errorVoted, errorHasActiveGroups, handleError]);
 
   // 检查投票状态并显示错误提示
   useEffect(() => {
@@ -164,7 +184,14 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
         <div className="flex justify-center pt-6">
           <Button
             className="w-full max-w-md"
-            disabled={isJoined || isPendingJoin || isConfirmingJoin || isConfirmedJoin || !hasVotes}
+            disabled={
+              isJoined ||
+              isPendingJoin ||
+              isConfirmingJoin ||
+              isConfirmedJoin ||
+              !hasVotes ||
+              (hasNoActiveGroups && !isPendingHasActiveGroups)
+            }
             type="button"
             onClick={handleJoin}
           >
@@ -176,18 +203,44 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
               ? '已加入'
               : isJoined
               ? '已加入此行动'
+              : hasNoActiveGroups && !isPendingHasActiveGroups
+              ? '没有激活链群，无法加入'
               : '确认加入'}
           </Button>
         </div>
 
-        {/* 提示信息 */}
-        <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
-          <div className="space-y-1 text-gray-600">
-            <div>• 有激活链群的地址，才可参加本行动</div>
-            <div>• 可在验证阶段设置激励分配地址和比例</div>
+        {/* 提示信息 / 帮助 */}
+        {hasNoActiveGroups && !isPendingHasActiveGroups ? (
+          <div className="mt-6 text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+            <div className="flex items-center gap-2 font-medium text-red-700 mb-1">
+              <HelpCircle className="w-4 h-4" />
+              <span>如何激活链群：</span>
+            </div>
+            <div className="space-y-1">
+              <div>
+                1. 铸造链群NFT{' '}
+                <Link href="/extension/groupids/" className="underline font-medium">
+                  去铸造 &gt;
+                </Link>
+              </div>
+              <div>
+                2. 成为治理者{' '}
+                <Link href={stakeHref} className="underline font-medium">
+                  去质押获取治理票 &gt;
+                </Link>
+              </div>
+              <div>3. 选择对应行动，在行动下激活链群</div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
+            <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
+            <div className="space-y-1 text-gray-600">
+              <div>• 有激活链群的地址，才可参加本行动</div>
+              <div>• 可在验证阶段设置激励分配地址和比例</div>
+            </div>
+          </div>
+        )}
       </div>
 
       <LoadingOverlay

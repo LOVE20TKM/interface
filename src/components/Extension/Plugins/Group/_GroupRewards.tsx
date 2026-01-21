@@ -8,6 +8,7 @@ import React, { useContext, useEffect, useState } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -15,14 +16,16 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useGroupAccountsRewardOfRound } from '@/src/hooks/extension/plugins/group/composite/useGroupAccountsRewardOfRound';
+import { useGroupWarningRatesOfRound } from '@/src/hooks/extension/plugins/group/composite/useGroupWarningRatesOfRound';
 import { useVerifiedAccountCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
-import { formatTokenAmount } from '@/src/lib/format';
+import { formatPercentage, formatTokenAmount, formatUnits } from '@/src/lib/format';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import AlertBox from '@/src/components/Common/AlertBox';
 import ChangeRound from '@/src/components/Common/ChangeRound';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -73,13 +76,26 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
     groupId,
   });
 
+  // 获取指定轮次的链群不信任率/容量衰减率（用于顶部警告）
+  const {
+    distrustRate,
+    capacityDecayRate,
+    isPending: isPendingWarningRates,
+    error: errorWarningRates,
+  } = useGroupWarningRatesOfRound({
+    extensionAddress,
+    round: selectedRound,
+    groupId,
+  });
+
   // 错误处理
   const { handleError } = useContractError();
   useEffect(() => {
     if (errorRound) handleError(errorRound);
     if (errorRecords) handleError(errorRecords);
     if (errorVerifiedAccountCount) handleError(errorVerifiedAccountCount);
-  }, [errorRound, errorRecords, errorVerifiedAccountCount, handleError]);
+    if (errorWarningRates) handleError(errorWarningRates);
+  }, [errorRound, errorRecords, errorVerifiedAccountCount, errorWarningRates, handleError]);
 
   const handleChangedRound = (round: number) => {
     const newRound = BigInt(round);
@@ -182,6 +198,59 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
         )}
       </div>
 
+      {/* 警告：所选轮次不信任率/容量衰减率 */}
+      {(() => {
+        if (selectedRound <= BigInt(0)) return null;
+        if (isPendingWarningRates) return null;
+
+        const distrustRatePercent = distrustRate !== undefined ? parseFloat(formatUnits(distrustRate)) * 100 : 0;
+        const capacityDecayRatePercent =
+          capacityDecayRate !== undefined ? parseFloat(formatUnits(capacityDecayRate)) * 100 : 0;
+
+        const showDistrustWarn = distrustRatePercent > 0;
+        const showCapacityDecayWarn = capacityDecayRatePercent > 0;
+        if (!showDistrustWarn && !showCapacityDecayWarn) return null;
+
+        const actionIdForLink = typeof router.query.actionId === 'string' ? router.query.actionId : undefined;
+        const symbolForLink = token?.symbol || (typeof router.query.symbol === 'string' ? router.query.symbol : '');
+        const distrustHref = actionIdForLink
+          ? `/action/info/?symbol=${encodeURIComponent(symbolForLink)}&id=${actionIdForLink}&tab=public&tab2=distrust`
+          : undefined;
+
+        return (
+          <div className="my-3">
+            <AlertBox
+              type="error"
+              message={
+                <div className="space-y-1 text-red-600">
+                  {showDistrustWarn && (
+                    <div>
+                      {distrustHref ? (
+                        <Link href={distrustHref} className="underline underline-offset-2 hover:text-red-700">
+                          本链群第 {selectedRound.toString()} 轮，被投不信任票，不信任率
+                          {formatPercentage(distrustRatePercent)}
+                        </Link>
+                      ) : (
+                        <>
+                          本链群第 {selectedRound.toString()} 轮，被投不信任票，不信任率
+                          {formatPercentage(distrustRatePercent)}
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {showCapacityDecayWarn && (
+                    <div>
+                      本链群第 {selectedRound.toString()} 轮，服务者容量不足，验证衰减率
+                      {formatPercentage(capacityDecayRatePercent)}
+                    </div>
+                  )}
+                </div>
+              }
+            />
+          </div>
+        );
+      })()}
+
       {/* 加载状态 */}
       {isPendingRecords && (
         <div className="flex justify-center py-8">
@@ -214,7 +283,8 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
           <table className="table w-full">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="px-1 text-left">成员 / 加入轮次</th>
+                <th className="pl-0 pr-[2px] w-[1%] whitespace-nowrap text-center"> </th>
+                <th className="pl-0 pr-1 text-left">成员 / 加入轮次</th>
                 <th className="px-1 text-right">得分 / 代币数×原始得分</th>
                 <th className="px-1 text-right">激励</th>
               </tr>
@@ -237,7 +307,10 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
 
                 return (
                   <tr key={`${item.account}-${index}`} className="border-b border-gray-100">
-                    <td className="px-1">
+                    <td className="pl-0 pr-[2px] w-[1%] whitespace-nowrap text-center text-greyscale-400 tabular-nums">
+                      {index + 1}
+                    </td>
+                    <td className="pl-0 pr-1">
                       <div className="flex items-center gap-2">
                         <AddressWithCopyButton address={item.account} showCopyButton={true} />
                       </div>
@@ -276,7 +349,8 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
               })}
               {/* 汇总行 */}
               <tr className="border-t-1 border-gray-300">
-                <td className="px-1 text-left">合计</td>
+                <td className="pl-0 pr-[1px] w-[1%] whitespace-nowrap text-center text-greyscale-400">-</td>
+                <td className="pl-0 pr-1 text-left">合计</td>
                 <td className="px-1 text-right">
                   <div className="font-mono">{formatTokenAmount(totalFinalScore)}</div>
                   {/* <div className="text-xs text-greyscale-500">100.00%</div> */}
