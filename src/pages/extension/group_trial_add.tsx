@@ -120,6 +120,8 @@ const GroupTrialAddPage: React.FC = () => {
           .refine(
             (val) => {
               if (!groupDetail) return true;
+              // maxJoinResult.amount 为 0 表示不限，不需要做最大值校验
+              if (maxJoinResult.amount <= BigInt(0)) return true;
               const inputVal = parseUnits(val);
               return inputVal !== null && inputVal <= maxJoinResult.amount;
             },
@@ -478,7 +480,7 @@ const GroupTrialAddPage: React.FC = () => {
                       <span>体验代币数量范围：</span>
                       <span className="font-mono text-secondary">
                         {formatTokenAmount(groupDetail.actualMinJoinAmount, 2)} ~{' '}
-                        {formatTokenAmount(maxJoinResult.amount, 2)}
+                        {maxJoinResult.amount > BigInt(0) ? formatTokenAmount(maxJoinResult.amount) : '不限'}
                       </span>
                     </div>
                     {maxJoinResult.reason && (
