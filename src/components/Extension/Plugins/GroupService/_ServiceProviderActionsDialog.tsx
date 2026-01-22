@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import { formatTokenAmount } from '@/src/lib/format';
 import { useActionsWithActiveGroupsByOwner } from '@/src/hooks/extension/plugins/group-service/composite/useActionsWithActiveGroupsByOwner';
-import { TokenContext } from '@/src/contexts/TokenContext';
 
 interface ServiceProviderActionsDialogProps {
   /** Extension 合约地址 */
@@ -33,12 +32,9 @@ export default function ServiceProviderActionsDialog({
   open,
   onOpenChange,
 }: ServiceProviderActionsDialogProps) {
-  const { token } = useContext(TokenContext) || {};
-
   // 获取服务者的所有行动和链群数据
   const { actionsWithGroups, isPending, error } = useActionsWithActiveGroupsByOwner({
     extensionAddress,
-    tokenAddress: token?.address as `0x${string}`,
     account: open && serviceProvider ? serviceProvider : undefined, // 只在 Dialog 打开时查询
   });
 

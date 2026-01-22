@@ -2,8 +2,8 @@
  * 获取服务者的所有行动和链群信息 Hook
  *
  * 功能：
- * 1. 使用 useActionIdsWithActiveGroupIdsByOwner 获取行动ID和链群ID列表
- * 2. 使用 useExtensionParams 获取链群行动所在代币地址
+ * 1. 使用 useExtensionParams 获取链群行动所在代币地址
+ * 2. 使用 useActionIdsWithActiveGroupIdsByOwner 获取行动ID和链群ID列表（使用步骤1获取的代币地址）
  * 3. 使用 useActionBaseInfosByIdsWithCache 批量获取行动信息
  * 4. 使用 useGroupNamesWithCache 批量获取链群名称
  * 5. 使用 GroupJoin.totalJoinedAmountByGroupId 批量获取链群代币参与量
@@ -13,7 +13,6 @@
  * ```typescript
  * const { actionsWithGroups, isPending, error } = useActionsWithActiveGroupsByOwner({
  *   extensionAddress: '0x...',
- *   tokenAddress: '0x...',
  *   account: '0x...'
  * });
  * ```
@@ -67,8 +66,6 @@ export interface ActionWithGroups {
 export interface UseActionsWithActiveGroupsByOwnerParams {
   /** 链群服务扩展合约地址 */
   extensionAddress: `0x${string}` | undefined;
-  /** 当前代币地址 */
-  tokenAddress: `0x${string}` | undefined;
   /** 链群服务者账户地址 */
   account: `0x${string}` | undefined;
 }
@@ -95,24 +92,10 @@ export interface UseActionsWithActiveGroupsByOwnerResult {
  */
 export function useActionsWithActiveGroupsByOwner({
   extensionAddress,
-  tokenAddress,
   account,
 }: UseActionsWithActiveGroupsByOwnerParams): UseActionsWithActiveGroupsByOwnerResult {
   // ==========================================
-  // 步骤1-2：获取 actionIds 和 groupIds
-  // ==========================================
-
-  const {
-    actionIdsWithGroupIds,
-    isPending: isActionIdsPending,
-    error: actionIdsError,
-  } = useActionIdsWithActiveGroupIdsByOwner({
-    tokenAddress,
-    account,
-  });
-
-  // ==========================================
-  // 步骤3：获取链群行动所在代币地址
+  // 步骤1：获取链群行动所在代币地址
   // ==========================================
 
   const {
@@ -120,6 +103,19 @@ export function useActionsWithActiveGroupsByOwner({
     isPending: isGroupActionTokenPending,
     error: groupActionTokenError,
   } = useExtensionParams((extensionAddress || '0x0000000000000000000000000000000000000000') as `0x${string}`);
+
+  // ==========================================
+  // 步骤2：获取 actionIds 和 groupIds
+  // ==========================================
+
+  const {
+    actionIdsWithGroupIds,
+    isPending: isActionIdsPending,
+    error: actionIdsError,
+  } = useActionIdsWithActiveGroupIdsByOwner({
+    tokenAddress: groupActionTokenAddress,
+    account,
+  });
 
   // ==========================================
   // 步骤3.5：获取每个 actionId 对应的扩展地址
@@ -309,15 +305,15 @@ export function useActionsWithActiveGroupsByOwner({
 
   const isPending = useMemo(() => {
     // 等待基本参数
-    if (!extensionAddress || !tokenAddress || !account) return true;
+    if (!extensionAddress || !account) return true;
 
-    // 步骤1-2：获取 actionIds 和 groupIds
-    if (isActionIdsPending) return true;
-    if (actionIdsWithGroupIds.length === 0) return false; // 没有数据，不需要继续加载
-
-    // 步骤3：获取链群行动所在代币地址
+    // 步骤1：获取链群行动所在代币地址
     if (isGroupActionTokenPending) return true;
     if (!groupActionTokenAddress) return false;
+
+    // 步骤2：获取 actionIds 和 groupIds
+    if (isActionIdsPending) return true;
+    if (actionIdsWithGroupIds.length === 0) return false; // 没有数据，不需要继续加载
 
     // 步骤3.5：获取扩展地址
     if (isExtensionsPending) return true;
@@ -333,7 +329,6 @@ export function useActionsWithActiveGroupsByOwner({
     return isTotalJoinedAmountPending;
   }, [
     extensionAddress,
-    tokenAddress,
     account,
     isActionIdsPending,
     actionIdsWithGroupIds.length,
