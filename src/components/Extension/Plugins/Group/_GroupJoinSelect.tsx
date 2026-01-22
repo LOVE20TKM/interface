@@ -27,11 +27,12 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import { useTokenIdOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
+import { useTokenIdOf, useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
+import { LocalCache } from '@/src/lib/LocalCache';
 
 // 组件
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -60,6 +61,15 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
     extensionAddress,
   });
 
+  // 读取缓存的 groupId（体验模式）
+  const cachedGroupIdStr = LocalCache.get<string>(`trial_groupId_${actionId.toString()}`);
+  const cachedGroupId = cachedGroupIdStr ? BigInt(cachedGroupIdStr) : null;
+
+  // 如果有缓存的 groupId，获取对应的 groupName
+  const { groupName: cachedGroupName, isPending: isPendingCachedGroupName } = useGroupNameOf(
+    cachedGroupId || BigInt(0),
+  );
+
   // 用户输入的链群名称
   const [inputGroupName, setInputGroupName] = useState<string>('');
 
@@ -79,6 +89,13 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
     },
     mode: 'onChange',
   });
+
+  // 如果有缓存的 groupName，设置为表单默认值
+  useEffect(() => {
+    if (cachedGroupName && !isPendingCachedGroupName) {
+      form.setValue('groupName', cachedGroupName);
+    }
+  }, [cachedGroupName, isPendingCachedGroupName, form]);
 
   // 监听表单输入，更新查询状态
   const watchedGroupName = form.watch('groupName');

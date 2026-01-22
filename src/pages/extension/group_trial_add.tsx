@@ -28,7 +28,6 @@ import { isValidEthAddress, normalizeAddressInput } from '@/src/lib/addressUtils
 import { getMaxJoinAmount } from '@/src/lib/extensionGroup';
 
 import { useTrialWaitingListAdd } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
-import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
@@ -72,15 +71,6 @@ const GroupTrialAddPage: React.FC = () => {
     actionInfo,
   });
   const extensionAddress = contractInfo?.extension;
-
-  const {
-    constants,
-    isPending: isPendingConstants,
-    error: errorConstants,
-  } = useExtensionActionConstCache({
-    extensionAddress: extensionAddress || ('0x0' as `0x${string}`),
-    actionId: actionId || BigInt(0),
-  });
 
   // 获取链群详情
   const {
@@ -150,7 +140,7 @@ const GroupTrialAddPage: React.FC = () => {
     isConfirming: isConfirmingApprove,
     isConfirmed: isConfirmedApprove,
     writeError: errorApprove,
-  } = useApprove(token?.address as `0x${string}`);
+  } = useApprove(contractInfo?.joinedAmountTokenAddress as `0x${string}`);
 
   // 获取授权额度
   const {
@@ -159,10 +149,10 @@ const GroupTrialAddPage: React.FC = () => {
     error: errorAllowance,
     refetch: refetchAllowance,
   } = useAllowance(
-    token?.address as `0x${string}`,
+    contractInfo?.joinedAmountTokenAddress as `0x${string}`,
     account as `0x${string}`,
     GROUP_JOIN_CONTRACT_ADDRESS,
-    !!token?.address && !!account && !!GROUP_JOIN_CONTRACT_ADDRESS,
+    !!contractInfo?.joinedAmountTokenAddress && !!account && !!GROUP_JOIN_CONTRACT_ADDRESS,
   );
 
   const formSchema = useMemo(
@@ -236,21 +226,11 @@ const GroupTrialAddPage: React.FC = () => {
   useEffect(() => {
     if (errorAction) handleError(errorAction);
     if (errorExtension) handleError(errorExtension);
-    if (errorConstants) handleError(errorConstants);
     if (errorGroupDetail) handleError(errorGroupDetail);
     if (errorAdd) handleError(errorAdd);
     if (errorApprove) handleError(errorApprove);
     if (errorAllowance) handleError(errorAllowance);
-  }, [
-    errorAction,
-    errorExtension,
-    errorConstants,
-    errorGroupDetail,
-    errorAdd,
-    errorApprove,
-    errorAllowance,
-    handleError,
-  ]);
+  }, [errorAction, errorExtension, errorGroupDetail, errorAdd, errorApprove, errorAllowance, handleError]);
 
   // 监听授权成功
   useEffect(() => {
@@ -286,6 +266,8 @@ const GroupTrialAddPage: React.FC = () => {
       console.error('授权失败:', error);
     }
   };
+
+  console.log('GROUP_JOIN_CONTRACT_ADDRESS', GROUP_JOIN_CONTRACT_ADDRESS);
 
   const onSubmit = async (values: FormValues) => {
     if (!extensionAddress || !groupIdBigInt) {
@@ -341,7 +323,7 @@ const GroupTrialAddPage: React.FC = () => {
     );
   }
 
-  if (isPendingAction || isPendingExtension || isPendingConstants || isPendingGroupDetail) {
+  if (isPendingAction || isPendingExtension || isPendingGroupDetail) {
     return (
       <>
         <Header title="增加体验地址" showBackButton={true} />
@@ -517,9 +499,10 @@ const GroupTrialAddPage: React.FC = () => {
               {shouldShowAmountHint && (
                 <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded px-3 py-2 mt-2">
                   <div className="flex items-center justify-between">
-                    <span>所需质押代币数量：</span>
-                    <span className="font-mono text-secondary">
-                      {formatTokenAmount(totalTrialAmount)} {token?.symbol || ''}
+                    <span>需质押代币：</span>
+                    <span>
+                      <span className="font-mono text-secondary mr-2">{formatTokenAmount(totalTrialAmount)}</span>
+                      <span className="text-greyscale-500">{contractInfo?.joinedAmountTokenSymbol || ''}</span>
                     </span>
                   </div>
                 </div>

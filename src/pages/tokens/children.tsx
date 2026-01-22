@@ -12,7 +12,7 @@ export default function Tokens() {
       <Header title="代币列表" showBackButton={true} />
       <main className="flex-grow">
         <header className="flex justify-between items-center m-4">
-          <h1 className="text-lg font-bold">子币列表</h1>
+          <h1 className="text-lg font-bold">{currentToken?.symbol} 的子币列表</h1>
         </header>
         <TokenList parentTokenAddress={currentToken?.address} />
       </main>

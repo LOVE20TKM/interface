@@ -11,8 +11,8 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ isLoading, text = 'Load
   if (!isLoading) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 pointer-events-none"
+    <div
+      className="fixed inset-0 z-50"
       style={{
         position: 'fixed',
         top: 0,
@@ -22,16 +22,16 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ isLoading, text = 'Load
         backgroundColor: 'rgba(17, 24, 39, 0.5)',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
       }}
     >
-      <div 
+      <div
         className="text-center"
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
         }}
       >
         <Loader2 className="mx-auto h-8 w-8 animate-spin text-white" />

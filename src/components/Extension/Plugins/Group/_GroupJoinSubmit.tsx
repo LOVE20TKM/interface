@@ -32,24 +32,21 @@ import { useError } from '@/src/contexts/ErrorContext';
 import { useTrialMode } from '@/src/contexts/TrialModeContext';
 
 // hooks
-import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
-import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
-import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
+import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
-import { useJoin, useJoinInfo, useTrialJoin } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
+import { useGetInfoForJoin } from '@/src/hooks/extension/plugins/group/composite/useGetInfoForJoin';
+import { useJoin, useTrialJoin } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 import { getMaxJoinAmount, getMaxIncreaseAmount } from '@/src/lib/extensionGroup';
+import { LocalCache } from '@/src/lib/LocalCache';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import InfoTooltip from '@/src/components/Common/InfoTooltip';
-import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import _GroupParticipationStats from './_GroupParticipationStats';
@@ -76,6 +73,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
   // 获取体验模式状态
   const { isTrialMode, provider, trialAmount } = useTrialMode();
+
   /**
    * 体验模式 UI 锁存
    * - TrialModeContext 的 isTrialMode 依赖 waitingList（加入后可能立刻变成 false）
@@ -87,16 +85,6 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   }, [isTrialMode]);
   const uiIsTrialMode = isTrialMode || isTrialModeLocked;
 
-  // 获取当前轮次
-  const { currentRound, isPending: isPendingCurrentRound, error: errorCurrentRound } = useCurrentRound();
-
-  // 获取行动是否已投票
-  const {
-    isActionIdVoted,
-    isPending: isPendingVoted,
-    error: errorVoted,
-  } = useIsActionIdVoted(token?.address as `0x${string}`, currentRound || BigInt(0), actionId);
-
   // 获取扩展常量数据（包括 joinTokenAddress 和 joinTokenSymbol）
   const {
     constants,
@@ -107,19 +95,35 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   const joinTokenAddress = constants?.joinTokenAddress;
   const joinTokenSymbol = constants?.joinTokenSymbol;
 
-  // 获取加入信息
-  const {
-    amount: joinedAmount,
-    isPending: isPendingJoinInfo,
-    error: errorJoinInfo,
-  } = useJoinInfo(extensionAddress, account as `0x${string}`);
+  // 获取验证信息的 key 列表
+  const verificationKeys = actionInfo?.body?.verificationKeys as string[] | undefined;
 
-  // 判断是否已加入行动
+  // 批量获取加入所需的所有信息
   const {
-    isJoined,
-    isPending: isPendingJoined,
-    error: errorJoined,
-  } = useIsAccountJoined(token?.address as `0x${string}`, actionId, account as `0x${string}`);
+    currentRound,
+    isActionIdVoted,
+    joinedAmount,
+    balance,
+    allowance,
+    verificationInfos: existingVerificationInfos,
+    isPending: isPendingJoinInfo,
+    isPendingAllowance,
+    error: errorJoinInfo,
+    refetchAllowance,
+  } = useGetInfoForJoin({
+    tokenAddress: token?.address as `0x${string}`,
+    extensionAddress,
+    account: account as `0x${string}`,
+    actionId,
+    joinTokenAddress,
+    verificationKeys,
+    groupJoinContractAddress: GROUP_JOIN_CONTRACT_ADDRESS,
+  });
+
+  // 使用 joinedAmount 判断是否已加入
+  const isJoined = useMemo(() => {
+    return joinedAmount !== undefined && joinedAmount > BigInt(0);
+  }, [joinedAmount]);
 
   // 获取链群详情
   const {
@@ -188,42 +192,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
   // 判断是否有投票（需要等待数据加载完成）
   const hasVotes = useMemo(() => {
-    if (isPendingCurrentRound || isPendingVoted) return true; // 加载中时默认允许，避免误判
+    if (isPendingJoinInfo) return true; // 加载中时默认允许，避免误判
     return isActionIdVoted === true;
-  }, [isPendingCurrentRound, isPendingVoted, isActionIdVoted]);
-
-  // 获取代币余额
-  const { balance, error: errorBalance } = useBalanceOf(
-    joinTokenAddress as `0x${string}`,
-    account as `0x${string}`,
-    !!joinTokenAddress && !!account,
-  );
-
-  // 获取已授权数量
-  const {
-    allowance,
-    isPending: isPendingAllowance,
-    error: errorAllowance,
-    refetch: refetchAllowance,
-  } = useAllowance(
-    joinTokenAddress as `0x${string}`,
-    account as `0x${string}`,
-    GROUP_JOIN_CONTRACT_ADDRESS,
-    !!joinTokenAddress && !!account,
-  );
-
-  // 获取已填写的验证信息
-  const verificationKeys = actionInfo?.body?.verificationKeys as string[] | undefined;
-  const {
-    verificationInfos: existingVerificationInfos,
-    isPending: isPendingVerificationInfos,
-    error: errorVerificationInfos,
-  } = useAccountVerificationInfos({
-    account: account as `0x${string}`,
-    tokenAddress: token?.address as `0x${string}`,
-    actionId,
-    verificationKeys,
-  });
+  }, [isPendingJoinInfo, isActionIdVoted]);
 
   // 授权状态
   const [isTokenApproved, setIsTokenApproved] = useState(false);
@@ -296,11 +267,11 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
   // 当已有验证信息加载完成时，更新表单默认值
   useEffect(() => {
-    if (!isPendingVerificationInfos && existingVerificationInfos && verificationKeys) {
+    if (!isPendingJoinInfo && existingVerificationInfos && verificationKeys) {
       const updatedInfos = verificationKeys.map((key, index) => existingVerificationInfos[index] || '');
       form.setValue('verificationInfos', updatedInfos);
     }
-  }, [isPendingVerificationInfos, existingVerificationInfos, verificationKeys, form]);
+  }, [isPendingJoinInfo, existingVerificationInfos, verificationKeys, form]);
 
   // 授权
   const {
@@ -374,6 +345,20 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     writeError: errorTrialJoin,
   } = useTrialJoin();
 
+  /**
+   * 加入状态 UI 锁存
+   * - 当加入成功后，数据刷新可能导致 isJoined 变成 true
+   * - 为避免界面从"加入"变成"已加入"，在加入成功到跳转期间锁存为 false
+   */
+  const [isJoinedLocked, setIsJoinedLocked] = useState(false);
+  useEffect(() => {
+    if (isConfirmedJoin || isConfirmedTrialJoin) {
+      setIsJoinedLocked(true);
+    }
+  }, [isConfirmedJoin, isConfirmedTrialJoin]);
+  // UI 使用锁存后的值，保持界面状态不变
+  const uiIsJoined = isJoinedLocked ? false : isJoined;
+
   async function handleJoin(values: FormValues) {
     try {
       // 体验模式：使用 trialJoin
@@ -409,56 +394,42 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   useEffect(() => {
     if (isConfirmedJoin || isConfirmedTrialJoin) {
       toast.success(uiIsTrialMode ? '体验加入成功' : '加入链群成功');
+
+      // 体验模式下缓存 groupId
+      if (isConfirmedTrialJoin && uiIsTrialMode) {
+        LocalCache.set(`trial_groupId_${actionId.toString()}`, groupId.toString());
+      }
+
       setTimeout(() => {
         router.push(`/my/myaction?id=${actionId.toString()}&symbol=${token?.symbol || ''}`);
       }, 1000);
     }
-  }, [isConfirmedJoin, isConfirmedTrialJoin, uiIsTrialMode, router, actionId, token?.symbol]);
+  }, [isConfirmedJoin, isConfirmedTrialJoin, uiIsTrialMode, router, actionId, token?.symbol, groupId]);
 
   // 错误处理
   const { handleError } = useContractError();
   useEffect(() => {
     if (errorDetail) handleError(errorDetail);
     if (errorJoinInfo) handleError(errorJoinInfo);
-    if (errorBalance) handleError(errorBalance);
-    if (errorAllowance) handleError(errorAllowance);
     if (errorApprove) handleError(errorApprove);
     if (errorJoin) handleError(errorJoin);
     if (errorTrialJoin) handleError(errorTrialJoin);
-    if (errorVerificationInfos) handleError(errorVerificationInfos);
     if (errorConstants) handleError(errorConstants);
-    if (errorCurrentRound) handleError(errorCurrentRound);
-    if (errorVoted) handleError(errorVoted);
-    if (errorJoined) handleError(errorJoined);
-  }, [
-    errorDetail,
-    errorJoinInfo,
-    errorBalance,
-    errorAllowance,
-    errorApprove,
-    errorJoin,
-    errorTrialJoin,
-    errorVerificationInfos,
-    errorConstants,
-    errorCurrentRound,
-    errorVoted,
-    errorJoined,
-    handleError,
-  ]);
+  }, [errorDetail, errorJoinInfo, errorApprove, errorJoin, errorTrialJoin, errorConstants, handleError]);
 
   // 检查投票状态并显示错误提示
   useEffect(() => {
     // 只在数据加载完成且未投票时设置错误
-    if (!isPendingCurrentRound && !isPendingVoted && isActionIdVoted === false) {
+    if (!isPendingJoinInfo && isActionIdVoted === false) {
       setError({
         name: '无法参加',
         message: '当前行动未投票，不能参加',
       });
     }
     // 注意：有投票时不操作，避免清除其他错误信息
-  }, [isPendingCurrentRound, isPendingVoted, isActionIdVoted, setError]);
+  }, [isPendingJoinInfo, isActionIdVoted, setError]);
 
-  if (isPendingDetail || isPendingJoinInfo || isPendingConstants || isPendingJoined) {
+  if (isPendingDetail || isPendingJoinInfo || isPendingConstants) {
     return (
       <div className="flex flex-col items-center px-4 pt-6">
         <LoadingIcon />
@@ -479,13 +450,13 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     <>
       <div className="px-4 pt-0 pb-2">
         {/* 追加时显示参与统计 */}
-        {isJoined && (
+        {uiIsJoined && (
           <div className="my-4">
             <_GroupParticipationStats actionId={actionId} extensionAddress={extensionAddress} groupId={groupId} />
           </div>
         )}
 
-        {!isJoined && (
+        {!uiIsJoined && (
           <>
             {/* 体验模式标识 */}
             {isTrialMode && (
@@ -517,16 +488,6 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
               <span className="text-gray-700 text-sm mr-2 leading-none">{groupDetail.groupId.toString()}</span>
               <span className="font-semibold text-gray-700 text-sm truncate">{groupDetail.groupName}</span>
             </div>
-            {/* {!isJoined && !isTrialMode && (
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() => router.push(`/acting/join?id=${actionId}&symbol=${token?.symbol || ''}`)}
-                className="text-secondary p-0 h-auto text-xs shrink-0"
-              >
-                切换链群
-              </Button>
-            )} */}
           </div>
         </div>
 
@@ -540,7 +501,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-greyscale-500 font-normal">
-                    {!isJoined ? (
+                    {!uiIsJoined ? (
                       <>
                         {isTrialMode ? '体验代币数：' : '参与代币数：'}{' '}
                         {hasVotes &&
@@ -615,7 +576,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
             {verificationKeys && verificationKeys.length > 0 && (
               <>
                 <div>
-                  {isPendingVerificationInfos ? (
+                  {isPendingJoinInfo ? (
                     <div className="text-sm text-gray-500">加载已有验证信息...</div>
                   ) : (
                     <>
@@ -726,7 +687,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                     : '2.已加入'
                   : uiIsTrialMode
                   ? '加入行动'
-                  : isJoined
+                  : uiIsJoined
                   ? '2.追加代币'
                   : '2.加入行动'}
               </Button>
@@ -769,9 +730,17 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
           isPendingJoin ||
           isConfirmingJoin ||
           isPendingTrialJoin ||
-          isConfirmingTrialJoin
+          isConfirmingTrialJoin ||
+          isConfirmedJoin ||
+          isConfirmedTrialJoin
         }
-        text={isPendingApprove || isPendingJoin || isPendingTrialJoin ? '提交交易...' : '确认交易...'}
+        text={
+          isConfirmedJoin || isConfirmedTrialJoin
+            ? '加入成功，即将跳转...'
+            : isPendingApprove || isPendingJoin || isPendingTrialJoin
+            ? '提交交易...'
+            : '确认交易...'
+        }
       />
     </>
   );
