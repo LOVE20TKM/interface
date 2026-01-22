@@ -84,26 +84,10 @@ export const useFormatLPSymbol = ({
     return tokenAddress.toLowerCase() === token.address.toLowerCase();
   }, [tokenAddress, token?.address]);
 
-  // 如果 tokenAddress 在 tokenContext 中，直接返回原 symbol
-  if (isTokenInContext) {
-    return {
-      formattedSymbol: tokenSymbol || 'UNKNOWN',
-      isPending: false,
-      error: null,
-    };
-  }
-
-  // 如果没有 tokenAddress 或为零地址，返回原 symbol
-  if (!tokenAddress || tokenAddress === ZERO_ADDRESS || !enabled) {
-    return {
-      formattedSymbol: tokenSymbol || 'UNKNOWN',
-      isPending: false,
-      error: null,
-    };
-  }
-
   // 阶段 1: 检查是否为 LP token（通过调用 factory() 方法）
-  const shouldCheckLP = enabled && !!tokenAddress && !!uniswapV2FactoryAddressLower;
+  // 注意：所有 hooks 必须在条件判断之前调用，不能提前返回
+  const shouldCheckLP =
+    enabled && !!tokenAddress && !!uniswapV2FactoryAddressLower && !isTokenInContext && tokenAddress !== ZERO_ADDRESS;
 
   const {
     data: factoryData,
@@ -197,6 +181,11 @@ export const useFormatLPSymbol = ({
 
   // 计算格式化后的 symbol
   const formattedSymbol = useMemo(() => {
+    // 如果 tokenAddress 在 tokenContext 中，直接返回原 symbol
+    if (isTokenInContext) {
+      return tokenSymbol || 'UNKNOWN';
+    }
+
     // 如果未启用或没有 tokenAddress，返回原 symbol
     if (!enabled || !tokenAddress || tokenAddress === ZERO_ADDRESS) {
       return tokenSymbol || 'UNKNOWN';
@@ -237,6 +226,7 @@ export const useFormatLPSymbol = ({
     // 如果无法获取 symbol，返回原 symbol
     return tokenSymbol || 'UNKNOWN';
   }, [
+    isTokenInContext,
     enabled,
     tokenAddress,
     tokenSymbol,
@@ -253,6 +243,11 @@ export const useFormatLPSymbol = ({
 
   // 计算 isPending 状态
   const isPending = useMemo(() => {
+    // 如果 tokenAddress 在 tokenContext 中，不需要等待
+    if (isTokenInContext) {
+      return false;
+    }
+
     if (!enabled || !tokenAddress || tokenAddress === ZERO_ADDRESS) {
       return false;
     }
@@ -275,6 +270,7 @@ export const useFormatLPSymbol = ({
 
     return false;
   }, [
+    isTokenInContext,
     enabled,
     tokenAddress,
     uniswapV2FactoryAddressLower,

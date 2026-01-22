@@ -6,6 +6,7 @@ import { formatEther } from 'viem';
 // my hooks
 import { useExtensionParams } from '@/src/hooks/extension/plugins/group/composite/useExtensionParams';
 import { useSymbol } from '@/src/hooks/contracts/useLOVE20Token';
+import { useFormatLPSymbol } from '@/src/hooks/extension/base/composite/useFormatLPSymbol';
 
 // my components
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -50,8 +51,14 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
     joinTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
   );
 
+  // 格式化加入代币符号（支持 LP 代币格式）
+  const { formattedSymbol: formattedJoinTokenSymbol, isPending: isFormatJoinSymbolPending } = useFormatLPSymbol({
+    tokenAddress: joinTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
+    tokenSymbol: joinTokenSymbol,
+  });
+
   // 加载中状态
-  if (isPending || isStakeSymbolPending || isJoinSymbolPending) {
+  if (isPending || isStakeSymbolPending || isJoinSymbolPending || isFormatJoinSymbolPending) {
     return (
       <div className="mt-6 bg-gray-50 rounded-lg p-4">
         <div className="text-center">
@@ -96,19 +103,19 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
       <div className="space-y-3">
         {/* 加入代币地址 */}
         <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">参与行动时使用的代币地址:</div>
-          <div className="flex items-center gap-2">
+          <div className="text-sm font-bold mb-1">参与行动时使用的代币:</div>
+          <div className="flex items-center justify-between">
+            {formattedJoinTokenSymbol && <span className="text-sm">{formattedJoinTokenSymbol}</span>}
             <AddressWithCopyButton address={joinTokenAddress} showCopyButton={true} colorClassName="text-sm" />
-            {joinTokenSymbol && <span className="text-sm text-gray-600">({joinTokenSymbol})</span>}
           </div>
         </div>
 
         {/* 质押代币地址 */}
         <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">激活链群需质押的代币地址:</div>
-          <div className="flex items-center gap-2">
+          <div className="text-sm font-bold mb-1">激活链群需质押的代币:</div>
+          <div className="flex items-center justify-between">
+            {stakeTokenSymbol && <span className="text-sm">{stakeTokenSymbol}</span>}
             <AddressWithCopyButton address={tokenAddress} showCopyButton={true} colorClassName="text-sm" />
-            {stakeTokenSymbol && <span className="text-sm text-gray-600">({stakeTokenSymbol})</span>}
           </div>
         </div>
 
