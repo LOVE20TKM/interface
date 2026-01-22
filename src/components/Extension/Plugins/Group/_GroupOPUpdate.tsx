@@ -28,7 +28,9 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import { useExtensionActionParam, useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
+import { useFormatLPSymbol } from '@/src/hooks/extension/base/composite/useFormatLPSymbol';
+import { useExtensionActionParam } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionParam';
+import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import {
   useUpdateGroupInfo,
   useMaxVerifyCapacityByOwner,
@@ -79,6 +81,13 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     isPending: isPendingParams,
     error: errorParams,
   } = useExtensionActionParam({ actionId, extensionAddress });
+
+  // 格式化 joinTokenSymbol（如果是 LP 代币，会格式化为 LP(token0,token1)）
+  const { formattedSymbol: formattedJoinTokenSymbol, isPending: isPendingFormattedSymbol } = useFormatLPSymbol({
+    tokenAddress: actionParams?.joinTokenAddress,
+    tokenSymbol: actionParams?.joinTokenSymbol,
+    enabled: !!actionParams?.joinTokenAddress,
+  });
 
   // 获取服务者的最大容量上限
   const {
@@ -284,7 +293,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     if (errorUpdate) handleError(errorUpdate);
   }, [errorDetail, errorParams, errorMaxCapacity, errorUpdate, handleError]);
 
-  if (isPendingDetail || isPendingParams || isPendingMaxCapacity) {
+  if (isPendingDetail || isPendingParams || isPendingMaxCapacity || isPendingFormattedSymbol) {
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
@@ -318,7 +327,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    链群容量上限 ({actionParams?.joinTokenSymbol}
+                    链群容量上限 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                     {actionParams?.joinTokenAddress && (
                       <span className="pl-2">
                         <AddressWithCopyButton
@@ -329,7 +338,6 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                         />
                       </span>
                     )}
-                    )
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="0 为不限制" className="!ring-secondary-foreground" {...field} />
@@ -337,7 +345,6 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                   <FormDescription className="text-xs">
                     <span className="flex items-center gap-1">
                       您的最大可验证容量为：{formatTokenAmount(maxVerifyCapacity || BigInt(0))}{' '}
-                      {actionParams?.joinTokenSymbol}
                     </span>
                   </FormDescription>
                   <FormMessage />
@@ -370,7 +377,9 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               name="minJoinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>最小参与代币数 ({actionParams?.joinTokenSymbol})</FormLabel>
+                  <FormLabel>
+                    最小参与代币数 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="请填写数量，必须大于0" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
@@ -386,7 +395,9 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               name="maxJoinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>最大参与代币数 ({actionParams?.joinTokenSymbol})</FormLabel>
+                  <FormLabel>
+                    最大参与代币数 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="可填0, 表示与扩展行动默认值保持一致"
@@ -396,8 +407,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                   </FormControl>
                   {actionParams?.joinMaxAmount && actionParams.joinMaxAmount > BigInt(0) && (
                     <FormDescription className="text-xs">
-                      扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)}{' '}
-                      {actionParams?.joinTokenSymbol}
+                      扩展行动当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)}
                     </FormDescription>
                   )}
                   <FormMessage />

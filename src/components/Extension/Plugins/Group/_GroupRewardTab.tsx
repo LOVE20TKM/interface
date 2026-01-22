@@ -256,9 +256,9 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
 
                         if (!canNavigate) return <span>{rewardText}</span>;
 
-                        const href = `/extension/group/?groupId=${item.groupId.toString()}&actionId=${actionId.toString()}&symbol=${encodeURIComponent(
-                          tokenSymbol,
-                        )}&tab=rewards`;
+                        const href = `/extension/group/?groupId=${item.groupId.toString()}&actionId=${actionId.toString()}&symbol=${
+                          token?.symbol
+                        }&tab=rewards`;
 
                         return (
                           <Link href={href} className="underline underline-offset-2 hover:text-secondary/80">

@@ -59,6 +59,8 @@ export interface ActionParticipationData {
   participantCount: bigint | undefined;
   /** 总参与金额 */
   totalAmount: bigint | undefined;
+  /** 转换后的总参与金额（转换为当前代币的等价值） */
+  convertedTotalAmount: bigint | undefined;
   /** joinedAmount 对应的代币地址（扩展行动可能不同于当前 token） */
   joinedAmountTokenAddress: `0x${string}` | undefined;
   /** joinedAmount 对应的代币 symbol（扩展行动可能不同于当前 token） */
@@ -146,6 +148,8 @@ export function useActionParticipationAdapter(
       // 参与统计（扩展优先，回退到 core）
       participantCount: isExtensionAction ? extensionData.participantCount : coreData?.participantCount,
       totalAmount: isExtensionAction ? extensionData.totalAmount : coreData?.totalAmount,
+      // 转换后的总参与金额（仅扩展行动有值，普通行动为 undefined）
+      convertedTotalAmount: isExtensionAction ? extensionData.convertedTotalAmount : undefined,
 
       // joinedAmount 口径代币信息（扩展优先；普通行动默认等同于当前 token）
       joinedAmountTokenAddress: isExtensionAction ? extensionData.joinedAmountTokenAddress : tokenAddress,

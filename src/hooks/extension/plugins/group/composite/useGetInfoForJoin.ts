@@ -28,7 +28,7 @@ export interface UseGetInfoForJoinParams {
   account: `0x${string}` | undefined;
   /** Action ID */
   actionId: bigint | undefined;
-  /** 加入代币地址（从 useExtensionActionConstCache 获取） */
+  /** 加入代币地址（从 useExtensionsByActionIdsWithCache 获取） */
   joinTokenAddress: `0x${string}` | undefined;
   /** 验证信息的 key 列表（从 actionInfo 获取） */
   verificationKeys: string[] | undefined;

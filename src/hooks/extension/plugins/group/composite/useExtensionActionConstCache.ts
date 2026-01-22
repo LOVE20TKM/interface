@@ -238,7 +238,6 @@ export const useExtensionActionConstCache = ({
       const cacheValue = {
         tokenAddress: constants.tokenAddress,
         actionId: constants.actionId?.toString(),
-        // stakeTokenAddress 已删除，不再缓存此字段
         stakeTokenSymbol: constants.stakeTokenSymbol,
         joinTokenAddress: constants.joinTokenAddress,
         joinTokenSymbol: constants.joinTokenSymbol,

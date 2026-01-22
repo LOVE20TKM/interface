@@ -39,6 +39,7 @@ export default function ActionInfoPage() {
     actionInfo,
     participantCount,
     totalAmount,
+    convertedTotalAmount,
     joinedAmountTokenSymbol,
     joinedAmountTokenIsLP,
     isJoined,
@@ -231,6 +232,7 @@ export default function ActionInfoPage() {
               actionInfo={actionInfo}
               participantCount={participantCount}
               totalAmount={totalAmount}
+              convertedTotalAmount={convertedTotalAmount}
               joinedAmountTokenSymbol={joinedAmountTokenSymbol}
               joinedAmountTokenIsLP={joinedAmountTokenIsLP}
               isJoined={isJoined}

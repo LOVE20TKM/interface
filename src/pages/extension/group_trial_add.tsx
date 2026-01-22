@@ -247,7 +247,7 @@ const GroupTrialAddPage: React.FC = () => {
       // 返回体验列表页面
       router.push(
         `/extension/group_trial?groupId=${groupIdBigInt?.toString()}&actionId=${actionId?.toString()}&symbol=${
-          token?.symbol || ''
+          token?.symbol
         }`,
       );
     }

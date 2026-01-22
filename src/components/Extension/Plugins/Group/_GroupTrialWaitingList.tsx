@@ -6,7 +6,6 @@ import { useAccount } from 'wagmi';
 import { toast } from 'react-hot-toast';
 
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
-import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,6 @@ import {
   useTrialWaitingListRemove,
   useTrialWaitingListRemoveAll,
 } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
-import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
 import { Trash2 } from 'lucide-react';
 
 interface GroupTrialWaitingListProps {
@@ -32,13 +30,6 @@ interface GroupTrialWaitingListProps {
 const _GroupTrialWaitingList: React.FC<GroupTrialWaitingListProps> = ({ extensionAddress, groupId, actionId }) => {
   const router = useRouter();
   const { address: account } = useAccount();
-
-  const {
-    constants,
-    isPending: isPendingConstants,
-    error: errorConstants,
-  } = useExtensionActionConstCache({ extensionAddress, actionId });
-  const joinTokenSymbol = constants?.joinTokenSymbol;
 
   const {
     waitingList,
@@ -69,8 +60,7 @@ const _GroupTrialWaitingList: React.FC<GroupTrialWaitingListProps> = ({ extensio
     if (errorWaitingList) handleError(errorWaitingList);
     if (errorRemove) handleError(errorRemove);
     if (errorRemoveAll) handleError(errorRemoveAll);
-    if (errorConstants) handleError(errorConstants);
-  }, [errorWaitingList, errorRemove, errorRemoveAll, errorConstants, handleError]);
+  }, [errorWaitingList, errorRemove, errorRemoveAll, handleError]);
 
   useEffect(() => {
     if ((isConfirmedRemove || isConfirmedRemoveAll) && !hasCalledSuccessRef.current) {
@@ -105,7 +95,7 @@ const _GroupTrialWaitingList: React.FC<GroupTrialWaitingListProps> = ({ extensio
     return <div className="text-sm text-gray-500">请先连接钱包</div>;
   }
 
-  if (isPendingWaitingList || isPendingConstants) {
+  if (isPendingWaitingList) {
     return (
       <div className="flex flex-col items-center py-6">
         <LoadingIcon />

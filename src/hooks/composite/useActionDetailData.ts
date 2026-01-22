@@ -23,6 +23,7 @@ export interface ActionDetailData {
   // 参与统计（自动支持扩展行动）
   participantCount: bigint | undefined;
   totalAmount: bigint | undefined;
+  convertedTotalAmount: bigint | undefined;
   joinedAmountTokenAddress: `0x${string}` | undefined;
   joinedAmountTokenSymbol: string | undefined;
   joinedAmountTokenIsLP: boolean;
@@ -166,6 +167,7 @@ export const useActionDetailData = ({
       // 参与统计（自动使用扩展数据或基础数据）
       participantCount: participationData.participantCount,
       totalAmount: participationData.totalAmount,
+      convertedTotalAmount: participationData.convertedTotalAmount,
       joinedAmountTokenAddress: participationData.joinedAmountTokenAddress,
       joinedAmountTokenSymbol: participationData.joinedAmountTokenSymbol,
       joinedAmountTokenIsLP: participationData.joinedAmountTokenIsLP,

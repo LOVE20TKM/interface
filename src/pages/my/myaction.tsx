@@ -32,6 +32,7 @@ const ActRewardsPage = () => {
     actionInfo,
     participantCount,
     totalAmount,
+    convertedTotalAmount,
     joinedAmountTokenSymbol,
     joinedAmountTokenIsLP,
     isJoined,
@@ -77,12 +78,12 @@ const ActRewardsPage = () => {
               actionInfo={actionInfo}
               participantCount={participantCount}
               totalAmount={totalAmount}
+              convertedTotalAmount={convertedTotalAmount}
               joinedAmountTokenSymbol={joinedAmountTokenSymbol}
               joinedAmountTokenIsLP={joinedAmountTokenIsLP}
               isJoined={isJoined}
               isPending={isPending}
               showActionButtons={false}
-              linkToActionInfo={true}
             />
           )}
 

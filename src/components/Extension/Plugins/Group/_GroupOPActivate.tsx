@@ -33,6 +33,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // hooks
 import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
 import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
+import { useFormatLPSymbol } from '@/src/hooks/extension/base/composite/useFormatLPSymbol';
 import { useExtensionActionParam } from '@/src/hooks/extension/plugins/group/composite';
 import {
   useActivateGroup,
@@ -99,6 +100,13 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     isPending: isPendingActionParams,
     error: errorActionParams,
   } = useExtensionActionParam({ actionId, extensionAddress });
+
+  // 格式化 joinTokenSymbol（如果是 LP 代币，会格式化为 LP(token0,token1)）
+  const { formattedSymbol: formattedJoinTokenSymbol, isPending: isPendingFormattedSymbol } = useFormatLPSymbol({
+    tokenAddress: actionParams?.joinTokenAddress,
+    tokenSymbol: actionParams?.joinTokenSymbol,
+    enabled: !!actionParams?.joinTokenAddress,
+  });
 
   // 获取固定的质押量要求（用于授权）
   const stakeAmount = actionParams?.groupActivationStakeAmount || BigInt(0);
@@ -374,6 +382,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     isPendingActionParams ||
     isPendingMaxCapacity ||
     isPendingBalance ||
+    isPendingFormattedSymbol ||
     (!groupId && (isPendingGroups || isPendingActivatedGroups))
   ) {
     return (
@@ -448,18 +457,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    链群容量上限 ({actionParams?.joinTokenSymbol}
-                    {actionParams?.tokenAddress && (
-                      <span className="gap-0 pl-2">
-                        <AddressWithCopyButton
-                          address={actionParams.tokenAddress}
-                          showCopyButton={true}
-                          showAddress={true}
-                          colorClassName="text-greyscale-500"
-                        />
-                      </span>
-                    )}
-                    )
+                    链群容量上限 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="0 为不限制" className="!ring-secondary-foreground flex-1" {...field} />
@@ -467,7 +465,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                   <FormDescription className="text-xs">
                     <span className="flex items-center gap-1">
                       您的最大可验证容量为：{formatTokenAmount(maxVerifyCapacity || BigInt(0))}{' '}
-                      {actionParams?.joinTokenSymbol}
                     </span>
                   </FormDescription>
                   <FormMessage />
@@ -500,7 +497,9 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               name="minJoinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>最小参与代币数 ({actionParams?.joinTokenSymbol})</FormLabel>
+                  <FormLabel>
+                    最小参与代币数 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="请填写数量，必须大于0" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
@@ -516,14 +515,15 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               name="maxJoinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>最大参与代币数 ({actionParams?.joinTokenSymbol})</FormLabel>
+                  <FormLabel>
+                    最大参与代币数 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="0 为不做限制" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
                   {actionParams?.joinMaxAmount && actionParams.joinMaxAmount > BigInt(0) && (
                     <FormDescription className="text-xs">
-                      扩展行动默认值当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)}{' '}
-                      {actionParams?.joinTokenSymbol}
+                      扩展行动当前最大参与量：{formatTokenAmount(actionParams.joinMaxAmount)}
                     </FormDescription>
                   )}
                   <FormMessage />
@@ -577,7 +577,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                   userBalance !== undefined && userBalance < stakeAmount ? 'text-red-600' : 'text-gray-600'
                 }`}
               >
-                当前余额：{formatTokenAmount(userBalance || BigInt(0))} {actionParams?.stakeTokenSymbol}
+                当前余额：{formatTokenAmount(userBalance || BigInt(0))}
               </div>
               {userBalance !== undefined && userBalance < stakeAmount && (
                 <div className="text-xs text-red-700 font-medium mt-2">⚠️ 余额不足，无法激活链群</div>

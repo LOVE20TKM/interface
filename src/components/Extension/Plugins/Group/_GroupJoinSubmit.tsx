@@ -33,7 +33,7 @@ import { useTrialMode } from '@/src/contexts/TrialModeContext';
 
 // hooks
 import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
-import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
+import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useGetInfoForJoin } from '@/src/hooks/extension/plugins/group/composite/useGetInfoForJoin';
 import { useJoin, useTrialJoin } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
@@ -87,13 +87,17 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
   // 获取扩展常量数据（包括 joinTokenAddress 和 joinTokenSymbol）
   const {
-    constants,
+    extensions,
     isPending: isPendingConstants,
     error: errorConstants,
-  } = useExtensionActionConstCache({ extensionAddress, actionId });
+  } = useExtensionsByActionIdsWithCache({
+    token: token || ({ address: '0x0000000000000000000000000000000000000000' as `0x${string}` } as any),
+    actionIds: [actionId],
+    enabled: !!token && actionId !== undefined,
+  });
 
-  const joinTokenAddress = constants?.joinTokenAddress;
-  const joinTokenSymbol = constants?.joinTokenSymbol;
+  const joinTokenAddress = extensions[0]?.joinedAmountTokenAddress;
+  const joinTokenSymbol = extensions[0]?.joinedAmountTokenSymbol;
 
   // 获取验证信息的 key 列表
   const verificationKeys = actionInfo?.body?.verificationKeys as string[] | undefined;
@@ -646,9 +650,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                   ) : isConfirmingApprove ? (
                     '1.确认中...'
                   ) : isTokenApproved ? (
-                    `1.${joinTokenSymbol || token?.symbol || ''}已授权`
+                    `1.代币已授权`
                   ) : (
-                    `1.授权${joinTokenSymbol || token?.symbol || ''}`
+                    `1.授权代币`
                   )}
                 </Button>
               )}

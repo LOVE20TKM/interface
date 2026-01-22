@@ -15,7 +15,7 @@ import { useMediaQuery } from '@mui/material';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
+import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
@@ -45,14 +45,22 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
 
-  // 获取扩展常量数据（包括 joinTokenAddress 和 joinTokenSymbol）
+  // 获取扩展信息（包括 joinedAmountTokenSymbol）
   const {
-    constants,
+    extensions,
     isPending: isPendingConstants,
     error: errorConstants,
-  } = useExtensionActionConstCache({ extensionAddress, actionId });
+  } = useExtensionsByActionIdsWithCache({
+    token: token?.address ? token : ({ address: '0x0000000000000000000000000000000000000000' as `0x${string}` } as any),
+    actionIds: [actionId],
+    enabled: !!token && actionId !== undefined,
+  });
 
-  const joinTokenSymbol = constants?.joinTokenSymbol;
+  const joinTokenSymbol = extensions[0]?.joinedAmountTokenSymbol;
+
+  // 计算显示的 symbol 和对应的字体大小
+  const displaySymbol = joinTokenSymbol || token?.symbol || '';
+  const symbolTextSize = displaySymbol.length > 10 ? 'text-xs' : 'text-sm';
 
   // 获取加入信息
   const {
@@ -136,8 +144,8 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
       <div className="stat place-items-center flex flex-col justify-center">
         <div className="stat-title">还可追加</div>
         <div className="stat-value text-2xl text-secondary">{formatTokenAmount(additionalAllowed)}</div>
-        <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
-          {joinTokenSymbol || token?.symbol || ''}
+        <div className={`stat-desc ${symbolTextSize} mt-2 whitespace-normal break-words text-center`}>
+          {displaySymbol}
         </div>
       </div>
 

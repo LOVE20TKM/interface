@@ -36,7 +36,18 @@ const VerifyDetailPage = () => {
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
   // 获取页面数据
-  const { actionInfo, participantCount, totalAmount, isJoined, isPending, error, currentRound } = useActionDetailData({
+  const {
+    actionInfo,
+    participantCount,
+    totalAmount,
+    convertedTotalAmount,
+    joinedAmountTokenSymbol,
+    joinedAmountTokenIsLP,
+    isJoined,
+    isPending,
+    error,
+    currentRound,
+  } = useActionDetailData({
     tokenAddress: token?.address,
     actionId,
     account,
@@ -565,10 +576,12 @@ const VerifyDetailPage = () => {
               actionInfo={actionInfo}
               participantCount={participantCount}
               totalAmount={totalAmount}
+              convertedTotalAmount={convertedTotalAmount}
+              joinedAmountTokenSymbol={joinedAmountTokenSymbol}
+              joinedAmountTokenIsLP={joinedAmountTokenIsLP}
               isJoined={isJoined}
               isPending={isPending}
               showActionButtons={false}
-              linkToActionInfo={true}
             />
           )}
         </div>

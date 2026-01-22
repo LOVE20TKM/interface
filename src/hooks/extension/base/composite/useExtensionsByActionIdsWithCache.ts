@@ -54,7 +54,7 @@ const EXTENSION_CENTER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENS
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
 
 /** 缓存键前缀 */
-const CACHE_KEY_PREFIX = 'extension_validation_';
+const CACHE_KEY_PREFIX = 'love20:extension:contract2:';
 
 // ==================== 类型定义 ====================
 
@@ -245,6 +245,7 @@ export const useExtensionsByActionIdsWithCache = ({
 
     actionIds.forEach((actionId) => {
       const cachedInfo = getCachedExtensionValidation(tokenAddress, actionId);
+
       if (cachedInfo !== null) {
         // 验证缓存完整性（向后兼容）
         if (cachedInfo.isExtension) {

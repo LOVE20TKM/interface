@@ -18,10 +18,10 @@ import { useReadContracts } from 'wagmi';
 import type { Abi } from 'abitype';
 import { IExtensionAbi } from '@/src/abis/IExtension';
 import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
-import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
+import { useConvertTokenAmount } from '@/src/hooks/composite/useConvertTokenAmount';
 import { ActionInfo } from '@/src/types/love20types';
 
 const EXTENSION_CENTER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
@@ -36,6 +36,8 @@ export interface ExtensionParticipationData {
   participantCount: bigint | undefined;
   /** 总参与金额 */
   totalAmount: bigint | undefined;
+  /** 转换后的总参与金额（转换为当前代币的等价值） */
+  convertedTotalAmount: bigint | undefined;
   /** joinedAmount 对应的代币地址*/
   joinedAmountTokenAddress: `0x${string}` | undefined;
   /** joinedAmount 对应的代币 symbol */
@@ -62,11 +64,12 @@ export interface ExtensionParticipationData {
  * @returns 扩展行动的参与数据
  *
  * @description
- * 批量查询（按条件可选）最多 4 个合约方法：
+ * 批量查询（按条件可选）最多 3 个合约方法：
  * 1. accountsCount - 参与者数量（从 ExtensionCenter）
  * 2. joinedAmount - 总参与金额（从扩展合约）
  * 3. isAccountJoined - 是否已参与（从 ExtensionCenter，需要 account）
- * 4. symbol - joinedAmountTokenAddress 对应的代币符号（需要 joinedAmountTokenAddress）
+ *
+ * 注意：joinedAmountTokenSymbol 直接从 contractInfo 获取，不需要查询合约
  */
 export function useExtensionParticipationData(
   extensionAddress: `0x${string}` | undefined,
@@ -111,8 +114,6 @@ export function useExtensionParticipationData(
   // ==========================================
   // 步骤3: 构建批量查询合约配置
   // ==========================================
-  const joinedAmountTokenSymbolAddress = contractInfo?.joinedAmountTokenAddress;
-
   const { contracts, contractIndex, isContractsEnabled } = useMemo(() => {
     const nextContracts: Array<{
       address: `0x${string}`;
@@ -125,7 +126,6 @@ export function useExtensionParticipationData(
       accountsCount: -1,
       joinedAmount: -1,
       isAccountJoined: -1,
-      joinedAmountTokenSymbol: -1,
     };
 
     // 1) accountsCount: 需要 tokenAddress + actionId
@@ -160,22 +160,12 @@ export function useExtensionParticipationData(
       });
     }
 
-    // 4) joinedAmountTokenSymbol: 仅取 contractInfo.joinedAmountTokenAddress
-    if (joinedAmountTokenSymbolAddress) {
-      nextIndex.joinedAmountTokenSymbol = nextContracts.length;
-      nextContracts.push({
-        address: joinedAmountTokenSymbolAddress,
-        abi: LOVE20TokenAbi,
-        functionName: 'symbol',
-      });
-    }
-
     return {
       contracts: nextContracts,
       contractIndex: nextIndex,
       isContractsEnabled: nextContracts.length > 0,
     };
-  }, [tokenAddress, actionId, extensionAddress, account, joinedAmountTokenSymbolAddress]);
+  }, [tokenAddress, actionId, extensionAddress, account]);
 
   // ==========================================
   // 步骤4: 批量调用合约
@@ -229,11 +219,42 @@ export function useExtensionParticipationData(
     return contractInfo?.joinedAmountTokenIsLP ?? false;
   }, [contractInfo?.joinedAmountTokenIsLP]);
 
+  // joinedAmountTokenSymbol 直接从 contractInfo 获取，不需要查询合约
   const joinedAmountTokenSymbol = useMemo(() => {
-    const idx = contractIndex.joinedAmountTokenSymbol;
-    if (idx < 0) return undefined;
-    return data?.[idx]?.status === 'success' ? (data[idx].result as string) : undefined;
-  }, [data, contractIndex.joinedAmountTokenSymbol]);
+    return contractInfo?.joinedAmountTokenSymbol;
+  }, [contractInfo?.joinedAmountTokenSymbol]);
+
+  // ==========================================
+  // 步骤7: 计算转换后的总参与金额（转换为当前代币的等价值）
+  // ==========================================
+  // 判断是否需要转换：只有当参与代币与当前代币不同时才需要转换
+  const shouldConvert = useMemo(() => {
+    return (
+      totalAmount !== undefined &&
+      totalAmount > BigInt(0) &&
+      joinedAmountTokenAddress !== undefined &&
+      tokenAddress !== undefined &&
+      joinedAmountTokenAddress.toLowerCase() !== tokenAddress.toLowerCase()
+    );
+  }, [totalAmount, joinedAmountTokenAddress, tokenAddress]);
+
+  // 使用 useConvertTokenAmount 进行代币转换
+  // 注意：需要确保 fromToken 和 toToken 都是有效地址，否则传入默认值（不会实际使用）
+  const defaultTokenAddress = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+  const { convertedAmount, isSuccess: isConvertSuccess } = useConvertTokenAmount({
+    fromToken: (joinedAmountTokenAddress || tokenAddress || defaultTokenAddress) as `0x${string}`,
+    isFromTokenLP: joinedAmountTokenIsLP,
+    fromAmount: totalAmount || BigInt(0),
+    toToken: (tokenAddress || defaultTokenAddress) as `0x${string}`,
+  });
+
+  const convertedTotalAmount = useMemo(() => {
+    // 只有在需要转换且转换成功时才返回转换后的金额
+    if (!shouldConvert || !isConvertSuccess) {
+      return undefined;
+    }
+    return convertedAmount;
+  }, [shouldConvert, isConvertSuccess, convertedAmount]);
 
   // ==========================================
   // 聚合加载状态和错误
@@ -252,6 +273,7 @@ export function useExtensionParticipationData(
   return {
     participantCount,
     totalAmount,
+    convertedTotalAmount,
     joinedAmountTokenAddress,
     joinedAmountTokenSymbol,
     joinedAmountTokenIsLP,

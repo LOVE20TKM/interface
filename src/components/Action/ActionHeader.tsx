@@ -1,64 +1,63 @@
 import { useContext } from 'react';
 import { useAccount } from 'wagmi';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { formatTokenAmount } from '@/src/lib/format';
 import { ActionInfo } from '@/src/types/love20types';
 import ActionButtons from './ActionButtons';
+import InfoTooltip from '@/src/components/Common/InfoTooltip';
 
 interface ActionHeaderProps {
   actionInfo: ActionInfo;
   participantCount: bigint | undefined;
   totalAmount: bigint | undefined;
+  convertedTotalAmount?: bigint | undefined;
   joinedAmountTokenSymbol?: string | undefined;
   joinedAmountTokenIsLP?: boolean | undefined;
   isJoined: boolean;
   isPending: boolean;
   showActionButtons?: boolean;
-  linkToActionInfo?: boolean;
 }
 
 export default function ActionHeader({
   actionInfo,
   participantCount,
   totalAmount,
+  convertedTotalAmount,
   joinedAmountTokenSymbol,
   joinedAmountTokenIsLP,
   isJoined,
   isPending,
   showActionButtons = true,
-  linkToActionInfo = false,
 }: ActionHeaderProps) {
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
-  const router = useRouter();
 
   if (!token) {
     return <div>Token信息加载中...</div>;
   }
 
-  const formattedTotalAmount = totalAmount ? formatTokenAmount(totalAmount) : '0';
+  // 判断是否显示转换后的金额
+  const shouldShowConverted = convertedTotalAmount && convertedTotalAmount > BigInt(0);
+  const displayAmount = shouldShowConverted ? convertedTotalAmount : totalAmount;
+  const formattedDisplayAmount = displayAmount ? formatTokenAmount(displayAmount) : '0';
+  const displayTitle = shouldShowConverted ? '总参与代币(估):' : '总参与代币:';
+
   const shouldShowJoinedTokenSymbol = Boolean(
     joinedAmountTokenSymbol && token?.symbol && joinedAmountTokenSymbol !== token.symbol,
   );
   const joinedTokenSymbolForDisplay = joinedAmountTokenIsLP ? 'LP' : joinedAmountTokenSymbol;
 
-  // 处理点击跳转
-  const handleClick = () => {
-    if (linkToActionInfo && token) {
-      router.push(`/action/info?symbol=${token.symbol}&id=${actionInfo.head.id}`);
-    }
-  };
+  // 构建提示内容
+  const tooltipContent = shouldShowConverted
+    ? `• 实际总参与代币： ${totalAmount ? formatTokenAmount(totalAmount) : '0'} ${
+        joinedAmountTokenSymbol || ''
+      }\n• 估算值是根据 UniswapV2 池价格实时换算。`
+    : '';
 
   return (
-    <div
-      className={`!bg-gray-100 rounded-lg px-2 pt-2 pb-2 text-sm my-4 ${
-        linkToActionInfo ? 'cursor-pointer hover:bg-gray-200 transition-colors' : ''
-      }`}
-      onClick={handleClick}
-    >
+    <div className="!bg-gray-100 rounded-lg px-2 pt-2 pb-2 text-sm my-4">
       <div className="mb-2">
         <h1 className="text-lg mb-1">
           <div className="flex items-baseline">
@@ -70,13 +69,16 @@ export default function ActionHeader({
       </div>
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center">
-          <span className="text-gray-500 mr-2">总参与代币:</span>
+          <span className="text-gray-500 mr-2">{displayTitle}</span>
           <span className="font-mono text-secondary">
-            {formattedTotalAmount}
-            {shouldShowJoinedTokenSymbol && (
+            {formattedDisplayAmount}
+            {shouldShowJoinedTokenSymbol && !shouldShowConverted && (
               <span className="ml-1 text-xs text-gray-500">{joinedTokenSymbolForDisplay}</span>
             )}{' '}
           </span>
+          {shouldShowConverted && tooltipContent && (
+            <InfoTooltip title="参与代币数量说明" content={tooltipContent} className="ml-1" />
+          )}
         </div>
         <div className="flex items-center">
           <span className="text-gray-500 mr-2">总参与地址:</span>

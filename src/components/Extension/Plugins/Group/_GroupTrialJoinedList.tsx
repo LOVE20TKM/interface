@@ -12,7 +12,6 @@ import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 import NavigationUtils from '@/src/lib/navigationUtils';
 
-import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
 import { useTrialExit, useTrialJoinedListByProvider } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 interface GroupTrialJoinedListProps {
@@ -24,9 +23,6 @@ interface GroupTrialJoinedListProps {
 const _GroupTrialJoinedList: React.FC<GroupTrialJoinedListProps> = ({ extensionAddress, groupId, actionId }) => {
   const { address: account } = useAccount();
   const hasCalledSuccessRef = useRef(false);
-
-  const { constants } = useExtensionActionConstCache({ extensionAddress, actionId });
-  const joinTokenSymbol = constants?.joinTokenSymbol;
 
   const { joinedList, isPending, error } = useTrialJoinedListByProvider(
     extensionAddress,

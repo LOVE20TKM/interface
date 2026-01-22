@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Info } from 'lucide-react';
-import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
-import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle, DrawerHeader } from '@/components/ui/drawer';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerTitle, DrawerHeader } from '@/components/ui/drawer';
 import { useMediaQuery } from '@mui/material';
 
 interface InfoTooltipProps {
@@ -31,7 +31,11 @@ export default function InfoTooltip({ title, content, className = '' }: InfoTool
   // 共享的内容组件
   const InfoContent = () => (
     <div className="text-gray-700">
-      {typeof content === 'string' ? <p className="leading-relaxed text-sm">{content}</p> : content}
+      {typeof content === 'string' ? (
+        <p className="leading-relaxed text-sm whitespace-pre-line">{content}</p>
+      ) : (
+        content
+      )}
     </div>
   );
 
@@ -40,9 +44,9 @@ export default function InfoTooltip({ title, content, className = '' }: InfoTool
       {/* 桌面端使用 Dialog */}
       {isDesktop && (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
+          <div onClick={() => setIsOpen(true)}>
             <TriggerButton />
-          </DialogTrigger>
+          </div>
           <DialogContent className="sm:max-w-[425px]">
             <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
             <div className="pt-2 pb-4">
@@ -55,9 +59,9 @@ export default function InfoTooltip({ title, content, className = '' }: InfoTool
       {/* 移动端使用 Drawer */}
       {!isDesktop && (
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
-          <DrawerTrigger asChild>
+          <div onClick={() => setIsOpen(true)}>
             <TriggerButton />
-          </DrawerTrigger>
+          </div>
           <DrawerContent className="pb-safe">
             <DrawerHeader>
               <DrawerTitle className="text-lg font-semibold">{title}</DrawerTitle>

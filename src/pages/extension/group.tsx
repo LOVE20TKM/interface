@@ -216,11 +216,8 @@ const ActionGroupPage: React.FC = () => {
             if (!showDistrustWarn && !showCapacityDecayWarn) return null;
 
             const actionIdForLink = actionInfo?.head?.id;
-            const symbolForLink = token?.symbol || (router.query.symbol as string) || '';
             const distrustHref = actionIdForLink
-              ? `/action/info/?symbol=${encodeURIComponent(
-                  symbolForLink,
-                )}&id=${actionIdForLink.toString()}&tab=public&tab2=distrust`
+              ? `/action/info/?symbol=${token?.symbol}&id=${actionIdForLink.toString()}&tab=public&tab2=distrust`
               : undefined;
 
             return (

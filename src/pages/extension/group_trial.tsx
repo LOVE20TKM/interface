@@ -90,9 +90,7 @@ const GroupTrialPage: React.FC = () => {
   const handleCopyShareLink = async () => {
     const baseUrl = window.location.origin;
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH ? process.env.NEXT_PUBLIC_BASE_PATH : '';
-    const shareUrl = `${baseUrl}${basePath}/acting/join/?tab=join&groupId=${groupIdParamStr}&id=${actionId}&provider=${account}&symbol=${
-      token?.symbol || ''
-    }`;
+    const shareUrl = `${baseUrl}${basePath}/acting/join/?tab=join&groupId=${groupIdParamStr}&id=${actionId}&provider=${account}&symbol=${token?.symbol}`;
 
     try {
       await copyWithToast(shareUrl, '分享链接已复制到剪贴板', (text) => {

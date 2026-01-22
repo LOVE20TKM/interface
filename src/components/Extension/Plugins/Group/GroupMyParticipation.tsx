@@ -25,10 +25,7 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
-import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
-import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useExit, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
@@ -37,7 +34,6 @@ import { useContractError } from '@/src/errors/useContractError';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 
 // 组件
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import _GroupParticipationStats from './_GroupParticipationStats';
@@ -52,18 +48,6 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
   const router = useRouter();
-
-  // 获取扩展常量数据（包括 joinTokenAddress 和 joinTokenSymbol）
-  const {
-    constants,
-    isPending: isPendingConstants,
-    error: errorConstants,
-  } = useExtensionActionConstCache({ extensionAddress, actionId });
-
-  const joinTokenSymbol = constants?.joinTokenSymbol;
-
-  // 获取当前轮次
-  const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
 
   // 获取加入信息
   const {
@@ -100,12 +84,8 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     verificationKeys,
   });
 
-  // 判断是否已加入行动
-  const {
-    isJoined,
-    isPending: isPendingJoined,
-    error: errorJoined,
-  } = useIsAccountJoined(token?.address as `0x${string}`, actionId, account as `0x${string}`);
+  // 判断是否已加入行动：joinedAmount > 0 表示已加入
+  const isJoined = (joinedAmount ?? BigInt(0)) > BigInt(0);
 
   // 退出
   const {
@@ -134,25 +114,13 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   // 错误处理
   const { handleError } = useContractError();
   useEffect(() => {
-    if (errorRound) handleError(errorRound);
     if (errorJoinInfo) handleError(errorJoinInfo);
     if (errorDetail) handleError(errorDetail);
     if (errorExit) handleError(errorExit);
     if (errorVerificationInfos) handleError(errorVerificationInfos);
-    if (errorConstants) handleError(errorConstants);
-    if (errorJoined) handleError(errorJoined);
-  }, [
-    errorRound,
-    errorJoinInfo,
-    errorDetail,
-    errorExit,
-    errorVerificationInfos,
-    errorConstants,
-    errorJoined,
-    handleError,
-  ]);
+  }, [errorJoinInfo, errorDetail, errorExit, errorVerificationInfos, handleError]);
 
-  if (isPendingRound || isPendingJoinInfo || isPendingDetail || isPendingConstants || isPendingJoined) {
+  if (isPendingJoinInfo || isPendingDetail) {
     return (
       <div className="bg-white rounded-lg p-8">
         <div className="text-center">
@@ -168,9 +136,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
       <div className="flex flex-col items-center pt-8">
         <p className="text-gray-600 mb-6">您还没有参与此链群行动</p>
         <Button variant="outline" className="text-secondary border-secondary" asChild>
-          <Link href={`/acting/join?id=${actionId}&symbol=${joinTokenSymbol || token?.symbol || ''}`}>
-            加入链群参与
-          </Link>
+          <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol}`}>加入链群参与</Link>
         </Button>
       </div>
     );
@@ -201,7 +167,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
               <span className="text-gray-500 text-xs">#</span>
               <Link
                 href={`/extension/group?groupId=${groupId?.toString()}&actionId=${actionId.toString()}&symbol=${
-                  joinTokenSymbol || token?.symbol || ''
+                  token?.symbol
                 }`}
                 className="text-secondary hover:underline flex items-center gap-1"
               >
@@ -225,7 +191,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
               onClick={() =>
                 router.push(
                   `/acting/join?tab=update_verification_info&groupId=${groupId?.toString()}&id=${actionId}&symbol=${
-                    joinTokenSymbol || token?.symbol || ''
+                    token?.symbol
                   }`,
                 )
               }
@@ -281,9 +247,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
 
         {/* 查看激励 */}
         <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
-          <Link href={`/my/rewardsofaction?id=${actionId}&symbol=${joinTokenSymbol || token?.symbol || ''}`}>
-            查看激励
-          </Link>
+          <Link href={`/my/rewardsofaction?id=${actionId}&symbol=${token?.symbol}`}>查看激励</Link>
         </Button>
 
         {/* 增加参与代币 */}
@@ -293,11 +257,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
           </Button>
         ) : (
           <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
-            <Link
-              href={`/acting/join?tab=join&groupId=${groupId?.toString()}&id=${actionId}&symbol=${
-                joinTokenSymbol || token?.symbol || ''
-              }`}
-            >
+            <Link href={`/acting/join?tab=join&groupId=${groupId?.toString()}&id=${actionId}&symbol=${token?.symbol}`}>
               追加代币
             </Link>
           </Button>
