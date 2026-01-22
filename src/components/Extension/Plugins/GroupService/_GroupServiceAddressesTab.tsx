@@ -84,13 +84,14 @@ const GroupServiceAddressesTab: React.FC<GroupServiceAddressesTabProps> = ({ ext
         <table className="table w-full">
           <thead>
             <tr className="border-b border-gray-100">
+              <th className="px-0 text-center"> </th>
               <th className="px-2 text-left">链群服务者</th>
               <th className="px-2 text-center">加入轮次</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            {sortedParticipants.map((participant) => (
+            {sortedParticipants.map((participant, index) => (
               <tr
                 key={participant.address}
                 onClick={() => handleRowClick(participant.address)}
@@ -98,6 +99,7 @@ const GroupServiceAddressesTab: React.FC<GroupServiceAddressesTabProps> = ({ ext
                   participant.address === account ? 'text-secondary' : ''
                 }`}
               >
+                <td className="px-0 text-center">{index + 1}</td>
                 <td className="px-2">
                   <AddressWithCopyButton
                     address={participant.address}

@@ -227,17 +227,42 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
 
   type FormValues = z.infer<typeof formSchema>;
 
+  // 计算 minJoinAmount 的默认值：如果1000大于 actionParams.joinMaxAmount，则不设置默认值
+  const defaultMinJoinAmount = useMemo(() => {
+    if (!actionParams?.joinMaxAmount) {
+      return '1000'; // 如果 joinMaxAmount 未加载，默认使用 1000
+    }
+    const defaultAmount = parseUnits('1000');
+    // 如果默认值大于 joinMaxAmount，则不设置默认值
+    if (defaultAmount > actionParams.joinMaxAmount) {
+      return '';
+    }
+    return '1000';
+  }, [actionParams?.joinMaxAmount]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       maxCapacity: '',
       description: '',
-      minJoinAmount: '1000',
+      minJoinAmount: defaultMinJoinAmount,
       maxJoinAmount: '',
       maxAccounts: '',
     },
     mode: 'onChange',
   });
+
+  // 当 actionParams 加载完成后，如果默认值需要更新，则重置表单
+  useEffect(() => {
+    if (actionParams?.joinMaxAmount !== undefined) {
+      const currentValue = form.getValues('minJoinAmount');
+      const newDefaultValue = defaultMinJoinAmount;
+      // 如果当前值为空或等于旧的默认值，且新默认值不同，则更新
+      if ((!currentValue || currentValue === '1000') && currentValue !== newDefaultValue) {
+        form.setValue('minJoinAmount', newDefaultValue);
+      }
+    }
+  }, [actionParams?.joinMaxAmount, defaultMinJoinAmount, form]);
 
   const {
     allowance,
