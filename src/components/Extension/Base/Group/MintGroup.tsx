@@ -304,12 +304,18 @@ export default function MintGroup() {
                 </div>
 
                 {isValid && mintCost !== undefined && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">铸造成本:</span>
-                    <span className="font-mono text-secondary font-medium">
-                      {formatTokenAmount(mintCost)} {FIRST_TOKEN_SYMBOL}
-                    </span>
-                  </div>
+                  <>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">铸造成本:</span>
+                      <span className="font-mono text-secondary font-medium">
+                        {formatTokenAmount(mintCost)} {FIRST_TOKEN_SYMBOL}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">滑点:</span>
+                      <span className="font-mono text-secondary font-medium">0.1%</span>
+                    </div>
+                  </>
                 )}
 
                 {balance !== undefined && (

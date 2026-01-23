@@ -2,17 +2,16 @@
  * 获取服务者的所有行动和链群信息 Hook
  *
  * 功能：
- * 1. 使用 useExtensionParams 获取链群行动所在代币地址
- * 2. 使用 useActionIdsWithActiveGroupIdsByOwner 获取行动ID和链群ID列表（使用步骤1获取的代币地址）
- * 3. 使用 useActionBaseInfosByIdsWithCache 批量获取行动信息
- * 4. 使用 useGroupNamesWithCache 批量获取链群名称
- * 5. 使用 GroupJoin.totalJoinedAmountByGroupId 批量获取链群代币参与量
- * 6. 组合并返回结构化数据
+ * 1. 使用 useActionIdsWithActiveGroupIdsByOwner 获取行动ID和链群ID列表（使用传入的代币地址）
+ * 2. 使用 useActionBaseInfosByIdsWithCache 批量获取行动信息
+ * 3. 使用 useGroupNamesWithCache 批量获取链群名称
+ * 4. 使用 GroupJoin.totalJoinedAmountByGroupId 批量获取链群代币参与量
+ * 5. 组合并返回结构化数据
  *
  * 使用示例：
  * ```typescript
  * const { actionsWithGroups, isPending, error } = useActionsWithActiveGroupsByOwner({
- *   extensionAddress: '0x...',
+ *   groupActionTokenAddress: '0x...',
  *   account: '0x...'
  * });
  * ```
@@ -22,7 +21,6 @@ import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { useActionIdsWithActiveGroupIdsByOwner } from './useActionIdsWithActiveGroupIdsByOwner';
-import { useExtensionParams } from './useExtensionParams';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
@@ -64,8 +62,8 @@ export interface ActionWithGroups {
  * Hook 参数
  */
 export interface UseActionsWithActiveGroupsByOwnerParams {
-  /** 链群服务扩展合约地址 */
-  extensionAddress: `0x${string}` | undefined;
+  /** 链群行动所在代币地址 */
+  groupActionTokenAddress: `0x${string}` | undefined;
   /** 链群服务者账户地址 */
   account: `0x${string}` | undefined;
 }
@@ -91,21 +89,11 @@ export interface UseActionsWithActiveGroupsByOwnerResult {
  * @returns 行动列表（包含链群信息）
  */
 export function useActionsWithActiveGroupsByOwner({
-  extensionAddress,
+  groupActionTokenAddress,
   account,
 }: UseActionsWithActiveGroupsByOwnerParams): UseActionsWithActiveGroupsByOwnerResult {
   // ==========================================
-  // 步骤1：获取链群行动所在代币地址
-  // ==========================================
-
-  const {
-    groupActionTokenAddress,
-    isPending: isGroupActionTokenPending,
-    error: groupActionTokenError,
-  } = useExtensionParams((extensionAddress || '0x0000000000000000000000000000000000000000') as `0x${string}`);
-
-  // ==========================================
-  // 步骤2：获取 actionIds 和 groupIds
+  // 步骤1：获取 actionIds 和 groupIds
   // ==========================================
 
   const {
@@ -305,35 +293,29 @@ export function useActionsWithActiveGroupsByOwner({
 
   const isPending = useMemo(() => {
     // 等待基本参数
-    if (!extensionAddress || !account) return true;
+    if (!groupActionTokenAddress || !account) return true;
 
-    // 步骤1：获取链群行动所在代币地址
-    if (isGroupActionTokenPending) return true;
-    if (!groupActionTokenAddress) return false;
-
-    // 步骤2：获取 actionIds 和 groupIds
+    // 步骤1：获取 actionIds 和 groupIds
     if (isActionIdsPending) return true;
     if (actionIdsWithGroupIds.length === 0) return false; // 没有数据，不需要继续加载
 
-    // 步骤3.5：获取扩展地址
+    // 步骤2：获取扩展地址
     if (isExtensionsPending) return true;
     if (actionIdToExtensionMap.size === 0) return false;
 
-    // 步骤4：获取行动信息
+    // 步骤3：获取行动信息
     if (isActionInfosPending) return true;
 
-    // 步骤5：获取链群名称
+    // 步骤4：获取链群名称
     if (isGroupNamesPending) return true;
 
-    // 步骤6：获取代币参与量
+    // 步骤5：获取代币参与量
     return isTotalJoinedAmountPending;
   }, [
-    extensionAddress,
+    groupActionTokenAddress,
     account,
     isActionIdsPending,
     actionIdsWithGroupIds.length,
-    isGroupActionTokenPending,
-    groupActionTokenAddress,
     isExtensionsPending,
     actionIdToExtensionMap.size,
     isActionInfosPending,
@@ -347,7 +329,6 @@ export function useActionsWithActiveGroupsByOwner({
 
   const error =
     actionIdsError ||
-    groupActionTokenError ||
     extensionsError ||
     actionInfosError ||
     groupNamesError ||

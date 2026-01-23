@@ -6,6 +6,7 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import { formatTokenAmount } from '@/src/lib/format';
 import { useActionsWithActiveGroupsByOwner } from '@/src/hooks/extension/plugins/group-service/composite/useActionsWithActiveGroupsByOwner';
+import { useExtensionParams } from '@/src/hooks/extension/plugins/group-service/composite/useExtensionParams';
 
 interface ServiceProviderActionsDialogProps {
   /** Extension 合约地址 */
@@ -32,9 +33,12 @@ export default function ServiceProviderActionsDialog({
   open,
   onOpenChange,
 }: ServiceProviderActionsDialogProps) {
+  // 从 extensionAddress 获取 groupActionTokenAddress
+  const { groupActionTokenAddress } = useExtensionParams(extensionAddress! as `0x${string}`);
+
   // 获取服务者的所有行动和链群数据
   const { actionsWithGroups, isPending, error } = useActionsWithActiveGroupsByOwner({
-    extensionAddress,
+    groupActionTokenAddress,
     account: open && serviceProvider ? serviceProvider : undefined, // 只在 Dialog 打开时查询
   });
 
