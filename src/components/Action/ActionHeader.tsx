@@ -72,7 +72,7 @@ export default function ActionHeader({
           <span className="text-gray-500 mr-2">{displayTitle}</span>
           <span className="font-mono text-secondary">
             {formattedDisplayAmount}
-            {shouldShowJoinedTokenSymbol && !shouldShowConverted && (
+            {totalAmount && shouldShowJoinedTokenSymbol && !shouldShowConverted && (
               <span className="ml-1 text-xs text-gray-500">{joinedTokenSymbolForDisplay}</span>
             )}{' '}
           </span>

@@ -11,8 +11,8 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 const STAKE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`;
 const CENTER_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
 
-// 固定精度值
-const LP_RATIO_PRECISION = BigInt(100000);
+// 固定精度值 - WAD 标准精度（1e18）
+const LP_RATIO_PRECISION = BigInt(1e18);
 
 export interface LpParticipant {
   address: `0x${string}`;

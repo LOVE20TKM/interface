@@ -5,8 +5,8 @@ import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
 
 const STAKE_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`;
 
-// 固定精度值
-const LP_RATIO_PRECISION = BigInt(100000);
+// 固定精度值 - WAD 标准精度（1e18）
+const LP_RATIO_PRECISION = BigInt(1e18);
 
 export interface UseMyLpActionDataParams {
   extensionAddress: `0x${string}` | undefined;

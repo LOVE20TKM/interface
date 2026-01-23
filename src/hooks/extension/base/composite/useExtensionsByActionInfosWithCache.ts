@@ -573,8 +573,10 @@ export const useExtensionsByActionInfosWithCache = ({
         const token0Res = lpToken0Token1Data?.[lpIndex * 2];
         const token1Res = lpToken0Token1Data?.[lpIndex * 2 + 1];
 
-        const token0Addr = token0Res?.status === 'success' ? (token0Res.result as `0x${string}` | undefined) : undefined;
-        const token1Addr = token1Res?.status === 'success' ? (token1Res.result as `0x${string}` | undefined) : undefined;
+        const token0Addr =
+          token0Res?.status === 'success' ? (token0Res.result as `0x${string}` | undefined) : undefined;
+        const token1Addr =
+          token1Res?.status === 'success' ? (token1Res.result as `0x${string}` | undefined) : undefined;
 
         const indexInfo: { token0?: number; token1?: number } = {};
 
@@ -775,13 +777,19 @@ export const useExtensionsByActionInfosWithCache = ({
           // LP token: 读取 token0/token1 symbols
           const lpSymIndexes = lpSymbolIndexMap.get(joinedTokenIndex - 1);
           if (lpSymIndexes) {
-            const token0SymbolRes = lpSymIndexes.token0 !== undefined ? tokenSymbolData?.[lpSymIndexes.token0] : undefined;
-            const token1SymbolRes = lpSymIndexes.token1 !== undefined ? tokenSymbolData?.[lpSymIndexes.token1] : undefined;
+            const token0SymbolRes =
+              lpSymIndexes.token0 !== undefined ? tokenSymbolData?.[lpSymIndexes.token0] : undefined;
+            const token1SymbolRes =
+              lpSymIndexes.token1 !== undefined ? tokenSymbolData?.[lpSymIndexes.token1] : undefined;
 
             const token0Symbol =
-              token0SymbolRes?.status === 'success' && token0SymbolRes.result ? (token0SymbolRes.result as string) : 'UNKNOWN';
+              token0SymbolRes?.status === 'success' && token0SymbolRes.result
+                ? (token0SymbolRes.result as string)
+                : 'UNKNOWN';
             const token1Symbol =
-              token1SymbolRes?.status === 'success' && token1SymbolRes.result ? (token1SymbolRes.result as string) : 'UNKNOWN';
+              token1SymbolRes?.status === 'success' && token1SymbolRes.result
+                ? (token1SymbolRes.result as string)
+                : 'UNKNOWN';
 
             joinedAmountTokenSymbol = `LP(${token0Symbol},${token1Symbol})`;
           }

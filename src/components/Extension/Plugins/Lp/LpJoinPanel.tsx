@@ -20,9 +20,9 @@ import { useContractError } from '@/src/errors/useContractError';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
-import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite/useMyLpActionData';
-import { useJoin, useJoinTokenAddress } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLp';
+import { useJoin } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLp';
+import { useFormatLPSymbol } from '@/src/hooks/extension/base/composite/useFormatLPSymbol';
 
 // contexts / types / etc
 import { ActionInfo } from '@/src/types/love20types';
@@ -65,16 +65,11 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     error: errorVoted,
   } = useIsActionIdVoted(token?.address as `0x${string}`, currentRound || BigInt(0), actionId);
 
-  // 获取 Join Token 地址（即 LP Token 地址）
-  const {
-    joinTokenAddress,
-    isPending: isPendingJoinToken,
-    error: errorJoinToken,
-  } = useJoinTokenAddress(extensionAddress);
-
   // 获取 Lp 扩展数据（用于显示已参与信息）
   const {
     joinedAmount,
+    waitingBlocks,
+    joinTokenAddress,
     rewardRatio,
     userGovVotes,
     totalGovVotes,
@@ -88,12 +83,8 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     account: account as `0x${string}`,
   });
 
-  // 判断是否已加入行动
-  const {
-    isJoined,
-    isPending: isPendingJoined,
-    error: errorJoined,
-  } = useIsAccountJoined(token?.address as `0x${string}`, actionId, account as `0x${string}`);
+  // 判断是否已加入行动（joinedAmount > 0 表示已加入）
+  const isJoined = joinedAmount > BigInt(0);
 
   // 格式化 LP 占比
   const lpRatioStr = formatPercentage(lpRatio);
@@ -114,6 +105,13 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     !!joinTokenAddress,
   );
 
+  // 获取 LP Token 的 symbol
+  const { formattedSymbol: lpTokenSymbol } = useFormatLPSymbol({
+    tokenAddress: joinTokenAddress,
+    tokenSymbol: undefined,
+    enabled: !!joinTokenAddress,
+  });
+
   // 获取已授权数量
   const {
     allowance: allowanceLp,
@@ -124,6 +122,8 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
 
   // 定义授权状态变量：是否已完成LP授权
   const [isLpApproved, setIsLpApproved] = useState(false);
+  // 标记是否正在等待跳转（加入成功后，在跳转前保持加入前的状态）
+  const [isWaitingRedirect, setIsWaitingRedirect] = useState(false);
 
   // 动态构造 zod schema
   const formSchema = z.object({
@@ -265,6 +265,8 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
       toast.success('加入LP成功');
       // 重置表单
       form.reset();
+      // 标记正在等待跳转，防止页面状态切换
+      setIsWaitingRedirect(true);
       // 2秒后返回
       setTimeout(() => {
         router.push(`/my/myaction?id=${actionInfo.head.id}&symbol=${token?.symbol}`);
@@ -277,7 +279,6 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   // ------------------------------
   const { handleError } = useContractError();
   useEffect(() => {
-    if (errorJoinToken) handleError(errorJoinToken);
     if (errorLpBalance) handleError(errorLpBalance);
     if (errApproveLp) handleError(errApproveLp);
     if (errorJoin) handleError(errorJoin);
@@ -285,19 +286,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     if (errorData) handleError(errorData);
     if (errorCurrentRound) handleError(errorCurrentRound);
     if (errorVoted) handleError(errorVoted);
-    if (errorJoined) handleError(errorJoined);
-  }, [
-    errorJoinToken,
-    errorLpBalance,
-    errApproveLp,
-    errorJoin,
-    errAllowanceLp,
-    errorData,
-    errorCurrentRound,
-    errorVoted,
-    errorJoined,
-    handleError,
-  ]);
+  }, [errorLpBalance, errApproveLp, errorJoin, errAllowanceLp, errorData, errorCurrentRound, errorVoted, handleError]);
 
   // 检查投票状态并显示错误提示
   useEffect(() => {
@@ -314,14 +303,14 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   // ------------------------------
   //  组件渲染
   // ------------------------------
-  if (isPendingJoinToken || isPendingData || isPendingJoined) {
+  if (isPendingData) {
     return <LoadingIcon />;
   }
 
   return (
     <>
-      {/* 如果已加入，显示参与信息 */}
-      {isJoined && (
+      {/* 如果已加入，显示参与信息（等待跳转期间不显示） */}
+      {isJoined && !isWaitingRedirect && (
         <div className="flex flex-col items-center px-4 pt-1">
           <LpStatsCard
             stakedAmount={joinedAmount || BigInt(0)}
@@ -349,7 +338,18 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
 
       {/* 加入表单 */}
       <div className="px-6 pt-6 pb-2">
-        <LeftTitle title={isJoined ? '追加LP' : '加入行动'} />
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-lg font-bold">{isJoined && !isWaitingRedirect ? '追加LP' : '加入行动'}</h1>
+          <button
+            type="button"
+            onClick={() => {
+              router.push('/dex/?tab=liquidity');
+            }}
+            className="text-secondary text-sm hover:underline"
+          >
+            获取LP代币 &gt;&gt;
+          </button>
+        </div>
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4 pt-2">
             {/* LP加入数 */}
@@ -358,11 +358,15 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
               name="joinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-greyscale-500 font-normal">{isJoined ? '' : '质押LP数量：'}</FormLabel>
+                  <FormLabel className="text-greyscale-500 font-normal">
+                    {isJoined && !isWaitingRedirect ? '' : '质押LP数量：'}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder={
-                        isJoined ? `最大可追加 ${formatTokenAmount(lpBalance || BigInt(0), 4)}` : `请输入LP加入数量`
+                        isJoined && !isWaitingRedirect
+                          ? `最大可追加 ${formatTokenAmount(lpBalance || BigInt(0), 4)}`
+                          : `请输入LP数量`
                       }
                       type="number"
                       disabled={!lpBalance || lpBalance <= BigInt(0) || isGovVotesInsufficient}
@@ -371,9 +375,10 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                     />
                   </FormControl>
                   <FormMessage />
-                  <FormDescription className="flex items-center">
+                  <FormDescription className="flex items-center justify-between">
                     <span>
-                      共有 <span className="text-secondary">{formatTokenAmount(lpBalance || BigInt(0), 4)}</span> LP
+                      共有 <span className="text-secondary">{formatTokenAmount(lpBalance || BigInt(0), 4)}</span>{' '}
+                      {lpTokenSymbol}
                     </span>
                     <Button
                       type="button"
@@ -384,7 +389,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                           form.setValue('joinAmount', formatUnits(lpBalance));
                         }
                       }}
-                      className="text-secondary p-0 ml-6"
+                      className="text-secondary p-0"
                       disabled={!lpBalance || lpBalance <= BigInt(0) || isGovVotesInsufficient}
                     >
                       全部
@@ -455,8 +460,12 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
 
       {/* 增加一个帮助信息 */}
       <div className="px-6 pt-0 pb-4">
-        <div className="text-greyscale-500 text-sm">
-          提示：加入LP参与扩展行动后，等待一定区块数后可以直接取回LP，取回不会影响已产生的激励
+        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
+          <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
+          <div className="space-y-1 text-gray-600">
+            <div>• 加入代币为 {lpTokenSymbol}</div>
+            <div>• 加入行动后，等待 {waitingBlocks.toString()} 区块数后可以取回LP</div>
+          </div>
         </div>
       </div>
 

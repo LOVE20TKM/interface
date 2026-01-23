@@ -31,8 +31,12 @@ const LpStatsCard: React.FC<LpStatsCardProps> = ({
   // 将激励占比转换为百分比字符串
   const actualRatioStr = formatPercentage(rewardRatio * 100);
 
-  // 计算治理票占比
-  const govVotesRatio = totalGovVotes > BigInt(0) ? (Number(userGovVotes) / Number(totalGovVotes)) * 100 : 0;
+  // 计算治理票占比 - 使用 BigInt 避免精度丢失
+  const LP_RATIO_PRECISION = BigInt(1e18);
+  const govVotesRatioBigInt = totalGovVotes > BigInt(0) 
+    ? (userGovVotes * LP_RATIO_PRECISION) / totalGovVotes 
+    : BigInt(0);
+  const govVotesRatio = (Number(govVotesRatioBigInt) / Number(LP_RATIO_PRECISION)) * 100;
   const govVotesRatioStr = formatPercentage(govVotesRatio);
 
   return (
