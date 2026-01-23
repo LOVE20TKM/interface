@@ -15,19 +15,23 @@ import { formatTokenAmount } from '@/src/lib/format';
 import NavigationUtils from '@/src/lib/navigationUtils';
 
 import {
-  useTrialWaitingListByProvider,
-  useTrialWaitingListRemove,
-  useTrialWaitingListRemoveAll,
+  useTrialAccountsWaiting,
+  useTrialAccountsWaitingRemove,
+  useTrialAccountsWaitingRemoveAll,
 } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 import { Trash2 } from 'lucide-react';
 
-interface GroupTrialWaitingListProps {
+interface GroupTrialAccountsWaitingProps {
   extensionAddress: `0x${string}`;
   groupId: bigint;
   actionId: bigint;
 }
 
-const _GroupTrialWaitingList: React.FC<GroupTrialWaitingListProps> = ({ extensionAddress, groupId, actionId }) => {
+const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
+  extensionAddress,
+  groupId,
+  actionId,
+}) => {
   const router = useRouter();
   const { address: account } = useAccount();
 
@@ -35,23 +39,23 @@ const _GroupTrialWaitingList: React.FC<GroupTrialWaitingListProps> = ({ extensio
     waitingList,
     isPending: isPendingWaitingList,
     error: errorWaitingList,
-  } = useTrialWaitingListByProvider(extensionAddress, groupId, (account || '0x0') as `0x${string}`);
+  } = useTrialAccountsWaiting(extensionAddress, groupId, (account || '0x0') as `0x${string}`);
 
   const {
-    trialWaitingListRemove,
+    trialAccountsWaitingRemove,
     isPending: isPendingRemove,
     isConfirming: isConfirmingRemove,
     isConfirmed: isConfirmedRemove,
     writeError: errorRemove,
-  } = useTrialWaitingListRemove();
+  } = useTrialAccountsWaitingRemove();
 
   const {
-    trialWaitingListRemoveAll,
+    trialAccountsWaitingRemoveAll,
     isPending: isPendingRemoveAll,
     isConfirming: isConfirmingRemoveAll,
     isConfirmed: isConfirmedRemoveAll,
     writeError: errorRemoveAll,
-  } = useTrialWaitingListRemoveAll();
+  } = useTrialAccountsWaitingRemoveAll();
 
   const hasCalledSuccessRef = useRef(false);
 
@@ -71,7 +75,7 @@ const _GroupTrialWaitingList: React.FC<GroupTrialWaitingListProps> = ({ extensio
   }, [isConfirmedRemove, isConfirmedRemoveAll]);
 
   const handleRemove = async (address: `0x${string}`) => {
-    await trialWaitingListRemove(extensionAddress, groupId, [address]);
+    await trialAccountsWaitingRemove(extensionAddress, groupId, [address]);
   };
 
   const handleRemoveAll = async () => {
@@ -79,7 +83,7 @@ const _GroupTrialWaitingList: React.FC<GroupTrialWaitingListProps> = ({ extensio
       toast.error('暂无可取消的设置');
       return;
     }
-    await trialWaitingListRemoveAll(extensionAddress, groupId);
+    await trialAccountsWaitingRemoveAll(extensionAddress, groupId);
   };
 
   const handleAddClick = () => {
@@ -177,4 +181,4 @@ const _GroupTrialWaitingList: React.FC<GroupTrialWaitingListProps> = ({ extensio
   );
 };
 
-export default _GroupTrialWaitingList;
+export default _GroupTrialAccountsWaiting;

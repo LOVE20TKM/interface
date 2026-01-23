@@ -12,19 +12,23 @@ import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 import NavigationUtils from '@/src/lib/navigationUtils';
 
-import { useTrialExit, useTrialJoinedListByProvider } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
+import { useTrialExit, useTrialAccountsJoined } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
-interface GroupTrialJoinedListProps {
+interface GroupTrialAccountsJoinedProps {
   extensionAddress: `0x${string}`;
   groupId: bigint;
   actionId: bigint;
 }
 
-const _GroupTrialJoinedList: React.FC<GroupTrialJoinedListProps> = ({ extensionAddress, groupId, actionId }) => {
+const _GroupTrialAccountsJoined: React.FC<GroupTrialAccountsJoinedProps> = ({
+  extensionAddress,
+  groupId,
+  actionId,
+}) => {
   const { address: account } = useAccount();
   const hasCalledSuccessRef = useRef(false);
 
-  const { joinedList, isPending, error } = useTrialJoinedListByProvider(
+  const { joinedList, isPending, error } = useTrialAccountsJoined(
     extensionAddress,
     groupId,
     (account || '0x0') as `0x${string}`,
@@ -123,4 +127,4 @@ const _GroupTrialJoinedList: React.FC<GroupTrialJoinedListProps> = ({ extensionA
   );
 };
 
-export default _GroupTrialJoinedList;
+export default _GroupTrialAccountsJoined;

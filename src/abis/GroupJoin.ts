@@ -1629,6 +1629,269 @@ export const GroupJoinAbi = [
   },
   {
     "type": "function",
+    "name": "trialAccountsJoined",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "trialAccountsJoinedAtIndex",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "trialAccountsJoinedCount",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "trialAccountsWaiting",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "trialAccountsWaitingAdd",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "trialAccounts",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "trialAmounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "trialAccountsWaitingAtIndex",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "trialAccountsWaitingCount",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "trialAccountsWaitingRemove",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "trialAccounts",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "trialAccountsWaitingRemoveAll",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "trialExit",
     "inputs": [
       {
@@ -1668,269 +1931,6 @@ export const GroupJoinAbi = [
         "name": "verificationInfos",
         "type": "string[]",
         "internalType": "string[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "trialJoinedListByProvider",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "provider",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "trialJoinedListByProviderAtIndex",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "provider",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "trialJoinedListByProviderCount",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "provider",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "trialWaitingListAdd",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "trialAccounts",
-        "type": "address[]",
-        "internalType": "address[]"
-      },
-      {
-        "name": "trialAmounts",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "trialWaitingListByProvider",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "provider",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address[]",
-        "internalType": "address[]"
-      },
-      {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "trialWaitingListByProviderAtIndex",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "provider",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "trialWaitingListByProviderCount",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "provider",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "trialWaitingListRemove",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "trialAccounts",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "trialWaitingListRemoveAll",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -1981,6 +1981,24 @@ export const GroupJoinAbi = [
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
+      },
+      {
+        "name": "accountCountByGroupId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "accountCountByActionId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "accountCountByTokenAddress",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -2027,6 +2045,24 @@ export const GroupJoinAbi = [
       },
       {
         "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "accountCountByGroupId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "accountCountByActionId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "accountCountByTokenAddress",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -2090,6 +2126,11 @@ export const GroupJoinAbi = [
   },
   {
     "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "AlreadyJoined",
     "inputs": []
   },
@@ -2126,6 +2167,11 @@ export const GroupJoinAbi = [
   {
     "type": "error",
     "name": "GroupCapacityExceeded",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidFactoryAddress",
     "inputs": []
   },
   {

@@ -200,9 +200,9 @@ export const useGroupIdByAccountByRound = (extensionAddress: `0x${string}`, roun
 };
 
 /**
- * Hook for trialWaitingListByProvider - 获取体验待使用地址列表
+ * Hook for trialAccountsWaiting - 获取体验待使用地址列表
  */
-export const useTrialWaitingListByProvider = (
+export const useTrialAccountsWaiting = (
   extensionAddress: `0x${string}`,
   groupId: bigint,
   provider: `0x${string}`,
@@ -210,7 +210,7 @@ export const useTrialWaitingListByProvider = (
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
-    functionName: 'trialWaitingListByProvider',
+    functionName: 'trialAccountsWaiting',
     args: [extensionAddress, groupId, provider],
     query: {
       enabled: !!extensionAddress && groupId !== undefined && !!provider && provider !== '0x0',
@@ -230,9 +230,9 @@ export const useTrialWaitingListByProvider = (
 };
 
 /**
- * Hook for trialJoinedListByProvider - 获取体验中地址列表（包含体验代币数量）
+ * Hook for trialAccountsJoined - 获取体验中地址列表（包含体验代币数量）
  */
-export const useTrialJoinedListByProvider = (
+export const useTrialAccountsJoined = (
   extensionAddress: `0x${string}`,
   groupId: bigint,
   provider: `0x${string}`,
@@ -244,7 +244,7 @@ export const useTrialJoinedListByProvider = (
   } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
-    functionName: 'trialJoinedListByProvider',
+    functionName: 'trialAccountsJoined',
     args: [extensionAddress, groupId, provider],
     query: {
       enabled: !!extensionAddress && groupId !== undefined && !!provider && provider !== '0x0',
@@ -383,22 +383,22 @@ export function useExit() {
 }
 
 /**
- * Hook for trialWaitingListAdd - 添加体验待使用地址
+ * Hook for trialAccountsWaitingAdd - 添加体验待使用地址
  */
-export function useTrialWaitingListAdd() {
+export function useTrialAccountsWaitingAdd() {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
     GroupJoinAbi,
     CONTRACT_ADDRESS,
-    'trialWaitingListAdd',
+    'trialAccountsWaitingAdd',
   );
 
-  const trialWaitingListAdd = async (
+  const trialAccountsWaitingAdd = async (
     extensionAddress: `0x${string}`,
     groupId: bigint,
     trialAccounts: `0x${string}`[],
     trialAmounts: bigint[],
   ) => {
-    console.log('提交 trialWaitingListAdd 交易:', {
+    console.log('提交 trialAccountsWaitingAdd 交易:', {
       extensionAddress,
       groupId,
       trialAccounts,
@@ -410,17 +410,17 @@ export function useTrialWaitingListAdd() {
 
   useEffect(() => {
     if (hash) {
-      console.log('trialWaitingListAdd tx hash:', hash);
+      console.log('trialAccountsWaitingAdd tx hash:', hash);
     }
     if (error) {
-      console.log('提交 trialWaitingListAdd 交易错误:');
+      console.log('提交 trialAccountsWaitingAdd 交易错误:');
       logWeb3Error(error);
       logError(error);
     }
   }, [hash, error]);
 
   return {
-    trialWaitingListAdd,
+    trialAccountsWaitingAdd,
     isPending,
     isConfirming,
     writeError: error,
@@ -474,37 +474,37 @@ export function useTrialJoin() {
 }
 
 /**
- * Hook for trialWaitingListRemove - 删除体验待使用地址
+ * Hook for trialAccountsWaitingRemove - 删除体验待使用地址
  */
-export function useTrialWaitingListRemove() {
+export function useTrialAccountsWaitingRemove() {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
     GroupJoinAbi,
     CONTRACT_ADDRESS,
-    'trialWaitingListRemove',
+    'trialAccountsWaitingRemove',
   );
 
-  const trialWaitingListRemove = async (
+  const trialAccountsWaitingRemove = async (
     extensionAddress: `0x${string}`,
     groupId: bigint,
     trialAccounts: `0x${string}`[],
   ) => {
-    console.log('提交 trialWaitingListRemove 交易:', { extensionAddress, groupId, trialAccounts, isTukeMode });
+    console.log('提交 trialAccountsWaitingRemove 交易:', { extensionAddress, groupId, trialAccounts, isTukeMode });
     return await execute([extensionAddress, groupId, trialAccounts]);
   };
 
   useEffect(() => {
     if (hash) {
-      console.log('trialWaitingListRemove tx hash:', hash);
+      console.log('trialAccountsWaitingRemove tx hash:', hash);
     }
     if (error) {
-      console.log('提交 trialWaitingListRemove 交易错误:');
+      console.log('提交 trialAccountsWaitingRemove 交易错误:');
       logWeb3Error(error);
       logError(error);
     }
   }, [hash, error]);
 
   return {
-    trialWaitingListRemove,
+    trialAccountsWaitingRemove,
     isPending,
     isConfirming,
     writeError: error,
@@ -515,33 +515,33 @@ export function useTrialWaitingListRemove() {
 }
 
 /**
- * Hook for trialWaitingListRemoveAll - 取消所有体验待使用地址
+ * Hook for trialAccountsWaitingRemoveAll - 取消所有体验待使用地址
  */
-export function useTrialWaitingListRemoveAll() {
+export function useTrialAccountsWaitingRemoveAll() {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
     GroupJoinAbi,
     CONTRACT_ADDRESS,
-    'trialWaitingListRemoveAll',
+    'trialAccountsWaitingRemoveAll',
   );
 
-  const trialWaitingListRemoveAll = async (extensionAddress: `0x${string}`, groupId: bigint) => {
-    console.log('提交 trialWaitingListRemoveAll 交易:', { extensionAddress, groupId, isTukeMode });
+  const trialAccountsWaitingRemoveAll = async (extensionAddress: `0x${string}`, groupId: bigint) => {
+    console.log('提交 trialAccountsWaitingRemoveAll 交易:', { extensionAddress, groupId, isTukeMode });
     return await execute([extensionAddress, groupId]);
   };
 
   useEffect(() => {
     if (hash) {
-      console.log('trialWaitingListRemoveAll tx hash:', hash);
+      console.log('trialAccountsWaitingRemoveAll tx hash:', hash);
     }
     if (error) {
-      console.log('提交 trialWaitingListRemoveAll 交易错误:');
+      console.log('提交 trialAccountsWaitingRemoveAll 交易错误:');
       logWeb3Error(error);
       logError(error);
     }
   }, [hash, error]);
 
   return {
-    trialWaitingListRemoveAll,
+    trialAccountsWaitingRemoveAll,
     isPending,
     isConfirming,
     writeError: error,

@@ -4,7 +4,7 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
-import { useTrialWaitingListByProvider } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
+import { useTrialAccountsWaiting } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 interface TrialModeContextType {
   // 是否处于体验模式
@@ -47,7 +47,7 @@ export const TrialModeProvider: React.FC<TrialModeProviderProps> = ({ children, 
   }, [providerParam]);
 
   // 查询体验等待列表
-  const { waitingList, isPending, error } = useTrialWaitingListByProvider(
+  const { waitingList, isPending, error } = useTrialAccountsWaiting(
     extensionAddress || ('0x0' as `0x${string}`),
     groupId || BigInt(0),
     provider || ('0x0' as `0x${string}`),

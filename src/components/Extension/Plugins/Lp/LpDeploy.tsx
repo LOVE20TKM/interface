@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionFactoryLp';
-import { ExtensionFactoryLpAbi } from '@/src/abis/ExtensionFactoryLp';
+import { ExtensionLpFactoryAbi } from '@/src/abis/ExtensionLpFactory';
 import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
@@ -29,16 +29,6 @@ const formSchema = z.object({
     .string()
     .min(1, { message: '请输入LP Token地址' })
     .refine((val): val is string => isAddress(val), { message: 'LP Token地址格式无效' }),
-  waitingBlocks: z
-    .string()
-    .min(1, { message: '请输入等待区块数' })
-    .refine(
-      (val) => {
-        const num = parseFloat(val);
-        return !isNaN(num) && num >= 0 && Number.isInteger(num);
-      },
-      { message: '等待区块数必须是非负整数' },
-    ),
   govRatioMultiplier: z
     .string()
     .min(1, { message: '请输入治理比率乘数' })
@@ -76,7 +66,6 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       joinTokenAddress: '',
-      waitingBlocks: '',
       govRatioMultiplier: '',
       minGovVotes: '',
     },
@@ -120,7 +109,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
       try {
         // 解析 CreateExtension 事件
         const logs = parseEventLogs({
-          abi: ExtensionFactoryLpAbi,
+          abi: ExtensionLpFactoryAbi,
           eventName: 'CreateExtension',
           logs: receipt.logs,
         });
@@ -192,7 +181,6 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
       await createExtension(
         tokenAddress,
         values.joinTokenAddress as `0x${string}`,
-        BigInt(values.waitingBlocks),
         BigInt(values.govRatioMultiplier),
         minGovVotesWei,
       );
@@ -240,39 +228,13 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                 )}
               />
 
-              {/* 等待区块数 */}
-              <FormField
-                control={form.control}
-                name="waitingBlocks"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>2. 退出行动需等待的区块数</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="比如 10"
-                        disabled={approvalStep !== 'idle'}
-                        min="0"
-                        step="1"
-                        className="max-w-40 md:max-w-xs"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription className="text-sm text-greyscale-500">
-                      加入行动后，需等多少区块才能退出
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               {/* 治理比率乘数 */}
               <FormField
                 control={form.control}
                 name="govRatioMultiplier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>3. 治理比率乘数</FormLabel>
+                    <FormLabel>2. 治理比率乘数</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -298,7 +260,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                 name="minGovVotes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>4. 加入行动所需最小治理票数</FormLabel>
+                    <FormLabel>3. 加入行动所需最小治理票数</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

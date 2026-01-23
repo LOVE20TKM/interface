@@ -177,4 +177,6 @@ export const ErrorMessages: Record<string, string> = {
   TrialArrayLengthMismatch: '体验地址列表长度不匹配',
   GroupNameInvalidCharacters: '链群名称中含有无效字符',
   GroupNameTooLong: '链群名称过长',
+  ExtensionCreatorMismatch: '扩展创建者不匹配',
+  InvalidFactoryAddress: '无效的工厂地址',
 };

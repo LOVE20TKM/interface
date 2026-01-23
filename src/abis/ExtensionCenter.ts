@@ -911,6 +911,22 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "error",
+    "name": "ExtensionCreatorMismatch",
+    "inputs": [
+      {
+        "name": "creator",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "author",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "ExtensionNotFoundInFactory",
     "inputs": []
   },

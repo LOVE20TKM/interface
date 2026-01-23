@@ -84,6 +84,25 @@ export const ExtensionGroupServiceFactoryAbi = [
   },
   {
     "type": "function",
+    "name": "extensionCreator",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "extensions",
     "inputs": [],
     "outputs": [

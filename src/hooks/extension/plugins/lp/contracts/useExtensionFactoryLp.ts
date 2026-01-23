@@ -5,7 +5,7 @@ import { useReadContract } from 'wagmi';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
-import { ExtensionFactoryLpAbi } from '@/src/abis/ExtensionFactoryLp';
+import { ExtensionLpFactoryAbi } from '@/src/abis/ExtensionLpFactory';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // 需要在环境变量中配置这个合约地址
@@ -21,7 +21,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACT
 export const useFactoryCenter = (factoryAddress?: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress || CONTRACT_ADDRESS,
-    abi: ExtensionFactoryLpAbi,
+    abi: ExtensionLpFactoryAbi,
     functionName: 'CENTER_ADDRESS',
     query: {
       enabled: !!(factoryAddress || CONTRACT_ADDRESS),
@@ -37,7 +37,7 @@ export const useFactoryCenter = (factoryAddress?: `0x${string}`) => {
 export const useExtensionExists = (factoryAddress: `0x${string}`, extensionAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: ExtensionFactoryLpAbi,
+    abi: ExtensionLpFactoryAbi,
     functionName: 'exists',
     args: [extensionAddress],
     query: {
@@ -54,7 +54,7 @@ export const useExtensionExists = (factoryAddress: `0x${string}`, extensionAddre
 export const useFactoryExtensions = (factoryAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: ExtensionFactoryLpAbi,
+    abi: ExtensionLpFactoryAbi,
     functionName: 'extensions',
     query: {
       enabled: !!factoryAddress,
@@ -70,7 +70,7 @@ export const useFactoryExtensions = (factoryAddress: `0x${string}`) => {
 export const useFactoryExtensionsAtIndex = (factoryAddress: `0x${string}`, index: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: ExtensionFactoryLpAbi,
+    abi: ExtensionLpFactoryAbi,
     functionName: 'extensionsAtIndex',
     args: [index],
     query: {
@@ -87,7 +87,7 @@ export const useFactoryExtensionsAtIndex = (factoryAddress: `0x${string}`, index
 export const useFactoryExtensionsCount = (factoryAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: factoryAddress,
-    abi: ExtensionFactoryLpAbi,
+    abi: ExtensionLpFactoryAbi,
     functionName: 'extensionsCount',
     query: {
       enabled: !!factoryAddress,
@@ -109,7 +109,7 @@ export const useFactoryExtensionsCount = (factoryAddress: `0x${string}`) => {
  */
 export function useCreateExtension(factoryAddress?: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    ExtensionFactoryLpAbi,
+    ExtensionLpFactoryAbi,
     factoryAddress || CONTRACT_ADDRESS,
     'createExtension',
   );
@@ -117,19 +117,17 @@ export function useCreateExtension(factoryAddress?: `0x${string}`) {
   const createExtension = async (
     tokenAddress: `0x${string}`,
     joinTokenAddress: `0x${string}`,
-    waitingBlocks: bigint,
     govRatioMultiplier: bigint,
     minGovVotes: bigint,
   ) => {
     console.log('提交 createExtension 交易:', {
       tokenAddress,
       joinTokenAddress,
-      waitingBlocks,
       govRatioMultiplier,
       minGovVotes,
       isTukeMode,
     });
-    return await execute([tokenAddress, joinTokenAddress, waitingBlocks, govRatioMultiplier, minGovVotes]);
+    return await execute([tokenAddress, joinTokenAddress, govRatioMultiplier, minGovVotes]);
   };
 
   // 错误日志记录

@@ -1,7 +1,7 @@
 
 import { Abi } from 'abitype';
 
-export const ExtensionFactoryLpAbi = [
+export const ExtensionLpFactoryAbi = [
   {
     "type": "constructor",
     "inputs": [
@@ -28,6 +28,19 @@ export const ExtensionFactoryLpAbi = [
   },
   {
     "type": "function",
+    "name": "DEFAULT_WAITING_BLOCKS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "createExtension",
     "inputs": [
       {
@@ -39,11 +52,6 @@ export const ExtensionFactoryLpAbi = [
         "name": "joinLpTokenAddress",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "waitingBlocks",
-        "type": "uint256",
-        "internalType": "uint256"
       },
       {
         "name": "govRatioMultiplier",
@@ -80,6 +88,25 @@ export const ExtensionFactoryLpAbi = [
         "name": "",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "extensionCreator",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"

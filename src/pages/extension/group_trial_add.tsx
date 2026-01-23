@@ -27,7 +27,7 @@ import { parseUnits, formatTokenAmount } from '@/src/lib/format';
 import { isValidEthAddress, normalizeAddressInput } from '@/src/lib/addressUtils';
 import { getMaxJoinAmount } from '@/src/lib/extensionGroup';
 
-import { useTrialWaitingListAdd } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
+import { useTrialAccountsWaitingAdd } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
@@ -126,12 +126,12 @@ const GroupTrialAddPage: React.FC = () => {
   );
 
   const {
-    trialWaitingListAdd,
+    trialAccountsWaitingAdd,
     isPending: isPendingAdd,
     isConfirming: isConfirmingAdd,
     isConfirmed: isConfirmedAdd,
     writeError: errorAdd,
-  } = useTrialWaitingListAdd();
+  } = useTrialAccountsWaitingAdd();
 
   // 代币授权相关
   const {
@@ -307,7 +307,7 @@ const GroupTrialAddPage: React.FC = () => {
       return;
     }
 
-    await trialWaitingListAdd(extensionAddress, groupIdBigInt, trialAccounts, trialAmounts);
+    await trialAccountsWaitingAdd(extensionAddress, groupIdBigInt, trialAccounts, trialAmounts);
   };
 
   if (!account) {

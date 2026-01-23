@@ -73,7 +73,7 @@ const groupFilesToConvert = ['LOVE20Group'];
 
 const extensionsCenterFilesToConvert = ['ExtensionCenter', 'IExtension', 'IReward', 'ExtensionFactoryBase'];
 
-const extensionslpFilesToConvert = ['ExtensionFactoryLp', 'ExtensionLp'];
+const extensionslpFilesToConvert = ['ExtensionLpFactory', 'ExtensionLp'];
 
 const extensionsGroupFilesToConvert = [
   'ExtensionGroupAction',

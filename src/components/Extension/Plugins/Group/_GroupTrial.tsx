@@ -6,8 +6,8 @@ import { useRouter } from 'next/router';
 // UI 组件
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import _GroupTrialWaitingList from '@/src/components/Extension/Plugins/Group/_GroupTrialWaitingList';
-import _GroupTrialJoinedList from '@/src/components/Extension/Plugins/Group/_GroupTrialJoinedList';
+import _GroupTrialAccountsWaiting from '@/src/components/Extension/Plugins/Group/_GroupTrialAccountsWaiting';
+import _GroupTrialAccountsJoined from '@/src/components/Extension/Plugins/Group/_GroupTrialAccountsJoined';
 
 type TrialTab = 'waiting' | 'joined';
 
@@ -58,11 +58,11 @@ const _GroupTrial: React.FC<GroupTrialProps> = ({ extensionAddress, groupId, act
         </TabsList>
 
         <TabsContent value="waiting" className="mt-0">
-          <_GroupTrialWaitingList extensionAddress={extensionAddress} groupId={groupId} actionId={actionId} />
+          <_GroupTrialAccountsWaiting extensionAddress={extensionAddress} groupId={groupId} actionId={actionId} />
         </TabsContent>
 
         <TabsContent value="joined" className="mt-0">
-          <_GroupTrialJoinedList extensionAddress={extensionAddress} groupId={groupId} actionId={actionId} />
+          <_GroupTrialAccountsJoined extensionAddress={extensionAddress} groupId={groupId} actionId={actionId} />
         </TabsContent>
       </Tabs>
     </div>
