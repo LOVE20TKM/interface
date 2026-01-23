@@ -48,7 +48,6 @@ const nextConfig = {
   async exportPathMap() {
     return {
       '/': { page: '/' },
-      '/articles': { page: '/articles' },
       '/acting': { page: '/acting' },
       '/acting/join': { page: '/acting/join' },
       '/action/new': { page: '/action/new' },

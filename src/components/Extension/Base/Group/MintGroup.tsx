@@ -149,7 +149,9 @@ export default function MintGroup() {
       return;
     }
     try {
-      await approve(GROUP_CONTRACT_ADDRESS, mintCost);
+      // 授权 mintCost 的 100.1%，避免铸造价格变化
+      const approveAmount = (mintCost * BigInt(1001)) / BigInt(1000);
+      await approve(GROUP_CONTRACT_ADDRESS, approveAmount);
     } catch (error) {
       console.error(error);
     }
