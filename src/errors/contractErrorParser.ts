@@ -131,7 +131,7 @@ export function parseRpcError(error: string): ErrorInfo | null {
     if (/An internal error was received/i.test(error)) {
       return {
         name: '链上交易失败',
-        message: 'RPC节点临时故障，请稍后重试或刷新页面',
+        message: '连接故障，请稍后重试或刷新页面',
       };
     }
   }

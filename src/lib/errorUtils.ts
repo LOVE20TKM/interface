@@ -145,7 +145,7 @@ function _parseRpcError(error: string): string {
   if (/Failed to fetch/i.test(error)) {
     // 如果同时包含 "An internal error was received"，说明是RPC节点内部错误
     if (/An internal error was received/i.test(error)) {
-      return 'RPC节点临时故障，请稍后重试或刷新页面';
+      return '连接故障，请稍后重试或刷新页面';
     }
     // 单独的 "Failed to fetch" 通常是网络连接问题
     return '网络连接失败，请检查网络连接后重试';
@@ -156,7 +156,7 @@ function _parseRpcError(error: string): string {
   if (/InternalRpcError/i.test(error) || /code.*-32603/i.test(error) || /Internal error/i.test(error)) {
     // 检查是否同时包含具体的交易信息，如果有则更可能是节点问题
     if (/An internal error was received/i.test(error)) {
-      return 'RPC节点临时故障，请稍后重试或刷新页面';
+      return '连接故障，请稍后重试或刷新页面';
     }
   }
 

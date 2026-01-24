@@ -20,7 +20,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { ActionInfo } from '@/src/types/love20types';
 
 // my components
-import { formatPercentage, formatSeconds } from '@/src/lib/format';
+import { formatTokenAmount, formatPercentage, formatSeconds } from '@/src/lib/format';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import LpStatsCard from '@/src/components/Extension/Plugins/Lp/_LpStatsCard';
@@ -150,8 +150,8 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
             <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-3 w-full">
               <div className="font-medium">⚠️ 治理票数不足</div>
               <div className="mt-1">
-                你的治理票数 <span className="font-semibold">{userGovVotes.toString()}</span> 低于最小门槛{' '}
-                <span className="font-semibold">{minGovVotes.toString()}</span>，无法获得得分和激励。
+                你的治理票数 <span className="font-semibold">{formatTokenAmount(userGovVotes)}</span> 低于最小门槛{' '}
+                <span className="font-semibold">{formatTokenAmount(minGovVotes)}</span>，无法获得得分和激励。
               </div>
               <div className="text-xs text-amber-600 mt-1">请质押更多代币以增加治理票数。</div>
             </div>
