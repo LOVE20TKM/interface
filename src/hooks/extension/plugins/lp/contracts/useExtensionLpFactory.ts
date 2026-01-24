@@ -1,4 +1,4 @@
-// hooks/contracts/useExtensionFactoryLp.ts
+// hooks/contracts/useExtensionLpFactory.ts
 
 import { useEffect } from 'react';
 import { useReadContract } from 'wagmi';
@@ -9,7 +9,7 @@ import { ExtensionLpFactoryAbi } from '@/src/abis/ExtensionLpFactory';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // 需要在环境变量中配置这个合约地址
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP as `0x${string}`;
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY as `0x${string}`;
 
 // =====================
 // === 读取 Hook ===

@@ -41,7 +41,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
   const configs: ExtensionConfig[] = [];
 
   // 链群行动 扩展配置
-  const groupActionFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_ACTION;
+  const groupActionFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_ACTION_FACTORY;
   if (groupActionFactory) {
     configs.push({
       type: ExtensionType.GROUP_ACTION,
@@ -55,7 +55,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
   }
 
   // 链群服务 扩展配置
-  const groupServiceFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_SERVICE;
+  const groupServiceFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_SERVICE_FACTORY;
   if (groupServiceFactory) {
     configs.push({
       type: ExtensionType.GROUP_SERVICE,
@@ -69,7 +69,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
   }
 
   // LP 扩展配置
-  const stakeLpFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP;
+  const stakeLpFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY;
   if (stakeLpFactory) {
     configs.push({
       type: ExtensionType.LP,

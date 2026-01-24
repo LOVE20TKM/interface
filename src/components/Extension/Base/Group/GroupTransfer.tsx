@@ -128,7 +128,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
       setLastProcessedTxHash(transferTxHash);
       // 等待2秒后跳转到链群NFT管理页面
       setTimeout(() => {
-        router.push('/extension/groupids');
+        router.push('/group/groupids');
       }, 2000);
     }
   }, [isTransferConfirmed, transferTxHash, lastProcessedTxHash, form, router]);

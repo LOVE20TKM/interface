@@ -63,7 +63,7 @@ const nextConfig = {
       '/extension/group_trial_add': { page: '/extension/group_trial_add' },
       '/extension/group_trial': { page: '/extension/group_trial' },
       '/extension/group': { page: '/extension/group' },
-      '/extension/groupids': { page: '/extension/groupids' },
+      '/group/groupids': { page: '/group/groupids' },
       '/extension/my_verifying_groups': { page: '/extension/my_verifying_groups' },
       '/group/transfer': { page: '/group/transfer' },
       '/gov': { page: '/gov' },

@@ -426,7 +426,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
           {myGroups && myGroups.length > 0 ? '您的所有链群已激活，没有未激活链群' : '没有未激活的 链群NFT'}
         </p>
         <p className="mb-4">
-          <Link href="/extension/groupids/">
+          <Link href="/group/groupids/">
             <Button variant="outline" className="w-1/2 text-secondary border-secondary">
               去铸造链群NFT &gt;&gt;
             </Button>

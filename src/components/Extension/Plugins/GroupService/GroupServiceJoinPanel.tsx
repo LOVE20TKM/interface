@@ -219,7 +219,7 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
             <div className="space-y-1">
               <div>
                 1. 铸造链群NFT{' '}
-                <Link href="/extension/groupids/" className="underline font-medium">
+                <Link href="/group/groupids/" className="underline font-medium">
                   去铸造 &gt;
                 </Link>
               </div>

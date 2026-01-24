@@ -210,7 +210,7 @@ export default function MintGroup() {
       toast.success('铸造成功！');
       // 2秒后跳转到"我的"页面
       setTimeout(() => {
-        router.push('/extension/groupids?tab=my');
+        router.push('/group/groupids?tab=my');
       }, 2000);
     }
   }, [isConfirmedMint, router]);

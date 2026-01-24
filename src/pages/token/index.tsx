@@ -229,9 +229,9 @@ const TokenPage = () => {
     ExtensionGroupManager: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER,
     ExtensionGroupJoin: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN,
     ExtensionGroupVerify: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY,
-    ExtensionGroupActionFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_ACTION,
-    ExtensionGroupServiceFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_GROUP_SERVICE,
-    ExtensionFactoryLp: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_FACTORY_LP,
+    ExtensionGroupActionFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_ACTION_FACTORY,
+    ExtensionGroupServiceFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_SERVICE_FACTORY,
+    ExtensionLpFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY,
   } as const;
 
   // 当前代币相关地址
@@ -562,7 +562,7 @@ const TokenPage = () => {
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
                       <AddressItem name="Group" address={constantsAddresses.Group} />
                       <AddressItem name="ExtensionCenter" address={constantsAddresses.ExtensionCenter} />
-                      <AddressItem name="ExtensionFactoryLp" address={constantsAddresses.ExtensionFactoryLp} />
+                      <AddressItem name="ExtensionLpFactory" address={constantsAddresses.ExtensionLpFactory} />
                       <AddressItem name="GroupManager" address={constantsAddresses.ExtensionGroupManager} />
                       <AddressItem name="GroupJoin" address={constantsAddresses.ExtensionGroupJoin} />
                       <AddressItem name="GroupVerify" address={constantsAddresses.ExtensionGroupVerify} />
