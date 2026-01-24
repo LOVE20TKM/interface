@@ -42,7 +42,6 @@ import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, parseUnits } from '@/src/lib/format';
 
 // 组件
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
@@ -328,16 +327,6 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                 <FormItem>
                   <FormLabel>
                     链群容量上限 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
-                    {actionParams?.joinTokenAddress && (
-                      <span className="pl-2">
-                        <AddressWithCopyButton
-                          address={actionParams.joinTokenAddress}
-                          showCopyButton={true}
-                          showAddress={true}
-                          colorClassName="text-greyscale-500"
-                        />
-                      </span>
-                    )}
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="0 为不限制" className="!ring-secondary-foreground" {...field} />
@@ -378,7 +367,8 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    最小参与代币数 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                    单地址最小参与代币数{' '}
+                    <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="请填写数量，必须大于0" className="!ring-secondary-foreground" {...field} />
@@ -396,7 +386,8 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    最大参与代币数 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                    单地址最大参与代币数{' '}
+                    <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                   </FormLabel>
                   <FormControl>
                     <Input

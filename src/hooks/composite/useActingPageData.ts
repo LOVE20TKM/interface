@@ -81,7 +81,7 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
         return {
           ...action,
           joinedAmount: extension.convertedJoinedValue, // 使用扩展的转换后参与值
-          accountsCount: extension.accountsCount, // 添加参与人数
+          accountsCount: extension.accountsCount, // 添加参与地址数
           isConvertedJoinedValueSuccess: extension.isConvertedJoinedValueSuccess, // 标记是否为“转换成功”的结果
           isExtension: true,
           extensionAddress: extension.extension,

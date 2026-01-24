@@ -37,7 +37,7 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
     groupId,
   });
 
-  // 获取参与人数
+  // 获取参与地址数
   const {
     count: accountsCount,
     isPending: isPendingAccountsCount,
@@ -125,12 +125,12 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
         <div className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div className="flex items-center justify-between md:max-w-xs">
-              <span className="text-sm">最小参与代币数:</span>
+              <span className="text-sm">单地址最小参与代币数:</span>
               <span className="font-mono pr-2">{formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')}</span>
             </div>
 
             <div className="flex items-center justify-between md:max-w-xs">
-              <span className="text-sm">最大参与代币数:</span>
+              <span className="text-sm">单地址最大参与代币数:</span>
               <span className="font-mono pr-2">
                 {groupDetail.maxJoinAmount > BigInt(0) ? formatTokenAmount(groupDetail.maxJoinAmount) : '不限'}
               </span>

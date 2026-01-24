@@ -171,9 +171,9 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
   if (!groups || groups.length === 0) {
     return (
       <div className="flex flex-col items-center px-6 pt-6">
-        <LeftTitle title="输入要加入的链群" />
+        <LeftTitle title="还没有已激活的链群" />
         <div className="text-center py-8 text-gray-500">
-          <p>没有已激活的链群</p>
+          <p>链群行动，需要先激活链群，才能加入行动</p>
           <div className="mt-4 flex justify-center">
             <Link href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}>
               <Button className="text-secondary border-secondary" variant="outline">

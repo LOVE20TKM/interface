@@ -2072,7 +2072,7 @@ export const GroupJoinAbi = [
   },
   {
     "type": "event",
-    "name": "TrialWaitingListUpdated",
+    "name": "TrialAccountsWaitingUpdated",
     "inputs": [
       {
         "name": "tokenAddress",

@@ -46,7 +46,6 @@ import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, parseUnits } from '@/src/lib/format';
 
 // 组件
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
@@ -70,6 +69,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   // 如果没有传入 groupId，需要从用户的 group NFT 中选择
   const { myGroups, isPending: isPendingGroups, error: errorGroups } = useMyGroups(account);
   const [selectedGroupId, setSelectedGroupId] = useState<bigint | undefined>(groupId);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // 如果传入了 groupId，直接使用；否则使用选中的 groupId
   const finalGroupId = groupId || selectedGroupId;
@@ -227,42 +227,17 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
 
   type FormValues = z.infer<typeof formSchema>;
 
-  // 计算 minJoinAmount 的默认值：如果1000大于 actionParams.joinMaxAmount，则不设置默认值
-  const defaultMinJoinAmount = useMemo(() => {
-    if (!actionParams?.joinMaxAmount) {
-      return '1000'; // 如果 joinMaxAmount 未加载，默认使用 1000
-    }
-    const defaultAmount = parseUnits('1000');
-    // 如果默认值大于 joinMaxAmount，则不设置默认值
-    if (defaultAmount > actionParams.joinMaxAmount) {
-      return '';
-    }
-    return '1000';
-  }, [actionParams?.joinMaxAmount]);
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       maxCapacity: '',
       description: '',
-      minJoinAmount: defaultMinJoinAmount,
+      minJoinAmount: '',
       maxJoinAmount: '',
       maxAccounts: '',
     },
     mode: 'onChange',
   });
-
-  // 当 actionParams 加载完成后，如果默认值需要更新，则重置表单
-  useEffect(() => {
-    if (actionParams?.joinMaxAmount !== undefined) {
-      const currentValue = form.getValues('minJoinAmount');
-      const newDefaultValue = defaultMinJoinAmount;
-      // 如果当前值为空或等于旧的默认值，且新默认值不同，则更新
-      if ((!currentValue || currentValue === '1000') && currentValue !== newDefaultValue) {
-        form.setValue('minJoinAmount', newDefaultValue);
-      }
-    }
-  }, [actionParams?.joinMaxAmount, defaultMinJoinAmount, form]);
 
   const {
     allowance,
@@ -374,11 +349,12 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   useEffect(() => {
     if (isConfirmedActivate) {
       toast.success('链群激活成功');
+      setIsRedirecting(true); // 标记为跳转中
       setTimeout(() => {
         router.push(`/action/info/?id=${actionId.toString()}&symbol=${token?.symbol}&tab=public`);
       }, 1500);
     }
-  }, [isConfirmedActivate, router]);
+  }, [isConfirmedActivate, router, actionId, token?.symbol]);
 
   // 错误处理
   const { handleError } = useContractError();
@@ -419,7 +395,8 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   }
 
   // 如果没有传入 groupId 且没有可用的 group（考虑已过滤的可用链群）
-  if (!isPendingActivate && !groupId && (!availableGroups || availableGroups.length === 0)) {
+  // 在跳转中时不显示"没有可用链群"提示，保持显示表单界面
+  if (!isPendingActivate && !isRedirecting && !groupId && (!availableGroups || availableGroups.length === 0)) {
     return (
       <div className="text-center py-12">
         <p className="mb-4 text-gray-500">
@@ -523,7 +500,8 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    最小参与代币数 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                    单地址最小参与代币数{' '}
+                    <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="请填写数量，必须大于0" className="!ring-secondary-foreground" {...field} />
@@ -541,7 +519,8 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    最大参与代币数 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                    单地址最大参与代币数{' '}
+                    <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="0 为不做限制" className="!ring-secondary-foreground" {...field} />

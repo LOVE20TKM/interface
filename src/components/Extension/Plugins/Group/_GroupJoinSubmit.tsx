@@ -171,7 +171,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
     // 检查地址数限制
     if (isAccountsFull) {
-      return { blocked: true, reason: '链群人数已达到上限' };
+      return { blocked: true, reason: '链群地址数已达到上限' };
     }
 
     // 检查可参与代币量

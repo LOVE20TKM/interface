@@ -7,7 +7,7 @@
  * 3. 批量调用 ExtensionGroupAction.isVerified 检查每个链群是否已验证
  * 4. 批量调用 ExtensionGroupAction.accountsByGroupIdByRoundCount 获取每个链群的账户数量
  * 5. 批量调用 GroupVerify.capacityDecayRate 获取每个链群在该轮次的容量衰减率
- * 6. 计算 needToVerify：如果未验证且人数>0，则为true（参与人数为空时，虽然未验证但也不需要验证）
+ * 6. 计算 needToVerify：如果未验证且地址数>0，则为true（参与地址数为空时，虽然未验证但也不需要验证）
  *
  * 性能优化：
  * - 使用批量 RPC 调用，总共约 4 次调用
@@ -46,7 +46,7 @@ export interface GroupNeedVerifyInfo {
   actionId: bigint;
   /** 是否已验证 */
   isVerified: boolean;
-  /** 是否需要验证：如果未验证且人数>0，则为true */
+  /** 是否需要验证：如果未验证且地址数>0，则为true */
   needToVerify: boolean;
   /** 容量衰减率（WAD 1e18 比例，1e18 = 100%） */
   capacityDecayRate: bigint | undefined;
@@ -259,7 +259,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
         const capacityDecayRate =
           capacityDecayRateItem?.status === 'success' ? safeToBigInt(capacityDecayRateItem.result) : undefined;
 
-        // needToVerify: 如果未验证且人数>0，则为true
+        // needToVerify: 如果未验证且地址数>0，则为true
         const needToVerify = !isVerified && accountCount > BigInt(0);
 
         result.push({

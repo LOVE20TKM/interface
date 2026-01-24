@@ -9,7 +9,7 @@
  * 要达到100%概率: myAmount / totalAmount = 1 / maxRandomAccounts
  *
  * @param totalAmount 行动的总代币数
- * @param maxRandomAccounts 最大随机抽取人数
+ * @param maxRandomAccounts 最大随机抽取地址数
  * @returns 达到100%概率所需的最少代币数
  */
 export function calculateTokensFor100Percent(totalAmount: bigint, maxRandomAccounts: number): bigint {
@@ -25,7 +25,7 @@ export function calculateTokensFor100Percent(totalAmount: bigint, maxRandomAccou
  *
  * @param myAmount 我当前持有的代币数
  * @param totalAmount 行动的总代币数
- * @param maxRandomAccounts 最大随机抽取人数
+ * @param maxRandomAccounts 最大随机抽取地址数
  * @returns 还需要的代币数，如果已经达到100%则返回0
  */
 export function calculateTokensNeededFor100Percent(
@@ -62,7 +62,7 @@ export function calculateTokensNeededFor100Percent(
  *
  * @param myAmount 我当前持有的代币数
  * @param totalAmount 行动的总代币数
- * @param maxRandomAccounts 最大随机抽取人数
+ * @param maxRandomAccounts 最大随机抽取地址数
  * @returns 被抽中的概率（0-100）
  */
 export function calculateProbability(myAmount: bigint, totalAmount: bigint, maxRandomAccounts: number): number {

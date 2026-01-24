@@ -24,7 +24,7 @@ export const ErrorMessages: Record<string, string> = {
   AmountIsGreaterThanReserve: '数量超过储备金',
   AmountIsZero: '数量不能为0',
   ArrayLengthMismatch: 'ArrayLengthMismatch',
-  CannotDeactivateInActivatedRound: 'CannotDeactivateInActivatedRound',
+  CannotDeactivateInActivatedRound: '链群需要在激活的下一个轮次，才能关闭',
   CannotJoinDeactivatedGroup: 'CannotJoinDeactivatedGroup',
   CannotSubmitAction: '您没有权限提交行动，请先质押获取足够代理票数',
   CannotVote: '没有剩余治理票，无法投票',

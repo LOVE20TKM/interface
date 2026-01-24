@@ -61,7 +61,7 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
   // 获取链群信息（用于获取激活轮次）
   const { activatedRound, isPending: isPendingInfo, error: errorInfo } = useGroupInfo(extensionAddress, groupId);
 
-  // 获取参与人数
+  // 获取参与地址数
   const {
     count: accountsCount,
     isPending: isPendingAccountsCount,
@@ -164,8 +164,8 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">参与人数:</span>
-              <span className="text-sm">{accountsCount?.toString() || '0'} 人</span>
+              <span className="text-sm text-gray-600">参与地址数:</span>
+              <span className="text-sm">{accountsCount?.toString() || '0'}</span>
             </div>
           </div>
         </div>
@@ -218,6 +218,7 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
                 <div>• 链群关闭后将无法再验证，也不再有激励</div>
                 <div>• 链群关闭后，新的参与者无法再加入</div>
                 <div>• 链群关闭后可以取回全部质押代币</div>
+                <div>• 在激活后的下一个轮次，才能关闭链群</div>
               </div>
             </div>
           </div>

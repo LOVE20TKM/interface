@@ -48,7 +48,7 @@ export default function BasicInfo({ actionInfo, currentRound, isExtensionAction 
         {!isExtensionAction && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex items-center justify-between md:max-w-xs">
-              <span className="font-bold">最小参与代币数:</span>
+              <span className="font-bold">单地址最小参与代币数:</span>
               <span className="font-mono text-secondary">{formatTokenAmount(actionInfo.body.minStake)}</span>
             </div>
 
