@@ -125,6 +125,7 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
           <table className="table w-full">
             <thead>
               <tr className="border-b border-gray-100">
+                <th className="px-0 text-left"> </th>
                 <th className="px-2 text-left">地址</th>
                 {/* <th className="px-2 text-right">得分</th> */}
                 <th className="px-2 text-right">溢出销毁激励</th>
@@ -132,11 +133,12 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
               </tr>
             </thead>
             <tbody>
-              {sortedParticipants.map((participant) => (
+              {sortedParticipants.map((participant, index) => (
                 <tr
                   key={participant.address}
                   className={`border-b border-gray-100 ${participant.address === account ? 'text-secondary' : ''}`}
                 >
+                  <td className="px-0 text-sm text-left text-greyscale-500">{index + 1}</td>
                   <td className="px-2">
                     <AddressWithCopyButton
                       address={participant.address}
@@ -146,7 +148,9 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
                   </td>
                   {/* <td className="px-2 text-right">{formatNumber(participant.score)}</td> */}
                   <td className="px-2 text-right text-greyscale-500">
-                    {participant.burnReward !== BigInt(0) ? `-${formatTokenAmount(participant.burnReward)}` : formatTokenAmount(participant.burnReward)}
+                    {participant.burnReward !== BigInt(0)
+                      ? `-${formatTokenAmount(participant.burnReward)}`
+                      : formatTokenAmount(participant.burnReward)}
                   </td>
                   <td className="px-2 text-right">{formatTokenAmount(participant.reward)}</td>
                 </tr>
