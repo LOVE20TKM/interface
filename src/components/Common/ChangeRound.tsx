@@ -75,7 +75,10 @@ const ChangeRound: React.FC<{
           切换轮次
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="z-[9999] min-h-[25vh]">
+      <DrawerContent 
+        className="z-[9999] min-h-[25vh]"
+        overlayClassName="z-[9998]"
+      >
         <DrawerHeader>
           <DrawerTitle></DrawerTitle>
           <DrawerDescription></DrawerDescription>
