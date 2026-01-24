@@ -127,6 +127,7 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
               <tr className="border-b border-gray-100">
                 <th className="px-2 text-left">地址</th>
                 {/* <th className="px-2 text-right">得分</th> */}
+                <th className="px-2 text-right">溢出销毁激励</th>
                 <th className="px-2 text-right">可铸造激励</th>
               </tr>
             </thead>
@@ -144,6 +145,9 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
                     />
                   </td>
                   {/* <td className="px-2 text-right">{formatNumber(participant.score)}</td> */}
+                  <td className="px-2 text-right text-greyscale-500">
+                    {participant.burnReward !== BigInt(0) ? `-${formatTokenAmount(participant.burnReward)}` : formatTokenAmount(participant.burnReward)}
+                  </td>
                   <td className="px-2 text-right">{formatTokenAmount(participant.reward)}</td>
                 </tr>
               ))}

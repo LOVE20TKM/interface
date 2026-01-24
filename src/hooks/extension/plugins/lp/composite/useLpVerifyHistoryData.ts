@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { IRewardAbi } from '@/src/abis/IReward';
+import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useAccountsByActionByRound } from '@/src/hooks/extension/base/composite/useAccountsByActionByRound';
 
@@ -11,8 +11,9 @@ export interface LpVerifyHistoryParticipant {
   address: `0x${string}`;
   score: bigint;
   rewardRatio: number;
-  reward: bigint;
-  isMinted: boolean;
+  reward: bigint; // mintReward
+  burnReward: bigint;
+  isMinted: boolean; // isClaimed
 }
 
 export interface UseLpVerifyHistoryDataParams {
@@ -71,8 +72,8 @@ export const useLpVerifyHistoryData = ({
 
     return accountsByRound.map((account) => ({
       address: extensionAddress,
-      abi: IRewardAbi,
-      functionName: 'rewardByAccount',
+      abi: ExtensionLpAbi,
+      functionName: 'rewardInfoByAccount',
       args: [round, account],
     }));
   }, [extensionAddress, round, accountsByRound]);
@@ -104,12 +105,14 @@ export const useLpVerifyHistoryData = ({
     // 组合数据
     const participants: LpVerifyHistoryParticipant[] = accountsByRound.map((address, index) => {
       // 获取实际激励金额
-      let reward = BigInt(0);
-      let isMinted = false;
+      let reward = BigInt(0); // mintReward
+      let burnReward = BigInt(0);
+      let isMinted = false; // isClaimed
       if (rewardData && rewardData[index]?.result) {
-        const rewardResult = rewardData[index].result as [bigint, boolean];
-        reward = safeToBigInt(rewardResult[0]);
-        isMinted = rewardResult[1];
+        const rewardResult = rewardData[index].result as [bigint, bigint, boolean];
+        reward = safeToBigInt(rewardResult[0]); // mintReward
+        burnReward = safeToBigInt(rewardResult[1]); // burnReward
+        isMinted = rewardResult[2]; // isClaimed
       }
 
       return {
@@ -117,6 +120,7 @@ export const useLpVerifyHistoryData = ({
         score: BigInt(0), // 已废弃，设为默认值
         rewardRatio: 0, // 已废弃，设为默认值
         reward,
+        burnReward,
         isMinted,
       };
     });
