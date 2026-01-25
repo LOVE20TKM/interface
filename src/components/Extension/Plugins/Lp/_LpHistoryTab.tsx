@@ -16,9 +16,10 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import ChangeRound from '@/src/components/Common/ChangeRound';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LeftTitle from '@/src/components/Common/LeftTitle';
+import LpAccountRewardDetailModal from '@/src/components/Extension/Plugins/Lp/LpAccountRewardDetailModal';
 
 // my funcs
-import { formatPercentage, formatRoundForDisplay, formatNumber, formatTokenAmount } from '@/src/lib/format';
+import { formatRoundForDisplay, formatTokenAmount } from '@/src/lib/format';
 
 interface LpHistoryTabProps {
   extensionAddress: `0x${string}`;
@@ -152,7 +153,20 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
                       ? `-${formatTokenAmount(participant.burnReward)}`
                       : formatTokenAmount(participant.burnReward)}
                   </td>
-                  <td className="px-2 text-right">{formatTokenAmount(participant.reward)}</td>
+                  <td className="px-2 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <span>{formatTokenAmount(participant.reward)}</span>
+                      {/* 只有当用户有激励时才显示帮助图标 */}
+                      {(participant.reward > BigInt(0) || participant.burnReward > BigInt(0)) && (
+                        <LpAccountRewardDetailModal
+                          extensionAddress={extensionAddress}
+                          tokenAddress={token?.address as `0x${string}`}
+                          account={participant.address}
+                          round={selectedRound}
+                        />
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
