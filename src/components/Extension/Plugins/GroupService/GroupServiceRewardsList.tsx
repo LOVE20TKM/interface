@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
 import toast from 'react-hot-toast';
 
 // 导入铸造 hooks
-import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
+import { useClaimReward } from '@/src/hooks/extension/base/contracts/useIReward';
 
 /**
  * 激励数据结构
@@ -16,20 +17,22 @@ export interface RewardItem {
 }
 
 /**
- * 普通行动激励列表组件属性
+ * 链群服务行动激励列表组件属性
  */
-export interface ActionRewardsListProps {
+export interface GroupServiceRewardsListProps {
   /** 激励数据列表 */
   rewards: RewardItem[];
-  /** Token 地址 */
-  tokenAddress: `0x${string}`;
-  /** 行动 ID */
-  actionId: bigint;
+  /** 扩展合约地址 */
+  extensionAddress: `0x${string}`;
   /** Token 数据（用于格式化显示） */
   tokenData: any;
+  /** 行动ID（用于构建跳转链接） */
+  actionId: bigint;
+  /** Token 符号（用于构建跳转链接） */
+  tokenSymbol: string;
   /** 铸造开始回调 */
   onMintStart?: () => void;
-  /** 铸造结束回调（成功或失败） */
+  /** 铸造结束回调 */
   onMintEnd?: () => void;
   /** 铸造成功回调 */
   onMintSuccess?: (round: bigint) => void;
@@ -38,29 +41,29 @@ export interface ActionRewardsListProps {
 }
 
 /**
- * 普通行动激励列表组件
+ * 链群服务行动激励列表组件
  *
- * 功能：
- * 1. 展示普通行动的激励列表
- * 2. 支持铸造激励
- *
- * 注意：扩展行动请使用专有组件：
- * - 链群行动：GroupActionRewardsList
- * - LP行动：LpActionRewardsList
- * - 链群服务：GroupServiceRewardsList
+ * 显示列：轮次、可铸造激励（可点击跳转到公示页）、结果
  */
-export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
+export const GroupServiceRewardsList: React.FC<GroupServiceRewardsListProps> = ({
   rewards,
-  tokenAddress,
-  actionId,
+  extensionAddress,
   tokenData,
+  actionId,
+  tokenSymbol,
   onMintStart,
   onMintEnd,
   onMintSuccess,
   isLoading = false,
 }) => {
   // ========== 铸造 Hook ==========
-  const { mintActionReward, isPending, isConfirming, isConfirmed, hash } = useMintActionReward();
+  const {
+    claimReward: extensionClaimReward,
+    isPending,
+    isConfirming,
+    isConfirmed,
+    hash,
+  } = useClaimReward(extensionAddress);
 
   // ========== 状态管理 ==========
   const [mintingTarget, setMintingTarget] = useState<bigint | null>(null);
@@ -85,7 +88,7 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
     onMintStart?.();
 
     try {
-      const txHash = await mintActionReward(tokenAddress, round, actionId);
+      const txHash = await extensionClaimReward(round);
       if (txHash) {
         setMintingHash(txHash);
       }
@@ -95,6 +98,11 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
       setMintingHash(undefined);
       onMintEnd?.();
     }
+  };
+
+  // ========== 构建跳转链接 ==========
+  const buildPublicLink = (round: bigint) => {
+    return `/action/info/?id=${actionId}&symbol=${tokenSymbol}&tab=public&round=${round}`;
   };
 
   // ========== 渲染 ==========
@@ -136,7 +144,14 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
                   className={index === rewards.length - 1 ? 'border-none' : 'border-b border-gray-100'}
                 >
                   <td>{formatRoundForDisplay(item.round, tokenData).toString()}</td>
-                  <td className="text-center">{formatTokenAmount(item.reward || BigInt(0))}</td>
+                  <td className="text-center">
+                    <Link
+                      href={buildPublicLink(item.round)}
+                      className="text-secondary underline hover:opacity-70"
+                    >
+                      {formatTokenAmount(item.reward || BigInt(0))}
+                    </Link>
+                  </td>
                   <td className="text-center">
                     {item.reward > BigInt(0) && !displayIsMinted ? (
                       <Button

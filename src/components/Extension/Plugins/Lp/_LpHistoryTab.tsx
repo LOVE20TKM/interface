@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { useAccount } from 'wagmi';
+import { useRouter } from 'next/router';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -37,25 +38,43 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
   currentRound, // 行动轮次
   actionId,
 }) => {
+  const router = useRouter();
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
+
+  // 从URL获取round参数
+  const { round } = router.query;
+  const roundNum = round ? BigInt(round as string) : undefined;
 
   // 内部状态：选择的验证轮次（基于行动轮次 - 2）
   const [selectedRound, setSelectedRound] = useState<bigint>(BigInt(0));
 
-  // 初始化选择的轮次（行动轮次 - 2）
+  // 初始化选择的轮次
   useEffect(() => {
-    if (currentRound > BigInt(2)) {
+    if (roundNum) {
+      // 如果URL中有round参数，使用它
+      setSelectedRound(roundNum);
+    } else if (currentRound > BigInt(2)) {
+      // 否则默认使用行动轮次 - 2
       setSelectedRound(currentRound - BigInt(2));
     }
-  }, [currentRound]);
+  }, [roundNum, currentRound]);
 
   // 内部轮次切换处理
   const handleChangedRound = (round: number) => {
     setSelectedRound(BigInt(round));
+    // 同时更新URL参数
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, round: round.toString() },
+      },
+      undefined,
+      { shallow: true },
+    );
   };
 
-  const { participants, totalScore, isEmpty, isPending, error } = useLpVerifyHistoryData({
+  const { participants, isEmpty, isPending, error } = useLpVerifyHistoryData({
     extensionAddress,
     tokenAddress: token?.address as `0x${string}` | undefined,
     actionId,
@@ -82,7 +101,7 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
     );
   }
 
-  // 按激励金额排序（score 已废弃）
+  // 按激励金额排序
   const sortedParticipants = [...participants].sort((a, b) => {
     if (a.reward > b.reward) return -1;
     if (a.reward < b.reward) return 1;
@@ -128,7 +147,6 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
               <tr className="border-b border-gray-100">
                 <th className="px-0 text-left"> </th>
                 <th className="px-2 text-left">地址</th>
-                {/* <th className="px-2 text-right">得分</th> */}
                 <th className="px-2 text-right">溢出销毁激励</th>
                 <th className="px-2 text-right">可铸造激励</th>
               </tr>
@@ -147,7 +165,6 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
                       word={participant.address === account ? '(我)' : ''}
                     />
                   </td>
-                  {/* <td className="px-2 text-right">{formatNumber(participant.score)}</td> */}
                   <td className="px-2 text-right text-greyscale-500">
                     {participant.burnReward !== BigInt(0)
                       ? `-${formatTokenAmount(participant.burnReward)}`

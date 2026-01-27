@@ -33,7 +33,7 @@ import {
   useExtensionByActionInfoWithCache,
   ExtensionContractInfo,
 } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
-import { useExtensionActionRewardsByRounds } from '@/src/hooks/extension/base/composite';
+import { useExtensionActionRewardsByRounds } from '@/src/hooks/extension/base/composite/useExtensionActionRewardsByRounds';
 import { ActionInfo } from '@/src/types/love20types';
 
 /**

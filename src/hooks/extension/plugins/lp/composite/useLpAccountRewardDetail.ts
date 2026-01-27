@@ -154,7 +154,9 @@ export const useLpAccountRewardDetail = ({
     const totalReward = contractData[0]?.result ? safeToBigInt(contractData[0].result) : BigInt(0);
     const rewardInfo = contractData[1]?.result as [bigint, bigint, boolean] | undefined;
     const userReward = rewardInfo ? safeToBigInt(rewardInfo[0]) : BigInt(0);
-    const userBurnReward = rewardInfo ? safeToBigInt(rewardInfo[1]) : BigInt(0);
+    // 忽略很小的 burnReward 值（小于 1e11 时认为是 0，避免精度误差）
+    const rawBurnReward = rewardInfo ? safeToBigInt(rewardInfo[1]) : BigInt(0);
+    const userBurnReward = rawBurnReward < BigInt(1e11) ? BigInt(0) : rawBurnReward;
 
     const joinInfo = contractData[2]?.result as [bigint, bigint, bigint, bigint] | undefined;
     const joinedRound = joinInfo ? safeToBigInt(joinInfo[0]) : BigInt(0);

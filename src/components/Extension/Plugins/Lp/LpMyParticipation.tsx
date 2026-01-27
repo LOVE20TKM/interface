@@ -215,9 +215,9 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
           <div className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-3 mt-6 mb-3 w-full">
             <div className="font-medium text-gray-600 mb-2">💡 计算说明：</div>
             <div className="ml-4 text-gray-600 space-y-1">
-              <div>• 您的LP占比 = 您参与本行动的LP数量 / 参与本行动的LP总和</div>
-              <div>• 您的治理票占比 = 您的治理票 / 总治理票</div>
-              <div>• 您的激励占比 = 您的LP占比 和 (您的治理票占比 × {Number(govRatioMultiplier)}) 中的最小值</div>
+              <div>• LP占比 = 你参与的LP数量 / 本行动的LP总量</div>
+              <div>• 治理票占比 = 你的治理票 / 总治理票</div>
+              <div>• 激励占比 = LP占比 和 (你的治理票占比 × {Number(govRatioMultiplier)}) 中的最小值</div>
             </div>
           </div>
         </>

@@ -16,7 +16,16 @@ import { useActionRewardsByRounds } from '@/src/hooks/composite/useActionRewards
 import Header from '@/src/components/Header';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { ActionRewardsList } from '@/src/components/My/ActionRewardsList';
+
+// 扩展类型配置
+import { ExtensionType } from '@/src/config/extensionConfig';
+
+// 扩展行动激励列表组件
+import { GroupActionRewardsList } from '@/src/components/Extension/Plugins/Group/GroupActionRewardsList';
+import { LpActionRewardsList } from '@/src/components/Extension/Plugins/Lp/LpActionRewardsList';
+import { GroupServiceRewardsList } from '@/src/components/Extension/Plugins/GroupService/GroupServiceRewardsList';
 
 const REWARDS_PER_PAGE = BigInt(20);
 
@@ -38,6 +47,10 @@ const ActRewardsPage: React.FC = () => {
 
   // 引入参考元素，用于无限滚动加载
   const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // 铸造状态管理
+  const [isMinting, setIsMinting] = useState(false);
+  const [mintingMessage, setMintingMessage] = useState('');
 
   // 获取行动详情
   const {
@@ -115,6 +128,17 @@ const ActRewardsPage: React.FC = () => {
       });
     }
   }, [rewards, isInitialized]);
+
+  // 铸造回调函数
+  const handleMintStart = useCallback(() => {
+    setIsMinting(true);
+    setMintingMessage('提交交易...');
+  }, []);
+
+  const handleMintEnd = useCallback(() => {
+    setIsMinting(false);
+    setMintingMessage('');
+  }, []);
 
   // 处理铸造成功（由子组件回调）
   const handleMintSuccess = useCallback(
@@ -224,18 +248,53 @@ const ActRewardsPage: React.FC = () => {
               </div>
             )}
 
-            {/* 激励列表 - 统一使用 ActionRewardsList 组件 */}
+            {/* 激励列表 - 根据行动类型渲染不同组件 */}
             {isExtensionAction ? (
-              // 扩展行动激励列表
+              // 扩展行动激励列表 - 根据扩展类型渲染不同组件
               extensionInfo?.extension ? (
-                <ActionRewardsList
-                  rewards={rewardList}
-                  extensionAddress={extensionInfo.extension}
-                  tokenData={token}
-                  isExtension={true}
-                  onMintSuccess={handleMintSuccess}
-                  isLoading={isLoadingRewards}
-                />
+                extensionInfo?.factory?.type === ExtensionType.GROUP_ACTION ? (
+                  // 链群行动：显示得分列
+                  <GroupActionRewardsList
+                    rewards={rewardList}
+                    extensionAddress={extensionInfo.extension}
+                    tokenData={token}
+                    actionId={actionId}
+                    onMintStart={handleMintStart}
+                    onMintEnd={handleMintEnd}
+                    onMintSuccess={handleMintSuccess}
+                    isLoading={isLoadingRewards}
+                  />
+                ) : extensionInfo?.factory?.type === ExtensionType.LP ? (
+                  // LP行动：显示溢出激励列
+                  <LpActionRewardsList
+                    rewards={rewardList}
+                    extensionAddress={extensionInfo.extension}
+                    tokenData={token}
+                    actionId={actionId}
+                    onMintStart={handleMintStart}
+                    onMintEnd={handleMintEnd}
+                    onMintSuccess={handleMintSuccess}
+                    isLoading={isLoadingRewards}
+                  />
+                ) : extensionInfo?.factory?.type === ExtensionType.GROUP_SERVICE ? (
+                  // 链群服务行动：激励可点击跳转到公示页
+                  <GroupServiceRewardsList
+                    rewards={rewardList}
+                    extensionAddress={extensionInfo.extension}
+                    tokenData={token}
+                    actionId={actionId!}
+                    tokenSymbol={token?.symbol || ''}
+                    onMintStart={handleMintStart}
+                    onMintEnd={handleMintEnd}
+                    onMintSuccess={handleMintSuccess}
+                    isLoading={isLoadingRewards}
+                  />
+                ) : (
+                  // 未知扩展类型
+                  <div className="text-center text-sm text-gray-500 py-4">
+                    暂不支持此扩展类型的激励展示
+                  </div>
+                )
               ) : (
                 <div className="text-center text-sm text-gray-500 py-4">无法加载扩展行动信息</div>
               )
@@ -246,7 +305,8 @@ const ActRewardsPage: React.FC = () => {
                 tokenAddress={token?.address as `0x${string}`}
                 actionId={actionId}
                 tokenData={token}
-                isExtension={false}
+                onMintStart={handleMintStart}
+                onMintEnd={handleMintEnd}
                 onMintSuccess={handleMintSuccess}
                 isLoading={isLoadingRewards}
               />
@@ -264,6 +324,7 @@ const ActRewardsPage: React.FC = () => {
             </div>
           </div>
         )}
+        <LoadingOverlay isLoading={isMinting} text={mintingMessage} />
       </main>
     </>
   );

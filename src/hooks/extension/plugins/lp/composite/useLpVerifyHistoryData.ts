@@ -9,8 +9,6 @@ import { useAccountsByActionByRound } from '@/src/hooks/extension/base/composite
 
 export interface LpVerifyHistoryParticipant {
   address: `0x${string}`;
-  score: bigint;
-  rewardRatio: number;
   reward: bigint; // mintReward
   burnReward: bigint;
   isMinted: boolean; // isClaimed
@@ -25,7 +23,6 @@ export interface UseLpVerifyHistoryDataParams {
 
 export interface UseLpVerifyHistoryDataResult {
   participants: LpVerifyHistoryParticipant[];
-  totalScore: bigint;
   isEmpty: boolean;
   isPending: boolean;
   error: any;
@@ -97,7 +94,6 @@ export const useLpVerifyHistoryData = ({
     if (accountsByRound.length === 0) {
       return {
         participants: [] as LpVerifyHistoryParticipant[],
-        totalScore: BigInt(0),
         isEmpty: true,
       };
     }
@@ -111,14 +107,14 @@ export const useLpVerifyHistoryData = ({
       if (rewardData && rewardData[index]?.result) {
         const rewardResult = rewardData[index].result as [bigint, bigint, boolean];
         reward = safeToBigInt(rewardResult[0]); // mintReward
-        burnReward = safeToBigInt(rewardResult[1]); // burnReward
+        // 忽略很小的 burnReward 值（小于 1e11 时认为是 0，避免精度误差）
+        const rawBurnReward = safeToBigInt(rewardResult[1]); // burnReward
+        burnReward = rawBurnReward < BigInt(1e11) ? BigInt(0) : rawBurnReward;
         isMinted = rewardResult[2]; // isClaimed
       }
 
       return {
         address,
-        score: BigInt(0), // 已废弃，设为默认值
-        rewardRatio: 0, // 已废弃，设为默认值
         reward,
         burnReward,
         isMinted,
@@ -127,7 +123,6 @@ export const useLpVerifyHistoryData = ({
 
     return {
       participants,
-      totalScore: BigInt(0), // 已废弃，设为默认值
       isEmpty: false,
     };
   }, [accountsByRound, rewardData]);

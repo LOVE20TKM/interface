@@ -18,6 +18,14 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { ActionRewardsPageHeader } from '@/src/components/My/ActionRewardsPageHeader';
 import { ActionRewardsList } from '@/src/components/My/ActionRewardsList';
 
+// 扩展类型配置
+import { ExtensionType } from '@/src/config/extensionConfig';
+
+// 扩展行动激励列表组件
+import { GroupActionRewardsList } from '@/src/components/Extension/Plugins/Group/GroupActionRewardsList';
+import { LpActionRewardsList } from '@/src/components/Extension/Plugins/Lp/LpActionRewardsList';
+import { GroupServiceRewardsList } from '@/src/components/Extension/Plugins/GroupService/GroupServiceRewardsList';
+
 const LAST_ROUNDS = BigInt(7);
 
 const ActRewardsPage: React.FC = () => {
@@ -93,36 +101,64 @@ const ActRewardsPage: React.FC = () => {
                     {hasRewards ? (
                       <>
                         {/* 普通行动激励 */}
-                        {coreRewards.length > 0 && (
+                        {!isExtension && coreRewards.length > 0 && (
                           <ActionRewardsList
                             rewards={coreRewards}
                             tokenAddress={token?.address as `0x${string}`}
                             actionId={action.action.head.id}
                             tokenData={token}
-                            isExtension={false}
-                            showTitle={isExtension}
-                            title="普通激励"
                             onMintStart={handleMintStart}
                             onMintEnd={handleMintEnd}
                           />
                         )}
 
-                        {/* 扩展激励 */}
-                        {isExtension && extensionInfo?.extension && extensionRewards && extensionRewards.length > 0 && (
-                          <ActionRewardsList
-                            rewards={extensionRewards}
-                            extensionAddress={extensionInfo.extension}
-                            tokenData={token}
-                            isExtension={true}
-                            showTitle={coreRewards.length > 0}
-                            title="扩展激励"
-                            onMintStart={handleMintStart}
-                            onMintEnd={handleMintEnd}
-                            onMintSuccess={(round) =>
-                              handleExtensionMintSuccess(extensionInfo.extension!, round.toString())
-                            }
-                          />
-                        )}
+                        {/* 扩展激励 - 根据扩展类型渲染专有组件 */}
+                        {isExtension &&
+                          extensionInfo?.extension &&
+                          extensionRewards &&
+                          extensionRewards.length > 0 &&
+                          (extensionInfo?.factory?.type === ExtensionType.GROUP_ACTION ? (
+                            <GroupActionRewardsList
+                              rewards={extensionRewards}
+                              extensionAddress={extensionInfo.extension}
+                              tokenData={token}
+                              actionId={action.action.head.id}
+                              onMintStart={handleMintStart}
+                              onMintEnd={handleMintEnd}
+                              onMintSuccess={(round) =>
+                                handleExtensionMintSuccess(extensionInfo.extension!, round.toString())
+                              }
+                            />
+                          ) : extensionInfo?.factory?.type === ExtensionType.LP ? (
+                            <LpActionRewardsList
+                              rewards={extensionRewards}
+                              extensionAddress={extensionInfo.extension}
+                              tokenData={token}
+                              actionId={action.action.head.id}
+                              onMintStart={handleMintStart}
+                              onMintEnd={handleMintEnd}
+                              onMintSuccess={(round) =>
+                                handleExtensionMintSuccess(extensionInfo.extension!, round.toString())
+                              }
+                            />
+                          ) : extensionInfo?.factory?.type === ExtensionType.GROUP_SERVICE ? (
+                            <GroupServiceRewardsList
+                              rewards={extensionRewards}
+                              extensionAddress={extensionInfo.extension}
+                              tokenData={token}
+                              actionId={action.action.head.id}
+                              tokenSymbol={token?.symbol || ''}
+                              onMintStart={handleMintStart}
+                              onMintEnd={handleMintEnd}
+                              onMintSuccess={(round) =>
+                                handleExtensionMintSuccess(extensionInfo.extension!, round.toString())
+                              }
+                            />
+                          ) : (
+                            <div className="text-center text-greyscale-500 py-4">
+                              暂不支持此扩展类型的激励展示
+                            </div>
+                          ))}
                       </>
                     ) : (
                       <div className="text-center text-greyscale-500 py-4">
