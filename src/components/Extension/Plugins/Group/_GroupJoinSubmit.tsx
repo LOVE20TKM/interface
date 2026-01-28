@@ -7,6 +7,7 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 // Next.js
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 // 第三方库
@@ -98,6 +99,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
   const joinTokenAddress = extensions[0]?.joinedAmountTokenAddress;
   const joinTokenSymbol = extensions[0]?.joinedAmountTokenSymbol;
+  const joinedAmountTokenIsLP = extensions[0]?.joinedAmountTokenIsLP;
 
   // 获取验证信息的 key 列表
   const verificationKeys = actionInfo?.body?.verificationKeys as string[] | undefined;
@@ -504,36 +506,46 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
               name="joinAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-greyscale-500 font-normal">
-                    {!uiIsJoined ? (
-                      <>
-                        {isTrialMode ? '体验代币数：' : '参与代币数：'}{' '}
-                        {hasVotes &&
-                          (isTrialMode ? (
-                            <span className="text-sm text-blue-600">（体验模式，无需支付代币）</span>
-                          ) : cannotJoin.blocked ? (
-                            <span className="text-red-600 text-sm">{cannotJoin.reason}</span>
-                          ) : (
-                            <span className="text-xs text-gray-500 inline-flex items-center gap-1">
-                              限 {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
-                              {formatTokenAmount(maxJoinResult.amount)}
-                              <InfoTooltip title="参与上限说明" content={maxJoinResult.reason} />
-                            </span>
-                          ))}
-                      </>
-                    ) : (
-                      <>
-                        追加代币数：{' '}
-                        {hasVotes &&
-                          (cannotIncrease.blocked ? (
-                            <span className="text-red-600 text-sm">{cannotIncrease.reason}</span>
-                          ) : (
-                            <span className="text-xs text-gray-500 inline-flex items-center gap-1">
-                              最大 {formatTokenAmount(maxIncreaseResult.amount)}
-                              <InfoTooltip title="追加上限说明" content={maxIncreaseResult.reason} />
-                            </span>
-                          ))}
-                      </>
+                  <FormLabel className="text-greyscale-500 font-normal flex items-center justify-between">
+                    <span>
+                      {!uiIsJoined ? (
+                        <>
+                          {isTrialMode ? '体验代币数：' : '参与代币数：'}{' '}
+                          {hasVotes &&
+                            (isTrialMode ? (
+                              <span className="text-sm text-blue-600">（体验模式，无需支付代币）</span>
+                            ) : cannotJoin.blocked ? (
+                              <span className="text-red-600 text-sm">{cannotJoin.reason}</span>
+                            ) : (
+                              <span className="text-xs text-gray-500 inline-flex items-center gap-1">
+                                限 {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
+                                {formatTokenAmount(maxJoinResult.amount)}
+                                <InfoTooltip title="参与上限说明" content={maxJoinResult.reason} />
+                              </span>
+                            ))}
+                        </>
+                      ) : (
+                        <>
+                          追加代币数：{' '}
+                          {hasVotes &&
+                            (cannotIncrease.blocked ? (
+                              <span className="text-red-600 text-sm">{cannotIncrease.reason}</span>
+                            ) : (
+                              <span className="text-xs text-gray-500 inline-flex items-center gap-1">
+                                最大 {formatTokenAmount(maxIncreaseResult.amount)}
+                                <InfoTooltip title="追加上限说明" content={maxIncreaseResult.reason} />
+                              </span>
+                            ))}
+                        </>
+                      )}
+                    </span>
+                    {joinedAmountTokenIsLP && !uiIsTrialMode && (
+                      <Link
+                        href="/dex/?tab=liquidity"
+                        className="text-sm text-secondary hover:text-secondary/80 hover:underline ml-2"
+                      >
+                        获取LP代币 &gt;&gt;
+                      </Link>
                     )}
                   </FormLabel>
                   <FormControl>

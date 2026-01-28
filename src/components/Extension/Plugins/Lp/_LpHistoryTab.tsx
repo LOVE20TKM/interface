@@ -146,9 +146,9 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-0 text-left"> </th>
-                <th className="px-2 text-left">地址</th>
-                <th className="px-2 text-right">溢出销毁激励</th>
-                <th className="px-2 text-right">可铸造激励</th>
+                <th className="px-1 text-left">地址</th>
+                <th className="px-1 text-right">溢出销毁激励</th>
+                <th className="px-1 text-right">可铸造激励</th>
               </tr>
             </thead>
             <tbody>
@@ -158,19 +158,19 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
                   className={`border-b border-gray-100 ${participant.address === account ? 'text-secondary' : ''}`}
                 >
                   <td className="px-0 text-sm text-left text-greyscale-500">{index + 1}</td>
-                  <td className="px-2">
+                  <td className="px-1">
                     <AddressWithCopyButton
                       address={participant.address}
                       showCopyButton={true}
                       word={participant.address === account ? '(我)' : ''}
                     />
                   </td>
-                  <td className="px-2 text-right text-greyscale-500">
+                  <td className="px-1 text-right text-greyscale-500">
                     {participant.burnReward !== BigInt(0)
                       ? `-${formatTokenAmount(participant.burnReward)}`
                       : formatTokenAmount(participant.burnReward)}
                   </td>
-                  <td className="px-2 text-right">
+                  <td className="px-1 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <span>{formatTokenAmount(participant.reward)}</span>
                       {/* 只有当用户有激励时才显示帮助图标 */}
