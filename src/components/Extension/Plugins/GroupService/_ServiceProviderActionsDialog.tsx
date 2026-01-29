@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import { formatTokenAmount } from '@/src/lib/format';
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useActionsWithActiveGroupsByOwner } from '@/src/hooks/extension/plugins/group-service/composite/useActionsWithActiveGroupsByOwner';
 import { useExtensionParams } from '@/src/hooks/extension/plugins/group-service/composite/useExtensionParams';
 
@@ -33,6 +34,9 @@ export default function ServiceProviderActionsDialog({
   open,
   onOpenChange,
 }: ServiceProviderActionsDialogProps) {
+  // 获取当前加入轮次
+  const { currentRound } = useCurrentRound();
+
   // 从 extensionAddress 获取 groupActionTokenAddress
   const { groupActionTokenAddress } = useExtensionParams(extensionAddress! as `0x${string}`);
 
@@ -40,6 +44,7 @@ export default function ServiceProviderActionsDialog({
   const { actionsWithGroups, isPending, error } = useActionsWithActiveGroupsByOwner({
     groupActionTokenAddress,
     account: open && serviceProvider ? serviceProvider : undefined, // 只在 Dialog 打开时查询
+    round: currentRound,
   });
 
   return (

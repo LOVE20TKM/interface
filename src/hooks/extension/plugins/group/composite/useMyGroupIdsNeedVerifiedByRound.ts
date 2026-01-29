@@ -190,7 +190,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
     const accountCountContracts = groupTuples.map(({ extensionAddress, groupId }) => ({
       address: GROUP_JOIN_ADDRESS,
       abi: GroupJoinAbi,
-      functionName: 'accountsByGroupIdByRoundCount' as const,
+      functionName: 'accountsByGroupIdCount' as const,
       args: [extensionAddress, round, groupId] as const,
     }));
 
@@ -198,7 +198,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
     const capacityDecayRateContracts = groupTuples.map(({ extensionAddress, groupId }) => ({
       address: GROUP_VERIFY_ADDRESS,
       abi: GroupVerifyAbi,
-      functionName: 'capacityDecayRate' as const,
+      functionName: 'capacityDecayRateByGroupId' as const,
       args: [extensionAddress, round, groupId] as const,
     }));
 
@@ -213,7 +213,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
   } = useReadContracts({
     contracts: combinedContracts as any,
     query: {
-      enabled: round !== undefined && groupTuples.length > 0,
+      enabled: !!round && groupTuples.length > 0,
     },
   });
 

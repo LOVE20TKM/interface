@@ -54,7 +54,7 @@ export const useDistrustVotesOfRound = ({
     groupOwners,
     isPending: isGroupOwnersPending,
     error: groupOwnersError,
-  } = useDistrustGroupOwners(extensionAddress as `0x${string}`, round !== undefined ? round : BigInt(0));
+  } = useDistrustGroupOwners(extensionAddress as `0x${string}`, !!round ? round : BigInt(0));
 
   // 第二步：批量获取每个群主的链群NFT列表
   // 新版合约 groupIdsByVerifier 使用 extensionAddress, round, groupOwner 参数
@@ -81,7 +81,7 @@ export const useDistrustVotesOfRound = ({
   } = useReadContracts({
     contracts: groupIdsContracts as any,
     query: {
-      enabled: !!extensionAddress && round !== undefined && !!groupOwners && groupOwners.length > 0,
+      enabled: !!extensionAddress && !!round && !!groupOwners && groupOwners.length > 0,
     },
   });
 
@@ -103,7 +103,7 @@ export const useDistrustVotesOfRound = ({
     votesNumByActionId: totalVotes,
     isPending: isTotalVotesPending,
     error: totalVotesError,
-  } = useVotesNumByActionId(tokenAddress as `0x${string}`, round !== undefined ? round : BigInt(0), actionId);
+  } = useVotesNumByActionId(tokenAddress as `0x${string}`, !!round ? round : BigInt(0), actionId);
 
   // 第四步：批量获取不信任票数据
   const distrustContracts = useMemo(() => {
@@ -131,12 +131,7 @@ export const useDistrustVotesOfRound = ({
   } = useReadContracts({
     contracts: distrustContracts as any,
     query: {
-      enabled:
-        !!extensionAddress &&
-        round !== undefined &&
-        !!groupOwners &&
-        groupOwners.length > 0 &&
-        distrustContracts.length > 0,
+      enabled: !!extensionAddress && !!round && !!groupOwners && groupOwners.length > 0 && distrustContracts.length > 0,
     },
   });
 

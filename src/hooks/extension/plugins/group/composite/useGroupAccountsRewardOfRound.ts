@@ -90,7 +90,7 @@ export const useGroupAccountsRewardOfRound = ({
       contracts.push({
         address: GROUP_JOIN_CONTRACT_ADDRESS,
         abi: GroupJoinAbi,
-        functionName: 'joinedAmountByAccountByRound',
+        functionName: 'joinedAmountByAccount',
         args: [extensionAddress, round, account],
       });
       // 加入轮次
@@ -98,7 +98,7 @@ export const useGroupAccountsRewardOfRound = ({
         address: GROUP_JOIN_CONTRACT_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'joinInfo',
-        args: [extensionAddress, account],
+        args: [extensionAddress, round, account],
       });
     }
 
@@ -112,7 +112,7 @@ export const useGroupAccountsRewardOfRound = ({
   } = useReadContracts({
     contracts: mergedContracts as any,
     query: {
-      enabled: !!extensionAddress && round !== undefined && mergedContracts.length > 0,
+      enabled: !!extensionAddress && !!round && mergedContracts.length > 0,
     },
   });
 

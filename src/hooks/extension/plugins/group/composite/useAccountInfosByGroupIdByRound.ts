@@ -126,15 +126,15 @@ export function useAccountInfosByGroupIdByRound(
   // 第二步：构建批量查询 joinInfo 的合约调用
   // 新版合约 joinInfo 需要 extensionAddress, account 参数
   const joinInfoContracts = useMemo(() => {
-    if (!extensionAddress || !accounts || accounts.length === 0) return [];
+    if (!extensionAddress || round === undefined || !accounts || accounts.length === 0) return [];
 
     return accounts.map((account) => ({
       address: GROUP_JOIN_CONTRACT_ADDRESS,
       abi: GroupJoinAbi,
       functionName: 'joinInfo',
-      args: [extensionAddress, account],
+      args: [extensionAddress, round, account],
     }));
-  }, [extensionAddress, accounts]);
+  }, [extensionAddress, round, accounts]);
 
   // 第三步：批量获取每个账号的 joinInfo
   const {

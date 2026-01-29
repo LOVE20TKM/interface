@@ -21,11 +21,6 @@ export const ExtensionLpAbi = [
         "internalType": "address"
       },
       {
-        "name": "waitingBlocks_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
         "name": "govRatioMultiplier_",
         "type": "uint256",
         "internalType": "uint256"
@@ -37,6 +32,19 @@ export const ExtensionLpAbi = [
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "DEFAULT_WAITING_BLOCKS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -131,6 +139,43 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "function",
+    "name": "burnInfo",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "burnAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "burned",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "burnRewardIfNeeded",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "claimReward",
     "inputs": [
       {
@@ -168,11 +213,6 @@ export const ExtensionLpAbi = [
         "name": "rewards",
         "type": "uint256[]",
         "internalType": "uint256[]"
-      },
-      {
-        "name": "total",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "nonpayable"
@@ -244,7 +284,7 @@ export const ExtensionLpAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "joinedBlock",
+        "name": "lastJoinedBlock",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -465,6 +505,37 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "event",
+    "name": "BurnReward",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "actionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "ClaimReward",
     "inputs": [
       {
@@ -605,11 +676,6 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "error",
-    "name": "AlreadyInitialized",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InsufficientGovVotes",
     "inputs": []
   },
@@ -665,11 +731,6 @@ export const ExtensionLpAbi = [
     "inputs": [
       {
         "name": "currentRound",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "requestedRound",
         "type": "uint256",
         "internalType": "uint256"
       }

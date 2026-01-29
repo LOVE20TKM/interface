@@ -43,6 +43,7 @@ export interface GroupDetailInfo {
 export interface UseExtensionGroupDetailParams {
   extensionAddress: `0x${string}` | undefined;
   groupId: bigint | undefined;
+  round: bigint | undefined;
 }
 
 export interface UseExtensionGroupDetailResult {
@@ -61,11 +62,12 @@ export interface UseExtensionGroupDetailResult {
 export const useExtensionGroupDetail = ({
   extensionAddress,
   groupId,
+  round,
 }: UseExtensionGroupDetailParams): UseExtensionGroupDetailResult => {
   // 批量获取链群详细信息
   // 新版合约：totalJoinedAmountByGroupId 和 accountsByGroupIdCount 移到 GroupJoin
   const detailContracts = useMemo(() => {
-    if (!extensionAddress || groupId === undefined) return [];
+    if (!extensionAddress || groupId === undefined || !round) return [];
 
     return [
       // 获取群组名称
@@ -94,14 +96,14 @@ export const useExtensionGroupDetail = ({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'totalJoinedAmountByGroupId',
-        args: [extensionAddress, groupId],
+        args: [extensionAddress, round, groupId],
       },
       // 获取群组成员数量（新版合约移到 GroupJoin）
       {
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'accountsByGroupIdCount',
-        args: [extensionAddress, groupId],
+        args: [extensionAddress, round, groupId],
       },
       // 获取群组信息
       {
@@ -111,7 +113,7 @@ export const useExtensionGroupDetail = ({
         args: [extensionAddress, groupId],
       },
     ];
-  }, [extensionAddress, groupId]);
+  }, [extensionAddress, groupId, round]);
 
   const {
     data: detailData,
@@ -120,7 +122,7 @@ export const useExtensionGroupDetail = ({
   } = useReadContracts({
     contracts: detailContracts as any,
     query: {
-      enabled: !!extensionAddress && groupId !== undefined && detailContracts.length > 0,
+      enabled: !!extensionAddress && groupId !== undefined && !!round && detailContracts.length > 0,
     },
   });
 
@@ -173,21 +175,30 @@ export const useExtensionGroupDetail = ({
     const totalJoinedAmount = safeToBigInt(detailData[3]?.result);
     const accountCount = safeToBigInt(detailData[4]?.result);
     const groupInfoData = detailData[5]?.result as
-      | [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint, bigint]
+      | {
+          groupId: bigint;
+          description: string;
+          maxCapacity: bigint;
+          minJoinAmount: bigint;
+          maxJoinAmount: bigint;
+          maxAccounts: bigint;
+          isActive: boolean;
+          activatedRound: bigint;
+          deactivatedRound: bigint;
+        }
       | undefined;
 
     if (!groupInfoData || !groupName || !ownerAddress) return undefined;
 
-    // 解析 groupInfo: [groupId, description, maxCapacity, minJoinAmount, maxJoinAmount, maxAccounts, isActive, activatedRound, deactivatedRound]
-    const groupId = safeToBigInt(groupInfoData[0]);
-    const description = groupInfoData[1];
-    const maxCapacity = safeToBigInt(groupInfoData[2]);
-    const minJoinAmount = safeToBigInt(groupInfoData[3]);
-    const maxJoinAmount = safeToBigInt(groupInfoData[4]);
-    const maxAccounts = safeToBigInt(groupInfoData[5]);
-    const isActive = groupInfoData[6];
-    const activatedRound = safeToBigInt(groupInfoData[7]);
-    const deactivatedRound = safeToBigInt(groupInfoData[8]);
+    const groupId = safeToBigInt(groupInfoData.groupId);
+    const description = groupInfoData.description;
+    const maxCapacity = safeToBigInt(groupInfoData.maxCapacity);
+    const minJoinAmount = safeToBigInt(groupInfoData.minJoinAmount);
+    const maxJoinAmount = safeToBigInt(groupInfoData.maxJoinAmount);
+    const maxAccounts = safeToBigInt(groupInfoData.maxAccounts);
+    const isActive = groupInfoData.isActive;
+    const activatedRound = safeToBigInt(groupInfoData.activatedRound);
+    const deactivatedRound = safeToBigInt(groupInfoData.deactivatedRound);
     const remainingCapacity = maxCapacity - totalJoinedAmount;
 
     // 计算实际最小参与量

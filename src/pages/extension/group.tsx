@@ -1,7 +1,7 @@
 // pages/extension/group.tsx
 // 链群详情页面主路由
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
@@ -53,16 +53,6 @@ const ActionGroupPage: React.FC = () => {
   });
   const extensionAddress = contractInfo?.extension;
 
-  // 获取链群详情（用于判断是否是owner）
-  const {
-    groupDetail,
-    isPending: isPendingGroupDetail,
-    error: errorGroupDetail,
-  } = useExtensionGroupDetail({
-    extensionAddress,
-    groupId: groupIdBigInt,
-  });
-
   // 当前验证轮（用于链群不信任率/验证衰减率提示）
   const {
     currentRound: verifyCurrentRound,
@@ -79,6 +69,22 @@ const ActionGroupPage: React.FC = () => {
     extensionAddress,
     round: verifyCurrentRound,
     groupId: groupIdBigInt,
+  });
+
+  // 计算加入轮（验证轮 + 1）
+  const joinRound = useMemo(() => {
+    return verifyCurrentRound ? verifyCurrentRound + BigInt(1) : undefined;
+  }, [verifyCurrentRound]);
+
+  // 获取链群详情（用于判断是否是owner）
+  const {
+    groupDetail,
+    isPending: isPendingGroupDetail,
+    error: errorGroupDetail,
+  } = useExtensionGroupDetail({
+    extensionAddress,
+    groupId: groupIdBigInt,
+    round: joinRound,
   });
 
   // 错误处理

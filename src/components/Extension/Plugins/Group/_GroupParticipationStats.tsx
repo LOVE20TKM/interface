@@ -15,6 +15,7 @@ import { useMediaQuery } from '@mui/material';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
@@ -62,13 +63,16 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
   const displaySymbol = joinTokenSymbol || token?.symbol || '';
   const symbolTextSize = displaySymbol.length > 10 ? 'text-xs' : 'text-sm';
 
+  // 获取当前加入轮次
+  const { currentRound } = useCurrentRound();
+
   // 获取加入信息
   const {
     amount: joinedAmount,
     provider: trialProviderAddress,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
-  } = useJoinInfo(extensionAddress, account as `0x${string}`);
+  } = useJoinInfo(extensionAddress, currentRound || BigInt(0), account as `0x${string}`);
 
   // 获取链群详情
   const {
@@ -78,6 +82,7 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
   } = useExtensionGroupDetail({
     extensionAddress,
     groupId,
+    round: currentRound,
   });
 
   // 计算还可以追加的代币数及原因

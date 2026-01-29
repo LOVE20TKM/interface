@@ -365,49 +365,56 @@ export const GroupManagerAbi = [
     ],
     "outputs": [
       {
-        "name": "groupId_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "description",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "maxCapacity",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "minJoinAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxJoinAmount_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxAccounts",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "isActive",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
-        "name": "activatedRound",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "deactivatedRound",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct IGroupManager.GroupInfo",
+        "components": [
+          {
+            "name": "groupId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "maxCapacity",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minJoinAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxJoinAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxAccounts",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "isActive",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "activatedRound",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deactivatedRound",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
       }
     ],
     "stateMutability": "view"
@@ -422,7 +429,7 @@ export const GroupManagerAbi = [
         "internalType": "address"
       },
       {
-        "name": "account",
+        "name": "owner",
         "type": "address",
         "internalType": "address"
       }
@@ -561,6 +568,68 @@ export const GroupManagerAbi = [
   },
   {
     "type": "function",
+    "name": "tokenAddressesByGroupId",
+    "inputs": [
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "tokenAddressesByGroupIdAtIndex",
+    "inputs": [
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "tokenAddressesByGroupIdCount",
+    "inputs": [
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "totalStaked",
     "inputs": [
       {
@@ -580,7 +649,7 @@ export const GroupManagerAbi = [
   },
   {
     "type": "function",
-    "name": "totalStakedByAccount",
+    "name": "totalStakedByOwner",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -588,7 +657,7 @@ export const GroupManagerAbi = [
         "internalType": "address"
       },
       {
-        "name": "account",
+        "name": "owner",
         "type": "address",
         "internalType": "address"
       }
@@ -799,11 +868,6 @@ export const GroupManagerAbi = [
   },
   {
     "type": "error",
-    "name": "ExtensionNotInitialized",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "GroupAlreadyActivated",
     "inputs": []
   },
@@ -820,11 +884,6 @@ export const GroupManagerAbi = [
   {
     "type": "error",
     "name": "InvalidRound",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "NotRegisteredExtension",
     "inputs": []
   },
   {

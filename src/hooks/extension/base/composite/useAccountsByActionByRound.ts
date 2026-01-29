@@ -88,9 +88,7 @@ export function useAccountsByActionByRound(params: UseAccountsByActionByRoundPar
       abi: ExtensionCenterAbi,
       functionName: 'accountsByRoundAtIndex' as const,
       args:
-        tokenAddress && actionId !== undefined && round !== undefined
-          ? [tokenAddress, actionId, BigInt(index), round]
-          : undefined,
+        tokenAddress && actionId !== undefined && !!round ? [tokenAddress, actionId, BigInt(index), round] : undefined,
     }));
   }, [count, tokenAddress, actionId, round]);
 

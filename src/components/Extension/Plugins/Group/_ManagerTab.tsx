@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { ActionInfo } from '@/src/types/love20types';
 
 // hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useExtensionGroupsOfAccount } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupsOfAccount';
 import { useMaxVerifyCapacityByOwner } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
@@ -33,6 +34,9 @@ interface ManagerTabProps {
 }
 
 const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensionAddress, account }) => {
+  // 获取当前加入轮次
+  const { currentRound } = useCurrentRound();
+
   // 获取服务者的最大容量上限
   const {
     maxVerifyCapacity,
@@ -48,6 +52,7 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   } = useExtensionGroupsOfAccount({
     extensionAddress,
     account,
+    round: currentRound,
   });
 
   // 错误处理

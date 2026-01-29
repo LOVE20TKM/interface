@@ -154,7 +154,7 @@ export const useActionInfosByPage = (tokenAddress: `0x${string}`, start: bigint,
  * Hook for votingActions
  */
 export const useVotingActions = (tokenAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const enableRead = !!tokenAddress && !!account && round !== undefined;
+  const enableRead = !!tokenAddress && !!account && !!round;
 
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -181,7 +181,7 @@ export const useVotingActions = (tokenAddress: `0x${string}`, round: bigint, acc
  * Hook for joinableActions
  */
 export const useJoinableActions = (tokenAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const enableRead = !!tokenAddress && !!account && round !== undefined;
+  const enableRead = !!tokenAddress && !!account && !!round;
 
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -225,7 +225,7 @@ export const useJoinedActions = (tokenAddress: `0x${string}`, account: `0x${stri
  * Hook for verifyingActions
  */
 export const useVerifyingActions = (tokenAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const enableRead = !!tokenAddress && !!account && round !== undefined;
+  const enableRead = !!tokenAddress && !!account && !!round;
 
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -252,7 +252,7 @@ export const useVerifyingActions = (tokenAddress: `0x${string}`, round: bigint, 
  * Hook for verifyingActionsByAccount
  */
 export const useVerifingActionsByAccount = (tokenAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const enableRead = !!tokenAddress && !!account && round !== undefined;
+  const enableRead = !!tokenAddress && !!account && !!round;
 
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -286,7 +286,7 @@ export const useVerifiedAddressesByAction = (tokenAddress: `0x${string}`, round:
     functionName: 'verifiedAddressesByAction',
     args: [tokenAddress, round, actionId],
     query: {
-      enabled: !!tokenAddress && round !== undefined && actionId !== undefined,
+      enabled: !!tokenAddress && !!round && actionId !== undefined,
     },
   });
   return { verifiedAddresses: data as VerifiedAddress[], isPending, error };
@@ -302,7 +302,7 @@ export const useVerificationInfosByAction = (tokenAddress: `0x${string}`, round:
     functionName: 'verificationInfosByAction',
     args: [tokenAddress, round, actionId],
     query: {
-      enabled: !!tokenAddress && round !== undefined && actionId !== undefined,
+      enabled: !!tokenAddress && !!round && actionId !== undefined,
     },
   });
   return { verificationInfos: data as VerificationInfo[], isPending, error };
@@ -361,7 +361,7 @@ export const useActionVoters = (tokenAddress: `0x${string}`, round: bigint, acti
     functionName: 'actionVoters',
     args: [tokenAddress, round, actionId],
     query: {
-      enabled: !!tokenAddress && round !== undefined && actionId !== undefined,
+      enabled: !!tokenAddress && !!round && actionId !== undefined,
     },
   });
 
@@ -417,7 +417,7 @@ export const useActionVerificationMatrix = (tokenAddress: `0x${string}`, round: 
     functionName: 'actionVerificationMatrix',
     args: [tokenAddress, round, actionId],
     query: {
-      enabled: !!tokenAddress && round !== undefined && actionId !== undefined,
+      enabled: !!tokenAddress && !!round && actionId !== undefined,
     },
   });
 
@@ -432,7 +432,7 @@ export const useActionVerificationMatrix = (tokenAddress: `0x${string}`, round: 
  * @returns 行动ID列表、投票数列表、加载状态和错误信息
  */
 export const useVotesNums = (tokenAddress: `0x${string}`, round: bigint) => {
-  const enableRead = !!tokenAddress && round !== undefined && round > BigInt(0);
+  const enableRead = !!tokenAddress && !!round && round > BigInt(0);
 
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
@@ -489,7 +489,7 @@ export const useActionVerificationMatrixPaged = (
 
   // 参数验证
   const isValidTokenAddress = tokenAddress && tokenAddress !== '0x' && tokenAddress.length === 42;
-  const isValidRound = round !== undefined && round > BigInt(0);
+  const isValidRound = !!round && round > BigInt(0);
   const isValidActionId = actionId !== undefined && actionId > BigInt(0);
   const enableRead = isValidTokenAddress && isValidRound && isValidActionId;
 

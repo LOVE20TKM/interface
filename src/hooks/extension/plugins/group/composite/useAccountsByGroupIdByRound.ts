@@ -20,7 +20,7 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
-import { useAccountsByGroupIdByRoundCount } from '../contracts/useGroupJoin';
+import { useAccountsByGroupIdCount } from '../contracts/useGroupJoin';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
@@ -90,7 +90,7 @@ export function useAccountsByGroupIdByRound(
     count,
     isPending: isPendingCount,
     error: errorCount,
-  } = useAccountsByGroupIdByRoundCount(extensionAddress, round, groupId);
+  } = useAccountsByGroupIdCount(extensionAddress, round, groupId);
 
   // 转换为数字类型
   const accountCount = useMemo(() => {
@@ -108,7 +108,7 @@ export function useAccountsByGroupIdByRound(
       contracts.push({
         address: GROUP_JOIN_CONTRACT_ADDRESS,
         abi: GroupJoinAbi,
-        functionName: 'accountsByGroupIdByRoundAtIndex',
+        functionName: 'accountsByGroupIdAtIndex',
         args: [extensionAddress, round, groupId, i],
       });
     }

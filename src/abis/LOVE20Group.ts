@@ -728,11 +728,6 @@ export const LOVE20GroupAbi = [
     "name": "GroupNameAlreadyExists",
     "inputs": [
       {
-        "name": "groupName",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
         "name": "existingTokenId",
         "type": "uint256",
         "internalType": "uint256"
@@ -747,13 +742,7 @@ export const LOVE20GroupAbi = [
   {
     "type": "error",
     "name": "GroupNameInvalidCharacters",
-    "inputs": [
-      {
-        "name": "groupName",
-        "type": "string",
-        "internalType": "string"
-      }
-    ]
+    "inputs": []
   },
   {
     "type": "error",
@@ -775,11 +764,6 @@ export const LOVE20GroupAbi = [
     "type": "error",
     "name": "HolderIndexOutOfBounds",
     "inputs": [
-      {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
       {
         "name": "length",
         "type": "uint256",

@@ -28,6 +28,7 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useFormatLPSymbol } from '@/src/hooks/extension/base/composite/useFormatLPSymbol';
 import { useExtensionActionParam } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionParam';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
@@ -64,6 +65,9 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
+  // 获取当前加入轮次
+  const { currentRound } = useCurrentRound();
+
   // 获取链群详情
   const {
     groupDetail,
@@ -72,6 +76,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   } = useExtensionGroupDetail({
     extensionAddress,
     groupId,
+    round: currentRound,
   });
 
   // 获取扩展协议参数（用于获取行动的最小/最大参与量）

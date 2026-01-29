@@ -55,7 +55,7 @@ export const useIsVerified = (extensionAddress: `0x${string}`, round: bigint, gr
     functionName: 'isVerified',
     args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && !!round && groupId !== undefined,
     },
   });
 
@@ -72,7 +72,7 @@ export const useVerifiedAccountCount = (extensionAddress: `0x${string}`, round: 
     functionName: 'verifiedAccountCount',
     args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && !!round && groupId !== undefined,
     },
   });
 
@@ -89,7 +89,7 @@ export const useVerifiedGroupIds = (extensionAddress: `0x${string}`, round: bigi
     functionName: 'verifiedGroupIds',
     args: [extensionAddress, round],
     query: {
-      enabled: !!extensionAddress && round !== undefined,
+      enabled: !!extensionAddress && !!round,
     },
   });
 
@@ -106,7 +106,7 @@ export const useVerifiers = (extensionAddress: `0x${string}`, round: bigint) => 
     functionName: 'verifiers',
     args: [extensionAddress, round],
     query: {
-      enabled: !!extensionAddress && round !== undefined,
+      enabled: !!extensionAddress && !!round,
     },
   });
 
@@ -123,7 +123,7 @@ export const useVerifiersAtIndex = (extensionAddress: `0x${string}`, round: bigi
     functionName: 'verifiersAtIndex',
     args: [extensionAddress, round, index],
     query: {
-      enabled: !!extensionAddress && round !== undefined && index !== undefined,
+      enabled: !!extensionAddress && !!round && index !== undefined,
     },
   });
 
@@ -140,7 +140,7 @@ export const useVerifiersCount = (extensionAddress: `0x${string}`, round: bigint
     functionName: 'verifiersCount',
     args: [extensionAddress, round],
     query: {
-      enabled: !!extensionAddress && round !== undefined,
+      enabled: !!extensionAddress && !!round,
     },
   });
 
@@ -157,7 +157,7 @@ export const useVerifierByGroupId = (extensionAddress: `0x${string}`, round: big
     functionName: 'verifierByGroupId',
     args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && !!round && groupId !== undefined,
     },
   });
 
@@ -191,7 +191,7 @@ export const useGroupIdsByVerifier = (extensionAddress: `0x${string}`, round: bi
     functionName: 'groupIdsByVerifier',
     args: [extensionAddress, round, verifier],
     query: {
-      enabled: !!extensionAddress && round !== undefined && !!verifier,
+      enabled: !!extensionAddress && !!round && !!verifier,
     },
   });
 
@@ -212,7 +212,7 @@ export const useActionIdsByVerifier = (
     functionName: 'actionIdsByVerifier',
     args: [tokenAddress!, round!, verifier!],
     query: {
-      enabled: !!tokenAddress && round !== undefined && !!verifier,
+      enabled: !!tokenAddress && !!round && !!verifier,
     },
   });
 
@@ -234,7 +234,7 @@ export const useGroupIdsByVerifierAtIndex = (
     functionName: 'groupIdsByVerifierAtIndex',
     args: [extensionAddress, round, verifier, index],
     query: {
-      enabled: !!extensionAddress && round !== undefined && !!verifier && index !== undefined,
+      enabled: !!extensionAddress && !!round && !!verifier && index !== undefined,
     },
   });
 
@@ -251,7 +251,7 @@ export const useGroupIdsByVerifierCount = (extensionAddress: `0x${string}`, roun
     functionName: 'groupIdsByVerifierCount',
     args: [extensionAddress, round, verifier],
     query: {
-      enabled: !!extensionAddress && round !== undefined && !!verifier,
+      enabled: !!extensionAddress && !!round && !!verifier,
     },
   });
 
@@ -272,7 +272,7 @@ export const useTotalGroupScore = (extensionAddress: `0x${string}`, round: bigin
     functionName: 'totalGroupScore',
     args: [extensionAddress, round],
     query: {
-      enabled: !!extensionAddress && round !== undefined,
+      enabled: !!extensionAddress && !!round,
     },
   });
 
@@ -289,7 +289,7 @@ export const useAccountScore = (extensionAddress: `0x${string}`, round: bigint, 
     functionName: 'accountScore',
     args: [extensionAddress, round, account],
     query: {
-      enabled: !!extensionAddress && round !== undefined && !!account,
+      enabled: !!extensionAddress && !!round && !!account,
     },
   });
 
@@ -306,7 +306,7 @@ export const useGroupScore = (extensionAddress: `0x${string}`, round: bigint, gr
     functionName: 'groupScore',
     args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && !!round && groupId !== undefined,
     },
   });
 
@@ -324,7 +324,7 @@ export const useTotalAccountScore = (extensionAddress: `0x${string}`, round: big
     functionName: 'totalAccountScore',
     args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && !!round && groupId !== undefined,
     },
   });
 
@@ -341,7 +341,7 @@ export const useOriginScoreByAccount = (extensionAddress: `0x${string}`, round: 
     functionName: 'originScoreByAccount',
     args: [extensionAddress, round, account],
     query: {
-      enabled: !!extensionAddress && round !== undefined && !!account,
+      enabled: !!extensionAddress && !!round && !!account,
     },
   });
 
@@ -355,10 +355,10 @@ export const useCapacityDecayRate = (extensionAddress: `0x${string}`, round: big
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
-    functionName: 'capacityDecayRate',
+    functionName: 'capacityDecayRateByGroupId',
     args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && !!round && groupId !== undefined,
     },
   });
 
@@ -383,7 +383,7 @@ export const useDistrustVotesByGroupOwner = (
     functionName: 'distrustVotesByGroupOwner',
     args: [extensionAddress, round, groupOwner],
     query: {
-      enabled: !!extensionAddress && round !== undefined && !!groupOwner,
+      enabled: !!extensionAddress && !!round && !!groupOwner,
     },
   });
 
@@ -405,7 +405,7 @@ export const useDistrustVotesByVoterByGroupOwner = (
     functionName: 'distrustVotesByVoterByGroupOwner',
     args: [extensionAddress, round, voter, groupOwner],
     query: {
-      enabled: !!extensionAddress && round !== undefined && !!voter && !!groupOwner,
+      enabled: !!extensionAddress && !!round && !!voter && !!groupOwner,
     },
   });
 
@@ -426,7 +426,7 @@ export const useDistrustRateByGroupId = (
     functionName: 'distrustRateByGroupId',
     args: [extensionAddress!, round!, groupId!],
     query: {
-      enabled: !!extensionAddress && round !== undefined && groupId !== undefined,
+      enabled: !!extensionAddress && !!round && groupId !== undefined,
     },
   });
 
@@ -448,7 +448,7 @@ export const useDistrustReason = (
     functionName: 'distrustReason',
     args: [extensionAddress, round, voter, groupOwner],
     query: {
-      enabled: !!extensionAddress && round !== undefined && !!voter && !!groupOwner,
+      enabled: !!extensionAddress && !!round && !!voter && !!groupOwner,
     },
   });
 
@@ -465,7 +465,7 @@ export const useDistrustGroupOwners = (extensionAddress: `0x${string}`, round: b
     functionName: 'distrustGroupOwners',
     args: [extensionAddress, round],
     query: {
-      enabled: !!extensionAddress && round !== undefined,
+      enabled: !!extensionAddress && !!round,
     },
   });
 
@@ -486,7 +486,7 @@ export const useDistrustVotersByGroupOwner = (
     functionName: 'distrustVotersByGroupOwner',
     args: [extensionAddress!, round!, groupOwner!],
     query: {
-      enabled: !!extensionAddress && round !== undefined && !!groupOwner,
+      enabled: !!extensionAddress && !!round && !!groupOwner,
     },
   });
 

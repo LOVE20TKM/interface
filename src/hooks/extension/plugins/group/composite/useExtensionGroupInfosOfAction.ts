@@ -35,6 +35,7 @@ export interface GroupBasicInfo {
 
 export interface UseExtensionGroupInfosOfActionParams {
   extensionAddress: `0x${string}` | undefined;
+  round: bigint | undefined;
 }
 
 export interface UseExtensionGroupInfosOfActionResult {
@@ -53,6 +54,7 @@ export interface UseExtensionGroupInfosOfActionResult {
  */
 export const useExtensionGroupInfosOfAction = ({
   extensionAddress,
+  round,
 }: UseExtensionGroupInfosOfActionParams): UseExtensionGroupInfosOfActionResult => {
   // 第一步：批量获取活跃链群NFT列表和行动最大参与代币量
   const firstBatchContracts = useMemo(() => {
@@ -101,7 +103,7 @@ export const useExtensionGroupInfosOfAction = ({
   // 第二步：批量获取每个群组的详细信息
   // 新版合约：totalJoinedAmountByGroupId 和 accountsByGroupIdCount 移到 GroupJoin
   const detailContracts = useMemo(() => {
-    if (!extensionAddress || groupIds.length === 0) return [];
+    if (!extensionAddress || !round || groupIds.length === 0) return [];
 
     const contracts = [];
 
@@ -135,7 +137,7 @@ export const useExtensionGroupInfosOfAction = ({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'totalJoinedAmountByGroupId',
-        args: [extensionAddress, groupId],
+        args: [extensionAddress, round, groupId],
       });
 
       // 获取群组成员数量（新版合约移到 GroupJoin）
@@ -143,12 +145,12 @@ export const useExtensionGroupInfosOfAction = ({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'accountsByGroupIdCount',
-        args: [extensionAddress, groupId],
+        args: [extensionAddress, round, groupId],
       });
     }
 
     return contracts;
-  }, [extensionAddress, groupIds]);
+  }, [extensionAddress, round, groupIds]);
 
   const {
     data: detailData,
@@ -157,7 +159,7 @@ export const useExtensionGroupInfosOfAction = ({
   } = useReadContracts({
     contracts: detailContracts as any,
     query: {
-      enabled: !!extensionAddress && detailContracts.length > 0,
+      enabled: !!extensionAddress && !!round && detailContracts.length > 0,
     },
   });
 
@@ -169,9 +171,19 @@ export const useExtensionGroupInfosOfAction = ({
 
     for (let i = 0; i < groupIds.length; i++) {
       const baseIndex = i * 5;
-      // GroupManager 的 groupInfo 返回 9 个字段: [groupId, description, maxCapacity, minJoinAmount, maxJoinAmount, maxAccounts, isActive, activatedRound, deactivatedRound]
+      // GroupManager 的 groupInfo 返回结构体 GroupInfo
       const groupInfoData = detailData[baseIndex]?.result as
-        | [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint, bigint]
+        | {
+            groupId: bigint;
+            description: string;
+            maxCapacity: bigint;
+            minJoinAmount: bigint;
+            maxJoinAmount: bigint;
+            maxAccounts: bigint;
+            isActive: boolean;
+            activatedRound: bigint;
+            deactivatedRound: bigint;
+          }
         | undefined;
       const groupName = detailData[baseIndex + 1]?.result as string | undefined;
       const owner = detailData[baseIndex + 2]?.result as `0x${string}` | undefined;
@@ -180,15 +192,14 @@ export const useExtensionGroupInfosOfAction = ({
 
       if (!groupInfoData || !groupName || !owner) continue;
 
-      // GroupManager groupInfo 字段: [groupId, description, maxCapacity, minJoinAmount, maxJoinAmount, maxAccounts, isActive, activatedRound, deactivatedRound]
-      const description = groupInfoData[1];
-      const maxCapacity = safeToBigInt(groupInfoData[2]);
-      const minJoinAmount = safeToBigInt(groupInfoData[3]);
-      const maxJoinAmount = safeToBigInt(groupInfoData[4]);
-      const maxAccounts = safeToBigInt(groupInfoData[5]);
-      const isActive = groupInfoData[6];
-      const activatedRound = safeToBigInt(groupInfoData[7]);
-      const deactivatedRound = safeToBigInt(groupInfoData[8]);
+      const description = groupInfoData.description;
+      const maxCapacity = safeToBigInt(groupInfoData.maxCapacity);
+      const minJoinAmount = safeToBigInt(groupInfoData.minJoinAmount);
+      const maxJoinAmount = safeToBigInt(groupInfoData.maxJoinAmount);
+      const maxAccounts = safeToBigInt(groupInfoData.maxAccounts);
+      const isActive = groupInfoData.isActive;
+      const activatedRound = safeToBigInt(groupInfoData.activatedRound);
+      const deactivatedRound = safeToBigInt(groupInfoData.deactivatedRound);
 
       // 计算实际最小参与量
       const actualMinJoinAmount = minJoinAmount;
@@ -207,7 +218,7 @@ export const useExtensionGroupInfosOfAction = ({
         maxCapacity,
         accountCount: safeToBigInt(accountCount),
         totalJoinedAmount: safeToBigInt(totalJoinedAmount),
-        isActive: groupInfoData[6],
+        isActive: isActive,
         activatedRound,
         deactivatedRound,
         // 最大最小参与量
@@ -228,8 +239,8 @@ export const useExtensionGroupInfosOfAction = ({
   const isPending = useMemo(() => {
     // 如果第一步（获取活跃链群NFT列表和行动最大参与量）还在加载，返回 true
     if (isFirstBatchPending) return true;
-    // 如果 tokenAddress 或 actionId 不存在，返回 true（等待前置条件）
-    if (!extensionAddress) return true;
+    // 如果 extensionAddress 或 round 不存在，返回 true（等待前置条件）
+    if (!extensionAddress || !round) return true;
     // 如果没有链群（groupIds 为空），且查询已完成，返回 false
     if (groupIds.length === 0 && !isFirstBatchPending) {
       return false;
@@ -240,7 +251,7 @@ export const useExtensionGroupInfosOfAction = ({
     }
     // 其他情况，返回 true
     return true;
-  }, [isFirstBatchPending, isDetailPending, groupIds.length, extensionAddress]);
+  }, [isFirstBatchPending, isDetailPending, groupIds.length, extensionAddress, round]);
 
   return {
     groups,

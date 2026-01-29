@@ -119,9 +119,9 @@ export function useRecipientsDetailByAccountByRound({
     address: extensionAddress,
     abi: ExtensionGroupServiceAbi,
     functionName: 'actionIdsWithRecipients',
-    args: account && round !== undefined ? [account, round] : undefined,
+    args: account && !!round ? [account, round] : undefined,
     query: {
-      enabled: !!extensionAddress && !!account && round !== undefined,
+      enabled: !!extensionAddress && !!account && !!round,
     },
   });
 
@@ -156,7 +156,7 @@ export function useRecipientsDetailByAccountByRound({
   } = useReadContracts({
     contracts: groupIdsContracts,
     query: {
-      enabled: !!extensionAddress && !!account && round !== undefined && groupIdsContracts.length > 0,
+      enabled: !!extensionAddress && !!account && !!round && groupIdsContracts.length > 0,
     },
   });
 
@@ -218,7 +218,7 @@ export function useRecipientsDetailByAccountByRound({
   } = useReadContracts({
     contracts: distributionContracts,
     query: {
-      enabled: !!extensionAddress && !!account && round !== undefined && distributionContracts.length > 0,
+      enabled: !!extensionAddress && !!account && !!round && distributionContracts.length > 0,
     },
   });
 
@@ -233,12 +233,7 @@ export function useRecipientsDetailByAccountByRound({
     actionGroupPairs.forEach(({ actionId, groupId }, index) => {
       const result = distributionData[index];
       if (result?.status === 'success' && result.result) {
-        const [addrs, ratios, amounts, ownerAmount] = result.result as [
-          `0x${string}`[],
-          bigint[],
-          bigint[],
-          bigint,
-        ];
+        const [addrs, ratios, amounts, ownerAmount] = result.result as [`0x${string}`[], bigint[], bigint[], bigint];
         const key = `${actionId}_${groupId}`;
         map.set(key, {
           addrs,

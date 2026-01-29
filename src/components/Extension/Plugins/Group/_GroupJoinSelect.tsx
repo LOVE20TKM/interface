@@ -27,6 +27,7 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useTokenIdOf, useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
 
@@ -52,6 +53,9 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
 
+  // 获取当前加入轮次
+  const { currentRound } = useCurrentRound();
+
   // 获取行动的所有活跃链群列表
   const {
     groups,
@@ -59,6 +63,7 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
     error: errorGroups,
   } = useExtensionGroupInfosOfAction({
     extensionAddress,
+    round: currentRound,
   });
 
   // 读取缓存的 groupId（体验模式）

@@ -28,19 +28,6 @@ export const ExtensionLpFactoryAbi = [
   },
   {
     "type": "function",
-    "name": "DEFAULT_WAITING_BLOCKS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "createExtension",
     "inputs": [
       {
@@ -178,6 +165,16 @@ export const ExtensionLpFactoryAbi = [
   {
     "type": "error",
     "name": "InvalidJoinTokenAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidJoinTokenFactory",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidJoinTokenPair",
     "inputs": []
   }
 ] as const satisfies Abi;

@@ -197,7 +197,7 @@ export const useGovRewardByAccount = (tokenAddress: `0x${string}`, round: bigint
     functionName: 'govRewardByAccount',
     args: [tokenAddress, round, account],
     query: {
-      enabled: !!tokenAddress && !!account && round !== undefined,
+      enabled: !!tokenAddress && !!account && !!round,
     },
   });
 

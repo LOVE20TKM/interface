@@ -84,7 +84,7 @@ export const useGroupScoresOfRound = ({
   } = useReadContracts({
     contracts: scoresContracts as any,
     query: {
-      enabled: !!extensionAddress && round !== undefined && scoresContracts.length > 0,
+      enabled: !!extensionAddress && !!round && scoresContracts.length > 0,
     },
   });
 

@@ -27,6 +27,7 @@ import { parseUnits, formatTokenAmount } from '@/src/lib/format';
 import { isValidEthAddress, normalizeAddressInput } from '@/src/lib/addressUtils';
 import { getMaxJoinAmount } from '@/src/lib/extensionGroup';
 
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useTrialAccountsWaitingAdd } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
@@ -72,6 +73,9 @@ const GroupTrialAddPage: React.FC = () => {
   });
   const extensionAddress = contractInfo?.extension;
 
+  // 获取当前加入轮次
+  const { currentRound } = useCurrentRound();
+
   // 获取链群详情
   const {
     groupDetail,
@@ -80,6 +84,7 @@ const GroupTrialAddPage: React.FC = () => {
   } = useExtensionGroupDetail({
     extensionAddress: extensionAddress || ('0x0' as `0x${string}`),
     groupId: groupIdBigInt,
+    round: currentRound,
   });
 
   // 计算最大参与量
@@ -266,8 +271,6 @@ const GroupTrialAddPage: React.FC = () => {
       console.error('授权失败:', error);
     }
   };
-
-  console.log('GROUP_JOIN_CONTRACT_ADDRESS', GROUP_JOIN_CONTRACT_ADDRESS);
 
   const onSubmit = async (values: FormValues) => {
     if (!extensionAddress || !groupIdBigInt) {

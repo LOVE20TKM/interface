@@ -22,9 +22,9 @@ export const useReward = (contractAddress: `0x${string}` | undefined, round: big
     address: contractAddress,
     abi: IRewardAbi,
     functionName: 'reward',
-    args: round !== undefined ? [round] : undefined,
+    args: !!round ? [round] : undefined,
     query: {
-      enabled: !!contractAddress && round !== undefined,
+      enabled: !!contractAddress && !!round,
     },
   });
 
@@ -43,9 +43,9 @@ export const useRewardByAccount = (
     address: contractAddress,
     abi: IRewardAbi,
     functionName: 'rewardByAccount',
-    args: round !== undefined && account ? [round, account] : undefined,
+    args: !!round && account ? [round, account] : undefined,
     query: {
-      enabled: !!contractAddress && round !== undefined && !!account,
+      enabled: !!contractAddress && !!round && !!account,
     },
   });
 

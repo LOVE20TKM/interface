@@ -12,6 +12,7 @@ import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 import NavigationUtils from '@/src/lib/navigationUtils';
 
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useTrialExit, useTrialAccountsJoined } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 interface GroupTrialAccountsJoinedProps {
@@ -28,8 +29,12 @@ const _GroupTrialAccountsJoined: React.FC<GroupTrialAccountsJoinedProps> = ({
   const { address: account } = useAccount();
   const hasCalledSuccessRef = useRef(false);
 
+  // 获取当前加入轮次
+  const { currentRound } = useCurrentRound();
+
   const { joinedList, isPending, error } = useTrialAccountsJoined(
     extensionAddress,
+    currentRound || BigInt(0),
     groupId,
     (account || '0x0') as `0x${string}`,
   );

@@ -82,7 +82,7 @@ export const useJoinInfo = (contractAddress: `0x${string}`, account: `0x${string
   return {
     joinedRound: typedData ? safeToBigInt(typedData[0]) : undefined,
     amount: typedData ? safeToBigInt(typedData[1]) : undefined,
-    joinedBlock: typedData ? safeToBigInt(typedData[2]) : undefined,
+    lastJoinedBlock: typedData ? safeToBigInt(typedData[2]) : undefined,
     exitableBlock: typedData ? safeToBigInt(typedData[3]) : undefined,
     isPending,
     error,
@@ -164,7 +164,7 @@ export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
     functionName: 'reward',
     args: [round],
     query: {
-      enabled: !!contractAddress && round !== undefined,
+      enabled: !!contractAddress && !!round,
     },
   });
 
@@ -181,7 +181,7 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
     functionName: 'rewardByAccount',
     args: [round, account],
     query: {
-      enabled: !!contractAddress && round !== undefined && !!account,
+      enabled: !!contractAddress && !!round && !!account,
     },
   });
 

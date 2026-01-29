@@ -47,7 +47,7 @@ export function useGroupWarningRatesOfRound({
       {
         address: GROUP_VERIFY_CONTRACT_ADDRESS,
         abi: GroupVerifyAbi,
-        functionName: 'capacityDecayRate' as const,
+        functionName: 'capacityDecayRateByGroupId' as const,
         args: [extensionAddress, round, groupId] as const,
       },
     ];

@@ -10,10 +10,12 @@
  *
  * 使用示例：
  * ```typescript
+ * const { currentRound } = useCurrentRound();
  * const { actionGroupRecipientsData, isPending, error } = useActionGroupRecipientsData({
  *   tokenAddress: '0x...',
  *   account: '0x...',
- *   extensionAddress: '0x...'
+ *   extensionAddress: '0x...',
+ *   round: currentRound,
  * });
  * ```
  */
@@ -63,6 +65,8 @@ export interface UseActionGroupRecipientsDataParams {
   account: `0x${string}` | undefined;
   /** Extension 合约地址 */
   extensionAddress: `0x${string}` | undefined;
+  /** 验证轮轮次（用于 recipients 查询） */
+  round: bigint | undefined;
 }
 
 /**
@@ -89,6 +93,7 @@ export function useActionGroupRecipientsData({
   tokenAddress,
   account,
   extensionAddress,
+  round,
 }: UseActionGroupRecipientsDataParams): UseActionGroupRecipientsDataResult {
   // ==========================================
   // 步骤1：获取行动-链群结构
@@ -158,9 +163,9 @@ export function useActionGroupRecipientsData({
   // 步骤5：批量获取二次分配数据
   // ==========================================
 
-  // 构建批量合约调用配置
+  // 构建批量合约调用配置（使用 recipients，需传入验证轮轮次）
   const recipientsContracts = useMemo(() => {
-    if (!extensionAddress || !account || actionIdsWithGroupIds.length === 0) {
+    if (!extensionAddress || !account || round === undefined || actionIdsWithGroupIds.length === 0) {
       return [];
     }
 
@@ -170,14 +175,14 @@ export function useActionGroupRecipientsData({
         contracts.push({
           address: extensionAddress,
           abi: ExtensionGroupServiceAbi,
-          functionName: 'recipientsLatest' as const,
-          args: [account, actionId, groupId] as const,
+          functionName: 'recipients' as const,
+          args: [account, actionId, groupId, round] as const,
         });
       });
     });
 
     return contracts;
-  }, [extensionAddress, account, actionIdsWithGroupIds]);
+  }, [extensionAddress, account, round, actionIdsWithGroupIds]);
 
   const {
     data: recipientsData,
@@ -186,7 +191,7 @@ export function useActionGroupRecipientsData({
   } = useReadContracts({
     contracts: recipientsContracts,
     query: {
-      enabled: !!extensionAddress && !!account && recipientsContracts.length > 0,
+      enabled: !!extensionAddress && !!account && !!round && recipientsContracts.length > 0,
     },
   });
 
@@ -263,8 +268,8 @@ export function useActionGroupRecipientsData({
   // ==========================================
 
   const isPending = useMemo(() => {
-    // 等待参数
-    if (!tokenAddress || !account || !extensionAddress) {
+    // 等待参数（含验证轮轮次）
+    if (!tokenAddress || !account || !extensionAddress || round === undefined) {
       return true;
     }
 
@@ -284,6 +289,7 @@ export function useActionGroupRecipientsData({
     tokenAddress,
     account,
     extensionAddress,
+    round,
     isActionIdsPending,
     actionIdsWithGroupIds.length,
     isActionInfosPending,

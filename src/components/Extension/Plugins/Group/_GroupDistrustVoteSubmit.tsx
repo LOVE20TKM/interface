@@ -130,6 +130,11 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     return remainingVotes <= BigInt(100000); // 剩余 <= 100000 wei 认为已投完
   }, [remainingVotes]);
 
+  // 计算加入轮次（验证轮次 + 1）
+  const joinRound = useMemo(() => {
+    return currentRound ? currentRound + BigInt(1) : undefined;
+  }, [currentRound]);
+
   // 获取服务者管理的链群
   const {
     groups,
@@ -137,6 +142,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     error: errorGroups,
   } = useExtensionGroupInfosOfAction({
     extensionAddress,
+    round: joinRound,
   });
 
   const ownerGroups = useMemo(() => {

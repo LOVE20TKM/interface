@@ -139,6 +139,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   } = useExtensionGroupDetail({
     extensionAddress,
     groupId,
+    round: currentRound,
   });
 
   // 计算新用户最大参与量

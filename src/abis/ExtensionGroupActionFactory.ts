@@ -267,5 +267,20 @@ export const ExtensionGroupActionFactoryAbi = [
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "InvalidJoinTokenAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMaxJoinAmountRatio",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMaxVerifyCapacityFactor",
+    "inputs": []
   }
 ] as const satisfies Abi;

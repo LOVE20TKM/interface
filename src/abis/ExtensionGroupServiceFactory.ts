@@ -164,5 +164,10 @@ export const ExtensionGroupServiceFactoryAbi = [
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "InvalidGroupActionTokenAddress",
+    "inputs": []
   }
 ] as const satisfies Abi;

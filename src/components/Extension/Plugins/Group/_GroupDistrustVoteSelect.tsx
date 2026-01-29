@@ -10,6 +10,7 @@ import React, { useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 
 // hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
 
 // 工具函数
@@ -31,9 +32,13 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
   onSelectOwner,
   onCancel,
 }) => {
+  // 获取当前加入轮次
+  const { currentRound } = useCurrentRound();
+
   // 获取链群列表
   const { groups, isPending, error } = useExtensionGroupInfosOfAction({
     extensionAddress,
+    round: currentRound,
   });
 
   // 错误处理

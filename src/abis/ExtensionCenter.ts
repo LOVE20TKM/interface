@@ -911,6 +911,22 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "error",
+    "name": "ExtensionActionIdMismatch",
+    "inputs": [
+      {
+        "name": "expected",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "actual",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "ExtensionCreatorMismatch",
     "inputs": [
       {
@@ -927,7 +943,23 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "error",
-    "name": "ExtensionNotFoundInFactory",
+    "name": "ExtensionTokenAddressMismatch",
+    "inputs": [
+      {
+        "name": "expected",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "actual",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidAccountAddress",
     "inputs": []
   },
   {
@@ -937,7 +969,7 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "error",
-    "name": "InvalidRound",
+    "name": "InvalidExtensionFactory",
     "inputs": []
   },
   {
@@ -948,6 +980,16 @@ export const ExtensionCenterAbi = [
   {
     "type": "error",
     "name": "InvalidRound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyAccountOrExtensionOrDelegate",
     "inputs": []
   },
   {
@@ -957,18 +999,8 @@ export const ExtensionCenterAbi = [
   },
   {
     "type": "error",
-    "name": "OnlyUserOrExtensionOrDelegate",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "RoundExceedsJoinRound",
     "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
       {
         "name": "currentRound",
         "type": "uint256",
@@ -982,11 +1014,6 @@ export const ExtensionCenterAbi = [
     "inputs": [
       {
         "name": "expected",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "actual",
         "type": "uint256",
         "internalType": "uint256"
       }

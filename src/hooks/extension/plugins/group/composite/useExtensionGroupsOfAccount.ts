@@ -29,6 +29,7 @@ export interface AccountGroupInfo {
 export interface UseExtensionGroupsOfAccountParams {
   extensionAddress: `0x${string}` | undefined;
   account: `0x${string}` | undefined;
+  round: bigint | undefined;
 }
 
 export interface UseExtensionGroupsOfAccountResult {
@@ -51,6 +52,7 @@ export interface UseExtensionGroupsOfAccountResult {
 export const useExtensionGroupsOfAccount = ({
   extensionAddress,
   account,
+  round,
 }: UseExtensionGroupsOfAccountParams): UseExtensionGroupsOfAccountResult => {
   // 第一步：获取账号的所有活跃链群NFT列表
   const groupIdsContract = useMemo(() => {
@@ -84,9 +86,9 @@ export const useExtensionGroupsOfAccount = ({
   }, [groupIdsData]);
 
   // 第二步：批量获取每个链群的详细信息
-  // 新版合约：totalJoinedAmountByGroupId 移到 GroupJoin，需要 extensionAddress, groupId
+  // 新版合约：totalJoinedAmountByGroupId 移到 GroupJoin，需要 extensionAddress, round, groupId
   const detailContracts = useMemo(() => {
-    if (!extensionAddress || groupIds.length === 0) return [];
+    if (!extensionAddress || !round || groupIds.length === 0) return [];
 
     const contracts = [];
 
@@ -112,7 +114,7 @@ export const useExtensionGroupsOfAccount = ({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'totalJoinedAmountByGroupId',
-        args: [extensionAddress, groupId],
+        args: [extensionAddress, round, groupId],
       });
 
       // 获取群组成员数量（新版合约移到 GroupJoin）
@@ -120,12 +122,12 @@ export const useExtensionGroupsOfAccount = ({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'accountsByGroupIdCount',
-        args: [extensionAddress, groupId],
+        args: [extensionAddress, round, groupId],
       });
     }
 
     return contracts;
-  }, [extensionAddress, groupIds]);
+  }, [extensionAddress, round, groupIds]);
 
   const {
     data: detailData,
@@ -134,7 +136,7 @@ export const useExtensionGroupsOfAccount = ({
   } = useReadContracts({
     contracts: detailContracts as any,
     query: {
-      enabled: !!extensionAddress && detailContracts.length > 0,
+      enabled: !!extensionAddress && !!round && detailContracts.length > 0,
     },
   });
 
@@ -146,9 +148,19 @@ export const useExtensionGroupsOfAccount = ({
 
     for (let i = 0; i < groupIds.length; i++) {
       const baseIndex = i * 4;
-      // GroupManager 的 groupInfo 返回 9 个字段: [groupId, description, maxCapacity, minJoinAmount, maxJoinAmount, maxAccounts, isActive, activatedRound, deactivatedRound]
+      // GroupManager 的 groupInfo 返回结构体 GroupInfo
       const groupInfoData = detailData[baseIndex]?.result as
-        | [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint, bigint]
+        | {
+            groupId: bigint;
+            description: string;
+            maxCapacity: bigint;
+            minJoinAmount: bigint;
+            maxJoinAmount: bigint;
+            maxAccounts: bigint;
+            isActive: boolean;
+            activatedRound: bigint;
+            deactivatedRound: bigint;
+          }
         | undefined;
       const groupName = detailData[baseIndex + 1]?.result as string | undefined;
       const totalJoinedAmount = detailData[baseIndex + 2]?.result;
@@ -156,18 +168,17 @@ export const useExtensionGroupsOfAccount = ({
 
       if (!groupInfoData || !groupName) continue;
 
-      // GroupManager groupInfo 字段: [groupId, description, maxCapacity, minJoinAmount, maxJoinAmount, maxAccounts, isActive, activatedRound, deactivatedRound]
       result.push({
         groupId: groupIds[i],
         groupName,
-        description: groupInfoData[1],
-        maxCapacity: safeToBigInt(groupInfoData[2]),
+        description: groupInfoData.description,
+        maxCapacity: safeToBigInt(groupInfoData.maxCapacity),
         totalJoinedAmount: safeToBigInt(totalJoinedAmount),
-        minJoinAmount: safeToBigInt(groupInfoData[3]),
-        maxJoinAmount: safeToBigInt(groupInfoData[4]),
-        isActive: groupInfoData[6],
-        activatedRound: safeToBigInt(groupInfoData[7]),
-        deactivatedRound: safeToBigInt(groupInfoData[8]),
+        minJoinAmount: safeToBigInt(groupInfoData.minJoinAmount),
+        maxJoinAmount: safeToBigInt(groupInfoData.maxJoinAmount),
+        isActive: groupInfoData.isActive,
+        activatedRound: safeToBigInt(groupInfoData.activatedRound),
+        deactivatedRound: safeToBigInt(groupInfoData.deactivatedRound),
         accountCount: safeToBigInt(accountCount),
       });
     }
@@ -177,8 +188,8 @@ export const useExtensionGroupsOfAccount = ({
 
   // 计算最终的 isPending 状态
   const isPending = useMemo(() => {
-    // 如果 extensionAddress 或 account 不存在，返回 true（等待前置条件）
-    if (!extensionAddress || !account) return true;
+    // 如果 extensionAddress、account 或 round 不存在，返回 true（等待前置条件）
+    if (!extensionAddress || !account || !round) return true;
     // 如果链群NFT列表还在加载，返回 true
     if (isGroupIdsPending) return true;
     // 如果没有链群（groupIds 为空），且链群NFT列表查询已完成，返回 false
@@ -191,7 +202,7 @@ export const useExtensionGroupsOfAccount = ({
     }
     // 其他情况，返回 true
     return true;
-  }, [isGroupIdsPending, isDetailPending, groupIds.length, extensionAddress, account]);
+  }, [isGroupIdsPending, isDetailPending, groupIds.length, extensionAddress, account, round]);
 
   return {
     groups,

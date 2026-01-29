@@ -175,7 +175,7 @@ export const useVotedGroupActions = (contractAddress: `0x${string}`, tokenAddres
     functionName: 'votedGroupActions',
     args: [tokenAddress, round],
     query: {
-      enabled: !!contractAddress && !!tokenAddress && round !== undefined,
+      enabled: !!contractAddress && !!tokenAddress && !!round,
     },
   });
 

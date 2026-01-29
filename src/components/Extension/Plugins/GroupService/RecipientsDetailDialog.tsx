@@ -44,16 +44,14 @@ export default function RecipientsDetailDialog({
     extensionAddress,
     tokenAddress,
     account,
-    round: open && round !== undefined ? round : undefined, // 只在 Dialog 打开时查询
+    round: open && !!round ? round : undefined, // 只在 Dialog 打开时查询
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto py-8 px-4">
         <DialogHeader>
-          <DialogTitle>
-            {account && round !== undefined ? `第 ${round.toString()} 轮二次分配明细` : '二次分配明细'}
-          </DialogTitle>
+          <DialogTitle>{account && !!round ? `第 ${round.toString()} 轮二次分配明细` : '二次分配明细'}</DialogTitle>
         </DialogHeader>
 
         {isPending ? (

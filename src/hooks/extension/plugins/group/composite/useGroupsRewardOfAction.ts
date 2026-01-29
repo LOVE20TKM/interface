@@ -43,7 +43,7 @@ export interface GroupRewardInfo {
   groupName: string | undefined;
   /** 激励代币数量 */
   reward: bigint | undefined;
-  /** 链群铸造代币数量（与 generatedRewardByGroupId 接口保持一致） */
+  /** 链群铸造代币数量（与 generatedActionRewardByGroupId 接口保持一致） */
   generatedReward?: bigint;
   /** 参与代币数量 */
   joinedAmount?: bigint;
@@ -87,7 +87,7 @@ export interface UseGroupsRewardOfActionResult {
  * 分四步获取链群激励信息：
  * 1. 调用 verifiedGroupIds(extensionAddress, round) 获取当轮有验证的链群 IDs
  * 2. 使用 useGroupNamesWithCache 批量获取链群名称（带缓存）
- * 3. 使用 useReadContracts 批量调用 generatedRewardByGroupId 和 totalJoinedAmountByGroupIdByRound（合并为一次调用）
+ * 3. 使用 useReadContracts 批量调用 generatedActionRewardByGroupId 和 totalJoinedAmountByGroupIdByRound（合并为一次调用）
  * 4. 组合链群 ID、名称、激励和参与代币量，返回完整列表
  *
  * @example
@@ -141,14 +141,14 @@ export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): 
       contracts.push({
         address: extensionAddress,
         abi: ExtensionGroupActionAbi,
-        functionName: 'generatedRewardByGroupId' as const,
+        functionName: 'generatedActionRewardByGroupId' as const,
         args: [round, groupId],
       });
       // 获取链群参与代币量
       contracts.push({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
-        functionName: 'totalJoinedAmountByGroupIdByRound' as const,
+        functionName: 'totalJoinedAmountByGroupId' as const,
         args: [extensionAddress, round, groupId],
       });
     }
@@ -164,7 +164,7 @@ export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): 
   } = useReadContracts({
     contracts: allContracts as any,
     query: {
-      enabled: !!extensionAddress && round !== undefined && allContracts.length > 0,
+      enabled: !!extensionAddress && !!round && allContracts.length > 0,
     },
   });
 
@@ -189,7 +189,7 @@ export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): 
         groupId,
         groupName: groupNameMap.get(groupId),
         reward,
-        generatedReward: reward, // 与 generatedRewardByGroupId 接口保持一致
+        generatedReward: reward, // 与 generatedActionRewardByGroupId 接口保持一致
         joinedAmount,
       };
     });

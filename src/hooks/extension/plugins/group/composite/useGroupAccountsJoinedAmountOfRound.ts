@@ -61,7 +61,7 @@ export const useGroupAccountsJoinedAmountOfRound = ({
       contracts.push({
         address: GROUP_JOIN_CONTRACT_ADDRESS,
         abi: GroupJoinAbi,
-        functionName: 'joinedAmountByAccountByRound',
+        functionName: 'joinedAmountByAccount',
         args: [extensionAddress, round, account],
       });
     }
@@ -72,15 +72,15 @@ export const useGroupAccountsJoinedAmountOfRound = ({
   // 第三步：获取每个账户的参与轮次
   // 新版合约 joinInfo 需要 extensionAddress, account 参数
   const joinInfoContracts = useMemo(() => {
-    if (!extensionAddress || accounts.length === 0) return [];
+    if (!extensionAddress || round === undefined || accounts.length === 0) return [];
 
     return accounts.map((account) => ({
       address: GROUP_JOIN_CONTRACT_ADDRESS,
       abi: GroupJoinAbi,
       functionName: 'joinInfo',
-      args: [extensionAddress, account],
+      args: [extensionAddress, round, account],
     }));
-  }, [extensionAddress, accounts]);
+  }, [extensionAddress, round, accounts]);
 
   const mergedContracts = useMemo(() => {
     if (!extensionAddress || round === undefined) return [];

@@ -179,4 +179,12 @@ export const ErrorMessages: Record<string, string> = {
   GroupNameTooLong: '链群名称过长',
   ExtensionCreatorMismatch: '扩展创建者不匹配',
   InvalidFactoryAddress: '无效的工厂地址',
+  ExtensionActionIdMismatch: '扩展行动ID不匹配',
+  ExtensionTokenAddressMismatch: '扩展代币地址不匹配',
+  InvalidAccountAddress: '无效的账户地址',
+  InvalidJoinTokenFactory: '无效的加入代币工厂',
+  InvalidJoinTokenPair: '无效的加入代币对',
+  InvalidMaxJoinAmountRatio: '无效的最大加入代币量比例',
+  InvalidMaxVerifyCapacityFactor: '无效的最大验证容量因子',
+  OnlyAccountOrExtensionOrDelegate: '只有所属账户、扩展或委托人可以调用',
 };

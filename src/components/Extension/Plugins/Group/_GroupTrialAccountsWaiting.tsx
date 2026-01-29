@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { useAccount } from 'wagmi';
+import { useAccount, usePublicClient } from 'wagmi';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -40,6 +41,37 @@ const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
     isPending: isPendingWaitingList,
     error: errorWaitingList,
   } = useTrialAccountsWaiting(extensionAddress, groupId, (account || '0x0') as `0x${string}`);
+
+  const publicClient = usePublicClient();
+  /** 待获取时间戳的区块号列表（去重，且排除 0） */
+  const blockNumbersToFetch = useMemo(
+    () => [...new Set(waitingList.map((i) => i.lastJoinedBlock).filter((b) => b != null && b > BigInt(0)))],
+    [
+      waitingList
+        .map((item) => `${item.account}-${item.lastJoinedBlock?.toString()}-${item.amount?.toString()}`)
+        .join('|'),
+    ],
+  );
+  /** 批量获取 lastJoinedBlock 对应的时间戳：blockNumber -> timestamp(秒) */
+  const { data: blockTimestampsMap } = useQuery({
+    queryKey: [
+      'trialWaitingBlockTimestamps',
+      extensionAddress,
+      groupId.toString(),
+      blockNumbersToFetch.map((b) => b.toString()),
+    ],
+    queryFn: async () => {
+      if (!publicClient || blockNumbersToFetch.length === 0) return {} as Record<string, bigint>;
+      const entries = await Promise.all(
+        blockNumbersToFetch.map(async (blockNum) => {
+          const block = await publicClient.getBlock({ blockNumber: blockNum });
+          return [blockNum.toString(), block.timestamp] as const;
+        }),
+      );
+      return Object.fromEntries(entries);
+    },
+    enabled: !!publicClient && blockNumbersToFetch.length > 0 && waitingList.length > 0,
+  });
 
   const {
     trialAccountsWaitingRemove,
@@ -114,7 +146,7 @@ const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
         <thead>
           <tr className="border-b border-gray-100">
             <th className="px-1 text-left w-12">No</th>
-            <th className="px-1 text-left">地址</th>
+            <th className="px-1 text-left">地址 / 添加时间</th>
             <th className="px-1 text-right">体验代币数量</th>
             <th className="px-0 text-right"> </th>
           </tr>
@@ -132,11 +164,18 @@ const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
                 <td className="px-1">{index + 1}</td>
                 <td className="px-1">
                   <AddressWithCopyButton address={item.account} showCopyButton={true} />
+                  {item.lastJoinedBlock != null &&
+                    item.lastJoinedBlock > BigInt(0) &&
+                    blockTimestampsMap?.[item.lastJoinedBlock.toString()] != null && (
+                      <div className="text-xs text-greyscale-400 mt-0.5">
+                        {new Date(Number(blockTimestampsMap[item.lastJoinedBlock.toString()]) * 1000).toLocaleString()}
+                      </div>
+                    )}
                 </td>
                 <td className="px-1 text-right">
                   <span className="font-mono text-secondary">{formatTokenAmount(item.amount)}</span>
                 </td>
-                <td className="px-0 text-right" style={{ verticalAlign: 'bottom' }}>
+                <td className="px-0 text-right" style={{ verticalAlign: 'middle' }}>
                   <button
                     onClick={() => handleRemove(item.account)}
                     disabled={isPendingRemove || isConfirmingRemove}

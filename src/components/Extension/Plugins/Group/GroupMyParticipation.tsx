@@ -25,6 +25,7 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useAccountVerificationInfos } from '@/src/hooks/extension/base/composite';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useExit, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
@@ -49,6 +50,9 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   const { token } = useContext(TokenContext) || {};
   const router = useRouter();
 
+  // 获取当前加入轮次
+  const { currentRound } = useCurrentRound();
+
   // 获取加入信息
   const {
     amount: joinedAmount,
@@ -56,7 +60,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     groupId,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
-  } = useJoinInfo(extensionAddress, account as `0x${string}`);
+  } = useJoinInfo(extensionAddress, currentRound || BigInt(0), account as `0x${string}`);
 
   // 判断是否是体验模式
   const isTrialMode = trialProviderAddress && trialProviderAddress !== '0x0000000000000000000000000000000000000000';
@@ -69,6 +73,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   } = useExtensionGroupDetail({
     extensionAddress,
     groupId: groupId || BigInt(0),
+    round: currentRound,
   });
 
   // 获取验证信息

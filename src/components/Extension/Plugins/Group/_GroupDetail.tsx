@@ -13,6 +13,7 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
@@ -31,10 +32,14 @@ interface GroupDetailProps {
 }
 
 const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId }) => {
+  // 获取当前加入轮次
+  const { currentRound } = useCurrentRound();
+
   // 获取链群详情
   const { groupDetail, isPending, error } = useExtensionGroupDetail({
     extensionAddress,
     groupId,
+    round: currentRound,
   });
 
   // 获取参与地址数
@@ -42,7 +47,7 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
     count: accountsCount,
     isPending: isPendingAccountsCount,
     error: errorAccountsCount,
-  } = useAccountsByGroupIdCount(extensionAddress, groupId);
+  } = useAccountsByGroupIdCount(extensionAddress, currentRound || BigInt(0), groupId);
 
   // 错误处理
   const { handleError } = useContractError();

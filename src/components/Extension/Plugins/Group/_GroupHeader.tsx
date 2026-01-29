@@ -25,6 +25,7 @@ import {
   useCurrentRound as useVerifyCurrentRound,
   useScoreByVerifierByActionId,
 } from '@/src/hooks/contracts/useLOVE20Verify';
+import { useCurrentRound as useJoinCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
 import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
@@ -53,6 +54,9 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
   // 管理面板弹窗状态
   const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
 
+  // 获取当前加入轮次
+  const { currentRound: joinCurrentRound } = useJoinCurrentRound();
+
   // 获取链群详情
   const {
     groupDetail,
@@ -61,6 +65,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
   } = useExtensionGroupDetail({
     extensionAddress,
     groupId,
+    round: joinCurrentRound,
   });
 
   // 获取参与地址数
@@ -68,7 +73,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
     count: accountsCount,
     isPending: isPendingAccountsCount,
     error: errorAccountsCount,
-  } = useAccountsByGroupIdCount(extensionAddress, groupId);
+  } = useAccountsByGroupIdCount(extensionAddress, joinCurrentRound || BigInt(0), groupId);
 
   // 获取打分代理
   const {

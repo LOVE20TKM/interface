@@ -182,18 +182,30 @@ export const useGroupInfo = (extensionAddress: `0x${string}`, groupId: bigint) =
     },
   });
 
-  const typedData = data as [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint, bigint] | undefined;
+  const typedData = data as
+    | {
+        groupId: bigint;
+        description: string;
+        maxCapacity: bigint;
+        minJoinAmount: bigint;
+        maxJoinAmount: bigint;
+        maxAccounts: bigint;
+        isActive: boolean;
+        activatedRound: bigint;
+        deactivatedRound: bigint;
+      }
+    | undefined;
 
   return {
-    groupId: typedData ? safeToBigInt(typedData[0]) : undefined,
-    description: typedData ? typedData[1] : undefined,
-    maxCapacity: typedData ? safeToBigInt(typedData[2]) : undefined,
-    minJoinAmount: typedData ? safeToBigInt(typedData[3]) : undefined,
-    maxJoinAmount: typedData ? safeToBigInt(typedData[4]) : undefined,
-    maxAccounts: typedData ? safeToBigInt(typedData[5]) : undefined,
-    isActive: typedData ? typedData[6] : undefined,
-    activatedRound: typedData ? safeToBigInt(typedData[7]) : undefined,
-    deactivatedRound: typedData ? safeToBigInt(typedData[8]) : undefined,
+    groupId: typedData ? safeToBigInt(typedData.groupId) : undefined,
+    description: typedData ? typedData.description : undefined,
+    maxCapacity: typedData ? safeToBigInt(typedData.maxCapacity) : undefined,
+    minJoinAmount: typedData ? safeToBigInt(typedData.minJoinAmount) : undefined,
+    maxJoinAmount: typedData ? safeToBigInt(typedData.maxJoinAmount) : undefined,
+    maxAccounts: typedData ? safeToBigInt(typedData.maxAccounts) : undefined,
+    isActive: typedData ? typedData.isActive : undefined,
+    activatedRound: typedData ? safeToBigInt(typedData.activatedRound) : undefined,
+    deactivatedRound: typedData ? safeToBigInt(typedData.deactivatedRound) : undefined,
     isPending,
     error,
   };

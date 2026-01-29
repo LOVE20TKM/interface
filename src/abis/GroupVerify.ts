@@ -193,7 +193,7 @@ export const GroupVerifyAbi = [
   },
   {
     "type": "function",
-    "name": "capacityDecayRate",
+    "name": "capacityDecayRateByGroupId",
     "inputs": [
       {
         "name": "extension",
@@ -1129,7 +1129,7 @@ export const GroupVerifyAbi = [
       {
         "name": "groupOwner",
         "type": "address",
-        "indexed": false,
+        "indexed": true,
         "internalType": "address"
       },
       {
@@ -1215,7 +1215,7 @@ export const GroupVerifyAbi = [
       {
         "name": "groupId",
         "type": "uint256",
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256"
       },
       {
@@ -1281,7 +1281,7 @@ export const GroupVerifyAbi = [
   },
   {
     "type": "error",
-    "name": "NotRegisteredExtension",
+    "name": "NotRegisteredExtensionInFactory",
     "inputs": []
   },
   {

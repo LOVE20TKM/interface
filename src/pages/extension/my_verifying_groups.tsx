@@ -48,6 +48,12 @@ const MyVerifyingGroupsPage: React.FC = () => {
     return currentRound - BigInt(2);
   }, [currentRound]);
 
+  // 计算加入轮次（验证轮次 + 1）
+  const joinRound = useMemo(() => {
+    if (!verifyRound) return undefined;
+    return verifyRound + BigInt(1);
+  }, [verifyRound]);
+
   // Fetch groups that need verification (VotedGroups - 只包含投过票的)
   const {
     groups: votedGroups,
@@ -69,6 +75,7 @@ const MyVerifyingGroupsPage: React.FC = () => {
   } = useActionsWithActiveGroupsByOwner({
     groupActionTokenAddress,
     account: account as `0x${string}`,
+    round: joinRound,
   });
 
   // 使用 votedGroups 作为 groups（保持向后兼容）

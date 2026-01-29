@@ -131,7 +131,31 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "function",
-    "name": "burnUnclaimedReward",
+    "name": "burnInfo",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "burnAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "burned",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "burnRewardIfNeeded",
     "inputs": [
       {
         "name": "round",
@@ -181,14 +205,33 @@ export const ExtensionGroupActionAbi = [
         "name": "rewards",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "generatedActionRewardByGroupId",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
-        "name": "total",
+        "name": "groupId",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "nonpayable"
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -208,30 +251,6 @@ export const ExtensionGroupActionAbi = [
     "outputs": [
       {
         "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "generatedRewardByGroupId",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -353,7 +372,7 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "event",
-    "name": "BurnUnclaimedReward",
+    "name": "BurnReward",
     "inputs": [
       {
         "name": "tokenAddress",
@@ -450,16 +469,6 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "error",
-    "name": "AlreadyInitialized",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidJoinTokenAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidTokenAddress",
     "inputs": []
   },
@@ -470,20 +479,10 @@ export const ExtensionGroupActionAbi = [
   },
   {
     "type": "error",
-    "name": "RoundHasVerifiedGroups",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "RoundNotFinished",
     "inputs": [
       {
         "name": "currentRound",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "requestedRound",
         "type": "uint256",
         "internalType": "uint256"
       }

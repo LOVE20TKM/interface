@@ -66,6 +66,8 @@ export interface UseActionsWithActiveGroupsByOwnerParams {
   groupActionTokenAddress: `0x${string}` | undefined;
   /** 链群服务者账户地址 */
   account: `0x${string}` | undefined;
+  /** 加入轮次 */
+  round: bigint | undefined;
 }
 
 /**
@@ -91,6 +93,7 @@ export interface UseActionsWithActiveGroupsByOwnerResult {
 export function useActionsWithActiveGroupsByOwner({
   groupActionTokenAddress,
   account,
+  round,
 }: UseActionsWithActiveGroupsByOwnerParams): UseActionsWithActiveGroupsByOwnerResult {
   // ==========================================
   // 步骤1：获取 actionIds 和 groupIds
@@ -203,7 +206,7 @@ export function useActionsWithActiveGroupsByOwner({
   }, [actionIdsWithGroupIds, actionIdToExtensionMap]);
 
   const totalJoinedAmountContracts = useMemo(() => {
-    if (extensionGroupPairs.length === 0) {
+    if (extensionGroupPairs.length === 0 || !round) {
       return [];
     }
 
@@ -211,9 +214,9 @@ export function useActionsWithActiveGroupsByOwner({
       address: GROUP_JOIN_ADDRESS,
       abi: GroupJoinAbi,
       functionName: 'totalJoinedAmountByGroupId' as const,
-      args: [extensionAddress, groupId] as const,
+      args: [extensionAddress, round, groupId] as const,
     }));
-  }, [extensionGroupPairs]);
+  }, [extensionGroupPairs, round]);
 
   const {
     data: totalJoinedAmountData,
@@ -222,7 +225,7 @@ export function useActionsWithActiveGroupsByOwner({
   } = useReadContracts({
     contracts: totalJoinedAmountContracts as any,
     query: {
-      enabled: totalJoinedAmountContracts.length > 0 && !isExtensionsPending,
+      enabled: !!round && totalJoinedAmountContracts.length > 0 && !isExtensionsPending,
     },
   });
 
@@ -293,7 +296,7 @@ export function useActionsWithActiveGroupsByOwner({
 
   const isPending = useMemo(() => {
     // 等待基本参数
-    if (!groupActionTokenAddress || !account) return true;
+    if (!groupActionTokenAddress || !account || !round) return true;
 
     // 步骤1：获取 actionIds 和 groupIds
     if (isActionIdsPending) return true;
@@ -314,6 +317,7 @@ export function useActionsWithActiveGroupsByOwner({
   }, [
     groupActionTokenAddress,
     account,
+    round,
     isActionIdsPending,
     actionIdsWithGroupIds.length,
     isExtensionsPending,

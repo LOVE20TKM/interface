@@ -56,7 +56,7 @@ export const useGroupActionRewardsExtra = ({
       allContracts.push({
         address: GROUP_JOIN_CONTRACT_ADDRESS,
         abi: GroupJoinAbi,
-        functionName: 'groupIdByAccountByRound',
+        functionName: 'groupIdByAccount',
         args: [extensionAddress, round, account],
       });
     }

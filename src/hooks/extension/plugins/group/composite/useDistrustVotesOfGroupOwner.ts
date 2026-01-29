@@ -104,8 +104,7 @@ export const useDistrustVotesOfGroupOwner = ({
   } = useReadContracts({
     contracts: detailContracts as any,
     query: {
-      enabled:
-        !!tokenAddress && actionId !== undefined && round !== undefined && !!groupOwner && detailContracts.length > 0,
+      enabled: !!tokenAddress && actionId !== undefined && !!round && !!groupOwner && detailContracts.length > 0,
     },
   });
 

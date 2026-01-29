@@ -89,7 +89,7 @@ export const useActionIdsWithRecipients = (contractAddress: `0x${string}`, accou
     functionName: 'actionIdsWithRecipients',
     args: [account, round],
     query: {
-      enabled: !!contractAddress && !!account && round !== undefined,
+      enabled: !!contractAddress && !!account && !!round,
     },
   });
 
@@ -126,7 +126,7 @@ export const useGeneratedActionRewardByVerifier = (
     functionName: 'generatedActionRewardByVerifier',
     args: [round, verifier],
     query: {
-      enabled: !!contractAddress && round !== undefined && !!verifier,
+      enabled: !!contractAddress && !!round && !!verifier,
     },
   });
 
@@ -152,7 +152,7 @@ export const useGroupIdsByActionIdWithRecipients = (
     functionName: 'groupIdsByActionIdWithRecipients',
     args: [account, actionId, round],
     query: {
-      enabled: !!contractAddress && !!account && actionId !== undefined && round !== undefined,
+      enabled: !!contractAddress && !!account && actionId !== undefined && !!round,
     },
   });
 
@@ -258,35 +258,7 @@ export const useRecipients = (
     functionName: 'recipients',
     args: [groupOwner, actionId, groupId, round],
     query: {
-      enabled:
-        !!contractAddress && !!groupOwner && actionId !== undefined && groupId !== undefined && round !== undefined,
-    },
-  });
-
-  return {
-    addrs: data ? (data[0] as `0x${string}`[]) : undefined,
-    ratios: data ? (data[1] as bigint[]) : undefined,
-    isPending,
-    error,
-  };
-};
-
-/**
- * Hook for recipientsLatest - 获取指定组所有者的最新接收者信息
- */
-export const useRecipientsLatest = (
-  contractAddress: `0x${string}`,
-  groupOwner: `0x${string}`,
-  actionId: bigint,
-  groupId: bigint,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupServiceAbi,
-    functionName: 'recipientsLatest',
-    args: [groupOwner, actionId, groupId],
-    query: {
-      enabled: !!contractAddress && !!groupOwner && actionId !== undefined && groupId !== undefined,
+      enabled: !!contractAddress && !!groupOwner && actionId !== undefined && groupId !== undefined && !!round,
     },
   });
 
@@ -308,7 +280,7 @@ export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
     functionName: 'reward',
     args: [round],
     query: {
-      enabled: !!contractAddress && round !== undefined,
+      enabled: !!contractAddress && !!round,
     },
   });
 
@@ -325,7 +297,7 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
     functionName: 'rewardByAccount',
     args: [round, account],
     query: {
-      enabled: !!contractAddress && round !== undefined && !!account,
+      enabled: !!contractAddress && !!round && !!account,
     },
   });
 
@@ -355,12 +327,7 @@ export const useRewardByRecipient = (
     args: [round, groupOwner, actionId, groupId, recipient],
     query: {
       enabled:
-        !!contractAddress &&
-        round !== undefined &&
-        !!groupOwner &&
-        actionId !== undefined &&
-        groupId !== undefined &&
-        !!recipient,
+        !!contractAddress && !!round && !!groupOwner && actionId !== undefined && groupId !== undefined && !!recipient,
     },
   });
 
@@ -383,8 +350,7 @@ export const useRewardDistribution = (
     functionName: 'rewardDistribution',
     args: [round, groupOwner, actionId, groupId],
     query: {
-      enabled:
-        !!contractAddress && round !== undefined && !!groupOwner && actionId !== undefined && groupId !== undefined,
+      enabled: !!contractAddress && !!round && !!groupOwner && actionId !== undefined && groupId !== undefined,
     },
   });
 

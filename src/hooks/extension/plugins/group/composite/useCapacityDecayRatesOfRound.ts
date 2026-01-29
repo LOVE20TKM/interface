@@ -41,7 +41,7 @@ export const useCapacityDecayRatesOfRound = ({
       contracts.push({
         address: GROUP_VERIFY_CONTRACT_ADDRESS,
         abi: GroupVerifyAbi,
-        functionName: 'capacityDecayRate' as const,
+        functionName: 'capacityDecayRateByGroupId' as const,
         args: [extensionAddress, round, groupId],
       });
     }
@@ -57,11 +57,7 @@ export const useCapacityDecayRatesOfRound = ({
     contracts: capacityDecayRateContracts as any,
     query: {
       enabled:
-        !!extensionAddress &&
-        round !== undefined &&
-        !!groupIds &&
-        groupIds.length > 0 &&
-        capacityDecayRateContracts.length > 0,
+        !!extensionAddress && !!round && !!groupIds && groupIds.length > 0 && capacityDecayRateContracts.length > 0,
     },
   });
 

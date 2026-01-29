@@ -120,7 +120,7 @@ export const useScoreByVerifier = (tokenAddress: `0x${string}`, round: bigint, v
     functionName: 'scoreByVerifier',
     args: [tokenAddress, round, verifier],
     query: {
-      enabled: !!tokenAddress && !!verifier && round !== undefined,
+      enabled: !!tokenAddress && !!verifier && !!round,
     },
   });
   return { scoreByVerifier: safeToBigInt(data), isPending, error };
@@ -141,7 +141,7 @@ export const useScoreByVerifierByActionId = (
     functionName: 'scoreByVerifierByActionId',
     args: [tokenAddress, round, verifier, actionId],
     query: {
-      enabled: !!tokenAddress && round !== undefined && !!verifier && actionId !== undefined,
+      enabled: !!tokenAddress && !!round && !!verifier && actionId !== undefined,
     },
   });
 
@@ -165,7 +165,7 @@ export const useScoreByVerifierByActionIdByAccount = (
     functionName: 'scoreByVerifierByActionIdByAccount',
     args: [verifier, round, tokenAddress, actionId, account],
     query: {
-      enabled: enabled && !!verifier && round !== undefined && !!tokenAddress && actionId !== undefined && !!account,
+      enabled: enabled && !!verifier && !!round && !!tokenAddress && actionId !== undefined && !!account,
     },
   });
 

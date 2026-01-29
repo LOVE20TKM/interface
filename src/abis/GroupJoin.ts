@@ -22,12 +22,56 @@ export const GroupJoinAbi = [
   },
   {
     "type": "function",
+    "name": "accountIndexByGroupId",
+    "inputs": [
+      {
+        "name": "extension",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "found",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "accountsByGroupId",
     "inputs": [
       {
         "name": "extension",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -54,64 +98,6 @@ export const GroupJoinAbi = [
         "internalType": "address"
       },
       {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "accountsByGroupIdByRound",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "accountsByGroupIdByRoundAtIndex",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "round",
         "type": "uint256",
         "internalType": "uint256"
@@ -132,35 +118,6 @@ export const GroupJoinAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "accountsByGroupIdByRoundCount",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -173,6 +130,11 @@ export const GroupJoinAbi = [
         "name": "extension",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
         "name": "groupId",
@@ -1327,7 +1289,7 @@ export const GroupJoinAbi = [
   },
   {
     "type": "function",
-    "name": "groupIdByAccountByRound",
+    "name": "groupIdByAccount",
     "inputs": [
       {
         "name": "extension",
@@ -1369,50 +1331,6 @@ export const GroupJoinAbi = [
   },
   {
     "type": "function",
-    "name": "isAccountInRangeByRound",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "startIndex",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "endIndex",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "join",
     "inputs": [
       {
@@ -1447,6 +1365,11 @@ export const GroupJoinAbi = [
         "name": "extension",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
         "name": "account",
@@ -1486,6 +1409,11 @@ export const GroupJoinAbi = [
         "name": "extension",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -1499,7 +1427,7 @@ export const GroupJoinAbi = [
   },
   {
     "type": "function",
-    "name": "joinedAmountByAccountByRound",
+    "name": "joinedAmountByAccount",
     "inputs": [
       {
         "name": "extension",
@@ -1528,55 +1456,7 @@ export const GroupJoinAbi = [
   },
   {
     "type": "function",
-    "name": "joinedAmountByRound",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "totalJoinedAmountByGroupId",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "totalJoinedAmountByGroupIdByRound",
     "inputs": [
       {
         "name": "extension",
@@ -1741,12 +1621,17 @@ export const GroupJoinAbi = [
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "accounts",
         "type": "address[]",
         "internalType": "address[]"
       },
       {
-        "name": "",
+        "name": "trialAmounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "blockNumbers",
         "type": "uint256[]",
         "internalType": "uint256[]"
       }
@@ -1808,12 +1693,17 @@ export const GroupJoinAbi = [
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "account",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "",
+        "name": "trialAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "blockNumber",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -2181,11 +2071,6 @@ export const GroupJoinAbi = [
   },
   {
     "type": "error",
-    "name": "InvalidJoinTokenAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidRound",
     "inputs": []
   },
@@ -2227,7 +2112,13 @@ export const GroupJoinAbi = [
   {
     "type": "error",
     "name": "TrialAccountNotInWaitingList",
-    "inputs": []
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
   },
   {
     "type": "error",

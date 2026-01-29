@@ -181,7 +181,7 @@ export const useLpAccountRewardDetail = ({
     // 计算加入轮时长比例
     let blockRatioPercent = 100;
     let blockRatio = PRECISION;
-    if (round !== undefined && joinedRound === round && phaseBlocks > BigInt(0)) {
+    if (!!round && joinedRound === round && phaseBlocks > BigInt(0)) {
       const roundEndBlock = originBlocks + (round + BigInt(1)) * phaseBlocks - BigInt(1);
       const blocksInRound = roundEndBlock - joinedBlock + BigInt(1);
       blockRatio = (blocksInRound * PRECISION) / phaseBlocks;

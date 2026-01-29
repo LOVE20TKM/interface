@@ -52,7 +52,7 @@ export const useVerificationInfoByRound = (
     functionName: 'verificationInfoByRound',
     args: [tokenAddress, actionId, account, verificationKey, round],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && !!account && !!verificationKey && round !== undefined,
+      enabled: !!tokenAddress && actionId !== undefined && !!account && !!verificationKey && !!round,
     },
   });
 
@@ -108,7 +108,7 @@ export const useAccountsByRoundAtIndex = (
     functionName: 'accountsByRoundAtIndex',
     args: [tokenAddress, actionId, index, round],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && index !== undefined && round !== undefined,
+      enabled: !!tokenAddress && actionId !== undefined && index !== undefined && !!round,
     },
   });
 
@@ -142,7 +142,7 @@ export const useAccountsByRoundCount = (tokenAddress: `0x${string}`, actionId: b
     functionName: 'accountsByRoundCount',
     args: [tokenAddress, actionId, round],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && round !== undefined,
+      enabled: !!tokenAddress && actionId !== undefined && !!round,
     },
   });
 
@@ -368,9 +368,12 @@ export const useIsAccountJoinedByRound = (
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'isAccountJoinedByRound',
-    args: tokenAddress && actionId !== undefined && account && round !== undefined ? [tokenAddress, actionId, account, round] : undefined,
+    args:
+      tokenAddress && actionId !== undefined && account && !!round
+        ? [tokenAddress, actionId, account, round]
+        : undefined,
     query: {
-      enabled: !!tokenAddress && actionId !== undefined && !!account && round !== undefined,
+      enabled: !!tokenAddress && actionId !== undefined && !!account && !!round,
     },
   });
 

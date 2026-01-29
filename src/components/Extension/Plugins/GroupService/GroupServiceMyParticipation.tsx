@@ -23,7 +23,7 @@ import {
 import { useActionGroupRecipientsData } from '@/src/hooks/extension/plugins/group-service/composite/useActionGroupRecipientsData';
 import { useExtensionParams } from '@/src/hooks/extension/plugins/group-service/composite/useExtensionParams';
 import { useSymbol } from '@/src/hooks/contracts/useLOVE20Token';
-
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import _GroupServiceSetRecipients from './_GroupServiceSetRecipients';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 
@@ -57,7 +57,10 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   // Get symbol for groupActionTokenAddress
   const { symbol: groupActionTokenSymbol } = useSymbol(groupActionTokenAddress || ('0x' as `0x${string}`));
 
-  // Fetch all action-group recipients data
+  // 验证轮轮次（recipients 需要）
+  const { currentRound } = useCurrentRound();
+
+  // Fetch all action-group recipients data（按验证轮查询）
   const {
     actionGroupRecipientsData,
     isPending: isRecipientsPending,
@@ -66,6 +69,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
     tokenAddress: groupActionTokenAddress,
     account: account as `0x${string}`,
     extensionAddress,
+    round: currentRound,
   });
 
   // Edit dialog state

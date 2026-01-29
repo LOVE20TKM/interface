@@ -22,6 +22,7 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
@@ -45,9 +46,13 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
+  // 获取当前加入轮次
+  const { currentRound } = useCurrentRound();
+
   // 获取链群列表
   const { groups, isPending, error } = useExtensionGroupInfosOfAction({
     extensionAddress,
+    round: currentRound,
   });
 
   // 获取当前用户加入的链群信息
@@ -55,7 +60,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
     groupId: joinedGroupId,
     isPending: isPendingJoinInfo,
     error: errorJoinInfo,
-  } = useJoinInfo(extensionAddress, account as `0x${string}`);
+  } = useJoinInfo(extensionAddress, currentRound || BigInt(0), account as `0x${string}`);
 
   // 错误处理
   const { handleError } = useContractError();

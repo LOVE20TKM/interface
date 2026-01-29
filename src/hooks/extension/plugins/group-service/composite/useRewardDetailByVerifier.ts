@@ -6,7 +6,7 @@
  * 2. 获取每个行动的扩展合约地址
  * 3. 使用 GroupVerify.groupIdsByVerifier 获取服务者在指定轮次验证的链群
  * 4. 批量调用 rewardDistribution 获取每个链群的激励分配明细
- * 5. 批量调用 generatedRewardByGroupId 获取各链群总铸币量
+ * 5. 批量调用 generatedActionRewardByGroupId 获取各链群总铸币量
  * 6. 批量获取行动名称（使用缓存）
  * 7. 批量获取链群名称
  *
@@ -278,7 +278,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
         return {
           address: extensionAddr,
           abi: ExtensionGroupActionAbi,
-          functionName: 'generatedRewardByGroupId' as const,
+          functionName: 'generatedActionRewardByGroupId' as const,
           args: [round, groupId] as const,
         };
       })

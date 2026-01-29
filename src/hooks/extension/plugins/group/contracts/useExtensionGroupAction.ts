@@ -198,7 +198,7 @@ export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
     functionName: 'reward',
     args: [round],
     query: {
-      enabled: !!contractAddress && round !== undefined,
+      enabled: !!contractAddress && !!round,
     },
   });
 
@@ -215,7 +215,7 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
     functionName: 'rewardByAccount',
     args: [round, account],
     query: {
-      enabled: !!contractAddress && round !== undefined && !!account,
+      enabled: !!contractAddress && !!round && !!account,
     },
   });
 
@@ -228,16 +228,16 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
 };
 
 /**
- * Hook for generatedRewardByGroupId - 获取指定组ID的生成奖励
+ * Hook for generatedActionRewardByGroupId - 获取指定组ID的生成奖励
  */
 export const useGeneratedRewardByGroupId = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
-    functionName: 'generatedRewardByGroupId',
+    functionName: 'generatedActionRewardByGroupId',
     args: [round, groupId],
     query: {
-      enabled: !!contractAddress && round !== undefined && groupId !== undefined,
+      enabled: !!contractAddress && !!round && groupId !== undefined,
     },
   });
 
@@ -258,7 +258,7 @@ export const useGeneratedActionRewardByVerifier = (
     functionName: 'generatedActionRewardByVerifier',
     args: [round, verifier],
     query: {
-      enabled: !!contractAddress && round !== undefined && !!verifier,
+      enabled: !!contractAddress && !!round && !!verifier,
     },
   });
 

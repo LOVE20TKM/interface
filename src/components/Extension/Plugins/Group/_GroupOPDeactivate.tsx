@@ -4,13 +4,12 @@
 'use client';
 
 // React
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
 
 // 第三方库
-import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 // UI 组件
@@ -48,6 +47,15 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
 
+  // 获取链群信息（用于获取激活轮次）
+  const { activatedRound, isPending: isPendingInfo, error: errorInfo } = useGroupInfo(extensionAddress, groupId);
+
+  // 获取当前轮次（vote 轮），加入轮 = vote 轮 + 1
+  const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
+  const joinRound = useMemo(() => {
+    return currentRound ? currentRound + BigInt(1) : undefined;
+  }, [currentRound]);
+
   // 获取链群详情
   const {
     groupDetail,
@@ -56,20 +64,16 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
   } = useExtensionGroupDetail({
     extensionAddress,
     groupId,
+    round: joinRound,
   });
-
-  // 获取链群信息（用于获取激活轮次）
-  const { activatedRound, isPending: isPendingInfo, error: errorInfo } = useGroupInfo(extensionAddress, groupId);
+  const joinCurrentRound = currentRound > BigInt(0) ? currentRound - BigInt(1) : BigInt(0);
 
   // 获取参与地址数
   const {
     count: accountsCount,
     isPending: isPendingAccountsCount,
     error: errorAccountsCount,
-  } = useAccountsByGroupIdCount(extensionAddress, groupId);
-
-  // 获取当前轮次
-  const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
+  } = useAccountsByGroupIdCount(extensionAddress, joinCurrentRound, groupId);
 
   // 关闭链群
   const {

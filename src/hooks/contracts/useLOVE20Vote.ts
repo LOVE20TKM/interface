@@ -95,7 +95,7 @@ export const useVotesNum = (tokenAddress: `0x${string}`, round: bigint) => {
     functionName: 'votesNum',
     args: [tokenAddress, round],
     query: {
-      enabled: !!tokenAddress && round !== undefined,
+      enabled: !!tokenAddress && !!round,
     },
   });
 
@@ -116,7 +116,7 @@ export const useVotesNumByAccount = (tokenAddress: `0x${string}`, round: bigint,
     functionName: 'votesNumByAccount',
     args: [tokenAddress, round, account],
     query: {
-      enabled: !!tokenAddress && !!account && round !== undefined,
+      enabled: !!tokenAddress && !!account && !!round,
     },
   });
 
@@ -159,7 +159,7 @@ export const useVotesNumByActionId = (tokenAddress: `0x${string}`, round: bigint
     functionName: 'votesNumByActionId',
     args: [tokenAddress, round, actionId],
     query: {
-      enabled: !!tokenAddress && round !== undefined && actionId !== undefined,
+      enabled: !!tokenAddress && !!round && actionId !== undefined,
     },
   });
 
@@ -176,7 +176,7 @@ export const useVotesNumsByAccount = (tokenAddress: `0x${string}`, round: bigint
     functionName: 'votesNumsByAccount',
     args: [tokenAddress, round, account],
     query: {
-      enabled: !!tokenAddress && !!account && round !== undefined,
+      enabled: !!tokenAddress && !!account && !!round,
     },
   });
 

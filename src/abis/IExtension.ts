@@ -132,11 +132,6 @@ export const IExtensionAbi = [
   },
   {
     "type": "error",
-    "name": "AlreadyInitialized",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidTokenAddress",
     "inputs": []
   },
@@ -151,11 +146,6 @@ export const IExtensionAbi = [
     "inputs": [
       {
         "name": "currentRound",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "requestedRound",
         "type": "uint256",
         "internalType": "uint256"
       }
