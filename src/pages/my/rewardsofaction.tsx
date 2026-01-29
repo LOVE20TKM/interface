@@ -291,9 +291,7 @@ const ActRewardsPage: React.FC = () => {
                   />
                 ) : (
                   // 未知扩展类型
-                  <div className="text-center text-sm text-gray-500 py-4">
-                    暂不支持此扩展类型的激励展示
-                  </div>
+                  <div className="text-center text-sm text-gray-500 py-4">暂不支持此扩展类型的激励展示</div>
                 )
               ) : (
                 <div className="text-center text-sm text-gray-500 py-4">无法加载扩展行动信息</div>

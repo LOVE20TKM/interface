@@ -35,7 +35,7 @@ export function useGroupWarningRatesOfRound({
   groupId,
 }: UseGroupWarningRatesOfRoundParams): UseGroupWarningRatesOfRoundResult {
   const contracts = useMemo(() => {
-    if (!extensionAddress || round === undefined || groupId === undefined) return [];
+    if (!extensionAddress || !round || !groupId) return [];
 
     return [
       {

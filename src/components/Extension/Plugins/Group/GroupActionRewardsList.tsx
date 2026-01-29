@@ -128,7 +128,7 @@ export const GroupActionRewardsList: React.FC<GroupActionRewardsListProps> = ({
             <th>轮次</th>
             <th className="text-center">得分</th>
             <th className="text-center">可铸造激励</th>
-            <th className="text-center">结果</th>
+            <th className="text-center">操作</th>
           </tr>
         </thead>
         <tbody>
@@ -174,7 +174,20 @@ export const GroupActionRewardsList: React.FC<GroupActionRewardsListProps> = ({
                 >
                   <td>{item.round.toString()}</td>
                   <td className="text-center">
-                    {isScorePending ? (
+                    {rewardHref ? (
+                      <Link
+                        href={rewardHref}
+                        className="text-secondary hover:text-secondary/80 underline underline-offset-2"
+                      >
+                        {isScorePending ? (
+                          <span className="text-greyscale-400">...</span>
+                        ) : score !== undefined ? (
+                          score.toString()
+                        ) : (
+                          '-'
+                        )}
+                      </Link>
+                    ) : isScorePending ? (
                       <span className="text-greyscale-400">...</span>
                     ) : score !== undefined ? (
                       score.toString()
@@ -188,10 +201,10 @@ export const GroupActionRewardsList: React.FC<GroupActionRewardsListProps> = ({
                         href={rewardHref}
                         className="text-secondary hover:text-secondary/80 underline underline-offset-2"
                       >
-                        {formatTokenAmount(item.reward || BigInt(0))}
+                        {formatTokenAmount(item.reward ?? BigInt(0))}
                       </Link>
                     ) : (
-                      formatTokenAmount(item.reward || BigInt(0))
+                      formatTokenAmount(item.reward ?? BigInt(0))
                     )}
                   </td>
                   <td className="text-center">

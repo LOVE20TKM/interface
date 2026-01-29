@@ -109,7 +109,7 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
           <tr className="border-b border-gray-100">
             <th>轮次</th>
             <th className="text-center">可铸造激励</th>
-            <th className="text-center">结果</th>
+            <th className="text-center">操作</th>
           </tr>
         </thead>
         <tbody>

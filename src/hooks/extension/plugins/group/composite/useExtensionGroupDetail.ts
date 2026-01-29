@@ -67,7 +67,7 @@ export const useExtensionGroupDetail = ({
   // 批量获取链群详细信息
   // 新版合约：totalJoinedAmountByGroupId 和 accountsByGroupIdCount 移到 GroupJoin
   const detailContracts = useMemo(() => {
-    if (!extensionAddress || groupId === undefined || !round) return [];
+    if (!extensionAddress || !groupId || !round) return [];
 
     return [
       // 获取群组名称

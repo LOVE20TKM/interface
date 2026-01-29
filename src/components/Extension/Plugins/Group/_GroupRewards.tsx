@@ -285,7 +285,8 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
               <tr className="border-b border-gray-100">
                 <th className="pl-0 pr-[2px] w-[1%] whitespace-nowrap text-center"> </th>
                 <th className="pl-0 pr-1 text-left">成员 / 加入轮次</th>
-                <th className="px-1 text-right">得分 / 代币数×原始得分</th>
+                <th className="px-1 text-right">参与代币</th>
+                <th className="px-1 text-right">得分</th>
                 <th className="px-1 text-right">激励</th>
               </tr>
             </thead>
@@ -325,15 +326,14 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
                       {shouldShowNotVerified ? (
                         <div className="text-greyscale-500">未验证</div>
                       ) : (
-                        <>
-                          <div className="font-mono text-secondary">{formatTokenAmount(item.finalScore)}</div>
-                          {/* <div className="text-xs text-greyscale-500">{item.finalScorePercentage.toFixed(2)}%</div> */}
-                          <div className="mt-0 text-xs text-greyscale-400">
-                            <span className="font-mono">{formatTokenAmount(item.joinedAmount)}</span>
-                            <span className="mx-1">×</span>
-                            <span>{Number(item.originScore).toString()}</span>
-                          </div>
-                        </>
+                        <div className="font-mono">{formatTokenAmount(item.joinedAmount)}</div>
+                      )}
+                    </td>
+                    <td className="px-1 text-right">
+                      {shouldShowNotVerified ? (
+                        <div className="text-greyscale-500">未验证</div>
+                      ) : (
+                        <div className="font-mono">{Number(item.originScore).toString()}</div>
                       )}
                     </td>
                     <td className="px-1 text-right">
@@ -352,12 +352,9 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
                 <td className="pl-0 pr-[1px] w-[1%] whitespace-nowrap text-center text-greyscale-400">-</td>
                 <td className="pl-0 pr-1 text-left">合计</td>
                 <td className="px-1 text-right">
-                  <div className="font-mono">{formatTokenAmount(totalFinalScore)}</div>
-                  {/* <div className="text-xs text-greyscale-500">100.00%</div> */}
-                  <div className="mt-0 text-xs text-greyscale-400">
-                    <span className="font-mono">{formatTokenAmount(totalJoinedAmount)}</span>
-                  </div>
+                  <div className="font-mono">{formatTokenAmount(totalJoinedAmount)}</div>
                 </td>
+                <td className="px-1 text-right text-greyscale-400">-</td>
                 <td className="px-1 text-right">
                   {selectedRound >= currentRound ? (
                     <div className="text-greyscale-500">未生成</div>

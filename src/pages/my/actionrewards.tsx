@@ -155,9 +155,7 @@ const ActRewardsPage: React.FC = () => {
                               }
                             />
                           ) : (
-                            <div className="text-center text-greyscale-500 py-4">
-                              暂不支持此扩展类型的激励展示
-                            </div>
+                            <div className="text-center text-greyscale-500 py-4">暂不支持此扩展类型的激励展示</div>
                           ))}
                       </>
                     ) : (

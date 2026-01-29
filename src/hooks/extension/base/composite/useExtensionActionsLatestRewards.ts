@@ -137,14 +137,14 @@ export const useExtensionActionsLatestRewards = ({
         const round = startRound + BigInt(i) - BigInt(1);
 
         // 只保存有激励的轮次
-        if (reward > BigInt(0)) {
-          rewards.push({
-            extensionAddress,
-            round,
-            reward: safeToBigInt(reward),
-            isMinted: isMinted as boolean,
-          });
-        }
+        // if (reward > BigInt(0)) {
+        rewards.push({
+          extensionAddress,
+          round,
+          reward: safeToBigInt(reward),
+          isMinted: isMinted as boolean,
+        });
+        // }
       }
 
       // 按轮次倒序排序

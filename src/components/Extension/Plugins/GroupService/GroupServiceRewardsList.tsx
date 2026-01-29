@@ -117,7 +117,7 @@ export const GroupServiceRewardsList: React.FC<GroupServiceRewardsListProps> = (
           <tr className="border-b border-gray-100">
             <th>轮次</th>
             <th className="text-center">可铸造激励</th>
-            <th className="text-center">结果</th>
+            <th className="text-center">操作</th>
           </tr>
         </thead>
         <tbody>
@@ -145,10 +145,7 @@ export const GroupServiceRewardsList: React.FC<GroupServiceRewardsListProps> = (
                 >
                   <td>{formatRoundForDisplay(item.round, tokenData).toString()}</td>
                   <td className="text-center">
-                    <Link
-                      href={buildPublicLink(item.round)}
-                      className="text-secondary underline hover:opacity-70"
-                    >
+                    <Link href={buildPublicLink(item.round)} className="text-secondary underline hover:opacity-70">
                       {formatTokenAmount(item.reward || BigInt(0))}
                     </Link>
                   </td>
