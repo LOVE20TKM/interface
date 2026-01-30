@@ -2,7 +2,7 @@
  * 获取一个链群服务者所有激活的链群NFTs列表（按行动id分组）Hook
  *
  * 功能：
- * 1. 使用 GroupManager.votedGroupActions 一次性获取当轮有投票且有激活链群的行动列表
+ * 1. 使用 GroupManager.actionIds 一次性获取所有含激活链群的行动列表
  * 2. 使用 useExtensionsByActionIdsWithCache 获取每个 actionId 对应的行动扩展地址
  * 3. 批量对于每个 actionId 用 activeGroupIdsByOwner 获取在该行动扩展下激活的链群NFT列表
  *
@@ -11,7 +11,6 @@
  * const { actionIdsWithGroupIds, isPending, error } = useActionIdsWithActiveGroupIdsByOwner({
  *   tokenAddress: '0x...',
  *   account: '0x...',
- *   extensionAddress: '0x...' // 已废弃，可传 undefined
  * });
  * ```
  */

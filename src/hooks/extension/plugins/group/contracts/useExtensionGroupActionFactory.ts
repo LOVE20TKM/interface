@@ -165,30 +165,6 @@ export const useExtensionsCount = (contractAddress: `0x${string}`) => {
   return { count: safeToBigInt(data), isPending, error };
 };
 
-/**
- * Hook for votedGroupActions - 获取投票通过的链群行动
- */
-export const useVotedGroupActions = (contractAddress: `0x${string}`, tokenAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupActionFactoryAbi,
-    functionName: 'votedGroupActions',
-    args: [tokenAddress, round],
-    query: {
-      enabled: !!contractAddress && !!tokenAddress && !!round,
-    },
-  });
-
-  const typedData = data as [bigint[], `0x${string}`[]] | undefined;
-
-  return {
-    actionIds: typedData ? typedData[0] : undefined,
-    extensions: typedData ? typedData[1] : undefined,
-    isPending,
-    error,
-  };
-};
-
 // =====================
 // === 写入 Hooks ===
 // =====================
