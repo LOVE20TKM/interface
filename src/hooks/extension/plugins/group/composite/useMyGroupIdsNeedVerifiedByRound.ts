@@ -2,15 +2,17 @@
  * 获取账户在指定轮次内所有待验证的链群信息 Hook
  *
  * 功能：
- * 1. 使用 ExtensionGroupActionFactory.votedGroupActions 获取当轮有投票且有激活链群的行动列表及扩展地址
- * 2. 批量调用 activeGroupIdsByOwner 获取每个扩展地址下账户拥有的激活链群NFT列表
- * 3. 批量调用 ExtensionGroupAction.isVerified 检查每个链群是否已验证
- * 4. 批量调用 ExtensionGroupAction.accountsByGroupIdByRoundCount 获取每个链群的账户数量
- * 5. 批量调用 GroupVerify.capacityDecayRate 获取每个链群在该轮次的容量衰减率
- * 6. 计算 needToVerify：如果未验证且地址数>0，则为true（参与地址数为空时，虽然未验证但也不需要验证）
+ * 1. 通过 LOVE20Group.balanceOf 获取账户拥有的链群 NFT 总数
+ * 2. 通过 LOVE20Group.tokenOfOwnerByIndex 批量获取所有 groupIds
+ * 3. 通过 GroupJoin.gActionIdsByTokenAddressByGroupId 批量获取每个 groupId 对应的行动 IDs
+ * 4. 通过 useExtensionsByActionIdsWithCache 获取所有 actionIds 对应的扩展信息
+ * 5. 批量调用 GroupVerify.isVerified 检查每个链群是否已验证
+ * 6. 批量调用 GroupJoin.accountsByGroupIdCount 获取每个链群的账户数量
+ * 7. 批量调用 GroupVerify.capacityDecayRateByGroupId 获取每个链群在该轮次的容量衰减率
+ * 8. 计算 needToVerify：如果未验证且地址数>0，则为true（参与地址数为空时，虽然未验证但也不需要验证）
  *
  * 性能优化：
- * - 使用批量 RPC 调用，总共约 4 次调用
+ * - 使用批量 RPC 调用优化性能
  * - 所有派生计算使用 useMemo 缓存
  * - 在每个步骤检查数据是否为空，及时返回
  *
@@ -26,10 +28,11 @@
 import { useMemo, useContext } from 'react';
 import { useReadContracts } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
-import { GroupManagerAbi } from '@/src/abis/GroupManager';
+import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
-import { useVotedGroupActions } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupActionFactory';
+import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
+import { useBalanceOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 // ==================== 类型定义 ====================
@@ -85,11 +88,9 @@ interface GroupTuple {
 
 // ==================== 常量定义 ====================
 
-const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
+const LOVE20_GROUP_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
 const GROUP_VERIFY_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY as `0x${string}`;
 const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
-const GROUP_ACTION_FACTORY_ADDRESS = process.env
-  .NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_ACTION_FACTORY as `0x${string}`;
 
 // ==================== Hook 实现 ====================
 
@@ -104,37 +105,42 @@ export function useMyGroupIdsNeedVerifiedByRound({
   round,
 }: UseMyGroupIdsNeedVerifiedByRoundParams): UseMyGroupIdsNeedVerifiedByRoundResult {
   // ==========================================
-  // 步骤1：获取 tokenAddress
+  // 步骤1：获取 token 和 tokenAddress
   // ==========================================
 
   const { token } = useContext(TokenContext) || {};
   const tokenAddress = token?.address;
 
   // ==========================================
-  // 步骤2：获取投票的链群行动
+  // 步骤2：获取账户拥有的链群 NFT 总数
   // ==========================================
 
   const {
-    actionIds,
-    extensions,
-    isPending: isVotedPending,
-    error: votedError,
-  } = useVotedGroupActions(GROUP_ACTION_FACTORY_ADDRESS, tokenAddress as `0x${string}`, round as bigint);
+    balance: balanceData,
+    isPending: isBalancePending,
+    error: balanceError,
+  } = useBalanceOf(account!, !!account);
+
+  const balance = balanceData || BigInt(0);
 
   // ==========================================
-  // 步骤3：批量获取每个行动的活跃链群NFT
+  // 步骤3：批量获取所有 groupIds
   // ==========================================
 
   const groupIdsContracts = useMemo(() => {
-    if (!account || !extensions || extensions.length === 0) return [];
+    if (!account || balance === BigInt(0)) return [];
 
-    return extensions.map((extensionAddress) => ({
-      address: GROUP_MANAGER_ADDRESS,
-      abi: GroupManagerAbi,
-      functionName: 'activeGroupIdsByOwner' as const,
-      args: [extensionAddress, account] as const,
-    }));
-  }, [account, extensions]);
+    const contracts = [];
+    for (let i = 0; i < Number(balance); i++) {
+      contracts.push({
+        address: LOVE20_GROUP_ADDRESS,
+        abi: LOVE20GroupAbi,
+        functionName: 'tokenOfOwnerByIndex' as const,
+        args: [account, BigInt(i)] as const,
+      });
+    }
+    return contracts;
+  }, [account, balance]);
 
   const {
     data: groupIdsData,
@@ -143,38 +149,119 @@ export function useMyGroupIdsNeedVerifiedByRound({
   } = useReadContracts({
     contracts: groupIdsContracts as any,
     query: {
-      enabled: !!account && !!extensions && extensions.length > 0,
+      enabled: !!account && balance > BigInt(0),
     },
   });
 
-  // ==========================================
-  // 步骤4：构建中间数据结构 (groupTuples)
-  // ==========================================
+  const groupIds = useMemo(() => {
+    if (!groupIdsData) return [];
 
-  const groupTuples = useMemo(() => {
-    if (!actionIds || !extensions || !groupIdsData) return [];
-
-    const tuples: GroupTuple[] = [];
-
-    groupIdsData.forEach((item, index) => {
+    const ids: bigint[] = [];
+    groupIdsData.forEach((item) => {
       if (item?.status === 'success' && item.result) {
-        const actionId = actionIds[index];
-        const extensionAddress = extensions[index];
-        const groupIds = item.result as bigint[];
+        ids.push(safeToBigInt(item.result));
+      }
+    });
+    return ids;
+  }, [groupIdsData]);
 
-        // 为每个 groupId 创建一个元组
-        groupIds.forEach((groupId) => {
-          tuples.push({ actionId, extensionAddress, groupId });
-        });
+  // ==========================================
+  // 步骤4：批量获取每个 groupId 对应的行动 IDs
+  // ==========================================
+
+  const actionIdsByGroupIdContracts = useMemo(() => {
+    if (!tokenAddress || groupIds.length === 0) return [];
+
+    return groupIds.map((groupId) => ({
+      address: GROUP_JOIN_ADDRESS,
+      abi: GroupJoinAbi,
+      functionName: 'gActionIdsByTokenAddressByGroupId' as const,
+      args: [tokenAddress, groupId] as const,
+    }));
+  }, [tokenAddress, groupIds]);
+
+  const {
+    data: actionIdsByGroupIdData,
+    isPending: isActionIdsByGroupIdPending,
+    error: actionIdsByGroupIdError,
+  } = useReadContracts({
+    contracts: actionIdsByGroupIdContracts as any,
+    query: {
+      enabled: !!tokenAddress && groupIds.length > 0,
+    },
+  });
+
+  // 构建 groupId -> actionIds[] 的映射，并收集所有唯一的 actionIds
+  const { groupIdToActionIdsMap, allUniqueActionIds } = useMemo(() => {
+    const map = new Map<bigint, bigint[]>();
+    const actionIdsSet = new Set<bigint>();
+
+    if (!actionIdsByGroupIdData) return { groupIdToActionIdsMap: map, allUniqueActionIds: [] };
+
+    groupIds.forEach((groupId, index) => {
+      const item = actionIdsByGroupIdData[index];
+      if (item?.status === 'success' && item.result) {
+        const actionIds = (item.result as bigint[]).map((id) => safeToBigInt(id));
+        map.set(groupId, actionIds);
+        actionIds.forEach((actionId) => actionIdsSet.add(actionId));
       }
     });
 
-    return tuples;
-  }, [actionIds, extensions, groupIdsData]);
+    return {
+      groupIdToActionIdsMap: map,
+      allUniqueActionIds: Array.from(actionIdsSet),
+    };
+  }, [groupIds, actionIdsByGroupIdData]);
 
   // ==========================================
-  // 步骤5：批量检查验证状态、账户数量、容量衰减率（合并为一次调用）
+  // 步骤5：获取所有 actionIds 对应的扩展信息
   // ==========================================
+
+  const {
+    extensions: extensionsInfo,
+    isPending: isExtensionsPending,
+    error: extensionsError,
+  } = useExtensionsByActionIdsWithCache({
+    token: token!,
+    actionIds: allUniqueActionIds,
+    enabled: !!token && allUniqueActionIds.length > 0,
+  });
+
+  // 构建 actionId -> extensionAddress 的映射（只保留有效的扩展行动）
+  const actionIdToExtensionMap = useMemo(() => {
+    const map = new Map<bigint, `0x${string}`>();
+    extensionsInfo.forEach((info) => {
+      if (info.isExtension && info.extensionAddress) {
+        map.set(info.actionId, info.extensionAddress);
+      }
+    });
+    return map;
+  }, [extensionsInfo]);
+
+  // ==========================================
+  // 步骤6：构建中间数据结构 (groupTuples)
+  // ==========================================
+
+  const groupTuples = useMemo(() => {
+    const tuples: GroupTuple[] = [];
+
+    groupIdToActionIdsMap.forEach((actionIds, groupId) => {
+      actionIds.forEach((actionId) => {
+        const extensionAddress = actionIdToExtensionMap.get(actionId);
+        // 只保留有效的扩展行动
+        if (extensionAddress) {
+          tuples.push({ actionId, extensionAddress, groupId });
+        }
+      });
+    });
+
+    return tuples;
+  }, [groupIdToActionIdsMap, actionIdToExtensionMap]);
+
+  // ==========================================
+  // 步骤7：批量检查验证状态、账户数量、容量衰减率（合并为一次调用）
+  // ==========================================
+
   const combinedContracts = useMemo(() => {
     if (round === undefined || groupTuples.length === 0) return [];
 
@@ -186,7 +273,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
       args: [extensionAddress, round, groupId] as const,
     }));
 
-    // 再添加所有 accountsByGroupIdByRoundCount 调用
+    // 再添加所有 accountsByGroupIdCount 调用
     const accountCountContracts = groupTuples.map(({ extensionAddress, groupId }) => ({
       address: GROUP_JOIN_ADDRESS,
       abi: GroupJoinAbi,
@@ -194,7 +281,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
       args: [extensionAddress, round, groupId] as const,
     }));
 
-    // 再添加所有 capacityDecayRate 调用
+    // 再添加所有 capacityDecayRateByGroupId 调用
     const capacityDecayRateContracts = groupTuples.map(({ extensionAddress, groupId }) => ({
       address: GROUP_VERIFY_ADDRESS,
       abi: GroupVerifyAbi,
@@ -213,11 +300,11 @@ export function useMyGroupIdsNeedVerifiedByRound({
   } = useReadContracts({
     contracts: combinedContracts as any,
     query: {
-      enabled: !!round && groupTuples.length > 0,
+      enabled: round !== undefined && groupTuples.length > 0,
     },
   });
 
-  // 从合并结果中分离出 isVerified 和 accountCount 数据
+  // 从合并结果中分离出 isVerified、accountCount 和 capacityDecayRate 数据
   const isVerifiedData = useMemo(() => {
     if (!combinedData || groupTuples.length === 0) return undefined;
     // 前 groupTuples.length 个结果是 isVerified
@@ -237,7 +324,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
   }, [combinedData, groupTuples.length]);
 
   // ==========================================
-  // 步骤6：组装最终结果
+  // 步骤8：组装最终结果
   // ==========================================
 
   const groups = useMemo(() => {
@@ -277,37 +364,63 @@ export function useMyGroupIdsNeedVerifiedByRound({
   }, [groupTuples, isVerifiedData, accountCountData, capacityDecayRateData]);
 
   // ==========================================
-  // 步骤7：计算 isPending 状态
+  // 步骤9：计算 isPending 状态
   // ==========================================
 
   const isPending = useMemo(() => {
     // 等待必需参数
     if (!tokenAddress || !account || round === undefined) return true;
 
-    // 步骤1: 获取 votedGroupActions
-    if (isVotedPending) return true;
+    // 步骤2: 获取 balance
+    if (isBalancePending) return true;
 
-    // 如果没有行动，直接返回 false
-    if (!actionIds || actionIds.length === 0) return false;
+    // 如果没有链群 NFT，直接返回 false
+    if (balance === BigInt(0)) return false;
 
-    // 步骤2: 获取链群NFT列表
+    // 步骤3: 获取 groupIds
     if (isGroupIdsPending) return true;
 
     // 如果没有链群，直接返回 false
+    if (groupIds.length === 0) return false;
+
+    // 步骤4: 获取每个 groupId 对应的 actionIds
+    if (isActionIdsByGroupIdPending) return true;
+
+    // 如果没有有效的 actionIds，直接返回 false
+    if (allUniqueActionIds.length === 0) return false;
+
+    // 步骤5: 获取扩展信息
+    if (isExtensionsPending) return true;
+
+    // 如果没有有效的 groupTuples，直接返回 false
     if (groupTuples.length === 0) return false;
 
-    // 步骤3: 检查验证状态和账户数量
+    // 步骤7: 检查验证状态和账户数量
     return isCombinedPending;
-  }, [tokenAddress, account, round, isVotedPending, actionIds, isGroupIdsPending, groupTuples, isCombinedPending]);
+  }, [
+    tokenAddress,
+    account,
+    round,
+    isBalancePending,
+    balance,
+    isGroupIdsPending,
+    groupIds.length,
+    isActionIdsByGroupIdPending,
+    allUniqueActionIds.length,
+    isExtensionsPending,
+    groupTuples.length,
+    isCombinedPending,
+  ]);
 
   // ==========================================
-  // 步骤8：错误处理
+  // 步骤10：错误处理
   // ==========================================
 
-  const error = votedError || groupIdsError || combinedError;
+  const error =
+    balanceError || groupIdsError || actionIdsByGroupIdError || extensionsError || combinedError || null;
 
   // ==========================================
-  // 步骤9：返回结果
+  // 步骤11：返回结果
   // ==========================================
 
   return {

@@ -23,7 +23,7 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { useVerifiedGroupIds } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
+import { useGroupIds } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
@@ -114,7 +114,7 @@ export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): 
     verifiedGroupIds,
     isPending: isPendingIds,
     error: errorIds,
-  } = useVerifiedGroupIds(extensionAddress || ('0x0' as `0x${string}`), round || BigInt(0));
+  } = useGroupIds(extensionAddress || ('0x0' as `0x${string}`), round || BigInt(0));
 
   // 转换为数组，如果没有数据则返回空数组
   const groupIds = useMemo(() => verifiedGroupIds || [], [verifiedGroupIds]);

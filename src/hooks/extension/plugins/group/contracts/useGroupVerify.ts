@@ -82,11 +82,11 @@ export const useVerifiedAccountCount = (extensionAddress: `0x${string}`, round: 
 /**
  * Hook for verifiedGroupIds - 获取指定轮次已验证的组ID列表
  */
-export const useVerifiedGroupIds = (extensionAddress: `0x${string}`, round: bigint) => {
+export const useGroupIds = (extensionAddress: `0x${string}`, round: bigint) => {
   const { data, isPending, error } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
-    functionName: 'verifiedGroupIds',
+    functionName: 'groupIds',
     args: [extensionAddress, round],
     query: {
       enabled: !!extensionAddress && !!round,

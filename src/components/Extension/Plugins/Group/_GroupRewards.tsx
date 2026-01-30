@@ -323,11 +323,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
                       </div>
                     </td>
                     <td className="px-1 text-right">
-                      {shouldShowNotVerified ? (
-                        <div className="text-greyscale-500">未验证</div>
-                      ) : (
-                        <div className="font-mono">{formatTokenAmount(item.joinedAmount)}</div>
-                      )}
+                      <div className="font-mono">{formatTokenAmount(item.joinedAmount)}</div>
                     </td>
                     <td className="px-1 text-right">
                       {shouldShowNotVerified ? (
