@@ -150,7 +150,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
               ) : (
                 <>
                   <span className="text-green-600">治理票充足，无扣减</span>
-                  {hasGovLimit && (
+                  {/* {hasGovLimit && (
                     <>
                       <br />
                       治理票占比 × 治理票占比倍数
@@ -158,7 +158,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                       {formatPercentage(govEffectiveRatioPercent)} ≥ LP占比(
                       {formatPercentage(data.lpRatioPercent)})
                     </>
-                  )}
+                  )} */}
                 </>
               )}
             </div>
@@ -226,9 +226,15 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
           <div className="flex gap-4">
             <div className="flex-shrink-0 w-28">溢出销毁激励</div>
             <div className="flex-1">
-              = 锁定激励 - 实际可铸造激励
-              <br />= {formatTokenAmount(lockedReward)} - {formatTokenAmount(data.userReward)}
-              <br />= <span className="text-red-600">{formatTokenAmount(lockedReward - data.userReward)}</span>
+              {!hasDeduction ? (
+                <span className="text-green-600">0</span>
+              ) : (
+                <>
+                  = 锁定激励 - 实际可铸造激励
+                  <br />= {formatTokenAmount(lockedReward)} - {formatTokenAmount(data.userReward)}
+                  <br />= <span className="text-red-600">{formatTokenAmount(lockedReward - data.userReward)}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
