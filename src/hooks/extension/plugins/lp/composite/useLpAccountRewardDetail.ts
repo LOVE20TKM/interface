@@ -130,6 +130,13 @@ export const useLpAccountRewardDetail = ({
         functionName: 'originBlocks',
         args: [],
       },
+      // 8: 用户在指定轮次的加入区块（不为0说明是首轮加入）
+      {
+        address: extensionAddress,
+        abi: ExtensionLpAbi,
+        functionName: 'lastJoinedBlockByAccountByJoinedRound',
+        args: [account, round],
+      },
     ];
   }, [extensionAddress, tokenAddress, account, round, enabled]);
 
@@ -167,6 +174,8 @@ export const useLpAccountRewardDetail = ({
     const govRatioMultiplier = contractData[5]?.result ? safeToBigInt(contractData[5].result) : BigInt(0);
     const phaseBlocks = contractData[6]?.result ? safeToBigInt(contractData[6].result) : BigInt(0);
     const originBlocks = contractData[7]?.result ? safeToBigInt(contractData[7].result) : BigInt(0);
+    // 用户在指定轮次的加入区块（不为0说明是首轮加入，值就是加入区块）
+    const lastJoinedBlockByRound = contractData[8]?.result ? safeToBigInt(contractData[8].result) : BigInt(0);
 
     // 计算理论激励（mintReward + burnReward）
     const theoreticalReward = userReward + userBurnReward;
@@ -178,12 +187,12 @@ export const useLpAccountRewardDetail = ({
       lpRatioPercent = (Number(lpRatio) / Number(PRECISION)) * 100;
     }
 
-    // 计算加入轮时长比例
+    // 计算加入轮时长比例（lastJoinedBlockByRound 不为0说明是首轮加入）
     let blockRatioPercent = 100;
     let blockRatio = PRECISION;
-    if (!!round && joinedRound === round && phaseBlocks > BigInt(0)) {
+    if (!!round && lastJoinedBlockByRound > BigInt(0) && phaseBlocks > BigInt(0)) {
       const roundEndBlock = originBlocks + (round + BigInt(1)) * phaseBlocks - BigInt(1);
-      const blocksInRound = roundEndBlock - joinedBlock + BigInt(1);
+      const blocksInRound = roundEndBlock - lastJoinedBlockByRound + BigInt(1);
       blockRatio = (blocksInRound * PRECISION) / phaseBlocks;
       blockRatioPercent = (Number(blockRatio) / Number(PRECISION)) * 100;
     }

@@ -386,6 +386,30 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "function",
+    "name": "lastJoinedBlockByAccountByJoinedRound",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "joinedRound",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "lastJoinedBlock",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "reward",
     "inputs": [
       {

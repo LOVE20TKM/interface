@@ -116,7 +116,7 @@ export const useExtensionActionsLatestRewards = ({
   const rewardsMap = useMemo(() => {
     const map = new Map<`0x${string}`, ExtensionActionRewardWithAddress[]>();
 
-    if (!rewardsData || !currentRound || currentRound === BigInt(0)) {
+    if (!rewardsData || !currentRound || currentRound <= BigInt(1)) {
       return map;
     }
 
@@ -124,9 +124,10 @@ export const useExtensionActionsLatestRewards = ({
     for (const extensionAddress of extensionAddresses) {
       const rewards: ExtensionActionRewardWithAddress[] = [];
 
-      // 计算起始轮次
-      const startRound = currentRound > lastRounds ? currentRound - lastRounds + BigInt(1) : BigInt(1);
-      const roundsCount = Number(currentRound - startRound + BigInt(1));
+      // 计算起始和结束轮次，与查询时保持一致
+      const endRound = currentRound - BigInt(1);
+      const startRound = endRound > lastRounds ? endRound - lastRounds + BigInt(1) : BigInt(1);
+      const roundsCount = Number(endRound - startRound + BigInt(1));
 
       // 解析该扩展地址的所有轮次数据
       for (let i = 0; i < roundsCount; i++) {
@@ -134,7 +135,7 @@ export const useExtensionActionsLatestRewards = ({
         if (!result?.result) continue;
 
         const [reward, isMinted] = result.result as [bigint, boolean];
-        const round = startRound + BigInt(i) - BigInt(1);
+        const round = startRound + BigInt(i);
 
         // 只保存有激励的轮次
         // if (reward > BigInt(0)) {
