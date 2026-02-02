@@ -260,7 +260,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
               <div className="font-medium">2. 首轮区块不足扣减：</div>
               <div className="ml-1 mt-2 space-y-1">
                 <div>• 必须完整待够1轮，才可以获得这个轮次的 100%激励</div>
-                <div>• 在加入首轮，加入前的当轮区块没有激励</div>
+                <div>• 在加入首轮，最后一次加入前的当轮区块没有激励</div>
               </div>
             </div>
           </div>
