@@ -162,11 +162,16 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
   // 检查新加入时地址数是否已满
   const isAccountsFull = useMemo(() => {
-    if (isJoined || !groupDetail) return false;
+    // 如果用户已加入，永远不限制（允许追加代币）
+    if (isJoined) return false;
+    // 如果 join 信息还在加载，暂不判定为满（避免数据未加载完成时误判）
+    if (isPendingJoinInfo) return false;
+    // 如果链群详情没有，不判定为满
+    if (!groupDetail) return false;
     // maxAccounts 为 0 表示不限制
     if (groupDetail.maxAccounts === BigInt(0)) return false;
     return groupDetail.accountCount >= groupDetail.maxAccounts;
-  }, [isJoined, groupDetail]);
+  }, [isJoined, isPendingJoinInfo, groupDetail]);
 
   // 综合检查是否可以加入（仅在首次加入时检查）
   const cannotJoin = useMemo(() => {

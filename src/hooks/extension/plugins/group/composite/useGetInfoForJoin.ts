@@ -154,7 +154,7 @@ export function useGetInfoForJoin(params: UseGetInfoForJoinParams): UseGetInfoFo
       address: groupJoinContractAddress,
       abi: GroupJoinAbi,
       functionName: 'joinInfo' as const,
-      args: [extensionAddress, account] as const,
+      args: [extensionAddress, currentRound, account] as const,
     });
 
     // 3. balanceOf - 需要 joinTokenAddress
@@ -240,7 +240,6 @@ export function useGetInfoForJoin(params: UseGetInfoForJoinParams): UseGetInfoFo
     const result = batchData[indices.joinInfoIndex];
     return result?.status === 'success' ? (result.result as [bigint, bigint, bigint, `0x${string}`]) : undefined;
   }, [batchData, indices.joinInfoIndex]);
-
   const joinedAmount = useMemo(() => {
     return joinInfoData ? safeToBigInt(joinInfoData[1]) : undefined;
   }, [joinInfoData]);
