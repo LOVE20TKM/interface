@@ -211,7 +211,7 @@ export function useRecipientsDetailByAccountByRound({
       address: extensionAddress,
       abi: ExtensionGroupServiceAbi,
       functionName: 'rewardDistribution' as const,
-      args: [round, account, actionId, groupId] as const,
+      args: [account, round, actionId, groupId] as const,
     }));
   }, [extensionAddress, account, round, actionGroupPairs]);
 

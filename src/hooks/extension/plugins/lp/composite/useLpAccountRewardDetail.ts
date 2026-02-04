@@ -85,7 +85,7 @@ export const useLpAccountRewardDetail = ({
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'rewardInfoByAccount',
+        functionName: 'rewardByAccount',
         args: [round, account],
       },
       // 2: 用户加入信息 (joinedRound, amount, joinedBlock, exitableBlock)

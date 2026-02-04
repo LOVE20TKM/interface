@@ -236,6 +236,35 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "function",
+    "name": "govRatio",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "ratio",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "claimed",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "initializeIfNeeded",
     "inputs": [],
     "outputs": [],
@@ -709,10 +738,5 @@ export const ExtensionLpAbi = [
         "internalType": "uint256"
       }
     ]
-  },
-  {
-    "type": "error",
-    "name": "ZeroTotalGovVotes",
-    "inputs": []
   }
 ] as const satisfies Abi;

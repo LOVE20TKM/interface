@@ -21,7 +21,7 @@ export interface UseLpRewardsExtraResult {
 /**
  * Hook: 批量获取LP行动中用户在多个轮次的溢出激励
  *
- * 使用 useReadContracts 批量调用 ExtensionLp.rewardInfoByAccount(round, account)
+ * 使用 useReadContracts 批量调用 ExtensionLp.rewardByAccount(round, account)
  * 返回值: (mintReward, burnReward, isClaimed)，我们只需要 burnReward
  */
 export const useLpRewardsExtra = ({
@@ -40,7 +40,7 @@ export const useLpRewardsExtra = ({
     return rounds.map((round) => ({
       address: extensionAddress,
       abi: ExtensionLpAbi,
-      functionName: 'rewardInfoByAccount',
+      functionName: 'rewardByAccount',
       args: [round, account],
     }));
   }, [extensionAddress, account, rounds, enabled]);
@@ -57,7 +57,7 @@ export const useLpRewardsExtra = ({
   });
 
   // 解析数据，构建 Map
-  // rewardInfoByAccount 返回 (mintReward, burnReward, isClaimed)
+  // rewardByAccount 返回 (mintReward, burnReward, isClaimed)
   const burnRewardMap = useMemo(() => {
     const result = new Map<string, bigint>();
 

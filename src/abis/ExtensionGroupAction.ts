@@ -248,14 +248,14 @@ export const ExtensionGroupActionAbi = [
     "name": "generatedActionRewardByVerifier",
     "inputs": [
       {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
         "name": "verifier",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [

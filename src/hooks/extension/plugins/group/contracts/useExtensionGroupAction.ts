@@ -258,7 +258,7 @@ export const useGeneratedActionRewardByVerifier = (
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'generatedActionRewardByVerifier',
-    args: [round, verifier],
+    args: [verifier, round],
     query: {
       enabled: !!contractAddress && !!round && !!verifier,
     },

@@ -137,7 +137,7 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
         address: extensionAddress,
         abi: ExtensionGroupServiceAbi,
         functionName: 'generatedActionRewardByVerifier' as const,
-        args: [round, account] as const,
+        args: [account, round] as const,
       });
     }
     return contracts;
@@ -184,7 +184,7 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
         // 如果 actionIdsWithRecipients 返回的列表不为空，就是设置了
         let hasRecipients = false;
         if (recipientData?.status === 'success' && recipientData.result) {
-          const actionIds = recipientData.result as bigint[];
+          const actionIds = recipientData.result as unknown as bigint[];
           hasRecipients = Array.isArray(actionIds) && actionIds.length > 0;
         }
 

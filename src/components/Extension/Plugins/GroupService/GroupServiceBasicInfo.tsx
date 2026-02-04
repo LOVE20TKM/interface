@@ -1,7 +1,6 @@
 // components/Extension/Plugins/GroupService/GroupServiceBasicInfo.tsx
 
 import React from 'react';
-import { formatUnits } from 'viem';
 
 // my hooks
 import { useExtensionParams } from '@/src/hooks/extension/plugins/group-service/composite/useExtensionParams';
@@ -91,7 +90,7 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
         {/* 治理票占比倍数 */}
         <div className="md:max-w-2xl">
           <div className="text-sm font-bold mb-1">治理票占比倍数:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">{formatUnits(govRatioMultiplier, 18)}</div>
+          <div className="font-mono text-secondary text-sm md:text-base">{govRatioMultiplier.toString()}</div>
           <div className="text-xs text-gray-600">
             服务者所属链群，参与代币总量占比，超过 (治理票占比 × 治理票占比倍数) 的部分，不再有铸币激励
           </div>

@@ -313,6 +313,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
       {editingGroup && (
         <_GroupServiceSetRecipients
           extensionAddress={extensionAddress}
+          groupActionTokenAddress={groupActionTokenAddress}
           actionId={editingGroup.actionId}
           actionTitle={editingGroup.actionTitle}
           groupId={editingGroup.groupId}

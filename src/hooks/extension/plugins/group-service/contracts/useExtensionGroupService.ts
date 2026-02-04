@@ -91,7 +91,7 @@ export const useGeneratedActionRewardByVerifier = (
     address: contractAddress,
     abi: ExtensionGroupServiceAbi,
     functionName: 'generatedActionRewardByVerifier',
-    args: [round, verifier],
+    args: [verifier, round],
     query: {
       enabled: !!contractAddress && !!round && !!verifier,
     },
@@ -233,7 +233,7 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
 export const useRewardByRecipient = (
   contractAddress: `0x${string}`,
   round: bigint,
-  groupOwner: `0x${string}`,
+  verifier: `0x${string}`,
   actionId: bigint,
   groupId: bigint,
   recipient: `0x${string}`,
@@ -242,10 +242,10 @@ export const useRewardByRecipient = (
     address: contractAddress,
     abi: ExtensionGroupServiceAbi,
     functionName: 'rewardByRecipient',
-    args: [round, groupOwner, actionId, groupId, recipient],
+    args: [verifier, round, actionId, groupId, recipient],
     query: {
       enabled:
-        !!contractAddress && !!round && !!groupOwner && actionId !== undefined && groupId !== undefined && !!recipient,
+        !!contractAddress && !!round && !!verifier && actionId !== undefined && groupId !== undefined && !!recipient,
     },
   });
 
@@ -266,7 +266,7 @@ export const useRewardDistribution = (
     address: contractAddress,
     abi: ExtensionGroupServiceAbi,
     functionName: 'rewardDistribution',
-    args: [round, groupOwner, actionId, groupId],
+    args: [groupOwner, round, actionId, groupId],
     query: {
       enabled: !!contractAddress && !!round && !!groupOwner && actionId !== undefined && groupId !== undefined,
     },
@@ -296,27 +296,6 @@ export const useTokenAddress = (contractAddress: `0x${string}`) => {
   });
 
   return { tokenAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
- * Hook for claimGovRatioByRound - 获取质押领取激励时账号对应的治理票占比
- */
-export const useClaimGovRatioByRound = (
-  contractAddress: `0x${string}`,
-  round: bigint | undefined,
-  account: `0x${string}` | undefined,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupServiceAbi,
-    functionName: 'claimGovRatioByRound',
-    args: round && account ? [round, account] : undefined,
-    query: {
-      enabled: !!contractAddress && !!round && !!account,
-    },
-  });
-
-  return { claimGovRatio: safeToBigInt(data), isPending, error };
 };
 
 // =====================
@@ -398,4 +377,3 @@ export function useJoin(contractAddress: `0x${string}`) {
     isTukeMode,
   };
 }
-

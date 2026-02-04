@@ -182,13 +182,10 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
     try {
       setApprovalStep('deploying');
 
-      // 治理票占比倍数：用户输入整数，需要转换为 wei（1e18 = 1）
-      const govRatioMultiplierWei = parseEther(values.govRatioMultiplier);
-
       await createExtension(
         tokenAddress,
         values.groupActionTokenAddress as `0x${string}`,
-        govRatioMultiplierWei,
+        BigInt(values.govRatioMultiplier),
       );
     } catch (error: any) {
       console.error('部署扩展失败:', error);

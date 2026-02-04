@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useContext, useEffect, useRef, useMemo, useCallback } from 'react';
-import { TokenContext } from '@/src/contexts/TokenContext';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -44,6 +43,7 @@ type FormValues = {
 
 interface _GroupServiceSetRecipientsProps {
   extensionAddress: `0x${string}`;
+  groupActionTokenAddress: `0x${string}` | undefined;
   actionId: bigint;
   actionTitle: string;
   groupId: bigint;
@@ -57,6 +57,7 @@ interface _GroupServiceSetRecipientsProps {
 
 export default function _GroupServiceSetRecipients({
   extensionAddress,
+  groupActionTokenAddress,
   actionId,
   actionTitle,
   groupId,
@@ -67,9 +68,6 @@ export default function _GroupServiceSetRecipients({
   onOpenChange,
   onSuccess,
 }: _GroupServiceSetRecipientsProps) {
-  // Token context
-  const { token } = useContext(TokenContext) || {};
-  const tokenAddress = token?.address as `0x${string}` | undefined;
 
   // Contracts - setRecipients 和 maxRecipients 使用 GroupRecipients 合约
   const { setRecipients, isPending, isConfirming, isConfirmed, writeError } = useSetRecipients();
@@ -222,12 +220,12 @@ export default function _GroupServiceSetRecipients({
       return;
     }
 
-    // Call contract with tokenAddress, actionId and groupId
-    if (!tokenAddress) {
-      form.setError('root', { message: '无法获取 Token 地址，请刷新页面重试' });
+    // Call contract with groupActionTokenAddress, actionId and groupId
+    if (!groupActionTokenAddress) {
+      form.setError('root', { message: '无法获取 Group Action Token 地址，请刷新页面重试' });
       return;
     }
-    await setRecipients(tokenAddress, actionId, groupId, addrs, ratios);
+    await setRecipients(groupActionTokenAddress, actionId, groupId, addrs, ratios);
   };
 
   // 实时计算总百分比（强制转换为数字类型，避免字符串拼接）

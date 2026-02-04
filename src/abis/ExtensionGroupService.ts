@@ -163,30 +163,6 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "claimGovRatioByRound",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "claimReward",
     "inputs": [
       {
@@ -269,14 +245,14 @@ export const ExtensionGroupServiceAbi = [
     "name": "generatedActionRewardByVerifier",
     "inputs": [
       {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
         "name": "verifier",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [
@@ -284,6 +260,35 @@ export const ExtensionGroupServiceAbi = [
         "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "govRatio",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "ratio",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "claimed",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -462,14 +467,14 @@ export const ExtensionGroupServiceAbi = [
     "name": "rewardByRecipient",
     "inputs": [
       {
+        "name": "verifier",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "round",
         "type": "uint256",
         "internalType": "uint256"
-      },
-      {
-        "name": "groupOwner",
-        "type": "address",
-        "internalType": "address"
       },
       {
         "name": "actionId_",
@@ -501,14 +506,14 @@ export const ExtensionGroupServiceAbi = [
     "name": "rewardDistribution",
     "inputs": [
       {
+        "name": "verifier",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "round",
         "type": "uint256",
         "internalType": "uint256"
-      },
-      {
-        "name": "groupOwner",
-        "type": "address",
-        "internalType": "address"
       },
       {
         "name": "actionId_",

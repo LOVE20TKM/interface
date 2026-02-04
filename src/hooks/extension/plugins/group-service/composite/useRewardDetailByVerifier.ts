@@ -239,7 +239,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
       address: extensionAddress,
       abi: ExtensionGroupServiceAbi,
       functionName: 'rewardDistribution' as const,
-      args: [round, verifier, actionId, groupId] as const,
+      args: [verifier, round, actionId, groupId] as const,
     }));
   }, [extensionAddress, round, verifier, actionGroupPairs]);
 
@@ -283,7 +283,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
         address: extensionAddress,
         abi: ExtensionGroupServiceAbi,
         functionName: 'generatedActionRewardByVerifier' as const,
-        args: [round, verifier] as const,
+        args: [verifier, round] as const,
       },
       // 3: 总铸币量
       {
@@ -436,8 +436,6 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     const hasGovLimit = govRatioMultiplier > BigInt(0);
 
     // 逆向推算治理票占比
-    // 注意：govRatioMultiplier 是 wei 单位（1e18 = 1）
-    const govRatioMultiplierNumber = Number(govRatioMultiplier) / 1e18;
     let govRatioPercent = 0;
     if (hasGovLimit && totalReward > BigInt(0)) {
       if (hasOverflow) {
@@ -446,12 +444,12 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
         // govRatio = actualReward / (govMultiplier × totalReward)
         const actualRatioBigInt = (mintReward * PRECISION) / totalReward;
         const actualRatioPercent = (Number(actualRatioBigInt) / Number(PRECISION)) * 100;
-        govRatioPercent = actualRatioPercent / govRatioMultiplierNumber;
+        govRatioPercent = actualRatioPercent / Number(govRatioMultiplier);
       } else {
         // 治理票充足，只能给出下限
         // govRatio × govMultiplier >= generatedRatio
         // govRatio >= generatedRatio / govMultiplier
-        govRatioPercent = generatedRatioPercent / govRatioMultiplierNumber;
+        govRatioPercent = generatedRatioPercent / Number(govRatioMultiplier);
       }
     } else if (!hasGovLimit) {
       // 没有治理票限制

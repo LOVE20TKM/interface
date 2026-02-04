@@ -171,25 +171,24 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center mb-1">
-                  <span className="text-sm text-greyscale-500 mr-2">溢出销毁激励:</span>
+                  <span className="text-sm text-red-500 mr-2">溢出销毁激励:</span>
                   <span className="text-sm font-medium text-red-600 mr-2">
                     {formatTokenAmount(verifierRewardSummary.burnReward)}
                   </span>
                   <span className="text-sm text-greyscale-500">, 原因:</span>
                 </div>
-                <div className="text-xs text-red-500 font-mono">
+                <div className="text-xs text-greyscale-500 font-mono">
                   <div>&nbsp;&nbsp;治理票占比 × 治理票占比倍数</div>
                   <div>
                     = <span className="font-medium">{formatPercentage(verifierRewardSummary.govRatioPercent)}</span>
                     {' × '}
-                    <span className="font-medium">{Number(verifierRewardSummary.govRatioMultiplier) / 1e18}</span>
+                    <span className="font-medium">{Number(verifierRewardSummary.govRatioMultiplier)}</span>
                   </div>
                   <div>
                     ={' '}
                     <span className="font-medium">
                       {formatPercentage(
-                        verifierRewardSummary.govRatioPercent *
-                          (Number(verifierRewardSummary.govRatioMultiplier) / 1e18),
+                        verifierRewardSummary.govRatioPercent * Number(verifierRewardSummary.govRatioMultiplier),
                       )}
                     </span>
                     {' < 铸币量占比 ('}
@@ -204,16 +203,14 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                     {' - '}
                     <span className="font-medium">
                       {formatPercentage(
-                        verifierRewardSummary.govRatioPercent *
-                          (Number(verifierRewardSummary.govRatioMultiplier) / 1e18),
+                        verifierRewardSummary.govRatioPercent * Number(verifierRewardSummary.govRatioMultiplier),
                       )}
                     </span>
                     {' = '}
                     <span className="font-medium">
                       {formatPercentage(
                         verifierRewardSummary.generatedRatioPercent -
-                          verifierRewardSummary.govRatioPercent *
-                            (Number(verifierRewardSummary.govRatioMultiplier) / 1e18),
+                          verifierRewardSummary.govRatioPercent * Number(verifierRewardSummary.govRatioMultiplier),
                       )}
                     </span>
                   </div>
