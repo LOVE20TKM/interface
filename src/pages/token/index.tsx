@@ -229,6 +229,7 @@ const TokenPage = () => {
     ExtensionGroupManager: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER,
     ExtensionGroupJoin: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN,
     ExtensionGroupVerify: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY,
+    ExtensionGroupRecipients: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_RECIPIENTS,
     ExtensionGroupActionFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_ACTION_FACTORY,
     ExtensionGroupServiceFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_SERVICE_FACTORY,
     ExtensionLpFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY,
@@ -566,6 +567,7 @@ const TokenPage = () => {
                       <AddressItem name="GroupManager" address={constantsAddresses.ExtensionGroupManager} />
                       <AddressItem name="GroupJoin" address={constantsAddresses.ExtensionGroupJoin} />
                       <AddressItem name="GroupVerify" address={constantsAddresses.ExtensionGroupVerify} />
+                      <AddressItem name="GroupRecipients" address={constantsAddresses.ExtensionGroupRecipients} />
                       <AddressItem
                         name="ExtensionGroupActionFactory"
                         nameClassName="text-sm"

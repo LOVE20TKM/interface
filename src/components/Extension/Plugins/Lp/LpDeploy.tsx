@@ -196,7 +196,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
     <>
       <Card className="border-0 shadow-none">
         <CardHeader className="px-4 md:px-6 pb-4 md:pb-6 pt-4 md:pt-6">
-          <CardTitle className="text-xl md:text-2xl">部署LP池行动扩展合约</CardTitle>
+          <CardTitle className="text-xl md:text-2xl">部署LP行动扩展合约</CardTitle>
           <CardDescription className="text-sm"></CardDescription>
         </CardHeader>
         <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
