@@ -107,13 +107,16 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
       return { sortedRewards: [], totalReward: BigInt(0), totalGeneratedReward: BigInt(0) };
     }
 
-    const total = accountRewards.reduce((sum, item) => sum + item.amount, BigInt(0));
+    // 总激励 = mintReward + burnReward
+    const total = accountRewards.reduce((sum, item) => sum + item.mintReward + item.burnReward, BigInt(0));
     const totalGenerated = accountRewards.reduce((sum, item) => sum + item.generatedAmount, BigInt(0));
 
-    // 按激励从高到低排序
+    // 按激励从高到低排序（按总激励排序）
     const sorted = [...accountRewards].sort((a, b) => {
-      if (a.amount > b.amount) return -1;
-      if (a.amount < b.amount) return 1;
+      const totalA = a.mintReward + a.burnReward;
+      const totalB = b.mintReward + b.burnReward;
+      if (totalA > totalB) return -1;
+      if (totalA < totalB) return 1;
       return 0;
     });
 
@@ -213,12 +216,12 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
                       className="font-mono text-secondary underline cursor-pointer hover:opacity-70"
                       onClick={() => handleViewDetail(item.account)}
                     >
-                      {formatTokenAmount(item.amount)}
+                      {formatTokenAmount(item.mintReward + item.burnReward)}
                     </div>
                     {/* <div className="text-greyscale-500 text-xs">
                       (
                       {totalReward > BigInt(0)
-                        ? formatPercentage(Number((BigInt(item.amount) * BigInt(10000)) / totalReward) / 100)
+                        ? formatPercentage(Number((BigInt(item.mintReward + item.burnReward) * BigInt(10000)) / totalReward) / 100)
                         : '0%'}
                       )
                     </div> */}

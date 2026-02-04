@@ -1,7 +1,6 @@
 // components/Extension/Plugins/Group/GroupActionBasicInfo.tsx
 
 import React from 'react';
-import { formatEther } from 'viem';
 
 // my hooks
 import { useExtensionParams } from '@/src/hooks/extension/plugins/group/composite/useExtensionParams';
@@ -36,7 +35,7 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
     joinTokenAddress,
     activationStakeAmount,
     maxJoinAmountRatio,
-    maxVerifyCapacityFactor,
+    activationMinGovRatio,
     isPending,
     error,
   } = useExtensionParams(extensionAddress);
@@ -84,17 +83,17 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
     !joinTokenAddress ||
     activationStakeAmount === undefined ||
     maxJoinAmountRatio === undefined ||
-    maxVerifyCapacityFactor === undefined
+    activationMinGovRatio === undefined
   ) {
     return null;
   }
 
-  // 将 wei 格式的系数转换为实数显示
-  const capacityFactorDisplay = formatEther(maxVerifyCapacityFactor);
-
   // 将 wei 格式的比例转换为百分比显示 (wei / 1e18 * 100 = %)
   // 先转换为 Number 再除法，避免 BigInt 整数除法截断小数部分
   const ratioPercentageDisplay = formatPercentage(Number(maxJoinAmountRatio) / Number(RATIO_DENOMINATOR));
+
+  // 激活最小治理票比例显示
+  const minGovRatioDisplay = formatPercentage(Number(activationMinGovRatio) / 1e18);
 
   return (
     <div className="mt-6 bg-gray-50 rounded-lg p-4">
@@ -136,11 +135,11 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
           </div>
         </div>
 
-        {/* 验证容量系数 */}
+        {/* 激活链群最小治理票比例 */}
         <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">验证容量系数:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">{capacityFactorDisplay}</div>
-          <div className="text-xs text-gray-600">理论最大容量 = 治理票占比 × 已铸造代币量 × 验证容量系数</div>
+          <div className="text-sm font-bold mb-1">激活链群最小治理票比例:</div>
+          <div className="font-mono text-secondary text-sm md:text-base">{minGovRatioDisplay}</div>
+          <div className="text-xs text-gray-600">服务者激活链群时，其治理票占比需不低于此值</div>
         </div>
       </div>
     </div>

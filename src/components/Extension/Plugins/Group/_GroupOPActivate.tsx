@@ -38,12 +38,12 @@ import { useExtensionActionParam } from '@/src/hooks/extension/plugins/group/com
 import {
   useActivateGroup,
   useActiveGroupIdsByOwner,
-  useMaxVerifyCapacityByOwner,
 } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
+import { useValidGovVotes, useGovVotesNum } from '@/src/hooks/contracts/useLOVE20Stake';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
-import { formatTokenAmount, parseUnits } from '@/src/lib/format';
+import { formatTokenAmount, formatPercentage, parseUnits } from '@/src/lib/format';
 
 // 组件
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -111,12 +111,26 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   // 获取固定的质押量要求（用于授权）
   const stakeAmount = actionParams?.groupActivationStakeAmount || BigInt(0);
 
-  // 获取服务者的最大容量上限
-  const {
-    maxVerifyCapacity,
-    isPending: isPendingMaxCapacity,
-    error: errorMaxCapacity,
-  } = useMaxVerifyCapacityByOwner(extensionAddress, (account || ZERO_ADDRESS) as `0x${string}`);
+  // 获取用户治理票占比（用于验证最小治理票比例）
+  const { validGovVotes: userGovVotes } = useValidGovVotes(
+    (actionParams?.tokenAddress || ZERO_ADDRESS) as `0x${string}`,
+    (account || ZERO_ADDRESS) as `0x${string}`,
+    !!actionParams?.tokenAddress && !!account,
+  );
+  const { govVotesNum: totalGovVotes } = useGovVotesNum((actionParams?.tokenAddress || ZERO_ADDRESS) as `0x${string}`);
+
+  // 计算用户治理票占比（wei 格式，1e18 = 100%）
+  const userGovRatio = useMemo(() => {
+    if (!userGovVotes || !totalGovVotes || totalGovVotes === BigInt(0)) return BigInt(0);
+    // 计算 (userGovVotes * 1e18) / totalGovVotes
+    return (userGovVotes * BigInt(10 ** 18)) / totalGovVotes;
+  }, [userGovVotes, totalGovVotes]);
+
+  // 获取最小治理票比例要求
+  const minGovRatio = actionParams?.activationMinGovRatio || BigInt(0);
+
+  // 判断治理票占比是否不足
+  const isGovRatioInsufficient = userGovRatio < minGovRatio;
 
   // 获取用户余额（用于授权验证）
   const {
@@ -314,6 +328,12 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
       return;
     }
 
+    // 检查治理票占比是否不足
+    if (isGovRatioInsufficient) {
+      toast.error('治理票占比不足，无法激活链群');
+      return;
+    }
+
     // 转换参数为 BigInt（formSchema 已经完成验证）
     const maxCapacityBigInt = values.maxCapacity ? parseUnits(values.maxCapacity) : BigInt(0);
     // 最小参与代币数不能为0，必须提供有效值
@@ -360,7 +380,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   const { handleError } = useContractError();
   useEffect(() => {
     if (errorActionParams) handleError(errorActionParams);
-    if (errorMaxCapacity) handleError(errorMaxCapacity);
     if (errorBalance) handleError(errorBalance);
     if (errorAllowance) handleError(errorAllowance);
     if (errorApprove) handleError(errorApprove);
@@ -369,7 +388,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     if (errorActivatedGroups) handleError(errorActivatedGroups);
   }, [
     errorActionParams,
-    errorMaxCapacity,
     errorBalance,
     errorAllowance,
     errorApprove,
@@ -381,7 +399,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
 
   if (
     isPendingActionParams ||
-    isPendingMaxCapacity ||
     isPendingBalance ||
     isPendingFormattedSymbol ||
     (!groupId && (isPendingGroups || isPendingActivatedGroups))
@@ -427,6 +444,20 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
         <div>
           <LeftTitle title="激活链群" />
         </div>
+
+        {/* 治理票占比不足的警告 */}
+        {isGovRatioInsufficient && (
+          <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+            <div className="font-medium">⚠️ 治理票占比不足</div>
+            <div className="mt-1">
+              你的治理票占比 <span className="font-semibold">{formatPercentage(Number(userGovRatio) / 1e18)}</span>{' '}
+              低于最小限制 <span className="font-semibold">{formatPercentage(Number(minGovRatio) / 1e18)}</span>
+              ，无法激活链群。
+            </div>
+            <div className="text-xs text-red-600 mt-1">您可以增加治理票数，再尝试激活链群。</div>
+          </div>
+        )}
+
         {/* 链群选择器（如果没有传入 groupId） */}
         {!groupId && (
           <div className="space-y-2">
@@ -464,11 +495,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                   <FormControl>
                     <Input placeholder="0 为不限制" className="!ring-secondary-foreground flex-1" {...field} />
                   </FormControl>
-                  <FormDescription className="text-xs">
-                    <span className="flex items-center gap-1">
-                      您的最大可验证容量为：{formatTokenAmount(maxVerifyCapacity || BigInt(0))}{' '}
-                    </span>
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -603,13 +629,15 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               actionLabelPending="2.提交中..."
               actionLabelConfirming="2.确认中..."
               actionLabelConfirmed="2.已激活"
-              disableAction={!finalGroupId || (userBalance !== undefined && userBalance < stakeAmount)}
+              disableAction={
+                !finalGroupId || (userBalance !== undefined && userBalance < stakeAmount) || isGovRatioInsufficient
+              }
             />
           </form>
         </Form>
         {/* 小贴士（算法 + 数值） */}
         <_GroupActionTips
-          maxVerifyCapacityFactor={actionParams?.maxVerifyCapacityFactor}
+          activationMinGovRatio={actionParams?.activationMinGovRatio}
           maxJoinAmountRatio={actionParams?.maxJoinAmountRatio}
           joinMaxAmount={actionParams?.joinMaxAmount}
           groupActivationStakeAmount={actionParams?.groupActivationStakeAmount}

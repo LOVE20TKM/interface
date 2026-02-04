@@ -2096,11 +2096,6 @@ export const GroupJoinAbi = [
   },
   {
     "type": "error",
-    "name": "OwnerCapacityExceeded",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "TrialAccountAlreadyAdded",
     "inputs": []
   },

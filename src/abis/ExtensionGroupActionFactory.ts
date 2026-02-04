@@ -108,9 +108,9 @@ export const ExtensionGroupActionFactoryAbi = [
         "internalType": "address"
       },
       {
-        "name": "joinTokenAddress_",
-        "type": "address",
-        "internalType": "address"
+        "name": "activationMinGovRatio_",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
         "name": "activationStakeAmount_",
@@ -118,12 +118,12 @@ export const ExtensionGroupActionFactoryAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "maxJoinAmountRatio_",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "joinTokenAddress_",
+        "type": "address",
+        "internalType": "address"
       },
       {
-        "name": "maxVerifyCapacityFactor_",
+        "name": "maxJoinAmountRatio_",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -247,11 +247,6 @@ export const ExtensionGroupActionFactoryAbi = [
   {
     "type": "error",
     "name": "InvalidMaxJoinAmountRatio",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidMaxVerifyCapacityFactor",
     "inputs": []
   }
 ] as const satisfies Abi;

@@ -12,8 +12,12 @@ import { useClaimReward } from '@/src/hooks/extension/base/contracts/useIReward'
  */
 export interface RewardItem {
   round: bigint;
-  reward: bigint;
-  isMinted: boolean;
+  /** 铸造激励 */
+  mintReward: bigint;
+  /** 销毁激励 */
+  burnReward: bigint;
+  /** 是否已领取 */
+  claimed: boolean;
 }
 
 /**
@@ -43,7 +47,7 @@ export interface GroupServiceRewardsListProps {
 /**
  * 链群服务行动激励列表组件
  *
- * 显示列：轮次、可铸造激励（可点击跳转到公示页）、结果
+ * 显示列：轮次、溢出激励、可铸造激励（可点击跳转到公示页）、操作
  */
 export const GroupServiceRewardsList: React.FC<GroupServiceRewardsListProps> = ({
   rewards,
@@ -116,6 +120,7 @@ export const GroupServiceRewardsList: React.FC<GroupServiceRewardsListProps> = (
         <thead>
           <tr className="border-b border-gray-100">
             <th>轮次</th>
+            <th className="text-center">溢出激励</th>
             <th className="text-center">可铸造激励</th>
             <th className="text-center">操作</th>
           </tr>
@@ -123,20 +128,23 @@ export const GroupServiceRewardsList: React.FC<GroupServiceRewardsListProps> = (
         <tbody>
           {rewards.length === 0 && isLoading ? (
             <tr>
-              <td colSpan={3} className="text-center text-sm text-gray-500 py-4">
+              <td colSpan={4} className="text-center text-sm text-gray-500 py-4">
                 加载中...
               </td>
             </tr>
           ) : rewards.length === 0 ? (
             <tr>
-              <td colSpan={3} className="text-center text-sm text-gray-500 py-4">
+              <td colSpan={4} className="text-center text-sm text-gray-500 py-4">
                 该行动在指定轮次范围内没有获得激励
               </td>
             </tr>
           ) : (
             rewards.map((item, index) => {
-              const isLocallyMinted = locallyMinted.has(item.round.toString());
-              const displayIsMinted = isLocallyMinted || item.isMinted;
+              const isLocallyClaimed = locallyMinted.has(item.round.toString());
+              const displayClaimed = isLocallyClaimed || item.claimed;
+              // 溢出激励 = burnReward，可铸造激励 = mintReward
+              const burnReward = item.burnReward || BigInt(0);
+              const mintReward = item.mintReward || BigInt(0);
 
               return (
                 <tr
@@ -144,13 +152,20 @@ export const GroupServiceRewardsList: React.FC<GroupServiceRewardsListProps> = (
                   className={index === rewards.length - 1 ? 'border-none' : 'border-b border-gray-100'}
                 >
                   <td>{formatRoundForDisplay(item.round, tokenData).toString()}</td>
+                  {/* 溢出激励 = burnReward */}
                   <td className="text-center">
                     <Link href={buildPublicLink(item.round)} className="text-secondary underline hover:opacity-70">
-                      {formatTokenAmount(item.reward || BigInt(0))}
+                      {formatTokenAmount(burnReward)}
+                    </Link>
+                  </td>
+                  {/* 可铸造激励 = mintReward */}
+                  <td className="text-center">
+                    <Link href={buildPublicLink(item.round)} className="text-secondary underline hover:opacity-70">
+                      {formatTokenAmount(mintReward)}
                     </Link>
                   </td>
                   <td className="text-center">
-                    {item.reward > BigInt(0) && !displayIsMinted ? (
+                    {mintReward > BigInt(0) && !displayClaimed ? (
                       <Button
                         variant="outline"
                         size="sm"
@@ -160,7 +175,7 @@ export const GroupServiceRewardsList: React.FC<GroupServiceRewardsListProps> = (
                       >
                         铸造
                       </Button>
-                    ) : displayIsMinted ? (
+                    ) : displayClaimed ? (
                       <span className="text-greyscale-500">已铸造</span>
                     ) : (
                       <span className="text-greyscale-500">-</span>

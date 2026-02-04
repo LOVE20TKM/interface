@@ -27,8 +27,12 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
  */
 export interface ExtensionActionReward {
   round: bigint;
-  reward: bigint;
-  isMinted: boolean;
+  /** 铸造激励 */
+  mintReward: bigint;
+  /** 销毁激励 */
+  burnReward: bigint;
+  /** 是否已领取 */
+  claimed: boolean;
 }
 
 /**
@@ -114,18 +118,19 @@ export const useExtensionActionRewardsByRounds = ({
 
     const result: ExtensionActionReward[] = [];
 
-    // rewardByAccount 返回 (reward, isMinted)
+    // rewardByAccount 返回 (mintReward, burnReward, claimed)
     for (let i = 0; i < rewardsData.length; i++) {
       const roundData = rewardsData[i];
       if (!roundData?.result) continue;
 
-      const [reward, isMinted] = roundData.result as [bigint, boolean];
+      const [mintReward, burnReward, claimed] = roundData.result as [bigint, bigint, boolean];
       const round = startRound + BigInt(i);
 
       result.push({
         round,
-        reward: safeToBigInt(reward),
-        isMinted: isMinted as boolean,
+        mintReward: safeToBigInt(mintReward),
+        burnReward: safeToBigInt(burnReward),
+        claimed: claimed as boolean,
       });
     }
 

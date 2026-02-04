@@ -11,8 +11,12 @@ import { useMintActionReward } from '@/src/hooks/contracts/useLOVE20Mint';
  */
 export interface RewardItem {
   round: bigint;
-  reward: bigint;
-  isMinted: boolean;
+  /** 铸造激励 */
+  mintReward: bigint;
+  /** 销毁激励 */
+  burnReward: bigint;
+  /** 是否已领取 */
+  claimed: boolean;
 }
 
 /**
@@ -127,8 +131,10 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
             </tr>
           ) : (
             rewards.map((item, index) => {
-              const isLocallyMinted = locallyMinted.has(item.round.toString());
-              const displayIsMinted = isLocallyMinted || item.isMinted;
+              const isLocallyClaimed = locallyMinted.has(item.round.toString());
+              const displayClaimed = isLocallyClaimed || item.claimed;
+              // 可铸造激励 = mintReward
+              const mintReward = item.mintReward || BigInt(0);
 
               return (
                 <tr
@@ -136,9 +142,9 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
                   className={index === rewards.length - 1 ? 'border-none' : 'border-b border-gray-100'}
                 >
                   <td>{formatRoundForDisplay(item.round, tokenData).toString()}</td>
-                  <td className="text-center">{formatTokenAmount(item.reward || BigInt(0))}</td>
+                  <td className="text-center">{formatTokenAmount(mintReward)}</td>
                   <td className="text-center">
-                    {item.reward > BigInt(0) && !displayIsMinted ? (
+                    {mintReward > BigInt(0) && !displayClaimed ? (
                       <Button
                         variant="outline"
                         size="sm"
@@ -148,7 +154,7 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
                       >
                         铸造
                       </Button>
-                    ) : displayIsMinted ? (
+                    ) : displayClaimed ? (
                       <span className="text-greyscale-500">已铸造</span>
                     ) : (
                       <span className="text-greyscale-500">-</span>

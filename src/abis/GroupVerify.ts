@@ -270,35 +270,6 @@ export const GroupVerifyAbi = [
   },
   {
     "type": "function",
-    "name": "capacityDecayRateByGroupId",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "delegateByGroupId",
     "inputs": [
       {
@@ -1349,11 +1320,6 @@ export const GroupVerifyAbi = [
   {
     "type": "error",
     "name": "InvalidStartIndex",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "NoRemainingVerifyCapacity",
     "inputs": []
   },
   {

@@ -187,4 +187,8 @@ export const ErrorMessages: Record<string, string> = {
   InvalidMaxJoinAmountRatio: '无效的最大加入代币量比例',
   InvalidMaxVerifyCapacityFactor: '无效的最大验证容量因子',
   OnlyAccountOrExtensionOrDelegate: '只有所属账户、扩展或委托人可以调用',
+  InsufficientActivationMinGovRatio: '治理票比例不足',
+  InsufficientGovRatio: '治理票比例不足',
+  NoGovVotes: '没有治理票',
+  ZeroTotalGovVotes: '总治理票为0',
 };

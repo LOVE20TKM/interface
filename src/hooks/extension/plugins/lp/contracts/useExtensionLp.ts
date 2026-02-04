@@ -139,22 +139,6 @@ export const useJoinedAmountByAccount = (contractAddress: `0x${string}`, account
 };
 
 /**
- * Hook for MIN_GOV_VOTES - 获取最小治理投票数
- */
-export const useMinGovVotes = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionLpAbi,
-    functionName: 'MIN_GOV_VOTES',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { minGovVotes: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for reward - 获取指定轮次的奖励
  */
 export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
@@ -187,7 +171,9 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
 
   return {
     reward: data ? safeToBigInt(data[0]) : undefined,
-    isMinted: data ? (data[1] as boolean) : undefined,
+    mintReward: data ? safeToBigInt(data[0]) : undefined,
+    burnReward: data ? safeToBigInt(data[1]) : undefined,
+    claimed: data ? (data[2] as unknown as boolean) : undefined,
     isPending,
     error,
   };

@@ -33,7 +33,7 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'MIN_GOV_VOTES',
+        functionName: 'MIN_GOV_RATIO',
       },
     ],
     query: {
@@ -46,14 +46,14 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
   const joinTokenAddress = data?.[1]?.result as `0x${string}` | undefined;
   const waitingBlocks = safeToBigInt(data?.[2]?.result);
   const govRatioMultiplier = safeToBigInt(data?.[3]?.result);
-  const minGovVotes = safeToBigInt(data?.[4]?.result);
+  const minGovRatio = safeToBigInt(data?.[4]?.result);
 
   return {
     tokenAddress,
     joinTokenAddress,
     waitingBlocks,
     govRatioMultiplier,
-    minGovVotes,
+    minGovRatio,
     isPending,
     error,
   };

@@ -41,7 +41,7 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
       {
         address: extensionAddress,
         abi: ExtensionGroupActionAbi,
-        functionName: 'MAX_VERIFY_CAPACITY_FACTOR',
+        functionName: 'ACTIVATION_MIN_GOV_RATIO',
       },
     ],
     query: {
@@ -54,7 +54,7 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
   const joinTokenAddress = data?.[1]?.result as `0x${string}` | undefined;
   const activationStakeAmount = safeToBigInt(data?.[2]?.result);
   const maxJoinAmountRatio = safeToBigInt(data?.[3]?.result);
-  const maxVerifyCapacityFactor = safeToBigInt(data?.[4]?.result);
+  const activationMinGovRatio = safeToBigInt(data?.[4]?.result);
 
   return {
     tokenAddress,
@@ -65,7 +65,7 @@ export const useExtensionParams = (extensionAddress: `0x${string}`) => {
     joinTokenAddress,
     activationStakeAmount,
     maxJoinAmountRatio,
-    maxVerifyCapacityFactor,
+    activationMinGovRatio,
     isPending,
     error,
   };

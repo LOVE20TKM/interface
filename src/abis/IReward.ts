@@ -51,7 +51,12 @@ export const IRewardAbi = [
     ],
     "outputs": [
       {
-        "name": "amount",
+        "name": "mintReward",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnReward",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -75,7 +80,12 @@ export const IRewardAbi = [
         "internalType": "uint256[]"
       },
       {
-        "name": "rewards",
+        "name": "mintRewards",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "burnRewards",
         "type": "uint256[]",
         "internalType": "uint256[]"
       }
@@ -118,7 +128,12 @@ export const IRewardAbi = [
     ],
     "outputs": [
       {
-        "name": "amount",
+        "name": "mintReward",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnReward",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -190,7 +205,13 @@ export const IRewardAbi = [
         "internalType": "address"
       },
       {
-        "name": "amount",
+        "name": "mintAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnAmount",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"

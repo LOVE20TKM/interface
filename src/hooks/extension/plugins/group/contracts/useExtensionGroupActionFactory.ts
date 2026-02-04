@@ -181,26 +181,26 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
 
   const createExtension = async (
     tokenAddress: `0x${string}`,
-    joinTokenAddress: `0x${string}`,
+    activationMinGovRatio: bigint,
     activationStakeAmount: bigint,
+    joinTokenAddress: `0x${string}`,
     maxJoinAmountRatio: bigint,
-    maxVerifyCapacityFactor: bigint,
   ) => {
     console.log('提交 createExtension 交易:', {
       contractAddress,
       tokenAddress,
-      joinTokenAddress,
+      activationMinGovRatio,
       activationStakeAmount,
+      joinTokenAddress,
       maxJoinAmountRatio,
-      maxVerifyCapacityFactor,
       isTukeMode,
     });
     return await execute([
       tokenAddress,
-      joinTokenAddress,
+      activationMinGovRatio,
       activationStakeAmount,
+      joinTokenAddress,
       maxJoinAmountRatio,
-      maxVerifyCapacityFactor,
     ]);
   };
 

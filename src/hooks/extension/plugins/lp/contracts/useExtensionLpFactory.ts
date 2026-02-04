@@ -118,16 +118,16 @@ export function useCreateExtension(factoryAddress?: `0x${string}`) {
     tokenAddress: `0x${string}`,
     joinTokenAddress: `0x${string}`,
     govRatioMultiplier: bigint,
-    minGovVotes: bigint,
+    minGovRatio: bigint,
   ) => {
     console.log('提交 createExtension 交易:', {
       tokenAddress,
       joinTokenAddress,
       govRatioMultiplier,
-      minGovVotes,
+      minGovRatio,
       isTukeMode,
     });
-    return await execute([tokenAddress, joinTokenAddress, govRatioMultiplier, minGovVotes]);
+    return await execute([tokenAddress, joinTokenAddress, govRatioMultiplier, minGovRatio]);
   };
 
   // 错误日志记录

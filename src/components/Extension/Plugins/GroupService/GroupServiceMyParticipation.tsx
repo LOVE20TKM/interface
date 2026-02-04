@@ -324,14 +324,15 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
           onSuccess={() => {
             toast.success('二次分配设置已更新');
             handleDialogOpenChange(false);
-            // 刷新所有 readContracts 查询，特别是 recipientsLatest 相关的
+            // 刷新所有 readContracts 查询，特别是 recipients 相关的
             queryClient.invalidateQueries({
               predicate: (query) => {
                 const queryKey = query.queryKey;
                 if (Array.isArray(queryKey) && queryKey[0] === 'readContracts') {
                   const contracts = (queryKey[1] as any)?.contracts;
                   if (Array.isArray(contracts)) {
-                    return contracts.some((contract: any) => contract?.functionName === 'recipientsLatest');
+                    // 刷新 recipients 函数调用（用于获取二次分配地址）
+                    return contracts.some((contract: any) => contract?.functionName === 'recipients');
                   }
                 }
                 return false;

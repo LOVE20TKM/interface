@@ -73,7 +73,8 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     rewardRatio,
     userGovVotes,
     totalGovVotes,
-    minGovVotes,
+    minGovRatio,
+    userGovRatio,
     lpRatio,
     isPending: isPendingData,
     error: errorData,
@@ -89,8 +90,8 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   // 格式化 LP 占比
   const lpRatioStr = formatPercentage(lpRatio);
 
-  // 判断治理票数是否不足
-  const isGovVotesInsufficient = userGovVotes !== undefined && minGovVotes !== undefined && userGovVotes < minGovVotes;
+  // 判断治理票占比是否不足
+  const isGovRatioInsufficient = userGovRatio !== undefined && minGovRatio !== undefined && userGovRatio < minGovRatio;
 
   // 判断是否有投票（需要等待数据加载完成）
   const hasVotes = useMemo(() => {
@@ -190,9 +191,9 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   }, [isPendingAllowanceLp]);
 
   async function handleApprove(values: FormValues) {
-    // 检查治理票数是否不足
-    if (isGovVotesInsufficient) {
-      toast.error('治理票数不足，无法参与行动。');
+    // 检查治理票占比是否不足
+    if (isGovRatioInsufficient) {
+      toast.error('治理票占比不足，无法参与行动。');
       return;
     }
 
@@ -243,9 +244,9 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   } = useJoin(extensionAddress);
 
   async function handleJoin(values: FormValues) {
-    // 检查治理票数是否不足
-    if (isGovVotesInsufficient) {
-      toast.error('治理票数不足，无法参与行动。');
+    // 检查治理票占比是否不足
+    if (isGovRatioInsufficient) {
+      toast.error('治理票占比不足，无法参与行动。');
       return;
     }
 
@@ -322,14 +323,16 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
         </div>
       )}
 
-      {/* 治理票数不足的警告 */}
-      {isGovVotesInsufficient && (
+      {/* 治理票占比不足的警告 */}
+      {isGovRatioInsufficient && (
         <div className="px-6 py-0">
           <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2 mt-3 w-full">
-            <div className="font-medium">⚠️ 治理票数不足</div>
+            <div className="font-medium">⚠️ 治理票占比不足</div>
             <div className="mt-1">
-              你的治理票数 <span className="font-semibold">{formatTokenAmount(userGovVotes || BigInt(0))}</span>{' '}
-              低于最小限制 <span className="font-semibold">{formatTokenAmount(minGovVotes)}</span>，无法参与行动。
+              你的治理票占比{' '}
+              <span className="font-semibold">{formatPercentage((Number(userGovRatio) / 1e18) * 100)}</span>{' '}
+              低于最小限制 <span className="font-semibold">{formatPercentage((Number(minGovRatio) / 1e18) * 100)}</span>
+              ，无法参与行动。
             </div>
             <div className="text-xs text-red-600 mt-1">您可以增加治理票数，再重新参与行动。</div>
           </div>
@@ -369,7 +372,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                           : `请输入LP数量`
                       }
                       type="number"
-                      disabled={!lpBalance || lpBalance <= BigInt(0) || isGovVotesInsufficient}
+                      disabled={!lpBalance || lpBalance <= BigInt(0) || isGovRatioInsufficient}
                       className="!ring-secondary-foreground"
                       {...field}
                     />
@@ -390,7 +393,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                         }
                       }}
                       className="text-secondary p-0"
-                      disabled={!lpBalance || lpBalance <= BigInt(0) || isGovVotesInsufficient}
+                      disabled={!lpBalance || lpBalance <= BigInt(0) || isGovRatioInsufficient}
                     >
                       全部
                     </Button>
@@ -409,7 +412,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                   isPendingApproveLp ||
                   isConfirmingApproveLp ||
                   isLpApproved ||
-                  isGovVotesInsufficient ||
+                  isGovRatioInsufficient ||
                   !hasVotes
                 }
                 type="button"
@@ -437,7 +440,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                   isPendingJoin ||
                   isConfirmingJoin ||
                   isConfirmedJoin ||
-                  isGovVotesInsufficient ||
+                  isGovRatioInsufficient ||
                   !hasVotes
                 }
                 type="button"

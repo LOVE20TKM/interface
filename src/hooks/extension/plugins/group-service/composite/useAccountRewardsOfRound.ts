@@ -36,10 +36,12 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 export interface AccountRewardInfo {
   /** 账户地址 */
   account: `0x${string}`;
-  /** 激励金额 */
-  amount: bigint;
-  /** 是否已铸造 */
-  isMinted: boolean;
+  /** 铸造激励 */
+  mintReward: bigint;
+  /** 销毁激励 */
+  burnReward: bigint;
+  /** 是否已领取 */
+  claimed: boolean;
   /** 是否设置了二次分配地址 */
   hasRecipients: boolean;
   /** 链群铸币量 */
@@ -175,7 +177,8 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
       const generatedData = allData[generatedIndex];
 
       if (rewardData?.status === 'success' && rewardData.result) {
-        const [amount, isMinted] = rewardData.result as [bigint, boolean];
+        // rewardByAccount 返回 (mintReward, burnReward, claimed)
+        const [mintReward, burnReward, claimed] = rewardData.result as [bigint, bigint, boolean];
 
         // 解析二次分配设置
         // 如果 actionIdsWithRecipients 返回的列表不为空，就是设置了
@@ -193,8 +196,9 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
 
         result.push({
           account: accounts[i],
-          amount: safeToBigInt(amount),
-          isMinted,
+          mintReward: safeToBigInt(mintReward),
+          burnReward: safeToBigInt(burnReward),
+          claimed,
           hasRecipients,
           generatedAmount,
         });

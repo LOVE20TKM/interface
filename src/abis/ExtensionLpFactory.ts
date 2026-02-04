@@ -46,7 +46,7 @@ export const ExtensionLpFactoryAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "minGovVotes",
+        "name": "minGovRatio",
         "type": "uint256",
         "internalType": "uint256"
       }

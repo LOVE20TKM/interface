@@ -32,19 +32,19 @@ export const useActivationStakeAmount = (contractAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for MAX_VERIFY_CAPACITY_FACTOR - 获取验证容量系数
+ * Hook for ACTIVATION_MIN_GOV_RATIO - 获取激活链群最小治理票比例
  */
-export const useMaxVerifyCapacityFactor = (contractAddress: `0x${string}`) => {
+export const useActivationMinGovRatio = (contractAddress: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
-    functionName: 'MAX_VERIFY_CAPACITY_FACTOR',
+    functionName: 'ACTIVATION_MIN_GOV_RATIO',
     query: {
       enabled: !!contractAddress,
     },
   });
 
-  return { maxVerifyCapacityFactor: safeToBigInt(data), isPending, error };
+  return { activationMinGovRatio: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -207,6 +207,7 @@ export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
 
 /**
  * Hook for rewardByAccount - 获取账户的奖励信息
+ * 返回值: (mintReward, burnReward, claimed)
  */
 export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
   const { data, isPending, error } = useReadContract({
@@ -220,8 +221,9 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
   });
 
   return {
-    reward: data ? safeToBigInt(data[0]) : undefined,
-    isMinted: data ? (data[1] as boolean) : undefined,
+    mintReward: data ? safeToBigInt(data[0]) : undefined,
+    burnReward: data ? safeToBigInt(data[1]) : undefined,
+    claimed: data ? (data[2] as boolean) : undefined,
     isPending,
     error,
   };

@@ -64,15 +64,15 @@ const formSchema = z.object({
       },
       { message: '最大参与代币占比必须在 0.001% ~ 100% 之间' },
     ),
-  maxVerifyCapacityFactor: z
+  activationMinGovRatio: z
     .string()
-    .min(1, { message: '请输入验证容量系数' })
+    .min(1, { message: '请输入激活链群最小治理票比例' })
     .refine(
       (val) => {
         const num = parseFloat(val);
-        return !isNaN(num) && num >= 0;
+        return !isNaN(num) && num >= 0 && num <= 100;
       },
-      { message: '验证容量系数必须是非负实数' },
+      { message: '激活链群最小治理票比例必须在 0% ~ 100% 之间' },
     ),
 });
 
@@ -93,7 +93,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
       joinTokenAddress: tokenAddress || '',
       activationStakeAmount: '',
       maxJoinAmountRatio: '0.1',
-      maxVerifyCapacityFactor: '1',
+      activationMinGovRatio: '0.1',
     },
     mode: 'onChange', // 实时验证
   });
@@ -215,15 +215,15 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
       // 公式：百分比 × 1e18 / 100 = wei
       const maxJoinAmountRatioWei = (parseUnits(values.maxJoinAmountRatio, 18) * BigInt(1)) / BigInt(100);
 
-      // 验证容量系数：实数 -> wei
-      const maxVerifyCapacityFactorWei = parseEther(values.maxVerifyCapacityFactor);
+      // 激活链群最小治理票比例：百分比 -> wei (1e18 = 100%)
+      const activationMinGovRatioWei = (parseUnits(values.activationMinGovRatio, 18) * BigInt(1)) / BigInt(100);
 
       await createExtension(
         tokenAddress,
-        values.joinTokenAddress as `0x${string}`,
+        activationMinGovRatioWei,
         activationStakeAmountWei,
+        values.joinTokenAddress as `0x${string}`,
         maxJoinAmountRatioWei,
-        maxVerifyCapacityFactorWei,
       );
     } catch (error: any) {
       console.error('部署扩展失败:', error);
@@ -322,26 +322,30 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                 )}
               />
 
-              {/* 验证容量系数 */}
+              {/* 激活链群最小治理票比例 */}
               <FormField
                 control={form.control}
-                name="maxVerifyCapacityFactor"
+                name="activationMinGovRatio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>4. 最大验证容量系数</FormLabel>
+                    <FormLabel>4. 激活链群最小治理票比例</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="比如 1.5"
-                        disabled={approvalStep !== 'idle'}
-                        min="0"
-                        step="0.01"
-                        className="max-w-40 md:max-w-xs"
-                        {...field}
-                      />
+                      <div className="flex items-center gap-2 max-w-40 md:max-w-xs">
+                        <Input
+                          type="number"
+                          placeholder="例如 0.001"
+                          disabled={approvalStep !== 'idle'}
+                          min="0"
+                          max="100"
+                          step="0.001"
+                          className="flex-1"
+                          {...field}
+                        />
+                        <span className="text-greyscale-500 text-base whitespace-nowrap">%</span>
+                      </div>
                     </FormControl>
                     <FormDescription className="text-sm text-greyscale-500">
-                      单个服务者理论最大容量 = 已铸造代币量 × 治理票占比 × 最大验证容量系数
+                      服务者激活链群时，其治理票占比需不低于此值
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

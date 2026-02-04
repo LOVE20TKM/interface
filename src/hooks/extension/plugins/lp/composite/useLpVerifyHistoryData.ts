@@ -9,9 +9,12 @@ import { useAccountsByActionByRound } from '@/src/hooks/extension/base/composite
 
 export interface LpVerifyHistoryParticipant {
   address: `0x${string}`;
-  reward: bigint; // mintReward
+  /** 铸造激励 */
+  mintReward: bigint;
+  /** 销毁激励 */
   burnReward: bigint;
-  isMinted: boolean; // isClaimed
+  /** 是否已领取 */
+  claimed: boolean;
 }
 
 export interface UseLpVerifyHistoryDataParams {
@@ -70,7 +73,7 @@ export const useLpVerifyHistoryData = ({
     return accountsByRound.map((account) => ({
       address: extensionAddress,
       abi: ExtensionLpAbi,
-      functionName: 'rewardInfoByAccount',
+      functionName: 'rewardByAccount',
       args: [round, account],
     }));
   }, [extensionAddress, round, accountsByRound]);
@@ -99,25 +102,26 @@ export const useLpVerifyHistoryData = ({
     }
 
     // 组合数据
+    // rewardByAccount 返回 (mintReward, burnReward, claimed)
     const participants: LpVerifyHistoryParticipant[] = accountsByRound.map((address, index) => {
       // 获取实际激励金额
-      let reward = BigInt(0); // mintReward
+      let mintReward = BigInt(0);
       let burnReward = BigInt(0);
-      let isMinted = false; // isClaimed
+      let claimed = false;
       if (rewardData && rewardData[index]?.result) {
         const rewardResult = rewardData[index].result as [bigint, bigint, boolean];
-        reward = safeToBigInt(rewardResult[0]); // mintReward
+        mintReward = safeToBigInt(rewardResult[0]);
         // 忽略很小的 burnReward 值（小于 1e11 时认为是 0，避免精度误差）
-        const rawBurnReward = safeToBigInt(rewardResult[1]); // burnReward
+        const rawBurnReward = safeToBigInt(rewardResult[1]);
         burnReward = rawBurnReward < BigInt(1e11) ? BigInt(0) : rawBurnReward;
-        isMinted = rewardResult[2]; // isClaimed
+        claimed = rewardResult[2];
       }
 
       return {
         address,
-        reward,
+        mintReward,
         burnReward,
-        isMinted,
+        claimed,
       };
     });
 

@@ -33,6 +33,7 @@ export const useReward = (contractAddress: `0x${string}` | undefined, round: big
 
 /**
  * Hook for rewardByAccount - 获取账户的奖励信息
+ * 返回值: (mintReward, burnReward, claimed)
  */
 export const useRewardByAccount = (
   contractAddress: `0x${string}` | undefined,
@@ -50,8 +51,9 @@ export const useRewardByAccount = (
   });
 
   return {
-    reward: data ? safeToBigInt(data[0]) : undefined,
-    isMinted: data ? (data[1] as boolean) : undefined,
+    mintReward: data ? safeToBigInt(data[0]) : undefined,
+    burnReward: data ? safeToBigInt(data[1]) : undefined,
+    claimed: data ? (data[2] as boolean) : undefined,
     isPending,
     error,
   };

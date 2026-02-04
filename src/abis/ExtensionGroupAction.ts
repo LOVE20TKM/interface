@@ -16,9 +16,9 @@ export const ExtensionGroupActionAbi = [
         "internalType": "address"
       },
       {
-        "name": "joinTokenAddress_",
-        "type": "address",
-        "internalType": "address"
+        "name": "activationMinGovRatio_",
+        "type": "uint256",
+        "internalType": "uint256"
       },
       {
         "name": "activationStakeAmount_",
@@ -26,17 +26,30 @@ export const ExtensionGroupActionAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "maxJoinAmountRatio_",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "joinTokenAddress_",
+        "type": "address",
+        "internalType": "address"
       },
       {
-        "name": "maxVerifyCapacityFactor_",
+        "name": "maxJoinAmountRatio_",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ACTIVATION_MIN_GOV_RATIO",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -80,19 +93,6 @@ export const ExtensionGroupActionAbi = [
   {
     "type": "function",
     "name": "MAX_JOIN_AMOUNT_RATIO",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "MAX_VERIFY_CAPACITY_FACTOR",
     "inputs": [],
     "outputs": [
       {
@@ -178,7 +178,12 @@ export const ExtensionGroupActionAbi = [
     ],
     "outputs": [
       {
-        "name": "amount",
+        "name": "mintReward",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnReward",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -202,7 +207,12 @@ export const ExtensionGroupActionAbi = [
         "internalType": "uint256[]"
       },
       {
-        "name": "rewards",
+        "name": "mintRewards",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "burnRewards",
         "type": "uint256[]",
         "internalType": "uint256[]"
       }
@@ -358,7 +368,12 @@ export const ExtensionGroupActionAbi = [
     ],
     "outputs": [
       {
-        "name": "amount",
+        "name": "mintReward",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnReward",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -430,7 +445,13 @@ export const ExtensionGroupActionAbi = [
         "internalType": "address"
       },
       {
-        "name": "amount",
+        "name": "mintAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnAmount",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"

@@ -9,6 +9,11 @@ export const ExtensionGroupServiceFactoryAbi = [
         "name": "groupActionFactory_",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "groupRecipients_",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
@@ -41,6 +46,19 @@ export const ExtensionGroupServiceFactoryAbi = [
   },
   {
     "type": "function",
+    "name": "GROUP_RECIPIENTS_ADDRESS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "createExtension",
     "inputs": [
       {
@@ -52,6 +70,11 @@ export const ExtensionGroupServiceFactoryAbi = [
         "name": "groupActionTokenAddress_",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "govRatioMultiplier_",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [

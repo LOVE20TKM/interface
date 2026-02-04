@@ -28,8 +28,12 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 export interface ExtensionActionRewardWithAddress {
   extensionAddress: `0x${string}`;
   round: bigint;
-  reward: bigint;
-  isMinted: boolean;
+  /** 铸造激励 */
+  mintReward: bigint;
+  /** 销毁激励 */
+  burnReward: bigint;
+  /** 是否已领取 */
+  claimed: boolean;
 }
 
 /**
@@ -130,22 +134,21 @@ export const useExtensionActionsLatestRewards = ({
       const roundsCount = Number(endRound - startRound + BigInt(1));
 
       // 解析该扩展地址的所有轮次数据
+      // rewardByAccount 返回 (mintReward, burnReward, claimed)
       for (let i = 0; i < roundsCount; i++) {
         const result = rewardsData[dataIndex + i];
         if (!result?.result) continue;
 
-        const [reward, isMinted] = result.result as [bigint, boolean];
+        const [mintReward, burnReward, claimed] = result.result as [bigint, bigint, boolean];
         const round = startRound + BigInt(i);
 
-        // 只保存有激励的轮次
-        // if (reward > BigInt(0)) {
         rewards.push({
           extensionAddress,
           round,
-          reward: safeToBigInt(reward),
-          isMinted: isMinted as boolean,
+          mintReward: safeToBigInt(mintReward),
+          burnReward: safeToBigInt(burnReward),
+          claimed: claimed as boolean,
         });
-        // }
       }
 
       // 按轮次倒序排序

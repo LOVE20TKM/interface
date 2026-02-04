@@ -1,6 +1,7 @@
 // components/Extension/Plugins/GroupService/GroupServiceBasicInfo.tsx
 
 import React from 'react';
+import { formatUnits } from 'viem';
 
 // my hooks
 import { useExtensionParams } from '@/src/hooks/extension/plugins/group-service/composite/useExtensionParams';
@@ -27,8 +28,15 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
   actionId,
 }) => {
   // 获取扩展部署参数
-  const { tokenAddress, groupActionTokenAddress, groupActionFactoryAddress, maxRecipients, isPending, error } =
-    useExtensionParams(extensionAddress);
+  const {
+    tokenAddress,
+    groupActionTokenAddress,
+    groupActionFactoryAddress,
+    maxRecipients,
+    govRatioMultiplier,
+    isPending,
+    error,
+  } = useExtensionParams(extensionAddress);
 
   // 获取链群行动代币符号
   const { symbol: groupActionTokenSymbol, isPending: isGroupActionSymbolPending } = useSymbol(
@@ -57,7 +65,12 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
   }
 
   // 数据不完整
-  if (!groupActionTokenAddress || !groupActionFactoryAddress || maxRecipients === undefined) {
+  if (
+    !groupActionTokenAddress ||
+    !groupActionFactoryAddress ||
+    maxRecipients === undefined ||
+    govRatioMultiplier === undefined
+  ) {
     return null;
   }
 
@@ -72,6 +85,15 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
           <div className="flex items-center gap-2">
             <AddressWithCopyButton address={groupActionTokenAddress} showCopyButton={true} colorClassName="text-sm" />
             {groupActionTokenSymbol && <span className="text-sm text-gray-600">({groupActionTokenSymbol})</span>}
+          </div>
+        </div>
+
+        {/* 治理票占比倍数 */}
+        <div className="md:max-w-2xl">
+          <div className="text-sm font-bold mb-1">治理票占比倍数:</div>
+          <div className="font-mono text-secondary text-sm md:text-base">{formatUnits(govRatioMultiplier, 18)}</div>
+          <div className="text-xs text-gray-600">
+            服务者所属链群，参与代币总量占比，超过 (治理票占比 × 治理票占比倍数) 的部分，不再有铸币激励
           </div>
         </div>
       </div>

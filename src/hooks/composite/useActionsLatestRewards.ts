@@ -10,16 +10,30 @@ import {
   ExtensionActionRewardWithAddress,
 } from '@/src/hooks/extension/base/composite';
 import { ExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
-import { JoinedAction, ActionReward } from '@/src/types/love20types';
+import { JoinedAction, ActionReward as ActionRewardRaw } from '@/src/types/love20types';
 import {
   setActionRewardNeedMinted,
   loadActionRewardNotice,
   buildActionRewardNoticeKey,
 } from '@/src/lib/actionRewardNotice';
 
+/**
+ * 统一的核心激励数据格式（与组件 RewardItem 兼容）
+ * 普通行动使用 reward 映射到 mintReward，burnReward 为 0
+ */
+export interface CoreRewardItem {
+  round: bigint;
+  /** 铸造激励（普通行动 reward 映射到此字段） */
+  mintReward: bigint;
+  /** 销毁激励（普通行动此值为 0） */
+  burnReward: bigint;
+  /** 是否已领取/铸造 */
+  claimed: boolean;
+}
+
 export interface ActionRewardsGroup {
   action: JoinedAction;
-  coreRewards: ActionReward[];
+  coreRewards: CoreRewardItem[];
   extensionInfo?: ExtensionContractInfo;
   extensionRewards?: ExtensionActionRewardWithAddress[];
 }
@@ -124,14 +138,20 @@ export const useActionsLatestRewards = ({
       return [];
     }
 
-    // 创建 core 激励映射
-    const coreRewardsByAction = new Map<string, ActionReward[]>();
+    // 创建 core 激励映射（转换为新格式）
+    const coreRewardsByAction = new Map<string, CoreRewardItem[]>();
     if (coreRewards) {
       for (const r of coreRewards) {
         if (r.reward <= BigInt(0)) continue;
         const key = r.actionId.toString();
         if (!coreRewardsByAction.has(key)) coreRewardsByAction.set(key, []);
-        coreRewardsByAction.get(key)!.push(r);
+        // 将旧格式转换为新格式
+        coreRewardsByAction.get(key)!.push({
+          round: r.round,
+          mintReward: r.reward,
+          burnReward: BigInt(0),
+          claimed: r.isMinted,
+        });
       }
     }
 
@@ -231,9 +251,10 @@ export const useActionsLatestRewards = ({
     const hasUnmintedCoreRewards = coreRewards.some((r) => r.reward > BigInt(0) && !r.isMinted);
 
     // 检查是否存在未铸造的扩展激励
+    // 扩展激励返回 mintReward + burnReward，使用 claimed 判断是否已领取
     let hasUnmintedExtensionRewards = false;
     for (const rewards of extensionRewardsMap.values()) {
-      if (rewards.some((r) => r.reward > BigInt(0) && !r.isMinted)) {
+      if (rewards.some((r) => (r.mintReward > BigInt(0) || r.burnReward > BigInt(0)) && !r.claimed)) {
         hasUnmintedExtensionRewards = true;
         break;
       }
@@ -278,7 +299,7 @@ export const useActionsLatestRewards = ({
       ...g,
       coreRewards: g.coreRewards.map((r) => {
         const key = `${BigInt(g.action.action.head.id).toString()}-${r.round.toString()}`;
-        return locallyMinted.has(key) || r.isMinted ? { ...r, isMinted: true } : r;
+        return locallyMinted.has(key) || r.claimed ? { ...r, claimed: true } : r;
       }),
     }));
   }, [grouped, locallyMinted]);

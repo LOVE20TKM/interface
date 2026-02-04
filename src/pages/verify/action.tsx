@@ -54,11 +54,7 @@ const VerifyPage = () => {
   const [actionInfo, setActionInfo] = useState<ActionInfo | undefined>(undefined);
 
   // 获取行动详情数据（包括扩展信息）
-  const {
-    isExtensionAction,
-    extensionAddress,
-    factory,
-  } = useActionDetailData({
+  const { isExtensionAction, extensionAddress, factory } = useActionDetailData({
     tokenAddress: token?.address,
     actionId,
     account,
@@ -66,7 +62,7 @@ const VerifyPage = () => {
 
   return (
     <>
-      <Header title="验证" backUrl={`/verify/?symbol=${token?.symbol}`} />
+      <Header title="验证" showBackButton={true} backUrl={`/verify/?symbol=${token?.symbol}`} />
       <main className="flex-grow">
         {remainingVotes > 0 && (
           <div className="px-2 pt-4">

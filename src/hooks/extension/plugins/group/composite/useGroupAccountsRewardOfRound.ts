@@ -14,8 +14,12 @@ const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXT
 
 export interface AccountRewardRecord {
   account: `0x${string}`;
-  reward: bigint;
-  isMinted: boolean;
+  /** 铸造激励 */
+  mintReward: bigint;
+  /** 销毁激励 */
+  burnReward: bigint;
+  /** 是否已领取 */
+  claimed: boolean;
   originScore: bigint;
   finalScore: bigint;
   joinedAmount: bigint;
@@ -125,7 +129,8 @@ export const useGroupAccountsRewardOfRound = ({
 
     for (let i = 0; i < accounts.length; i++) {
       const baseIndex = i * recordSize;
-      const rewardData = mergedData[baseIndex]?.result as [bigint, boolean] | undefined;
+      // rewardByAccount 返回 (mintReward, burnReward, claimed)
+      const rewardData = mergedData[baseIndex]?.result as [bigint, bigint, boolean] | undefined;
       const originScoreData = mergedData[baseIndex + 1]?.result;
       const finalScoreData = mergedData[baseIndex + 2]?.result;
       const joinedAmountData = mergedData[baseIndex + 3]?.result;
@@ -133,8 +138,9 @@ export const useGroupAccountsRewardOfRound = ({
 
       result.push({
         account: accounts[i],
-        reward: rewardData ? safeToBigInt(rewardData[0]) : BigInt(0),
-        isMinted: rewardData ? rewardData[1] : false,
+        mintReward: rewardData ? safeToBigInt(rewardData[0]) : BigInt(0),
+        burnReward: rewardData ? safeToBigInt(rewardData[1]) : BigInt(0),
+        claimed: rewardData ? rewardData[2] : false,
         originScore: safeToBigInt(originScoreData),
         finalScore: safeToBigInt(finalScoreData),
         joinedAmount: safeToBigInt(joinedAmountData),

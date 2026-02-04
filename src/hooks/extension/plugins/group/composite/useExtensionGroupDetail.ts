@@ -33,11 +33,6 @@ export interface GroupDetailInfo {
   totalJoinedAmount: bigint; // 当前参与代币量
   accountCount: bigint; //当前参与地址数
   remainingCapacity: bigint; // 链群剩余容量
-
-  // 服务者容量信息
-  ownerMaxVerifyCapacity: bigint; // 服务者最大验证容量
-  ownerTotalJoinedAmount: bigint; // 服务者所有链群的总参与量
-  ownerRemainingCapacity: bigint; // 服务者剩余验证容量
 }
 
 export interface UseExtensionGroupDetailParams {
@@ -126,45 +121,6 @@ export const useExtensionGroupDetail = ({
     },
   });
 
-  // 从第一轮数据中提取 owner 地址
-  const ownerAddress = useMemo(() => {
-    if (!detailData || detailData.length < 2) return undefined;
-    return detailData[1]?.result as `0x${string}` | undefined;
-  }, [detailData]);
-
-  // 第二轮：获取服务者容量信息（依赖 owner）
-  const ownerContracts = useMemo(() => {
-    if (!extensionAddress || !ownerAddress) return [];
-
-    return [
-      // 获取服务者最大验证容量
-      {
-        address: GROUP_MANAGER_ADDRESS,
-        abi: GroupManagerAbi,
-        functionName: 'maxVerifyCapacityByOwner',
-        args: [extensionAddress, ownerAddress],
-      },
-      // 获取服务者总参与量
-      {
-        address: GROUP_JOIN_ADDRESS,
-        abi: GroupJoinAbi,
-        functionName: 'totalJoinedAmountByGroupOwner',
-        args: [extensionAddress, ownerAddress],
-      },
-    ];
-  }, [extensionAddress, ownerAddress]);
-
-  const {
-    data: ownerData,
-    isPending: isOwnerPending,
-    error: ownerError,
-  } = useReadContracts({
-    contracts: ownerContracts as any,
-    query: {
-      enabled: !!extensionAddress && !!ownerAddress && ownerContracts.length > 0,
-    },
-  });
-
   // 解析数据
   const groupDetail = useMemo(() => {
     if (!detailData || detailData.length < 6) return undefined;
@@ -211,12 +167,6 @@ export const useExtensionGroupDetail = ({
     const actualMaxJoinAmount =
       maxJoinAmount > BigInt(0) && maxJoinAmount < actionMaxJoinAmount ? maxJoinAmount : actionMaxJoinAmount;
 
-    // ===== 新增：第二轮数据解析 =====
-    const ownerMaxVerifyCapacity = safeToBigInt(ownerData?.[0]?.result);
-    const ownerTotalJoinedAmount = safeToBigInt(ownerData?.[1]?.result);
-    const ownerRemainingCapacity =
-      ownerMaxVerifyCapacity > ownerTotalJoinedAmount ? ownerMaxVerifyCapacity - ownerTotalJoinedAmount : BigInt(0);
-
     return {
       groupId,
       groupName,
@@ -235,15 +185,12 @@ export const useExtensionGroupDetail = ({
       actionMaxJoinAmount,
       actualMinJoinAmount,
       actualMaxJoinAmount,
-      ownerMaxVerifyCapacity,
-      ownerTotalJoinedAmount,
-      ownerRemainingCapacity,
     };
-  }, [detailData, ownerData]);
+  }, [detailData]);
 
   return {
     groupDetail: groupDetail as GroupDetailInfo | undefined,
-    isPending: isDetailPending || isOwnerPending,
-    error: detailError || ownerError,
+    isPending: isDetailPending,
+    error: detailError,
   };
 };

@@ -119,7 +119,7 @@ export const useGroupActionFactoryAddress = (contractAddress: `0x${string}`) => 
 
 /**
  * Hook for createExtension - 创建扩展
- * 新版合约只需要 tokenAddress 和 groupActionTokenAddress 两个参数
+ * 合约需要 tokenAddress、groupActionTokenAddress 和 govRatioMultiplier 三个参数
  */
 export function useCreateExtension(contractAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
@@ -131,14 +131,16 @@ export function useCreateExtension(contractAddress: `0x${string}`) {
   const createExtension = async (
     tokenAddress: `0x${string}`, // 链群服务行动代币地址
     groupActionTokenAddress: `0x${string}`, // 组行动代币地址
+    govRatioMultiplier: bigint, // 治理票占比倍数
   ) => {
     console.log('提交 createExtension 交易:', {
       contractAddress,
       tokenAddress,
       groupActionTokenAddress,
+      govRatioMultiplier,
       isTukeMode,
     });
-    return await execute([tokenAddress, groupActionTokenAddress]);
+    return await execute([tokenAddress, groupActionTokenAddress, govRatioMultiplier]);
   };
 
   // 错误日志记录

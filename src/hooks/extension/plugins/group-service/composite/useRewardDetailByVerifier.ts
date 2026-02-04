@@ -48,6 +48,32 @@ export interface GroupRewardInfo {
 }
 
 /**
+ * 服务者激励汇总信息（溢出计算相关）
+ */
+export interface VerifierRewardSummary {
+  /** 可铸造激励 */
+  mintReward: bigint;
+  /** 销毁激励 */
+  burnReward: bigint;
+  /** 是否已领取 */
+  claimed: boolean;
+  /** 行动总激励 */
+  totalReward: bigint;
+  /** 服务者铸币量 */
+  verifierGenerated: bigint;
+  /** 总铸币量 */
+  totalGenerated: bigint;
+  /** 治理票占比倍数 */
+  govRatioMultiplier: bigint;
+  /** 铸币量占比（%） */
+  generatedRatioPercent: number;
+  /** 推算的治理票占比（%） */
+  govRatioPercent: number;
+  /** 是否有溢出销毁 */
+  hasOverflow: boolean;
+}
+
+/**
  * 行动激励信息
  */
 export interface ActionRewardInfo {
@@ -79,6 +105,8 @@ export interface UseRewardDetailByVerifierParams {
 export interface UseRewardDetailByVerifierResult {
   /** 按行动分组的激励数据 */
   actionRewards: ActionRewardInfo[];
+  /** 服务者激励汇总信息（溢出计算相关） */
+  verifierRewardSummary: VerifierRewardSummary | null;
   /** 加载状态 */
   isPending: boolean;
   /** 错误信息 */
@@ -200,7 +228,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   }, [groupIdsData, extensions]);
 
   // ==========================================
-  // 第四步：批量获取每个链群的激励分配明细
+  // 第四步：批量获取每个链群的激励分配明细 + 服务者激励汇总数据
   // ==========================================
   const rewardDistributionContracts = useMemo(() => {
     if (!extensionAddress || !round || !verifier || actionGroupPairs.length === 0) {
@@ -224,6 +252,64 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     query: {
       enabled:
         !!extensionAddress && !!round && !!verifier && rewardDistributionContracts.length > 0 && !isGroupIdsPending,
+    },
+  });
+
+  // ==========================================
+  // 第四步-B：批量获取服务者激励汇总数据（用于溢出计算）
+  // ==========================================
+  const verifierSummaryContracts = useMemo(() => {
+    if (!extensionAddress || !round || !verifier) {
+      return [];
+    }
+
+    return [
+      // 0: 服务者激励详情 (mintReward, burnReward, claimed)
+      {
+        address: extensionAddress,
+        abi: ExtensionGroupServiceAbi,
+        functionName: 'rewardByAccount' as const,
+        args: [round, verifier] as const,
+      },
+      // 1: 行动总激励
+      {
+        address: extensionAddress,
+        abi: ExtensionGroupServiceAbi,
+        functionName: 'reward' as const,
+        args: [round] as const,
+      },
+      // 2: 服务者铸币量
+      {
+        address: extensionAddress,
+        abi: ExtensionGroupServiceAbi,
+        functionName: 'generatedActionRewardByVerifier' as const,
+        args: [round, verifier] as const,
+      },
+      // 3: 总铸币量
+      {
+        address: extensionAddress,
+        abi: ExtensionGroupServiceAbi,
+        functionName: 'generatedActionReward' as const,
+        args: [round] as const,
+      },
+      // 4: 治理票占比倍数
+      {
+        address: extensionAddress,
+        abi: ExtensionGroupServiceAbi,
+        functionName: 'GOV_RATIO_MULTIPLIER' as const,
+        args: [] as const,
+      },
+    ];
+  }, [extensionAddress, round, verifier]);
+
+  const {
+    data: verifierSummaryData,
+    isPending: isVerifierSummaryPending,
+    error: verifierSummaryError,
+  } = useReadContracts({
+    contracts: verifierSummaryContracts as any,
+    query: {
+      enabled: !!extensionAddress && !!round && !!verifier && verifierSummaryContracts.length > 0,
     },
   });
 
@@ -314,6 +400,77 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   }, [actionGroupPairs]);
 
   const { groupNameMap, isPending: isGroupNamesPending } = useGroupNames(allGroupIds, allGroupIds.length > 0);
+
+  // ==========================================
+  // 第七步-B：计算服务者激励汇总（溢出计算）
+  // ==========================================
+  const PRECISION = BigInt(1e18);
+
+  const verifierRewardSummary = useMemo((): VerifierRewardSummary | null => {
+    if (!verifierSummaryData || verifierSummaryData.length < 5) {
+      return null;
+    }
+
+    // 解析数据
+    const rewardByAccountResult = verifierSummaryData[0]?.result as [bigint, bigint, boolean] | undefined;
+    const mintReward = rewardByAccountResult ? rewardByAccountResult[0] : BigInt(0);
+    // 忽略很小的 burnReward 值（小于 1e11 时认为是 0，避免精度误差）
+    const rawBurnReward = rewardByAccountResult ? rewardByAccountResult[1] : BigInt(0);
+    const burnReward = rawBurnReward < BigInt(1e11) ? BigInt(0) : rawBurnReward;
+    const claimed = rewardByAccountResult ? rewardByAccountResult[2] : false;
+
+    const totalReward = verifierSummaryData[1]?.result ? (verifierSummaryData[1].result as bigint) : BigInt(0);
+    const verifierGenerated = verifierSummaryData[2]?.result ? (verifierSummaryData[2].result as bigint) : BigInt(0);
+    const totalGenerated = verifierSummaryData[3]?.result ? (verifierSummaryData[3].result as bigint) : BigInt(0);
+    const govRatioMultiplier = verifierSummaryData[4]?.result ? (verifierSummaryData[4].result as bigint) : BigInt(0);
+
+    // 计算铸币量占比
+    let generatedRatioPercent = 0;
+    if (totalGenerated > BigInt(0) && verifierGenerated > BigInt(0)) {
+      const generatedRatio = (verifierGenerated * PRECISION) / totalGenerated;
+      generatedRatioPercent = (Number(generatedRatio) / Number(PRECISION)) * 100;
+    }
+
+    // 判断是否有溢出销毁
+    const hasOverflow = burnReward > BigInt(0);
+    const hasGovLimit = govRatioMultiplier > BigInt(0);
+
+    // 逆向推算治理票占比
+    // 注意：govRatioMultiplier 是 wei 单位（1e18 = 1）
+    const govRatioMultiplierNumber = Number(govRatioMultiplier) / 1e18;
+    let govRatioPercent = 0;
+    if (hasGovLimit && totalReward > BigInt(0)) {
+      if (hasOverflow) {
+        // 治理票不足，可以精确计算治理票占比
+        // actualReward = govRatio × govMultiplier × totalReward
+        // govRatio = actualReward / (govMultiplier × totalReward)
+        const actualRatioBigInt = (mintReward * PRECISION) / totalReward;
+        const actualRatioPercent = (Number(actualRatioBigInt) / Number(PRECISION)) * 100;
+        govRatioPercent = actualRatioPercent / govRatioMultiplierNumber;
+      } else {
+        // 治理票充足，只能给出下限
+        // govRatio × govMultiplier >= generatedRatio
+        // govRatio >= generatedRatio / govMultiplier
+        govRatioPercent = generatedRatioPercent / govRatioMultiplierNumber;
+      }
+    } else if (!hasGovLimit) {
+      // 没有治理票限制
+      govRatioPercent = 100;
+    }
+
+    return {
+      mintReward,
+      burnReward,
+      claimed,
+      totalReward,
+      verifierGenerated,
+      totalGenerated,
+      govRatioMultiplier,
+      generatedRatioPercent,
+      govRatioPercent,
+      hasOverflow,
+    };
+  }, [verifierSummaryData]);
 
   // ==========================================
   // 第八步：组装数据
@@ -421,8 +578,8 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   const isPending = useMemo(() => {
     // 如果 allActionIds 为空数组，说明查询已完成，直接返回 false
     if (!allActionIds || allActionIds.length === 0) {
-      // 但需要确保第一步的查询已完成
-      return isActionIdsPending;
+      // 但需要确保第一步的查询和服务者汇总查询已完成
+      return isActionIdsPending || isVerifierSummaryPending;
     }
 
     // 第一步：获取行动ID
@@ -431,6 +588,8 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     if (isExtensionsPending) return true;
     // 第三步：获取验证的链群
     if (isGroupIdsPending) return true;
+    // 服务者汇总数据
+    if (isVerifierSummaryPending) return true;
     // 如果没有链群数据，不需要等待其他查询
     if (actionGroupPairs.length === 0) return false;
     // 等待激励分配明细、链群总铸币量、行动信息、链群名称查询完成
@@ -440,6 +599,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     isActionIdsPending,
     isExtensionsPending,
     isGroupIdsPending,
+    isVerifierSummaryPending,
     actionGroupPairs.length,
     isRewardDistributionPending,
     isGeneratedRewardsPending,
@@ -447,13 +607,15 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     isGroupNamesPending,
   ]);
 
-  const error = actionIdsError || groupIdsError || rewardDistributionError || generatedRewardsError || null;
+  const error =
+    actionIdsError || groupIdsError || rewardDistributionError || generatedRewardsError || verifierSummaryError || null;
 
   // ==========================================
   // 返回结果
   // ==========================================
   return {
     actionRewards,
+    verifierRewardSummary,
     isPending,
     error,
   };

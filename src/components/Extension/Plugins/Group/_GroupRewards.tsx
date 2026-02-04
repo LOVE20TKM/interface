@@ -137,8 +137,8 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
     return <div>Token信息加载中...</div>;
   }
 
-  // 计算总激励
-  const totalReward = accountRewardRecords?.reduce((sum, item) => sum + item.reward, BigInt(0)) || BigInt(0);
+  // 计算总激励（链群行动只有 mintReward）
+  const totalReward = accountRewardRecords?.reduce((sum, item) => sum + item.mintReward, BigInt(0)) || BigInt(0);
 
   // 计算总 finalScore（用于计算百分比）
   const totalFinalScore =
@@ -152,7 +152,9 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
   const combinedData =
     accountRewardRecords
       ?.map((record, originalIndex) => {
-        const rewardPercentage = totalReward > BigInt(0) ? (Number(record.reward) / Number(totalReward)) * 100 : 0;
+        // 链群行动总激励只有 mintReward
+        const totalRecordReward = record.mintReward;
+        const rewardPercentage = totalReward > BigInt(0) ? (Number(totalRecordReward) / Number(totalReward)) * 100 : 0;
         const finalScorePercentage =
           totalFinalScore > BigInt(0) ? (Number(record.finalScore) / Number(totalFinalScore)) * 100 : 0;
 
@@ -163,7 +165,8 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
           originScore: record.originScore,
           finalScore: record.finalScore,
           finalScorePercentage,
-          reward: record.reward,
+          mintReward: record.mintReward,
+          totalReward: totalRecordReward,
           rewardPercentage,
           trialProvider: record.trialProvider,
           originalIndex, // 保存原始索引，用于验证状态判断
@@ -336,7 +339,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
                       {shouldShowNotGenerated ? (
                         <div className="text-greyscale-500">未生成</div>
                       ) : (
-                        <div className="font-mono text-secondary">{formatTokenAmount(item.reward)}</div>
+                        <div className="font-mono text-secondary">{formatTokenAmount(item.totalReward)}</div>
                       )}
                       {/* <div className="text-xs text-greyscale-500">{item.rewardPercentage.toFixed(2)}%</div> */}
                     </td>

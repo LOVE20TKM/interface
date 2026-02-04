@@ -8,32 +8,22 @@ import React from 'react';
 
 // 工具函数
 import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
-import { formatEther } from 'viem';
 
 interface GroupActionTipsProps {
-  maxVerifyCapacityFactor?: bigint;
+  activationMinGovRatio?: bigint;
   maxJoinAmountRatio?: bigint;
   joinMaxAmount?: bigint;
   groupActivationStakeAmount?: bigint;
 }
 
 const _GroupActionTips: React.FC<GroupActionTipsProps> = ({
-  maxVerifyCapacityFactor,
+  activationMinGovRatio,
   maxJoinAmountRatio,
   joinMaxAmount,
   groupActivationStakeAmount,
 }) => {
-  // 比例分母常量 (10^16)
-  const RATIO_DENOMINATOR = BigInt('10000000000000000');
-
-  // 将 wei 格式的系数转换为实数显示
-  const capacityFactorDisplay = maxVerifyCapacityFactor ? formatEther(maxVerifyCapacityFactor) : '0';
-
-  // 将 wei 格式的比例转换为百分比显示 (wei / 1e18 * 100 = %)
-  // 先转换为 Number 再除法，避免 BigInt 整数除法截断小数部分
-  const ratioPercentageDisplay = maxJoinAmountRatio
-    ? formatPercentage(Number(maxJoinAmountRatio) / Number(RATIO_DENOMINATOR))
-    : '0%';
+  // 将 wei 格式的比例转换为百分比显示 (wei / 1e18 = 比例)
+  const minGovRatioDisplay = activationMinGovRatio ? formatPercentage(Number(activationMinGovRatio) / 1e18) : '0%';
 
   return (
     <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
@@ -43,9 +33,8 @@ const _GroupActionTips: React.FC<GroupActionTipsProps> = ({
         <div>
           激活链群需质押代币数量：<b>{formatTokenAmount(groupActivationStakeAmount || BigInt(0), 4, 'ceil')}</b>
         </div>
-        <div className="text-sm text-blue-700 pt-3">容量与质押量：</div>
         <div>
-          <b>理论最大容量</b> = 治理票占比 × 已铸造代币量 × 验证容量系数
+          激活链群最小治理票比例：<b>{minGovRatioDisplay}</b>
         </div>
         <div className="text-sm text-blue-700 pt-3">参与代币：</div>
         <div>

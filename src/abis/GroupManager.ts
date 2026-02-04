@@ -501,30 +501,6 @@ export const GroupManagerAbi = [
   },
   {
     "type": "function",
-    "name": "maxVerifyCapacityByOwner",
-    "inputs": [
-      {
-        "name": "extension",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "owner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "staked",
     "inputs": [
       {
@@ -878,12 +854,22 @@ export const GroupManagerAbi = [
   },
   {
     "type": "error",
+    "name": "InsufficientActivationMinGovRatio",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidMinMaxJoinAmount",
     "inputs": []
   },
   {
     "type": "error",
     "name": "InvalidRound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoGovVotes",
     "inputs": []
   },
   {

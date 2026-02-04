@@ -50,12 +50,6 @@ export const getMaxJoinAmount = (groupDetail: GroupDetailInfo): JoinAmountResult
     });
   }
 
-  // 4. 链群服务者剩余验证容量
-  limits.push({
-    amount: groupDetail.ownerRemainingCapacity,
-    reason: `服务者剩余容量 ${formatTokenAmount(groupDetail.ownerRemainingCapacity)}`,
-  });
-
   // 找出最小限制（确保最小值为0，不能为负）
   let minLimit = limits[0];
   for (const limit of limits) {
@@ -110,12 +104,6 @@ export const getMaxIncreaseAmount = (groupDetail: GroupDetailInfo, oldAmount: bi
       reason: `链群剩余容量 ${formatTokenAmount(groupDetail.remainingCapacity)}`,
     });
   }
-
-  // 4. 链群服务者剩余验证容量
-  limits.push({
-    amount: groupDetail.ownerRemainingCapacity,
-    reason: `服务者剩余容量 ${formatTokenAmount(groupDetail.ownerRemainingCapacity)}`,
-  });
 
   // 找出最小限制（确保最小值为0，不能为负）
   let minLimit = limits[0];

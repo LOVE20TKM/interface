@@ -44,6 +44,16 @@ const formSchema = z.object({
     .string()
     .min(1, { message: '请输入链群行动所在代币地址' })
     .refine((val): val is string => isAddress(val), { message: '链群行动所在代币地址格式无效' }),
+  govRatioMultiplier: z
+    .string()
+    .min(1, { message: '请输入治理票占比倍数' })
+    .refine(
+      (val) => {
+        const num = parseFloat(val);
+        return !isNaN(num) && num >= 0 && Number.isInteger(num);
+      },
+      { message: '治理票占比倍数必须是非负整数' },
+    ),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -61,6 +71,7 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
     resolver: zodResolver(formSchema),
     defaultValues: {
       groupActionTokenAddress: tokenAddress || '',
+      govRatioMultiplier: '',
     },
     mode: 'onChange', // 实时验证
   });
@@ -171,7 +182,14 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
     try {
       setApprovalStep('deploying');
 
-      await createExtension(tokenAddress, values.groupActionTokenAddress as `0x${string}`);
+      // 治理票占比倍数：用户输入整数，需要转换为 wei（1e18 = 1）
+      const govRatioMultiplierWei = parseEther(values.govRatioMultiplier);
+
+      await createExtension(
+        tokenAddress,
+        values.groupActionTokenAddress as `0x${string}`,
+        govRatioMultiplierWei,
+      );
     } catch (error: any) {
       console.error('部署扩展失败:', error);
       toast.error(error?.message || '部署扩展失败');
@@ -195,7 +213,7 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
                 name="groupActionTokenAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>链群行动所在代币合约地址</FormLabel>
+                    <FormLabel>1. 链群行动所在代币合约地址</FormLabel>
                     <FormControl>
                       <Input
                         type="text"
@@ -210,6 +228,32 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
                     </FormControl>
                     <FormDescription className="text-sm text-greyscale-500">
                       仅限链群服务所在代币地址或其子币地址
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* 治理票占比倍数 */}
+              <FormField
+                control={form.control}
+                name="govRatioMultiplier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>2. 治理票占比倍数</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="比如 2"
+                        disabled={approvalStep !== 'idle'}
+                        min="0"
+                        step="1"
+                        className="max-w-40 md:max-w-xs"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription className="text-sm text-greyscale-500">
+                      服务者所属链群，参与代币总量占比，超过 (治理票占比 × 治理票占比倍数) 的部分，不再有铸币激励
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

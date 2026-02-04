@@ -324,23 +324,6 @@ export const useCalculateJoinMaxAmount = (extensionAddress: `0x${string}`) => {
 };
 
 /**
- * Hook for maxVerifyCapacityByOwner - 获取所有者的最大验证容量
- */
-export const useMaxVerifyCapacityByOwner = (extensionAddress: `0x${string}`, owner: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: GroupManagerAbi,
-    functionName: 'maxVerifyCapacityByOwner',
-    args: [extensionAddress, owner],
-    query: {
-      enabled: !!extensionAddress && !!owner,
-    },
-  });
-
-  return { maxVerifyCapacity: safeToBigInt(data), isPending, error };
-};
-
-/**
  * Hook for staked - 获取单个扩展的总质押量
  */
 export const useStaked = (extensionAddress: `0x${string}`) => {

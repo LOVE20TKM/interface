@@ -14,7 +14,7 @@ export interface ExtensionActionParam {
   joinTokenAddress: `0x${string}`;
   joinTokenSymbol: string | undefined;
   maxJoinAmountRatio: bigint; // 单个行动者最大参与代币占比（wei，1e28=100%）
-  maxVerifyCapacityFactor: bigint; // 验证容量系数（wei）
+  activationMinGovRatio: bigint; // 激活链群最小治理票比例（wei，1e18=100%）
   groupActivationStakeAmount: bigint; // 激活需质押代币数量
   // 实时数据
   joinMaxAmount: bigint; // 单个行动者最大参与代币数

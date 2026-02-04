@@ -64,39 +64,6 @@ export const useGroupActionFactoryAddress = (contractAddress: `0x${string}`) => 
 };
 
 /**
- * Hook for DEFAULT_MAX_RECIPIENTS - 获取默认最大接收者数量
- */
-export const useMaxRecipients = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupServiceAbi,
-    functionName: 'DEFAULT_MAX_RECIPIENTS',
-    query: {
-      enabled: !!contractAddress,
-    },
-  });
-
-  return { maxRecipients: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for actionIdsWithRecipients - 获取账户在指定轮次设置了接收者的行动ID列表
- */
-export const useActionIdsWithRecipients = (contractAddress: `0x${string}`, account: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupServiceAbi,
-    functionName: 'actionIdsWithRecipients',
-    args: [account, round],
-    query: {
-      enabled: !!contractAddress && !!account && !!round,
-    },
-  });
-
-  return { actionIds: data as bigint[] | undefined, isPending, error };
-};
-
-/**
  * Hook for FACTORY_ADDRESS - 获取工厂地址
  */
 export const useFactory = (contractAddress: `0x${string}`) => {
@@ -135,28 +102,6 @@ export const useGeneratedActionRewardByVerifier = (
     isPending,
     error,
   };
-};
-
-/**
- * Hook for groupIdsByActionIdWithRecipients - 获取账户在指定行动和轮次设置了接收者的组ID列表
- */
-export const useGroupIdsByActionIdWithRecipients = (
-  contractAddress: `0x${string}`,
-  account: `0x${string}`,
-  actionId: bigint,
-  round: bigint,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupServiceAbi,
-    functionName: 'groupIdsByActionIdWithRecipients',
-    args: [account, actionId, round],
-    query: {
-      enabled: !!contractAddress && !!account && actionId !== undefined && !!round,
-    },
-  });
-
-  return { groupIds: data as bigint[] | undefined, isPending, error };
 };
 
 /**
@@ -243,34 +188,6 @@ export const useJoinInfo = (contractAddress: `0x${string}`, account: `0x${string
 };
 
 /**
- * Hook for recipients - 获取指定组所有者和轮次的接收者信息
- */
-export const useRecipients = (
-  contractAddress: `0x${string}`,
-  groupOwner: `0x${string}`,
-  actionId: bigint,
-  groupId: bigint,
-  round: bigint,
-) => {
-  const { data, isPending, error } = useReadContract({
-    address: contractAddress,
-    abi: ExtensionGroupServiceAbi,
-    functionName: 'recipients',
-    args: [groupOwner, actionId, groupId, round],
-    query: {
-      enabled: !!contractAddress && !!groupOwner && actionId !== undefined && groupId !== undefined && !!round,
-    },
-  });
-
-  return {
-    addrs: data ? (data[0] as `0x${string}`[]) : undefined,
-    ratios: data ? (data[1] as bigint[]) : undefined,
-    isPending,
-    error,
-  };
-};
-
-/**
  * Hook for reward - 获取指定轮次的奖励
  */
 export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
@@ -302,8 +219,9 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
   });
 
   return {
-    reward: data ? safeToBigInt(data[0]) : undefined,
-    isMinted: data ? (data[1] as boolean) : undefined,
+    mintReward: data ? safeToBigInt(data[0]) : undefined,
+    burnReward: data ? safeToBigInt(data[1]) : undefined,
+    claimed: data ? (data[2] as unknown as boolean) : undefined,
     isPending,
     error,
   };
@@ -331,7 +249,7 @@ export const useRewardByRecipient = (
     },
   });
 
-  return { reward: safeToBigInt(data), isPending, error };
+  return { rewardByRecipient: safeToBigInt(data), isPending, error };
 };
 
 /**
@@ -378,6 +296,27 @@ export const useTokenAddress = (contractAddress: `0x${string}`) => {
   });
 
   return { tokenAddress: data as `0x${string}` | undefined, isPending, error };
+};
+
+/**
+ * Hook for claimGovRatioByRound - 获取质押领取激励时账号对应的治理票占比
+ */
+export const useClaimGovRatioByRound = (
+  contractAddress: `0x${string}`,
+  round: bigint | undefined,
+  account: `0x${string}` | undefined,
+) => {
+  const { data, isPending, error } = useReadContract({
+    address: contractAddress,
+    abi: ExtensionGroupServiceAbi,
+    functionName: 'claimGovRatioByRound',
+    args: round && account ? [round, account] : undefined,
+    query: {
+      enabled: !!contractAddress && !!round && !!account,
+    },
+  });
+
+  return { claimGovRatio: safeToBigInt(data), isPending, error };
 };
 
 // =====================
@@ -460,40 +399,3 @@ export function useJoin(contractAddress: `0x${string}`) {
   };
 }
 
-/**
- * Hook for setRecipients - 设置接收者
- */
-export function useSetRecipients(contractAddress: `0x${string}`) {
-  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
-    ExtensionGroupServiceAbi,
-    contractAddress,
-    'setRecipients',
-  );
-
-  const setRecipients = async (actionId: bigint, groupId: bigint, addrs: `0x${string}`[], ratios: bigint[]) => {
-    console.log('提交 setRecipients 交易:', { contractAddress, actionId, groupId, addrs, ratios, isTukeMode });
-    return await execute([actionId, groupId, addrs, ratios]);
-  };
-
-  // 错误日志记录
-  useEffect(() => {
-    if (hash) {
-      console.log('setRecipients tx hash:', hash);
-    }
-    if (error) {
-      console.log('提交 setRecipients 交易错误:');
-      logWeb3Error(error);
-      logError(error);
-    }
-  }, [hash, error]);
-
-  return {
-    setRecipients,
-    isPending,
-    isConfirming,
-    writeError: error,
-    isConfirmed,
-    hash,
-    isTukeMode,
-  };
-}

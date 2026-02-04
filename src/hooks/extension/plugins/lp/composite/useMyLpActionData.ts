@@ -34,7 +34,8 @@ export interface UseMyLpActionDataResult {
   // 治理票信息（用于显示）
   userGovVotes: bigint;
   totalGovVotes: bigint;
-  minGovVotes: bigint; // 最小治理票数门槛
+  minGovRatio: bigint; // 最小治理票占比门槛（1e18 = 100%）
+  userGovRatio: bigint; // 用户治理票占比（1e18 = 100%）
 
   // LP占比（用于显示）
   lpRatio: number; // LP占比百分比
@@ -127,11 +128,11 @@ export const useMyLpActionData = ({
         functionName: 'WAITING_BLOCKS',
         args: [],
       },
-      // 7. 获取最小治理票数门槛
+      // 7. 获取最小治理票占比门槛
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'MIN_GOV_VOTES',
+        functionName: 'MIN_GOV_RATIO',
         args: [],
       },
     ];
@@ -196,10 +197,16 @@ export const useMyLpActionData = ({
     return BigInt(data[5].result.toString());
   }, [data]);
 
-  const minGovVotes = useMemo(() => {
+  const minGovRatio = useMemo(() => {
     if (!data || !data[7]?.result) return BigInt(0);
     return BigInt(data[7].result.toString());
   }, [data]);
+
+  // 计算用户治理票占比（1e18 = 100%）
+  const userGovRatio = useMemo(() => {
+    if (!totalGovVotes || totalGovVotes === BigInt(0)) return BigInt(0);
+    return (userGovVotes * LP_RATIO_PRECISION) / totalGovVotes;
+  }, [userGovVotes, totalGovVotes]);
 
   // 计算激励占比（0-1 的比例值）
   const rewardRatio = useMemo(() => {
@@ -284,7 +291,8 @@ export const useMyLpActionData = ({
     rewardRatio,
     userGovVotes,
     totalGovVotes,
-    minGovVotes,
+    minGovRatio,
+    userGovRatio,
     lpRatio,
     joinTokenAddress,
     govRatioMultiplier,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useContext } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
@@ -7,16 +7,18 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // 导入铸造 hooks
 import { useClaimReward } from '@/src/hooks/extension/base/contracts/useIReward';
-// 导入额外数据 hook
-import { useLpRewardsExtra } from '@/src/hooks/extension/plugins/lp/composite/useLpRewardsExtra';
 
 /**
  * 激励数据结构
  */
 export interface RewardItem {
   round: bigint;
-  reward: bigint;
-  isMinted: boolean;
+  /** 铸造激励 */
+  mintReward: bigint;
+  /** 销毁激励 */
+  burnReward: bigint;
+  /** 是否已领取 */
+  claimed: boolean;
 }
 
 /**
@@ -70,15 +72,6 @@ export const LpActionRewardsList: React.FC<LpActionRewardsListProps> = ({
   const [mintingTarget, setMintingTarget] = useState<bigint | null>(null);
   const [locallyMinted, setLocallyMinted] = useState<Set<string>>(new Set());
   const [mintingHash, setMintingHash] = useState<`0x${string}` | undefined>(undefined);
-
-  // ========== 获取额外数据（溢出激励）==========
-  const rounds = useMemo(() => rewards.map((r) => r.round), [rewards]);
-
-  const { burnRewardMap, isPending: isBurnRewardPending } = useLpRewardsExtra({
-    extensionAddress,
-    rounds,
-    enabled: rewards.length > 0,
-  });
 
   // ========== 铸造成功处理 ==========
   useEffect(() => {
@@ -141,9 +134,11 @@ export const LpActionRewardsList: React.FC<LpActionRewardsListProps> = ({
             </tr>
           ) : (
             rewards.map((item, index) => {
-              const isLocallyMinted = locallyMinted.has(item.round.toString());
-              const displayIsMinted = isLocallyMinted || item.isMinted;
-              const burnReward = burnRewardMap.get(item.round.toString());
+              const isLocallyClaimed = locallyMinted.has(item.round.toString());
+              const displayClaimed = isLocallyClaimed || item.claimed;
+              // 溢出激励 = burnReward，可铸造激励 = mintReward
+              const burnReward = item.burnReward || BigInt(0);
+              const mintReward = item.mintReward || BigInt(0);
 
               // 判断是否可以跳转（需要 actionId 和 token symbol）
               const canNavigate =
@@ -162,38 +157,34 @@ export const LpActionRewardsList: React.FC<LpActionRewardsListProps> = ({
                   className={index === rewards.length - 1 ? 'border-none' : 'border-b border-gray-100'}
                 >
                   <td>{formatRoundForDisplay(item.round, tokenData).toString()}</td>
-                  <td className="text-center">
-                    {isBurnRewardPending ? (
-                      <span className="text-greyscale-400">...</span>
-                    ) : burnReward !== undefined ? (
-                      rewardHref ? (
-                        <Link
-                          href={rewardHref}
-                          className="text-secondary hover:text-secondary/80 underline underline-offset-2"
-                        >
-                          {formatTokenAmount(burnReward)}
-                        </Link>
-                      ) : (
-                        formatTokenAmount(burnReward)
-                      )
-                    ) : (
-                      '-'
-                    )}
-                  </td>
+                  {/* 溢出激励 = burnReward */}
                   <td className="text-center">
                     {rewardHref ? (
                       <Link
                         href={rewardHref}
                         className="text-secondary hover:text-secondary/80 underline underline-offset-2"
                       >
-                        {formatTokenAmount(item.reward || BigInt(0))}
+                        {formatTokenAmount(burnReward)}
                       </Link>
                     ) : (
-                      formatTokenAmount(item.reward || BigInt(0))
+                      formatTokenAmount(burnReward)
+                    )}
+                  </td>
+                  {/* 可铸造激励 = mintReward */}
+                  <td className="text-center">
+                    {rewardHref ? (
+                      <Link
+                        href={rewardHref}
+                        className="text-secondary hover:text-secondary/80 underline underline-offset-2"
+                      >
+                        {formatTokenAmount(mintReward)}
+                      </Link>
+                    ) : (
+                      formatTokenAmount(mintReward)
                     )}
                   </td>
                   <td className="text-center">
-                    {item.reward > BigInt(0) && !displayIsMinted ? (
+                    {mintReward > BigInt(0) && !displayClaimed ? (
                       <Button
                         variant="outline"
                         size="sm"
@@ -203,7 +194,7 @@ export const LpActionRewardsList: React.FC<LpActionRewardsListProps> = ({
                       >
                         铸造
                       </Button>
-                    ) : displayIsMinted ? (
+                    ) : displayClaimed ? (
                       <span className="text-greyscale-500">已铸造</span>
                     ) : (
                       <span className="text-greyscale-500">-</span>

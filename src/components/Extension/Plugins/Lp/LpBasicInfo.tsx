@@ -12,7 +12,7 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 // my utils
-import { formatTokenAmount } from '@/src/lib/format';
+import { formatPercentage } from '@/src/lib/format';
 
 interface LpBasicInfoProps {
   extensionAddress: `0x${string}`;
@@ -27,7 +27,7 @@ interface LpBasicInfoProps {
  */
 const LpBasicInfo: React.FC<LpBasicInfoProps> = ({ extensionAddress, factoryAddress, actionId }) => {
   // 获取扩展部署参数
-  const { tokenAddress, joinTokenAddress, waitingBlocks, govRatioMultiplier, minGovVotes, isPending, error } =
+  const { tokenAddress, joinTokenAddress, waitingBlocks, govRatioMultiplier, minGovRatio, isPending, error } =
     useExtensionParams(extensionAddress);
 
   // 获取LP代币符号
@@ -67,7 +67,7 @@ const LpBasicInfo: React.FC<LpBasicInfoProps> = ({ extensionAddress, factoryAddr
     !joinTokenAddress ||
     waitingBlocks === undefined ||
     govRatioMultiplier === undefined ||
-    minGovVotes === undefined
+    minGovRatio === undefined
   ) {
     return null;
   }
@@ -92,15 +92,17 @@ const LpBasicInfo: React.FC<LpBasicInfoProps> = ({ extensionAddress, factoryAddr
           <div className="font-mono text-secondary text-sm md:text-base">{waitingBlocks.toString()}</div>
         </div>
 
-        {/* 最小治理票数 */}
+        {/* 最小治理票占比 */}
         <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">加入行动所需最小治理票数:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">{formatTokenAmount(minGovVotes)}</div>
+          <div className="text-sm font-bold mb-1">加入行动所需最小治理票占比:</div>
+          <div className="font-mono text-secondary text-sm md:text-base">
+            {formatPercentage((Number(minGovRatio) / 1e18) * 100)}
+          </div>
         </div>
 
         {/* 治理比率乘数 */}
         <div className="md:max-w-2xl">
-          <div className="text-sm font-bold mb-1">治理比率乘数:</div>
+          <div className="text-sm font-bold mb-1">治理票占比倍数:</div>
           <div className="font-mono text-secondary text-sm md:text-base">{govRatioMultiplier.toString()}</div>
           <div className="text-xs text-gray-600">LP占比超过 (治理票占比 × 治理比率乘数) 的部分，不再有收益</div>
         </div>

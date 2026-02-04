@@ -22,10 +22,13 @@
 
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
-import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
+import { GroupRecipientsAbi } from '@/src/abis/GroupRecipients';
 import { useActionIdsWithActiveGroupIdsByOwner } from '@/src/hooks/extension/plugins/group-service/composite/useActionIdsWithActiveGroupIdsByOwner';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
+
+// GroupRecipients 是全局合约，使用环境变量配置地址
+const GROUP_RECIPIENTS_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_RECIPIENTS as `0x${string}`;
 
 // ==================== 类型定义 ====================
 
@@ -160,12 +163,12 @@ export function useActionGroupRecipientsData({
   });
 
   // ==========================================
-  // 步骤5：批量获取二次分配数据
+  // 步骤5：批量获取二次分配数据（使用 GroupRecipients 合约）
   // ==========================================
 
-  // 构建批量合约调用配置（使用 recipients，需传入验证轮轮次）
+  // 构建批量合约调用配置（使用 recipients，需传入验证轮轮次和 tokenAddress）
   const recipientsContracts = useMemo(() => {
-    if (!extensionAddress || !account || round === undefined || actionIdsWithGroupIds.length === 0) {
+    if (!GROUP_RECIPIENTS_ADDRESS || !tokenAddress || !account || round === undefined || actionIdsWithGroupIds.length === 0) {
       return [];
     }
 
@@ -173,16 +176,16 @@ export function useActionGroupRecipientsData({
     actionIdsWithGroupIds.forEach(({ actionId, groupIds }) => {
       groupIds.forEach((groupId) => {
         contracts.push({
-          address: extensionAddress,
-          abi: ExtensionGroupServiceAbi,
+          address: GROUP_RECIPIENTS_ADDRESS,
+          abi: GroupRecipientsAbi,
           functionName: 'recipients' as const,
-          args: [account, actionId, groupId, round] as const,
+          args: [account, tokenAddress, actionId, groupId, round] as const,
         });
       });
     });
 
     return contracts;
-  }, [extensionAddress, account, round, actionIdsWithGroupIds]);
+  }, [tokenAddress, account, round, actionIdsWithGroupIds]);
 
   const {
     data: recipientsData,
@@ -191,7 +194,7 @@ export function useActionGroupRecipientsData({
   } = useReadContracts({
     contracts: recipientsContracts,
     query: {
-      enabled: !!extensionAddress && !!account && !!round && recipientsContracts.length > 0,
+      enabled: !!GROUP_RECIPIENTS_ADDRESS && !!tokenAddress && !!account && !!round && recipientsContracts.length > 0,
     },
   });
 

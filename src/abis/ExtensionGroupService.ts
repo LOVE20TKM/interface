@@ -11,6 +11,11 @@ export const ExtensionGroupServiceAbi = [
         "internalType": "address"
       },
       {
+        "name": "groupActionFactoryAddress_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "tokenAddress_",
         "type": "address",
         "internalType": "address"
@@ -21,25 +26,12 @@ export const ExtensionGroupServiceAbi = [
         "internalType": "address"
       },
       {
-        "name": "groupActionFactoryAddress_",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "DEFAULT_MAX_RECIPIENTS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
+        "name": "govRatioMultiplier_",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "view"
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -50,6 +42,19 @@ export const ExtensionGroupServiceAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "GOV_RATIO_MULTIPLIER",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -121,30 +126,6 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "actionIdsWithRecipients",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "burnInfo",
     "inputs": [
       {
@@ -182,6 +163,30 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
+    "name": "claimGovRatioByRound",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "claimReward",
     "inputs": [
       {
@@ -192,7 +197,12 @@ export const ExtensionGroupServiceAbi = [
     ],
     "outputs": [
       {
-        "name": "amount",
+        "name": "mintReward",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnReward",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -216,7 +226,12 @@ export const ExtensionGroupServiceAbi = [
         "internalType": "uint256[]"
       },
       {
-        "name": "rewards",
+        "name": "mintRewards",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "burnRewards",
         "type": "uint256[]",
         "internalType": "uint256[]"
       }
@@ -269,35 +284,6 @@ export const ExtensionGroupServiceAbi = [
         "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "groupIdsByActionIdWithRecipients",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "actionId_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
       }
     ],
     "stateMutability": "view"
@@ -420,45 +406,6 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "function",
-    "name": "recipients",
-    "inputs": [
-      {
-        "name": "groupOwner",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "actionId_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "addrs",
-        "type": "address[]",
-        "internalType": "address[]"
-      },
-      {
-        "name": "ratios",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "reward",
     "inputs": [
       {
@@ -493,7 +440,12 @@ export const ExtensionGroupServiceAbi = [
     ],
     "outputs": [
       {
-        "name": "amount",
+        "name": "mintReward",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnReward",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -594,34 +546,6 @@ export const ExtensionGroupServiceAbi = [
     "stateMutability": "view"
   },
   {
-    "type": "function",
-    "name": "setRecipients",
-    "inputs": [
-      {
-        "name": "actionId_",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "addrs",
-        "type": "address[]",
-        "internalType": "address[]"
-      },
-      {
-        "name": "ratios",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
     "type": "event",
     "name": "BurnReward",
     "inputs": [
@@ -681,7 +605,13 @@ export const ExtensionGroupServiceAbi = [
         "internalType": "address"
       },
       {
-        "name": "amount",
+        "name": "mintAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnAmount",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -718,7 +648,13 @@ export const ExtensionGroupServiceAbi = [
         "internalType": "address"
       },
       {
-        "name": "amount",
+        "name": "mintAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnAmount",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -869,55 +805,6 @@ export const ExtensionGroupServiceAbi = [
     "anonymous": false
   },
   {
-    "type": "event",
-    "name": "UpdateRecipients",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "groupId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "recipients",
-        "type": "address[]",
-        "indexed": false,
-        "internalType": "address[]"
-      },
-      {
-        "name": "ratios",
-        "type": "uint256[]",
-        "indexed": false,
-        "internalType": "uint256[]"
-      }
-    ],
-    "anonymous": false
-  },
-  {
     "type": "error",
     "name": "ActionIdNotFound",
     "inputs": []
@@ -934,37 +821,7 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "error",
-    "name": "ArrayLengthMismatch",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "DuplicateAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "GroupNotActive",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidExtension",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidRatio",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidRound",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidRound",
     "inputs": []
   },
   {
@@ -984,17 +841,7 @@ export const ExtensionGroupServiceAbi = [
   },
   {
     "type": "error",
-    "name": "NotGroupOwner",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "NotJoined",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "RecipientCannotBeSelf",
     "inputs": []
   },
   {
@@ -1007,20 +854,5 @@ export const ExtensionGroupServiceAbi = [
         "internalType": "uint256"
       }
     ]
-  },
-  {
-    "type": "error",
-    "name": "TooManyRecipients",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ZeroAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ZeroRatio",
-    "inputs": []
   }
 ] as const satisfies Abi;

@@ -83,6 +83,7 @@ const extensionsGroupFilesToConvert = [
   'GroupManager',
   'GroupJoin',
   'GroupVerify',
+  'GroupRecipients',
 ];
 
 // 用于生成 TypeScript 文件的函数

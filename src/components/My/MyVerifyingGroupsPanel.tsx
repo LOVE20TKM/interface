@@ -10,7 +10,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // Hooks
 import { useMyGroupIdsNeedVerifiedByRound } from '@/src/hooks/extension/plugins/group/composite/useMyGroupIdsNeedVerifiedByRound';
 import { useMyGroupActionsDistrustInfoOfRound } from '@/src/hooks/extension/plugins/group/composite/useMyGroupActionsDistrustInfoOfRound';
-import { useMyCapacityUsageWarnings } from '@/src/hooks/extension/plugins/group/composite/useMyCapacityUsageWarnings';
 
 // Components
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -60,31 +59,12 @@ const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ current
     return actionDistrustInfos.filter((x) => x.distrustVotes > BigInt(0) && x.distrustRatioPercent > 0);
   }, [actionDistrustInfos]);
 
-  const actionTitleByActionId = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const info of actionDistrustInfos) {
-      map.set(info.actionId.toString(), info.actionTitle);
-    }
-    return map;
-  }, [actionDistrustInfos]);
-
-  const {
-    warnItems: capacityUsageWarnItems,
-    isPending: isPendingCapacityUsage,
-    error: errorCapacityUsage,
-  } = useMyCapacityUsageWarnings({
-    owner: account as `0x${string}` | undefined,
-    pairs: actionPairs,
-    thresholdBps: BigInt(9900), // >=99% 红色告警
-  });
-
   // 错误处理
   const { handleError } = useContractError();
   useEffect(() => {
     if (error) handleError(error);
     if (errorActionDistrust) handleError(errorActionDistrust);
-    if (errorCapacityUsage) handleError(errorCapacityUsage);
-  }, [error, errorActionDistrust, errorCapacityUsage, handleError]);
+  }, [error, errorActionDistrust, handleError]);
 
   // Calculate counts
   const verifiedCount = useMemo(() => groups.filter((g) => g.isVerified).length, [groups]);
@@ -168,30 +148,9 @@ const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ current
                       )}&id=${info.actionId.toString()}&tab=public&tab2=distrust`}
                       className="underline underline-offset-2 hover:text-red-700"
                     >
-                      你在行动“No.{info.actionId.toString()} {info.actionTitle}”中被投不信任票，不信任率
+                      你在行动"No.{info.actionId.toString()} {info.actionTitle}"中被投不信任票，不信任率
                       {formatPercentage(info.distrustRatioPercent)}；
                     </Link>
-                  </div>
-                ))}
-              </div>
-            }
-          />
-        </div>
-      )}
-
-      {/* 警告：最大容量使用率>=99%（按行动维度） */}
-      {!isPendingCapacityUsage && capacityUsageWarnItems.length > 0 && (
-        <div className="mb-3">
-          <AlertBox
-            type="error"
-            message={
-              <div className="space-y-1 text-red-600">
-                {capacityUsageWarnItems.map((item) => (
-                  <div key={`${item.actionId.toString()}-${item.extensionAddress.toLowerCase()}`}>
-                    你的验证票不足！行动“ No.{item.actionId.toString()}{' '}
-                    {actionTitleByActionId.get(item.actionId.toString()) || `行动 #${item.actionId.toString()}`}”
-                    中最大容量使用率已达&nbsp;
-                    {formatPercentage(item.usagePercent)}；
                   </div>
                 ))}
               </div>

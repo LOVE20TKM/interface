@@ -38,11 +38,16 @@ import { ActionInfo } from '@/src/types/love20types';
 
 /**
  * 统一的激励数据格式
+ * 扩展行动返回 mintReward + burnReward，普通行动使用 reward 映射到 mintReward
  */
 export interface ActionReward {
   round: bigint;
-  reward: bigint;
-  isMinted: boolean;
+  /** 铸造激励（普通行动 reward 映射到此字段） */
+  mintReward: bigint;
+  /** 销毁激励（普通行动此值为 0） */
+  burnReward: bigint;
+  /** 是否已领取/铸造 */
+  claimed: boolean;
 }
 
 /**
@@ -148,11 +153,18 @@ export const useActionRewardsByRounds = ({
   });
 
   // 第4步：合并返回统一格式
-  const rewards = useMemo(() => {
+  const rewards = useMemo<ActionReward[]>(() => {
     if (isExtensionAction) {
+      // 扩展行动直接使用新格式
       return extensionRewards || [];
     }
-    return coreRewards || [];
+    // 普通行动：将旧格式映射到新格式
+    return (coreRewards || []).map((r) => ({
+      round: r.round,
+      mintReward: r.reward,
+      burnReward: BigInt(0),
+      claimed: r.isMinted,
+    }));
   }, [isExtensionAction, extensionRewards, coreRewards]);
 
   const isLoadingRewards = isExtensionAction ? isLoadingExtensionRewards : isLoadingCoreRewards;

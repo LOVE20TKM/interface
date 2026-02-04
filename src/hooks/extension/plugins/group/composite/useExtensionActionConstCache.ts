@@ -15,7 +15,7 @@ export interface ExtensionActionConst {
   joinTokenAddress: `0x${string}`;
   joinTokenSymbol: string | undefined;
   maxJoinAmountRatio: bigint; // 单个行动者最大参与代币占比（wei，1e28=100%）
-  maxVerifyCapacityFactor: bigint; // 验证容量系数（wei）
+  activationMinGovRatio: bigint; // 激活链群最小治理票比例（wei，1e18=100%）
   groupActivationStakeAmount: bigint; // 激活需质押代币数量
 }
 
@@ -64,7 +64,7 @@ export const useExtensionActionConstCache = ({
             joinTokenAddress: parsed.joinTokenAddress as `0x${string}`,
             joinTokenSymbol: parsed.joinTokenSymbol as string | undefined,
             maxJoinAmountRatio: BigInt(parsed.maxJoinAmountRatio || parsed.maxJoinAmountMultiplier || 0),
-            maxVerifyCapacityFactor: BigInt(parsed.maxVerifyCapacityFactor || parsed.verifyCapacityMultiplier || 0),
+            activationMinGovRatio: BigInt(parsed.activationMinGovRatio || 0),
             groupActivationStakeAmount: BigInt(parsed.groupActivationStakeAmount),
           };
         }
@@ -99,7 +99,7 @@ export const useExtensionActionConstCache = ({
       {
         address: extensionAddress,
         abi: ExtensionGroupActionAbi,
-        functionName: 'MAX_VERIFY_CAPACITY_FACTOR',
+        functionName: 'ACTIVATION_MIN_GOV_RATIO',
       },
       {
         address: extensionAddress,
@@ -154,7 +154,7 @@ export const useExtensionActionConstCache = ({
       joinTokenAddress: joinTokenAddress,
       joinTokenSymbol: undefined, // 需要单独查询
       maxJoinAmountRatio: safeToBigInt(contractData[2]?.result),
-      maxVerifyCapacityFactor: safeToBigInt(contractData[3]?.result),
+      activationMinGovRatio: safeToBigInt(contractData[3]?.result),
       groupActivationStakeAmount: safeToBigInt(contractData[4]?.result),
     };
   }, [contractData, cachedData, actionId]);
@@ -242,7 +242,7 @@ export const useExtensionActionConstCache = ({
         joinTokenAddress: constants.joinTokenAddress,
         joinTokenSymbol: constants.joinTokenSymbol,
         maxJoinAmountRatio: constants.maxJoinAmountRatio?.toString(),
-        maxVerifyCapacityFactor: constants.maxVerifyCapacityFactor?.toString(),
+        activationMinGovRatio: constants.activationMinGovRatio?.toString(),
         groupActivationStakeAmount: constants.groupActivationStakeAmount?.toString(),
         timestamp: Date.now(),
       };

@@ -37,18 +37,6 @@ export default function ExtensionFactoriesPage() {
       <main className="flex-grow container mx-auto px-4 py-6 max-w-4xl">
         <div className="space-y-4 mb-10">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">发起普通行动：</h2>
-          </div>
-          <div className="space-y-3 text-center">
-            <Link href={`/action/new/`}>
-              <Button variant="outline" size="default" className="w-1/2 text-secondary border-secondary">
-                <span className="text-secondary">发起行动 &gt;&gt;</span>
-              </Button>
-            </Link>
-          </div>
-        </div>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">发起扩展行动：</h2>
           </div>
           <div className="space-y-3">
@@ -77,6 +65,18 @@ export default function ExtensionFactoriesPage() {
                 </div>
               );
             })}
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">发起普通行动：</h2>
+          </div>
+          <div className="space-y-3 text-center">
+            <Link href={`/action/new/`}>
+              <Button variant="outline" size="default" className="w-1/2 text-secondary border-secondary">
+                <span className="text-secondary">发起行动 &gt;&gt;</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </main>

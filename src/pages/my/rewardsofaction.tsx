@@ -143,8 +143,8 @@ const ActRewardsPage: React.FC = () => {
   // 处理铸造成功（由子组件回调）
   const handleMintSuccess = useCallback(
     (round: bigint) => {
-      // 更新本地状态
-      setRewardList((prev) => prev.map((item) => (item.round === round ? { ...item, isMinted: true } : item)));
+      // 更新本地状态（扩展行动使用 claimed，普通行动使用兼容的 claimed 字段）
+      setRewardList((prev) => prev.map((item) => (item.round === round ? { ...item, claimed: true } : item)));
       // 刷新底层数据，确保缓存更新
       if (refetchRewards) {
         refetchRewards();

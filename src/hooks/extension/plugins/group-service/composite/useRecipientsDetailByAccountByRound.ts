@@ -22,10 +22,14 @@
 import { useMemo } from 'react';
 import { useReadContract, useReadContracts } from 'wagmi';
 import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
+import { GroupRecipientsAbi } from '@/src/abis/GroupRecipients';
 import { ActionBaseInfo } from '@/src/types/love20types';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 import { safeToBigInt } from '@/src/lib/clientUtils';
+
+// GroupRecipients 是全局合约，使用环境变量配置地址
+const GROUP_RECIPIENTS_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_RECIPIENTS as `0x${string}`;
 
 // ==================== 类型定义 ====================
 
@@ -108,7 +112,7 @@ export function useRecipientsDetailByAccountByRound({
   round,
 }: UseRecipientsDetailByAccountByRoundParams): UseRecipientsDetailByAccountByRoundResult {
   // ==========================================
-  // 步骤1：获取有二次分配的行动ID列表
+  // 步骤1：获取有二次分配的行动ID列表（使用 GroupRecipients 合约）
   // ==========================================
 
   const {
@@ -116,12 +120,12 @@ export function useRecipientsDetailByAccountByRound({
     isPending: isActionIdsPending,
     error: actionIdsError,
   } = useReadContract({
-    address: extensionAddress,
-    abi: ExtensionGroupServiceAbi,
+    address: GROUP_RECIPIENTS_ADDRESS,
+    abi: GroupRecipientsAbi,
     functionName: 'actionIdsWithRecipients',
-    args: account && !!round ? [account, round] : undefined,
+    args: account && tokenAddress && !!round ? [account, tokenAddress, round] : undefined,
     query: {
-      enabled: !!extensionAddress && !!account && !!round,
+      enabled: !!GROUP_RECIPIENTS_ADDRESS && !!account && !!tokenAddress && !!round,
     },
   });
 
@@ -133,21 +137,21 @@ export function useRecipientsDetailByAccountByRound({
   }, [actionIdsData]);
 
   // ==========================================
-  // 步骤2：获取每个行动的有二次分配的链群NFT列表
+  // 步骤2：获取每个行动的有二次分配的链群NFT列表（使用 GroupRecipients 合约）
   // ==========================================
 
   const groupIdsContracts = useMemo(() => {
-    if (!extensionAddress || !account || round === undefined || actionIds.length === 0) {
+    if (!GROUP_RECIPIENTS_ADDRESS || !account || !tokenAddress || round === undefined || actionIds.length === 0) {
       return [];
     }
 
     return actionIds.map((actionId) => ({
-      address: extensionAddress,
-      abi: ExtensionGroupServiceAbi,
+      address: GROUP_RECIPIENTS_ADDRESS,
+      abi: GroupRecipientsAbi,
       functionName: 'groupIdsByActionIdWithRecipients' as const,
-      args: [account, actionId, round] as const,
+      args: [account, tokenAddress, actionId, round] as const,
     }));
-  }, [extensionAddress, account, round, actionIds]);
+  }, [account, tokenAddress, round, actionIds]);
 
   const {
     data: groupIdsData,
@@ -156,7 +160,7 @@ export function useRecipientsDetailByAccountByRound({
   } = useReadContracts({
     contracts: groupIdsContracts,
     query: {
-      enabled: !!extensionAddress && !!account && !!round && groupIdsContracts.length > 0,
+      enabled: !!GROUP_RECIPIENTS_ADDRESS && !!account && !!tokenAddress && !!round && groupIdsContracts.length > 0,
     },
   });
 

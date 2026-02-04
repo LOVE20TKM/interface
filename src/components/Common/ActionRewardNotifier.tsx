@@ -112,11 +112,12 @@ const ActionRewardNotifier: React.FC = () => {
   });
 
   // 判断扩展行动是否有未铸造的激励
+  // 扩展激励使用 mintReward + burnReward，claimed 表示是否已领取
   const hasUnmintedExtensionReward = useMemo(() => {
     if (!shouldTriggerCheck || extensionRewardsMap.size === 0) return false;
 
     for (const rewards of extensionRewardsMap.values()) {
-      const hasUnminted = rewards.some((r) => !r.isMinted && r.reward > BigInt(0));
+      const hasUnminted = rewards.some((r) => !r.claimed && r.mintReward > BigInt(0));
       if (hasUnminted) return true;
     }
     return false;

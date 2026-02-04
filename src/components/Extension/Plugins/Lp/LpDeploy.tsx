@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { isAddress, parseEther, parseEventLogs } from 'viem';
+import { isAddress, parseEther, parseUnits, parseEventLogs } from 'viem';
 import { useWaitForTransactionReceipt } from 'wagmi';
 import { z } from 'zod';
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -39,15 +39,15 @@ const formSchema = z.object({
       },
       { message: '治理比率乘数必须是非负整数' },
     ),
-  minGovVotes: z
+  minGovRatio: z
     .string()
-    .min(1, { message: '请输入最小治理票数' })
+    .min(1, { message: '请输入最小治理票占比' })
     .refine(
       (val) => {
         const num = parseFloat(val);
-        return !isNaN(num) && num >= 0;
+        return !isNaN(num) && num >= 0 && num <= 100;
       },
-      { message: '最小治理票数必须是非负数' },
+      { message: '最小治理票占比必须在 0% ~ 100% 之间' },
     ),
 });
 
@@ -67,7 +67,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
     defaultValues: {
       joinTokenAddress: '',
       govRatioMultiplier: '',
-      minGovVotes: '',
+      minGovRatio: '',
     },
     mode: 'onChange', // 实时验证
   });
@@ -175,14 +175,15 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   const handleDeploy = async (values: FormValues) => {
     try {
       setApprovalStep('deploying');
-      // 将 minGovVotes 从 eth 转换为 wei
-      const minGovVotesWei = parseEther(values.minGovVotes);
+      // 最小治理票占比：百分比 -> wei (1e18 = 100%)
+      // 公式：百分比 × 1e18 / 100 = wei
+      const minGovRatioWei = (parseUnits(values.minGovRatio, 18) * BigInt(1)) / BigInt(100);
 
       await createExtension(
         tokenAddress,
         values.joinTokenAddress as `0x${string}`,
         BigInt(values.govRatioMultiplier),
-        minGovVotesWei,
+        minGovRatioWei,
       );
     } catch (error: any) {
       console.error('部署扩展失败:', error);
@@ -247,31 +248,38 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                       />
                     </FormControl>
                     <FormDescription className="text-sm text-greyscale-500">
-                      LP占比超过 (治理票占比 × 治理比率乘数) 的部分，不再有收益
+                      LP占比超过 (治理票占比 × 治理比率乘数) 的部分，不再有铸币激励
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* 最小治理票数 */}
+              {/* 最小治理票占比 */}
               <FormField
                 control={form.control}
-                name="minGovVotes"
+                name="minGovRatio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>3. 加入行动所需最小治理票数</FormLabel>
+                    <FormLabel>3. 加入行动所需最小治理票占比</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="比如 10,000"
-                        disabled={approvalStep !== 'idle'}
-                        min="0"
-                        step="0.000001"
-                        className="max-w-40 md:max-w-xs"
-                        {...field}
-                      />
+                      <div className="flex items-center gap-2 max-w-40 md:max-w-xs">
+                        <Input
+                          type="number"
+                          placeholder="例如 0.1"
+                          disabled={approvalStep !== 'idle'}
+                          min="0"
+                          max="100"
+                          step="0.001"
+                          className="flex-1"
+                          {...field}
+                        />
+                        <span className="text-greyscale-500 text-base whitespace-nowrap">%</span>
+                      </div>
                     </FormControl>
+                    <FormDescription className="text-sm text-greyscale-500">
+                      用户治理票占比低于此值时，无法加入行动
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

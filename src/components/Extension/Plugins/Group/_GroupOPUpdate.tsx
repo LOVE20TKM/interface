@@ -32,11 +32,7 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useFormatLPSymbol } from '@/src/hooks/extension/base/composite/useFormatLPSymbol';
 import { useExtensionActionParam } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionParam';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
-import {
-  useUpdateGroupInfo,
-  useMaxVerifyCapacityByOwner,
-} from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
-import { useAccount } from 'wagmi';
+import { useUpdateGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
@@ -63,7 +59,6 @@ interface GroupOPUpdateProps {
 const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, extensionAddress, groupId }) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
-  const { address: account } = useAccount();
 
   // 获取当前加入轮次
   const { currentRound } = useCurrentRound();
@@ -92,13 +87,6 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     tokenSymbol: actionParams?.joinTokenSymbol,
     enabled: !!actionParams?.joinTokenAddress,
   });
-
-  // 获取服务者的最大容量上限
-  const {
-    maxVerifyCapacity,
-    isPending: isPendingMaxCapacity,
-    error: errorMaxCapacity,
-  } = useMaxVerifyCapacityByOwner(extensionAddress, account as `0x${string}`);
 
   // 表单验证
   const formSchema = useMemo(
@@ -293,11 +281,10 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   useEffect(() => {
     if (errorDetail) handleError(errorDetail);
     if (errorParams) handleError(errorParams);
-    if (errorMaxCapacity) handleError(errorMaxCapacity);
     if (errorUpdate) handleError(errorUpdate);
-  }, [errorDetail, errorParams, errorMaxCapacity, errorUpdate, handleError]);
+  }, [errorDetail, errorParams, errorUpdate, handleError]);
 
-  if (isPendingDetail || isPendingParams || isPendingMaxCapacity || isPendingFormattedSymbol) {
+  if (isPendingDetail || isPendingParams || isPendingFormattedSymbol) {
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
@@ -336,11 +323,6 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                   <FormControl>
                     <Input placeholder="0 为不限制" className="!ring-secondary-foreground" {...field} />
                   </FormControl>
-                  <FormDescription className="text-xs">
-                    <span className="flex items-center gap-1">
-                      您的最大可验证容量为：{formatTokenAmount(maxVerifyCapacity || BigInt(0))}{' '}
-                    </span>
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -451,7 +433,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
 
         {/* 小贴士（算法 + 数值） */}
         <_GroupActionTips
-          maxVerifyCapacityFactor={actionParams?.maxVerifyCapacityFactor}
+          activationMinGovRatio={actionParams?.activationMinGovRatio}
           maxJoinAmountRatio={actionParams?.maxJoinAmountRatio}
           joinMaxAmount={actionParams?.joinMaxAmount}
           groupActivationStakeAmount={actionParams?.groupActivationStakeAmount}

@@ -26,7 +26,7 @@ export const ExtensionLpAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "minGovVotes_",
+        "name": "minGovRatio_",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -87,7 +87,7 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "function",
-    "name": "MIN_GOV_VOTES",
+    "name": "MIN_GOV_RATIO",
     "inputs": [],
     "outputs": [
       {
@@ -186,7 +186,12 @@ export const ExtensionLpAbi = [
     ],
     "outputs": [
       {
-        "name": "amount",
+        "name": "mintReward",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnReward",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -210,7 +215,12 @@ export const ExtensionLpAbi = [
         "internalType": "uint256[]"
       },
       {
-        "name": "rewards",
+        "name": "mintRewards",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "burnRewards",
         "type": "uint256[]",
         "internalType": "uint256[]"
       }
@@ -444,35 +454,6 @@ export const ExtensionLpAbi = [
     ],
     "outputs": [
       {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "claimed",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "rewardInfoByAccount",
-    "inputs": [
-      {
-        "name": "round",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
         "name": "mintReward",
         "type": "uint256",
         "internalType": "uint256"
@@ -483,49 +464,12 @@ export const ExtensionLpAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "isClaimed",
+        "name": "claimed",
         "type": "bool",
         "internalType": "bool"
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "event",
-    "name": "BurnReward",
-    "inputs": [
-      {
-        "name": "tokenAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "round",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
   },
   {
     "type": "event",
@@ -587,7 +531,13 @@ export const ExtensionLpAbi = [
         "internalType": "address"
       },
       {
-        "name": "amount",
+        "name": "mintAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "burnAmount",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -700,7 +650,7 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "error",
-    "name": "InsufficientGovVotes",
+    "name": "InsufficientGovRatio",
     "inputs": []
   },
   {
@@ -759,5 +709,10 @@ export const ExtensionLpAbi = [
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "ZeroTotalGovVotes",
+    "inputs": []
   }
 ] as const satisfies Abi;

@@ -101,10 +101,12 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
     );
   }
 
-  // 按激励金额排序
+  // 按激励金额排序（mintReward + burnReward）
   const sortedParticipants = [...participants].sort((a, b) => {
-    if (a.reward > b.reward) return -1;
-    if (a.reward < b.reward) return 1;
+    const totalA = a.mintReward + a.burnReward;
+    const totalB = b.mintReward + b.burnReward;
+    if (totalA > totalB) return -1;
+    if (totalA < totalB) return 1;
     return 0;
   });
 
@@ -172,9 +174,9 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
                   </td>
                   <td className="px-1 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <span>{formatTokenAmount(participant.reward)}</span>
+                      <span>{formatTokenAmount(participant.mintReward)}</span>
                       {/* 只有当用户有激励时才显示帮助图标 */}
-                      {(participant.reward > BigInt(0) || participant.burnReward > BigInt(0)) && (
+                      {(participant.mintReward > BigInt(0) || participant.burnReward > BigInt(0)) && (
                         <LpAccountRewardDetailModal
                           extensionAddress={extensionAddress}
                           tokenAddress={token?.address as `0x${string}`}

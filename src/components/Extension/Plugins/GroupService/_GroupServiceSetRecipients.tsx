@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useContext, useEffect, useRef, useMemo, useCallback } from 'react';
+import { TokenContext } from '@/src/contexts/TokenContext';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,11 +14,11 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+import { usePrecision } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 import {
   useSetRecipients,
-  usePrecision,
-  useMaxRecipients,
-} from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
+  useDefaultMaxRecipients,
+} from '@/src/hooks/extension/plugins/group-service/contracts/useGroupRecipients';
 import { useContractError } from '@/src/errors/useContractError';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { isValidEthAddress, normalizeAddressInput } from '@/src/lib/addressUtils';
@@ -66,10 +67,14 @@ export default function _GroupServiceSetRecipients({
   onOpenChange,
   onSuccess,
 }: _GroupServiceSetRecipientsProps) {
-  // Contracts
-  const { setRecipients, isPending, isConfirming, isConfirmed, writeError } = useSetRecipients(extensionAddress);
+  // Token context
+  const { token } = useContext(TokenContext) || {};
+  const tokenAddress = token?.address as `0x${string}` | undefined;
+
+  // Contracts - setRecipients 和 maxRecipients 使用 GroupRecipients 合约
+  const { setRecipients, isPending, isConfirming, isConfirmed, writeError } = useSetRecipients();
   const { precision } = usePrecision(extensionAddress);
-  const { maxRecipients } = useMaxRecipients(extensionAddress);
+  const { maxRecipients } = useDefaultMaxRecipients();
 
   // 用户输入的是百分比，最大值是 100
   // basisPointsBase (1e18) 只在转换为 wei 时使用
@@ -217,8 +222,12 @@ export default function _GroupServiceSetRecipients({
       return;
     }
 
-    // Call contract with actionId and groupId
-    await setRecipients(actionId, groupId, addrs, ratios);
+    // Call contract with tokenAddress, actionId and groupId
+    if (!tokenAddress) {
+      form.setError('root', { message: '无法获取 Token 地址，请刷新页面重试' });
+      return;
+    }
+    await setRecipients(tokenAddress, actionId, groupId, addrs, ratios);
   };
 
   // 实时计算总百分比（强制转换为数字类型，避免字符串拼接）
