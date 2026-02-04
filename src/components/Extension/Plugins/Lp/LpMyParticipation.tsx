@@ -50,7 +50,8 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
     rewardRatio,
     userGovVotes,
     totalGovVotes,
-    minGovVotes,
+    minGovRatio,
+    userGovRatio,
     lpRatio,
     govRatioMultiplier,
     joinedBlock,
@@ -145,13 +146,14 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
             totalGovVotes={totalGovVotes}
           />
 
-          {/* 治理票数不足的警告 */}
-          {userGovVotes < minGovVotes && (
+          {/* 治理票占比不足的警告 */}
+          {userGovRatio < minGovRatio && (
             <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-3 w-full">
-              <div className="font-medium">⚠️ 治理票数不足</div>
+              <div className="font-medium">⚠️ 治理票占比不足</div>
               <div className="mt-1">
-                你的治理票数 <span className="font-semibold">{formatTokenAmount(userGovVotes)}</span> 低于最小门槛{' '}
-                <span className="font-semibold">{formatTokenAmount(minGovVotes)}</span>，无法获得得分和激励。
+                你的治理票占比{' '}
+                <span className="font-semibold">{formatPercentage((Number(userGovRatio) / 1e18) * 100)}</span> 低于最小门槛{' '}
+                <span className="font-semibold">{formatPercentage((Number(minGovRatio) / 1e18) * 100)}</span>，无法获得得分和激励。
               </div>
               <div className="text-xs text-amber-600 mt-1">请质押更多代币以增加治理票数。</div>
             </div>
