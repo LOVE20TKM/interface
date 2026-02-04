@@ -29,19 +29,6 @@ export const useDefaultMaxRecipients = () => {
 };
 
 /**
- * Hook for GROUP_ADDRESS - 获取组地址
- */
-export const useGroupAddress = () => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: GroupRecipientsAbi,
-    functionName: 'GROUP_ADDRESS',
-  });
-
-  return { groupAddress: data as `0x${string}` | undefined, isPending, error };
-};
-
-/**
  * Hook for PRECISION - 获取精度常量
  */
 export const usePrecision = () => {
@@ -52,19 +39,6 @@ export const usePrecision = () => {
   });
 
   return { precision: safeToBigInt(data), isPending, error };
-};
-
-/**
- * Hook for VERIFY_ADDRESS - 获取验证地址
- */
-export const useVerifyAddress = () => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: GroupRecipientsAbi,
-    functionName: 'VERIFY_ADDRESS',
-  });
-
-  return { verifyAddress: data as `0x${string}` | undefined, isPending, error };
 };
 
 // =====================
