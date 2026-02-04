@@ -348,23 +348,6 @@ export const useOriginScoreByAccount = (extensionAddress: `0x${string}`, round: 
   return { originScore: safeToBigInt(data), isPending, error };
 };
 
-/**
- * Hook for capacityDecayRate - 获取指定轮次和组ID的容量削减
- */
-export const useCapacityDecayRate = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: GroupVerifyAbi,
-    functionName: 'capacityDecayRateByGroupId',
-    args: [extensionAddress, round, groupId],
-    query: {
-      enabled: !!extensionAddress && !!round && groupId !== undefined,
-    },
-  });
-
-  return { capacityDecayRate: safeToBigInt(data), isPending, error };
-};
-
 // =====================
 // === 读取 Hooks - 不信任投票相关 ===
 // =====================
