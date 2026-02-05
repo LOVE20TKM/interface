@@ -129,9 +129,8 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
         </div>
 
         {/* 溢出项 */}
-        <div className="bg-gray-50 p-2 rounded-lg space-y-3">
+        <div className="bg-gray-50 p-2 rounded-lg space-y-2">
           <div className="font-semibold text-base text-gray-900">溢出项：</div>
-
           <div className="space-y-2 text-sm text-gray-600">
             {/* 治理票不足溢出 */}
             <div>
@@ -147,7 +146,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                     LP占比(
                     {formatPercentage(data.lpRatioPercent, 6)})
                     <br />
-                    <span className="inline-block text-gray-700 font-medium mt-2">可铸造激励，降级为：</span>
+                    <span className="inline-block text-gray-700 font-medium mt-1">可铸造激励，降级为：</span>
                     <br />
                     &nbsp;&nbsp;&nbsp;行动激励 × 治理票占比 × 治理票占比倍数
                   </div>
@@ -166,7 +165,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                   <div className="font-medium">
                     <span className="text-red-600">2.首轮区块不足溢出：</span>
                   </div>
-                  <div>
+                  <div className="leading-relaxed mt-1">
                     &nbsp;&nbsp;&nbsp;首阶段区块数比例
                     <br />= (该阶段结束区块 - 当轮最后加入区块 + 1) / 阶段总区块数
                     <br />= ({data.roundEndBlock.toString()} - {data.lastJoinedBlockByRound.toString()} + 1) /{' '}
@@ -174,7 +173,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                     {/* <br />= {data.blocksInRound.toString()} / {data.phaseBlocks.toString()} */}
                     <br />= <span className="text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>
                     <br />
-                    <span className="inline-block text-gray-700 font-medium mt-2">可铸造激励，降级为：</span>
+                    <span className="inline-block text-gray-700 font-medium mt-1">可铸造激励，降级为：</span>
                     <br />
                     &nbsp;&nbsp;&nbsp;原激励 × 首阶段区块数比例
                     {/* <span className="font-medium text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>， */}
@@ -281,7 +280,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
           </div>
           <DialogContent className="sm:max-w-[500px]">
             <DialogTitle className="text-lg font-semibold">激励计算明细</DialogTitle>
-            <div className="pt-2 pb-4 max-h-[70vh] overflow-y-auto">
+            <div className="pb-4 max-h-[70vh] overflow-y-auto">
               <InfoContent />
             </div>
           </DialogContent>
@@ -298,7 +297,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
             <DrawerHeader>
               <DrawerTitle className="text-lg font-semibold">激励计算明细</DrawerTitle>
             </DrawerHeader>
-            <div className="px-4 pb-8 mb-10 max-h-[70vh] overflow-y-auto">
+            <div className="px-3 pb-8 mb-10 max-h-[70vh] overflow-y-auto">
               <InfoContent />
             </div>
           </DrawerContent>
