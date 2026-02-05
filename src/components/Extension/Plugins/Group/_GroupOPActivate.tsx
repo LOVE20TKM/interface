@@ -450,8 +450,9 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
           <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
             <div className="font-medium">⚠️ 治理票占比不足</div>
             <div className="mt-1">
-              你的治理票占比 <span className="font-semibold">{formatPercentage(Number(userGovRatio) / 1e18)}</span>{' '}
-              低于最小限制 <span className="font-semibold">{formatPercentage(Number(minGovRatio) / 1e18)}</span>
+              你的治理票占比{' '}
+              <span className="font-semibold">{formatPercentage((Number(userGovRatio) * 100) / 1e18)}</span>{' '}
+              低于最小限制 <span className="font-semibold">{formatPercentage((Number(minGovRatio) * 100) / 1e18)}</span>
               ，无法激活链群。
             </div>
             <div className="text-xs text-red-600 mt-1">您可以增加治理票数，再尝试激活链群。</div>

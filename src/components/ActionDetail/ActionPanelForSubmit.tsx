@@ -17,7 +17,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import AlertBox from '@/src/components/Common/AlertBox';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import { formatTokenAmount } from '@/src/lib/format';
+import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 
 interface ActionPanelForJoinProps {
   actionId: bigint;
@@ -97,9 +97,7 @@ const ActionPanelForSubmit: React.FC<ActionPanelForJoinProps> = ({ actionId, sub
             type="error"
             message={`有效治理票，须达到总治理票的${(SUBMIT_MIN_PERCENTAGE * 100).toFixed(
               1,
-            )}%，才能新建、推举行动（您当前有效治理票为${formatTokenAmount(validGovVotes)}，占比${(
-              accountPercentage * 100
-            ).toFixed(2)}%）`}
+            )}%，才能新建、推举行动（您当前有效治理票占比${formatPercentage(accountPercentage * 100, 3)}%）`}
             className="mb-4"
           />
         )}

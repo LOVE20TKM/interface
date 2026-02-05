@@ -6,16 +6,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { isAddress, parseEther, parseUnits, parseEventLogs } from 'viem';
-import { useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWaitForTransactionReceipt } from 'wagmi';
 import { z } from 'zod';
 import { TokenContext } from '@/src/contexts/TokenContext';
+import { useError } from '@/src/contexts/ErrorContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLpFactory';
 import { ExtensionLpFactoryAbi } from '@/src/abis/ExtensionLpFactory';
-import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import { useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 
@@ -60,6 +61,13 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
   const context = useContext(TokenContext);
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
   const tokenSymbol = context?.token?.symbol || '';
+
+  // 获取当前连接的账户地址
+  const { address: accountAddress } = useAccount();
+  // 获取错误上下文
+  const { setError } = useError();
+  // 获取用户代币余额
+  const { balance: tokenBalance } = useBalanceOf(tokenAddress, accountAddress as `0x${string}`, !!accountAddress);
 
   // 表单实例
   const form = useForm<FormValues>({
@@ -148,6 +156,16 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
       setApprovalStep('idle');
     }
   }, [approveError]);
+
+  // 检查用户余额是否足够（需要1个token）
+  useEffect(() => {
+    if (tokenBalance !== undefined && tokenBalance < parseEther('1')) {
+      setError({
+        name: '代币余额不足',
+        message: `部署扩展合约，需要1个${tokenSymbol}，请先充值`,
+      });
+    }
+  }, [tokenBalance, tokenSymbol, setError]);
 
   /**
    * 步骤1: 授权代币

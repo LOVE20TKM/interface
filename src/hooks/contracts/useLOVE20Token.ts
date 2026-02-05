@@ -33,7 +33,7 @@ export const useAllowance = (
     },
   });
 
-  return { allowance: data ? safeToBigInt(data) : undefined, isPending, error, refetch };
+  return { allowance: data !== undefined ? safeToBigInt(data) : undefined, isPending, error, refetch };
 };
 
 /**
@@ -51,7 +51,7 @@ export const useBalanceOf = (token: `0x${string}`, account: `0x${string}`, flag:
     },
   });
 
-  return { balance: data ? safeToBigInt(data) : undefined, isPending, error, refetch };
+  return { balance: data !== undefined ? safeToBigInt(data) : undefined, isPending, error, refetch };
 };
 
 /**
@@ -85,7 +85,7 @@ export const useMaxSupply = (token: `0x${string}`) => {
     },
   });
 
-  return { maxSupply: data ? safeToBigInt(data) : undefined, isPending, error };
+  return { maxSupply: data !== undefined ? safeToBigInt(data) : undefined, isPending, error };
 };
 
 /**
@@ -119,7 +119,7 @@ export const useParentPool = (token: `0x${string}`) => {
     },
   });
 
-  return { parentPool: data ? safeToBigInt(data) : undefined, isPending, error };
+  return { parentPool: data !== undefined ? safeToBigInt(data) : undefined, isPending, error };
 };
 
 /**
@@ -170,7 +170,7 @@ export const useTotalSupply = (token: `0x${string}`) => {
     },
   });
 
-  return { totalSupply: data ? safeToBigInt(data) : undefined, isPending, error };
+  return { totalSupply: data !== undefined ? safeToBigInt(data) : undefined, isPending, error };
 };
 
 /* =======================

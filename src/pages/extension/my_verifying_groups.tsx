@@ -78,9 +78,6 @@ const MyVerifyingGroupsPage: React.FC = () => {
     round: joinRound,
   });
 
-  // 使用 votedGroups 作为 groups（保持向后兼容）
-  const groups = votedGroups;
-
   // 将 VotedGroups 转换为以 (actionId, groupId) 为key的Map，用于快速查找
   const votedGroupsMap = useMemo(() => {
     const map = new Map<string, (typeof votedGroups)[0]>();

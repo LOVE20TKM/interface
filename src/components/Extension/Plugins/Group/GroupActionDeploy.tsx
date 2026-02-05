@@ -11,7 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { isAddress, parseEther, parseUnits, parseEventLogs } from 'viem';
-import { useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWaitForTransactionReceipt } from 'wagmi';
 import { z } from 'zod';
 
 // UI 组件
@@ -22,9 +22,10 @@ import { Input } from '@/components/ui/input';
 
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
+import { useError } from '@/src/contexts/ErrorContext';
 
 // hooks
-import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import { useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
 import { useCreateExtension } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupActionFactory';
 
 // ABI
@@ -85,6 +86,13 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
   const context = useContext(TokenContext);
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
   const tokenSymbol = context?.token?.symbol || '';
+
+  // 获取当前连接的账户地址
+  const { address: accountAddress } = useAccount();
+  // 获取错误上下文
+  const { setError } = useError();
+  // 获取用户代币余额
+  const { balance: tokenBalance } = useBalanceOf(tokenAddress, accountAddress as `0x${string}`, !!accountAddress);
 
   // 表单实例
   const form = useForm<FormValues>({
@@ -181,6 +189,16 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
       setApprovalStep('idle');
     }
   }, [approveError]);
+
+  // 检查用户余额是否足够（需要1个token）
+  useEffect(() => {
+    if (tokenBalance !== undefined && tokenBalance < parseEther('1')) {
+      setError({
+        name: '代币余额不足',
+        message: `部署扩展合约，需要1个${tokenSymbol}，请先充值`,
+      });
+    }
+  }, [tokenBalance, tokenSymbol, setError]);
 
   /**
    * 步骤1: 授权代币

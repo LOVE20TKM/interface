@@ -31,7 +31,7 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 
 // others
-import { formatTokenAmount, parseUnits } from '@/src/lib/format';
+import { formatTokenAmount, parseUnits, formatPercentage } from '@/src/lib/format';
 
 // 获取环境变量
 const MAX_VERIFICATION_KEY_BYTES = Number(process.env.NEXT_PUBLIC_MAX_VERIFICATION_KEY_LENGTH || '0');
@@ -198,7 +198,7 @@ export default function NewAction() {
       const percentage = (SUBMIT_PERCENTAGE * 100).toFixed(2);
       form.setError('actionName', {
         type: 'manual',
-        message: `有效治理票，须达到总治理票的${percentage}%，才能新建、推举行动（您当前有效治理票为${validGovVotes}，占比${(
+        message: `有效治理票，须达到总治理票的${percentage}%，才能新建、推举行动（您当前有效治理票占比${(
           accountPercentage * 100
         ).toFixed(2)}%）`,
       });
@@ -250,11 +250,10 @@ export default function NewAction() {
         {!hasEnoughVotes && validGovVotes !== undefined && totalGovVotes && (
           <AlertBox
             type="error"
-            message={`有效治理票，须达到总治理票的${(SUBMIT_PERCENTAGE * 100).toFixed(
+            message={`有效治理票，须达到总治理票的${formatPercentage(
+              SUBMIT_PERCENTAGE * 100,
               1,
-            )}%，才能新建、推举行动（您当前有效治理票为${formatTokenAmount(validGovVotes)}，占比${(
-              accountPercentage * 100
-            ).toFixed(2)}%））`}
+            )}，才能新建、推举行动（您当前有效治理票占比${formatPercentage(accountPercentage * 100, 3)}）`}
             className="mb-4"
           />
         )}
