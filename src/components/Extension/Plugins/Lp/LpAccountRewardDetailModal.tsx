@@ -167,7 +167,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                     <span className="text-red-600">2.首轮区块不足溢出：</span>
                   </div>
                   <div>
-                    &nbsp;&nbsp;&nbsp;首轮区块数比例
+                    &nbsp;&nbsp;&nbsp;首阶段区块数比例
                     <br />= (该阶段结束区块 - 加入区块 + 1) / 阶段总区块数
                     <br />= ({data.roundEndBlock.toString()} - {data.lastJoinedBlockByRound.toString()} + 1) /{' '}
                     {data.phaseBlocks.toString()}
@@ -176,7 +176,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                     <br />
                     可领取激励将降为：
                     <br />
-                    &nbsp;&nbsp;&nbsp;原激励 × 首轮区块数比例
+                    &nbsp;&nbsp;&nbsp;原激励 × 首阶段区块数比例
                     {/* <span className="font-medium text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>， */}
                   </div>
                 </>
@@ -210,14 +210,14 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
               ) : onlyBlockDeduction ? (
                 // 只有首轮区块不足溢出
                 <>
-                  = 锁定激励 × 首轮区块数比例
+                  = 锁定激励 × 首阶段区块数比例
                   <br />= {formatTokenAmount(lockedReward)} × {formatPercentage(data.blockRatioPercent, 6)}
                   <br />= <span className="text-secondary">{formatTokenAmount(data.userReward)}</span>
                 </>
               ) : (
                 // 两者都有溢出
                 <>
-                  = 行动激励 × 治理票占比 × 治理票占比倍数 × 首轮区块数比例
+                  = 行动激励 × 治理票占比 × 治理票占比倍数 × 首阶段区块数比例
                   <br />= {formatTokenAmount(data.totalReward)} ×{' '}
                   <span className="text-secondary">{formatPercentage(govEffectiveRatioPercent, 6)}</span> ×{' '}
                   <span className="text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>
@@ -245,7 +245,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
         </div>
 
         {/* 底部溢出项说明 */}
-        <div className="bg-gray-50 p-3 rounded text-gray-600">
+        {/* <div className="bg-gray-50 p-3 rounded text-gray-600">
           <div className="font-semibold mb-4 flex items-center gap-2">
             <Info className="h-4 w-4 text-gray-400" />
             溢出项说明：
@@ -256,20 +256,17 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
               <div className="ml-1 mt-2 space-y-1">
                 <div>• 必须满足 “治理票占比 × 治理票占比倍数 ≥ LP占比”，才可铸造 100%锁定激励</div>
                 <div>• 否则 “实际激励 = 行动激励 × 治理票占比 × 治理票占比倍数”，溢出的锁定激励会被销毁</div>
-                {/* {hasGovLimit && (
-                  <div className="text-gray-500 mt-1">（当前治理票占比倍数为 {Number(data.govRatioMultiplier)}）</div>
-                )} */}
               </div>
             </div>
             <div>
               <div className="font-medium">2. 首轮区块不足溢出：</div>
               <div className="ml-1 mt-2 space-y-1">
-                <div>• 必须完整待够1轮，才可以获得这个轮次的 100%激励</div>
-                <div>• 在加入首轮，最后一次加入前的当轮区块没有激励</div>
+                <div>• 必须完整待够1个加入阶段，才可以获得这个轮次的 100%激励</div>
+                <div>• 在加入的阶段，最后一次加入前的当阶段区块没有激励</div>
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     );
   };
