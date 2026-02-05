@@ -93,7 +93,7 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
   const ratioPercentageDisplay = formatPercentage(Number(maxJoinAmountRatio) / Number(RATIO_DENOMINATOR));
 
   // 激活最小治理票比例显示
-  const minGovRatioDisplay = formatPercentage(Number(activationMinGovRatio) / 1e18);
+  const minGovRatioDisplay = formatPercentage(Number(activationMinGovRatio) / Number(RATIO_DENOMINATOR));
 
   return (
     <div className="mt-6 bg-gray-50 rounded-lg p-4">
