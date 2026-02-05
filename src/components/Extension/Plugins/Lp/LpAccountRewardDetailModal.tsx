@@ -115,7 +115,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
     const onlyBlockDeduction = !hasGovDeduction && hasBlockDeduction;
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-2">
         {/* 锁定激励 */}
         <div className="space-y-2 text-base">
           <div className="space-y-1">
@@ -129,71 +129,68 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
         </div>
 
         {/* 溢出项 */}
-        <div className="space-y-4 text-sm text-gray-600">
-          {/* 治理票不足溢出 */}
-          <div className="space-y-1">
-            <div className="font-medium">
-              <span className="text-red-600">治理票不足溢出：</span>
-            </div>
-            <div className="leading-relaxed">
+        <div className="bg-gray-50 p-2 rounded-lg space-y-3">
+          <div className="font-semibold text-sm text-gray-700">溢出项</div>
+
+          <div className="space-y-2 text-sm text-gray-600">
+            {/* 治理票不足溢出 */}
+            <div className="space-y-1">
               {hasGovShortage && hasGovLimit ? (
                 <>
-                  &nbsp;&nbsp;&nbsp;治理票占比 × 治理票占比倍数
-                  <br />= {formatPercentage(data.govRatioPercent, 6)} × {Number(data.govRatioMultiplier)}
-                  <br />= <span className="text-secondary">{formatPercentage(govEffectiveRatioPercent, 6)}</span> &lt;
-                  LP占比(
-                  {formatPercentage(data.lpRatioPercent, 6)})
-                  <br />
-                  可领取激励将降为：
-                  <br />
-                  &nbsp;&nbsp;&nbsp;行动激励 × 治理票占比 × 治理票占比倍数
+                  <div className="font-medium">
+                    <span className="text-red-600">1.治理票不足溢出：</span>
+                  </div>
+                  <div className="leading-relaxed">
+                    &nbsp;&nbsp;&nbsp;治理票占比 × 治理票占比倍数
+                    <br />= {formatPercentage(data.govRatioPercent, 6)} × {Number(data.govRatioMultiplier)}
+                    <br />= <span className="text-secondary">{formatPercentage(govEffectiveRatioPercent, 6)}</span> &lt;
+                    LP占比(
+                    {formatPercentage(data.lpRatioPercent, 6)})
+                    <br />
+                    可领取激励将降为：
+                    <br />
+                    &nbsp;&nbsp;&nbsp;行动激励 × 治理票占比 × 治理票占比倍数
+                  </div>
                 </>
               ) : (
-                <>
-                  <span className="text-green-600">治理票充足，无溢出</span>
-                  {/* {hasGovLimit && (
-                    <>
-                      <br />
-                      治理票占比 × 治理票占比倍数
-                      <br />= {formatPercentage(data.govRatioPercent)} × {Number(data.govRatioMultiplier)} ={' '}
-                      {formatPercentage(govEffectiveRatioPercent)} ≥ LP占比(
-                      {formatPercentage(data.lpRatioPercent, 2)})
-                    </>
-                  )} */}
-                </>
+                <div className="font-medium">
+                  <span className="text-green-600">1.治理票充足，无溢出</span>
+                </div>
               )}
             </div>
-          </div>
 
-          {/* 首轮区块不足溢出 */}
-          <div className="space-y-1">
-            <div className="font-medium">
-              <span className="text-red-600">首轮区块不足溢出：</span>
-            </div>
-            <div>
+            {/* 首轮区块不足溢出 */}
+            <div className="space-y-1">
               {isPartialRound ? (
                 <>
-                  &nbsp;&nbsp;&nbsp;首轮区块数比例
-                  <br />= (该阶段结束区块 - 加入区块 + 1) / 阶段总区块数
-                  <br />= ({data.roundEndBlock.toString()} - {data.lastJoinedBlockByRound.toString()} + 1) /{' '}
-                  {data.phaseBlocks.toString()}
-                  {/* <br />= {data.blocksInRound.toString()} / {data.phaseBlocks.toString()} */}
-                  <br />= <span className="text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>
-                  <br />
-                  可领取激励将降为：
-                  <br />
-                  &nbsp;&nbsp;&nbsp;原激励 × 首轮区块数比例
-                  {/* <span className="font-medium text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>， */}
+                  <div className="font-medium">
+                    <span className="text-red-600">2.首轮区块不足溢出：</span>
+                  </div>
+                  <div>
+                    &nbsp;&nbsp;&nbsp;首轮区块数比例
+                    <br />= (该阶段结束区块 - 加入区块 + 1) / 阶段总区块数
+                    <br />= ({data.roundEndBlock.toString()} - {data.lastJoinedBlockByRound.toString()} + 1) /{' '}
+                    {data.phaseBlocks.toString()}
+                    {/* <br />= {data.blocksInRound.toString()} / {data.phaseBlocks.toString()} */}
+                    <br />= <span className="text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>
+                    <br />
+                    可领取激励将降为：
+                    <br />
+                    &nbsp;&nbsp;&nbsp;原激励 × 首轮区块数比例
+                    {/* <span className="font-medium text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>， */}
+                  </div>
                 </>
               ) : (
-                <span className="text-green-600">非首轮，无溢出</span>
+                <div className="font-medium">
+                  <span className="text-green-600">2.非首轮加入，无溢出</span>
+                </div>
               )}
             </div>
           </div>
         </div>
 
         {/* 实际可铸造激励 */}
-        <div className="space-y-6 text-base">
+        <div className="space-y-4 text-base">
           <div className="space-y-1">
             <div className="font-medium">实际可铸造激励</div>
             <div>
@@ -206,7 +203,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                 // 只有治理票不足溢出
                 <>
                   = 行动激励 × 治理票占比 × 治理票占比倍数
-                  <br />= {formatTokenAmount(data.totalReward, 4)} × {formatPercentage(data.govRatioPercent, 2)} ×{' '}
+                  <br />= {formatTokenAmount(data.totalReward, 4)} × {formatPercentage(data.govRatioPercent, 6)} ×{' '}
                   {Number(data.govRatioMultiplier)}
                   <br />= <span className="text-secondary">{formatTokenAmount(data.userReward)}</span>
                 </>
@@ -214,7 +211,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                 // 只有首轮区块不足溢出
                 <>
                   = 锁定激励 × 首轮区块数比例
-                  <br />= {formatTokenAmount(lockedReward)} × {formatPercentage(data.blockRatioPercent, 2)}
+                  <br />= {formatTokenAmount(lockedReward)} × {formatPercentage(data.blockRatioPercent, 6)}
                   <br />= <span className="text-secondary">{formatTokenAmount(data.userReward)}</span>
                 </>
               ) : (
