@@ -130,24 +130,24 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
 
         {/* 溢出项 */}
         <div className="bg-gray-50 p-2 rounded-lg space-y-3">
-          <div className="font-semibold text-sm text-gray-700">溢出项</div>
+          <div className="font-semibold text-sm text-gray-700">溢出项：</div>
 
           <div className="space-y-2 text-sm text-gray-600">
             {/* 治理票不足溢出 */}
-            <div className="space-y-1">
+            <div>
               {hasGovShortage && hasGovLimit ? (
                 <>
                   <div className="font-medium">
                     <span className="text-red-600">1.治理票不足溢出：</span>
                   </div>
-                  <div className="leading-relaxed">
+                  <div className="leading-relaxed mt-1">
                     &nbsp;&nbsp;&nbsp;治理票占比 × 治理票占比倍数
                     <br />= {formatPercentage(data.govRatioPercent, 6)} × {Number(data.govRatioMultiplier)}
                     <br />= <span className="text-secondary">{formatPercentage(govEffectiveRatioPercent, 6)}</span> &lt;
                     LP占比(
                     {formatPercentage(data.lpRatioPercent, 6)})
                     <br />
-                    可领取激励将降为：
+                    <span className="inline-block text-gray-900 font-medium mt-2">可铸造激励，降级为：</span>
                     <br />
                     &nbsp;&nbsp;&nbsp;行动激励 × 治理票占比 × 治理票占比倍数
                   </div>
@@ -160,7 +160,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
             </div>
 
             {/* 首轮区块不足溢出 */}
-            <div className="space-y-1">
+            <div>
               {isPartialRound ? (
                 <>
                   <div className="font-medium">
@@ -174,7 +174,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                     {/* <br />= {data.blocksInRound.toString()} / {data.phaseBlocks.toString()} */}
                     <br />= <span className="text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>
                     <br />
-                    可领取激励将降为：
+                    <span className="inline-block text-gray-900 font-medium mt-2">可铸造激励，降级为：</span>
                     <br />
                     &nbsp;&nbsp;&nbsp;原激励 × 首阶段区块数比例
                     {/* <span className="font-medium text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>， */}
