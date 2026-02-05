@@ -427,7 +427,8 @@ const removeTrailingZeros = (num: number, digits: number): string => {
 };
 
 // 格式化百分比显示（向下取整）
-export const formatPercentage = (value: number | string): string => {
+// fixedDecimals: 如果指定，则固定使用该小数位数；否则根据数值大小自动选择
+export const formatPercentage = (value: number | string, fixedDecimals?: number): string => {
   if (value === undefined || value === null || isNaN(Number(value))) return '-%';
 
   const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -482,6 +483,12 @@ export const formatPercentage = (value: number | string): string => {
       .replace(/\.$/, ''); // 删除末尾的小数点（如果有）
   };
 
+  // 如果指定了固定小数位数，直接使用
+  if (fixedDecimals !== undefined) {
+    return floorToDecimals(num, fixedDecimals) + '%';
+  }
+
+  // 否则根据数值大小自动选择小数位数
   if (absNum >= 100) return floorToDecimals(num, 0) + '%';
   if (absNum >= 10) return floorToDecimals(num, 1) + '%';
   if (absNum >= 1) return floorToDecimals(num, 2) + '%';
