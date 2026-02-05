@@ -516,11 +516,11 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                     <span>
                       {!uiIsJoined ? (
                         <>
-                          {isTrialMode ? '体验代币数：' : '参与代币数：'}{' '}
+                          <span className="font-bold text-gray-900">
+                            {isTrialMode ? '体验代币数：' : '参与代币数：'}
+                          </span>{' '}
                           {hasVotes &&
-                            (isTrialMode ? (
-                              <span className="text-sm text-blue-600">（体验模式，无需支付代币）</span>
-                            ) : cannotJoin.blocked ? (
+                            (cannotJoin.blocked ? (
                               <span className="text-red-600 text-sm">{cannotJoin.reason}</span>
                             ) : (
                               <span className="text-xs text-gray-500 inline-flex items-center gap-1">
@@ -532,7 +532,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                         </>
                       ) : (
                         <>
-                          追加代币数：{' '}
+                          <span className="font-bold text-gray-900">追加代币数：</span>{' '}
                           {hasVotes &&
                             (cannotIncrease.blocked ? (
                               <span className="text-red-600 text-sm">{cannotIncrease.reason}</span>
@@ -567,9 +567,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                   </FormControl>
                   <FormMessage />
                   {isTrialMode && (
-                    <FormDescription className="text-xs">
-                      本次行动参与代币，由 <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />{' '}
-                      代为提供
+                    <FormDescription className="text-xs text-gray-600">
+                      体验模式，由 <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />{' '}
+                      代为提供参与代币
                     </FormDescription>
                   )}
                   {!isTrialMode && (
@@ -611,7 +611,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                             name={`verificationInfos.${index}`}
                             render={({ field }) => (
                               <FormItem className="mb-4">
-                                <FormLabel className="text-greyscale-500 font-normal">{key}：</FormLabel>
+                                <FormLabel className="text-greyscale-500 font-normal">
+                                  <span className="font-bold text-gray-900">{key}：</span>
+                                </FormLabel>
                                 <FormControl>
                                   {guide.length > 50 ? (
                                     <Textarea
@@ -627,7 +629,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                                     />
                                   )}
                                 </FormControl>
-                                {guide && <FormDescription className="text-xs">提示信息：{guide}</FormDescription>}
+                                {guide && (
+                                  <FormDescription className="text-xs text-gray-600">提示信息：{guide}</FormDescription>
+                                )}
                                 <FormMessage />
                               </FormItem>
                             )}

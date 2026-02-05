@@ -67,7 +67,7 @@ export interface VerifierRewardSummary {
   govRatioMultiplier: bigint;
   /** 铸币量占比（%） */
   generatedRatioPercent: number;
-  /** 推算的治理票占比（%） */
+  /** 实际治理票占比（%） */
   govRatioPercent: number;
   /** 是否有溢出销毁 */
   hasOverflow: boolean;
@@ -299,6 +299,13 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
         functionName: 'GOV_RATIO_MULTIPLIER' as const,
         args: [] as const,
       },
+      // 5: 服务者的实际治理票占比 (ratio, claimed)
+      {
+        address: extensionAddress,
+        abi: ExtensionGroupServiceAbi,
+        functionName: 'govRatio' as const,
+        args: [round, verifier] as const,
+      },
     ];
   }, [extensionAddress, round, verifier]);
 
@@ -407,7 +414,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
   const PRECISION = BigInt(1e18);
 
   const verifierRewardSummary = useMemo((): VerifierRewardSummary | null => {
-    if (!verifierSummaryData || verifierSummaryData.length < 5) {
+    if (!verifierSummaryData || verifierSummaryData.length < 6) {
       return null;
     }
 
@@ -423,6 +430,10 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     const verifierGenerated = verifierSummaryData[2]?.result ? (verifierSummaryData[2].result as bigint) : BigInt(0);
     const totalGenerated = verifierSummaryData[3]?.result ? (verifierSummaryData[3].result as bigint) : BigInt(0);
     const govRatioMultiplier = verifierSummaryData[4]?.result ? (verifierSummaryData[4].result as bigint) : BigInt(0);
+    
+    // 服务者的实际治理票占比
+    const govRatioInfo = verifierSummaryData[5]?.result as [bigint, boolean] | undefined;
+    const govRatio = govRatioInfo ? govRatioInfo[0] : BigInt(0);
 
     // 计算铸币量占比
     let generatedRatioPercent = 0;
@@ -433,27 +444,11 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
 
     // 判断是否有溢出销毁
     const hasOverflow = burnReward > BigInt(0);
-    const hasGovLimit = govRatioMultiplier > BigInt(0);
 
-    // 逆向推算治理票占比
+    // 使用合约返回的实际治理票占比
     let govRatioPercent = 0;
-    if (hasGovLimit && totalReward > BigInt(0)) {
-      if (hasOverflow) {
-        // 治理票不足，可以精确计算治理票占比
-        // actualReward = govRatio × govMultiplier × totalReward
-        // govRatio = actualReward / (govMultiplier × totalReward)
-        const actualRatioBigInt = (mintReward * PRECISION) / totalReward;
-        const actualRatioPercent = (Number(actualRatioBigInt) / Number(PRECISION)) * 100;
-        govRatioPercent = actualRatioPercent / Number(govRatioMultiplier);
-      } else {
-        // 治理票充足，只能给出下限
-        // govRatio × govMultiplier >= generatedRatio
-        // govRatio >= generatedRatio / govMultiplier
-        govRatioPercent = generatedRatioPercent / Number(govRatioMultiplier);
-      }
-    } else if (!hasGovLimit) {
-      // 没有治理票限制
-      govRatioPercent = 100;
+    if (govRatio > BigInt(0)) {
+      govRatioPercent = (Number(govRatio) / Number(PRECISION)) * 100;
     }
 
     return {

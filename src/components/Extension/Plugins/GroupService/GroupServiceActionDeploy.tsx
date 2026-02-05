@@ -164,6 +164,13 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
       return;
     }
 
+    // 在授权前先验证表单
+    const isValid = await form.trigger();
+    if (!isValid) {
+      toast.error('请先完整填写表单');
+      return;
+    }
+
     try {
       setApprovalStep('approving');
       // 授权 1 个代币给 factory

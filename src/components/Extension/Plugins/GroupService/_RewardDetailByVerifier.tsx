@@ -152,89 +152,96 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
           </div>
         )}
 
-        {/* 服务者地址 */}
-        <div className="flex items-center mb-4 bg-gray-50 px-3 py-2 rounded">
-          <span className="text-sm text-greyscale-500 mr-2">服务者:</span>
-          <AddressWithCopyButton address={verifier} showCopyButton={true} />
-        </div>
-
-        {/* 溢出销毁激励信息 */}
-        {verifierRewardSummary && verifierRewardSummary.govRatioMultiplier > BigInt(0) && (
-          <div className="mb-4 bg-gray-50 px-3 py-2 rounded">
-            {verifierRewardSummary.hasOverflow ? (
-              // 有溢出销毁
-              <div>
-                <div className="flex items-center mb-2">
-                  <span className="text-sm text-greyscale-500 mr-2">锁定激励:</span>
-                  <span className="text-sm font-medium text-primary">
-                    {formatTokenAmount(verifierRewardSummary.mintReward + verifierRewardSummary.burnReward)}
-                  </span>
-                </div>
-                <div className="flex items-center mb-1">
-                  <span className="text-sm text-red-500 mr-2">溢出销毁激励:</span>
-                  <span className="text-sm font-medium text-red-600 mr-2">
-                    {formatTokenAmount(verifierRewardSummary.burnReward)}
-                  </span>
-                  <span className="text-sm text-greyscale-500">, 原因:</span>
-                </div>
-                <div className="text-xs text-greyscale-500 font-mono">
-                  <div>&nbsp;&nbsp;治理票占比 × 治理票占比倍数</div>
-                  <div>
-                    = <span className="font-medium">{formatPercentage(verifierRewardSummary.govRatioPercent)}</span>
-                    {' × '}
-                    <span className="font-medium">{Number(verifierRewardSummary.govRatioMultiplier)}</span>
-                  </div>
-                  <div>
-                    ={' '}
-                    <span className="font-medium">
-                      {formatPercentage(
-                        verifierRewardSummary.govRatioPercent * Number(verifierRewardSummary.govRatioMultiplier),
-                      )}
-                    </span>
-                    {' < 铸币量占比 ('}
-                    <span className="font-medium">{formatPercentage(verifierRewardSummary.generatedRatioPercent)}</span>
-                    {')'}
-                  </div>
-                </div>
-                {/* <div className="text-xs text-red-500 font-mono">
-                  <div>
-                    &nbsp;&nbsp;溢出部分 ={' '}
-                    <span className="font-medium">{formatPercentage(verifierRewardSummary.generatedRatioPercent)}</span>
-                    {' - '}
-                    <span className="font-medium">
-                      {formatPercentage(
-                        verifierRewardSummary.govRatioPercent * Number(verifierRewardSummary.govRatioMultiplier),
-                      )}
-                    </span>
-                    {' = '}
-                    <span className="font-medium">
-                      {formatPercentage(
-                        verifierRewardSummary.generatedRatioPercent -
-                          verifierRewardSummary.govRatioPercent * Number(verifierRewardSummary.govRatioMultiplier),
-                      )}
-                    </span>
-                  </div>
-                </div> */}
-              </div>
-            ) : (
-              // 无溢出销毁
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <span className="text-sm text-greyscale-500 mr-2">锁定激励:</span>
-                  <span className="text-sm font-medium text-primary">
-                    {formatTokenAmount(verifierRewardSummary.mintReward + verifierRewardSummary.burnReward)}
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center">
-                    <span className="text-sm text-greyscale-500 mr-2">无溢出销毁激励</span>
-                  </div>
-                  <div className="text-xs text-green-600">&nbsp;&nbsp;治理票占比 × 治理票占比倍数 ≥ 铸币量占比</div>
-                </div>
-              </div>
-            )}
+        {/* 服务者信息 */}
+        <div className="mb-4 bg-gray-50 px-3 py-2 rounded space-y-2">
+          {/* 服务者地址 */}
+          <div className="flex items-center">
+            <span className="text-sm text-greyscale-500 mr-2">服务者:</span>
+            <AddressWithCopyButton address={verifier} showCopyButton={true} />
           </div>
-        )}
+
+          {/* 溢出销毁激励信息 */}
+          {verifierRewardSummary && verifierRewardSummary.govRatioMultiplier > BigInt(0) && (
+            <>
+              {verifierRewardSummary.hasOverflow ? (
+                // 有溢出销毁
+                <div>
+                  <div className="flex items-center mb-1">
+                    <span className="text-sm text-greyscale-500 mr-2">• 锁定激励:</span>
+                    <span className="text-sm font-medium text-primary">
+                      {formatTokenAmount(verifierRewardSummary.mintReward + verifierRewardSummary.burnReward)}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-sm text-red-500 mr-2">• 溢出销毁激励:</span>
+                    <span className="text-sm font-medium text-red-600 mr-2">
+                      {formatTokenAmount(verifierRewardSummary.burnReward)}
+                    </span>
+                    <span className="text-sm text-greyscale-500">, 原因:</span>
+                  </div>
+                  <div className="text-xs text-greyscale-500 font-mono">
+                    <div>&nbsp;&nbsp;治理票占比 × 治理票占比倍数</div>
+                    <div>
+                      = <span className="font-medium">{formatPercentage(verifierRewardSummary.govRatioPercent)}</span>
+                      {' × '}
+                      <span className="font-medium">{Number(verifierRewardSummary.govRatioMultiplier)}</span>
+                    </div>
+                    <div>
+                      ={' '}
+                      <span className="font-medium">
+                        {formatPercentage(
+                          verifierRewardSummary.govRatioPercent * Number(verifierRewardSummary.govRatioMultiplier),
+                        )}
+                      </span>
+                      {' < 铸币量占比 ('}
+                      <span className="font-medium">
+                        {formatPercentage(verifierRewardSummary.generatedRatioPercent)}
+                      </span>
+                      {')'}
+                    </div>
+                  </div>
+                  {/* <div className="text-xs text-red-500 font-mono">
+                    <div>
+                      &nbsp;&nbsp;溢出部分 ={' '}
+                      <span className="font-medium">{formatPercentage(verifierRewardSummary.generatedRatioPercent)}</span>
+                      {' - '}
+                      <span className="font-medium">
+                        {formatPercentage(
+                          verifierRewardSummary.govRatioPercent * Number(verifierRewardSummary.govRatioMultiplier),
+                        )}
+                      </span>
+                      {' = '}
+                      <span className="font-medium">
+                        {formatPercentage(
+                          verifierRewardSummary.generatedRatioPercent -
+                            verifierRewardSummary.govRatioPercent * Number(verifierRewardSummary.govRatioMultiplier),
+                        )}
+                      </span>
+                    </div>
+                  </div> */}
+                </div>
+              ) : (
+                // 无溢出销毁
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <span className="text-sm text-greyscale-500 mr-2">锁定激励:</span>
+                    <span className="text-sm font-medium text-primary">
+                      {formatTokenAmount(verifierRewardSummary.mintReward + verifierRewardSummary.burnReward)}
+                    </span>
+                  </div>
+                  {verifierRewardSummary.mintReward + verifierRewardSummary.burnReward > BigInt(0) && (
+                    <div className="space-y-1">
+                      <div className="flex items-center">
+                        <span className="text-sm text-greyscale-500 mr-2">无溢出销毁激励</span>
+                      </div>
+                      {/* <div className="text-xs text-green-600">&nbsp;&nbsp;治理票占比 × 治理票占比倍数 ≥ 铸币量占比</div> */}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* 数据展示区 */}
