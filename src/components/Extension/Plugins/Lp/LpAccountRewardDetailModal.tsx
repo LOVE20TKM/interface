@@ -168,7 +168,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                   </div>
                   <div>
                     &nbsp;&nbsp;&nbsp;首阶段区块数比例
-                    <br />= (该阶段结束区块 - 加入区块 + 1) / 阶段总区块数
+                    <br />= (该阶段结束区块 - 当轮最后加入区块 + 1) / 阶段总区块数
                     <br />= ({data.roundEndBlock.toString()} - {data.lastJoinedBlockByRound.toString()} + 1) /{' '}
                     {data.phaseBlocks.toString()}
                     {/* <br />= {data.blocksInRound.toString()} / {data.phaseBlocks.toString()} */}
