@@ -152,8 +152,10 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
               <div className="font-medium">⚠️ 治理票占比不足</div>
               <div className="mt-1">
                 你的治理票占比{' '}
-                <span className="font-semibold">{formatPercentage((Number(userGovRatio) / 1e18) * 100)}</span> 低于最小门槛{' '}
-                <span className="font-semibold">{formatPercentage((Number(minGovRatio) / 1e18) * 100)}</span>，无法获得得分和激励。
+                <span className="font-semibold">{formatPercentage((Number(userGovRatio) / 1e18) * 100)}</span>{' '}
+                低于最小门槛{' '}
+                <span className="font-semibold">{formatPercentage((Number(minGovRatio) / 1e18) * 100)}</span>
+                ，无法获得得分和激励。
               </div>
               <div className="text-xs text-amber-600 mt-1">请质押更多代币以增加治理票数。</div>
             </div>
@@ -168,32 +170,39 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
         </Button>
       ) : (
         <>
-          <div className="flex justify-center space-x-2 mt-6 w-full">
-            {/* 退出LP按钮 */}
-            {!joinedAmount || joinedAmount <= BigInt(0) ? (
-              <Button variant="outline" className="w-1/3 text-secondary border-secondary" disabled>
-                退出
+          <div className="w-full space-y-3 mt-6">
+            <div className="flex justify-center space-x-2 w-full">
+              {/* 退出LP按钮 */}
+              {!joinedAmount || joinedAmount <= BigInt(0) ? (
+                <Button variant="outline" className="flex-1 text-secondary border-secondary" disabled>
+                  退出并取回代币
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="flex-1 text-secondary border-secondary"
+                  onClick={handleExit}
+                  disabled={!canExitNow || isPendingExit || isConfirmingExit || isConfirmedExit}
+                >
+                  {isPendingExit ? '提交中' : isConfirmingExit ? '确认中' : isConfirmedExit ? '已退出' : '退出并取回代币'}
+                </Button>
+              )}
+
+              {/* 增加LP按钮 */}
+              <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
+                <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol}`}>增加LP</Link>
               </Button>
-            ) : (
-              <Button
-                variant="outline"
-                className="w-1/3 text-secondary border-secondary"
-                onClick={handleExit}
-                disabled={!canExitNow || isPendingExit || isConfirmingExit || isConfirmedExit}
+            </div>
+
+            {/* 查看激励链接 */}
+            <div className="flex justify-center">
+              <Link
+                href={`/my/rewardsofaction?id=${actionId}&symbol=${token?.symbol}`}
+                className="text-secondary hover:underline"
               >
-                {isPendingExit ? '提交中' : isConfirmingExit ? '确认中' : isConfirmedExit ? '已退出' : '退出'}
-              </Button>
-            )}
-
-            {/* 查看激励按钮 */}
-            <Button variant="outline" className="w-1/3 text-secondary border-secondary" asChild>
-              <Link href={`/my/rewardsofaction?id=${actionId}&symbol=${token?.symbol}`}>查看激励</Link>
-            </Button>
-
-            {/* 增加LP按钮 */}
-            <Button variant="outline" className="w-1/3 text-secondary border-secondary" asChild>
-              <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol}`}>增加LP</Link>
-            </Button>
+                查看行动激励 &gt;&gt;
+              </Link>
+            </div>
           </div>
 
           {/* 等待退出的提示 */}

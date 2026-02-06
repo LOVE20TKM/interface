@@ -240,40 +240,49 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
             )
           ) : (
             <>
-              <div className="flex justify-center space-x-2 mt-2 w-full">
-                {joinedAmountByActionIdByAccount != undefined && joinedAmountByActionIdByAccount <= BigInt(2) ? (
-                  <Button variant="outline" className="w-1/3 text-secondary border-secondary" disabled>
-                    取回
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="w-1/3 text-secondary border-secondary"
-                    onClick={handleWithdraw}
-                    disabled={isPendingWithdraw || isConfirmingWithdraw || isConfirmedWithdraw}
-                  >
-                    {isPendingWithdraw
-                      ? '提交中'
-                      : isConfirmingWithdraw
-                      ? '确认中'
-                      : isConfirmedWithdraw
-                      ? '已取回'
-                      : '取回代币'}
-                  </Button>
-                )}
+              <div className="w-full space-y-3 mt-2">
+                <div className="flex justify-center space-x-2 w-full">
+                  {joinedAmountByActionIdByAccount != undefined && joinedAmountByActionIdByAccount <= BigInt(2) ? (
+                    <Button variant="outline" className="flex-1 text-secondary border-secondary" disabled>
+                      取回
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="flex-1 text-secondary border-secondary"
+                      onClick={handleWithdraw}
+                      disabled={isPendingWithdraw || isConfirmingWithdraw || isConfirmedWithdraw}
+                    >
+                      {isPendingWithdraw
+                        ? '提交中'
+                        : isConfirmingWithdraw
+                        ? '确认中'
+                        : isConfirmedWithdraw
+                        ? '已取回'
+                        : '退出并取回代币'}
+                    </Button>
+                  )}
 
-                <Button variant="outline" className="w-1/3 text-secondary border-secondary" asChild>
-                  <Link href={`/my/rewardsofaction?id=${actionId}&symbol=${token?.symbol}`}>查看激励</Link>
-                </Button>
-                {!isActionIdVoted ? (
-                  <Button variant="outline" className="w-1/3" disabled>
-                    增加参与代币
-                  </Button>
-                ) : (
-                  <Button variant="outline" className="w-1/3 text-secondary border-secondary" asChild>
-                    <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol}`}>增加参与代币</Link>
-                  </Button>
-                )}
+                  {!isActionIdVoted ? (
+                    <Button variant="outline" className="flex-1" disabled>
+                      增加参与代币
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
+                      <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol}`}>增加参与代币</Link>
+                    </Button>
+                  )}
+                </div>
+
+                {/* 查看激励链接 */}
+                <div className="flex justify-center">
+                  <Link
+                    href={`/my/rewardsofaction?id=${actionId}&symbol=${token?.symbol}`}
+                    className="text-secondary hover:underline"
+                  >
+                    查看行动激励 &gt;&gt;
+                  </Link>
+                </div>
               </div>
 
               <div className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-3 mt-3 mb-3 w-full">

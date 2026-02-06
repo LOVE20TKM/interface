@@ -229,44 +229,55 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
       )}
 
       {/* 按钮区 */}
-      <div className="flex justify-center space-x-2 w-full">
-        {/* 取回代币 */}
-        <Button
-          variant="outline"
-          className="flex-1 text-secondary border-secondary"
-          onClick={handleExit}
-          disabled={!joinedAmount || joinedAmount <= BigInt(0) || isPendingExit || isConfirmingExit || isConfirmedExit}
-        >
-          {isPendingExit
-            ? '提交中'
-            : isConfirmingExit
-            ? '确认中'
-            : isConfirmedExit
-            ? isTrialMode
-              ? '已退出'
-              : '已取回'
-            : isTrialMode
-            ? '退出体验'
-            : '取回代币'}
-        </Button>
-
-        {/* 查看激励 */}
-        <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
-          <Link href={`/my/rewardsofaction?id=${actionId}&symbol=${token?.symbol}`}>查看激励</Link>
-        </Button>
-
-        {/* 增加参与代币 */}
-        {isTrialMode ? (
-          <Button variant="outline" className="flex-1 text-secondary border-secondary" disabled>
-            追加代币
+      <div className="w-full space-y-3">
+        <div className="flex justify-center space-x-2 w-full">
+          {/* 取回代币 */}
+          <Button
+            variant="outline"
+            className="flex-1 text-secondary border-secondary"
+            onClick={handleExit}
+            disabled={
+              !joinedAmount || joinedAmount <= BigInt(0) || isPendingExit || isConfirmingExit || isConfirmedExit
+            }
+          >
+            {isPendingExit
+              ? '提交中'
+              : isConfirmingExit
+              ? '确认中'
+              : isConfirmedExit
+              ? isTrialMode
+                ? '已退出'
+                : '已取回'
+              : isTrialMode
+              ? '退出体验'
+              : '退出并取回代币'}
           </Button>
-        ) : (
-          <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
-            <Link href={`/acting/join?tab=join&groupId=${groupId?.toString()}&id=${actionId}&symbol=${token?.symbol}`}>
+
+          {/* 增加参与代币 */}
+          {isTrialMode ? (
+            <Button variant="outline" className="flex-1 text-secondary border-secondary" disabled>
               追加代币
-            </Link>
-          </Button>
-        )}
+            </Button>
+          ) : (
+            <Button variant="outline" className="flex-1 text-secondary border-secondary" asChild>
+              <Link
+                href={`/acting/join?tab=join&groupId=${groupId?.toString()}&id=${actionId}&symbol=${token?.symbol}`}
+              >
+                追加代币
+              </Link>
+            </Button>
+          )}
+        </div>
+
+        {/* 查看激励链接 */}
+        <div className="flex justify-center">
+          <Link
+            href={`/my/rewardsofaction?id=${actionId}&symbol=${token?.symbol}`}
+            className="text-secondary hover:underline"
+          >
+            查看行动激励 &gt;&gt;
+          </Link>
+        </div>
       </div>
 
       {/* 说明 */}

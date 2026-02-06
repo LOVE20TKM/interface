@@ -407,10 +407,8 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     if (isConfirmedJoin || isConfirmedTrialJoin) {
       toast.success(uiIsTrialMode ? '体验加入成功' : '加入链群成功');
 
-      // 体验模式下缓存 groupId
-      if (isConfirmedTrialJoin && uiIsTrialMode) {
-        LocalCache.set(`trial_groupId_${actionId.toString()}`, groupId.toString());
-      }
+      // 加入时缓存 groupId
+      LocalCache.set(`joined_group_id`, groupId.toString());
 
       setTimeout(() => {
         router.push(`/my/myaction?id=${actionId.toString()}&symbol=${token?.symbol || ''}`);

@@ -26,7 +26,11 @@ import { useError } from '@/src/contexts/ErrorContext';
 
 // hooks
 import { useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useCanSubmit } from '@/src/hooks/composite/useCanSubmit';
 import { useCreateExtension } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupServiceFactory';
+
+// utils
+import { formatPercentage } from '@/src/lib/format';
 
 // ABI
 import { ExtensionGroupServiceFactoryAbi } from '@/src/abis/ExtensionGroupServiceFactory';
@@ -73,6 +77,15 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
   const { setError } = useError();
   // 获取用户代币余额
   const { balance: tokenBalance } = useBalanceOf(tokenAddress, accountAddress as `0x${string}`, !!accountAddress);
+
+  // 检查是否可以提交（治理票检查）
+  const {
+    hasEnoughVotes,
+    percentage: accountPercentage,
+    validGovVotes,
+    govData: totalGovVotes,
+    SUBMIT_MIN_PERCENTAGE: SUBMIT_PERCENTAGE,
+  } = useCanSubmit();
 
   // 表单实例
   const form = useForm<FormValues>({
@@ -172,6 +185,19 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
       });
     }
   }, [tokenBalance, tokenSymbol, setError]);
+
+  // 检查治理票是否足够
+  useEffect(() => {
+    if (!hasEnoughVotes && validGovVotes !== undefined && totalGovVotes) {
+      setError({
+        name: '治理票不足',
+        message: `有效治理票，须达到总治理票的${formatPercentage(
+          SUBMIT_PERCENTAGE * 100,
+          1,
+        )}，才能部署扩展合约（您当前有效治理票占比${formatPercentage(accountPercentage * 100, 3)}）`,
+      });
+    }
+  }, [hasEnoughVotes, validGovVotes, totalGovVotes, SUBMIT_PERCENTAGE, accountPercentage, setError]);
 
   /**
    * 步骤1: 授权代币
@@ -327,7 +353,9 @@ export default function GroupServiceActionDeploy({ factoryAddress }: GroupServic
                         isApproveConfirming ||
                         approvalStep === 'approved' ||
                         approvalStep === 'deploying' ||
-                        approvalStep === 'deployed'
+                        approvalStep === 'deployed' ||
+                        !hasEnoughVotes ||
+                        (tokenBalance !== undefined && tokenBalance < parseEther('1'))
                       }
                     >
                       {isApprovePending

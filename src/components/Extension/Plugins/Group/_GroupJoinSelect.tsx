@@ -66,8 +66,8 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
     round: currentRound,
   });
 
-  // 读取缓存的 groupId（体验模式）
-  const cachedGroupIdStr = LocalCache.get<string>(`trial_groupId_${actionId.toString()}`);
+  // 读取缓存的 groupId（加入时设置）
+  const cachedGroupIdStr = LocalCache.get<string>(`joined_group_id`);
   const cachedGroupId = cachedGroupIdStr ? BigInt(cachedGroupIdStr) : null;
 
   // 如果有缓存的 groupId，获取对应的 groupName
