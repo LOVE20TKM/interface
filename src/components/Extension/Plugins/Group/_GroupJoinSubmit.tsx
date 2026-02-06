@@ -238,9 +238,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
           return inputVal !== null && inputVal >= groupDetail.actualMinJoinAmount;
         },
         {
-          message: `参与代币数不能小于最小值 ${
-            groupDetail ? formatTokenAmount(groupDetail.actualMinJoinAmount, 2) : '0'
-          }`,
+          message: `参与代币数不能小于最小值 ${groupDetail ? formatTokenAmount(groupDetail.actualMinJoinAmount) : '0'}`,
         },
       )
       .refine(
@@ -251,7 +249,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
         },
         {
           message: `参与代币数不能大于最大值 ${
-            effectiveMaxAmount > BigInt(0) ? formatTokenAmount(effectiveMaxAmount, 2) : '不限'
+            effectiveMaxAmount > BigInt(0) ? formatTokenAmount(effectiveMaxAmount) : '不限'
           }`,
         },
       ),
