@@ -52,6 +52,11 @@ export const getMaxJoinAmount = (groupDetail: GroupDetailInfo): JoinAmountResult
     });
   }
 
+  // 如果没有任何限制条件，说明全部"无限制"
+  if (limits.length === 0) {
+    return { amount: BigInt(0), reason: '无限制' };
+  }
+
   // 找出最小限制（确保最小值为0，不能为负）
   let minLimit = limits[0];
   for (const limit of limits) {
@@ -105,6 +110,11 @@ export const getMaxIncreaseAmount = (groupDetail: GroupDetailInfo, oldAmount: bi
       amount: groupDetail.remainingCapacity,
       reason: `链群剩余容量 ${formatTokenAmount(groupDetail.remainingCapacity)}`,
     });
+  }
+
+  // 如果没有任何限制条件，说明全部"无限制"
+  if (limits.length === 0) {
+    return { amount: BigInt(0), reason: '无限制' };
   }
 
   // 找出最小限制（确保最小值为0，不能为负）
