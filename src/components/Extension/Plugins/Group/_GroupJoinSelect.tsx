@@ -98,7 +98,7 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
   // 如果有缓存的 groupName，设置为表单默认值
   useEffect(() => {
     if (cachedGroupName && !isPendingCachedGroupName) {
-      form.setValue('groupName', cachedGroupName);
+      form.setValue('groupName', cachedGroupName, { shouldValidate: true, shouldDirty: true });
     }
   }, [cachedGroupName, isPendingCachedGroupName, form]);
 
