@@ -78,8 +78,21 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
   // 用户输入的链群名称
   const [inputGroupName, setInputGroupName] = useState<string>('');
 
-  // 查询输入的链群名称对应的 groupId
-  const { tokenId: groupId, isPending: isPendingGroupId, error: errorGroupId } = useTokenIdOf(inputGroupName);
+  // 判断是否需要查询（输入名称与缓存名称不同时才查询）
+  const shouldQueryGroupId = inputGroupName && inputGroupName !== cachedGroupName;
+
+  // 查询输入的链群名称对应的 groupId（只在需要时查询，传空字符串会自动跳过）
+  const {
+    tokenId: queriedGroupId,
+    isPending: isPendingQueriedGroupId,
+    error: errorGroupId,
+  } = useTokenIdOf(shouldQueryGroupId ? inputGroupName : '');
+
+  // 最终使用的 groupId：如果输入的是缓存名称，直接用缓存的 ID，否则使用查询结果
+  const groupId = inputGroupName === cachedGroupName && cachedGroupId ? cachedGroupId : queriedGroupId;
+
+  // isPendingGroupId：只有在实际查询时才为 true，使用缓存时为 false
+  const isPendingGroupId = shouldQueryGroupId ? isPendingQueriedGroupId : false;
 
   // 表单验证 schema（基础验证）
   const formSchema = z.object({
