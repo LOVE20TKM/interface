@@ -23,7 +23,9 @@ const _GroupActionTips: React.FC<GroupActionTipsProps> = ({
   groupActivationStakeAmount,
 }) => {
   // 将 wei 格式的比例转换为百分比显示 (wei / 1e18 = 比例)
-  const minGovRatioDisplay = activationMinGovRatio ? formatPercentage(Number(activationMinGovRatio) / 1e18) : '0%';
+  const minGovRatioDisplay = activationMinGovRatio
+    ? formatPercentage((Number(activationMinGovRatio) * 100) / 1e18)
+    : '0%';
 
   return (
     <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">

@@ -118,15 +118,14 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
         <div className="mt-4 space-y-4">
           {[...joinedActions]
             .sort((a, b) => {
-              // 首先按有无激励和是否投票排序，有激励且有投票的排在前面
+              // 按有无激励和是否投票排序，有激励且有投票的排在前面
               const aIsGood = a.hasReward && a.votesNum > 0;
               const bIsGood = b.hasReward && b.votesNum > 0;
 
               if (aIsGood && !bIsGood) return -1;
               if (!aIsGood && bIsGood) return 1;
 
-              // 然后按参与代币数量从大到小排序
-              return Number(b.joinedAmountOfAccount) - Number(a.joinedAmountOfAccount);
+              return 0;
             })
             .map((action: JoinedAction, index: number) => {
               // 根据是否有激励且有投票设置背景色和标题颜色

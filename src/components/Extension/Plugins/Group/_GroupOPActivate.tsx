@@ -630,6 +630,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               actionLabelPending="2.提交中..."
               actionLabelConfirming="2.确认中..."
               actionLabelConfirmed="2.已激活"
+              disableApprove={isGovRatioInsufficient}
               disableAction={
                 !finalGroupId || (userBalance !== undefined && userBalance < stakeAmount) || isGovRatioInsufficient
               }
