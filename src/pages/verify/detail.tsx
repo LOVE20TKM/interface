@@ -204,7 +204,7 @@ const VerifyDetailPage = () => {
     if (!matrixCalculations) {
       return (
         <div className="bg-white rounded-lg p-8">
-          <div className="text-center text-gray-600">暂无验证数据</div>
+          <div className="text-center text-gray-600">无验证数据</div>
         </div>
       );
     }

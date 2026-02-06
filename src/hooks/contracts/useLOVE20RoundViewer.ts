@@ -526,18 +526,26 @@ export const useActionVerificationMatrixPaged = (
 
     // 如果不在 pending 状态，但 pageData 为 undefined
     // 可能是查询超出范围或失败，应该停止查询
-    if (!pageData && !isPagePending && currentPage > 0) {
-      console.log('⚠️ 查询返回空数据，停止分页查询');
+    if (!pageData && !isPagePending) {
+      console.log('⚠️ 查询返回空数据，停止分页查询', { currentPage });
       setHasMore(false);
       setIsLoading(false);
 
-      // 设置最终数据
+      // 设置最终数据（如果有累积的数据）
       if (tempDataRef.current) {
         console.log(`✅ 分页查询完成，总验证者数: ${tempDataRef.current.verifiers.length}`);
         setFinalData({
           verifiers: tempDataRef.current.verifiers,
           verifiees: tempDataRef.current.verifiees,
           scores: tempDataRef.current.scores,
+        });
+      } else if (currentPage === 0) {
+        // 第一页就返回空数据，说明没有任何验证数据
+        console.log('⚠️ 第一页返回空数据，无验证矩阵');
+        setFinalData({
+          verifiers: [],
+          verifiees: [],
+          scores: [],
         });
       }
       return;
