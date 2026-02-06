@@ -182,7 +182,8 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                   <div className="text-xs text-greyscale-500 font-mono">
                     <div>&nbsp;&nbsp;治理票占比 × 治理票占比倍数</div>
                     <div>
-                      = <span className="font-medium">{formatPercentage(verifierRewardSummary.govRatioPercent)}</span>
+                      ={' '}
+                      <span className="font-medium">{formatPercentage(verifierRewardSummary.govRatioPercent, 6)}</span>
                       {' × '}
                       <span className="font-medium">{Number(verifierRewardSummary.govRatioMultiplier)}</span>
                     </div>
@@ -191,11 +192,12 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                       <span className="font-medium">
                         {formatPercentage(
                           verifierRewardSummary.govRatioPercent * Number(verifierRewardSummary.govRatioMultiplier),
+                          6,
                         )}
                       </span>
                       {' < 铸币量占比 ('}
                       <span className="font-medium">
-                        {formatPercentage(verifierRewardSummary.generatedRatioPercent)}
+                        {formatPercentage(verifierRewardSummary.generatedRatioPercent, 6)}
                       </span>
                       {')'}
                     </div>
