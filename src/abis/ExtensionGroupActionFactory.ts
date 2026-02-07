@@ -241,6 +241,16 @@ export const ExtensionGroupActionFactoryAbi = [
   },
   {
     "type": "error",
+    "name": "InvalidActivationMinGovRatio",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidActivationStakeAmount",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidJoinTokenAddress",
     "inputs": []
   },

@@ -191,4 +191,6 @@ export const ErrorMessages: Record<string, string> = {
   InsufficientGovRatio: '治理票比例不足',
   NoGovVotes: '没有治理票',
   ZeroTotalGovVotes: '总治理票为0',
+  InvalidActivationMinGovRatio: '激活治理票比例无效',
+  InvalidActivationStakeAmount: '激活质押数量无效',
 };

@@ -28,9 +28,11 @@ interface LpAccountRewardDetailModalProps {
  * LP激励计算详情弹窗
  *
  * 显示激励计算的详细信息：
- * - 计算过程（根据是否有销毁显示不同说明）
- * - 详细数据（LP占比、治理票占比、区块数比例）
- * - 计算说明
+ * - 有效LP代币计算（含可折叠的逐条扣除明细）
+ * - 锁定激励
+ * - 治理票不足溢出
+ * - 实际可铸造激励
+ * - 溢出销毁激励
  */
 const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
   extensionAddress,
@@ -40,6 +42,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
   className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showDeductionDetail, setShowDeductionDetail] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
   // 获取激励详情数据
@@ -91,146 +94,67 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
       );
     }
 
-    // 判断是否有销毁
-    const hasBurn = data.userBurnReward > BigInt(0);
-    // 判断是否为非完整轮参与
-    const isPartialRound = data.blockRatioPercent < 100;
+    // ========== 计算辅助值 ==========
+    // 锁定激励 = 行动总激励 × 有效LP代币占比
+    const lockedReward = data.theoreticalReward;
+
     // 判断是否限制治理票
     const hasGovLimit = data.govRatioMultiplier > BigInt(0);
     // 直接使用 hook 返回的 hasGovShortage（已包含精度容差处理）
     const hasGovShortage = data.hasGovShortage;
 
-    // ========== 计算溢出项 ==========
-    // 1. 锁定激励
-    const lockedReward = data.theoreticalReward;
-
-    // 2. 治理票有效占比（治理票占比 × 治理票占比倍数）
+    // 治理票有效占比（治理票占比 × 治理票占比倍数）
     const govEffectiveRatioPercent = Number(data.govRatioPercent) * Number(data.govRatioMultiplier);
 
-    // 3. 判断溢出类型
-    const hasGovDeduction = hasGovShortage && hasGovLimit;
-    const hasBlockDeduction = isPartialRound;
-    const hasDeduction = hasGovDeduction || hasBlockDeduction;
-    const onlyGovDeduction = hasGovDeduction && !hasBlockDeduction;
-    const onlyBlockDeduction = !hasGovDeduction && hasBlockDeduction;
+    // 是否存在溢出（仅治理票不足一种溢出类型）
+    const hasOverflow = hasGovShortage && hasGovLimit;
 
     return (
-      <div className="space-y-2">
-        {/* 锁定激励 */}
+      <div className="space-y-4">
+        {/* (1) 锁定激励 */}
         <div className="space-y-2 text-base">
           <div className="space-y-1">
             <div className="font-medium">锁定激励</div>
             <div>
-              = 行动激励 × LP占比
-              <br />= {formatTokenAmount(data.totalReward)} × {formatPercentage(data.lpRatioPercent, 6)}
+              = 行动总激励 × 有效 LP 代币占比
+              <br />= {formatTokenAmount(data.totalReward)} × {formatPercentage(data.effectiveLpRatioPercent, 6)}
               <br />= {formatTokenAmount(lockedReward)}
             </div>
           </div>
         </div>
 
-        {/* 溢出项 */}
-        <div className="bg-gray-50 p-2 rounded-lg space-y-2">
-          <div className="font-semibold text-base text-gray-900">溢出项：</div>
-          <div className="space-y-2 text-sm text-gray-600">
-            {/* 治理票不足溢出 */}
-            <div>
-              {hasGovShortage && hasGovLimit ? (
-                <>
-                  <div className="font-medium">
-                    <span className="text-red-600">1.治理票不足溢出：</span>
-                  </div>
-                  <div className="leading-relaxed mt-1">
-                    &nbsp;&nbsp;&nbsp;治理票占比 × 治理票占比倍数
-                    <br />= {formatPercentage(data.govRatioPercent, 6)} × {Number(data.govRatioMultiplier)}
-                    <br />= <span className="text-secondary">{formatPercentage(govEffectiveRatioPercent, 6)}</span> &lt;
-                    LP占比(
-                    {formatPercentage(data.lpRatioPercent, 6)})
-                    <br />
-                    <span className="inline-block text-gray-700 font-medium mt-1">可铸造激励，降级为：</span>
-                    <br />
-                    &nbsp;&nbsp;&nbsp;行动激励 × 治理票占比 × 治理票占比倍数
-                  </div>
-                </>
-              ) : (
-                <div className="font-medium">
-                  <span className="text-green-600">1.治理票充足，无溢出</span>
-                </div>
-              )}
-            </div>
-
-            {/* 首轮区块不足溢出 */}
-            <div>
-              {isPartialRound ? (
-                <>
-                  <div className="font-medium">
-                    <span className="text-red-600">2.首轮区块不足溢出：</span>
-                  </div>
-                  <div className="leading-relaxed mt-1">
-                    &nbsp;&nbsp;&nbsp;首阶段区块数比例
-                    <br />= (该阶段结束区块 - 当轮最后加入区块 + 1) / 阶段总区块数
-                    <br />= ({data.roundEndBlock.toString()} - {data.lastJoinedBlockByRound.toString()} + 1) /{' '}
-                    {data.phaseBlocks.toString()}
-                    {/* <br />= {data.blocksInRound.toString()} / {data.phaseBlocks.toString()} */}
-                    <br />= <span className="text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>
-                    <br />
-                    <span className="inline-block text-gray-700 font-medium mt-1">可铸造激励，降级为：</span>
-                    <br />
-                    &nbsp;&nbsp;&nbsp;原激励 × 首阶段区块数比例
-                    {/* <span className="font-medium text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>， */}
-                  </div>
-                </>
-              ) : (
-                <div className="font-medium">
-                  <span className="text-green-600">2.非首轮加入，无溢出</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 实际可铸造激励 */}
+        {/* (2) 实际可铸造激励 */}
         <div className="space-y-4 text-base">
           <div className="space-y-1">
             <div className="font-medium">实际可铸造激励</div>
             <div>
-              {!hasDeduction ? (
-                // 无溢出
+              {!hasOverflow ? (
+                // 无溢出：实际激励 = 锁定激励
                 <>
                   = 锁定激励 = <span className="text-secondary">{formatTokenAmount(data.userReward)}</span>
                 </>
-              ) : onlyGovDeduction ? (
-                // 只有治理票不足溢出
-                <>
-                  = 行动激励 × 治理票占比 × 治理票占比倍数
-                  <br />= {formatTokenAmount(data.totalReward, 4)} × {formatPercentage(data.govRatioPercent, 6)} ×{' '}
-                  {Number(data.govRatioMultiplier)}
-                  <br />= <span className="text-secondary">{formatTokenAmount(data.userReward)}</span>
-                </>
-              ) : onlyBlockDeduction ? (
-                // 只有首轮区块不足溢出
-                <>
-                  = 锁定激励 × 首阶段区块数比例
-                  <br />= {formatTokenAmount(lockedReward)} × {formatPercentage(data.blockRatioPercent, 6)}
-                  <br />= <span className="text-secondary">{formatTokenAmount(data.userReward)}</span>
-                </>
               ) : (
-                // 两者都有溢出
+                // 治理票不足溢出
                 <>
-                  = 行动激励 × 治理票占比 × 治理票占比倍数 × 首阶段区块数比例
+                  = 行动总激励 × MIN(有效LP代币占比, 治理票占比 × 倍数)
+                  <br />= {formatTokenAmount(data.totalReward)} × MIN(
+                  <span className="text-secondary">{formatPercentage(data.effectiveLpRatioPercent, 6)}</span>,{' '}
+                  <span className="text-secondary">{formatPercentage(govEffectiveRatioPercent, 6)}</span>)
                   <br />= {formatTokenAmount(data.totalReward)} ×{' '}
-                  <span className="text-secondary">{formatPercentage(govEffectiveRatioPercent, 6)}</span> ×{' '}
-                  <span className="text-secondary">{formatPercentage(data.blockRatioPercent, 6)}</span>
+                  <span className="text-secondary">
+                    {formatPercentage(Math.min(data.effectiveLpRatioPercent, govEffectiveRatioPercent), 6)}
+                  </span>
                   <br />= <span className="text-secondary">{formatTokenAmount(data.userReward)}</span>
                 </>
               )}
             </div>
           </div>
 
-          {/* 溢出销毁激励 */}
+          {/* (3) 溢出销毁激励 */}
           <div className="space-y-1">
             <div className="font-medium">溢出销毁激励</div>
             <div>
-              {!hasDeduction ? (
+              {!hasOverflow ? (
                 <span className="text-green-600">0</span>
               ) : (
                 <>
@@ -242,30 +166,122 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
             </div>
           </div>
         </div>
+        {/* (4) 有效 LP 代币计算 */}
+        <div className="bg-gray-50 py-4 px-2 rounded-lg space-y-2">
+          <div className="font-semibold text-base text-gray-900">有效 LP 代币占比：</div>
+          <div className="space-y-2 text-sm text-gray-600 leading-relaxed">
+            {/* 当轮扣除量 */}
+            <div>
+              {data.joinBlocks.length > 0 ? (
+                <>
+                  <div className="mt-1">
+                    <span className="text-gray-700 font-medium">该账户 当轮扣除量</span>
+                    <button
+                      type="button"
+                      className="ml-2 text-xs text-blue-500 hover:text-blue-700 underline"
+                      onClick={() => setShowDeductionDetail(!showDeductionDetail)}
+                    >
+                      {showDeductionDetail ? '隐藏明细' : '查看明细'}
+                    </button>
+                    <br />= <span className="text-secondary">{formatTokenAmount(data.totalDeduction)}</span>
+                  </div>
 
-        {/* 底部溢出项说明 */}
-        {/* <div className="bg-gray-50 p-3 rounded text-gray-600">
-          <div className="font-semibold mb-4 flex items-center gap-2">
-            <Info className="h-4 w-4 text-gray-400" />
-            溢出项说明：
-          </div>
-          <div className="space-y-4">
-            <div>
-              <div className="font-medium">1. 治理票不足溢出：</div>
-              <div className="ml-1 mt-2 space-y-1">
-                <div>• 必须满足 “治理票占比 × 治理票占比倍数 ≥ LP占比”，才可铸造 100%锁定激励</div>
-                <div>• 否则 “实际激励 = 行动激励 × 治理票占比 × 治理票占比倍数”，溢出的锁定激励会被销毁</div>
-              </div>
+                  {/* 逐条加入记录及扣除量（折叠区） */}
+                  {showDeductionDetail && (
+                    <div className="mt-2 bg-gray-100 border border-gray-200 rounded-lg p-3 space-y-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-gray-700 font-medium text-xs">-- 本轮加入记录明细 --</span>
+                        <button
+                          type="button"
+                          className="text-xs text-blue-500 hover:text-blue-700 underline"
+                          onClick={() => setShowDeductionDetail(false)}
+                        >
+                          隐藏明细
+                        </button>
+                      </div>
+                      {data.joinBlocks.map((block, i) => {
+                        const amount = data.joinAmounts[i];
+                        const elapsed = block - data.roundStartBlock;
+                        return (
+                          <div key={i} className="mt-1">
+                            <span className="text-gray-700 font-medium">
+                              在区块 {block.toString()} 加入 {formatTokenAmount(amount)} 个LP 代币：
+                            </span>
+                            <br />
+                            &nbsp;&nbsp;&nbsp;本次代币扣除量
+                            <br />= 加入代币数量 × (已过区块数 / 阶段总区块数)
+                            <br />= {formatTokenAmount(amount)} × ({block.toString()} -{' '}
+                            {data.roundStartBlock.toString()}) / {data.phaseBlocks.toString()}
+                            <br />={' '}
+                            <span className="text-secondary">
+                              {formatTokenAmount(
+                                data.phaseBlocks > BigInt(0) ? (amount * elapsed) / data.phaseBlocks : BigInt(0),
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })}
+                      <div className="mt-2 text-xs text-gray-400">
+                        备注：本轮起始区块 {data.roundStartBlock.toString()}；每轮总区块数 {data.phaseBlocks.toString()}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="mt-1">
+                  <span className="text-gray-700 font-medium">该账户 当轮扣除量</span>
+                  <br />
+                  &nbsp;&nbsp;&nbsp;当轮没有追加代币，当轮扣除量 = 0
+                </div>
+              )}
             </div>
-            <div>
-              <div className="font-medium">2. 首轮区块不足溢出：</div>
-              <div className="ml-1 mt-2 space-y-1">
-                <div>• 必须完整待够1个加入阶段，才可以获得这个轮次的 100%激励</div>
-                <div>• 在加入的阶段，最后一次加入前的当阶段区块没有激励</div>
-              </div>
+
+            {/* 总有效 LP 代币数量 */}
+            <div className="mt-3">
+              <span className="text-gray-700 font-medium">总有效 LP 代币数量</span>
+              <br />= 总参与 LP 代币数量 - 当轮总扣除量
+              <br />= {formatTokenAmount(data.totalLp)} - {formatTokenAmount(data.roundTotalDeduction)}
+              <br />= <span className="text-secondary">{formatTokenAmount(data.totalEffectiveLp)}</span>
+            </div>
+
+            {/* 有效LP代币占比 */}
+            <div className="mt-3">
+              <span className="text-gray-700 font-medium">有效 LP 代币占比</span>
+              <br />= (参与 LP 代币数量 - 当轮扣除量) / 总有效 LP 代币数量
+              <br />= ({formatTokenAmount(data.userLp)} - {formatTokenAmount(data.totalDeduction)}) /{' '}
+              {formatTokenAmount(data.totalEffectiveLp)}
+              <br />= <span className="text-secondary">{formatPercentage(data.effectiveLpRatioPercent, 6)}</span>
             </div>
           </div>
-        </div> */}
+        </div>
+
+        {/* (3) 治理票检查 */}
+        {hasGovLimit && (
+          <div className="bg-gray-50 py-4 px-2 rounded-lg space-y-2">
+            <div className="font-semibold text-base text-gray-900">
+              <span className={hasGovShortage ? 'text-red-600' : 'text-green-600'}>
+                {hasGovShortage ? '治理票不足溢出：' : '治理票充足，无溢出：'}
+              </span>
+            </div>
+            <div className="space-y-2 text-sm text-gray-600 leading-relaxed">
+              &nbsp;&nbsp;&nbsp;治理票占比 × 治理票占比倍数
+              <br />= {formatPercentage(data.govRatioPercent, 6)} × {Number(data.govRatioMultiplier)}
+              <br />
+              ={' '}
+              <span className="text-secondary">{formatPercentage(govEffectiveRatioPercent, 6)}</span>{' '}
+              {hasGovShortage ? '<' : '≥'} 有效LP代币占比(
+              {formatPercentage(data.effectiveLpRatioPercent, 6)})
+              {hasGovShortage && (
+                <>
+                  <br />
+                  <span className="inline-block text-gray-700 font-medium mt-1">可铸造激励，降级为：</span>
+                  <br />
+                  &nbsp;&nbsp;&nbsp;行动总激励 × 治理票占比 × 治理票占比倍数
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   };

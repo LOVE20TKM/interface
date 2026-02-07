@@ -16,23 +16,29 @@ export interface LpAccountRewardDetailData {
   totalReward: bigint; // 总激励
   userReward: bigint; // 用户实际激励（mintReward）
   userBurnReward: bigint; // 用户销毁激励
-  userLp: bigint; // 用户LP
-  totalLp: bigint; // 总LP
+  userLp: bigint; // 用户LP（参与LP代币数量）
+  totalLp: bigint; // 总参与LP代币数量
   phaseBlocks: bigint; // 轮次区块数
   originBlocks: bigint; // 起始区块
   govRatioMultiplier: bigint; // 治理票占比倍数
-  lastJoinedBlockByRound: bigint; // 用户在指定轮次的加入区块
 
-  // 计算结果（百分比）
+  // 当轮扣除数据
+  totalDeduction: bigint; // 当轮扣除量（当前用户）
+  roundTotalDeduction: bigint; // 当轮总扣除量（所有用户）
+  joinBlocks: bigint[]; // 当轮各次加入的区块号
+  joinAmounts: bigint[]; // 当轮各次加入的代币数量
+
+  // 计算结果
   lpRatioPercent: number; // LP占比（%）
   govRatioPercent: number; // 实际治理票占比（%，未乘以倍数）
-  blockRatioPercent: number; // 加入轮时长比例（%）
-  theoreticalReward: bigint; // 理论激励（用于显示销毁计算）
+  effectiveLp: bigint; // 有效LP代币数量 = userLp - totalDeduction
+  totalEffectiveLp: bigint; // 总有效LP代币数量 = totalLp - roundTotalDeduction
+  effectiveLpRatioPercent: number; // 有效LP占比（%）= effectiveLp / totalEffectiveLp
+  theoreticalReward: bigint; // 理论激励/锁定激励 = totalReward × 有效LP占比
   hasGovShortage: boolean; // 是否因治理票不足导致销毁（考虑了精度容差）
-  
-  // 区块计算详情
-  roundEndBlock: bigint; // 该阶段结束区块
-  blocksInRound: bigint; // 在该轮次参与的区块数
+
+  // 区块详情
+  roundStartBlock: bigint; // 本轮起始区块
 }
 
 export interface UseLpAccountRewardDetailParams {
@@ -68,7 +74,7 @@ export const useLpAccountRewardDetail = ({
   round,
   enabled = true,
 }: UseLpAccountRewardDetailParams): UseLpAccountRewardDetailResult => {
-  // 构建合约调用数组（9个调用）
+  // 构建合约调用数组（10个调用）
   const contracts = useMemo(() => {
     if (!extensionAddress || !tokenAddress || !account || round === undefined || !enabled) {
       return [];
@@ -124,12 +130,12 @@ export const useLpAccountRewardDetail = ({
         functionName: 'originBlocks',
         args: [],
       },
-      // 7: 用户在指定轮次的加入区块（不为0说明是首轮加入）
+      // 7: 当轮扣除量及加入记录 (totalDeduction, joinBlocks[], joinAmounts[])
       {
         address: extensionAddress,
         abi: ExtensionLpAbi,
-        functionName: 'lastJoinedBlockByAccountByJoinedRound',
-        args: [account, round],
+        functionName: 'deduction',
+        args: [round, account],
       },
       // 8: 用户的实际治理票占比 (ratio, claimed)
       {
@@ -137,6 +143,13 @@ export const useLpAccountRewardDetail = ({
         abi: ExtensionLpAbi,
         functionName: 'govRatio',
         args: [round, account],
+      },
+      // 9: 当轮总扣除量（所有用户）
+      {
+        address: extensionAddress,
+        abi: ExtensionLpAbi,
+        functionName: 'totalDeduction',
+        args: [round],
       },
     ];
   }, [extensionAddress, tokenAddress, account, round, enabled]);
@@ -171,33 +184,41 @@ export const useLpAccountRewardDetail = ({
     const govRatioMultiplier = contractData[4]?.result ? safeToBigInt(contractData[4].result) : BigInt(0);
     const phaseBlocks = contractData[5]?.result ? safeToBigInt(contractData[5].result) : BigInt(0);
     const originBlocks = contractData[6]?.result ? safeToBigInt(contractData[6].result) : BigInt(0);
-    // 用户在指定轮次的加入区块（不为0说明是首轮加入，值就是加入区块）
-    const lastJoinedBlockByRound = contractData[7]?.result ? safeToBigInt(contractData[7].result) : BigInt(0);
+    // 当轮扣除量及加入记录
+    const deductionResult = contractData[7]?.result as [bigint, bigint[], bigint[]] | undefined;
+    const totalDeduction = deductionResult ? safeToBigInt(deductionResult[0]) : BigInt(0);
+    const joinBlocks = deductionResult ? deductionResult[1].map((b) => safeToBigInt(b)) : [];
+    const joinAmounts = deductionResult ? deductionResult[2].map((a) => safeToBigInt(a)) : [];
     // 用户的实际治理票占比
     const govRatioInfo = contractData[8]?.result as [bigint, boolean] | undefined;
     const govRatio = govRatioInfo ? safeToBigInt(govRatioInfo[0]) : BigInt(0);
+    // 当轮总扣除量（所有用户）
+    const roundTotalDeduction = contractData[9]?.result ? safeToBigInt(contractData[9].result) : BigInt(0);
 
-    // 计算理论激励（mintReward + burnReward）
+    // 计算理论激励/锁定激励（mintReward + burnReward）
     const theoreticalReward = userReward + userBurnReward;
 
-    // 计算LP占比
+    // 计算LP占比（参考值）
     let lpRatioPercent = 0;
     if (totalLp > BigInt(0) && userLp > BigInt(0)) {
       const lpRatio = (userLp * PRECISION) / totalLp;
       lpRatioPercent = (Number(lpRatio) / Number(PRECISION)) * 100;
     }
 
-    // 计算加入轮时长比例（lastJoinedBlockByRound 不为0说明是首轮加入）
-    let blockRatioPercent = 100;
-    let blockRatio = PRECISION;
-    let roundEndBlock = BigInt(0);
-    let blocksInRound = BigInt(0);
-    if (!!round && lastJoinedBlockByRound > BigInt(0) && phaseBlocks > BigInt(0)) {
-      roundEndBlock = originBlocks + (round + BigInt(1)) * phaseBlocks - BigInt(1);
-      blocksInRound = roundEndBlock - lastJoinedBlockByRound + BigInt(1);
-      blockRatio = (blocksInRound * PRECISION) / phaseBlocks;
-      blockRatioPercent = (Number(blockRatio) / Number(PRECISION)) * 100;
+    // 计算有效LP代币数量及总有效LP代币数量
+    const effectiveLp = userLp > totalDeduction ? userLp - totalDeduction : BigInt(0);
+    const totalEffectiveLp = totalLp > roundTotalDeduction ? totalLp - roundTotalDeduction : BigInt(0);
+
+    // 有效LP占比 = 有效LP代币数量 / 总有效LP代币数量
+    let effectiveLpRatioPercent = 0;
+    let effectiveLpRatio = BigInt(0);
+    if (totalEffectiveLp > BigInt(0) && effectiveLp > BigInt(0)) {
+      effectiveLpRatio = (effectiveLp * PRECISION) / totalEffectiveLp;
+      effectiveLpRatioPercent = (Number(effectiveLpRatio) / Number(PRECISION)) * 100;
     }
+
+    // 计算本轮起始区块
+    const roundStartBlock = round !== undefined ? originBlocks + round * phaseBlocks : BigInt(0);
 
     // 使用合约返回的实际治理票占比
     let govRatioPercent = 0;
@@ -209,9 +230,9 @@ export const useLpAccountRewardDetail = ({
     let hasGovShortage = false;
     const hasGovLimit = govRatioMultiplier > BigInt(0);
     if (hasGovLimit && totalReward > BigInt(0)) {
-      // 计算如果治理票充足情况下应该得到的激励（只考虑首轮区块比例）
-      // rewardIfGovSufficient = theoreticalReward × blockRatio
-      const rewardIfGovSufficient = (theoreticalReward * blockRatio) / PRECISION;
+      // 计算如果治理票充足情况下应该得到的激励（基于有效LP占比）
+      // rewardIfGovSufficient = totalReward × effectiveLpRatio
+      const rewardIfGovSufficient = (totalReward * effectiveLpRatio) / PRECISION;
 
       // 判断是否因治理票不足导致销毁
       // 注意：由于精度损失，需要添加容差。允许 0.1% 的计算误差
@@ -229,18 +250,24 @@ export const useLpAccountRewardDetail = ({
       phaseBlocks,
       originBlocks,
       govRatioMultiplier,
-      lastJoinedBlockByRound,
+
+      // 当轮扣除数据
+      totalDeduction,
+      roundTotalDeduction,
+      joinBlocks,
+      joinAmounts,
 
       // 计算结果
       lpRatioPercent,
       govRatioPercent,
-      blockRatioPercent,
+      effectiveLp,
+      totalEffectiveLp,
+      effectiveLpRatioPercent,
       theoreticalReward,
       hasGovShortage,
-      
-      // 区块计算详情
-      roundEndBlock,
-      blocksInRound,
+
+      // 区块详情
+      roundStartBlock,
     };
   }, [contractData, round]);
 

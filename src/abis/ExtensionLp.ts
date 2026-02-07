@@ -229,6 +229,40 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "function",
+    "name": "deduction",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "deduction_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "joinBlocks_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "joinAmounts_",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "exit",
     "inputs": [],
     "outputs": [],
@@ -425,30 +459,6 @@ export const ExtensionLpAbi = [
   },
   {
     "type": "function",
-    "name": "lastJoinedBlockByAccountByJoinedRound",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "joinedRound",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "lastJoinedBlock",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "reward",
     "inputs": [
       {
@@ -496,6 +506,25 @@ export const ExtensionLpAbi = [
         "name": "claimed",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalDeduction",
+    "inputs": [
+      {
+        "name": "round",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
