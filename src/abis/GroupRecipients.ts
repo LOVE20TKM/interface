@@ -201,6 +201,11 @@ export const GroupRecipientsAbi = [
         "name": "ratios",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      },
+      {
+        "name": "remarks",
+        "type": "string[]",
+        "internalType": "string[]"
       }
     ],
     "stateMutability": "view"
@@ -233,6 +238,11 @@ export const GroupRecipientsAbi = [
         "name": "ratios",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      },
+      {
+        "name": "remarks",
+        "type": "string[]",
+        "internalType": "string[]"
       }
     ],
     "outputs": [],
@@ -283,6 +293,12 @@ export const GroupRecipientsAbi = [
         "type": "uint256[]",
         "indexed": false,
         "internalType": "uint256[]"
+      },
+      {
+        "name": "remarks",
+        "type": "string[]",
+        "indexed": false,
+        "internalType": "string[]"
       }
     ],
     "anonymous": false
@@ -300,6 +316,11 @@ export const GroupRecipientsAbi = [
   {
     "type": "error",
     "name": "InvalidRatio",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRound",
     "inputs": []
   },
   {

@@ -154,6 +154,7 @@ export const useRecipients = (
   return {
     addrs: data ? (data[0] as `0x${string}`[]) : undefined,
     ratios: data ? (data[1] as bigint[]) : undefined,
+    remarks: data ? (data[2] as string[]) : undefined,
     isPending,
     error,
   };
@@ -179,9 +180,10 @@ export function useSetRecipients() {
     groupId: bigint,
     addrs: `0x${string}`[],
     ratios: bigint[],
+    remarks: string[],
   ) => {
-    console.log('提交 setRecipients 交易:', { tokenAddress, actionId, groupId, addrs, ratios, isTukeMode });
-    return await execute([tokenAddress, actionId, groupId, addrs, ratios]);
+    console.log('提交 setRecipients 交易:', { tokenAddress, actionId, groupId, addrs, ratios, remarks, isTukeMode });
+    return await execute([tokenAddress, actionId, groupId, addrs, ratios, remarks]);
   };
 
   // 错误日志记录

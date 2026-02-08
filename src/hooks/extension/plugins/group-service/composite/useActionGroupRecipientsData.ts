@@ -44,6 +44,8 @@ export interface GroupRecipientData {
   addrs: `0x${string}`[] | undefined;
   /** 对应的分配比例（wei 格式，1e18 = 100%） */
   ratios: bigint[] | undefined;
+  /** 接收地址的备注（名称/职位等） */
+  remarks: string[] | undefined;
 }
 
 /**
@@ -203,7 +205,7 @@ export function useActionGroupRecipientsData({
   // ==========================================
 
   const recipientsMap = useMemo(() => {
-    const map = new Map<string, { addrs: `0x${string}`[]; ratios: bigint[] }>();
+    const map = new Map<string, { addrs: `0x${string}`[]; ratios: bigint[]; remarks: string[] }>();
 
     if (!recipientsData || actionIdsWithGroupIds.length === 0) return map;
 
@@ -212,9 +214,9 @@ export function useActionGroupRecipientsData({
       groupIds.forEach((groupId) => {
         const data = recipientsData[index];
         if (data?.status === 'success' && data.result) {
-          const [addrs, ratios] = data.result as [`0x${string}`[], bigint[]];
+          const [addrs, ratios, remarks] = data.result as [`0x${string}`[], bigint[], string[]];
           const key = `${actionId}_${groupId}`;
-          map.set(key, { addrs, ratios });
+          map.set(key, { addrs, ratios, remarks });
         }
         index++;
       });
@@ -253,6 +255,7 @@ export function useActionGroupRecipientsData({
           groupName: groupNameMap.get(groupId),
           addrs: recipients?.addrs,
           ratios: recipients?.ratios,
+          remarks: recipients?.remarks,
         };
       });
 

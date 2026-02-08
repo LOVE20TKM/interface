@@ -11,9 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+// Table 组件不再需要，改为卡片式布局
 
-import { usePrecision } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 import {
   useSetRecipients,
   useDefaultMaxRecipients,
@@ -32,12 +31,14 @@ const recipientSchema = z.object({
     .number({ invalid_type_error: '百分比必须是数字' })
     .min(0, '百分比不能为负')
     .max(100, '百分比不能超过100'),
+  remark: z.string().max(50, '备注不能超过50个字符').optional().default(''),
 });
 
 type FormValues = {
   recipients: Array<{
     address: string;
     basisPoints: number;
+    remark: string;
   }>;
 };
 
@@ -50,6 +51,7 @@ interface _GroupServiceSetRecipientsProps {
   groupName: string | undefined;
   currentAddrs?: `0x${string}`[];
   currentRatios?: bigint[];
+  currentRemarks?: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -64,14 +66,13 @@ export default function _GroupServiceSetRecipients({
   groupName,
   currentAddrs,
   currentRatios,
+  currentRemarks,
   open,
   onOpenChange,
   onSuccess,
 }: _GroupServiceSetRecipientsProps) {
-
   // Contracts - setRecipients 和 maxRecipients 使用 GroupRecipients 合约
   const { setRecipients, isPending, isConfirming, isConfirmed, writeError } = useSetRecipients();
-  const { precision } = usePrecision(extensionAddress);
   const { maxRecipients } = useDefaultMaxRecipients();
 
   // 用户输入的是百分比，最大值是 100
@@ -135,6 +136,7 @@ export default function _GroupServiceSetRecipients({
       const initialData = currentAddrs.map((addr, index) => ({
         address: addr,
         basisPoints: Number(currentRatios[index]) / 1e16, // wei 转百分比
+        remark: currentRemarks?.[index] || '',
       }));
       form.reset({ recipients: initialData });
       // 重置成功回调标记
@@ -145,7 +147,7 @@ export default function _GroupServiceSetRecipients({
       // 重置成功回调标记
       hasCalledSuccessRef.current = false;
     }
-  }, [open, currentAddrs, currentRatios, form]);
+  }, [open, currentAddrs, currentRatios, currentRemarks, form]);
 
   const { handleError } = useContractError();
 
@@ -220,12 +222,15 @@ export default function _GroupServiceSetRecipients({
       return;
     }
 
+    // 收集备注信息
+    const remarks = values.recipients.map((r) => r.remark || '');
+
     // Call contract with groupActionTokenAddress, actionId and groupId
     if (!groupActionTokenAddress) {
       form.setError('root', { message: '无法获取 Group Action Token 地址，请刷新页面重试' });
       return;
     }
-    await setRecipients(groupActionTokenAddress, actionId, groupId, addrs, ratios);
+    await setRecipients(groupActionTokenAddress, actionId, groupId, addrs, ratios, remarks);
   };
 
   // 实时计算总百分比（强制转换为数字类型，避免字符串拼接）
@@ -325,99 +330,104 @@ export default function _GroupServiceSetRecipients({
               </div>
             )}
 
-            <div className="border rounded-md overflow-hidden -mx-2 sm:mx-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-auto px-1 sm:px-2 text-center">地址</TableHead>
-                    <TableHead className="w-16 px-1 sm:px-2 text-center">百分比</TableHead>
-                    <TableHead className="w-10 px-1 sm:px-2"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fields.map((field, index) => {
-                    // 计算当前输入框的最大值：剩余百分比 + 当前输入框的值
-                    const otherBasisPointsSum = watchedRecipients.reduce(
-                      (sum, r, i) => (i !== index ? sum + (Number(r.basisPoints) || 0) : sum),
-                      0,
-                    );
-                    const maxForThisInput = base - otherBasisPointsSum; // base = 100
-                    const isDuplicate = duplicateAddressIndices.has(index);
+            <div className="space-y-3 -mx-2 sm:mx-0">
+              {fields.map((field, index) => {
+                // 计算当前输入框的最大值：剩余百分比 + 当前输入框的值
+                const otherBasisPointsSum = watchedRecipients.reduce(
+                  (sum, r, i) => (i !== index ? sum + (Number(r.basisPoints) || 0) : sum),
+                  0,
+                );
+                const maxForThisInput = base - otherBasisPointsSum; // base = 100
+                const isDuplicate = duplicateAddressIndices.has(index);
 
-                    return (
-                      <TableRow key={field.id} className={isDuplicate ? 'bg-red-50' : ''}>
-                        <TableCell className="px-1 sm:px-2">
-                          <FormField
-                            control={form.control}
-                            name={`recipients.${index}.address`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Input
-                                    placeholder="0x..."
-                                    {...field}
-                                    onBlur={handleAddressBlur(field.onChange)}
-                                    className={`font-mono text-xs sm:text-sm h-8 px-1 sm:px-2 ${
-                                      isDuplicate ? 'border-red-500 focus-visible:ring-red-500' : ''
-                                    }`}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs" />
-                                {isDuplicate && <p className="text-xs text-red-600 mt-1">该地址重复</p>}
-                              </FormItem>
-                            )}
-                          />
-                        </TableCell>
-                        <TableCell className="px-1 sm:px-2">
-                          <FormField
-                            control={form.control}
-                            name={`recipients.${index}.basisPoints`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <div className="relative inline-block">
-                                    <Input
-                                      type="number"
-                                      min={0}
-                                      max={maxForThisInput}
-                                      placeholder="0-100"
-                                      {...field}
-                                      onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
-                                      className="h-8 px-1 sm:px-2 pr-6 max-w-20"
-                                    />
-                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs sm:text-sm">
-                                      %
-                                    </span>
-                                  </div>
-                                </FormControl>
-                                <FormMessage className="text-xs" />
-                              </FormItem>
-                            )}
-                          />
-                        </TableCell>
-                        <TableCell className="px-0 sm:px-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => remove(index)}
-                            className="h-8 w-8"
-                          >
-                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {fields.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-center text-muted-foreground h-24 text-xs sm:text-sm">
-                        暂无接收地址，点击下方按钮添加
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                return (
+                  <div
+                    key={field.id}
+                    className={`border rounded-lg p-2 sm:p-3 ${
+                      isDuplicate ? 'bg-red-50 border-red-300' : 'bg-white border-gray-200'
+                    }`}
+                  >
+                    {/* 第一行：序号 + 名称 + 百分比 + 删除按钮 */}
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <span className="text-xs text-greyscale-400 min-w-[20px]">{index + 1}.</span>
+                      <FormField
+                        control={form.control}
+                        name={`recipients.${index}.remark`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1 min-w-0">
+                            <FormControl>
+                              <Input placeholder="名称/备注" {...field} className="h-8 px-2 text-sm" />
+                            </FormControl>
+                            <FormMessage className="text-xs" />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`recipients.${index}.basisPoints`}
+                        render={({ field }) => (
+                          <FormItem className="shrink-0">
+                            <FormControl>
+                              <div className="relative inline-block">
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={maxForThisInput}
+                                  placeholder="0-100"
+                                  {...field}
+                                  onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
+                                  className="h-8 px-1 sm:px-2 pr-6 w-20"
+                                />
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs sm:text-sm">
+                                  %
+                                </span>
+                              </div>
+                            </FormControl>
+                            <FormMessage className="text-xs" />
+                          </FormItem>
+                        )}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => remove(index)}
+                        className="h-8 w-8 shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
+                      </Button>
+                    </div>
+                    {/* 第二行：地址 */}
+                    <div className="mt-1.5 ml-5 sm:ml-6">
+                      <FormField
+                        control={form.control}
+                        name={`recipients.${index}.address`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                placeholder="0x..."
+                                {...field}
+                                onBlur={handleAddressBlur(field.onChange)}
+                                className={`font-mono text-xs sm:text-sm h-8 px-2 ${
+                                  isDuplicate ? 'border-red-500 focus-visible:ring-red-500' : ''
+                                }`}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-xs" />
+                            {isDuplicate && <p className="text-xs text-red-600 mt-1">该地址重复</p>}
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              {fields.length === 0 && (
+                <div className="text-center text-muted-foreground py-8 text-xs sm:text-sm border rounded-lg border-dashed">
+                  暂无接收地址，点击下方按钮添加
+                </div>
+              )}
             </div>
 
             {/* 显示总百分比 */}
@@ -458,7 +468,7 @@ export default function _GroupServiceSetRecipients({
                   toast.error(`激励分配地址数量不能超过最大限制 ${maxRecipients.toString()}`);
                   return;
                 }
-                append({ address: '', basisPoints: 0 });
+                append({ address: '', basisPoints: 0, remark: '' });
               }}
             >
               <Plus className="w-4 h-4 mr-2" /> 添加地址

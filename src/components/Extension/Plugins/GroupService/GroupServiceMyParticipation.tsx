@@ -81,6 +81,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
     groupName: string | undefined;
     addrs?: `0x${string}`[];
     ratios?: bigint[];
+    remarks?: string[];
   } | null>(null);
 
   const handleEditClick = (action: any, group: any) => {
@@ -91,6 +92,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
       groupName: group.groupName,
       addrs: group.addrs,
       ratios: group.ratios,
+      remarks: group.remarks,
     });
     setEditDialogOpen(true);
   };
@@ -273,30 +275,30 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                       </div>
 
                       {group.addrs && group.addrs.length > 0 ? (
-                        <table className="table w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-gray-100">
-                              <th className="py-1 px-1 text-left">序号</th>
-                              <th className="py-1 px-1 text-left">地址</th>
-                              <th className="py-1 px-1 text-right">分配比例</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {group.addrs.map((addr, idx) => (
-                              <tr key={`${addr}-${idx}`} className="border-b border-gray-100">
-                                <td className="py-1 px-1 text-greyscale-400">{idx + 1}</td>
-                                <td className="py-1 px-1">
-                                  <div className="inline-flex items-center bg-gray-50 rounded-md px-2 py-1">
+                        <div className="space-y-0 mt-2">
+                          {group.addrs.map((addr, idx) => (
+                            <div key={`${addr}-${idx}`} className="border rounded-lg p-2 bg-gray-50/50">
+                              {/* 第一行：序号 + 地址 + 比例 */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="text-xs text-greyscale-400 shrink-0">{idx + 1}.</span>
+                                  <div className="inline-flex items-center bg-white rounded-md px-2 py-0.5 min-w-0">
                                     <AddressWithCopyButton address={addr} showCopyButton={true} />
                                   </div>
-                                </td>
-                                <td className="py-1 px-1 text-right font-mono text-secondary">
+                                </div>
+                                <span className="font-mono text-sm text-secondary shrink-0 ml-2">
                                   {group.ratios ? (Number(group.ratios[idx]) / 1e16).toFixed(2) : '0.00'}%
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                </span>
+                              </div>
+                              {/* 第二行：备注名称 */}
+                              <div className="ml-4">
+                                <span className="text-sm text-gray-600">
+                                  {group.remarks?.[idx] || <span className="text-greyscale-400 italic">未命名</span>}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       ) : (
                         <div className="text-sm text-greyscale-400 p-2 bg-gray-50 rounded">未设置分配地址</div>
                       )}
@@ -320,6 +322,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
           groupName={editingGroup.groupName}
           currentAddrs={editingGroup.addrs}
           currentRatios={editingGroup.ratios}
+          currentRemarks={editingGroup.remarks}
           open={editDialogOpen}
           onOpenChange={handleDialogOpenChange}
           onSuccess={() => {
