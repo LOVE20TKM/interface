@@ -104,7 +104,7 @@ const LpBasicInfo: React.FC<LpBasicInfoProps> = ({ extensionAddress, factoryAddr
         <div className="md:max-w-2xl">
           <div className="text-sm font-bold mb-1">治理票占比倍数:</div>
           <div className="font-mono text-secondary text-sm md:text-base">{govRatioMultiplier.toString()}</div>
-          <div className="text-xs text-gray-600">LP占比超过 (治理票占比 × 治理比率乘数) 的部分，不再有收益</div>
+          <div className="text-xs text-gray-600">有效LP占比超过 (治理票占比 × 治理比率乘数) 的部分，不再有收益</div>
         </div>
       </div>
 
