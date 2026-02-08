@@ -347,9 +347,32 @@ export default function _GroupServiceSetRecipients({
                       isDuplicate ? 'bg-red-50 border-red-300' : 'bg-white border-gray-200'
                     }`}
                   >
-                    {/* 第一行：序号 + 名称 + 百分比 + 删除按钮 */}
-                    <div className="flex items-center gap-1 sm:gap-2">
+                    {/* 第一行：序号 + 地址 */}
+                    <div className="flex items-center">
                       <span className="text-xs text-greyscale-400 min-w-[20px]">{index + 1}.</span>
+                      <FormField
+                        control={form.control}
+                        name={`recipients.${index}.address`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1 min-w-0">
+                            <FormControl>
+                              <Input
+                                placeholder="0x..."
+                                {...field}
+                                onBlur={handleAddressBlur(field.onChange)}
+                                className={`font-mono text-xs sm:text-sm h-8 px-2 ${
+                                  isDuplicate ? 'border-red-500 focus-visible:ring-red-500' : ''
+                                }`}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-xs" />
+                            {isDuplicate && <p className="text-xs text-red-600 mt-1">该地址重复</p>}
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    {/* 第二行：名称/备注 + 百分比 + 删除按钮 */}
+                    <div className="mt-1.5 ml-5 sm:ml-6 flex items-center gap-1 sm:gap-2">
                       <FormField
                         control={form.control}
                         name={`recipients.${index}.remark`}
@@ -376,7 +399,7 @@ export default function _GroupServiceSetRecipients({
                                   placeholder="0-100"
                                   {...field}
                                   onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
-                                  className="h-8 px-1 sm:px-2 pr-6 w-20"
+                                  className="h-8 px-1 sm:px-2 pr-6 w-16"
                                 />
                                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs sm:text-sm">
                                   %
@@ -396,29 +419,6 @@ export default function _GroupServiceSetRecipients({
                       >
                         <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                       </Button>
-                    </div>
-                    {/* 第二行：地址 */}
-                    <div className="mt-1.5 ml-5 sm:ml-6">
-                      <FormField
-                        control={form.control}
-                        name={`recipients.${index}.address`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                placeholder="0x..."
-                                {...field}
-                                onBlur={handleAddressBlur(field.onChange)}
-                                className={`font-mono text-xs sm:text-sm h-8 px-2 ${
-                                  isDuplicate ? 'border-red-500 focus-visible:ring-red-500' : ''
-                                }`}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-xs" />
-                            {isDuplicate && <p className="text-xs text-red-600 mt-1">该地址重复</p>}
-                          </FormItem>
-                        )}
-                      />
                     </div>
                   </div>
                 );

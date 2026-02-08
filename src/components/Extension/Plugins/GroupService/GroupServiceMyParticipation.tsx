@@ -275,7 +275,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                       </div>
 
                       {group.addrs && group.addrs.length > 0 ? (
-                        <div className="space-y-0 mt-2">
+                        <div className="space-y-2 mt-2">
                           {group.addrs.map((addr, idx) => (
                             <div key={`${addr}-${idx}`} className="border rounded-lg p-2 bg-gray-50/50">
                               {/* 第一行：序号 + 地址 + 比例 */}
