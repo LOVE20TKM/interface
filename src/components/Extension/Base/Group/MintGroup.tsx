@@ -281,9 +281,14 @@ export default function MintGroup() {
                   </FormControl>
                   <FormMessage />
                   {maxGroupNameLength && (
-                    <div className="text-xs text-greyscale-400 mt-1">
-                      最大长度：{maxGroupNameLength.toString()} 字节 (可以是英文、汉字、数字、符号等)
-                    </div>
+                    <>
+                      <div className="text-xs text-greyscale-400 mt-1">
+                        最大长度：{maxGroupNameLength.toString()} 字节
+                      </div>
+                      <div className="text-xs text-greyscale-400 mt-1">
+                        (其中英文或数字一个占1个字节，中文一个占3个字节)
+                      </div>
+                    </>
                   )}
                 </FormItem>
               )}
@@ -337,7 +342,7 @@ export default function MintGroup() {
             )}
 
             {/* 授权和铸造按钮 */}
-            <div className="flex space-x-4 w-full pt-4">
+            <div className="flex space-x-4 w-full pt-2">
               <Button
                 className="w-1/2"
                 onClick={onApprove}
