@@ -564,7 +564,7 @@ const TokenPage = () => {
                       <AddressItem name="Group" address={constantsAddresses.Group} />
                       <AddressItem name="ExtensionCenter" address={constantsAddresses.ExtensionCenter} />
                       <AddressItem name="ExtensionLpFactory" address={constantsAddresses.ExtensionLpFactory} />
-                      <AddressItem name="GroupManager" address={constantsAddresses.ExtensionGroupManager} />
+                      {/* <AddressItem name="GroupManager" address={constantsAddresses.ExtensionGroupManager} />
                       <AddressItem name="GroupJoin" address={constantsAddresses.ExtensionGroupJoin} />
                       <AddressItem name="GroupVerify" address={constantsAddresses.ExtensionGroupVerify} />
                       <AddressItem name="GroupRecipients" address={constantsAddresses.ExtensionGroupRecipients} />
@@ -577,7 +577,7 @@ const TokenPage = () => {
                         name="ExtensionGroupServiceFactory"
                         nameClassName="text-sm"
                         address={constantsAddresses.ExtensionGroupServiceFactory}
-                      />
+                      /> */}
                     </CardContent>
                   </Card>
                 </div>
