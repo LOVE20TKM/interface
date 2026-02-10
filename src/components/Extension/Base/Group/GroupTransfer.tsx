@@ -1,5 +1,5 @@
 /**
- * 链群 NFT 转移组件
+ * 链群 NFT 转让组件
  */
 
 'use client';
@@ -105,7 +105,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
     }
   }, [watchedToAddress]);
 
-  // NFT 转移
+  // NFT 转让
   const {
     transferFrom,
     isPending: isPendingTransfer,
@@ -118,10 +118,10 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   const isTransferring = isPendingTransfer || isConfirmingTransfer;
   const isTransferConfirmed = isConfirmedTransfer;
 
-  // 监听转移成功
+  // 监听转让成功
   useEffect(() => {
     if (isTransferConfirmed && transferTxHash && transferTxHash !== lastProcessedTxHash) {
-      toast.success(`转移链群NFT成功`);
+      toast.success(`转让链群NFT成功`);
       // 清空表单
       form.reset();
       // 记录已处理的交易哈希，避免重复处理
@@ -133,7 +133,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
     }
   }, [isTransferConfirmed, transferTxHash, lastProcessedTxHash, form, router]);
 
-  // 处理转移
+  // 处理转让
   const handleTransfer = form.handleSubmit(async (data) => {
     if (!account) {
       toast.error('请先连接钱包');
@@ -149,7 +149,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
 
     try {
       const toAddress = normalizedAddress as `0x${string}`;
-      console.log('执行NFT转移:', { from: account, to: toAddress, tokenId });
+      console.log('执行NFT转让:', { from: account, to: toAddress, tokenId });
       await transferFrom(account, toAddress, tokenId);
     } catch (error: any) {
       console.error('Transfer error:', error);
@@ -169,7 +169,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   if (isPendingGroupName) {
     return (
       <div className="p-6">
-        <LeftTitle title="转移链群NFT" />
+        <LeftTitle title="转让链群NFT" />
         <div className="flex justify-center py-8">
           <LoadingIcon />
         </div>
@@ -180,7 +180,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   if (groupNameError) {
     return (
       <div className="p-6">
-        <LeftTitle title="转移链群NFT" />
+        <LeftTitle title="转让链群NFT" />
         <div className="text-center text-red-500 mt-4">加载NFT信息失败: {groupNameError.message}</div>
       </div>
     );
@@ -189,7 +189,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   if (!groupName) {
     return (
       <div className="p-6">
-        <LeftTitle title="转移链群NFT" />
+        <LeftTitle title="转让链群NFT" />
         <div className="text-center text-gray-500 mt-4">未找到NFT信息</div>
       </div>
     );
@@ -199,7 +199,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
 
   return (
     <div className="p-6">
-      <LeftTitle title="转移链群NFT" />
+      <LeftTitle title="转让链群 NFT 给指定地址：" />
       <div className="w-full max-w-md mx-auto mt-4">
         <Form {...form}>
           <form className="space-y-4">
@@ -245,17 +245,17 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
               )}
             />
 
-            {/* 转移按钮 */}
+            {/* 转让按钮 */}
             <div className="flex space-x-2 pt-4">
               <Button className="w-full" onClick={handleTransfer} disabled={isTransferring || isDisabled} size="lg">
-                {isTransferring ? '转移中...' : '确认转移'}
+                {isTransferring ? '转让中...' : '确认转让'}
               </Button>
             </div>
           </form>
         </Form>
       </div>
 
-      <LoadingOverlay isLoading={isTransferring} text="转移中..." />
+      <LoadingOverlay isLoading={isTransferring} text="转让中..." />
     </div>
   );
 };

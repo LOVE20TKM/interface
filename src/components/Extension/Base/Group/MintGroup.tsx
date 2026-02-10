@@ -23,7 +23,10 @@ import { formatTokenAmount } from '@/src/lib/format';
 import { useContractError } from '@/src/errors/useContractError';
 import { useError } from '@/src/contexts/ErrorContext';
 import { useBalanceOf, useAllowance, useApprove } from '@/src/hooks/contracts/useLOVE20Token';
-import { useMint, useMaxGroupNameLength } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
+import {
+  useMint,
+  useMaxGroupNameLength,
+} from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useGroupNameValidation } from '@/src/hooks/extension/base/composite/useGroupNameValidation';
 
 // my components
@@ -210,7 +213,7 @@ export default function MintGroup() {
       toast.success('铸造成功！');
       // 2秒后跳转到"我的"页面
       setTimeout(() => {
-        router.push('/group/groupids?tab=my');
+        router.push('/group/groupids');
       }, 2000);
     }
   }, [isConfirmedMint, router]);
@@ -259,7 +262,7 @@ export default function MintGroup() {
 
   return (
     <>
-      <div className="px-4 mt-4">
+      <div className="px-2 mt-4">
         <LeftTitle title="铸造链群NFT" />
 
         <Form {...form}>

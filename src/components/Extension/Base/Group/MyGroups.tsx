@@ -9,16 +9,24 @@ import Link from 'next/link';
 
 // my hooks
 import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
+import { useTotalSupply, useTotalBurnedForMint } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
+import { formatTokenAmount } from '@/src/lib/format';
 
 // my components
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import { Button } from '@/components/ui/button';
 
+const FIRST_TOKEN_SYMBOL = process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL as string;
+
 export default function MyGroups() {
   const { address: account, isConnected } = useAccount();
 
   const { myGroups, balance, isPending, error } = useMyGroups(account);
+
+  // 获取统计数据
+  const { totalSupply } = useTotalSupply();
+  const { totalBurnedForMint } = useTotalBurnedForMint();
 
   if (!isConnected) {
     return (
@@ -38,7 +46,7 @@ export default function MyGroups() {
 
   if (error) {
     return (
-      <div className="px-4 mt-4">
+      <div className="px-2 mt-4">
         <div className="alert alert-error">
           <svg className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
             <path
@@ -56,7 +64,29 @@ export default function MyGroups() {
 
   return (
     <div className="px-4 mt-4">
-      <LeftTitle title="我的链群NFT" />
+      {/* 统计信息提示框 */}
+      <div className="bg-gray-100 rounded-lg p-3 mb-4 space-y-2">
+        <div className="text-sm text-gray-600">
+          社区共铸造 NFT：
+          <span className="font-medium text-gray-800 ml-1">
+            {totalSupply !== undefined ? totalSupply.toString() : '...'} 个
+          </span>
+        </div>
+        <div className="text-sm text-gray-600">
+          累计销毁 {FIRST_TOKEN_SYMBOL} 代币：
+          <span className="font-medium text-gray-800 ml-1">
+            {totalBurnedForMint !== undefined ? formatTokenAmount(totalBurnedForMint) : '...'}
+          </span>
+        </div>
+      </div>
+
+      {/* LeftTitle 和铸造链接 */}
+      <div className="flex items-center justify-between mb-4">
+        <LeftTitle title="我的链群NFT" />
+        <Link href="/group/mint" className="text-sm text-secondary hover:underline">
+          铸造链群 NFT &gt;&gt;
+        </Link>
+      </div>
 
       <div className="mb-4">
         {balance > 3 && (
@@ -71,7 +101,7 @@ export default function MyGroups() {
         <div className="text-center text-sm text-greyscale-500 p-8">
           <div className="mb-8">您还没有链群NFT</div>
           <Button variant="outline" className="w-1/2 text-secondary border-secondary" asChild>
-            <Link href="/group/groupids/?tab=mint">去铸造NFT &gt;&gt;</Link>
+            <Link href="/group/mint">去铸造NFT &gt;&gt;</Link>
           </Button>
         </div>
       ) : (
@@ -93,7 +123,7 @@ export default function MyGroups() {
                   </td>
                   <td className="px-2 text-right w-auto">
                     <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
-                      <Link href={`/group/transfer?tokenId=${group.tokenId.toString()}`}>转移</Link>
+                      <Link href={`/group/transfer?tokenId=${group.tokenId.toString()}`}>转让</Link>
                     </Button>
                   </td>
                 </tr>

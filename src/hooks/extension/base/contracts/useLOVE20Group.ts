@@ -170,6 +170,21 @@ export const useTotalSupply = () => {
 };
 
 /**
+ * Hook for totalBurnedForMint
+ * 获取为铸造而销毁的 LOVE20 代币总量
+ */
+export const useTotalBurnedForMint = () => {
+  const { data, isPending, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20GroupAbi,
+    functionName: 'totalBurnedForMint',
+    args: [],
+  });
+
+  return { totalBurnedForMint: data ? safeToBigInt(data) : undefined, isPending, error };
+};
+
+/**
  * Hook for holdersCount
  * 获取持有者总数
  */
