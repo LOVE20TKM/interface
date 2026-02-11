@@ -40,33 +40,33 @@ export interface ExtensionConfig {
 export const getExtensionConfigs = (): ExtensionConfig[] => {
   const configs: ExtensionConfig[] = [];
 
-  // // 链群行动 扩展配置
-  // const groupActionFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_ACTION_FACTORY;
-  // if (groupActionFactory) {
-  //   configs.push({
-  //     type: ExtensionType.GROUP_ACTION,
-  //     name: '链群行动',
-  //     factoryAddress: groupActionFactory as `0x${string}`,
-  //     actionDetailTabs: [
-  //       { key: 'public', label: '链群公示', showCondition: 'hasExtension' },
-  //       { key: 'group-manage', label: '我的链群', showCondition: 'hasExtension' },
-  //     ],
-  //   });
-  // }
+  // 链群行动 扩展配置
+  const groupActionFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_ACTION_FACTORY;
+  if (groupActionFactory) {
+    configs.push({
+      type: ExtensionType.GROUP_ACTION,
+      name: '链群行动',
+      factoryAddress: groupActionFactory as `0x${string}`,
+      actionDetailTabs: [
+        { key: 'public', label: '链群公示', showCondition: 'hasExtension' },
+        { key: 'group-manage', label: '我的链群', showCondition: 'hasExtension' },
+      ],
+    });
+  }
 
-  // // 链群服务 扩展配置
-  // const groupServiceFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_SERVICE_FACTORY;
-  // if (groupServiceFactory) {
-  //   configs.push({
-  //     type: ExtensionType.GROUP_SERVICE,
-  //     name: '链群服务行动',
-  //     factoryAddress: groupServiceFactory as `0x${string}`,
-  //     actionDetailTabs: [
-  //       { key: 'public', label: '激励公示', showCondition: 'hasExtension' },
-  //       { key: 'addresses', label: '服务者', showCondition: 'hasExtension' },
-  //     ],
-  //   });
-  // }
+  // 链群服务 扩展配置
+  const groupServiceFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_SERVICE_FACTORY;
+  if (groupServiceFactory) {
+    configs.push({
+      type: ExtensionType.GROUP_SERVICE,
+      name: '链群服务行动',
+      factoryAddress: groupServiceFactory as `0x${string}`,
+      actionDetailTabs: [
+        { key: 'public', label: '激励公示', showCondition: 'hasExtension' },
+        { key: 'addresses', label: '服务者', showCondition: 'hasExtension' },
+      ],
+    });
+  }
 
   // LP 扩展配置
   const stakeLpFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY;
