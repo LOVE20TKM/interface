@@ -3,7 +3,6 @@ import React, { useEffect, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/router';
-import { useAccount, useChainId } from 'wagmi';
 
 // my hooks
 import { useCurrentRound, useSubmit } from '@/src/hooks/contracts/useLOVE20Submit';
@@ -17,7 +16,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import AlertBox from '@/src/components/Common/AlertBox';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+import { formatPercentage } from '@/src/lib/format';
 
 interface ActionPanelForJoinProps {
   actionId: bigint;
@@ -27,7 +26,6 @@ interface ActionPanelForJoinProps {
 
 const ActionPanelForSubmit: React.FC<ActionPanelForJoinProps> = ({ actionId, submitted, onRoundChange }) => {
   const { token } = useContext(TokenContext) || {};
-  const chainId = useChainId();
   const router = useRouter();
 
   // 获取当前轮次, 并设置状态给父组件

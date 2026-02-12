@@ -1,4 +1,5 @@
 // src/lib/tukeWalletUtils.ts
+// 【TUKE 钱包已升级，不再需要老的兼容方式，相关代码应删除】
 import { ethers } from 'ethers';
 
 export const isTukeWallet = (): boolean => {

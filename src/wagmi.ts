@@ -3,7 +3,8 @@ import { Chain } from 'wagmi/chains';
 import { mainnet, sepolia, bscTestnet } from 'wagmi/chains';
 import { createConfig, http } from 'wagmi';
 import { injected } from 'wagmi/connectors';
-import { isClient, hasWeb3Wallet, getEthereumProvider } from '@/src/lib/clientUtils';
+import { isClient } from '@/src/lib/clientUtils';
+import { detectBrowserEnv } from '@/src/lib/browserDetect';
 
 // 定义自定义链 Anvil
 const anvil: Chain = {
@@ -69,30 +70,24 @@ export const config = createConfig({
   connectors: [
     injected({
       target() {
-        // 使用安全的客户端检测工具
-        if (!isClient() || !hasWeb3Wallet()) {
-          return {
-            id: 'fallback',
-            name: 'Wallet',
-            provider: null,
-          };
+        // SSR 环境或无钱包时返回安全默认值
+        if (!isClient()) {
+          return { id: 'fallback', name: 'Wallet', provider: null };
         }
 
-        const provider = getEthereumProvider();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const provider = (window as any).ethereum;
         if (provider) {
+          const env = detectBrowserEnv();
           return {
             id: 'injected',
-            name: 'Injected Wallet',
-            provider: provider,
+            name: env.walletName ?? 'Injected Wallet',
+            provider,
           };
         }
 
-        // 如果没有找到钱包，返回一个安全的默认值
-        return {
-          id: 'fallback',
-          name: 'Wallet',
-          provider: null,
-        };
+        // 没有找到钱包，返回安全的默认值
+        return { id: 'fallback', name: 'Wallet', provider: null };
       },
       shimDisconnect: true, // 确保断开连接时清理状态
     }),

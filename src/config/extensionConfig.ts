@@ -40,9 +40,12 @@ export interface ExtensionConfig {
 export const getExtensionConfigs = (): ExtensionConfig[] => {
   const configs: ExtensionConfig[] = [];
 
+  // 链群行动 & 链群服务扩展仅在非正式环境（NEXT_PUBLIC_TOKEN_PREFIX 非空）时启用
+  const isTestEnv = !!process.env.NEXT_PUBLIC_TOKEN_PREFIX;
+
   // 链群行动 扩展配置
   const groupActionFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_ACTION_FACTORY;
-  if (groupActionFactory) {
+  if (isTestEnv && groupActionFactory) {
     configs.push({
       type: ExtensionType.GROUP_ACTION,
       name: '链群行动',
@@ -56,7 +59,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
 
   // 链群服务 扩展配置
   const groupServiceFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_SERVICE_FACTORY;
-  if (groupServiceFactory) {
+  if (isTestEnv && groupServiceFactory) {
     configs.push({
       type: ExtensionType.GROUP_SERVICE,
       name: '链群服务行动',

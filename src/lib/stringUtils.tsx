@@ -62,7 +62,7 @@ export const renderTextWithLinks = (text: string, preserveLineBreaks: boolean = 
                 return false;
               }
 
-              // 调用我们的处理逻辑
+              // 调用统一的外部链接处理
               NavigationUtils.handleExternalLink(url);
 
               // 返回 false 确保不会触发默认行为

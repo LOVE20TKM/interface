@@ -4,7 +4,7 @@
 'use client';
 
 // React
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
@@ -33,6 +33,7 @@ import {
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
+import { LocalCache } from '@/src/lib/LocalCache';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 
 // 复合 hooks
@@ -70,6 +71,12 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
   // 获取当前轮次
   const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
+
+  // 打分缓存 key（按 extensionAddress + groupId + currentRound 唯一标识）
+  const cacheKey = useMemo(
+    () => (currentRound ? `group_verify_scores_${extensionAddress}_${groupId}_${currentRound}` : ''),
+    [extensionAddress, groupId, currentRound],
+  );
 
   // 检查是否有打分权限
   const {
@@ -112,17 +119,29 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   // 打分状态
   const [accountScores, setAccountScores] = useState<AccountScore[]>([]);
 
-  // 初始化打分列表
+  // 初始化打分列表（优先从 LocalCache 恢复缓存分数）
   useEffect(() => {
     if (accounts && accounts.length > 0) {
+      const cached = cacheKey ? LocalCache.get<Record<string, string>>(cacheKey) : null;
       setAccountScores(
         accounts.map((acc) => ({
           account: acc,
-          score: '100', // 默认100分
+          score: cached?.[acc.toLowerCase()] ?? '100', // 有缓存用缓存，否则默认100分
         })),
       );
     }
-  }, [accounts]);
+  }, [accounts, cacheKey]);
+
+  // 分数变更时自动保存到 LocalCache
+  useEffect(() => {
+    if (cacheKey && accountScores.length > 0) {
+      const map: Record<string, string> = {};
+      accountScores.forEach((s) => {
+        map[s.account.toLowerCase()] = s.score;
+      });
+      LocalCache.set(cacheKey, map);
+    }
+  }, [accountScores, cacheKey]);
 
   // 打分
   const {
@@ -233,12 +252,16 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
   useEffect(() => {
     if (isConfirmedVerify) {
+      // 提交成功后清除打分缓存
+      if (cacheKey) {
+        LocalCache.remove(cacheKey);
+      }
       toast.success('打分提交成功');
       setTimeout(() => {
         router.push(`/extension/my_verifying_groups?symbol=${token?.symbol}`);
       }, 1500);
     }
-  }, [isConfirmedVerify, router]);
+  }, [isConfirmedVerify, router, cacheKey]);
 
   // 错误处理
   const { handleError } = useContractError();
