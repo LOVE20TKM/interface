@@ -45,7 +45,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
 
   // 链群行动 扩展配置
   const groupActionFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_ACTION_FACTORY;
-  if (isTestEnv && groupActionFactory) {
+  if (groupActionFactory) {
     configs.push({
       type: ExtensionType.GROUP_ACTION,
       name: '链群行动',
