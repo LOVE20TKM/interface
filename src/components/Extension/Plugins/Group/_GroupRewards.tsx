@@ -4,11 +4,17 @@
 'use client';
 
 // React
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+
+// 第三方库
+import { ChevronRight, ChevronDown } from 'lucide-react';
+
+// 类型
+import { ActionInfo } from '@/src/types/love20types';
 
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -19,9 +25,13 @@ import { useGroupAccountsRewardOfRound } from '@/src/hooks/extension/plugins/gro
 import { useGroupWarningRatesOfRound } from '@/src/hooks/extension/plugins/group/composite/useGroupWarningRatesOfRound';
 import { useVerifiedAccountCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
+// 复合 hooks
+import { useVerificationInfos } from '@/src/hooks/composite/useVerificationInfos';
+
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
 import { formatPercentage, formatTokenAmount, formatUnits } from '@/src/lib/format';
+import { LinkIfUrl } from '@/src/lib/stringUtils';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -33,9 +43,11 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 interface GroupRewardsProps {
   extensionAddress: `0x${string}`;
   groupId: bigint;
+  actionId: bigint;
+  actionInfo: ActionInfo;
 }
 
-const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId }) => {
+const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId, actionId, actionInfo }) => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
 
@@ -88,6 +100,40 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
     groupId,
   });
 
+  // 从激励记录中提取账户地址列表（用于批量获取验证信息）
+  const accounts = useMemo(() => {
+    return accountRewardRecords?.map((record) => record.account) || [];
+  }, [accountRewardRecords]);
+
+  // 批量获取验证信息
+  const {
+    verificationInfos,
+    isPending: isPendingVerificationInfos,
+    error: errorVerificationInfos,
+  } = useVerificationInfos({
+    tokenAddress: token?.address,
+    actionId,
+    accounts,
+    verificationKeys: actionInfo?.body.verificationKeys || [],
+    enabled: !!token?.address && !!actionInfo && accounts.length > 0,
+  });
+
+  // 展开/收起状态
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (address: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(address)) {
+      newExpanded.delete(address);
+    } else {
+      newExpanded.add(address);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  // 是否有验证信息可展示
+  const hasVerificationKeys = actionInfo?.body.verificationKeys && actionInfo.body.verificationKeys.length > 0;
+
   // 错误处理
   const { handleError } = useContractError();
   useEffect(() => {
@@ -95,7 +141,8 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
     if (errorRecords) handleError(errorRecords);
     if (errorVerifiedAccountCount) handleError(errorVerifiedAccountCount);
     if (errorWarningRates) handleError(errorWarningRates);
-  }, [errorRound, errorRecords, errorVerifiedAccountCount, errorWarningRates, handleError]);
+    if (errorVerificationInfos) handleError(errorVerificationInfos);
+  }, [errorRound, errorRecords, errorVerifiedAccountCount, errorWarningRates, errorVerificationInfos, handleError]);
 
   const handleChangedRound = (round: number) => {
     const newRound = BigInt(round);
@@ -309,41 +356,74 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId 
                     verifiedAccountCount !== undefined &&
                     item.originalIndex >= Number(verifiedAccountCount));
 
+                const isExpanded = expandedRows.has(item.account);
+                const verificationInfo = verificationInfos?.find(
+                  (v) => v.account.toLowerCase() === item.account.toLowerCase(),
+                );
+
                 return (
-                  <tr key={`${item.account}-${index}`} className="border-b border-gray-100">
-                    <td className="pl-0 pr-[2px] w-[1%] whitespace-nowrap text-center text-greyscale-400 tabular-nums">
-                      {index + 1}
-                    </td>
-                    <td className="pl-0 pr-1">
-                      <div className="flex items-center gap-2">
-                        <AddressWithCopyButton address={item.account} showCopyButton={true} />
-                      </div>
-                      <div className="text-xs text-greyscale-400 mt-0.5">
-                        第{item.joinedRound.toString()}轮
-                        {isTrialUser && (
-                          <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded">体验</span>
+                  <React.Fragment key={`${item.account}-${index}`}>
+                    <tr className="border-b border-gray-100">
+                      <td className="pl-0 pr-[4px] w-[1%] whitespace-nowrap text-center text-greyscale-400 tabular-nums">
+                        {hasVerificationKeys && (
+                          <button
+                            onClick={() => toggleRow(item.account)}
+                            className="text-greyscale-400 hover:text-greyscale-600"
+                          >
+                            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                          </button>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-1 text-right">
-                      <div className="font-mono">{formatTokenAmount(item.joinedAmount)}</div>
-                    </td>
-                    <td className="px-1 text-right">
-                      {shouldShowNotVerified ? (
-                        <div className="text-greyscale-500">未验证</div>
-                      ) : (
-                        <div className="font-mono">{Number(item.originScore).toString()}</div>
-                      )}
-                    </td>
-                    <td className="px-1 text-right">
-                      {shouldShowNotGenerated ? (
-                        <div className="text-greyscale-500">未生成</div>
-                      ) : (
-                        <div className="font-mono text-secondary">{formatTokenAmount(item.totalReward)}</div>
-                      )}
-                      {/* <div className="text-xs text-greyscale-500">{item.rewardPercentage.toFixed(2)}%</div> */}
-                    </td>
-                  </tr>
+                        {index + 1}
+                      </td>
+                      <td className="pl-0 pr-1">
+                        <div className="flex items-center gap-2">
+                          <AddressWithCopyButton address={item.account} showCopyButton={true} />
+                        </div>
+                        <div className="text-xs text-greyscale-400 mt-0.5">
+                          第{item.joinedRound.toString()}轮
+                          {isTrialUser && (
+                            <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded">体验</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-1 text-right">
+                        <div className="font-mono">{formatTokenAmount(item.joinedAmount)}</div>
+                      </td>
+                      <td className="px-1 text-right">
+                        {shouldShowNotVerified ? (
+                          <div className="text-greyscale-500">未验证</div>
+                        ) : (
+                          <div className="font-mono">{Number(item.originScore).toString()}</div>
+                        )}
+                      </td>
+                      <td className="px-1 text-right">
+                        {shouldShowNotGenerated ? (
+                          <div className="text-greyscale-500">未生成</div>
+                        ) : (
+                          <div className="font-mono text-secondary">{formatTokenAmount(item.totalReward)}</div>
+                        )}
+                        {/* <div className="text-xs text-greyscale-500">{item.rewardPercentage.toFixed(2)}%</div> */}
+                      </td>
+                    </tr>
+
+                    {/* 展开的验证信息行 */}
+                    {hasVerificationKeys && verificationInfo && isExpanded && (
+                      <tr className="border-b border-gray-100 bg-gray-50">
+                        <td></td>
+                        <td colSpan={5} className="px-1 py-3">
+                          <div className="text-sm text-greyscale-600">
+                            <div className="text-xs text-greyscale-400 mb-2">验证信息:</div>
+                            {actionInfo.body.verificationKeys.map((key, i) => (
+                              <div key={i} className="mb-1">
+                                <span className="text-greyscale-500">{key}:</span>{' '}
+                                <LinkIfUrl text={verificationInfo.infos[i] || ''} />
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
               {/* 汇总行 */}

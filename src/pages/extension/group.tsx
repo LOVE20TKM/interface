@@ -182,7 +182,7 @@ const ActionGroupPage: React.FC = () => {
       case 'detail':
         return <_GroupDetail extensionAddress={extensionAddress} groupId={groupIdBigInt} />;
       case 'rewards':
-        return <_GroupRewards extensionAddress={extensionAddress} groupId={groupIdBigInt} />;
+        return <_GroupRewards extensionAddress={extensionAddress} groupId={groupIdBigInt} actionId={actionId!} actionInfo={actionInfo} />;
       case 'apps': {
         return <_GroupApps extensionAddress={extensionAddress} groupId={groupIdBigInt} actionId={actionId!} />;
       }
