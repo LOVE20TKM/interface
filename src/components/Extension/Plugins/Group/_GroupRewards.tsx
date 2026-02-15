@@ -22,7 +22,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useGroupAccountsRewardOfRound } from '@/src/hooks/extension/plugins/group/composite/useGroupAccountsRewardOfRound';
-import { useGroupWarningRatesOfRound } from '@/src/hooks/extension/plugins/group/composite/useGroupWarningRatesOfRound';
+import { useDistrustRateByGroupId } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useVerifiedAccountCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
 // 复合 hooks
@@ -88,17 +88,12 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
     groupId,
   });
 
-  // 获取指定轮次的链群不信任率/容量衰减率（用于顶部警告）
+  // 获取指定轮次的链群不信任率（用于顶部警告）
   const {
     distrustRate,
-    capacityDecayRate,
     isPending: isPendingWarningRates,
     error: errorWarningRates,
-  } = useGroupWarningRatesOfRound({
-    extensionAddress,
-    round: selectedRound,
-    groupId,
-  });
+  } = useDistrustRateByGroupId(extensionAddress, selectedRound, groupId);
 
   // 从激励记录中提取账户地址列表（用于批量获取验证信息）
   const accounts = useMemo(() => {
@@ -248,23 +243,21 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
         )}
       </div>
 
-      {/* 警告：所选轮次不信任率/容量衰减率 */}
+      {/* 警告：所选轮次不信任率 */}
       {(() => {
         if (selectedRound <= BigInt(0)) return null;
         if (isPendingWarningRates) return null;
 
         const distrustRatePercent = distrustRate !== undefined ? parseFloat(formatUnits(distrustRate)) * 100 : 0;
-        const capacityDecayRatePercent =
-          capacityDecayRate !== undefined ? parseFloat(formatUnits(capacityDecayRate)) * 100 : 0;
 
-        const showDistrustWarn = distrustRatePercent > 0;
-        const showCapacityDecayWarn = capacityDecayRatePercent > 0;
-        if (!showDistrustWarn && !showCapacityDecayWarn) return null;
+        if (distrustRatePercent <= 0) return null;
 
         const actionIdForLink = typeof router.query.actionId === 'string' ? router.query.actionId : undefined;
         const symbolForLink = token?.symbol || (typeof router.query.symbol === 'string' ? router.query.symbol : '');
         const distrustHref = actionIdForLink
-          ? `/action/info/?symbol=${encodeURIComponent(symbolForLink)}&id=${actionIdForLink}&tab=public&tab2=distrust`
+          ? `/action/info/?symbol=${encodeURIComponent(
+              symbolForLink,
+            )}&id=${actionIdForLink}&tab=public&tab2=distrust&round=${selectedRound.toString()}`
           : undefined;
 
         return (
@@ -273,27 +266,19 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
               type="error"
               message={
                 <div className="space-y-1 text-red-600">
-                  {showDistrustWarn && (
-                    <div>
-                      {distrustHref ? (
-                        <Link href={distrustHref} className="underline underline-offset-2 hover:text-red-700">
-                          本链群第 {selectedRound.toString()} 轮，被投不信任票，不信任率
-                          {formatPercentage(distrustRatePercent)}
-                        </Link>
-                      ) : (
-                        <>
-                          本链群第 {selectedRound.toString()} 轮，被投不信任票，不信任率
-                          {formatPercentage(distrustRatePercent)}
-                        </>
-                      )}
-                    </div>
-                  )}
-                  {showCapacityDecayWarn && (
-                    <div>
-                      本链群第 {selectedRound.toString()} 轮，服务者容量不足，验证衰减率
-                      {formatPercentage(capacityDecayRatePercent)}
-                    </div>
-                  )}
+                  <div>
+                    {distrustHref ? (
+                      <Link href={distrustHref} className="underline underline-offset-2 hover:text-red-700">
+                        本链群第 {selectedRound.toString()} 轮，被投不信任票，不信任率
+                        {formatPercentage(distrustRatePercent)}
+                      </Link>
+                    ) : (
+                      <>
+                        本链群第 {selectedRound.toString()} 轮，被投不信任票，不信任率
+                        {formatPercentage(distrustRatePercent)}
+                      </>
+                    )}
+                  </div>
                 </div>
               }
             />

@@ -19,11 +19,10 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useCurrentRound as useVerifyCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useGroupsRewardOfAction } from '@/src/hooks/extension/plugins/group/composite/useGroupsRewardOfAction';
 import { useDistrustVotesOfRound } from '@/src/hooks/extension/plugins/group/composite/useDistrustVotesOfRound';
-import { useCapacityDecayRatesOfRound } from '@/src/hooks/extension/plugins/group/composite/useCapacityDecayRatesOfRound';
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
-import { formatPercentage, formatTokenAmount, formatUnits } from '@/src/lib/format';
+import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -69,23 +68,6 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
     round: selectedRound > BigInt(0) ? selectedRound : undefined,
   });
 
-  // 获取容量衰减率数据
-  // 提取所有 groupId 用于批量查询
-  const groupIds = useMemo(() => {
-    if (!groupRewards || groupRewards.length === 0) return undefined;
-    return groupRewards.map((item) => item.groupId);
-  }, [groupRewards]);
-
-  const {
-    capacityDecayRates: capacityDecayRateMap,
-    isPending: isPendingCapacityDecayRate,
-    error: errorCapacityDecayRate,
-  } = useCapacityDecayRatesOfRound({
-    extensionAddress,
-    round: selectedRound > BigInt(0) ? selectedRound : undefined,
-    groupIds,
-  });
-
   // 创建不信任投票数据的 Map，按 groupId 映射
   const distrustVotesMap = useMemo(() => {
     const map = new Map<bigint, { distrustVotes: bigint; distrustRatio: number }>();
@@ -104,7 +86,7 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
     return map;
   }, [distrustVotesData]);
 
-  // 按激励从高到低排序，并合并不信任投票数据和容量衰减率
+  // 按激励从高到低排序，并合并不信任投票数据
   const sortedGroupRewards = useMemo(() => {
     if (!groupRewards || groupRewards.length === 0) return [];
 
@@ -112,13 +94,10 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
       .map((item) => {
         // 合并不信任投票数据
         const distrustData = distrustVotesMap.get(item.groupId);
-        // 合并容量衰减率
-        const capacityDecayRate = capacityDecayRateMap.get(item.groupId);
         return {
           ...item,
           distrustVotes: distrustData?.distrustVotes,
           distrustRatio: distrustData?.distrustRatio,
-          capacityDecayRate,
         };
       })
       .sort((a, b) => {
@@ -129,7 +108,7 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
         if (rewardA < rewardB) return 1;
         return 0;
       });
-  }, [groupRewards, distrustVotesMap, capacityDecayRateMap]);
+  }, [groupRewards, distrustVotesMap]);
 
   // 错误处理
   const { handleError } = useContractError();
@@ -137,8 +116,7 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
     if (error) handleError(error);
     if (errorRound) handleError(errorRound);
     if (errorDistrust) handleError(errorDistrust);
-    if (errorCapacityDecayRate) handleError(errorCapacityDecayRate);
-  }, [error, errorRound, errorDistrust, errorCapacityDecayRate, handleError]);
+  }, [error, errorRound, errorDistrust, handleError]);
 
   // 处理轮次切换
   const handleChangedRound = (round: number) => {
@@ -147,10 +125,10 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
 
   // 只有在真正加载中且还没有数据时才显示加载状态
   // 1. 还在获取轮次且未选择轮次时显示加载
-  // 2. 或者已选择轮次且正在获取激励数据、不信任投票数据或容量衰减率时显示加载
+  // 2. 或者已选择轮次且正在获取激励数据或不信任投票数据时显示加载
   if (
     (isPendingRound && selectedRound === BigInt(0)) ||
-    (selectedRound > BigInt(0) && (isPending || isPendingDistrust || isPendingCapacityDecayRate))
+    (selectedRound > BigInt(0) && (isPending || isPendingDistrust))
   ) {
     return (
       <div className="flex flex-col items-center py-8">
@@ -188,7 +166,7 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
                   </div>
                 </th>
                 <th className="px-1 text-center hidden md:table-cell">参与代币</th>
-                <th className="px-1 text-center">不信任率/容量衰减率</th>
+                <th className="px-1 text-center">不信任率</th>
                 <th className="px-1 text-center">激励总数</th>
               </tr>
             </thead>
@@ -219,28 +197,11 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
                   </td>
                   <td className="px-1 text-center">
                     <div className="font-mono text-secondary">
-                      <span>
-                        {item.distrustRatio !== undefined ? (
-                          <span className="text-red-500">-{formatPercentage(item.distrustRatio * 100)}</span>
-                        ) : (
-                          <>-</>
-                        )}
-                      </span>{' '}
-                      <span className="text-gray-500">/</span>{' '}
-                      <span className="mt-1">
-                        {item.capacityDecayRate !== undefined ? (
-                          (() => {
-                            const decayRate = parseFloat(formatUnits(item.capacityDecayRate)) * 100;
-                            return decayRate === 0 ? (
-                              <>-</>
-                            ) : (
-                              <span className="text-red-500">-{formatPercentage(decayRate)}</span>
-                            );
-                          })()
-                        ) : (
-                          <>-</>
-                        )}
-                      </span>
+                      {item.distrustRatio !== undefined ? (
+                        <span className="text-red-500">-{formatPercentage(item.distrustRatio * 100)}</span>
+                      ) : (
+                        <>-</>
+                      )}
                     </div>
                   </td>
                   <td className="px-1 text-center">

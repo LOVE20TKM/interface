@@ -14,7 +14,7 @@ import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActio
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 import { useActionsWithActiveGroupsByOwner } from '@/src/hooks/extension/plugins/group-service/composite/useActionsWithActiveGroupsByOwner';
 import { useContractError } from '@/src/errors/useContractError';
-import { formatPercentage, formatUnits } from '@/src/lib/format';
+
 
 // Components
 import Header from '@/src/components/Header';
@@ -31,7 +31,6 @@ interface GroupedData {
     extensionAddress: `0x${string}`;
     isVerified: boolean;
     needToVerify: boolean;
-    capacityDecayRate: bigint | undefined;
     hasVoted: boolean; // 是否投过票
   }[];
 }
@@ -157,7 +156,6 @@ const MyVerifyingGroupsPage: React.FC = () => {
         extensionAddress: group.extensionAddress,
         isVerified: group.isVerified,
         needToVerify: group.needToVerify,
-        capacityDecayRate: group.capacityDecayRate,
         hasVoted: true, // 来自 VotedGroups，已投票
       });
     });
@@ -188,7 +186,6 @@ const MyVerifyingGroupsPage: React.FC = () => {
             extensionAddress: action.extensionAddress,
             isVerified: false, // 未投票的项，默认未验证
             needToVerify: false, // 未投票的项，不需要验证
-            capacityDecayRate: undefined,
             hasVoted: false, // 来自 AllGroups 但不在 VotedGroups 中，未投票
           });
         }
@@ -278,14 +275,6 @@ const MyVerifyingGroupsPage: React.FC = () => {
                             <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">待验证</span>
                           ) : (
                             <span className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">无需验证</span>
-                          )}
-                          {group.capacityDecayRate !== undefined && group.capacityDecayRate > BigInt(0) && (
-                            <span className="ml-2 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
-                              {(() => {
-                                const percent = parseFloat(formatUnits(group.capacityDecayRate!)) * 100;
-                                return `验证衰减 ${formatPercentage(percent)}`;
-                              })()}
-                            </span>
                           )}
                         </div>
                       </div>

@@ -145,7 +145,7 @@ const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ current
                     <Link
                       href={`/action/info/?symbol=${encodeURIComponent(
                         token?.symbol || '',
-                      )}&id=${info.actionId.toString()}&tab=public&tab2=distrust`}
+                      )}&id=${info.actionId.toString()}&tab=public&tab2=distrust&round=${currentRound.toString()}`}
                       className="underline underline-offset-2 hover:text-red-700"
                     >
                       你在行动"No.{info.actionId.toString()} {info.actionTitle}"中被投不信任票，不信任率

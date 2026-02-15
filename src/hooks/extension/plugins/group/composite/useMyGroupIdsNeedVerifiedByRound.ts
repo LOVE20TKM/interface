@@ -8,8 +8,7 @@
  * 4. 通过 useExtensionsByActionIdsWithCache 获取所有 actionIds 对应的扩展信息
  * 5. 批量调用 GroupVerify.isVerified 检查每个链群是否已验证
  * 6. 批量调用 GroupJoin.accountsByGroupIdCount 获取每个链群的账户数量
- * 7. 批量调用 GroupVerify.capacityDecayRateByGroupId 获取每个链群在该轮次的容量衰减率
- * 8. 计算 needToVerify：如果未验证且地址数>0，则为true（参与地址数为空时，虽然未验证但也不需要验证）
+ * 7. 计算 needToVerify：如果未验证且地址数>0，则为true（参与地址数为空时，虽然未验证但也不需要验证）
  *
  * 性能优化：
  * - 使用批量 RPC 调用优化性能
@@ -51,8 +50,6 @@ export interface GroupNeedVerifyInfo {
   isVerified: boolean;
   /** 是否需要验证：如果未验证且地址数>0，则为true */
   needToVerify: boolean;
-  /** 容量衰减率（WAD 1e18 比例，1e18 = 100%） */
-  capacityDecayRate: bigint | undefined;
 }
 
 /**
@@ -259,7 +256,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
   }, [groupIdToActionIdsMap, actionIdToExtensionMap]);
 
   // ==========================================
-  // 步骤7：批量检查验证状态、账户数量、容量衰减率（合并为一次调用）
+  // 步骤7：批量检查验证状态、账户数量（合并为一次调用）
   // ==========================================
 
   const combinedContracts = useMemo(() => {
@@ -281,16 +278,8 @@ export function useMyGroupIdsNeedVerifiedByRound({
       args: [extensionAddress, round, groupId] as const,
     }));
 
-    // 再添加所有 capacityDecayRateByGroupId 调用
-    const capacityDecayRateContracts = groupTuples.map(({ extensionAddress, groupId }) => ({
-      address: GROUP_VERIFY_ADDRESS,
-      abi: GroupVerifyAbi,
-      functionName: 'capacityDecayRateByGroupId' as const,
-      args: [extensionAddress, round, groupId] as const,
-    }));
-
     // 合并数组（一次批量 RPC）
-    return [...isVerifiedContracts, ...accountCountContracts, ...capacityDecayRateContracts];
+    return [...isVerifiedContracts, ...accountCountContracts];
   }, [round, groupTuples]);
 
   const {
@@ -304,7 +293,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
     },
   });
 
-  // 从合并结果中分离出 isVerified、accountCount 和 capacityDecayRate 数据
+  // 从合并结果中分离出 isVerified 和 accountCount 数据
   const isVerifiedData = useMemo(() => {
     if (!combinedData || groupTuples.length === 0) return undefined;
     // 前 groupTuples.length 个结果是 isVerified
@@ -313,14 +302,8 @@ export function useMyGroupIdsNeedVerifiedByRound({
 
   const accountCountData = useMemo(() => {
     if (!combinedData || groupTuples.length === 0) return undefined;
-    // 中间 groupTuples.length 个结果是 accountCount
+    // 后 groupTuples.length 个结果是 accountCount
     return combinedData.slice(groupTuples.length, groupTuples.length * 2);
-  }, [combinedData, groupTuples.length]);
-
-  const capacityDecayRateData = useMemo(() => {
-    if (!combinedData || groupTuples.length === 0) return undefined;
-    // 最后 groupTuples.length 个结果是 capacityDecayRate
-    return combinedData.slice(groupTuples.length * 2, groupTuples.length * 3);
   }, [combinedData, groupTuples.length]);
 
   // ==========================================
@@ -328,7 +311,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
   // ==========================================
 
   const groups = useMemo(() => {
-    if (!isVerifiedData || !accountCountData || !capacityDecayRateData || groupTuples.length === 0) return [];
+    if (!isVerifiedData || !accountCountData || groupTuples.length === 0) return [];
 
     const result: GroupNeedVerifyInfo[] = [];
 
@@ -341,11 +324,6 @@ export function useMyGroupIdsNeedVerifiedByRound({
         const accountCountItem = accountCountData[index];
         const accountCount = accountCountItem?.status === 'success' ? (accountCountItem.result as bigint) : BigInt(0);
 
-        // 获取对应的 capacityDecayRate
-        const capacityDecayRateItem = capacityDecayRateData[index];
-        const capacityDecayRate =
-          capacityDecayRateItem?.status === 'success' ? safeToBigInt(capacityDecayRateItem.result) : undefined;
-
         // needToVerify: 如果未验证且地址数>0，则为true
         const needToVerify = !isVerified && accountCount > BigInt(0);
 
@@ -355,13 +333,12 @@ export function useMyGroupIdsNeedVerifiedByRound({
           actionId,
           isVerified,
           needToVerify,
-          capacityDecayRate,
         });
       }
     });
 
     return result;
-  }, [groupTuples, isVerifiedData, accountCountData, capacityDecayRateData]);
+  }, [groupTuples, isVerifiedData, accountCountData]);
 
   // ==========================================
   // 步骤9：计算 isPending 状态

@@ -611,22 +611,14 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                                   <span className="font-bold text-gray-900">{key}：</span>
                                 </FormLabel>
                                 <FormControl>
-                                  {guide.length > 50 ? (
-                                    <Textarea
-                                      placeholder={guide || `请输入${key}`}
-                                      className="!ring-secondary-foreground min-h-[100px]"
-                                      {...field}
-                                    />
-                                  ) : (
-                                    <Input
-                                      placeholder={guide || `请输入${key}`}
-                                      className="!ring-secondary-foreground"
-                                      {...field}
-                                    />
-                                  )}
+                                  <Input
+                                    placeholder={`请输入${key}`}
+                                    className="!ring-secondary-foreground"
+                                    {...field}
+                                  />
                                 </FormControl>
                                 {guide && (
-                                  <FormDescription className="text-xs text-gray-600">提示信息：{guide}</FormDescription>
+                                  <FormDescription className="text-xs text-gray-600">提示：{guide}</FormDescription>
                                 )}
                                 <FormMessage />
                               </FormItem>

@@ -8,6 +8,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 // 第三方库
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { ChevronRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAccount } from 'wagmi';
@@ -55,21 +56,27 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
   extensionAddress,
   onStartVote,
 }) => {
+  const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
   // 获取当前轮次
   const { currentRound, isPending: isPendingRound, error: errorRound } = useVerifyCurrentRound();
 
+  // 从URL获取round参数
+  const { round: urlRound } = router.query;
+
   // 轮次选择状态
   const [selectedRound, setSelectedRound] = useState<bigint>(BigInt(0));
 
-  // 初始化选中轮次为当前轮次
+  // 初始化选中轮次：优先使用URL参数，否则使用当前轮次
   useEffect(() => {
-    if (currentRound && currentRound > BigInt(0)) {
+    if (urlRound && !isNaN(Number(urlRound))) {
+      setSelectedRound(BigInt(urlRound as string));
+    } else if (currentRound && currentRound > BigInt(0)) {
       setSelectedRound(currentRound);
     }
-  }, [currentRound]);
+  }, [urlRound, currentRound]);
 
   // 判断是否为当前轮次
   const isCurrentRound = useMemo(() => {
@@ -172,6 +179,15 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
   // 处理轮次切换
   const handleChangedRound = (round: number) => {
     setSelectedRound(BigInt(round));
+    // 同时更新URL参数
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, round: round.toString() },
+      },
+      undefined,
+      { shallow: true },
+    );
   };
 
   // 处理点击行

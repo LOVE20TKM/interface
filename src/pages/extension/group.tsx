@@ -18,7 +18,7 @@ import _GroupRewards from '@/src/components/Extension/Plugins/Group/_GroupReward
 import _GroupApps from '@/src/components/Extension/Plugins/Group/_GroupApps';
 import _GroupManagement from '@/src/components/Extension/Plugins/Group/_GroupManagement';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite';
-import { useGroupWarningRatesOfRound } from '@/src/hooks/extension/plugins/group/composite/useGroupWarningRatesOfRound';
+import { useDistrustRateByGroupId } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useCurrentRound as useVerifyCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { formatPercentage, formatUnits } from '@/src/lib/format';
 
@@ -53,7 +53,7 @@ const ActionGroupPage: React.FC = () => {
   });
   const extensionAddress = contractInfo?.extension;
 
-  // 当前验证轮（用于链群不信任率/验证衰减率提示）
+  // 当前验证轮（用于链群不信任率提示）
   const {
     currentRound: verifyCurrentRound,
     isPending: isPendingVerifyRound,
@@ -62,14 +62,9 @@ const ActionGroupPage: React.FC = () => {
 
   const {
     distrustRate,
-    capacityDecayRate,
     isPending: isPendingWarningRates,
     error: errorWarningRates,
-  } = useGroupWarningRatesOfRound({
-    extensionAddress,
-    round: verifyCurrentRound,
-    groupId: groupIdBigInt,
-  });
+  } = useDistrustRateByGroupId(extensionAddress, verifyCurrentRound, groupIdBigInt);
 
   // 计算加入轮（验证轮 + 1）
   const joinRound = useMemo(() => {
@@ -182,7 +177,14 @@ const ActionGroupPage: React.FC = () => {
       case 'detail':
         return <_GroupDetail extensionAddress={extensionAddress} groupId={groupIdBigInt} />;
       case 'rewards':
-        return <_GroupRewards extensionAddress={extensionAddress} groupId={groupIdBigInt} actionId={actionId!} actionInfo={actionInfo} />;
+        return (
+          <_GroupRewards
+            extensionAddress={extensionAddress}
+            groupId={groupIdBigInt}
+            actionId={actionId!}
+            actionInfo={actionInfo}
+          />
+        );
       case 'apps': {
         return <_GroupApps extensionAddress={extensionAddress} groupId={groupIdBigInt} actionId={actionId!} />;
       }
@@ -214,16 +216,14 @@ const ActionGroupPage: React.FC = () => {
             if (isPendingVerifyRound || isPendingWarningRates) return null;
 
             const distrustRatePercent = distrustRate !== undefined ? parseFloat(formatUnits(distrustRate)) * 100 : 0;
-            const capacityDecayRatePercent =
-              capacityDecayRate !== undefined ? parseFloat(formatUnits(capacityDecayRate)) * 100 : 0;
 
-            const showDistrustWarn = distrustRatePercent > 0;
-            const showCapacityDecayWarn = capacityDecayRatePercent > 0;
-            if (!showDistrustWarn && !showCapacityDecayWarn) return null;
+            if (distrustRatePercent <= 0) return null;
 
             const actionIdForLink = actionInfo?.head?.id;
             const distrustHref = actionIdForLink
-              ? `/action/info/?symbol=${token?.symbol}&id=${actionIdForLink.toString()}&tab=public&tab2=distrust`
+              ? `/action/info/?symbol=${
+                  token?.symbol
+                }&id=${actionIdForLink.toString()}&tab=public&tab2=distrust&round=${verifyCurrentRound.toString()}`
               : undefined;
 
             return (
@@ -232,27 +232,19 @@ const ActionGroupPage: React.FC = () => {
                   type="error"
                   message={
                     <div className="space-y-1 text-red-600">
-                      {showDistrustWarn && (
-                        <div>
-                          {distrustHref ? (
-                            <Link href={distrustHref} className="underline underline-offset-2 hover:text-red-700">
-                              本链群第 {verifyCurrentRound.toString()} 轮，被投不信任票，不信任率
-                              {formatPercentage(distrustRatePercent)}
-                            </Link>
-                          ) : (
-                            <>
-                              本链群第 {verifyCurrentRound.toString()} 轮，被投不信任票，不信任率
-                              {formatPercentage(distrustRatePercent)}
-                            </>
-                          )}
-                        </div>
-                      )}
-                      {showCapacityDecayWarn && (
-                        <div>
-                          本链群第 {verifyCurrentRound.toString()} 轮，服务者容量不足，验证衰减率
-                          {formatPercentage(capacityDecayRatePercent)}
-                        </div>
-                      )}
+                      <div>
+                        {distrustHref ? (
+                          <Link href={distrustHref} className="underline underline-offset-2 hover:text-red-700">
+                            本链群第 {verifyCurrentRound.toString()} 轮，被投不信任票，不信任率
+                            {formatPercentage(distrustRatePercent)}
+                          </Link>
+                        ) : (
+                          <>
+                            本链群第 {verifyCurrentRound.toString()} 轮，被投不信任票，不信任率
+                            {formatPercentage(distrustRatePercent)}
+                          </>
+                        )}
+                      </div>
                     </div>
                   }
                 />
