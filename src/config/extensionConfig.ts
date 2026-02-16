@@ -59,7 +59,7 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
 
   // 链群服务 扩展配置
   const groupServiceFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_SERVICE_FACTORY;
-  if (isTestEnv && groupServiceFactory) {
+  if (groupServiceFactory) {
     configs.push({
       type: ExtensionType.GROUP_SERVICE,
       name: '链群服务行动',
