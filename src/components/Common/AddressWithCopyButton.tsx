@@ -73,9 +73,9 @@ const AddressWithCopyButton: React.FC<AddressWithCopyButtonProps> = ({
         <span className="text-[0px]">
           <span className={`font-mono text-xs ${colorClassName ?? 'text-greyscale-500'}`}>{`${address.substring(
             0,
-            6,
+            4,
           )}...`}</span>
-          <span className={`font-mono text-xs ${colorClassName2}`}>{`${address.substring(address.length - 4)}`}</span>
+          <span className={`font-mono text-xs ${colorClassName2}`}>{`${address.substring(address.length - 6)}`}</span>
         </span>
       )}
       {showCopyButton && (

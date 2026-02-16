@@ -4,7 +4,7 @@ import { Token } from '@/src/contexts/TokenContext';
 // 地址缩写
 export const abbreviateAddress = (address: string): string => {
   if (!address) return '';
-  return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  return `${address.substring(0, 4)}...${address.substring(address.length - 6)}`;
 };
 
 // 【显示函数-格式化普通数字】用于格式化已经是正常单位的数字（非 wei），添加千分位分隔符
