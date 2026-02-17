@@ -113,6 +113,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     actionId,
     accounts: accounts || [],
     verificationKeys: actionInfo?.body.verificationKeys || [],
+    round: currentRound || BigInt(0),
     enabled: !!token?.address && !!actionInfo && (accounts?.length || 0) > 0,
   });
 
@@ -126,7 +127,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
       setAccountScores(
         accounts.map((acc) => ({
           account: acc,
-          score: cached?.[acc.toLowerCase()] ?? '100', // 有缓存用缓存，否则默认100分
+          score: cached?.[acc.toLowerCase()] ?? '0', // 有缓存用缓存，否则默认100分
         })),
       );
     }
@@ -386,6 +387,14 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         {/* 标题 */}
         <div>
           <LeftTitle title="链群验证" />
+          {/* 行动信息 */}
+          <div className="text-gray-500 mb-2 text-sm">
+            <span>行动：</span>
+            <span className="text-greyscale-400 text-sm">No.</span>
+            <span className="text-secondary text-xl font-bold mr-2">{actionId.toString()}</span>
+            <span className="font-bold text-greyscale-800 text-base">{actionInfo?.body.title || ''}</span>
+          </div>
+          {/* 链群信息 */}
           <div className="text-gray-500 mb-2 text-sm">
             <span>链群：</span>
             <span className="text-gray-500 text-xs">#</span>

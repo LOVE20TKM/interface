@@ -110,6 +110,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
     actionId,
     accounts,
     verificationKeys: actionInfo?.body.verificationKeys || [],
+    round: selectedRound,
     enabled: !!token?.address && !!actionInfo && accounts.length > 0,
   });
 

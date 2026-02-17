@@ -10,6 +10,7 @@ interface VerificationInfosParams {
   actionId: bigint;
   accounts: `0x${string}`[];
   verificationKeys: string[];
+  round: bigint;
   enabled?: boolean;
 }
 
@@ -31,6 +32,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENT
  * @param actionId - 行动 ID
  * @param accounts - 需要获取验证信息的地址列表
  * @param verificationKeys - 验证信息的键列表
+ * @param round - 轮次
  * @param enabled - 是否启用查询
  * @returns 包含所有地址验证信息的数组
  */
@@ -39,6 +41,7 @@ export const useVerificationInfos = ({
   actionId,
   accounts,
   verificationKeys,
+  round,
   enabled = true,
 }: VerificationInfosParams) => {
   // 构建批量合约调用配置
@@ -56,14 +59,14 @@ export const useVerificationInfos = ({
         contractCalls.push({
           address: CONTRACT_ADDRESS,
           abi: ExtensionCenterAbi,
-          functionName: 'verificationInfo' as const,
-          args: [tokenAddress, actionId, account, key],
+          functionName: 'verificationInfoByRound' as const,
+          args: [tokenAddress, actionId, account, key, round],
         });
       });
     });
 
     return contractCalls;
-  }, [tokenAddress, actionId, accounts, verificationKeys, enabled]);
+  }, [tokenAddress, actionId, accounts, verificationKeys, round, enabled]);
 
   // 使用 useReadContracts 进行批量调用 - 这是真正的一次 RPC 请求！
   const {

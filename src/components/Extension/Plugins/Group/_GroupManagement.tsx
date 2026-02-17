@@ -102,9 +102,9 @@ const _GroupManagement: React.FC<GroupManagementProps> = ({ actionId, groupId, s
         className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg transition-all group cursor-pointer"
       >
         <div className="flex items-center gap-3">
-          <XCircle className="w-5 h-5 text-red-600" />
+          <XCircle className="w-5 h-5 text-secondary" />
           <div>
-            <div className="text-base font-medium text-red-600">关闭链群</div>
+            <div className="text-base font-medium">关闭链群</div>
           </div>
         </div>
         <ArrowRight className="w-5 h-5 text-greyscale-400" />
