@@ -43,6 +43,12 @@ interface FormValues {
   groupName: string;
 }
 
+// 移到组件外部：保证 schema 和 resolver 引用稳定，避免每次渲染重建导致异步验证结果被丢弃
+const formSchema = z.object({
+  groupName: z.string().min(1, { message: '请输入链群名称' }),
+});
+const formResolver = zodResolver(formSchema);
+
 interface GroupJoinSelectProps {
   actionId: bigint;
   actionInfo: ActionInfo;
@@ -94,24 +100,20 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
   // isPendingGroupId：只有在实际查询时才为 true，使用缓存时为 false
   const isPendingGroupId = shouldQueryGroupId ? isPendingQueriedGroupId : false;
 
-  // 表单验证 schema（基础验证）
-  const formSchema = z.object({
-    groupName: z.string().min(1, { message: '请输入链群名称' }),
-  });
-
   // 表单实例
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: formResolver,
     defaultValues: {
       groupName: '',
     },
     mode: 'onChange',
   });
 
-  // 如果有缓存的 groupName，设置为表单默认值
+  // 如果有缓存的 groupName，用 reset 重新初始化表单（reset 会正确地重新评估 isValid）
   useEffect(() => {
     if (cachedGroupName && !isPendingCachedGroupName) {
-      form.setValue('groupName', cachedGroupName, { shouldValidate: true, shouldDirty: true });
+      form.reset({ groupName: cachedGroupName });
+      setInputGroupName(cachedGroupName);
     }
   }, [cachedGroupName, isPendingCachedGroupName, form]);
 
