@@ -690,8 +690,16 @@ export const useExtensionsByActionInfosWithCache = ({
       }
 
       // 获取 factory 地址
-      const factoryAddress = factoryAddressesData?.[validWhitelistIndex]?.result as `0x${string}` | undefined;
+      const factoryResult = factoryAddressesData?.[validWhitelistIndex];
       validWhitelistIndex++;
+
+      // 如果查询失败或数据未就绪（网络错误等），不缓存，下次重新查询
+      if (!factoryResult || factoryResult.status === 'failure') {
+        console.warn(`⚠️ ActionId ${actionId} 的 factory 地址查询失败，跳过缓存`);
+        continue;
+      }
+
+      const factoryAddress = factoryResult.result as `0x${string}` | undefined;
 
       // 如果没有获取到 factory 地址，或 factory 地址不在配置列表中，标记为非扩展
       if (!factoryAddress || !factoryAddressSet.has(factoryAddress.toLowerCase())) {
@@ -711,10 +719,18 @@ export const useExtensionsByActionInfosWithCache = ({
       }
 
       // 检查 exists 验证结果
-      const existsResult = existsData?.[existsIndex]?.result as boolean | undefined;
+      const existsResultItem = existsData?.[existsIndex];
       existsIndex++;
 
-      // 如果 exists 返回 false 或未定义，标记为非扩展
+      // 如果查询失败或数据未就绪（网络错误等），不缓存，下次重新查询
+      if (!existsResultItem || existsResultItem.status === 'failure') {
+        console.warn(`⚠️ ActionId ${actionId} 的 exists 验证查询失败，跳过缓存`);
+        continue;
+      }
+
+      const existsResult = existsResultItem.result as boolean | undefined;
+
+      // 如果 exists 明确返回 false，标记为非扩展
       if (existsResult !== true) {
         setCachedContractInfo(
           tokenAddress,
