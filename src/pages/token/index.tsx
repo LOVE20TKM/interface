@@ -213,7 +213,7 @@ const TokenPage = () => {
   const launchedChildTokensCount = tokenStatistics?.launchedChildTokensCount ?? BigInt(0);
   const unminted = maxSupply > totalSupply ? maxSupply - totalSupply : BigInt(0);
   const usdtPairBalance = tokenBalanceInUSDTPair ?? BigInt(0);
-  const otherBalance = totalSupply - joinedTokenAmount - tokenAmountForSl - stakedTokenAmountForSt - usdtPairBalance;
+  const otherBalance = totalSupply - joinedTokenAmount - tokenAmountForSl - stakedTokenAmountForSt;
   // 计算 TVL：流动性质押*2 + 加速激励质押 + U池 + 行动参与
   const tvl = tokenAmountForSl * BigInt(2) + stakedTokenAmountForSt + usdtPairBalance + joinedTokenAmount;
 
@@ -409,7 +409,7 @@ const TokenPage = () => {
                             </div>
                           ) : (
                             <Field
-                              label="行动参与量"
+                              label="行动参与量(含U池)"
                               value={formatAmount(joinedTokenAmount, decimals)}
                               percentage={formatPercentage((Number(joinedTokenAmount) / Number(totalSupply)) * 100)}
                             />
