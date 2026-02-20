@@ -40,6 +40,7 @@ export interface ExtensionBaseData {
   joinedAmount?: bigint; // 原始的 joinedAmount
   convertedJoinedValue?: bigint; // 转换后的参与值
   isConvertedJoinedValueSuccess?: boolean; // convertedJoinedValue 是否为“转换成功”得到的结果
+  isFromTokenLP?: boolean; // 参与代币是否为 LP token（convertedJoinedValue 含 ×2 溢价）
 }
 
 /**
@@ -274,6 +275,7 @@ export const useExtensionsBaseData = ({
           joinedAmount,
           convertedJoinedValue,
           isConvertedJoinedValueSuccess,
+          isFromTokenLP: contractInfo.joinedAmountTokenIsLP ?? false,
         });
       } else {
         // 数据还在加载中

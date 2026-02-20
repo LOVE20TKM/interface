@@ -25,7 +25,9 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import { useTokenStatistics } from '@/src/hooks/contracts/useLOVE20TokenViewer';
 import { useLaunchInfo } from '@/src/hooks/contracts/useLOVE20Launch';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
+import { useCurrentRound as useCurrentRoundForJoin } from '@/src/hooks/contracts/useLOVE20Join';
 import { useUSDTPairTokenBalance } from '@/src/hooks/composite/useUSDTPairTokenBalance';
+import { useActingPageData } from '@/src/hooks/composite/useActingPageData';
 import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatPercentage } from '@/src/lib/format';
 
@@ -170,12 +172,23 @@ const TokenPage = () => {
     launchEnded, // 只有在发射完成后才查询
   );
 
+  // 从 Join 合约获取当前轮次（供 useActingPageData 使用，与 Vote 合约的轮次独立）
+  const { currentRound: currentRoundForJoin } = useCurrentRoundForJoin(launchEnded && isConnected);
+
+  // 获取行动参与量（含扩展行动修正），仅在发射完成且已连接时有效
+  const actingPageData = useActingPageData({
+    tokenAddress: launchEnded && isConnected ? (currentToken?.address as `0x${string}`) : undefined,
+    currentRound: currentRoundForJoin ?? BigInt(0),
+  });
+
   // 错误处理
   const { handleContractError } = useHandleContractError();
   useEffect(() => {
     if (errorTokenStatistics) handleContractError(errorTokenStatistics, 'roundViewer');
     if (errorLaunchInfo) handleContractError(errorLaunchInfo, 'launch');
-  }, [errorTokenStatistics, errorLaunchInfo]);
+    if (actingPageData.errorActions) handleContractError(actingPageData.errorActions, 'dataViewer');
+    if (actingPageData.errorExtension) handleContractError(actingPageData.errorExtension, 'extension');
+  }, [errorTokenStatistics, errorLaunchInfo, actingPageData.errorActions, actingPageData.errorExtension]);
 
   const decimals = currentToken?.decimals ?? 18;
   const parentSymbol = currentToken?.parentTokenSymbol ?? '';
@@ -188,7 +201,8 @@ const TokenPage = () => {
   const reservedAvailable = tokenStatistics?.reservedAvailable ?? BigInt(0);
   const rewardAvailable = tokenStatistics?.rewardAvailable ?? BigInt(0);
   const stakedTokenAmountForSt = tokenStatistics?.stakedTokenAmountForSt ?? BigInt(0);
-  const joinedTokenAmount = tokenStatistics?.joinedTokenAmount ?? BigInt(0);
+  // 使用单边参与量（LP 扩展行动去掉 ×2 溢价），用于占比统计，加载中以 BigInt(0) 兜底
+  const joinedTokenAmount = actingPageData.totalJoinedAmountSingleSide;
   const tokenAmountForSl = tokenStatistics?.tokenAmountForSl ?? BigInt(0);
   const parentPool = tokenStatistics?.parentPool ?? BigInt(0);
   const finishedRounds = tokenStatistics?.finishedRounds ?? BigInt(0);
@@ -200,8 +214,8 @@ const TokenPage = () => {
   const unminted = maxSupply > totalSupply ? maxSupply - totalSupply : BigInt(0);
   const usdtPairBalance = tokenBalanceInUSDTPair ?? BigInt(0);
   const otherBalance = totalSupply - joinedTokenAmount - tokenAmountForSl - stakedTokenAmountForSt - usdtPairBalance;
-  // 计算 TVL：流动性质押*2 + 加速激励质押 + U池*2 + 行动参与
-  const tvl = tokenAmountForSl * BigInt(2) + stakedTokenAmountForSt + usdtPairBalance * BigInt(2) + joinedTokenAmount;
+  // 计算 TVL：流动性质押*2 + 加速激励质押 + U池 + 行动参与
+  const tvl = tokenAmountForSl * BigInt(2) + stakedTokenAmountForSt + usdtPairBalance + joinedTokenAmount;
 
   // 发射区块
   const startBlock = launchInfo?.startBlock;
@@ -383,16 +397,23 @@ const TokenPage = () => {
                               <div className="space-y-2">
                                 <p className="font-medium">LOVE20 TVL 计算公式：</p>
                                 <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
-                                  <div>TVL = 流动性质押 × 2 + 加速激励质押 + U池 × 2 + 行动参与</div>
+                                  <div>TVL = 流动性质押 × 2 + 加速激励质押 + U池 + 行动参与</div>
                                 </div>
                               </div>
                             }
                           />
-                          <Field
-                            label="行动参与量"
-                            value={formatAmount(joinedTokenAmount, decimals)}
-                            percentage={formatPercentage((Number(joinedTokenAmount) / Number(totalSupply)) * 100)}
-                          />
+                          {isConnected && (actingPageData.isPendingActions || actingPageData.isPendingExtension) ? (
+                            <div className="flex flex-col gap-1">
+                              <div className="text-sm text-muted-foreground">行动参与量</div>
+                              <LoadingIcon />
+                            </div>
+                          ) : (
+                            <Field
+                              label="行动参与量"
+                              value={formatAmount(joinedTokenAmount, decimals)}
+                              percentage={formatPercentage((Number(joinedTokenAmount) / Number(totalSupply)) * 100)}
+                            />
+                          )}
                           <Field
                             label="流动性质押量"
                             value={formatAmount(tokenAmountForSl, decimals)}

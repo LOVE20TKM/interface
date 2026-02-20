@@ -14,7 +14,8 @@ export interface UseActingPageDataResult {
   joinableActions: any[] | undefined;
 
   // 统计数据相关
-  totalJoinedAmount: bigint;
+  totalJoinedAmount: bigint; // 含 LP 扩展行动的 ×2 溢价（适用于行动页展示）
+  totalJoinedAmountSingleSide: bigint; // 去掉 LP ×2 溢价的单边量（适用于代币占比统计）
   expectedReward: bigint | undefined;
 
   // 加载状态
@@ -84,6 +85,7 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
           accountsCount: extension.accountsCount, // 添加参与地址数
           isConvertedJoinedValueSuccess: extension.isConvertedJoinedValueSuccess, // 标记是否为“转换成功”的结果
           isExtension: true,
+          isFromTokenLP: extension.isFromTokenLP ?? false,
           extensionAddress: extension.extension,
         };
       }
@@ -96,7 +98,7 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
     });
   }, [rawActions, extensionData]);
 
-  // 计算所有行动的参与代币数总和
+  // 计算所有行动的参与代币数总和（LP 扩展行动含 ×2 溢价，用于行动页展示）
   const totalJoinedAmount = useMemo(() => {
     if (!joinableActions || joinableActions.length === 0) {
       return BigInt(0);
@@ -104,6 +106,21 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
 
     return joinableActions.reduce((total, action) => {
       return total + action.joinedAmount;
+    }, BigInt(0));
+  }, [joinableActions]);
+
+  // 计算去掉 LP ×2 溢价的单边参与量（用于代币占比统计，不重复计算 LP 两侧价值）
+  const totalJoinedAmountSingleSide = useMemo(() => {
+    if (!joinableActions || joinableActions.length === 0) {
+      return BigInt(0);
+    }
+
+    return joinableActions.reduce((total, action) => {
+      // 仅 LP 类型扩展行动的 convertedJoinedValue 含 ×2 溢价，此处还原为单边量
+      // 注：rawActions 直接返回时无 isFromTokenLP 字段，故用 in 运算符安全检测
+      const isLP = 'isFromTokenLP' in action && action.isFromTokenLP === true;
+      const amount = isLP ? action.joinedAmount / BigInt(2) : action.joinedAmount;
+      return total + amount;
     }, BigInt(0));
   }, [joinableActions]);
 
@@ -120,6 +137,7 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
 
     // 统计数据相关
     totalJoinedAmount,
+    totalJoinedAmountSingleSide,
     expectedReward,
 
     // 加载状态
