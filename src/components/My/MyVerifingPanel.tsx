@@ -90,8 +90,8 @@ const MyVerifingPanel: React.FC<MyVerifingPanelProps> = ({ currentRound, showBtn
       <div className="flex justify-between items-center mb-2">
         <LeftTitle title="我的验证" />
         {showBtn && currentRound >= BigInt(1) && (
-          <Button variant="link" className="text-secondary border-secondary" asChild>
-            <Link href={`/verify/actions/?symbol=${token?.symbol}`}>验证中的行动</Link>
+          <Button variant="link" className="text-secondary border-secondary underline" asChild>
+            <Link href={`/verify/actions/?symbol=${token?.symbol}`}>验证中的行动 &gt;&gt;</Link>
           </Button>
         )}
       </div>

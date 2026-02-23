@@ -128,7 +128,7 @@ const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ current
     <div className="flex-col items-center px-0 py-2">
       <div className="flex justify-between items-center mb-2">
         <LeftTitle title="我的链群" />
-        <Button variant="link" className="text-secondary border-secondary" asChild>
+        <Button variant="link" className="text-secondary border-secondary underline" asChild>
           <Link href={`/extension/my_verifying_groups?symbol=${token?.symbol}`}>查看链群 &gt;&gt;</Link>
         </Button>
       </div>
