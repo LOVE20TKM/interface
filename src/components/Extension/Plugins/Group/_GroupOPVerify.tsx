@@ -33,6 +33,7 @@ import {
 
 // 工具函数
 import { useContractError } from '@/src/errors/useContractError';
+import { copyWithToast } from '@/src/lib/clipboardUtils';
 import { LocalCache } from '@/src/lib/LocalCache';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 
@@ -152,6 +153,38 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     isConfirmed: isConfirmedVerify,
     writeError: errorVerifyGroup,
   } = useSubmitOriginScores();
+
+  // 复制所有地址及验证信息到剪贴板
+  const handleCopyAddresses = async () => {
+    try {
+      if (!accountScores || accountScores.length === 0) {
+        toast.error('没有可复制的地址');
+        return;
+      }
+
+      const lines: string[] = [];
+
+      // 第一行：标题行
+      const verificationKeys = actionInfo?.body.verificationKeys || [];
+      const headerParts = ['地址', '后4位', ...verificationKeys];
+      lines.push(headerParts.join('\t'));
+
+      // 数据行：每个地址及其验证信息
+      accountScores.forEach((item) => {
+        const address = item.account;
+        const last4 = address.slice(-4);
+        const info = verificationInfos.find((v) => v.account.toLowerCase() === address.toLowerCase());
+        const verificationValues = info?.infos || [];
+        lines.push([address, last4, ...verificationValues].join('\t'));
+      });
+
+      const textToCopy = lines.join('\n');
+      await copyWithToast(textToCopy, `已复制 ${accountScores.length} 个地址信息到剪贴板`);
+    } catch (error) {
+      toast.error('复制失败，请手动复制');
+      console.error('Copy error:', error);
+    }
+  };
 
   // 从剪贴板粘贴分数
   const handlePasteFromClipboard = async () => {
@@ -474,8 +507,17 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
         {/* 按钮 */}
         <div className="flex justify-center space-x-4 pt-4">
-          <Button className="w-1/2" variant="outline" onClick={handlePasteFromClipboard}>
-            从剪贴板粘贴分数
+          <Button
+            className="w-1/4"
+            variant="outline"
+            disabled={!accountScores || accountScores.length === 0}
+            onClick={handleCopyAddresses}
+            title="复制地址及验证信息（包含地址、后4位、验证信息）"
+          >
+            复制地址
+          </Button>
+          <Button className="w-1/4" variant="outline" onClick={handlePasteFromClipboard}>
+            粘贴分数
           </Button>
           <Button
             className="w-1/2"
