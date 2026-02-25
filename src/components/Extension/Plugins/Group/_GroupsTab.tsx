@@ -73,30 +73,11 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
     }
   }, [error, errorJoinInfo, handleError]);
 
-  // 对链群进行分类和排序
+  // 按参与代币数从高到低排序
   const sortedGroups = useMemo(() => {
     if (!groups || groups.length === 0) return [];
-
-    // 分类：我激活的、我参与的、其他
-    const myActivatedGroups = groups.filter((g) => account && g.owner.toLowerCase() === account.toLowerCase());
-    const myJoinedGroups = groups.filter(
-      (g) =>
-        joinedGroupId !== undefined &&
-        g.groupId === joinedGroupId &&
-        !(account && g.owner.toLowerCase() === account.toLowerCase()),
-    );
-    const otherGroups = groups.filter(
-      (g) =>
-        !(account && g.owner.toLowerCase() === account.toLowerCase()) &&
-        !(joinedGroupId !== undefined && g.groupId === joinedGroupId),
-    );
-
-    // 随机打乱 otherGroups
-    const shuffledOtherGroups = [...otherGroups].sort(() => Math.random() - 0.5);
-
-    // 合并：我激活的 -> 我参与的 -> 其他（随机）
-    return [...myActivatedGroups, ...myJoinedGroups, ...shuffledOtherGroups];
-  }, [groups, account, joinedGroupId]);
+    return [...groups].sort((a, b) => (b.totalJoinedAmount > a.totalJoinedAmount ? 1 : b.totalJoinedAmount < a.totalJoinedAmount ? -1 : 0));
+  }, [groups]);
 
   // 跳转到链群服务者页
   const handleGroupClick = (groupId: bigint) => {
