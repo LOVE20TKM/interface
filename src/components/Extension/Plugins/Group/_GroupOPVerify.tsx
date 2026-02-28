@@ -45,6 +45,7 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import ManualPasteDialog from '@/src/components/Common/ManualPasteDialog';
 
 interface GroupOPVerifyProps {
   actionId: bigint;
@@ -120,6 +121,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
 
   // 打分状态
   const [accountScores, setAccountScores] = useState<AccountScore[]>([]);
+  const [showManualPasteDialog, setShowManualPasteDialog] = useState(false);
 
   // 初始化打分列表（优先从 LocalCache 恢复缓存分数）
   useEffect(() => {
@@ -186,63 +188,91 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     }
   };
 
-  // 从剪贴板粘贴分数
-  const handlePasteFromClipboard = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      const lines = text
-        .trim()
-        .split('\n')
-        .filter((line) => line.trim().length > 0);
+  // 处理剪贴板文本的通用函数
+  const processClipboardText = (clipboardText: string) => {
+    const lines = clipboardText
+      .trim()
+      .split('\n')
+      .filter((line) => line.trim().length > 0);
 
-      const newScores = [...accountScores];
-      let updated = 0;
+    const newScores = [...accountScores];
+    let updated = 0;
 
-      // 检查格式：如果所有行都只有1个部分（只有分数），则按顺序匹配
-      const allLinesHaveOnePart = lines.every((line) => {
+    // 检查格式：如果所有行都只有1个部分（只有分数），则按顺序匹配
+    const allLinesHaveOnePart = lines.every((line) => {
+      const parts = line.trim().split(/[\t,\s]+/);
+      return parts.length === 1;
+    });
+
+    if (allLinesHaveOnePart && lines.length === newScores.length) {
+      for (let i = 0; i < lines.length && i < newScores.length; i++) {
+        const score = lines[i].trim();
+        if (!isNaN(parseFloat(score))) {
+          newScores[i].score = score;
+          updated++;
+        }
+      }
+    } else {
+      for (const line of lines) {
         const parts = line.trim().split(/[\t,\s]+/);
-        return parts.length === 1;
-      });
+        if (parts.length >= 2) {
+          const address = parts[0].toLowerCase();
+          const score = parts[1];
 
-      if (allLinesHaveOnePart && lines.length === newScores.length) {
-        // 格式2：只有分数，按顺序匹配
-        for (let i = 0; i < lines.length && i < newScores.length; i++) {
-          const score = lines[i].trim();
-          if (!isNaN(parseFloat(score))) {
-            newScores[i].score = score;
+          const index = newScores.findIndex((s) => s.account.toLowerCase() === address);
+          if (index !== -1 && !isNaN(parseFloat(score))) {
+            newScores[index].score = score;
             updated++;
           }
         }
-      } else {
-        // 格式1：地址 分数
-        for (const line of lines) {
-          const parts = line.trim().split(/[\t,\s]+/);
-          if (parts.length >= 2) {
-            const address = parts[0].toLowerCase();
-            const score = parts[1];
+      }
+    }
 
-            const index = newScores.findIndex((s) => s.account.toLowerCase() === address);
-            if (index !== -1 && !isNaN(parseFloat(score))) {
-              newScores[index].score = score;
-              updated++;
-            }
+    if (updated > 0) {
+      setAccountScores(newScores);
+      toast.success(`成功导入 ${updated} 个地址的分数`);
+    } else {
+      if (allLinesHaveOnePart) {
+        toast.error(`分数行数（${lines.length}）与地址数量（${newScores.length}）不匹配`);
+      } else {
+        toast.error('未找到匹配的地址，请确保格式为：分数（每行一个）');
+      }
+    }
+  };
+
+  // 从剪贴板粘贴分数（兼容手机钱包浏览器）
+  const handlePasteFromClipboard = async () => {
+    try {
+      let clipboardText = '';
+      let useManualPaste = false;
+
+      const isTrustWallet = /Trust/i.test(navigator.userAgent);
+
+      if (navigator.clipboard && navigator.clipboard.readText && !isTrustWallet) {
+        try {
+          const permission = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
+          if (permission.state === 'denied') {
+            useManualPaste = true;
+          } else {
+            clipboardText = await navigator.clipboard.readText();
           }
+        } catch (clipboardError) {
+          console.warn('Clipboard API 读取失败:', clipboardError);
+          useManualPaste = true;
         }
+      } else {
+        useManualPaste = true;
       }
 
-      if (updated > 0) {
-        setAccountScores(newScores);
-        toast.success(`成功导入 ${updated} 个地址的分数`);
-      } else {
-        if (allLinesHaveOnePart) {
-          toast.error(`分数行数（${lines.length}）与地址数量（${newScores.length}）不匹配`);
-        } else {
-          toast.error('未找到匹配的地址，请确保格式为：分数（每行一个）');
-        }
+      if (useManualPaste || !clipboardText) {
+        setShowManualPasteDialog(true);
+        return;
       }
+
+      processClipboardText(clipboardText);
     } catch (error) {
-      toast.error('粘贴失败，请检查剪贴板内容');
-      console.error('Paste error:', error);
+      console.error('粘贴功能出错:', error);
+      setShowManualPasteDialog(true);
     }
   };
 
@@ -547,6 +577,15 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
       <LoadingOverlay
         isLoading={isPendingVerifyGroup || isConfirmingVerify}
         text={isPendingVerifyGroup ? '提交打分...' : '确认打分...'}
+      />
+
+      <ManualPasteDialog
+        isOpen={showManualPasteDialog}
+        onClose={() => setShowManualPasteDialog(false)}
+        onConfirm={processClipboardText}
+        title="粘贴分数数据"
+        description="请将复制的分数数据粘贴到下方文本框中（每行一个分数，或每行：地址 分数）"
+        placeholder="请粘贴分数数据...&#10;例如：&#10;80&#10;90&#10;100"
       />
     </>
   );
