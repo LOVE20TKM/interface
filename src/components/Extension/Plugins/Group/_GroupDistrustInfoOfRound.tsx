@@ -30,7 +30,6 @@ import {
 } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useDistrustVotesOfRound } from '@/src/hooks/extension/plugins/group/composite/useDistrustVotesOfRound';
 import { useDistrustVotesOfGroupOwner } from '@/src/hooks/extension/plugins/group/composite/useDistrustVotesOfGroupOwner';
-import { useDistrustVotesByVoterByGroupOwner } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 
 // 工具函数
@@ -103,34 +102,6 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
     actionId,
   );
 
-  // 获取已投不信任票数（仅当前轮次需要）
-  const firstGroupOwner = distrustVotes?.[0]?.groupOwner;
-  const {
-    votes: alreadyVotedAmount,
-    isPending: isPendingAlreadyVoted,
-    error: errorAlreadyVoted,
-  } = useDistrustVotesByVoterByGroupOwner(
-    extensionAddress,
-    isCurrentRound ? currentRound || BigInt(0) : BigInt(0),
-    account as `0x${string}`,
-    isCurrentRound && firstGroupOwner ? firstGroupOwner : '0x0000000000000000000000000000000000000000',
-  );
-
-  // 计算剩余可投不信任票数（仅当前轮次需要）
-  const remainingVotes = useMemo(() => {
-    if (!isCurrentRound) return BigInt(0);
-    if (
-      myVerifyVotes === undefined ||
-      myVerifyVotes === null ||
-      alreadyVotedAmount === undefined ||
-      alreadyVotedAmount === null
-    ) {
-      return BigInt(0);
-    }
-    const remaining = myVerifyVotes - alreadyVotedAmount;
-    return remaining > BigInt(0) ? remaining : BigInt(0);
-  }, [isCurrentRound, myVerifyVotes, alreadyVotedAmount]);
-
   // 提取所有唯一的 groupIds 用于批量查询 groupName
   const allGroupIds = useMemo(() => {
     if (!distrustVotes) return [];
@@ -173,8 +144,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
     if (errorDetail) handleError(errorDetail);
     if (errorRound) handleError(errorRound);
     if (errorVerify) handleError(errorVerify);
-    if (errorAlreadyVoted) handleError(errorAlreadyVoted);
-  }, [error, errorDetail, errorRound, errorVerify, errorAlreadyVoted, handleError]);
+  }, [error, errorDetail, errorRound, errorVerify, handleError]);
 
   // 处理轮次切换
   const handleChangedRound = (round: number) => {
@@ -213,14 +183,6 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
     // 检查是否有验证票
     if (!myVerifyVotes || myVerifyVotes === BigInt(0)) {
       toast.error('只有投治理票给本行动，并完成"验证"的治理者才能投不信任票');
-      return;
-    }
-
-    // 检查是否已经投完所有票（这里只检查对第一个服务者的投票，作为权限判断）
-    // 实际上用户可能对不同服务者投不同的票，这里只是简单检查
-    const hasVotedAll = remainingVotes <= BigInt(100000);
-    if (hasVotedAll && firstGroupOwner) {
-      toast.error('您已投完所有不信任票');
       return;
     }
 
