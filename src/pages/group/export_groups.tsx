@@ -45,11 +45,11 @@ function buildTsvContent(
     const lines: string[] = [];
 
     // 群标题行
-    lines.push(`${group.groupId.toString()}\t${group.groupName}`);
+    lines.push(`${group.groupId.toString()} ${group.groupName}`);
 
-    // 列头行
-    const header = ['地址', '后4位', ...verificationKeys];
-    lines.push(header.join('\t'));
+    // // 列头行
+    // const header = ['地址', '后4位', ...verificationKeys];
+    // lines.push(header.join('\t'));
 
     // 数据行
     for (const address of accounts) {
@@ -138,6 +138,12 @@ const ExportGroupsPage: React.FC = () => {
     groups,
   });
 
+  // 按参与代币数从高到低排序（与链群列表页保持一致）
+  const sortedGroups = useMemo(
+    () => [...groups].sort((a, b) => (b.totalJoinedAmount > a.totalJoinedAmount ? 1 : b.totalJoinedAmount < a.totalJoinedAmount ? -1 : 0)),
+    [groups],
+  );
+
   // verificationKeys
   const verificationKeys: string[] = useMemo(() => actionInfo?.body?.verificationKeys || [], [actionInfo]);
 
@@ -203,7 +209,7 @@ const ExportGroupsPage: React.FC = () => {
 
   // 下载 TSV 文件
   const handleDownload = () => {
-    const content = buildTsvContent(groups, groupAccountsMap, verificationInfosMap, verificationKeys);
+    const content = buildTsvContent(sortedGroups, groupAccountsMap, verificationInfosMap, verificationKeys);
     const filename = `groups_action${actionId}_round${currentRound}.tsv`;
     downloadTsv(content, filename);
   };
@@ -242,25 +248,37 @@ const ExportGroupsPage: React.FC = () => {
           </div>
         )}
 
+        {/* 下载按钮 */}
+        {!isLoading && sortedGroups.length > 0 && (
+          <div>
+            <Button onClick={handleDownload} disabled={totalAccounts === 0} className="w-full">
+              下载 TSV 文件（可直接用 Excel 打开）
+            </Button>
+            <p className="text-xs text-gray-400 mt-2 text-center">
+              文件包含所有链群的参与地址及验证信息，用 Excel 打开后即可打分
+            </p>
+          </div>
+        )}
+
         {/* 加载状态 / 群列表摘要 */}
         {isLoading ? (
           <div className="flex flex-col items-center gap-3 py-6">
             <LoadingIcon />
             <div className="text-gray-500 text-sm">{loadingText}</div>
           </div>
-        ) : groups.length === 0 ? (
+        ) : sortedGroups.length === 0 ? (
           <p className="text-gray-500 text-sm py-4">暂无活跃链群</p>
         ) : (
           <div className="space-y-2">
             {/* 汇总 */}
             <div className="text-sm text-gray-600">
-              共 <span className="font-semibold text-secondary">{groups.length}</span> 个链群， 共{' '}
+              共 <span className="font-semibold text-secondary">{sortedGroups.length}</span> 个链群， 共{' '}
               <span className="font-semibold text-secondary">{totalAccounts}</span> 个参与地址
             </div>
 
             {/* 每个群的简要信息 */}
             <div className="border border-gray-200 rounded-lg divide-y divide-gray-100">
-              {groups.map((group) => {
+              {sortedGroups.map((group) => {
                 const count = groupAccountsMap.get(group.groupId.toString())?.length ?? Number(group.accountCount);
                 return (
                   <div key={group.groupId.toString()} className="flex items-center justify-between px-3 py-2 text-sm">
@@ -274,18 +292,6 @@ const ExportGroupsPage: React.FC = () => {
                 );
               })}
             </div>
-          </div>
-        )}
-
-        {/* 下载按钮 */}
-        {!isLoading && groups.length > 0 && (
-          <div className="pt-2">
-            <Button onClick={handleDownload} disabled={totalAccounts === 0} className="w-full">
-              下载 TSV 文件（可直接用 Excel 打开）
-            </Button>
-            <p className="text-xs text-gray-400 mt-2 text-center">
-              文件包含所有链群的参与地址及验证信息，用 Excel 打开后即可打分
-            </p>
           </div>
         )}
       </main>
