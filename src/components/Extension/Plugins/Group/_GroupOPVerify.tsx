@@ -15,6 +15,7 @@ import { useAccount } from 'wagmi';
 
 // UI 组件
 import { Button } from '@/components/ui/button';
+import { Copy, Download, Upload } from 'lucide-react';
 
 // 类型
 import { ActionInfo } from '@/src/types/love20types';
@@ -155,6 +156,17 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     isConfirmed: isConfirmedVerify,
     writeError: errorVerifyGroup,
   } = useSubmitOriginScores();
+
+  // 复制当前所有分数到剪贴板（每行一个分数）
+  const handleCopyScores = async () => {
+    if (!accountScores || accountScores.length === 0) {
+      toast.error('没有可复制的分数');
+      return;
+    }
+    const scoresList = accountScores.map((item) => item.score || '0');
+    const textToCopy = scoresList.join('\n');
+    await copyWithToast(textToCopy, `已复制 ${scoresList.length} 个分数到剪贴板`);
+  };
 
   // 复制所有地址及验证信息到剪贴板
   const handleCopyAddresses = async () => {
@@ -536,19 +548,8 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         </div>
 
         {/* 按钮 */}
-        <div className="flex justify-center space-x-4 pt-4">
-          <Button
-            className="w-1/4"
-            variant="outline"
-            disabled={!accountScores || accountScores.length === 0}
-            onClick={handleCopyAddresses}
-            title="复制地址及验证信息（包含地址、后4位、验证信息）"
-          >
-            复制地址
-          </Button>
-          <Button className="w-1/4" variant="outline" onClick={handlePasteFromClipboard}>
-            粘贴分数
-          </Button>
+        <div className="flex flex-col items-center gap-2 pb-4">
+          {/* 第一行：主操作按钮 */}
           <Button
             className="w-1/2"
             disabled={isPendingVerifyGroup || isConfirmingVerify || isConfirmedVerify}
@@ -562,6 +563,31 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
               ? '已提交'
               : '提交验证'}
           </Button>
+          {/* 第二行：辅助操作按钮 */}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              disabled={!accountScores || accountScores.length === 0}
+              onClick={handleCopyAddresses}
+              title="复制地址及验证信息（包含地址、后4位、验证信息）"
+            >
+              <Copy size={14} />
+              复制地址
+            </Button>
+            <Button
+              variant="outline"
+              disabled={!accountScores || accountScores.length === 0}
+              onClick={handleCopyScores}
+              title="复制当前所有分数到剪贴板（每行一个分数）"
+            >
+              <Upload size={14} />
+              复制分数
+            </Button>
+            <Button variant="outline" onClick={handlePasteFromClipboard}>
+              <Download size={14} />
+              粘贴分数
+            </Button>
+          </div>
         </div>
 
         {/* 说明 */}
