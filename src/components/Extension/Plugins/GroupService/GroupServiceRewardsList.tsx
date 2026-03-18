@@ -5,7 +5,7 @@ import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
 import toast from 'react-hot-toast';
 
 // 导入铸造 hooks
-import { useClaimReward } from '@/src/hooks/extension/base/contracts/useIReward';
+import { useClaimReward } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 import { useContractError } from '@/src/errors/useContractError';
 
 /**
