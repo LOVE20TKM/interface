@@ -3,6 +3,7 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { isAddress, zeroAddress } from 'viem';
 import { useAccount } from 'wagmi';
 
 // my lib
@@ -85,10 +86,13 @@ const ActionRewardNotifier: React.FC = () => {
   }, [isOnActionRewardsPage, token?.address, account, currentRound]);
 
   // 检查普通行动激励：最近 LAST_ROUNDS 轮是否存在未铸造
+  // 占位用 zeroAddress；是否真正发请求由 hook 内 isAddress + 非零地址 + gateRounds>0 决定（勿用 '0x'，在 JS 里为 truthy 会误导 enabled）
   const gateRounds = shouldTriggerCheck ? LAST_ROUNDS : BigInt(0);
+  const mintViewerToken = token?.address && isAddress(token.address) ? token.address : zeroAddress;
+  const mintViewerAccount = account && isAddress(account) ? account : zeroAddress;
   const { hasUnmintedActionRewardOfLastRounds } = useHasUnmintedActionRewardOfLastRounds(
-    (token?.address || '0x') as `0x${string}`,
-    (account || '0x') as `0x${string}`,
+    mintViewerToken as `0x${string}`,
+    mintViewerAccount as `0x${string}`,
     gateRounds,
   );
 

@@ -1,5 +1,6 @@
 // hooks/contracts/useLOVE20MintViewer.ts
 
+import { isAddress, zeroAddress } from 'viem';
 import { useReadContract } from 'wagmi';
 import { LOVE20MintViewerAbi } from '@/src/abis/LOVE20MintViewer';
 import { RewardInfo, ActionReward, GovReward } from '@/src/types/love20types';
@@ -129,7 +130,12 @@ export const useActionRewardsByAccountOfLastRounds = (
     functionName: 'actionRewardsByAccountOfLastRounds',
     args: [tokenAddress, account, latestRounds],
     query: {
-      enabled: !!tokenAddress && !!account && !!latestRounds,
+      enabled:
+        isAddress(tokenAddress) &&
+        isAddress(account) &&
+        tokenAddress !== zeroAddress &&
+        account !== zeroAddress &&
+        latestRounds > BigInt(0),
     },
   });
   const rewards = (data as ActionReward[]) || [];
@@ -150,7 +156,12 @@ export const useHasUnmintedActionRewardOfLastRounds = (
     functionName: 'hasUnmintedActionRewardOfLastRounds',
     args: [tokenAddress, account, latestRounds],
     query: {
-      enabled: !!tokenAddress && !!account && !!latestRounds,
+      enabled:
+        isAddress(tokenAddress) &&
+        isAddress(account) &&
+        tokenAddress !== zeroAddress &&
+        account !== zeroAddress &&
+        latestRounds > BigInt(0),
     },
   });
   return { hasUnmintedActionRewardOfLastRounds: data as boolean, isPending, error };
