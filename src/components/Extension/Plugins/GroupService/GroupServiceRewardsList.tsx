@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 
 // 导入铸造 hooks
 import { useClaimReward } from '@/src/hooks/extension/base/contracts/useIReward';
+import { useContractError } from '@/src/errors/useContractError';
 
 /**
  * 激励数据结构
@@ -67,6 +68,7 @@ export const GroupServiceRewardsList: React.FC<GroupServiceRewardsListProps> = (
     isConfirming,
     isConfirmed,
     hash,
+    writeError,
   } = useClaimReward(extensionAddress);
 
   // ========== 状态管理 ==========
@@ -103,6 +105,12 @@ export const GroupServiceRewardsList: React.FC<GroupServiceRewardsListProps> = (
       onMintEnd?.();
     }
   };
+
+  // 错误处理
+  const { handleError } = useContractError();
+  useEffect(() => {
+    if (writeError) handleError(writeError);
+  }, [writeError, handleError]);
 
   // ========== 构建跳转链接 ==========
   const buildPublicLink = (round: bigint) => {
