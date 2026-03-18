@@ -30,7 +30,7 @@ const LaunchStatus: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = 
   useEffect(() => {
     if (!blockNumber || !launchInfo) return;
 
-    if (ratio >= 0.5) {
+    if (launchInfo.secondHalfStartBlock) {
       const targetBlock = Number(launchInfo.secondHalfStartBlock) + Number(launchInfo.secondHalfMinBlocks);
       const currentBlock = Number(blockNumber);
       const remaining = targetBlock - currentBlock;
@@ -59,7 +59,7 @@ const LaunchStatus: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = 
             <LeftTitle title="公平发射" />
           </div>
           {launchInfo.hasEnded && <span className={`stat-title text-base text-red-500`}>（已结束）</span>}
-          {!launchInfo.hasEnded && ratio >= 0.5 && currentBlocksRemaining > 0 && (
+          {!launchInfo.hasEnded && launchInfo.secondHalfStartBlock && currentBlocksRemaining > 0 && (
             <span className="text-greyscale-500 text-sm">
               {'('}距离结束还有{' '}
               <LeftTime
@@ -120,7 +120,7 @@ const LaunchStatus: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = 
               <p className="text-greyscale-600">
                 2. 最后一笔申购，距离首笔达成 50%募资目标的所在区块
                 {!launchInfo.hasEnded &&
-                  ratio >= 0.5 &&
+                  launchInfo.secondHalfStartBlock &&
                   (() => {
                     if (currentBlocksRemaining <= 0) {
                       if (ratio >= 1) {
@@ -147,7 +147,9 @@ const LaunchStatus: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = 
                       );
                     }
                   })()}
-                {!launchInfo.hasEnded && ratio < 0.5 && `，至少${launchInfo.secondHalfMinBlocks.toString()}个区块`}
+                {!launchInfo.hasEnded &&
+                  !launchInfo.secondHalfStartBlock &&
+                  `，至少${launchInfo.secondHalfMinBlocks.toString()}个区块`}
                 {launchInfo.hasEnded &&
                   `（第 ${launchInfo.secondHalfStartBlock.toString()}区块），至少${launchInfo.secondHalfMinBlocks.toString()}个区块`}
               </p>
