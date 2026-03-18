@@ -26,7 +26,13 @@ export const sendUniversalTransaction = async (
     return await sendTransactionForTuke(abi, address, functionName, args, value, options);
   } else {
     // 标准钱包模式：simulate + write
-    if (!options?.skipSimulation) {
+    const isDebug =
+      typeof window !== 'undefined' &&
+      !!localStorage.getItem('debug') &&
+      localStorage.getItem('debug') !== '0' &&
+      localStorage.getItem('debug') !== 'false';
+
+    if (!options?.skipSimulation && !isDebug) {
       console.log('步骤1: (标准模式)执行模拟调用 验证交易...');
       await simulateContract(config, {
         address,
@@ -35,6 +41,8 @@ export const sendUniversalTransaction = async (
         args,
         value,
       });
+    } else if (isDebug) {
+      console.log('步骤1: [DEBUG] 跳过模拟调用');
     }
 
     console.log('步骤2: (标准模式)执行真实交易...');
