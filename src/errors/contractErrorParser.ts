@@ -5,7 +5,7 @@
  * 支持多种错误格式：hex 选择器、错误名称、RPC 错误等
  */
 
-import { ContractRevertError } from '../lib/revertDecoder';
+import { ContractRevertError, extractRawRevertData, formatRawErrorMessage } from '../lib/revertDecoder';
 import { ErrorsBySelector, ErrorsByName } from './unifiedErrorMap';
 
 // ============================================================================
@@ -126,10 +126,10 @@ export function parseTimeoutError(error: string): ErrorInfo | null {
 /**
  * 检查是否为 RPC 调用错误
  */
-export function parseRpcError(error: string): ErrorInfo | null {
+export function parseRpcError(error: unknown, rawMessage: string): ErrorInfo | null {
   // RPC 节点内部错误
-  if (/InternalRpcError/i.test(error) || /code.*-32603/i.test(error) || /Internal error/i.test(error)) {
-    if (/An internal error was received/i.test(error)) {
+  if (/InternalRpcError/i.test(rawMessage) || /code.*-32603/i.test(rawMessage) || /Internal error/i.test(rawMessage)) {
+    if (/An internal error was received/i.test(rawMessage)) {
       return {
         name: '链上交易失败',
         message: '连接故障，请稍后重试或刷新页面',
@@ -157,18 +157,17 @@ export function parseRpcError(error: string): ErrorInfo | null {
   ];
 
   for (const pattern of rpcErrorPatterns) {
-    if (pattern.test(error)) {
-      if (/insufficient.*liquidity|zero.*liquidity|insufficient.*reserves/i.test(error)) {
+    if (pattern.test(rawMessage)) {
+      if (/insufficient.*liquidity|zero.*liquidity|insufficient.*reserves/i.test(rawMessage)) {
         return {
           name: '链上交易失败',
           message: '流动性不足，请尝试较小的交换数量或稍后重试',
         };
       }
-      if (/position.*out of bounds|index out of bounds/i.test(error)) {
+      if (/position.*out of bounds|index out of bounds/i.test(rawMessage)) {
         return {
           name: '链上交易失败',
-          // message: '链上状态变化，导致操作失败。可能有人先发起了同样的交易。请刷新重试~',
-          message: error,
+          message: formatRawErrorMessage(error, '链上交易失败'),
         };
       }
       return {
@@ -312,6 +311,7 @@ export function parseContractError(error: unknown): ErrorInfo | null {
 
   // 提取错误消息
   const rawMessage = extractErrorMessage(error);
+  const rawData = extractRawRevertData(error);
 
   // 1. 检查 Gas 费不足
   const gasError = parseGasError(rawMessage);
@@ -326,7 +326,7 @@ export function parseContractError(error: unknown): ErrorInfo | null {
   if (localParameterError) return localParameterError;
 
   // 4. 检查 RPC 错误
-  const rpcError = parseRpcError(rawMessage);
+  const rpcError = parseRpcError(error, rawMessage);
   if (rpcError) return rpcError;
 
   // 5. 检查用户取消（返回 null 表示不是错误）
@@ -391,10 +391,25 @@ export function parseContractError(error: unknown): ErrorInfo | null {
       return { name: '交易错误', message: directErrorDef.message };
     }
 
+    if (rawData) {
+      return {
+        name: '链上交易失败',
+        message: formatRawErrorMessage(error, '链上交易失败'),
+      };
+    }
+
     return { name: '交易错误', message: revertMessage };
   }
 
-  // 9. 兜底返回
+  // 9. 如果拿到了原始 revert data，但仍无法解码，直接输出原始上下文方便排查
+  if (rawData) {
+    return {
+      name: '链上交易失败',
+      message: formatRawErrorMessage(error, '链上交易失败'),
+    };
+  }
+
+  // 10. 兜底返回
   return {
     name: '交易错误',
     message: rawMessage || '交易失败，请稍后刷新重试',

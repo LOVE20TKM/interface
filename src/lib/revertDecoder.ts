@@ -34,6 +34,179 @@ export class ContractRevertError extends Error {
   }
 }
 
+/**
+ * 判断是否为 0x 格式的十六进制字符串
+ */
+function isHexString(value: unknown): value is `0x${string}` {
+  return typeof value === 'string' && /^0x[0-9a-fA-F]+$/.test(value);
+}
+
+/**
+ * 从字符串中提取最可能的 revert data
+ * 规则：
+ * 1. 只接受 0x 开头的十六进制片段
+ * 2. 优先选择更长的片段，尽量避开地址等短片段
+ */
+function extractBestHexCandidate(text: string): `0x${string}` | null {
+  const matches = text.match(/0x[0-9a-fA-F]+/g);
+  if (!matches || matches.length === 0) return null;
+
+  const candidates = matches
+    .filter((candidate) => candidate.length >= 10)
+    .sort((a, b) => b.length - a.length);
+
+  return (candidates[0] as `0x${string}` | undefined) ?? null;
+}
+
+/**
+ * 递归提取错误对象中最可能的 revert data
+ *
+ * 兼容 viem / wagmi 常见结构：
+ * - error.data
+ * - error.cause.data
+ * - error.details / shortMessage / message 中嵌入的 hex 字符串
+ * - 嵌套对象中的 response / body / error 等字段
+ */
+export function extractRawRevertData(error: unknown): `0x${string}` | null {
+  const seen = new WeakSet<object>();
+
+  const visit = (value: unknown, depth: number): `0x${string}` | null => {
+    if (value == null || depth > 8) return null;
+
+    if (isHexString(value)) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      return extractBestHexCandidate(value);
+    }
+
+    if (typeof value !== 'object') {
+      return null;
+    }
+
+    const current = value as Record<string, unknown>;
+    if (seen.has(current)) return null;
+    seen.add(current);
+
+    // 先检查更可能存放 revert data 的字段
+    const preferredKeys = ['data', 'revertData', 'rawData', 'returnData', 'result', 'response', 'body'];
+    for (const key of preferredKeys) {
+      const nested = current[key];
+      const found = visit(nested, depth + 1);
+      if (found) return found;
+    }
+
+    // 再检查文本字段
+    const textKeys = ['message', 'details', 'shortMessage', 'reason', 'name', 'stack'];
+    for (const key of textKeys) {
+      const nested = current[key];
+      if (typeof nested === 'string') {
+        const found = extractBestHexCandidate(nested);
+        if (found) return found;
+      }
+    }
+
+    // 最后递归 cause / error / info / metaMessages
+    const recursiveKeys = ['cause', 'error', 'info'];
+    for (const key of recursiveKeys) {
+      const found = visit(current[key], depth + 1);
+      if (found) return found;
+    }
+
+    const metaMessages = current.metaMessages;
+    if (Array.isArray(metaMessages)) {
+      for (const item of metaMessages) {
+        const found = visit(item, depth + 1);
+        if (found) return found;
+      }
+    }
+
+    // 扫描对象自身的所有字符串字段，作为兜底
+    for (const valueItem of Object.values(current)) {
+      const found = visit(valueItem, depth + 1);
+      if (found) return found;
+    }
+
+    return null;
+  };
+
+  return visit(error, 0);
+}
+
+/**
+ * 提取用于排障展示的错误上下文文本片段
+ *
+ * 目标不是“美化”，而是尽量保留原始信息，便于用户截图排查。
+ */
+export function collectErrorContextLines(error: unknown): string[] {
+  const lines = new Set<string>();
+  const seen = new WeakSet<object>();
+
+  const pushLine = (label: string, value: unknown) => {
+    if (value == null) return;
+    if (typeof value === 'string') {
+      const text = value.trim();
+      if (text) lines.add(`${label}: ${text}`);
+      return;
+    }
+    if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+      lines.add(`${label}: ${String(value)}`);
+    }
+  };
+
+  const visit = (value: unknown, path: string, depth: number) => {
+    if (value == null || depth > 6) return;
+
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+      pushLine(path, value);
+      return;
+    }
+
+    if (typeof value !== 'object') return;
+
+    const current = value as Record<string, unknown>;
+    if (seen.has(current)) return;
+    seen.add(current);
+
+    pushLine(`${path}.name`, current.name);
+    pushLine(`${path}.message`, current.message);
+    pushLine(`${path}.shortMessage`, current.shortMessage);
+    pushLine(`${path}.details`, current.details);
+    pushLine(`${path}.reason`, current.reason);
+    pushLine(`${path}.data`, current.data);
+
+    if (Array.isArray(current.metaMessages)) {
+      current.metaMessages.forEach((item, index) => pushLine(`${path}.metaMessages[${index}]`, item));
+    }
+
+    const nextKeys = ['cause', 'error', 'info', 'response', 'body'];
+    nextKeys.forEach((key) => visit(current[key], `${path}.${key}`, depth + 1));
+  };
+
+  visit(error, 'error', 0);
+  return Array.from(lines);
+}
+
+/**
+ * 构造用于截图排查的原始错误文案
+ */
+export function formatRawErrorMessage(error: unknown, title = '链上交易失败'): string {
+  const rawData = extractRawRevertData(error);
+  const contextLines = collectErrorContextLines(error);
+  const selector = rawData ? rawData.slice(0, 10) : null;
+
+  const sections = [
+    title,
+    '原始错误信息:',
+    ...contextLines,
+    `原始 revert data: ${rawData ?? '未获取到'}`,
+    selector ? `selector: ${selector}` : null,
+  ].filter((line): line is string => Boolean(line));
+
+  return sections.join('\n');
+}
+
 // ============================================================================
 // ABI 解码错误检测
 // ============================================================================
@@ -93,8 +266,9 @@ export async function fetchRawCallData(
       return result.data as `0x${string}`;
     }
     return null;
-  } catch {
-    return null;
+  } catch (error) {
+    const rawData = extractRawRevertData(error);
+    return rawData;
   }
 }
 

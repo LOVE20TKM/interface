@@ -11,6 +11,7 @@ import {
   isAbiDecodingError,
   fetchRawCallData,
   tryDecodeRevertData,
+  extractRawRevertData,
   ContractRevertError,
 } from '@/src/lib/revertDecoder';
 
@@ -52,8 +53,18 @@ export const sendUniversalTransaction = async (
           value,
         });
       } catch (simError: unknown) {
+        // 先尝试从模拟错误对象本身提取原始 revert data
+        const directRawData = extractRawRevertData(simError);
+        if (directRawData) {
+          const decoded = tryDecodeRevertData(directRawData, abi);
+          if (decoded) {
+            const selector = directRawData.slice(0, 10) as `0x${string}`;
+            throw new ContractRevertError(decoded.errorName, decoded.args, selector);
+          }
+        }
+
         if (isAbiDecodingError(simError)) {
-          // 非标准 RPC：revert data 被当作成功返回，尝试恢复并解码
+          // 非标准 RPC：revert data 被当作成功返回，尝试通过低级 call 恢复
           const rawData = await fetchRawCallData(config, address, abi, functionName, args, value);
           if (rawData) {
             const decoded = tryDecodeRevertData(rawData, abi);
