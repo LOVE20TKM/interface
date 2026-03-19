@@ -546,18 +546,18 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                     onClick={() => {
                       window.location.href = `/acting/?symbol=${token.parentTokenSymbol}`;
                     }}
-                    className="rounded-lg text-gray-700 focus:text-gray-900 focus:bg-gray-50"
+                    className="rounded-lg text-base text-gray-700 focus:text-gray-900 focus:bg-gray-50"
                   >
                     <ArrowUpLeft className="w-4 h-4 mr-3 text-gray-500" />
                     返回父币
-                    <span className="ml-auto text-xs text-gray-400">{token.parentTokenSymbol}</span>
+                    <span className="ml-auto text-sm text-gray-400">{token.parentTokenSymbol}</span>
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem
                     onClick={() => {
                       window.location.href = `/tokens/children/?symbol=${token.symbol}`;
                     }}
-                    className="rounded-lg text-gray-700 focus:text-gray-900 focus:bg-gray-50"
+                    className="rounded-lg text-base text-gray-700 focus:text-gray-900 focus:bg-gray-50"
                   >
                     <List className="w-4 h-4 mr-3 text-gray-500" />
                     子币列表
@@ -569,7 +569,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
           })()}
         <DropdownMenuItem
           onClick={handleDisconnect}
-          className="rounded-lg text-red-600 focus:text-red-600 focus:bg-red-50"
+          className="rounded-lg text-base text-red-600 focus:text-red-600 focus:bg-red-50"
         >
           <LogOut className="w-4 h-4 mr-3" />
           断开连接
