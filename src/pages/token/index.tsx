@@ -143,7 +143,7 @@ function formatAmount(value?: bigint, decimals?: number, symbol?: string) {
 
 const TokenPage = () => {
   const { isConnected } = useAccount();
-  const { data: currentBlockNumber } = useBlockNumber();
+  const { data: currentBlockNumber } = useBlockNumber({ watch: true });
   const { token: currentToken } = useContext(TokenContext) || {};
   const { currentRound, isPending: isPendingCurrentRound } = useCurrentRound();
 

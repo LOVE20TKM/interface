@@ -15,7 +15,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 
 const Todeploy: React.FC<{ token: Token }> = ({ token }) => {
   // 获取当前区块号和个人地址
-  const { data: blockNumber } = useBlockNumber();
+  const { data: blockNumber } = useBlockNumber({ watch: true });
   const { address: account } = useAccount();
 
   // 获取发射信息

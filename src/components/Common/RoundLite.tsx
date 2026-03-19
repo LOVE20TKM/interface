@@ -16,7 +16,7 @@ interface RoundProps {
 }
 
 const RoundLite: React.FC<RoundProps> = ({ currentRound, roundType, showCountdown = true }) => {
-  const { data: blockNumber } = useBlockNumber();
+  const { data: blockNumber } = useBlockNumber({ watch: true });
   const context = useContext(TokenContext);
   const token = context ? context.token : undefined;
 
