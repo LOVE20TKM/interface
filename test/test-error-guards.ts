@@ -21,13 +21,13 @@ assert.equal(
 );
 
 assert.equal(
-  shouldEnableTrialAccountsWaitingQuery(validAddress, 1n, validAddress),
+  shouldEnableTrialAccountsWaitingQuery(validAddress, BigInt(1), validAddress),
   true,
   '完整合法参数应启用体验查询',
 );
 
 assert.equal(
-  shouldEnableTrialAccountsWaitingQuery(validAddress, 1n, ZERO_ADDRESS),
+  shouldEnableTrialAccountsWaitingQuery(validAddress, BigInt(1), ZERO_ADDRESS),
   false,
   '零地址 provider 不应触发体验查询',
 );
