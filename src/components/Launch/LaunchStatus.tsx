@@ -19,7 +19,7 @@ import LeftTime from '@/src/components/Common/LeftTime';
 const LaunchStatus: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = ({ token, launchInfo }) => {
   const ratio = Number(launchInfo.totalContributed) / Number(launchInfo.parentTokenFundraisingGoal);
   const ratioPercent = (ratio * 100).toFixed(1);
-  const { data: blockNumber } = useBlockNumber();
+  const { data: blockNumber } = useBlockNumber({ watch: true });
 
   // 倒计时相关状态
   const [currentTimeLeft, setCurrentTimeLeft] = useState(0);

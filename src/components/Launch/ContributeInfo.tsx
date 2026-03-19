@@ -23,7 +23,7 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 
 const ContributeInfo: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = ({ token, launchInfo }) => {
   const { address: account, isConnected } = useAccount();
-  const { data: blockNumber } = useBlockNumber();
+  const { data: blockNumber } = useBlockNumber({ watch: true });
   const router = useRouter();
 
   const {
