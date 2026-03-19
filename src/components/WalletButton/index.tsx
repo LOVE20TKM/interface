@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useContext } from 'react';
 import { useAccount, useBalance, useConnect, useDisconnect, useChainId } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Wallet, Copy, LogOut, ChevronDown, Check, Loader2 } from 'lucide-react';
+import { Wallet, Copy, LogOut, ChevronDown, Check, Loader2, ArrowUpLeft, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
@@ -18,12 +19,15 @@ import { config } from '@/src/wagmi';
 import { isTukeWallet } from '@/src/lib/tukeWalletUtils';
 import { formatTokenAmount } from '@/src/lib/format';
 import { useError } from '@/src/contexts/ErrorContext';
+import { TokenContext } from '@/src/contexts/TokenContext';
 
 interface WalletButtonProps {
   className?: string;
 }
 
 export function WalletButton({ className }: WalletButtonProps = {}) {
+  const tokenContext = useContext(TokenContext);
+  const token = tokenContext?.token;
   const chainId = useChainId();
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
   const { data: balance, error: balanceError } = useBalance({
@@ -528,6 +532,41 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
           <p className="font-mono text-xs text-gray-600 mt-1 break-all">{address}</p>
         </div>
 
+        {token &&
+          (() => {
+            const hasParent =
+              token.parentTokenAddress &&
+              token.parentTokenAddress !== '0x0000000000000000000000000000000000000000' &&
+              token.parentTokenSymbol &&
+              token.parentTokenSymbol !== process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
+            return (
+              <>
+                {hasParent ? (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      window.location.href = `/acting/?symbol=${token.parentTokenSymbol}`;
+                    }}
+                    className="rounded-lg text-gray-700 focus:text-gray-900 focus:bg-gray-50"
+                  >
+                    <ArrowUpLeft className="w-4 h-4 mr-3 text-gray-500" />
+                    返回父币
+                    <span className="ml-auto text-xs text-gray-400">{token.parentTokenSymbol}</span>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      window.location.href = `/tokens/children/?symbol=${token.symbol}`;
+                    }}
+                    className="rounded-lg text-gray-700 focus:text-gray-900 focus:bg-gray-50"
+                  >
+                    <List className="w-4 h-4 mr-3 text-gray-500" />
+                    子币列表
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator className="my-1" />
+              </>
+            );
+          })()}
         <DropdownMenuItem
           onClick={handleDisconnect}
           className="rounded-lg text-red-600 focus:text-red-600 focus:bg-red-50"
