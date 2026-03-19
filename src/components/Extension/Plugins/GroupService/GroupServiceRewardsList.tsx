@@ -5,8 +5,7 @@ import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
 import toast from 'react-hot-toast';
 
 // 导入铸造 hooks
-import { useClaimReward } from '@/src/hooks/extension/base/contracts/useIReward';
-
+import { useClaimReward } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 
 /**
  * 激励数据结构
@@ -104,7 +103,6 @@ export const GroupServiceRewardsList: React.FC<GroupServiceRewardsListProps> = (
       onMintEnd?.();
     }
   };
-
 
   // ========== 构建跳转链接 ==========
   const buildPublicLink = (round: bigint) => {

@@ -167,7 +167,8 @@ export function parseRpcError(error: string): ErrorInfo | null {
       if (/position.*out of bounds|index out of bounds/i.test(error)) {
         return {
           name: '链上交易失败',
-          message: '合约执行失败，可能不满足领取条件或该轮次尚未结束，请刷新后重试',
+          // message: '链上状态变化，导致操作失败。可能有人先发起了同样的交易。请刷新重试~',
+          message: error,
         };
       }
       return {
