@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useReadContracts, useBlockNumber } from 'wagmi';
+import { useBlockNumber } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
 
@@ -139,7 +140,7 @@ export const useMyLpActionData = ({
   }, [extensionAddress, tokenAddress, account]);
 
   // 批量读取数据（第一批）
-  const { data, isPending, error } = useReadContracts({
+  const { data, isPending, error } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: !!extensionAddress && !!tokenAddress && !!account && contracts.length > 0,

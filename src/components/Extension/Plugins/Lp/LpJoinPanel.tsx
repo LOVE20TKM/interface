@@ -176,7 +176,6 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     isPending: isPendingApproveLp,
     isConfirming: isConfirmingApproveLp,
     isConfirmed: isConfirmedApproveLp,
-    writeError: errApproveLp,
   } = useApprove(joinTokenAddress as `0x${string}`);
 
   // 新增：为授权按钮设置 ref ，用于在授权等待状态结束后调用 blur() 取消 hover 效果
@@ -240,7 +239,6 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     isPending: isPendingJoin,
     isConfirming: isConfirmingJoin,
     isConfirmed: isConfirmedJoin,
-    writeError: errorJoin,
   } = useJoin(extensionAddress);
 
   async function handleJoin(values: FormValues) {
@@ -281,13 +279,11 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   const { handleError } = useContractError();
   useEffect(() => {
     if (errorLpBalance) handleError(errorLpBalance);
-    if (errApproveLp) handleError(errApproveLp);
-    if (errorJoin) handleError(errorJoin);
     if (errAllowanceLp) handleError(errAllowanceLp);
     if (errorData) handleError(errorData);
     if (errorCurrentRound) handleError(errorCurrentRound);
     if (errorVoted) handleError(errorVoted);
-  }, [errorLpBalance, errApproveLp, errorJoin, errAllowanceLp, errorData, errorCurrentRound, errorVoted, handleError]);
+  }, [errorLpBalance, errAllowanceLp, errorData, errorCurrentRound, errorVoted, handleError]);
 
   // 检查投票状态并显示错误提示
   useEffect(() => {

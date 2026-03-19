@@ -26,7 +26,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts, useReadContract } from 'wagmi';
+import { useUniversalReadContract, useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { useActionIdsByAccount } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { ExtensionContractInfo } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 import { LOVE20RoundViewerAbi } from '@/src/abis/LOVE20RoundViewer';
@@ -105,7 +105,7 @@ export const useMyJoinedExtensionActions = ({
     data: currentRoundData,
     isPending: isPendingCurrentRoundInternal,
     error: errorCurrentRoundInternal,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: JOIN_ADDRESS,
     abi: LOVE20JoinAbi,
     functionName: 'currentRound',
@@ -279,7 +279,7 @@ export const useMyJoinedExtensionActions = ({
     data: mergedDynamicData,
     isPending: isPendingMergedDynamic,
     error: errorMergedDynamic,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: mergedDynamicContracts as any,
     query: { enabled: mergedDynamicContracts.length > 0 },
   });

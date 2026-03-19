@@ -16,8 +16,6 @@ import {
 import { useVerificationInfosByAccount } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useIsSubmitted } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
@@ -161,40 +159,6 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
     }
     onStakedAmountChange?.(joinedAmountByActionIdByAccount || BigInt(0));
   }, [joinedAmountByActionIdByAccount, isPendingJoinedAmountByAccount]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorJoinedAmountByAccount) {
-      handleContractError(errorJoinedAmountByAccount, 'join');
-    }
-    if (errorJoinedAmount) {
-      handleContractError(errorJoinedAmount, 'join');
-    }
-    if (errorVerificationInfo) {
-      handleContractError(errorVerificationInfo, 'join');
-    }
-    if (errCurrentRound) {
-      handleContractError(errCurrentRound, 'join');
-    }
-    if (errorWithdraw) {
-      handleContractError(errorWithdraw, 'join');
-    }
-    if (errIsSubmitted) {
-      handleContractError(errIsSubmitted, 'submit');
-    }
-    if (errIsActionIdVoted) {
-      handleContractError(errIsActionIdVoted, 'vote');
-    }
-  }, [
-    errorJoinedAmountByAccount,
-    errorJoinedAmount,
-    errorVerificationInfo,
-    errCurrentRound,
-    errorWithdraw,
-    errIsSubmitted,
-    errIsActionIdVoted,
-  ]);
 
   if (isPendingJoinedAmountByAccount || isPendingJoinedAmount || isPendingIsSubmitted || isPendingIsActionIdVoted) {
     return '';

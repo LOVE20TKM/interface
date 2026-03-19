@@ -1,4 +1,4 @@
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { UniswapV2PairAbi } from '@/src/abis/UniswapV2Pair';
 
 /**
@@ -14,7 +14,7 @@ export const useLPBalance = (
     isLoading,
     error,
     refetch,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: pairAddress,
     abi: UniswapV2PairAbi,
     functionName: 'balanceOf',
@@ -41,7 +41,7 @@ export const useLPBalance = (
  * 获取交易对储备量
  */
 export const useGetReserves = (pairAddress: `0x${string}` | undefined, refetchInterval?: number) => {
-  const { data, isLoading, error, refetch } = useReadContract({
+  const { data, isLoading, error, refetch } = useUniversalReadContract({
     address: pairAddress,
     abi: UniswapV2PairAbi,
     functionName: 'getReserves',
@@ -76,7 +76,7 @@ export const useTotalSupply = (pairAddress: `0x${string}` | undefined) => {
     isLoading,
     error,
     refetch,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: pairAddress,
     abi: UniswapV2PairAbi,
     functionName: 'totalSupply',
@@ -104,7 +104,7 @@ export const useToken0 = (pairAddress: `0x${string}` | undefined) => {
     data: token0,
     isLoading,
     error,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: pairAddress,
     abi: UniswapV2PairAbi,
     functionName: 'token0',
@@ -128,7 +128,7 @@ export const useToken1 = (pairAddress: `0x${string}` | undefined) => {
     data: token1,
     isLoading,
     error,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: pairAddress,
     abi: UniswapV2PairAbi,
     functionName: 'token1',
@@ -152,7 +152,7 @@ export const useLPSymbol = (pairAddress: `0x${string}` | undefined) => {
     data: symbol,
     isLoading,
     error,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: pairAddress,
     abi: UniswapV2PairAbi,
     functionName: 'symbol',

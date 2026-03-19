@@ -18,7 +18,6 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 
 // my hooks
 import { useSubmitNewAction } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useCanSubmit } from '@/src/hooks/composite/useCanSubmit';
 
 // my contexts
@@ -231,17 +230,6 @@ export default function NewAction() {
       router.push(`/vote/batch?symbol=${token?.symbol}`);
     }
   }, [isSubmitted, router, token?.symbol]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorSubmitCheck) {
-      handleContractError(errorSubmitCheck, 'submit');
-    }
-    if (submitError) {
-      handleContractError(submitError, 'submit');
-    }
-  }, [errorSubmitCheck, submitError, handleContractError]);
 
   return (
     <>

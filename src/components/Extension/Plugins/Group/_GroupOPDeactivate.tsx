@@ -81,7 +81,6 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
     isPending: isPendingDeactivate,
     isConfirming: isConfirmingDeactivate,
     isConfirmed: isConfirmedDeactivate,
-    writeError: errorDeactivate,
   } = useDeactivateGroup();
 
   async function handleDeactivate() {
@@ -113,8 +112,7 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
     if (errorInfo) handleError(errorInfo);
     if (errorAccountsCount) handleError(errorAccountsCount);
     if (errorRound) handleError(errorRound);
-    if (errorDeactivate) handleError(errorDeactivate);
-  }, [errorDetail, errorInfo, errorAccountsCount, errorRound, errorDeactivate, handleError]);
+  }, [errorDetail, errorInfo, errorAccountsCount, errorRound, handleError]);
 
   if (isPendingDetail || isPendingInfo || isPendingAccountsCount || isPendingRound) {
     return (

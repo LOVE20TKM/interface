@@ -1,8 +1,7 @@
 'use client';
-import React, { useContext, useEffect, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 
 // my hooks
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useAction19PoolValue } from '@/src/hooks/composite/useAction19PoolValue';
 
 // my contexts
@@ -44,14 +43,6 @@ const ActDataPanel: React.FC<ActDataPanelProps> = ({
   const totalCost = useMemo(() => {
     return (totalJoinedAmount ?? BigInt(0)) + action19PoolValue;
   }, [totalJoinedAmount, action19PoolValue]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorAction19Pool) {
-      handleContractError(errorAction19Pool, 'join');
-    }
-  }, [errorAction19Pool]);
 
   return (
     <div className="px-4">

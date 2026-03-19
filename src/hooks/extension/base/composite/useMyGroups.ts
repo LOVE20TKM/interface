@@ -2,7 +2,7 @@
  * 复合 Hook: 获取用户拥有的所有链群 NFT
  */
 
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { useBalanceOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -47,7 +47,7 @@ export function useMyGroups(account: `0x${string}` | undefined) {
     data: tokenIdsData,
     isPending: isTokenIdsPending,
     error: tokenIdsError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts,
     query: {
       enabled: hasAccount && nftCount > 0,
@@ -71,7 +71,7 @@ export function useMyGroups(account: `0x${string}` | undefined) {
     data: groupNamesData,
     isPending: isGroupNamesPending,
     error: groupNamesError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: groupNameContracts,
     query: {
       enabled: hasAccount && tokenIds && tokenIds.length > 0,

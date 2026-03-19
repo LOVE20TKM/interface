@@ -19,8 +19,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 // my funcs
 import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my hooks
 import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import { useAddLiquidity, useAddLiquidityETH } from '@/src/hooks/contracts/useUniswapV2Router';
@@ -425,7 +423,6 @@ const LiquidityPanel = () => {
       toast.success('添加流动性交易已提交');
     } catch (error: any) {
       console.error('添加流动性失败', error);
-      handleContractError(error, 'liquidity');
     }
   });
 
@@ -502,26 +499,7 @@ const LiquidityPanel = () => {
   }, [isConfirmedAddLiquidity, isConfirmedAddLiquidityETH, form, baseToken.address, refreshLiquidityData]);
 
   // --------------------------------------------------
-  // 10. 错误处理
-  // --------------------------------------------------
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errApproveBase) {
-      handleContractError(errApproveBase, 'liquidity');
-    }
-    if (errApproveToken) {
-      handleContractError(errApproveToken, 'liquidity');
-    }
-    if (errAddLiquidity) {
-      handleContractError(errAddLiquidity, 'liquidity');
-    }
-    if (errAddLiquidityETH) {
-      handleContractError(errAddLiquidityETH, 'liquidity');
-    }
-  }, [errApproveBase, errApproveToken, errAddLiquidity, errAddLiquidityETH, handleContractError]);
-
-  // --------------------------------------------------
-  // 11. 加载状态
+  // 10. 加载状态
   // --------------------------------------------------
   if (!token || !targetToken || isLoadingLiquidityData) {
     return <LoadingIcon />;

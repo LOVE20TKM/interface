@@ -9,8 +9,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // 导入hooks
 import { useValidGovVotes, useCurrentRound } from '@/src/hooks/contracts/useLOVE20Stake';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // 导入组件
 import Header from '@/src/components/Header';
 import TokenTab from '@/src/components/Token/TokenTab';
@@ -42,17 +40,6 @@ const GovPage = () => {
     isPending: isPendingValidGovVotes,
     error: errorValidGovVotes,
   } = useValidGovVotes((currentToken?.address as `0x${string}`) || '', (account as `0x${string}`) || '');
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  React.useEffect(() => {
-    if (errorValidGovVotes) {
-      handleContractError(errorValidGovVotes, 'stake');
-    }
-    if (errorCurrentRound) {
-      handleContractError(errorCurrentRound, 'vote');
-    }
-  }, [errorValidGovVotes, errorCurrentRound]);
 
   // 判断是否需要显示治理组件
   const shouldShowGovComponents = validGovVotes > BigInt(0);

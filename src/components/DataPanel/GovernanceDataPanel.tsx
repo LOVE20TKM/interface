@@ -1,7 +1,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { Info } from 'lucide-react';
 
 // my hooks
@@ -17,8 +17,6 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 // my utils
 import { calculateAPY } from '@/src/lib/domainUtils';
 import { formatTokenAmount } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 const GovernanceDataPanel: React.FC = () => {
   const { token } = useContext(TokenContext) || {};
 
@@ -29,17 +27,6 @@ const GovernanceDataPanel: React.FC = () => {
     isPending: isPendingEstimatedGovReward,
     error: errorEstimatedGovReward,
   } = useEstimatedGovRewardOfCurrentRound((token?.address as `0x${string}`) || '');
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (error) {
-      handleContractError(error, 'govData');
-    }
-    if (errorEstimatedGovReward) {
-      handleContractError(errorEstimatedGovReward, 'dataViewer');
-    }
-  }, [error, errorEstimatedGovReward]);
 
   if (!token) {
     return <LoadingIcon />;

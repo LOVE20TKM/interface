@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -11,8 +11,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useVotesNumByAccount } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -38,14 +36,6 @@ const MyVotingPanel: React.FC<MyVotingPanelProps> = ({
     isPending: isPendingVotesNumByAccount,
     error: errorVotesNumByAccount,
   } = useVotesNumByAccount((token?.address as `0x${string}`) || '', currentRound, (account as `0x${string}`) || '');
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorVotesNumByAccount) {
-      handleContractError(errorVotesNumByAccount, 'vote');
-    }
-  }, [errorVotesNumByAccount]);
 
   if (!token) {
     return '';

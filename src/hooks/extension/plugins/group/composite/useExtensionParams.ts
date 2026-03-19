@@ -1,6 +1,6 @@
 // hooks/extension/plugins/group/composite/useExtensionParams.ts
 
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -16,7 +16,7 @@ const GROUP_VERIFY_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_
  * 注意：新版合约中，GroupManager、GroupJoin、GroupVerify 的地址通过环境变量配置
  */
 export const useExtensionParams = (extensionAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContracts({
+  const { data, isPending, error } = useUniversalReadContracts({
     contracts: [
       {
         address: extensionAddress,

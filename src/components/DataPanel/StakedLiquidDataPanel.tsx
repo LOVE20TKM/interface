@@ -1,11 +1,10 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 
 // my hooks
 import { formatTokenAmount } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useGovData } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useTokenAmounts } from '@/src/hooks/contracts/useLOVE20SLToken';
 
@@ -31,17 +30,6 @@ const StakedLiquidDataPanel: React.FC<StakedLiquidDataPanelProps> = ({}) => {
     error: errorTokenAmount,
   } = useTokenAmounts(token?.slTokenAddress as `0x${string}`, true);
   const { govData, isPending: isPendingGovData, error: errorGovData } = useGovData(token?.address as `0x${string}`);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorTokenAmount) {
-      handleContractError(errorTokenAmount, 'slToken');
-    }
-    if (errorGovData) {
-      handleContractError(errorGovData, 'govData');
-    }
-  }, [errorTokenAmount, errorGovData]);
 
   if (isPendingTokenAmount || isPendingGovData) {
     return <LoadingIcon />;

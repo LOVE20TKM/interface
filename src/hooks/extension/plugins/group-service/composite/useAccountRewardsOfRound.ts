@@ -23,7 +23,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
 import { useAccountsByActionByRound } from '@/src/hooks/extension/base/composite/useAccountsByActionByRound';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -147,7 +147,7 @@ export function useAccountRewardsOfRound(params: UseAccountRewardsOfRoundParams)
     data: allData,
     isPending: isAllDataPending,
     error: allDataError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: allContracts,
     query: {
       // 只有在扩展地址、轮次、账户列表都就绪时才启用

@@ -14,7 +14,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import type { Abi } from 'abitype';
 import { IExtensionAbi } from '@/src/abis/IExtension';
 import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
@@ -174,7 +174,7 @@ export function useExtensionParticipationData(
     data,
     isPending: isPendingContracts,
     error: errorContracts,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts,
     query: {
       enabled: isContractsEnabled,

@@ -1,6 +1,6 @@
 // hooks/extension/plugins/group-service/composite/useExtensionParams.ts
 
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
 import { GroupRecipientsAbi } from '@/src/abis/GroupRecipients';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -14,7 +14,7 @@ const GROUP_RECIPIENTS_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENS
  * 注意：maxRecipients 从 GroupRecipients 合约获取
  */
 export const useExtensionParams = (extensionAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContracts({
+  const { data, isPending, error } = useUniversalReadContracts({
     contracts: [
       {
         address: extensionAddress,

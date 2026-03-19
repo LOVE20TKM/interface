@@ -84,7 +84,6 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
     isPending: isPendingExit,
     isConfirming: isConfirmingExit,
     isConfirmed: isConfirmedExit,
-    writeError: errorExit,
   } = useExit(extensionAddress);
 
   const handleExit = async () => {
@@ -115,13 +114,10 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
     if (errorData) {
       handleError(errorData);
     }
-    if (errorExit) {
-      handleError(errorExit);
-    }
     if (errorJoined) {
       handleError(errorJoined);
     }
-  }, [errorData, errorExit, errorJoined, handleError]);
+  }, [errorData, errorJoined, handleError]);
 
   if (isPendingData || isPendingJoined) {
     return (

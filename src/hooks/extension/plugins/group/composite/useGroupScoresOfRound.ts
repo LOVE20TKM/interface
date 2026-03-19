@@ -2,7 +2,7 @@
 // 获取某轮某群打分的结果
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useAccountsByGroupIdByRound } from './useAccountsByGroupIdByRound';
@@ -81,7 +81,7 @@ export const useGroupScoresOfRound = ({
     data: scoresData,
     isPending: isScoresPending,
     error: scoresError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: scoresContracts as any,
     query: {
       enabled: !!extensionAddress && !!round && scoresContracts.length > 0,

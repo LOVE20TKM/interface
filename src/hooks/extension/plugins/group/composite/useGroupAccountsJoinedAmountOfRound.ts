@@ -2,7 +2,7 @@
 // 获取某轮某群参与代币的明细
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useAccountsByGroupIdByRound } from './useAccountsByGroupIdByRound';
@@ -92,7 +92,7 @@ export const useGroupAccountsJoinedAmountOfRound = ({
     data: mergedData,
     isPending: isMergedPending,
     error: mergedError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: mergedContracts as any,
     query: {
       enabled: mergedContracts.length > 0,

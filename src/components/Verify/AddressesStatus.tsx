@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { useAccount } from 'wagmi';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
@@ -12,8 +12,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useVerificationInfosByAction, useVerifiedAddressesByAction } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useScoreByActionIdByAccount } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useVotesNumByActionId } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -67,23 +65,6 @@ const AddressesStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionI
     isPending: isPendingTotalVotesNum,
     error: errorTotalVotesNum,
   } = useVotesNumByActionId(token?.address as `0x${string}`, currentRound, actionId);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorVerifiedAddresses) {
-      handleContractError(errorVerifiedAddresses, 'dataViewer');
-    }
-    if (errorVerificationInfosByAction) {
-      handleContractError(errorVerificationInfosByAction, 'dataViewer');
-    }
-    if (errorAbstainVotes) {
-      handleContractError(errorAbstainVotes, 'verify');
-    }
-    if (errorTotalVotesNum) {
-      handleContractError(errorTotalVotesNum, 'vote');
-    }
-  }, [errorVerifiedAddresses, errorVerificationInfosByAction, errorAbstainVotes, errorTotalVotesNum]);
 
   const toggleRow = (address: string) => {
     const newExpanded = new Set(expandedRows);

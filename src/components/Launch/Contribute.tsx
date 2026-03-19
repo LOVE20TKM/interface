@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
 
-import { useAccount, useBalance, useChainId } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
 import { toast } from 'react-hot-toast';
 
 // UI & shadcn components
@@ -17,7 +17,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 
 // my hooks
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { LaunchInfo } from '@/src/types/love20types';
 import { useContribute, useContributed } from '@/src/hooks/contracts/useLOVE20Launch';
 import { useContributeFirstTokenWithETH } from '@/src/hooks/contracts/useLOVE20Hub';
@@ -65,7 +64,6 @@ const getFormSchema = (balance: bigint, maxAllowed?: bigint, maxAllowedLabel?: s
 
 const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: LaunchInfo }> = ({ token, launchInfo }) => {
   const { address: account, isConnected } = useAccount();
-  const chainId = useChainId();
   const router = useRouter();
 
   // 判断是否使用native代币申购
@@ -266,41 +264,6 @@ const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: Launch
       });
     }
   }, [balance, setError, isConnected, isPendingBalance, parentTokenSymbol]);
-
-  // 6. 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    const contractError = isNativeContribute ? errContributeETH : errContributeToken;
-    const balanceError = isNativeContribute ? errorETHBalance : errorBalanceOfParentToken;
-
-    if (contractError) {
-      handleContractError(contractError, 'launch');
-    }
-    if (contributedError) {
-      handleContractError(contributedError, 'launch');
-    }
-    if (balanceError) {
-      handleContractError(balanceError, isNativeContribute ? 'balance' : 'token');
-    }
-    if (!isNativeContribute) {
-      if (errApproveParentToken) {
-        handleContractError(errApproveParentToken, 'token');
-      }
-      if (errAllowanceParentToken) {
-        handleContractError(errAllowanceParentToken, 'token');
-      }
-    }
-  }, [
-    errContributeETH,
-    errContributeToken,
-    contributedError,
-    errorETHBalance,
-    errorBalanceOfParentToken,
-    errApproveParentToken,
-    errAllowanceParentToken,
-    handleContractError,
-    isNativeContribute,
-  ]);
 
   // 控制按钮文案，已启动授权状态
   const hasStartedApproving = isPendingApproveParentToken || isConfirmingApproveParentToken;

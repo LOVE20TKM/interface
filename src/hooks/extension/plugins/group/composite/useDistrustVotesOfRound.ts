@@ -3,7 +3,7 @@
 // TODO: 有多个RPC可以合并
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useDistrustGroupOwners } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
@@ -78,7 +78,7 @@ export const useDistrustVotesOfRound = ({
     data: groupIdsData,
     isPending: isGroupIdsPending,
     error: groupIdsError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: groupIdsContracts as any,
     query: {
       enabled: !!extensionAddress && !!round && !!groupOwners && groupOwners.length > 0,
@@ -128,7 +128,7 @@ export const useDistrustVotesOfRound = ({
     data: distrustData,
     isPending: isDistrustPending,
     error: distrustError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: distrustContracts as any,
     query: {
       enabled: !!extensionAddress && !!round && !!groupOwners && groupOwners.length > 0 && distrustContracts.length > 0,

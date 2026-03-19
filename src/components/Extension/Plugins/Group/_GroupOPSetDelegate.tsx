@@ -108,7 +108,6 @@ const _GroupOPSetDelegate: React.FC<GroupOPSetDelegatedProps> = ({
     isPending: isPendingSet,
     isConfirming: isConfirmingSet,
     isConfirmed: isConfirmedSet,
-    writeError: errorSet,
   } = useSetGroupDelegate();
 
   async function handleSetDelegated(values: FormValues) {
@@ -150,8 +149,7 @@ const _GroupOPSetDelegate: React.FC<GroupOPSetDelegatedProps> = ({
   useEffect(() => {
     if (errorInfo) handleError(errorInfo);
     if (errorDelegated) handleError(errorDelegated);
-    if (errorSet) handleError(errorSet);
-  }, [errorInfo, errorDelegated, errorSet, handleError]);
+  }, [errorInfo, errorDelegated, handleError]);
 
   if (isPendingInfo || isPendingDelegated) {
     return (

@@ -17,7 +17,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { IRewardAbi } from '@/src/abis/IReward';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
@@ -109,7 +109,7 @@ export const useExtensionActionsLatestRewards = ({
     data: rewardsData,
     isPending: isPendingRewards,
     error: errorRewards,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: rewardContracts as any,
     query: {
       enabled: rewardContracts.length > 0,

@@ -6,7 +6,6 @@ import { useDebouncedCallback } from 'use-debounce';
 
 // my hooks
 import { useTokenDetails, useTokensByPage, useChildTokensByPage } from '@/src/hooks/contracts/useLOVE20TokenViewer';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatPercentage } from '@/src/lib/format';
 import { NavigationUtils } from '@/src/lib/navigationUtils';
 // my contexts
@@ -119,17 +118,6 @@ export default function TokenList({ parentTokenAddress }: TokenListProps) {
       NavigationUtils.redirectWithOverlay(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/launch/?symbol=${token.symbol}`);
     }
   };
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (tokensError) {
-      handleContractError(tokensError, 'launch');
-    }
-    if (detailsError) {
-      handleContractError(detailsError, 'dataViewer');
-    }
-  }, [tokensError, detailsError]);
 
   return (
     <div className="space-y-4 m-4">

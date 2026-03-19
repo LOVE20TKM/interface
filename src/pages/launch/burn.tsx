@@ -1,14 +1,12 @@
 'use client';
 
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useLaunchInfo } from '@/src/hooks/contracts/useLOVE20Launch';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import Burn from '@/src/components/Launch/Burn';
 import Header from '@/src/components/Header';
@@ -21,14 +19,6 @@ export default function BurnPage() {
     isPending: isLaunchInfoPending,
     error: launchInfoError,
   } = useLaunchInfo(token ? token.address : '0x0000000000000000000000000000000000000000');
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (launchInfoError) {
-      handleContractError(launchInfoError, 'launch');
-    }
-  }, [launchInfoError]);
 
   return (
     <>

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 // my contexts
@@ -10,7 +10,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useActionDetailData } from '@/src/hooks/composite/useActionDetailData';
 
 // my types
@@ -33,14 +32,6 @@ const VerifyPage = () => {
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
   const { currentRound, error: errorCurrentRound } = useCurrentRound();
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorCurrentRound) {
-      handleContractError(errorCurrentRound, 'verify');
-    }
-  }, [errorCurrentRound]);
 
   // 状态：剩余票数
   const [remainingVotes, setRemainingVotes] = useState<bigint>(BigInt(-1));

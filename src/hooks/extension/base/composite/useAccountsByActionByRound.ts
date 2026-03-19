@@ -18,7 +18,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 import { useAccountsByRoundCount } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 
@@ -96,7 +96,7 @@ export function useAccountsByActionByRound(params: UseAccountsByActionByRoundPar
     data: accountsData,
     isPending: isAccountsPending,
     error: accountsError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: accountsContracts,
     query: {
       // 只有在获得 count 且 count > 0 时才启用

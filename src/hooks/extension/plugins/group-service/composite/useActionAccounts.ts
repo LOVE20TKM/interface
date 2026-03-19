@@ -2,7 +2,7 @@
 // 获取链群服务行动的参与者列表（所有成员）
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -96,7 +96,7 @@ export const useGroupServiceActionAccounts = ({
     data: detailData,
     isPending: isDetailPending,
     error: detailError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: detailContracts as any,
     query: {
       enabled: !!extensionAddress && !!tokenAddress && actionId !== undefined && detailContracts.length > 0,

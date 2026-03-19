@@ -19,8 +19,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useVerificationInfosByAction, useVerifiedAddressesByAction } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useVerify, useScoreByActionIdByAccount } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useVerifierScores } from '@/src/hooks/composite/useVerifierScores';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -706,23 +704,6 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
       }, 2000);
     }
   }, [isConfirmed, submitError]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (submitError) {
-      handleContractError(submitError, 'verify');
-    }
-    if (errorVerificationInfosByAction) {
-      handleContractError(errorVerificationInfosByAction, 'dataViewer');
-    }
-    if (errorVerifiedAddresses) {
-      handleContractError(errorVerifiedAddresses, 'dataViewer');
-    }
-    if (errorAbstainVotes) {
-      handleContractError(errorAbstainVotes, 'verify');
-    }
-  }, [submitError, errorVerificationInfosByAction, errorVerifiedAddresses, errorAbstainVotes]);
 
   // 渲染
   return (

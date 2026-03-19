@@ -273,7 +273,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     isPending: isPendingApprove,
     isConfirming: isConfirmingApprove,
     isConfirmed: isConfirmedApprove,
-    writeError: errorApprove,
   } = useApprove((actionParams?.tokenAddress || ZERO_ADDRESS) as `0x${string}`);
 
   async function handleApprove(values: FormValues) {
@@ -309,7 +308,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     isPending: isPendingActivate,
     isConfirming: isConfirmingActivate,
     isConfirmed: isConfirmedActivate,
-    writeError: errorActivate,
   } = useActivateGroup();
 
   async function handleActivate(values: FormValues) {
@@ -382,20 +380,9 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     if (errorActionParams) handleError(errorActionParams);
     if (errorBalance) handleError(errorBalance);
     if (errorAllowance) handleError(errorAllowance);
-    if (errorApprove) handleError(errorApprove);
-    if (errorActivate) handleError(errorActivate);
     if (errorGroups) handleError(errorGroups);
     if (errorActivatedGroups) handleError(errorActivatedGroups);
-  }, [
-    errorActionParams,
-    errorBalance,
-    errorAllowance,
-    errorApprove,
-    errorActivate,
-    errorGroups,
-    errorActivatedGroups,
-    handleError,
-  ]);
+  }, [errorActionParams, errorBalance, errorAllowance, errorGroups, errorActivatedGroups, handleError]);
 
   if (
     isPendingActionParams ||

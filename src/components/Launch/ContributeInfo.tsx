@@ -8,8 +8,6 @@ import toast from 'react-hot-toast';
 // my hooks
 import { useContributed, useLastContributedBlock } from '@/src/hooks/contracts/useLOVE20Launch';
 import { useWithdraw } from '@/src/hooks/contracts/useLOVE20Launch';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my types & funcs
 import { formatTokenAmount, formatSeconds } from '@/src/lib/format';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -78,20 +76,6 @@ const ContributeInfo: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> 
       }, 1000);
     }
   }, [isWithdrawConfirmed]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (contributedError) {
-      handleContractError(contributedError, 'launch');
-    }
-    if (lastContributedBlockError) {
-      handleContractError(lastContributedBlockError, 'launch');
-    }
-    if (errWithdraw) {
-      handleContractError(errWithdraw, 'launch');
-    }
-  }, [contributedError, lastContributedBlockError, errWithdraw]);
 
   if (!token || isContributedPending || isLastContributedBlockPending) {
     return <LoadingIcon />;

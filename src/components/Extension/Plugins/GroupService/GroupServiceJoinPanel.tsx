@@ -103,7 +103,6 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
     isPending: isPendingJoin,
     isConfirming: isConfirmingJoin,
     isConfirmed: isConfirmedJoin,
-    writeError: errorJoin,
   } = useJoin(extensionAddress);
 
   async function handleJoin() {
@@ -129,11 +128,10 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
   const { handleError } = useContractError();
   useEffect(() => {
     if (errorJoinInfo) handleError(errorJoinInfo);
-    if (errorJoin) handleError(errorJoin);
     if (errorCurrentRound) handleError(errorCurrentRound);
     if (errorVoted) handleError(errorVoted);
     if (errorHasActiveGroups) handleError(errorHasActiveGroups);
-  }, [errorJoinInfo, errorJoin, errorCurrentRound, errorVoted, errorHasActiveGroups, handleError]);
+  }, [errorJoinInfo, errorCurrentRound, errorVoted, errorHasActiveGroups, handleError]);
 
   // 检查投票状态并显示错误提示
   useEffect(() => {

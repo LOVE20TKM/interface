@@ -2,7 +2,7 @@
 // 通用的 ILOVE20Extension 接口 Hook
 // 可用于任何继承 ILOVE20Extension 接口的扩展合约
 
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { IExtensionAbi } from '@/src/abis/IExtension';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -14,7 +14,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
  * Hook for initialized - 检查是否已初始化
  */
 export const useExtensionInitialized = (extensionAddress: `0x${string}` | undefined) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: extensionAddress,
     abi: IExtensionAbi,
     functionName: 'initialized',
@@ -30,7 +30,7 @@ export const useExtensionInitialized = (extensionAddress: `0x${string}` | undefi
  * Hook for FACTORY_ADDRESS - 获取 factory 地址
  */
 export const useExtensionFactory = (extensionAddress: `0x${string}` | undefined) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: extensionAddress,
     abi: IExtensionAbi,
     functionName: 'FACTORY_ADDRESS',
@@ -46,7 +46,7 @@ export const useExtensionFactory = (extensionAddress: `0x${string}` | undefined)
  * Hook for TOKEN_ADDRESS - 获取 token 地址
  */
 export const useExtensionTokenAddress = (extensionAddress: `0x${string}` | undefined) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: extensionAddress,
     abi: IExtensionAbi,
     functionName: 'TOKEN_ADDRESS',
@@ -62,7 +62,7 @@ export const useExtensionTokenAddress = (extensionAddress: `0x${string}` | undef
  * Hook for actionId - 获取 action ID
  */
 export const useExtensionActionId = (extensionAddress: `0x${string}` | undefined) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: extensionAddress,
     abi: IExtensionAbi,
     functionName: 'actionId',
@@ -78,7 +78,7 @@ export const useExtensionActionId = (extensionAddress: `0x${string}` | undefined
  * Hook for joinedAmount - 获取总参与价值
  */
 export const useJoinedAmount = (extensionAddress: `0x${string}` | undefined) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: extensionAddress,
     abi: IExtensionAbi,
     functionName: 'joinedAmount',
@@ -97,7 +97,7 @@ export const useJoinedAmountByAccount = (
   extensionAddress: `0x${string}` | undefined,
   account: `0x${string}` | undefined,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: extensionAddress,
     abi: IExtensionAbi,
     functionName: 'joinedAmountByAccount',

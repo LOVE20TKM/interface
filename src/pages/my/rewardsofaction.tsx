@@ -9,7 +9,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // my hooks
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useActionRewardsByRounds } from '@/src/hooks/composite/useActionRewardsByRounds';
 
 // my components
@@ -189,15 +188,6 @@ const ActRewardsPage: React.FC = () => {
       observer.disconnect();
     };
   }, [loadMoreRewards, isLoadingRewards, hasMoreRewards, isInitialized]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorActionInfo) handleContractError(errorActionInfo, 'actionInfo');
-    if (errorCurrentRound) handleContractError(errorCurrentRound, 'currentRound');
-    if (errorExtensionInfo) handleContractError(errorExtensionInfo, 'extensionCenter');
-    if (errorRewards) handleContractError(errorRewards, 'dataViewer');
-  }, [errorActionInfo, errorCurrentRound, errorExtensionInfo, errorRewards, handleContractError]);
 
   // 如果路由未准备好，显示加载状态
   if (!router.isReady) {

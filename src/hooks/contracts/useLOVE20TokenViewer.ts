@@ -1,6 +1,6 @@
 // hooks/contracts/useLOVE20TokenViewer.ts
 
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { LOVE20TokenViewerAbi } from '@/src/abis/LOVE20TokenViewer';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { LaunchInfo, TokenInfo, PairInfo, TokenStats } from '@/src/types/love20types';
@@ -16,7 +16,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_TOK
  * Reads the address of the launch contract.
  */
 export const useLaunchAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'launchAddress',
@@ -30,7 +30,7 @@ export const useLaunchAddress = () => {
  * Reads the address of the stake contract.
  */
 export const useStakeAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'stakeAddress',
@@ -43,7 +43,7 @@ export const useStakeAddress = () => {
  * Hook for tokensByPage
  */
 export const useTokensByPage = (start: bigint, end: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'tokensByPage',
@@ -57,7 +57,7 @@ export const useTokensByPage = (start: bigint, end: bigint) => {
  * Hook for childTokensByPage
  */
 export const useChildTokensByPage = (parentTokenAddress: `0x${string}`, start: bigint, end: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'childTokensByPage',
@@ -71,7 +71,7 @@ export const useChildTokensByPage = (parentTokenAddress: `0x${string}`, start: b
  * Hook for launchingTokensByPage
  */
 export const useLaunchingTokensByPage = (start: bigint, end: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'launchingTokensByPage',
@@ -85,7 +85,7 @@ export const useLaunchingTokensByPage = (start: bigint, end: bigint) => {
  * Hook for launchedTokensByPage
  */
 export const useLaunchedTokensByPage = (start: bigint, end: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'launchedTokensByPage',
@@ -99,7 +99,7 @@ export const useLaunchedTokensByPage = (start: bigint, end: bigint) => {
  * Hook for launchingChildTokensByPage
  */
 export const useLaunchingChildTokensByPage = (parentTokenAddress: `0x${string}`, start: bigint, end: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'launchingChildTokensByPage',
@@ -113,7 +113,7 @@ export const useLaunchingChildTokensByPage = (parentTokenAddress: `0x${string}`,
  * Hook for launchedChildTokensByPage
  */
 export const useLaunchedChildTokensByPage = (parentTokenAddress: `0x${string}`, start: bigint, end: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'launchedChildTokensByPage',
@@ -127,7 +127,7 @@ export const useLaunchedChildTokensByPage = (parentTokenAddress: `0x${string}`, 
  * Hook for participatedTokensByPage
  */
 export const useParticipatedTokensByPage = (walletAddress: `0x${string}`, start: bigint, end: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'participatedTokensByPage',
@@ -142,7 +142,7 @@ export const useParticipatedTokensByPage = (walletAddress: `0x${string}`, start:
  * Reads the details of a token.
  */
 export const useTokenDetail = (tokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'tokenDetail',
@@ -165,7 +165,7 @@ export const useTokenDetail = (tokenAddress: `0x${string}`) => {
  * Reads the details of a token by symbol.
  */
 export const useTokenDetailBySymbol = (symbol: string) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'tokenDetailBySymbol',
@@ -187,7 +187,7 @@ export const useTokenDetailBySymbol = (symbol: string) => {
  * Reads the details of multiple tokens.
  */
 export const useTokenDetails = (tokenAddresses: `0x${string}`[]) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'tokenDetails',
@@ -205,7 +205,7 @@ export const useTokenDetails = (tokenAddresses: `0x${string}`[]) => {
  * Hook for tokenPairInfoWithAccount
  */
 export const useTokenPairInfoWithAccount = (account: `0x${string}`, tokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'tokenPairInfoWithAccount',
@@ -223,7 +223,7 @@ export const useTokenPairInfoWithAccount = (account: `0x${string}`, tokenAddress
  * Reads the statistics of a token.
  */
 export const useTokenStatistics = (tokenAddress: `0x${string}`, flag: boolean = true) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'tokenStatistics',

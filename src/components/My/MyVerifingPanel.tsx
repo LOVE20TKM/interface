@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -13,8 +13,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // my hooks
 import { useVotesNumByAccount } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useScoreByVerifier } from '@/src/hooks/contracts/useLOVE20Verify';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -59,17 +57,6 @@ const MyVerifingPanel: React.FC<MyVerifingPanelProps> = ({ currentRound, showBtn
       return BigInt(0);
     }
   })();
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (isVotesNumByAccountError) {
-      handleContractError(isVotesNumByAccountError, 'vote');
-    }
-    if (isScoreByVerifierError) {
-      handleContractError(isScoreByVerifierError, 'verify');
-    }
-  }, [isVotesNumByAccountError, isScoreByVerifierError]);
 
   if (!token) {
     return <LoadingIcon />;

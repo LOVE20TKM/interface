@@ -22,7 +22,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { useAccountsByGroupIdByRound } from './useAccountsByGroupIdByRound';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -141,7 +141,7 @@ export function useAccountInfosByGroupIdByRound(
     data: joinInfosData,
     isPending: isJoinInfosPending,
     error: joinInfosError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: joinInfoContracts as any,
     query: {
       enabled: accounts.length > 0 && joinInfoContracts.length > 0,

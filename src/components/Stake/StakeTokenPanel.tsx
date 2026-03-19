@@ -21,8 +21,6 @@ import { formatPhaseText } from '@/src/lib/domainUtils';
 // my hooks
 import { useAccountStakeStatus, useStakeToken } from '@/src/hooks/contracts/useLOVE20Stake';
 import { useApprove, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
@@ -136,8 +134,7 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
       );
     } catch (error: any) {
       console.error('Approve failed', error);
-      // 使用统一的错误处理
-      handleContractError(error, 'token');
+      console.error('Approve error:', error);
     }
   };
 
@@ -162,8 +159,7 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
       );
     } catch (error) {
       console.error('Stake failed', error);
-      // 添加错误处理
-      handleContractError(error, 'stake');
+      console.error('Stake error:', error);
     }
   };
 
@@ -196,23 +192,6 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
       setIsTokenApproved(false);
     }
   }, [stakeTokenAmountValue, allowanceToken, isPendingAllowanceToken]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errStakeToken) {
-      handleContractError(errStakeToken, 'stake');
-    }
-    if (errApproveToken) {
-      handleContractError(errApproveToken, 'token');
-    }
-    if (errAllowanceToken) {
-      handleContractError(errAllowanceToken, 'token');
-    }
-    if (errAccountStakeStatus) {
-      handleContractError(errAccountStakeStatus, 'stake');
-    }
-  }, [errStakeToken, errApproveToken, errAllowanceToken, errAccountStakeStatus, handleContractError]);
 
   if (isPendingAccountStakeStatus) {
     return (

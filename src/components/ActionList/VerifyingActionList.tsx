@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,6 @@ import Link from 'next/link';
 
 // my hooks
 import { useVerifyingActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -37,14 +36,6 @@ const VerifyingActionList: React.FC<VerifingActionListProps> = ({ currentRound }
     currentRound,
     address as `0x${string}`,
   );
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (error) {
-      handleContractError(error, 'dataviewer');
-    }
-  }, [error]);
 
   if (!token || isPending) {
     return (

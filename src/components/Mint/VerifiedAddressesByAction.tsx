@@ -4,7 +4,6 @@ import { useAccount } from 'wagmi';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 // my hooks
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useVerificationInfosByAction, useVerifiedAddressesByAction } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useScoreByActionIdByAccount } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useVotesNumByActionId } from '@/src/hooks/contracts/useLOVE20Vote';
@@ -118,23 +117,6 @@ const VerifiedAddressesByAction: React.FC<{
       { shallow: true },
     );
   };
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorVerifiedAddresses) {
-      handleContractError(errorVerifiedAddresses, 'dataViewer');
-    }
-    if (errorVerificationInfosByAction) {
-      handleContractError(errorVerificationInfosByAction, 'dataViewer');
-    }
-    if (errorAbstainVotes) {
-      handleContractError(errorAbstainVotes, 'verify');
-    }
-    if (errorTotalVotesNum) {
-      handleContractError(errorTotalVotesNum, 'vote');
-    }
-  }, [errorVerifiedAddresses, errorVerificationInfosByAction, errorAbstainVotes, errorTotalVotesNum]);
 
   // 当地址数据加载完成后，展开获得验证票最多的地址
   useEffect(() => {

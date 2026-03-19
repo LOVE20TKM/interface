@@ -158,7 +158,6 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     isPending: isPendingUpdate,
     isConfirming: isConfirmingUpdate,
     isConfirmed: isConfirmedUpdate,
-    writeError: errorUpdate,
   } = useUpdateVerificationInfo();
 
   async function handleSubmit(values: FormValues) {
@@ -192,9 +191,8 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     if (errorDetail) handleError(errorDetail);
     if (errorJoinInfo) handleError(errorJoinInfo);
     if (errorActionInfo) handleError(errorActionInfo);
-    if (errorUpdate) handleError(errorUpdate);
     if (errorVerificationInfos) handleError(errorVerificationInfos);
-  }, [errorDetail, errorJoinInfo, errorActionInfo, errorUpdate, errorVerificationInfos, handleError]);
+  }, [errorDetail, errorJoinInfo, errorActionInfo, errorVerificationInfos, handleError]);
 
   if (isPendingDetail || isPendingActionInfo || isPendingVerificationInfos) {
     return (

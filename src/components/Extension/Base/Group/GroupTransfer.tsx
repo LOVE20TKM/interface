@@ -23,8 +23,6 @@ import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from '
 // my hooks
 import { useTransferFrom } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -156,14 +154,6 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
       // 错误会通过 errorUtils 处理，这里不需要额外的toast
     }
   });
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errTransfer) {
-      handleContractError(errTransfer, 'group');
-    }
-  }, [errTransfer, handleContractError]);
 
   // 加载状态
   if (isPendingGroupName) {

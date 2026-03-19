@@ -2,7 +2,7 @@
 // 获取 LP 行动的历史验证激励数据
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useAccountsByActionByRound } from '@/src/hooks/extension/base/composite/useAccountsByActionByRound';
@@ -82,7 +82,7 @@ export const useLpVerifyHistoryData = ({
     data: rewardData,
     isPending: isPendingRewards,
     error: errorRewards,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: rewardContracts as any,
     query: {
       enabled: rewardContracts.length > 0,

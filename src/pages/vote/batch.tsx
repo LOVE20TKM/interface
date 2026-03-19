@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { useRouter } from 'next/router';
 
 // my hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -25,14 +24,6 @@ const BatchVotePage = () => {
   const [selectedIds, setSelectedIds] = useState<bigint[]>([]);
   const { currentRound, isPending: isPendingCurrentRound, error: errCurrentRound } = useCurrentRound();
   const router = useRouter();
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errCurrentRound) {
-      handleContractError(errCurrentRound, 'vote');
-    }
-  }, [errCurrentRound]);
 
   // 进入下一步
   const handleNext = (ids: bigint[]) => {

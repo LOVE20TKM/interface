@@ -18,7 +18,6 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 
 // my hooks
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 import { useJoin, useJoinedAmountByActionId } from '@/src/hooks/contracts/useLOVE20Join';
 import { useVerificationInfosByAccount } from '@/src/hooks/contracts/useLOVE20RoundViewer';
@@ -304,31 +303,6 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
       }, 2000);
     }
   }, [isConfirmedJoin]);
-
-  // ------------------------------
-  //  错误处理
-  // ------------------------------
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorTokenBalance) {
-      handleContractError(errorTokenBalance, 'token');
-    }
-    if (errorVerificationInfo) {
-      handleContractError(errorVerificationInfo, 'join');
-    }
-    if (errApprove) {
-      handleContractError(errApprove, 'token');
-    }
-    if (errorJoin) {
-      handleContractError(errorJoin, 'join');
-    }
-    if (errAllowanceToken) {
-      handleContractError(errAllowanceToken, 'token');
-    }
-    if (errorJoinedAmount) {
-      handleContractError(errorJoinedAmount, 'join');
-    }
-  }, [errorTokenBalance, errorVerificationInfo, errApprove, errorJoin, errAllowanceToken, errorJoinedAmount]);
 
   // ------------------------------
   //  组件渲染

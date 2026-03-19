@@ -1,4 +1,4 @@
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { UniswapV2FactoryAbi } from '@/src/abis/UniswapV2Factory';
 
 const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY as `0x${string}`;
@@ -11,7 +11,7 @@ export const useGetPair = (tokenA: `0x${string}`, tokenB: `0x${string}`, enabled
     data: pairAddress,
     isLoading,
     error,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: FACTORY_ADDRESS,
     abi: UniswapV2FactoryAbi,
     functionName: 'getPair',
@@ -32,7 +32,7 @@ export const useGetPair = (tokenA: `0x${string}`, tokenB: `0x${string}`, enabled
  * 获取所有交易对数量
  */
 export const useAllPairsLength = () => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: FACTORY_ADDRESS,
     abi: UniswapV2FactoryAbi,
     functionName: 'allPairsLength',

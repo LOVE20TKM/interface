@@ -9,8 +9,6 @@ import toast from 'react-hot-toast';
 import { useValidGovVotes } from '@/src/hooks/contracts/useLOVE20Stake';
 import { useCurrentRound, useVotesNumByAccountByActionId, useVote } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useVotesNumByAccount } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
@@ -75,26 +73,6 @@ const ActionPanelForVote: React.FC<ActionPanelForVoteProps> = ({ actionId, onRou
     }
     vote(token?.address as `0x${string}`, [actionId], [myLeftVotes]);
   };
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorVote) {
-      handleContractError(errorVote, 'vote');
-    }
-    if (errCurrentRound) {
-      handleContractError(errCurrentRound, 'vote');
-    }
-    if (errVotesNumByAccountByActionId) {
-      handleContractError(errVotesNumByAccountByActionId, 'vote');
-    }
-    if (errValidGovVotes) {
-      handleContractError(errValidGovVotes, 'stake');
-    }
-    if (errorVotesNumByAccount) {
-      handleContractError(errorVotesNumByAccount, 'vote');
-    }
-  }, [errorVote, errCurrentRound, errVotesNumByAccountByActionId, errValidGovVotes, errorVotesNumByAccount]);
 
   // 提交成功
   useEffect(() => {

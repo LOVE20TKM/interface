@@ -154,7 +154,6 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     isPending: isPendingVerifyGroup,
     isConfirming: isConfirmingVerify,
     isConfirmed: isConfirmedVerify,
-    writeError: errorVerifyGroup,
   } = useSubmitOriginScores();
 
   // 复制当前所有分数到剪贴板（每行一个分数）
@@ -346,14 +345,12 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     if (errorCanVerify) handleError(errorCanVerify);
     if (errorGetAccounts) handleError(errorGetAccounts);
     if (errorSubmittedCount) handleError(errorSubmittedCount);
-    if (errorVerifyGroup) handleError(errorVerifyGroup);
     if (errorVerificationInfos) handleError(errorVerificationInfos);
   }, [
     errorRound,
     errorCanVerify,
     errorGetAccounts,
     errorSubmittedCount,
-    errorVerifyGroup,
     errorVerificationInfos,
     handleError,
   ]);

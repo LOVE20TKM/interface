@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { useAccount } from 'wagmi';
 import { HelpCircle } from 'lucide-react';
 
@@ -9,7 +9,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // use hooks
 import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useTokenAmounts } from '@/src/hooks/contracts/useLOVE20SLToken';
 
 // use components
@@ -31,14 +30,6 @@ const StakeTokenPage = () => {
     isPending: isPendingStakedSLTokenAmount,
     error: errorStakedSLTokenAmount,
   } = useTokenAmounts(token?.slTokenAddress as `0x${string}`);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorStakedSLTokenAmount) {
-      handleContractError(errorStakedSLTokenAmount, 'slToken');
-    }
-  }, [errorStakedSLTokenAmount]);
 
   return (
     <>

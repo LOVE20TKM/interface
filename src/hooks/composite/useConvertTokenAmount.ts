@@ -33,7 +33,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { UniswapV2FactoryAbi } from '@/src/abis/UniswapV2Factory';
 import { UniswapV2PairAbi } from '@/src/abis/UniswapV2Pair';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -292,7 +292,7 @@ export const useConvertTokenAmount = ({
     data: pairData,
     isPending: isPendingPair,
     error: errorPair,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: pairContracts as any,
     query: { enabled: pairContracts.length > 0 },
   });
@@ -351,7 +351,7 @@ export const useConvertTokenAmount = ({
     data: reservesData,
     isPending: isPendingReserves,
     error: errorReserves,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: reservesContracts as any,
     query: {
       enabled: reservesContracts.length > 0,
@@ -454,7 +454,7 @@ export const useConvertTokenAmounts = ({ conversions }: UseConvertTokenAmountsPa
     data: pairData,
     isPending: isPendingPair,
     error: errorPair,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: pairContracts as any,
     query: { enabled: pairContracts.length > 0 },
   });
@@ -542,7 +542,7 @@ export const useConvertTokenAmounts = ({ conversions }: UseConvertTokenAmountsPa
     data: reservesData,
     isPending: isPendingReserves,
     error: errorReserves,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: reservesContracts as any,
     query: {
       enabled: reservesContracts.length > 0,

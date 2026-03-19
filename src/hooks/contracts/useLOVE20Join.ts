@@ -1,7 +1,7 @@
 // hooks/useLove20Join.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -18,7 +18,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${s
  * Hook for currentRound
  */
 export const useCurrentRound = (flag: boolean = true) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20JoinAbi,
     functionName: 'currentRound',
@@ -34,7 +34,7 @@ export const useCurrentRound = (flag: boolean = true) => {
  * Hook for joinedAmountByActionId tokenAddress => actionId => amount
  */
 export const useJoinedAmountByActionId = (tokenAddress: `0x${string}`, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20JoinAbi,
     functionName: 'amountByActionId',
@@ -55,7 +55,7 @@ export const useJoinedAmountByActionIdByAccount = (
   actionId: bigint,
   account: `0x${string}`,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20JoinAbi,
     functionName: 'amountByActionIdByAccount',
@@ -72,7 +72,7 @@ export const useJoinedAmountByActionIdByAccount = (
  * Hook for originBlocks
  */
 export const useOriginBlocks = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20JoinAbi,
     functionName: 'originBlocks',
@@ -85,7 +85,7 @@ export const useOriginBlocks = () => {
  * Hook for stakedAmountByAccount
  */
 export const useStakedAmountByAccount = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20JoinAbi,
     functionName: 'amountByAccount',
@@ -102,7 +102,7 @@ export const useStakedAmountByAccount = (tokenAddress: `0x${string}`, account: `
  * Hook for indexToAccount - 根据索引获取参与地址
  */
 export const useIndexToAccount = (tokenAddress: `0x${string}`, actionId: bigint, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20JoinAbi,
     functionName: 'indexToAccount',
@@ -119,7 +119,7 @@ export const useIndexToAccount = (tokenAddress: `0x${string}`, actionId: bigint,
  * Hook for numOfAccounts - 参与地址数
  */
 export const useNumOfAccounts = (tokenAddress: `0x${string}`, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20JoinAbi,
     functionName: 'numOfAccounts',

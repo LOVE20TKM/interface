@@ -6,7 +6,6 @@ import React, { useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 
 // my hooks
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useJoinedActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite/useMyJoinedExtensionActions';
@@ -83,17 +82,6 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
       onActionStatusChange(hasActions);
     }
   }, [joinedActions, isPendingJoinedActions, onActionStatusChange]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorCore) {
-      handleContractError(errorCore, 'dataViewer');
-    }
-    if (errorExtension) {
-      handleContractError(errorExtension, 'extension');
-    }
-  }, [errorCore, errorExtension, handleContractError]);
 
   if (isPendingJoinedActions) {
     return (

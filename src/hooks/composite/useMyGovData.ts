@@ -2,7 +2,7 @@
 // 合并获取用户治理票数据的复合hook
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
 import { LOVE20RoundViewerAbi } from '@/src/abis/LOVE20RoundViewer';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -62,7 +62,7 @@ export const useMyGovData = ({ tokenAddress, account }: MyGovDataParams): MyGovD
     ];
   }, [tokenAddress, account]);
 
-  const { data, isPending, error } = useReadContracts({
+  const { data, isPending, error } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: !!tokenAddress && !!account && contracts.length > 0,

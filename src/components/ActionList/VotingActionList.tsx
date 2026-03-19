@@ -8,12 +8,11 @@ import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import Link from 'next/link';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 
 // my hooks
 import { VotingAction } from '@/src/types/love20types';
 import { useVotingActions, useGovData } from '@/src/hooks/contracts/useLOVE20RoundViewer';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -49,14 +48,6 @@ const VotingActionList: React.FC<VotingActionListProps> = ({ currentRound }) => 
 
   // 计算最小投票比例阈值（以百分比为单位）
   const minVotePercentage = Number(process.env.NEXT_PUBLIC_ACTION_REWARD_MIN_VOTE_PER_THOUSAND ?? 0) / 10;
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (error) {
-      handleContractError(error, 'vote');
-    }
-  }, [error, handleContractError]);
 
   // 加载中
   if (isPending || isPendingGovData) {

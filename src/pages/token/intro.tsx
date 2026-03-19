@@ -10,8 +10,6 @@ import rehypeHighlight from 'rehype-highlight';
 
 import { formatPercentage, formatTokenAmount, parseUnits } from '@/src/lib/format';
 import { useLaunchInfo } from '@/src/hooks/contracts/useLOVE20Launch';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 const INTRO_MD_URL = basePath + '/token/INTRO.md';
 
@@ -88,12 +86,6 @@ const TokenIntroPage = () => {
     } as const;
     return applyPlaceholders(rawMd, vars);
   }, [rawMd, token, launchInfo]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorLaunchInfo) handleContractError(errorLaunchInfo, 'launch');
-  }, [errorLaunchInfo]);
 
   return (
     <>

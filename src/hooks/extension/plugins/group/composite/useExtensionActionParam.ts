@@ -2,7 +2,7 @@
 // 缓存获取行动整体实时数据
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useExtensionActionConstCache } from '@/src/hooks/extension/plugins/group/composite/useExtensionActionConstCache';
@@ -67,7 +67,7 @@ export const useExtensionActionParam = ({
     data: realtimeData,
     isPending: isRealtimePending,
     error: realtimeError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: realtimeContracts as any,
     query: {
       enabled: realtimeContracts.length > 0,

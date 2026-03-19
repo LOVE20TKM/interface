@@ -2,7 +2,7 @@
 // 批量获取加入链群所需的所有信息
 
 import { useMemo } from 'react';
-import { useReadContract, useReadContracts } from 'wagmi';
+import { useUniversalReadContract, useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20JoinAbi } from '@/src/abis/LOVE20Join';
 import { LOVE20VoteAbi } from '@/src/abis/LOVE20Vote';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
@@ -93,7 +93,7 @@ export function useGetInfoForJoin(params: UseGetInfoForJoinParams): UseGetInfoFo
     data: currentRoundData,
     isPending: isPendingCurrentRound,
     error: errorCurrentRound,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: JOIN_CONTRACT_ADDRESS,
     abi: LOVE20JoinAbi,
     functionName: 'currentRound',
@@ -114,7 +114,7 @@ export function useGetInfoForJoin(params: UseGetInfoForJoinParams): UseGetInfoFo
     isPending: isPendingAllowance,
     error: errorAllowance,
     refetch: refetchAllowance,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: joinTokenAddress,
     abi: LOVE20TokenAbi,
     functionName: 'allowance',
@@ -198,7 +198,7 @@ export function useGetInfoForJoin(params: UseGetInfoForJoinParams): UseGetInfoFo
     data: batchData,
     isPending: isPendingBatch,
     error: errorBatch,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts,
     query: {
       enabled: contracts.length > 0 && extensionAddress !== undefined && account !== undefined,

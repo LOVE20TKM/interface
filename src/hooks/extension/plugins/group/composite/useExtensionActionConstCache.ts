@@ -2,7 +2,7 @@
 // 缓存获取行动基本常量数据
 
 import { useMemo, useEffect } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
 import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -114,7 +114,7 @@ export const useExtensionActionConstCache = ({
     data: contractData,
     isPending,
     error,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: !!extensionAddress && actionId !== undefined && contracts.length > 0,
@@ -190,7 +190,7 @@ export const useExtensionActionConstCache = ({
     data: symbolData,
     isPending: isPendingSymbol,
     error: errorSymbol,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: symbolContracts as any,
     query: {
       enabled: symbolContracts.length > 0,

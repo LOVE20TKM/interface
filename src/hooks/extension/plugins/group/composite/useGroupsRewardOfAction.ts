@@ -22,7 +22,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { useGroupIds } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
@@ -161,7 +161,7 @@ export function useGroupsRewardOfAction(params: UseGroupsRewardOfActionParams): 
     data: allData,
     isPending: isPendingAll,
     error: errorAll,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: allContracts as any,
     query: {
       enabled: !!extensionAddress && !!round && allContracts.length > 0,

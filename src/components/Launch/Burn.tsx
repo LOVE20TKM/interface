@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { LaunchInfo } from '@/src/types/love20types';
 import { useBalanceOf, useBurnForParentToken, useTotalSupply } from '@/src/hooks/contracts/useLOVE20Token';
 
@@ -136,23 +135,6 @@ const Burn: React.FC<{ token: Token | null | undefined; launchInfo: LaunchInfo }
   const setMaxAmount = () => {
     form.setValue('burnAmount', formatUnits(balanceOfToken || BigInt(0)));
   };
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorBalanceOfToken) handleContractError(errorBalanceOfToken, 'token');
-    if (errorBalanceOfParentToken) handleContractError(errorBalanceOfParentToken, 'token');
-    if (errorTotalSupplyOfToken) handleContractError(errorTotalSupplyOfToken, 'token');
-    if (errorBalanceOfParentTokenOfMy) handleContractError(errorBalanceOfParentTokenOfMy, 'token');
-    if (errBurn) handleContractError(errBurn, 'token');
-  }, [
-    errorBalanceOfToken,
-    errorBalanceOfParentToken,
-    errorTotalSupplyOfToken,
-    errorBalanceOfParentTokenOfMy,
-    errBurn,
-    handleContractError,
-  ]);
 
   if (!token || isPendingBalanceOfToken) {
     return <LoadingIcon />;

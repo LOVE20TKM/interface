@@ -17,7 +17,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContract, useReadContracts } from 'wagmi';
+import { useUniversalReadContract, useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { UniswapV2PairAbi } from '@/src/abis/UniswapV2Pair';
 import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import useTokenContext from '@/src/hooks/context/useTokenContext';
@@ -93,7 +93,7 @@ export const useFormatLPSymbol = ({
     data: factoryData,
     isPending: isPendingFactory,
     error: errorFactory,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: tokenAddress,
     abi: UniswapV2PairAbi,
     functionName: 'factory',
@@ -117,7 +117,7 @@ export const useFormatLPSymbol = ({
     data: token0Token1Data,
     isPending: isPendingToken0Token1,
     error: errorToken0Token1,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: shouldReadToken0Token1
       ? [
           {
@@ -157,7 +157,7 @@ export const useFormatLPSymbol = ({
     data: symbolData,
     isPending: isPendingSymbol,
     error: errorSymbol,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: shouldReadSymbols
       ? [
           {

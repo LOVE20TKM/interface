@@ -18,7 +18,8 @@
  */
 
 import { useMemo } from 'react';
-import { useAccount, useReadContracts } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { IRewardAbi } from '@/src/abis/IReward';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -103,7 +104,7 @@ export const useExtensionActionRewardsByRounds = ({
     isPending,
     error,
     refetch,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: contracts.length > 0,

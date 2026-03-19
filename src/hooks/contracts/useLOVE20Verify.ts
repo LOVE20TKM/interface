@@ -1,7 +1,7 @@
 // hooks/contracts/useLOVE20Verify.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -19,7 +19,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VERIFY as `0x$
  * Hook for currentRound
  */
 export const useCurrentRound = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VerifyAbi,
     functionName: 'currentRound',
@@ -32,7 +32,7 @@ export const useCurrentRound = () => {
  * Hook for firstTokenAddress
  */
 export const useFirstTokenAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VerifyAbi,
     functionName: 'firstTokenAddress',
@@ -45,7 +45,7 @@ export const useFirstTokenAddress = () => {
  * Hook for originBlocks
  */
 export const useOriginBlocks = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VerifyAbi,
     functionName: 'originBlocks',
@@ -58,7 +58,7 @@ export const useOriginBlocks = () => {
  * Hook for score
  */
 export const useScore = (account: `0x${string}`, someNumber: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VerifyAbi,
     functionName: 'score',
@@ -75,7 +75,7 @@ export const useScore = (account: `0x${string}`, someNumber: bigint) => {
  * Hook for scoreByActionId
  */
 export const useScoreByActionId = (account: `0x${string}`, someNumber1: bigint, someNumber2: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VerifyAbi,
     functionName: 'scoreByActionId',
@@ -97,7 +97,7 @@ export const useScoreByActionIdByAccount = (
   someNumber2: bigint,
   anotherAccount: `0x${string}`,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VerifyAbi,
     functionName: 'scoreByActionIdByAccount',
@@ -114,7 +114,7 @@ export const useScoreByActionIdByAccount = (
  * Hook for scoreByVerifier
  */
 export const useScoreByVerifier = (tokenAddress: `0x${string}`, round: bigint, verifier: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VerifyAbi,
     functionName: 'scoreByVerifier',
@@ -135,7 +135,7 @@ export const useScoreByVerifierByActionId = (
   verifier: `0x${string}`,
   actionId: bigint,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VerifyAbi,
     functionName: 'scoreByVerifierByActionId',
@@ -159,7 +159,7 @@ export const useScoreByVerifierByActionIdByAccount = (
   account: `0x${string}`,
   enabled: boolean = true,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VerifyAbi,
     functionName: 'scoreByVerifierByActionIdByAccount',
@@ -176,7 +176,7 @@ export const useScoreByVerifierByActionIdByAccount = (
  * Hook for scoreWithReward
  */
 export const useScoreWithReward = (account: `0x${string}`, someNumber: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VerifyAbi,
     functionName: 'scoreWithReward',

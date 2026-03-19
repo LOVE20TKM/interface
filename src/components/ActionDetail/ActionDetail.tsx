@@ -3,8 +3,6 @@ import React, { useContext, useEffect } from 'react';
 
 // my hooks
 import { useActionInfo, useSubmitInfo } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
@@ -67,17 +65,6 @@ const ActionDetail: React.FC<ActivityDetailProps> = ({
 
   // 找到当前动作的提交者
   const submitter = submitInfo?.submitter || 'N/A';
-
-  // 错误提示
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorActionInfo) {
-      handleContractError(errorActionInfo, 'submit');
-    }
-    if (errorSubmitInfo) {
-      handleContractError(errorSubmitInfo, 'submit');
-    }
-  }, [errorActionInfo, errorSubmitInfo]);
 
   if (isPendingActionInfo) {
     return <LoadingIcon />;

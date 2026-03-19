@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 
 // my hooks
 import { formatTokenAmount } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { LaunchInfo } from '@/src/types/love20types';
 import { useContributed, useClaimInfo, useClaim } from '@/src/hooks/contracts/useLOVE20Launch';
 
@@ -66,20 +65,6 @@ const Claim: React.FC<{ token: Token; launchInfo: LaunchInfo }> = ({ token, laun
       toast.error(`领取失败`);
     }
   }, [isClaimConfirmed, claimError]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (claimError) {
-      handleContractError(claimError, 'launch');
-    }
-    if (claimInfoError) {
-      handleContractError(claimInfoError, 'launch');
-    }
-    if (contributedError) {
-      handleContractError(contributedError, 'launch');
-    }
-  }, [claimError, claimInfoError, contributedError]);
 
   console.log('contributed', contributed);
 

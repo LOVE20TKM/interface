@@ -1,12 +1,11 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { useAccount } from 'wagmi';
 
 // my hooks
 import { formatTokenAmount } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useAccountStakeStatus } from '@/src/hooks/contracts/useLOVE20Stake';
 import { useTokenAmountsBySlAmount } from '@/src/hooks/contracts/useLOVE20SLToken';
 
@@ -36,17 +35,6 @@ const MyLiquidDataPanel: React.FC<MyLiquidDataPanelProps> = ({}) => {
     isPending: isPendingTokenAmounts,
     error: errorTokenAmounts,
   } = useTokenAmountsBySlAmount((token?.slTokenAddress as `0x${string}`) || '', slAmount || BigInt(0));
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorStakeStatus) {
-      handleContractError(errorStakeStatus, 'stake');
-    }
-    if (errorTokenAmounts) {
-      handleContractError(errorTokenAmounts, 'slToken');
-    }
-  }, [errorStakeStatus, errorTokenAmounts]);
 
   if (!account) {
     return (

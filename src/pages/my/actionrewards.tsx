@@ -1,9 +1,7 @@
 'use client';
 
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
@@ -38,7 +36,7 @@ const ActRewardsPage: React.FC = () => {
   const [mintingMessage, setMintingMessage] = useState('');
 
   // 获取行动激励数据
-  const { displayedGroups, isLoading, handleExtensionMintSuccess, errors } = useActionsLatestRewards({
+  const { displayedGroups, isLoading, handleExtensionMintSuccess } = useActionsLatestRewards({
     tokenAddress: token?.address as `0x${string}`,
     currentRound: currentRound,
     lastRounds: LAST_ROUNDS,
@@ -54,16 +52,6 @@ const ActRewardsPage: React.FC = () => {
     setIsMinting(false);
     setMintingMessage('');
   };
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errors.coreRewards) handleContractError(errors.coreRewards, 'dataViewer');
-    if (errors.actions) handleContractError(errors.actions, 'dataViewer');
-    if (errors.extensionInfo) handleContractError(errors.extensionInfo, 'dataViewer');
-    if (errors.extensionRewards) handleContractError(errors.extensionRewards, 'dataViewer');
-    if (errors.mint) handleContractError(errors.mint, 'mint');
-  }, [errors, handleContractError]);
 
   return (
     <>

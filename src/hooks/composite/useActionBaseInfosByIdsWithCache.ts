@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20SubmitAbi } from '@/src/abis/LOVE20Submit';
 import { ActionInfo, ActionBaseInfo } from '@/src/types/love20types';
 
@@ -199,7 +199,7 @@ export const useActionBaseInfosByIdsWithCache = ({
     data: contractResults,
     isPending: isRpcPending,
     error: rpcError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: enabled && contracts.length > 0,

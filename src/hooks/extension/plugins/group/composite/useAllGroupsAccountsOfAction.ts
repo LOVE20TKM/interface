@@ -2,7 +2,7 @@
 // 批量获取一个行动所有链群的成员地址，单次 useReadContracts 完成
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { GroupBasicInfo } from './useExtensionGroupInfosOfAction';
 
@@ -58,7 +58,7 @@ export function useAllGroupsAccountsOfAction({
     data,
     isPending,
     error,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts,
     query: {
       enabled: contracts.length > 0,

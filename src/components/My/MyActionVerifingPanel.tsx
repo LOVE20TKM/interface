@@ -4,8 +4,6 @@ import { useAccount } from 'wagmi';
 // my hooks
 import { useVotesNumByAccountByActionId } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useScoreByVerifierByActionId } from '@/src/hooks/contracts/useLOVE20Verify';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
@@ -67,17 +65,6 @@ const MyActionVerifingPanel: React.FC<MyActionVerifingPanelProps> = ({
       onRemainingVotesChange?.(remainingVotes);
     }
   }, [remainingVotes, isPendingVotesNumByAccount, isPendingScoreByVerifier]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (isVotesNumByAccountError) {
-      handleContractError(isVotesNumByAccountError, 'vote');
-    }
-    if (isScoreByVerifierError) {
-      handleContractError(isScoreByVerifierError, 'verify');
-    }
-  }, [isVotesNumByAccountError, isScoreByVerifierError]);
 
   if (remainingVotes <= 0) {
     return <></>;

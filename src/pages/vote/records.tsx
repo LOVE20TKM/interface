@@ -14,7 +14,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 // my hooks
 import { useAccountVotingHistory } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my components
 import Header from '@/src/components/Header';
@@ -289,13 +288,6 @@ const VoteRecordsPage: React.FC = () => {
       scrollContainer.removeEventListener('touchmove', checkScrollPosition);
     };
   }, [loadMoreRounds, hasMoreRounds, isLoadingHistory, isLoadingMore, scrollFailureCount, allRoundsData.length]); // 扩展依赖列表
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorLoadingCurrentRound) handleContractError(errorLoadingCurrentRound, 'dataViewer');
-    if (errorLoadingHistory) handleContractError(errorLoadingHistory, 'dataViewer');
-  }, [errorLoadingCurrentRound, errorLoadingHistory, handleContractError]);
 
   return (
     <>

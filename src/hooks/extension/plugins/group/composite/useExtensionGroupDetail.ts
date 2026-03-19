@@ -2,7 +2,7 @@
 // 获取一个链群详情数据
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
@@ -114,7 +114,7 @@ export const useExtensionGroupDetail = ({
     data: detailData,
     isPending: isDetailPending,
     error: detailError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: detailContracts as any,
     query: {
       enabled: !!extensionAddress && groupId !== undefined && !!round && detailContracts.length > 0,

@@ -1,5 +1,4 @@
 import { useAccount } from 'wagmi';
-import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -11,8 +10,6 @@ import { Token } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -35,17 +32,6 @@ const MyTokenPanel: React.FC<{ token: Token | null | undefined }> = ({ token }) 
     isPending: isPendingParentTokenBalance,
     error: errorParentTokenBalance,
   } = useBalanceOf(token?.parentTokenAddress as `0x${string}`, account as `0x${string}`);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorBalance) {
-      handleContractError(errorBalance, 'token');
-    }
-    if (errorParentTokenBalance) {
-      handleContractError(errorParentTokenBalance, 'token');
-    }
-  }, [errorBalance, errorParentTokenBalance]);
 
   if (!token) {
     return <LoadingIcon />;

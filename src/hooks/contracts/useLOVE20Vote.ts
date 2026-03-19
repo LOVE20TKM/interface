@@ -1,6 +1,6 @@
 // hooks/contracts/useLOVE20Vote.ts
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -17,7 +17,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VOTE as `0x${s
  * Hook to check if an account can vote.
  */
 export const useCanVote = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VoteAbi,
     functionName: 'canVote',
@@ -31,7 +31,7 @@ export const useCanVote = (tokenAddress: `0x${string}`, account: `0x${string}`) 
  * Hook to get the current round.
  */
 export const useCurrentRound = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VoteAbi,
     functionName: 'currentRound',
@@ -44,7 +44,7 @@ export const useCurrentRound = () => {
  * Hook to check if an action ID has been voted.
  */
 export const useIsActionIdVoted = (tokenAddress: `0x${string}`, round: bigint, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VoteAbi,
     functionName: 'isActionIdVoted',
@@ -58,7 +58,7 @@ export const useIsActionIdVoted = (tokenAddress: `0x${string}`, round: bigint, a
  * Hook to get the maximum number of votes.
  */
 export const useMaxVotesNum = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VoteAbi,
     functionName: 'maxVotesNum',
@@ -72,7 +72,7 @@ export const useMaxVotesNum = (tokenAddress: `0x${string}`, account: `0x${string
  * Hook to get the origin blocks.
  */
 export const useOriginBlocks = (flag: boolean) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VoteAbi,
     functionName: 'originBlocks',
@@ -89,7 +89,7 @@ export const useOriginBlocks = (flag: boolean) => {
  * Hook to get the number of votes.
  */
 export const useVotesNum = (tokenAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VoteAbi,
     functionName: 'votesNum',
@@ -110,7 +110,7 @@ export const useVotesNum = (tokenAddress: `0x${string}`, round: bigint) => {
  * Hook to get the number of votes by account.
  */
 export const useVotesNumByAccount = (tokenAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VoteAbi,
     functionName: 'votesNumByAccount',
@@ -136,7 +136,7 @@ export const useVotesNumByAccountByActionId = (
   account: `0x${string}`,
   actionId: bigint,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VoteAbi,
     functionName: 'votesNumByAccountByActionId',
@@ -153,7 +153,7 @@ export const useVotesNumByAccountByActionId = (
  * Hook to get the number of votes by action ID.
  */
 export const useVotesNumByActionId = (tokenAddress: `0x${string}`, round: bigint, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VoteAbi,
     functionName: 'votesNumByActionId',
@@ -170,7 +170,7 @@ export const useVotesNumByActionId = (tokenAddress: `0x${string}`, round: bigint
  * Hook to get the number of votes by account (multiple).
  */
 export const useVotesNumsByAccount = (tokenAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VoteAbi,
     functionName: 'votesNumsByAccount',

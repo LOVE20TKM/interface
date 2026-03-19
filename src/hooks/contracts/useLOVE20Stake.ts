@@ -1,4 +1,4 @@
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useEffect } from 'react';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
@@ -17,7 +17,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${
  * @param account 账户地址
  */
 export const useAccountStakeStatus = (token: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20StakeAbi,
     functionName: 'accountStakeStatus',
@@ -44,7 +44,7 @@ export const useAccountStakeStatus = (token: `0x${string}`, account: `0x${string
  * @param promisedWaitingPhases 预期等待轮数
  */
 export const useCaculateGovVotes = (lpAmount: bigint, promisedWaitingPhases: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20StakeAbi,
     functionName: 'caculateGovVotes',
@@ -58,7 +58,7 @@ export const useCaculateGovVotes = (lpAmount: bigint, promisedWaitingPhases: big
  * 获取当前轮次
  */
 export const useCurrentRound = (enabled: boolean = true) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20StakeAbi,
     functionName: 'currentRound',
@@ -76,7 +76,7 @@ export const useCurrentRound = (enabled: boolean = true) => {
  * @param token 代币地址
  */
 export const useInitialStakeRound = (tokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20StakeAbi,
     functionName: 'initialStakeRound',
@@ -94,7 +94,7 @@ export const useInitialStakeRound = (tokenAddress: `0x${string}`) => {
  * @param token 代币地址
  */
 export const useGovVotesNum = (token: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20StakeAbi,
     functionName: 'govVotesNum',
@@ -111,7 +111,7 @@ export const useGovVotesNum = (token: `0x${string}`) => {
  * 获取 originBlocks 的值
  */
 export const useOriginBlocks = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20StakeAbi,
     functionName: 'originBlocks',
@@ -128,7 +128,7 @@ export const useOriginBlocks = () => {
  * @param enabled 是否启用查询（可选，默认为 true）
  */
 export const useValidGovVotes = (tokenAddress: `0x${string}`, account: `0x${string}`, enabled: boolean = true) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20StakeAbi,
     functionName: 'validGovVotes',

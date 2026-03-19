@@ -13,7 +13,7 @@
  * ```
  */
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import * as Sentry from '@sentry/nextjs';
 import { useError } from '@/src/contexts/ErrorContext';
 import { parseContractError, extractErrorMessage } from './contractErrorParser';
@@ -24,9 +24,14 @@ import { parseContractError, extractErrorMessage } from './contractErrorParser';
  */
 export function useContractError() {
   const { setError } = useError();
+  const lastErrorRef = useRef<unknown>(null);
 
   const handleError = useCallback(
     (error: unknown) => {
+      // 去重：同一个错误对象不重复处理（防止过渡期 Sentry 重复上报）
+      if (error === lastErrorRef.current) return;
+      lastErrorRef.current = error;
+
       console.error('Contract error:', error);
 
       // 解析错误

@@ -1,7 +1,7 @@
 // hooks/contracts/useLOVE20Mint.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -17,7 +17,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_MINT as `0x${s
  * Hook for ROUND_REWARD_ACTION_PER_THOUSAND
  */
 export const useRoundRewardActionPerThousand = () => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'ROUND_REWARD_ACTION_PER_THOUSAND',
@@ -35,7 +35,7 @@ export const useRoundRewardActionPerThousand = () => {
  * Hook for ROUND_REWARD_GOV_PER_THOUSAND
  */
 export const useRoundRewardGovPerThousand = () => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'ROUND_REWARD_GOV_PER_THOUSAND',
@@ -54,7 +54,7 @@ export const useRoundRewardGovPerThousand = () => {
  * 查询账户已铸造的治理次数
  */
 export const useNumOfMintGovRewardByAccount = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'numOfMintGovRewardByAccount',
@@ -72,7 +72,7 @@ export const useNumOfMintGovRewardByAccount = (tokenAddress: `0x${string}`, acco
  * Hook for actionReward
  */
 export const useActionReward = (tokenAddress: `0x${string}`, round: bigint) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'actionReward',
@@ -95,7 +95,7 @@ export const useActionRewardByActionIdByAccount = (
   actionId: bigint,
   account: `0x${string}`,
 ) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'actionRewardByActionIdByAccount',
@@ -119,7 +119,7 @@ export const useActionRewardMintedByAccount = (
   actionId: bigint,
   targetAddress: `0x${string}`,
 ) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'actionRewardMintedByAccount',
@@ -137,7 +137,7 @@ export const useActionRewardMintedByAccount = (
  * Hook for calculateRoundActionReward
  */
 export const useCalculateRoundActionReward = (tokenAddress: `0x${string}`, round: bigint) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'calculateRoundActionReward',
@@ -155,7 +155,7 @@ export const useCalculateRoundActionReward = (tokenAddress: `0x${string}`, round
  * Hook for calculateRoundGovReward
  */
 export const useCalculateRoundGovReward = (tokenAddress: `0x${string}`) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'calculateRoundGovReward',
@@ -173,7 +173,7 @@ export const useCalculateRoundGovReward = (tokenAddress: `0x${string}`) => {
  * Hook for govReward
  */
 export const useGovReward = (tokenAddress: `0x${string}`, round: bigint) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'govReward',
@@ -191,7 +191,7 @@ export const useGovReward = (tokenAddress: `0x${string}`, round: bigint) => {
  * Hook for govRewardByAccount
  */
 export const useGovRewardByAccount = (tokenAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'govRewardByAccount',
@@ -215,7 +215,7 @@ export const useGovRewardByAccount = (tokenAddress: `0x${string}`, round: bigint
  * Hook for govRewardMintedByAccount
  */
 export const useGovRewardMintedByAccount = (account: `0x${string}`, round: bigint, targetAddress: `0x${string}`) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'govRewardMintedByAccount',
@@ -233,7 +233,7 @@ export const useGovRewardMintedByAccount = (account: `0x${string}`, round: bigin
  * Hook for isRewardPrepared
  */
 export const useIsRewardPrepared = (tokenAddress: `0x${string}`, round: bigint) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'isRewardPrepared',
@@ -251,7 +251,7 @@ export const useIsRewardPrepared = (tokenAddress: `0x${string}`, round: bigint) 
  * Hook for rewardAvailable
  */
 export const useRewardAvailable = (tokenAddress: `0x${string}`) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'rewardAvailable',
@@ -272,7 +272,7 @@ export const useRewardAvailable = (tokenAddress: `0x${string}`) => {
  * Hook for rewardBurned
  */
 export const useRewardBurned = (account: `0x${string}`) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'rewardBurned',
@@ -290,7 +290,7 @@ export const useRewardBurned = (account: `0x${string}`) => {
  * Hook for rewardMinted
  */
 export const useRewardMinted = (account: `0x${string}`) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'rewardMinted',
@@ -308,7 +308,7 @@ export const useRewardMinted = (account: `0x${string}`) => {
  * Hook for rewardReserved
  */
 export const useRewardReserved = (account: `0x${string}`) => {
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintAbi,
     functionName: 'rewardReserved',

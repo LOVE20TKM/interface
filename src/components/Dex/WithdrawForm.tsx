@@ -18,8 +18,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 // my funcs
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my hooks
 import { useApprove, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 import { useRemoveLiquidity, useRemoveLiquidityETH } from '@/src/hooks/contracts/useUniswapV2Router';
@@ -260,7 +258,6 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
       toast.success('撤销流动性交易已提交');
     } catch (error: any) {
       console.error('撤销流动性失败', error);
-      handleContractError(error, 'liquidity');
     }
   });
 
@@ -294,22 +291,6 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
       }, 10000);
     }
   }, [isConfirmedRemoveLiquidity, isConfirmedRemoveLiquidityETH, form, baseToken.address, onRefreshData]);
-
-  // --------------------------------------------------
-  // 8. 错误处理
-  // --------------------------------------------------
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errApproveLP) {
-      handleContractError(errApproveLP, 'liquidity');
-    }
-    if (errRemoveLiquidity) {
-      handleContractError(errRemoveLiquidity, 'liquidity');
-    }
-    if (errRemoveLiquidityETH) {
-      handleContractError(errRemoveLiquidityETH, 'liquidity');
-    }
-  }, [errApproveLP, errRemoveLiquidity, errRemoveLiquidityETH, handleContractError]);
 
   const isApproving = isPendingApproveLP;
   const isApproveConfirming = isConfirmingApproveLP;

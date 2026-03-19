@@ -1,7 +1,7 @@
 // hooks/extension/plugins/group/contracts/useExtensionGroupActionFactory.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -19,7 +19,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
  * Hook for GROUP_ADDRESS - 获取组合约地址
  */
 export const useGroupAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionFactoryAbi,
     functionName: 'GROUP_ADDRESS',
@@ -35,7 +35,7 @@ export const useGroupAddress = (contractAddress: `0x${string}`) => {
  * Hook for GROUP_JOIN_ADDRESS - 获取加入合约地址
  */
 export const useGroupJoinAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionFactoryAbi,
     functionName: 'GROUP_JOIN_ADDRESS',
@@ -51,7 +51,7 @@ export const useGroupJoinAddress = (contractAddress: `0x${string}`) => {
  * Hook for GROUP_MANAGER_ADDRESS - 获取组管理器地址
  */
 export const useGroupManagerAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionFactoryAbi,
     functionName: 'GROUP_MANAGER_ADDRESS',
@@ -67,7 +67,7 @@ export const useGroupManagerAddress = (contractAddress: `0x${string}`) => {
  * Hook for GROUP_VERIFY_ADDRESS - 获取验证合约地址
  */
 export const useGroupVerifyAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionFactoryAbi,
     functionName: 'GROUP_VERIFY_ADDRESS',
@@ -83,7 +83,7 @@ export const useGroupVerifyAddress = (contractAddress: `0x${string}`) => {
  * Hook for CENTER_ADDRESS - 获取 center 合约地址
  */
 export const useCenter = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionFactoryAbi,
     functionName: 'CENTER_ADDRESS',
@@ -103,7 +103,7 @@ export const useCenter = (contractAddress: `0x${string}`) => {
  * Hook for exists - 检查扩展是否存在
  */
 export const useExists = (contractAddress: `0x${string}`, extension: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionFactoryAbi,
     functionName: 'exists',
@@ -120,7 +120,7 @@ export const useExists = (contractAddress: `0x${string}`, extension: `0x${string
  * Hook for extensions - 获取所有扩展地址
  */
 export const useExtensions = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionFactoryAbi,
     functionName: 'extensions',
@@ -136,7 +136,7 @@ export const useExtensions = (contractAddress: `0x${string}`) => {
  * Hook for extensionsAtIndex - 根据索引获取扩展地址
  */
 export const useExtensionsAtIndex = (contractAddress: `0x${string}`, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionFactoryAbi,
     functionName: 'extensionsAtIndex',
@@ -153,7 +153,7 @@ export const useExtensionsAtIndex = (contractAddress: `0x${string}`, index: bigi
  * Hook for extensionsCount - 获取扩展数量
  */
 export const useExtensionsCount = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionFactoryAbi,
     functionName: 'extensionsCount',

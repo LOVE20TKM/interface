@@ -10,7 +10,6 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 // my hooks
 import { useLaunchInfo, useRemainingLaunchCount } from '@/src/hooks/contracts/useLOVE20Launch';
 import { useNumOfMintGovRewardByAccount } from '@/src/hooks/contracts/useLOVE20Mint';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatTokenAmount } from '@/src/lib/format';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -36,14 +35,6 @@ const Todeploy: React.FC<{ token: Token }> = ({ token }) => {
       token ? token.address : '0x0000000000000000000000000000000000000000',
       account as `0x${string}`,
     );
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  React.useEffect(() => {
-    if (launchInfoError) {
-      handleContractError(launchInfoError, 'launch');
-    }
-  }, [launchInfoError]);
 
   if (isLaunchInfoPending || !blockNumber || isRemainingLaunchCountPending || isNumOfMintGovRewardByAccountPending) {
     return <></>;

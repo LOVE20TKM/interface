@@ -18,7 +18,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { useActionIdsWithActiveGroupIdsByOwner } from './useActionIdsWithActiveGroupIdsByOwner';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
@@ -222,7 +222,7 @@ export function useActionsWithActiveGroupsByOwner({
     data: totalJoinedAmountData,
     isPending: isTotalJoinedAmountPending,
     error: totalJoinedAmountError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: totalJoinedAmountContracts as any,
     query: {
       enabled: !!round && totalJoinedAmountContracts.length > 0 && !isExtensionsPending,

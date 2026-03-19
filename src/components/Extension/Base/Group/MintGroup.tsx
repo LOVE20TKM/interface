@@ -104,7 +104,6 @@ export default function MintGroup() {
     isPending: isPendingApprove,
     isConfirming: isConfirmingApprove,
     isConfirmed: isConfirmedApprove,
-    writeError: errApprove,
   } = useApprove(FIRST_TOKEN_ADDRESS);
 
   const [isTokenApproved, setIsTokenApproved] = useState(false);
@@ -166,7 +165,6 @@ export default function MintGroup() {
     isPending: isPendingMint,
     isConfirming: isConfirmingMint,
     isConfirmed: isConfirmedMint,
-    writeError: errMint,
   } = useMint();
 
   const onMint = async (data: z.infer<ReturnType<typeof getFormSchema>>) => {
@@ -234,16 +232,10 @@ export default function MintGroup() {
     if (balanceError) {
       handleError(balanceError);
     }
-    if (errApprove) {
-      handleError(errApprove);
-    }
     if (errAllowance) {
       handleError(errAllowance);
     }
-    if (errMint) {
-      handleError(errMint);
-    }
-  }, [balanceError, errApprove, errAllowance, errMint, handleError]);
+  }, [balanceError, errAllowance, handleError]);
 
   // 控制按钮文案
   const hasStartedApproving = isPendingApprove || isConfirmingApprove;

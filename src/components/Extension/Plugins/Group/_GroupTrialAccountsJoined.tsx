@@ -44,14 +44,12 @@ const _GroupTrialAccountsJoined: React.FC<GroupTrialAccountsJoinedProps> = ({
     isPending: isPendingExit,
     isConfirming: isConfirmingExit,
     isConfirmed: isConfirmedExit,
-    writeError: errorExit,
   } = useTrialExit();
 
   const { handleError } = useContractError();
   useEffect(() => {
     if (error) handleError(error);
-    if (errorExit) handleError(errorExit);
-  }, [error, errorExit, handleError]);
+  }, [error, handleError]);
 
   useEffect(() => {
     if (isConfirmedExit && !hasCalledSuccessRef.current) {

@@ -2,7 +2,7 @@
 // 批量获取链群列表完整信息
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
@@ -82,7 +82,7 @@ export const useExtensionGroupInfosOfAction = ({
     data: firstBatchData,
     isPending: isFirstBatchPending,
     error: firstBatchError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: firstBatchContracts as any,
     query: {
       enabled: !!extensionAddress && firstBatchContracts.length > 0,
@@ -156,7 +156,7 @@ export const useExtensionGroupInfosOfAction = ({
     data: detailData,
     isPending: isDetailPending,
     error: detailError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: detailContracts as any,
     query: {
       enabled: !!extensionAddress && !!round && detailContracts.length > 0,

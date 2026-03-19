@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -17,7 +17,6 @@ import TokenTab from '@/src/components/Token/TokenTab';
 
 // my hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useActingPageData } from '@/src/hooks/composite/useActingPageData';
 
 const ActingPage = () => {
@@ -32,23 +31,6 @@ const ActingPage = () => {
     tokenAddress: currentToken?.address as `0x${string}`,
     currentRound: currentRound || BigInt(0),
   });
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorCurrentRound) {
-      handleContractError(errorCurrentRound, 'join');
-    }
-    if (actingPageData.errorActions) {
-      handleContractError(actingPageData.errorActions, 'dataViewer');
-    }
-    if (actingPageData.errorExtension) {
-      handleContractError(actingPageData.errorExtension, 'extension');
-    }
-    if (actingPageData.errorReward) {
-      handleContractError(actingPageData.errorReward, 'dataViewer');
-    }
-  }, [errorCurrentRound, actingPageData.errorActions, actingPageData.errorExtension, actingPageData.errorReward]);
 
   if (shouldCall && isPendingCurrentRound) {
     return (

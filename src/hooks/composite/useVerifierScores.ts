@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20VerifyAbi } from '@/src/abis/LOVE20Verify';
 
 interface VerifierScoresParams {
@@ -53,7 +53,7 @@ export const useVerifierScores = ({
     isLoading,
     error,
     isSuccess,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts,
     query: {
       enabled: enabled && contracts.length > 0,

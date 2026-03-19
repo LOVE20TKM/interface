@@ -1,13 +1,11 @@
 'use client';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { useRouter } from 'next/router';
 
 // my hooks
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { TrialModeProvider } from '@/src/contexts/TrialModeContext';
@@ -46,17 +44,6 @@ const JoinPage = () => {
     tokenAddress: token?.address as `0x${string}`,
     actionInfo,
   });
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorActionInfo) {
-      handleContractError(errorActionInfo, 'submit');
-    }
-    if (errorExtension) {
-      handleContractError(errorExtension, 'extension');
-    }
-  }, [errorActionInfo, errorExtension]);
 
   // 解析 groupId (如果有)
   const groupIdBigInt = groupId && typeof groupId === 'string' ? BigInt(groupId) : undefined;

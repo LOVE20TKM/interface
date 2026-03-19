@@ -31,8 +31,6 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 // my hooks
 import { useLaunchToken, useRemainingLaunchCount } from '@/src/hooks/contracts/useLOVE20Launch';
 import { useNumOfMintGovRewardByAccount } from '@/src/hooks/contracts/useLOVE20Mint';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
@@ -76,15 +74,7 @@ export default function TokenDeployment() {
   const remainingMintTimes =
     Number(MIN_GOV_REWARD_MINTS) - (Number(numOfMintGovRewardByAccount ?? 0) % Number(MIN_GOV_REWARD_MINTS));
 
-  // 3. 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (writeError) {
-      handleContractError(writeError, 'launch');
-    }
-  }, [writeError, handleContractError]);
-
-  // 4. 表单 Hook
+  // 3. 表单 Hook
   const form = useForm<TokenFormValues>({
     resolver: zodResolver(TokenFormSchema),
     defaultValues: {

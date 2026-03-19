@@ -6,7 +6,6 @@ import { useRouter } from 'next/router';
 
 // my hooks
 import { useCurrentRound, useSubmit } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useCanSubmit } from '@/src/hooks/composite/useCanSubmit';
 
 // my contexts
@@ -68,20 +67,6 @@ const ActionPanelForSubmit: React.FC<ActionPanelForJoinProps> = ({ actionId, sub
       }, 2000);
     }
   }, [isConfirmed, errSubmit]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errCurrentRound) {
-      handleContractError(errCurrentRound, 'submit');
-    }
-    if (errCanSubmit) {
-      handleContractError(errCanSubmit, 'submit');
-    }
-    if (errSubmit) {
-      handleContractError(errSubmit, 'submit');
-    }
-  }, [errCurrentRound, errCanSubmit, errSubmit]);
 
   if (isPendingCanSubmit || isPendingCurrentRound) {
     return <LoadingIcon />;

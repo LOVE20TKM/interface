@@ -1,7 +1,7 @@
 // hooks/extension/plugins/group-service/contracts/useGroupRecipients.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -19,7 +19,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROU
  * Hook for DEFAULT_MAX_RECIPIENTS - 获取默认最大接收者数量
  */
 export const useDefaultMaxRecipients = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupRecipientsAbi,
     functionName: 'DEFAULT_MAX_RECIPIENTS',
@@ -32,7 +32,7 @@ export const useDefaultMaxRecipients = () => {
  * Hook for PRECISION - 获取精度常量
  */
 export const usePrecision = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupRecipientsAbi,
     functionName: 'PRECISION',
@@ -53,7 +53,7 @@ export const useActionIdsWithRecipients = (
   tokenAddress: `0x${string}` | undefined,
   round: bigint | undefined,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupRecipientsAbi,
     functionName: 'actionIdsWithRecipients',
@@ -77,7 +77,7 @@ export const useGetDistribution = (
   groupReward: bigint | undefined,
   round: bigint | undefined,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupRecipientsAbi,
     functionName: 'getDistribution',
@@ -115,7 +115,7 @@ export const useGroupIdsByActionIdWithRecipients = (
   actionId: bigint | undefined,
   round: bigint | undefined,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupRecipientsAbi,
     functionName: 'groupIdsByActionIdWithRecipients',
@@ -138,7 +138,7 @@ export const useRecipients = (
   groupId: bigint | undefined,
   round: bigint | undefined,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupRecipientsAbi,
     functionName: 'recipients',

@@ -20,7 +20,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContract, useReadContracts } from 'wagmi';
+import { useUniversalReadContract, useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
 import { GroupRecipientsAbi } from '@/src/abis/GroupRecipients';
 import { ActionBaseInfo } from '@/src/types/love20types';
@@ -119,7 +119,7 @@ export function useRecipientsDetailByAccountByRound({
     data: actionIdsData,
     isPending: isActionIdsPending,
     error: actionIdsError,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: GROUP_RECIPIENTS_ADDRESS,
     abi: GroupRecipientsAbi,
     functionName: 'actionIdsWithRecipients',
@@ -157,7 +157,7 @@ export function useRecipientsDetailByAccountByRound({
     data: groupIdsData,
     isPending: isGroupIdsPending,
     error: groupIdsError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: groupIdsContracts,
     query: {
       enabled: !!GROUP_RECIPIENTS_ADDRESS && !!account && !!tokenAddress && !!round && groupIdsContracts.length > 0,
@@ -219,7 +219,7 @@ export function useRecipientsDetailByAccountByRound({
     data: distributionData,
     isPending: isDistributionPending,
     error: distributionError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: distributionContracts,
     query: {
       enabled: !!extensionAddress && !!account && !!round && distributionContracts.length > 0,

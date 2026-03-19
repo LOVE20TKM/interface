@@ -2,7 +2,7 @@
 // “我的链群”面板：按行动维度聚合服务者的不信任票信息（批量 RPC + 行动标题）
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { LOVE20VoteAbi } from '@/src/abis/LOVE20Vote';
@@ -100,7 +100,7 @@ export function useMyGroupActionsDistrustInfoOfRound({
     data: combinedData,
     isPending: isPendingRead,
     error: readError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: contracts.length > 0,

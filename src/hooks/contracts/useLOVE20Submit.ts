@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { LOVE20SubmitAbi } from '@/src/abis/LOVE20Submit';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
@@ -16,7 +16,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_SUBMIT as `0x$
  * Hook for SUBMIT_MIN_PER_THOUSAND
  */
 export const useSubmitMinPerThousand = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20SubmitAbi,
     functionName: 'SUBMIT_MIN_PER_THOUSAND',
@@ -30,7 +30,7 @@ export const useSubmitMinPerThousand = () => {
  * Hook for actionInfo
  */
 export const useActionInfo = (tokenAddress: `0x${string}`, actionId: bigint | undefined) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20SubmitAbi,
     functionName: 'actionInfo',
@@ -47,7 +47,7 @@ export const useActionInfo = (tokenAddress: `0x${string}`, actionId: bigint | un
  * Hook for actionNum
  */
 export const useActionsCount = (tokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20SubmitAbi,
     functionName: 'actionsCount',
@@ -61,7 +61,7 @@ export const useActionsCount = (tokenAddress: `0x${string}`) => {
  * Hook for canSubmit
  */
 export const useCanSubmit = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20SubmitAbi,
     functionName: 'canSubmit',
@@ -75,7 +75,7 @@ export const useCanSubmit = (tokenAddress: `0x${string}`, account: `0x${string}`
  * Hook for currentRound
  */
 export const useCurrentRound = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20SubmitAbi,
     functionName: 'currentRound',
@@ -89,7 +89,7 @@ export const useCurrentRound = () => {
  * Hook for isSubmitted
  */
 export const useIsSubmitted = (tokenAddress: `0x${string}`, round: bigint, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20SubmitAbi,
     functionName: 'isSubmitted',
@@ -103,7 +103,7 @@ export const useIsSubmitted = (tokenAddress: `0x${string}`, round: bigint, actio
  * Hook for originBlocks
  */
 export const useOriginBlocks = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20SubmitAbi,
     functionName: 'originBlocks',
@@ -117,7 +117,7 @@ export const useOriginBlocks = () => {
  * Hook for submitInfo
  */
 export const useSubmitInfo = (tokenAddress: `0x${string}`, round: bigint, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20SubmitAbi,
     functionName: 'submitInfo',

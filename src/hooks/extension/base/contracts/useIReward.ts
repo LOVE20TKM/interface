@@ -3,7 +3,7 @@
 // 可用于任何实现 IReward 接口的合约
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -18,7 +18,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
  * Hook for reward - 获取指定轮次的奖励
  */
 export const useReward = (contractAddress: `0x${string}` | undefined, round: bigint | undefined) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: IRewardAbi,
     functionName: 'reward',
@@ -40,7 +40,7 @@ export const useRewardByAccount = (
   round: bigint | undefined,
   account: `0x${string}` | undefined,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: IRewardAbi,
     functionName: 'rewardByAccount',

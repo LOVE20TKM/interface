@@ -16,7 +16,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { useActionIds } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
@@ -146,7 +146,7 @@ export function useActionIdsWithActiveGroupIdsByOwner({
     data: groupIdsData,
     isPending: isGroupIdsPending,
     error: groupIdsError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: groupIdsContracts as any,
     query: {
       enabled: !!account && !!actionIds && actionIds.length > 0 && extensionAddressMap.size > 0 && !isExtensionsPending,

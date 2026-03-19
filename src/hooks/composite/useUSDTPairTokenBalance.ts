@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { UniswapV2FactoryAbi } from '@/src/abis/UniswapV2Factory';
 import { UniswapV2PairAbi } from '@/src/abis/UniswapV2Pair';
 
@@ -35,7 +35,7 @@ export const useUSDTPairTokenBalance = (
   }, [tokenAddress, usdtAddress, enabled]);
 
   // 第一步：获取 pair 地址
-  const { data: pairData, isPending: isPendingPair } = useReadContracts({
+  const { data: pairData, isPending: isPendingPair } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: !!tokenAddress && !!usdtAddress && enabled && contracts.length > 0,
@@ -77,7 +77,7 @@ export const useUSDTPairTokenBalance = (
     ];
   }, [pairAddress]);
 
-  const { data: pairInfoData, isPending: isPendingPairInfo } = useReadContracts({
+  const { data: pairInfoData, isPending: isPendingPairInfo } = useUniversalReadContracts({
     contracts: pairContracts as any,
     query: {
       enabled: !!pairAddress && pairContracts.length > 0,

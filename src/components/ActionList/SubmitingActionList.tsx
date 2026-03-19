@@ -7,7 +7,6 @@ import Link from 'next/link';
 // my hooks
 import { useActionsCount } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useActionInfosByPage, useActionSubmits } from '@/src/hooks/contracts/useLOVE20RoundViewer';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my context
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -125,20 +124,6 @@ const SubmitingActionList: React.FC<SubmitingActionListProps> = ({ currentRound 
       }
     };
   }, [hasMore, isPendingActionInfosByPage, isFirstPageLoaded, currentPage]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorActionNum) {
-      handleContractError(errorActionNum, 'submit');
-    }
-    if (errorActionInfosByPage) {
-      handleContractError(errorActionInfosByPage, 'submit');
-    }
-    if (errorActionSubmits) {
-      handleContractError(errorActionSubmits, 'submit');
-    }
-  }, [errorActionNum, errorActionInfosByPage, errorActionSubmits]);
 
   if (!token) {
     return <LoadingIcon />;

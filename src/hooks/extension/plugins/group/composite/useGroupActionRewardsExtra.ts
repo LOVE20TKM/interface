@@ -2,7 +2,8 @@
 // 批量获取链群行动中用户在多个轮次的得分和链群ID
 
 import { useMemo } from 'react';
-import { useReadContracts, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -67,7 +68,7 @@ export const useGroupActionRewardsExtra = ({
     data: allData,
     isPending,
     error,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: enabled && contracts.length > 0,

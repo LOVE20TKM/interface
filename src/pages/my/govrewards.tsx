@@ -18,8 +18,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useGovRewardsByAccountByRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useMintGovReward } from '@/src/hooks/contracts/useLOVE20Mint';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import Header from '@/src/components/Header';
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -98,20 +96,6 @@ const GovRewardsPage: React.FC = () => {
       await mintGovReward(token.address, round);
     }
   };
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorLoadingRewards) {
-      handleContractError(errorLoadingRewards, 'dataViewer');
-    }
-    if (errorCurrentRound) {
-      handleContractError(errorCurrentRound, 'mint');
-    }
-    if (errorMintGovReward) {
-      handleContractError(errorMintGovReward, 'mint');
-    }
-  }, [errorLoadingRewards, errorCurrentRound, errorMintGovReward, handleContractError]);
 
   // 无限滚动加载更多激励：当滚动到底部时更新 startRound
   const loadMoreRewards = useCallback(() => {

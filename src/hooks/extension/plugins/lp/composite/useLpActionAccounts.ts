@@ -2,7 +2,7 @@
 // 获取LP行动的实时公开数据（所有参与者）
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
 import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
@@ -105,7 +105,7 @@ export const useLpActionAccounts = ({
     data: basicData,
     isPending: isBasicPending,
     error: basicError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: basicContracts as any,
     query: {
       enabled: !!extensionAddress && !!tokenAddress && basicContracts.length > 0,
@@ -167,7 +167,7 @@ export const useLpActionAccounts = ({
     data: detailData,
     isPending: isDetailPending,
     error: detailError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: detailContracts as any,
     query: {
       enabled: !!extensionAddress && !!tokenAddress && detailContracts.length > 0,

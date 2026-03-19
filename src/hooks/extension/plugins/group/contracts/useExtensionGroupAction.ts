@@ -1,7 +1,7 @@
 // hooks/extension/plugins/group/contracts/useExtensionGroupAction.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -19,7 +19,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
  * Hook for ACTIVATION_STAKE_AMOUNT - 获取激活需质押代币数量
  */
 export const useActivationStakeAmount = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'ACTIVATION_STAKE_AMOUNT',
@@ -35,7 +35,7 @@ export const useActivationStakeAmount = (contractAddress: `0x${string}`) => {
  * Hook for ACTIVATION_MIN_GOV_RATIO - 获取激活链群最小治理票比例
  */
 export const useActivationMinGovRatio = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'ACTIVATION_MIN_GOV_RATIO',
@@ -51,7 +51,7 @@ export const useActivationMinGovRatio = (contractAddress: `0x${string}`) => {
  * Hook for MAX_JOIN_AMOUNT_RATIO - 获取最大加入代币比例
  */
 export const useMaxJoinAmountRatio = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'MAX_JOIN_AMOUNT_RATIO',
@@ -67,7 +67,7 @@ export const useMaxJoinAmountRatio = (contractAddress: `0x${string}`) => {
  * Hook for JOIN_TOKEN_ADDRESS - 获取加入代币地址
  */
 export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'JOIN_TOKEN_ADDRESS',
@@ -87,7 +87,7 @@ export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
  * Hook for actionId - 获取 action ID
  */
 export const useActionId = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'actionId',
@@ -103,7 +103,7 @@ export const useActionId = (contractAddress: `0x${string}`) => {
  * Hook for FACTORY_ADDRESS - 获取工厂地址
  */
 export const useFactory = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'FACTORY_ADDRESS',
@@ -119,7 +119,7 @@ export const useFactory = (contractAddress: `0x${string}`) => {
  * Hook for TOKEN_ADDRESS - 获取代币地址
  */
 export const useTokenAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'TOKEN_ADDRESS',
@@ -135,7 +135,7 @@ export const useTokenAddress = (contractAddress: `0x${string}`) => {
  * Hook for initialized - 检查是否已初始化
  */
 export const useInitialized = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'initialized',
@@ -155,7 +155,7 @@ export const useInitialized = (contractAddress: `0x${string}`) => {
  * Hook for joinedAmount - 获取加入值
  */
 export const useJoinedAmount = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'joinedAmount',
@@ -171,7 +171,7 @@ export const useJoinedAmount = (contractAddress: `0x${string}`) => {
  * Hook for joinedAmountByAccount - 获取账户的加入值
  */
 export const useJoinedAmountByAccount = (contractAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'joinedAmountByAccount',
@@ -192,7 +192,7 @@ export const useJoinedAmountByAccount = (contractAddress: `0x${string}`, account
  * Hook for reward - 获取指定轮次的奖励
  */
 export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'reward',
@@ -210,7 +210,7 @@ export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
  * 返回值: (mintReward, burnReward, claimed)
  */
 export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'rewardByAccount',
@@ -233,7 +233,7 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
  * Hook for generatedActionRewardByGroupId - 获取指定组ID的生成奖励
  */
 export const useGeneratedRewardByGroupId = (contractAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'generatedActionRewardByGroupId',
@@ -254,7 +254,7 @@ export const useGeneratedActionRewardByVerifier = (
   round: bigint,
   verifier: `0x${string}`,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionGroupActionAbi,
     functionName: 'generatedActionRewardByVerifier',

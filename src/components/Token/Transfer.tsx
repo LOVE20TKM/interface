@@ -21,8 +21,6 @@ import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from '
 
 // my funcs
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my hooks
 import { useBalanceOf, useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
 import { useNativeTransfer } from '@/src/hooks/contracts/useNativeTransfer';
@@ -428,17 +426,6 @@ const TransferPanel = () => {
       // 错误会通过 errorUtils 处理，这里不需要额外的toast
     }
   });
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    const errors = [errERC20Transfer, errNativeTransfer];
-    errors.forEach((error) => {
-      if (error) {
-        handleContractError(error, 'transfer');
-      }
-    });
-  }, [errERC20Transfer, errNativeTransfer, handleContractError]);
 
   // 加载状态
   if (!token) {

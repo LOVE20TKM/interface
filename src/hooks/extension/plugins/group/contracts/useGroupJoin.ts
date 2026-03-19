@@ -1,7 +1,7 @@
 // hooks/extension/plugins/group/contracts/useGroupJoin.ts
 
 import { useEffect, useMemo } from 'react';
-import { useReadContract, useReadContracts } from 'wagmi';
+import { useUniversalReadContract, useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -19,7 +19,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROU
  * Hook for FACTORY_ADDRESS - 获取工厂地址
  */
 export const useFactoryAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'FACTORY_ADDRESS',
@@ -32,7 +32,7 @@ export const useFactoryAddress = () => {
  * Hook for joinInfo - 获取账户的加入信息
  */
 export const useJoinInfo = (extensionAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'joinInfo',
@@ -58,7 +58,7 @@ export const useJoinInfo = (extensionAddress: `0x${string}`, round: bigint, acco
  * Hook for accountsByGroupIdCount - 获取指定组ID的账户数量
  */
 export const useAccountsByGroupIdCount = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'accountsByGroupIdCount',
@@ -80,7 +80,7 @@ export const useAccountsByGroupIdAtIndex = (
   groupId: bigint,
   index: bigint,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'accountsByGroupIdAtIndex',
@@ -97,7 +97,7 @@ export const useAccountsByGroupIdAtIndex = (
  * Hook for totalJoinedAmountByGroupId - 获取指定组ID的总加入数量
  */
 export const useTotalJoinedAmountByGroupId = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'totalJoinedAmountByGroupId',
@@ -114,7 +114,7 @@ export const useTotalJoinedAmountByGroupId = (extensionAddress: `0x${string}`, r
  * Hook for joinedAmountByRound - 获取指定轮次的总加入数量
  */
 export const useJoinedAmountByRound = (extensionAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'joinedAmount',
@@ -131,7 +131,7 @@ export const useJoinedAmountByRound = (extensionAddress: `0x${string}`, round: b
  * Hook for groupIdByAccount - 获取指定账户在指定轮次的组ID
  */
 export const useGroupIdByAccount = (extensionAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'groupIdByAccount',
@@ -148,7 +148,7 @@ export const useGroupIdByAccount = (extensionAddress: `0x${string}`, round: bigi
  * Hook for trialAccountsWaiting - 获取体验待使用地址列表
  */
 export const useTrialAccountsWaiting = (extensionAddress: `0x${string}`, groupId: bigint, provider: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'trialAccountsWaiting',
@@ -185,7 +185,7 @@ export const useTrialAccountsJoined = (
     data: accountsData,
     isPending: isPendingAccounts,
     error: accountsError,
-  } = useReadContract({
+  } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'trialAccountsJoined',
@@ -213,7 +213,7 @@ export const useTrialAccountsJoined = (
     data: joinInfos,
     isPending: isPendingJoinInfos,
     error: joinInfoError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: joinInfoContracts as any,
     query: {
       enabled: joinInfoContracts.length > 0,

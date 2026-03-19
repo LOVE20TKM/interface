@@ -5,6 +5,7 @@
  * 支持多种错误格式：hex 选择器、错误名称、RPC 错误等
  */
 
+import { ContractRevertError } from '@/src/lib/revertDecoder';
 import { ErrorsBySelector, ErrorsByName } from './unifiedErrorMap';
 
 // ============================================================================
@@ -166,7 +167,7 @@ export function parseRpcError(error: string): ErrorInfo | null {
       if (/position.*out of bounds|index out of bounds/i.test(error)) {
         return {
           name: '链上交易失败',
-          message: '链上状态变化，导致操作失败。可能有人先发起了同样的交易。请刷新重试~',
+          message: '合约执行失败，可能不满足领取条件或该轮次尚未结束，请刷新后重试',
         };
       }
       return {
@@ -285,6 +286,15 @@ export function parseOriginalRevertMessage(errorLog: string): string | null {
  * @returns ErrorInfo | null（null 表示用户取消交易，不是真正的错误）
  */
 export function parseContractError(error: unknown): ErrorInfo | null {
+  // 0. 直接处理已解码的合约 revert 错误（来自 revertDecoder 恢复路径）
+  if (error instanceof ContractRevertError) {
+    const errorDef = ErrorsBySelector[error.selector] ?? ErrorsByName[error.errorName];
+    if (errorDef) {
+      return { name: '交易错误', message: errorDef.message };
+    }
+    return { name: '交易错误', message: `合约错误: ${error.errorName}` };
+  }
+
   // 提取错误消息
   const rawMessage = extractErrorMessage(error);
 

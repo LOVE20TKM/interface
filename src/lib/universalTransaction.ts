@@ -5,6 +5,13 @@ import { simulateContract, writeContract } from '@wagmi/core';
 import { config } from '@/src/wagmi';
 import { isTukeWallet, sendTransactionForTuke, waitForTukeTransaction } from './tukeWalletUtils';
 import { checkWalletNetworkStatus } from '@/src/lib/web3';
+import { useContractError } from '@/src/errors/useContractError';
+import {
+  isAbiDecodingError,
+  fetchRawCallData,
+  tryDecodeRevertData,
+  ContractRevertError,
+} from '@/src/lib/revertDecoder';
 
 /**
  * 统一交易发送函数
@@ -28,13 +35,28 @@ export const sendUniversalTransaction = async (
     // 标准钱包模式：simulate + write
     if (!options?.skipSimulation) {
       console.log('步骤1: (标准模式)执行模拟调用 验证交易...');
-      await simulateContract(config, {
-        address,
-        abi,
-        functionName,
-        args,
-        value,
-      });
+      try {
+        await simulateContract(config, {
+          address,
+          abi,
+          functionName,
+          args,
+          value,
+        });
+      } catch (simError: unknown) {
+        if (isAbiDecodingError(simError)) {
+          // 非标准 RPC：revert data 被当作成功返回，尝试恢复并解码
+          const rawData = await fetchRawCallData(config, address, abi, functionName, args, value);
+          if (rawData) {
+            const decoded = tryDecodeRevertData(rawData, abi);
+            if (decoded) {
+              const selector = rawData.slice(0, 10) as `0x${string}`;
+              throw new ContractRevertError(decoded.errorName, decoded.args, selector);
+            }
+          }
+        }
+        throw simError;
+      }
     }
 
     console.log('步骤2: (标准模式)执行真实交易...');
@@ -67,6 +89,7 @@ export function useUniversalTransaction(
   const [isManuallyConfirmed, setIsManuallyConfirmed] = useState(false);
 
   const isTuke = isTukeWallet();
+  const { handleError } = useContractError();
 
   // 对于非TUKE钱包，使用标准的useWaitForTransactionReceipt
   const {
@@ -137,11 +160,12 @@ export function useUniversalTransaction(
   // 合并错误
   const combinedError = error ?? finalConfirmError;
 
+  // 自动处理合约错误：解析、展示到全局 ErrorContext、上报 Sentry
   useEffect(() => {
     if (combinedError) {
-      console.error('交易回执错误:', combinedError);
+      handleError(combinedError);
     }
-  }, [combinedError]);
+  }, [combinedError, handleError]);
 
   return {
     execute,

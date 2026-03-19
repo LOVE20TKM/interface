@@ -8,7 +8,6 @@ import { useAccount } from 'wagmi';
 
 import { useActionDetailData } from '@/src/hooks/composite/useActionDetailData';
 import { useActionVerificationMatrixPaged } from '@/src/hooks/contracts/useLOVE20RoundViewer';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my components
 import Header from '@/src/components/Header';
@@ -90,17 +89,6 @@ const VerifyDetailPage = () => {
       { shallow: true },
     );
   };
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (error) {
-      handleContractError(error, 'verify_detail');
-    }
-    if (matrixError) {
-      handleContractError(matrixError, 'verify_detail_matrix');
-    }
-  }, [error, matrixError]);
 
   // 提前计算验证矩阵数据（必须在组件顶层使用 useMemo）
   const matrixCalculations = useMemo(() => {

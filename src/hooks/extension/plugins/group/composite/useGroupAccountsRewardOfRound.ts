@@ -2,7 +2,7 @@
 // 获取某轮某群激励的明细
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
@@ -113,7 +113,7 @@ export const useGroupAccountsRewardOfRound = ({
     data: mergedData,
     isPending: isMergedPending,
     error: mergedError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: mergedContracts as any,
     query: {
       enabled: !!extensionAddress && !!round && mergedContracts.length > 0,

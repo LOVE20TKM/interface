@@ -25,7 +25,7 @@
  */
 
 import { useMemo, useContext } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
@@ -143,7 +143,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
     data: groupIdsData,
     isPending: isGroupIdsPending,
     error: groupIdsError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: groupIdsContracts as any,
     query: {
       enabled: !!account && balance > BigInt(0),
@@ -181,7 +181,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
     data: actionIdsByGroupIdData,
     isPending: isActionIdsByGroupIdPending,
     error: actionIdsByGroupIdError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: actionIdsByGroupIdContracts as any,
     query: {
       enabled: !!tokenAddress && groupIds.length > 0,
@@ -286,7 +286,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
     data: combinedData,
     isPending: isCombinedPending,
     error: combinedError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: combinedContracts as any,
     query: {
       enabled: round !== undefined && groupTuples.length > 0,

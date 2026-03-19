@@ -1,6 +1,6 @@
 // hooks/contracts/useLOVE20Launch.ts
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 import { Address } from 'viem';
@@ -19,7 +19,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_LAUNCH as `0x$
  * Hook for FIRST_PARENT_TOKEN_FUNDRAISING_GOAL
  */
 export const useFirstParentTokenFundraisingGoal = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'FIRST_PARENT_TOKEN_FUNDRAISING_GOAL',
@@ -33,7 +33,7 @@ export const useFirstParentTokenFundraisingGoal = () => {
  * Hook for PARENT_TOKEN_FUNDRAISING_GOAL
  */
 export const useParentTokenFundraisingGoal = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'PARENT_TOKEN_FUNDRAISING_GOAL',
@@ -47,7 +47,7 @@ export const useParentTokenFundraisingGoal = () => {
  * Hook for SECOND_HALF_MIN_BLOCKS
  */
 export const useSecondHalfMinBlocks = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'SECOND_HALF_MIN_BLOCKS',
@@ -61,7 +61,7 @@ export const useSecondHalfMinBlocks = () => {
  * Hook for TOKEN_SYMBOL_LENGTH
  */
 export const useTokenSymbolLength = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'TOKEN_SYMBOL_LENGTH',
@@ -75,7 +75,7 @@ export const useTokenSymbolLength = () => {
  * Hook for childTokensCount
  */
 export const useChildTokensCount = (parentTokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'childTokensCount',
@@ -89,7 +89,7 @@ export const useChildTokensCount = (parentTokenAddress: `0x${string}`) => {
  * Hook for launchedChildTokensCount
  */
 export const useLaunchedChildTokensCount = (parentTokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'launchedChildTokensCount',
@@ -103,7 +103,7 @@ export const useLaunchedChildTokensCount = (parentTokenAddress: `0x${string}`) =
  * Hook for claimInfo
  */
 export const useClaimInfo = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'claimInfo',
@@ -126,7 +126,7 @@ export const useClaimInfo = (tokenAddress: `0x${string}`, account: `0x${string}`
  * Hook for contributed
  */
 export const useContributed = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error, refetch } = useReadContract({
+  const { data, isPending, error, refetch } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'contributed',
@@ -143,7 +143,7 @@ export const useContributed = (tokenAddress: `0x${string}`, account: `0x${string
  * Hook for launches
  */
 export const useLaunchInfo = (address: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'launchInfo',
@@ -176,7 +176,7 @@ export const useLaunchInfo = (address: `0x${string}`) => {
  * Hook for tokenAddressBySymbol
  */
 export const useTokenAddressBySymbol = (symbol: string) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'tokenAddressBySymbol',
@@ -190,7 +190,7 @@ export const useTokenAddressBySymbol = (symbol: string) => {
  * Hook for tokenNum
  */
 export const useTokenCount = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'tokensCount',
@@ -204,7 +204,7 @@ export const useTokenCount = () => {
  * Hook for lastContributedBlock
  */
 export const useLastContributedBlock = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'lastContributedBlock',
@@ -222,7 +222,7 @@ export const useLastContributedBlock = (tokenAddress: `0x${string}`, account: `0
  * 查询账户剩余可发起Launch的次数
  */
 export const useRemainingLaunchCount = (parentTokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'remainingLaunchCount',

@@ -21,7 +21,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupRecipientsAbi } from '@/src/abis/GroupRecipients';
 import { useActionIdsWithActiveGroupIdsByOwner } from '@/src/hooks/extension/plugins/group-service/composite/useActionIdsWithActiveGroupIdsByOwner';
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
@@ -193,7 +193,7 @@ export function useActionGroupRecipientsData({
     data: recipientsData,
     isPending: isRecipientsPending,
     error: recipientsError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: recipientsContracts,
     query: {
       enabled: !!GROUP_RECIPIENTS_ADDRESS && !!tokenAddress && !!account && !!round && recipientsContracts.length > 0,

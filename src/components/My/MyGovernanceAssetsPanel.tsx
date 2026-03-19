@@ -10,7 +10,6 @@ import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
 import { formatPhaseText } from '@/src/lib/domainUtils';
 
 // my hooks
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useAccountStakeStatus, useUnstake, useWithdraw, useValidGovVotes } from '@/src/hooks/contracts/useLOVE20Stake';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useApprove as useApproveST } from '@/src/hooks/contracts/useLOVE20STToken';
@@ -217,44 +216,6 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
       onStakeStatusChange(hasStake);
     }
   }, [slAmount, isPendingAccountStakeStatus, onStakeStatusChange]);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorAccountStakeStatus) {
-      handleContractError(errorAccountStakeStatus, 'stake');
-    }
-    if (approveSTWriteError) {
-      handleContractError(approveSTWriteError, 'stToken');
-    }
-    if (approveSLWriteError) {
-      handleContractError(approveSLWriteError, 'slToken');
-    }
-    if (unstakeWriteError) {
-      handleContractError(unstakeWriteError, 'stake');
-    }
-    if (withdrawWriteError) {
-      handleContractError(withdrawWriteError, 'stake');
-    }
-    if (errorCurrentRound) {
-      handleContractError(errorCurrentRound, 'stake');
-    }
-    if (errAllowanceSL) {
-      handleContractError(errAllowanceSL, 'slToken');
-    }
-    if (errAllowanceST) {
-      handleContractError(errAllowanceST, 'stToken');
-    }
-  }, [
-    errorAccountStakeStatus,
-    approveSTWriteError,
-    approveSLWriteError,
-    unstakeWriteError,
-    withdrawWriteError,
-    errorCurrentRound,
-    errAllowanceSL,
-    errAllowanceST,
-  ]);
 
   if (!account) {
     return <div className="text-sm mt-4 text-greyscale-500 text-center">请先连接钱包</div>;

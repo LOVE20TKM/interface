@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { toast } from 'react-hot-toast';
 import { formatUnits, parseUnits } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { TokenConfig, SwapMethod } from '../utils/swapTypes';
 import { useTokenBalance } from './useTokenBalance';
 import { useSwapRoute } from './useSwapRoute';
@@ -24,7 +23,6 @@ import {
 
 export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig) => {
   const { address: account } = useAccount();
-  const { handleContractError } = useHandleContractError();
 
   // 状态管理
   const [fromAmount, setFromAmount] = useState<bigint>(BigInt(0));
@@ -127,22 +125,6 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig) => {
       setToAmount(BigInt(0));
     }
   }, [swapMethod, fromAmount, amountsOut]);
-
-  // 错误处理
-  useEffect(() => {
-    if (amountsOutError) {
-      handleContractError(amountsOutError, 'uniswapV2Router');
-    }
-  }, [amountsOutError, handleContractError]);
-
-  useEffect(() => {
-    const errors = [errInitialStakeRound, errApprove, errDeposit, errWithdraw, errTokenToToken, errETHToToken, errTokenToETH];
-    errors.forEach((error) => {
-      if (error) {
-        handleContractError(error, 'uniswapV2Router');
-      }
-    });
-  }, [errInitialStakeRound, errApprove, errDeposit, errWithdraw, errTokenToToken, errETHToToken, errTokenToETH, handleContractError]);
 
   // 授权成功提示
   useEffect(() => {
@@ -250,7 +232,7 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig) => {
         toast.error('价格变动过快超过滑点保护，交易被保护性取消，请重试');
         return;
       }
-      handleContractError(error, 'uniswapV2Router');
+      console.error('Swap error:', error);
     }
   };
 

@@ -2,7 +2,7 @@
 // 获取LP激励计算详情数据
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { LOVE20JoinAbi } from '@/src/abis/LOVE20Join';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -158,7 +158,7 @@ export const useLpAccountRewardDetail = ({
     data: contractData,
     isPending,
     error,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: contracts.length > 0,

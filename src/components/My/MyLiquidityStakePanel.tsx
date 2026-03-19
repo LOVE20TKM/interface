@@ -1,9 +1,8 @@
 import { useAccount } from 'wagmi';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { formatTokenAmount } from '@/src/lib/format';
 
 // my hooks
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useAccountStakeStatus } from '@/src/hooks/contracts/useLOVE20Stake';
 
 // my contexts
@@ -33,14 +32,6 @@ const MyLiquidityStakePanel: React.FC<MyLiquidityStakePanelProps> = ({ token: pr
     isPending: isPendingAccountStakeStatus,
     error: errorAccountStakeStatus,
   } = useAccountStakeStatus(token?.address as `0x${string}`, account as `0x${string}`);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorAccountStakeStatus) {
-      handleContractError(errorAccountStakeStatus, 'stake');
-    }
-  }, [errorAccountStakeStatus, handleContractError]);
 
   if (!account) {
     return <div className="text-sm mt-4 text-greyscale-500 text-center">请先连接钱包</div>;

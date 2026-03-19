@@ -1,7 +1,7 @@
 // hooks/extension/plugins/group/contracts/useGroupManager.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -19,7 +19,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROU
  * Hook for FACTORY_ADDRESS - 获取工厂地址
  */
 export const useFactoryAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'FACTORY_ADDRESS',
@@ -32,7 +32,7 @@ export const useFactoryAddress = () => {
  * Hook for PRECISION - 获取精度
  */
 export const usePrecision = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'PRECISION',
@@ -49,7 +49,7 @@ export const usePrecision = () => {
  * Hook for actionIds - 获取指定工厂和代币的 action ID 列表
  */
 export const useActionIds = (tokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIds',
@@ -66,7 +66,7 @@ export const useActionIds = (tokenAddress: `0x${string}`) => {
  * Hook for actionIdsAtIndex - 获取指定索引的 action ID
  */
 export const useActionIdsAtIndex = (tokenAddress: `0x${string}`, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIdsAtIndex',
@@ -83,7 +83,7 @@ export const useActionIdsAtIndex = (tokenAddress: `0x${string}`, index: bigint) 
  * Hook for actionIdsCount - 获取 action ID 数量
  */
 export const useActionIdsCount = (tokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIdsCount',
@@ -100,7 +100,7 @@ export const useActionIdsCount = (tokenAddress: `0x${string}`) => {
  * Hook for actionIdsByGroupId - 获取指定组ID的 action ID 列表
  */
 export const useActionIdsByGroupId = (tokenAddress: `0x${string}`, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIdsByGroupId',
@@ -117,7 +117,7 @@ export const useActionIdsByGroupId = (tokenAddress: `0x${string}`, groupId: bigi
  * Hook for actionIdsByGroupIdAtIndex - 获取指定索引的组 action ID
  */
 export const useActionIdsByGroupIdAtIndex = (tokenAddress: `0x${string}`, groupId: bigint, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIdsByGroupIdAtIndex',
@@ -134,7 +134,7 @@ export const useActionIdsByGroupIdAtIndex = (tokenAddress: `0x${string}`, groupI
  * Hook for actionIdsByGroupIdCount - 获取指定组的 action ID 数量
  */
 export const useActionIdsByGroupIdCount = (tokenAddress: `0x${string}`, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'actionIdsByGroupIdCount',
@@ -151,7 +151,7 @@ export const useActionIdsByGroupIdCount = (tokenAddress: `0x${string}`, groupId:
  * Hook for hasActiveGroups - 检查账户是否有活跃链群
  */
 export const useHasActiveGroups = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'hasActiveGroups',
@@ -172,7 +172,7 @@ export const useHasActiveGroups = (tokenAddress: `0x${string}`, account: `0x${st
  * Hook for groupInfo - 获取链群信息
  */
 export const useGroupInfo = (extensionAddress: `0x${string}`, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'groupInfo',
@@ -215,7 +215,7 @@ export const useGroupInfo = (extensionAddress: `0x${string}`, groupId: bigint) =
  * Hook for isGroupActive - 检查链群是否活跃
  */
 export const useIsGroupActive = (extensionAddress: `0x${string}`, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'isGroupActive',
@@ -232,7 +232,7 @@ export const useIsGroupActive = (extensionAddress: `0x${string}`, groupId: bigin
  * Hook for activeGroupIds - 获取活跃链群ID列表
  */
 export const useActiveGroupIds = (extensionAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'activeGroupIds',
@@ -249,7 +249,7 @@ export const useActiveGroupIds = (extensionAddress: `0x${string}`) => {
  * Hook for activeGroupIdsAtIndex - 获取指定索引的活跃链群ID
  */
 export const useActiveGroupIdsAtIndex = (extensionAddress: `0x${string}`, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'activeGroupIdsAtIndex',
@@ -266,7 +266,7 @@ export const useActiveGroupIdsAtIndex = (extensionAddress: `0x${string}`, index:
  * Hook for activeGroupIdsCount - 获取活跃链群数量
  */
 export const useActiveGroupIdsCount = (extensionAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'activeGroupIdsCount',
@@ -283,7 +283,7 @@ export const useActiveGroupIdsCount = (extensionAddress: `0x${string}`) => {
  * Hook for activeGroupIdsByOwner - 获取指定所有者的活跃链群ID列表
  */
 export const useActiveGroupIdsByOwner = (extensionAddress: `0x${string}`, owner: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'activeGroupIdsByOwner',
@@ -304,7 +304,7 @@ export const useActiveGroupIdsByOwner = (extensionAddress: `0x${string}`, owner:
  * Hook for maxJoinAmount - 查询最大加入量
  */
 export const useMaxJoinAmount = (extensionAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'maxJoinAmount',
@@ -327,7 +327,7 @@ export const useCalculateJoinMaxAmount = (extensionAddress: `0x${string}`) => {
  * Hook for staked - 获取单个扩展的总质押量
  */
 export const useStaked = (extensionAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'staked',
@@ -345,7 +345,7 @@ export const useStaked = (extensionAddress: `0x${string}`) => {
  * @param tokenAddress 代币地址（不是 extensionAddress）
  */
 export const useTotalStaked = (tokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'totalStaked',
@@ -362,7 +362,7 @@ export const useTotalStaked = (tokenAddress: `0x${string}`) => {
  * Hook for stakedByOwner - 获取指定所有者在指定扩展的质押量
  */
 export const useStakedByOwner = (extensionAddress: `0x${string}`, owner: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'stakedByOwner',

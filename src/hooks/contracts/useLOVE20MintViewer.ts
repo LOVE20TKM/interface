@@ -1,7 +1,7 @@
 // hooks/contracts/useLOVE20MintViewer.ts
 
 import { isAddress, zeroAddress } from 'viem';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { LOVE20MintViewerAbi } from '@/src/abis/LOVE20MintViewer';
 import { RewardInfo, ActionReward, GovReward } from '@/src/types/love20types';
 
@@ -16,7 +16,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_MIN
  * Reads the address of the stake contract.
  */
 export const useStakeAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintViewerAbi,
     functionName: 'stakeAddress',
@@ -30,7 +30,7 @@ export const useStakeAddress = () => {
  * Reads the address of the vote contract.
  */
 export const useVoteAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintViewerAbi,
     functionName: 'voteAddress',
@@ -44,7 +44,7 @@ export const useVoteAddress = () => {
  * Reads the address of the join contract.
  */
 export const useJoinAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintViewerAbi,
     functionName: 'joinAddress',
@@ -58,7 +58,7 @@ export const useJoinAddress = () => {
  * Reads the address of the mint contract.
  */
 export const useMintAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintViewerAbi,
     functionName: 'mintAddress',
@@ -77,7 +77,7 @@ export const useGovRewardsByAccountByRounds = (
   startRound: bigint,
   endRound: bigint,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintViewerAbi,
     functionName: 'govRewardsByAccountByRounds',
@@ -100,7 +100,7 @@ export const useActionRewardsByAccountByActionIdByRounds = (
   startRound: bigint,
   endRound: bigint,
 ) => {
-  const { data, isPending, error, refetch } = useReadContract({
+  const { data, isPending, error, refetch } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintViewerAbi,
     functionName: 'actionRewardsByAccountByActionIdByRounds',
@@ -124,7 +124,7 @@ export const useActionRewardsByAccountOfLastRounds = (
   account: `0x${string}`,
   latestRounds: bigint,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintViewerAbi,
     functionName: 'actionRewardsByAccountOfLastRounds',
@@ -150,7 +150,7 @@ export const useHasUnmintedActionRewardOfLastRounds = (
   account: `0x${string}`,
   latestRounds: bigint,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintViewerAbi,
     functionName: 'hasUnmintedActionRewardOfLastRounds',
@@ -171,7 +171,7 @@ export const useHasUnmintedActionRewardOfLastRounds = (
  * Hook for estimatedActionRewardOfCurrentRound
  */
 export const useEstimatedActionRewardOfCurrentRound = (tokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintViewerAbi,
     functionName: 'estimatedActionRewardOfCurrentRound',
@@ -187,7 +187,7 @@ export const useEstimatedActionRewardOfCurrentRound = (tokenAddress: `0x${string
  * Hook for estimatedGovRewardOfCurrentRound
  */
 export const useEstimatedGovRewardOfCurrentRound = (tokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20MintViewerAbi,
     functionName: 'estimatedGovRewardOfCurrentRound',

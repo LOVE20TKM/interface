@@ -1,7 +1,7 @@
 // hooks/contracts/useExtensionLpFactory.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -19,7 +19,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_F
  * Hook for CENTER_ADDRESS - 获取 ExtensionCenter 地址
  */
 export const useFactoryCenter = (factoryAddress?: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: factoryAddress || CONTRACT_ADDRESS,
     abi: ExtensionLpFactoryAbi,
     functionName: 'CENTER_ADDRESS',
@@ -35,7 +35,7 @@ export const useFactoryCenter = (factoryAddress?: `0x${string}`) => {
  * Hook for exists - 检查扩展是否存在
  */
 export const useExtensionExists = (factoryAddress: `0x${string}`, extensionAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: factoryAddress,
     abi: ExtensionLpFactoryAbi,
     functionName: 'exists',
@@ -52,7 +52,7 @@ export const useExtensionExists = (factoryAddress: `0x${string}`, extensionAddre
  * Hook for extensions - 获取所有扩展地址
  */
 export const useFactoryExtensions = (factoryAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: factoryAddress,
     abi: ExtensionLpFactoryAbi,
     functionName: 'extensions',
@@ -68,7 +68,7 @@ export const useFactoryExtensions = (factoryAddress: `0x${string}`) => {
  * Hook for extensionsAtIndex - 根据索引获取扩展地址
  */
 export const useFactoryExtensionsAtIndex = (factoryAddress: `0x${string}`, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: factoryAddress,
     abi: ExtensionLpFactoryAbi,
     functionName: 'extensionsAtIndex',
@@ -85,7 +85,7 @@ export const useFactoryExtensionsAtIndex = (factoryAddress: `0x${string}`, index
  * Hook for extensionsCount - 获取扩展数量
  */
 export const useFactoryExtensionsCount = (factoryAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: factoryAddress,
     abi: ExtensionLpFactoryAbi,
     functionName: 'extensionsCount',

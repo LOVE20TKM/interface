@@ -2,7 +2,7 @@
 // 获取第n轮某个服务者收到的不信任票明细
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { LOVE20VerifyAbi } from '@/src/abis/LOVE20Verify';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -101,7 +101,7 @@ export const useDistrustVotesOfGroupOwner = ({
     data: detailData,
     isPending: isDetailPending,
     error: detailError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: detailContracts as any,
     query: {
       enabled: !!tokenAddress && actionId !== undefined && !!round && !!groupOwner && detailContracts.length > 0,

@@ -2,7 +2,7 @@
 // 使用批量RPC调用检查用户是否可以提交行动
 
 import { useContext, useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { LOVE20StakeAbi } from '@/src/abis/LOVE20Stake';
@@ -72,7 +72,7 @@ export const useCanSubmit = (): CanSubmitResult => {
     ];
   }, [token?.address, account]);
 
-  const { data, isPending, error } = useReadContracts({
+  const { data, isPending, error } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: !!token?.address && !!account && contracts.length > 0,

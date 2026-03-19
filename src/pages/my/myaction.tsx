@@ -1,13 +1,11 @@
 'use client';
 
-import { useEffect, useContext } from 'react';
+import { useContext } from 'react';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 
 // my hooks
 import { useActionDetailData } from '@/src/hooks/composite/useActionDetailData';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import Header from '@/src/components/Header';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -44,14 +42,6 @@ const ActRewardsPage = () => {
     actionId,
     account,
   });
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (error) {
-      handleContractError(error, 'submit');
-    }
-  }, [error]);
 
   // 如果没有actionId，显示错误
   if (actionId === undefined) {

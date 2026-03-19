@@ -18,7 +18,6 @@ import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 // my hooks
 import { useDeposit } from '@/src/hooks/contracts/useWETH';
 import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useError } from '@/src/contexts/ErrorContext';
 
 // my context
@@ -138,20 +137,6 @@ const Deposit: React.FC = () => {
     // 再用 formatUnits 转成人类可读
     form.setValue('depositAmount', formatUnits(balance?.value || BigInt(0)));
   };
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errBalance) {
-      handleContractError(errBalance, 'token');
-    }
-    if (errorBalanceOfERC20Token) {
-      handleContractError(errorBalanceOfERC20Token, 'token');
-    }
-    if (errDeposit) {
-      handleContractError(errDeposit, 'token');
-    }
-  }, [errBalance, errorBalanceOfERC20Token, errDeposit, handleContractError]);
 
   if (isLoadingBalance || isPendingBalanceOfERC20Token) {
     return <LoadingIcon />;

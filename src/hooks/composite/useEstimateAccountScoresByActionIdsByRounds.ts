@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20JoinAbi } from '@/src/abis/LOVE20Join';
 import { LOVE20VerifyAbi } from '@/src/abis/LOVE20Verify';
 import { readContracts } from '@wagmi/core';
@@ -203,7 +203,7 @@ export const useEstimateAccountScoresByActionIdsByRounds = ({
     isLoading: isLoadingRandomAccounts,
     error: randomAccountsError,
     isSuccess: randomAccountsSuccess,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: randomAccountsContracts,
     query: {
       enabled: enabled && randomAccountsContracts.length > 0,
@@ -532,7 +532,7 @@ export const useEstimateAccountScoreByActionRound = ({
   }, [enabled, account, tokenAddress, actionId, round]);
 
   // 获取随机账户列表
-  const { data: randomAccountsData, isSuccess: randomAccountsSuccess } = useReadContracts({
+  const { data: randomAccountsData, isSuccess: randomAccountsSuccess } = useUniversalReadContracts({
     contracts: [
       {
         address: JOIN_CONTRACT_ADDRESS,

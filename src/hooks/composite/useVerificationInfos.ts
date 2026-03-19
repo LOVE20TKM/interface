@@ -2,7 +2,7 @@
 // 批量获取验证信息的 Hook
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 
 interface VerificationInfosParams {
@@ -74,7 +74,7 @@ export const useVerificationInfos = ({
     isLoading,
     error,
     isSuccess,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts,
     query: {
       enabled: enabled && contracts.length > 0,

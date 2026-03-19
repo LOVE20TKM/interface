@@ -22,7 +22,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { ActionInfo } from '@/src/types/love20types';
@@ -146,7 +146,7 @@ export const useExtensionsBaseData = ({
     data: dynamicContractsData,
     isPending: isPendingDynamic,
     error: errorDynamic,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: dynamicContracts as any,
     query: {
       enabled: dynamicContracts.length > 0,

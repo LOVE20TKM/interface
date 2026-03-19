@@ -1,6 +1,6 @@
 // hooks/extension/base/contracts/useLOVE20Group.ts
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -18,7 +18,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${
  * 获取基础除数
  */
 export const useBaseDivisor = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'BASE_DIVISOR',
@@ -33,7 +33,7 @@ export const useBaseDivisor = () => {
  * 获取字节阈值
  */
 export const useBytesThreshold = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'BYTES_THRESHOLD',
@@ -48,7 +48,7 @@ export const useBytesThreshold = () => {
  * 获取乘数
  */
 export const useMultiplier = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'MULTIPLIER',
@@ -63,7 +63,7 @@ export const useMultiplier = () => {
  * 获取最大组名长度
  */
 export const useMaxGroupNameLength = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'MAX_GROUP_NAME_LENGTH',
@@ -78,7 +78,7 @@ export const useMaxGroupNameLength = () => {
  * 获取 LOVE20 代币地址
  */
 export const useLove20Token = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'LOVE20_TOKEN_ADDRESS',
@@ -93,7 +93,7 @@ export const useLove20Token = () => {
  * 获取账户持有的 NFT 数量
  */
 export const useBalanceOf = (owner: `0x${string}`, enabled: boolean = true) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'balanceOf',
@@ -111,7 +111,7 @@ export const useBalanceOf = (owner: `0x${string}`, enabled: boolean = true) => {
  * 获取指定 tokenId 的所有者
  */
 export const useOwnerOf = (tokenId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'ownerOf',
@@ -129,7 +129,7 @@ export const useOwnerOf = (tokenId: bigint) => {
  * 获取 NFT 合约名称
  */
 export const useName = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'name',
@@ -144,7 +144,7 @@ export const useName = () => {
  * 获取 NFT 合约符号
  */
 export const useSymbol = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'symbol',
@@ -159,7 +159,7 @@ export const useSymbol = () => {
  * 获取 NFT 总供应量
  */
 export const useTotalSupply = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'totalSupply',
@@ -174,7 +174,7 @@ export const useTotalSupply = () => {
  * 获取为铸造而销毁的 LOVE20 代币总量
  */
 export const useTotalBurnedForMint = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'totalBurnedForMint',
@@ -189,7 +189,7 @@ export const useTotalBurnedForMint = () => {
  * 获取持有者总数
  */
 export const useHoldersCount = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'holdersCount',
@@ -204,7 +204,7 @@ export const useHoldersCount = () => {
  * 计算铸造指定组名的成本
  */
 export const useCalculateMintCost = (groupName: string) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'calculateMintCost',
@@ -222,7 +222,7 @@ export const useCalculateMintCost = (groupName: string) => {
  * 检查组名是否已被使用
  */
 export const useIsGroupNameUsed = (groupName: string) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'isGroupNameUsed',
@@ -240,7 +240,7 @@ export const useIsGroupNameUsed = (groupName: string) => {
  * 根据 tokenId 获取组名
  */
 export const useGroupNameOf = (tokenId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'groupNameOf',
@@ -258,7 +258,7 @@ export const useGroupNameOf = (tokenId: bigint) => {
  * 根据组名获取 tokenId
  */
 export const useTokenIdOf = (groupName: string) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'tokenIdOf',
@@ -276,7 +276,7 @@ export const useTokenIdOf = (groupName: string) => {
  * 根据索引获取 tokenId
  */
 export const useTokenByIndex = (index: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'tokenByIndex',
@@ -294,7 +294,7 @@ export const useTokenByIndex = (index: bigint) => {
  * 根据索引获取持有者地址
  */
 export const useHoldersAtIndex = (index: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'holdersAtIndex',
@@ -312,7 +312,7 @@ export const useHoldersAtIndex = (index: bigint) => {
  * 根据所有者和索引获取 tokenId
  */
 export const useTokenOfOwnerByIndex = (owner: `0x${string}`, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'tokenOfOwnerByIndex',
@@ -330,7 +330,7 @@ export const useTokenOfOwnerByIndex = (owner: `0x${string}`, index: bigint) => {
  * 获取 tokenURI
  */
 export const useTokenURI = (tokenId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'tokenURI',
@@ -348,7 +348,7 @@ export const useTokenURI = (tokenId: bigint) => {
  * 获取标准化的群名称
  */
 export const useNormalizedNameOf = (groupName: string) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'normalizedNameOf',
@@ -366,7 +366,7 @@ export const useNormalizedNameOf = (groupName: string) => {
  * 获取已批准的地址
  */
 export const useGetApproved = (tokenId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'getApproved',
@@ -384,7 +384,7 @@ export const useGetApproved = (tokenId: bigint) => {
  * 检查操作者是否被批准管理所有者的所有 NFT
  */
 export const useIsApprovedForAll = (owner: `0x${string}`, operator: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'isApprovedForAll',

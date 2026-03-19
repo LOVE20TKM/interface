@@ -1,7 +1,7 @@
 // hooks/contracts/useLOVE20SLToken.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 
 import { LOVE20SLTokenAbi } from '@/src/abis/LOVE20SLToken';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -16,7 +16,7 @@ import { logWeb3Error, logError } from '@/src/lib/debugUtils';
  * Hook for allowance
  */
 export const useAllowance = (address: `0x${string}`, owner: `0x${string}`, spender: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address,
     abi: LOVE20SLTokenAbi,
     functionName: 'allowance',
@@ -33,7 +33,7 @@ export const useAllowance = (address: `0x${string}`, owner: `0x${string}`, spend
  * Hook for balanceOf
  */
 export const useBalanceOf = (address: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address,
     abi: LOVE20SLTokenAbi,
     functionName: 'balanceOf',
@@ -50,7 +50,7 @@ export const useBalanceOf = (address: `0x${string}`, account: `0x${string}`) => 
  * Hook for decimals
  */
 export const useDecimals = (address: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address,
     abi: LOVE20SLTokenAbi,
     functionName: 'decimals',
@@ -67,7 +67,7 @@ export const useDecimals = (address: `0x${string}`) => {
  * Hook for name
  */
 export const useName = (address: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address,
     abi: LOVE20SLTokenAbi,
     functionName: 'name',
@@ -84,7 +84,7 @@ export const useName = (address: `0x${string}`) => {
  * Hook for parentTokenAddress
  */
 export const useParentTokenAddress = (address: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address,
     abi: LOVE20SLTokenAbi,
     functionName: 'parentTokenAddress',
@@ -101,7 +101,7 @@ export const useParentTokenAddress = (address: `0x${string}`) => {
  * Hook for symbol
  */
 export const useSymbol = (address: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address,
     abi: LOVE20SLTokenAbi,
     functionName: 'symbol',
@@ -118,7 +118,7 @@ export const useSymbol = (address: `0x${string}`) => {
  * Hook for tokenAddress
  */
 export const useTokenAddress = (address: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address,
     abi: LOVE20SLTokenAbi,
     functionName: 'tokenAddress',
@@ -135,7 +135,7 @@ export const useTokenAddress = (address: `0x${string}`) => {
  * Hook for tokenAmounts
  */
 export const useTokenAmounts = (address: `0x${string}`, flag: boolean = true) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address,
     abi: LOVE20SLTokenAbi,
     functionName: 'tokenAmounts',
@@ -159,7 +159,7 @@ export const useTokenAmounts = (address: `0x${string}`, flag: boolean = true) =>
  * Hook for tokenAmountsBySlAmount
  */
 export const useTokenAmountsBySlAmount = (address: `0x${string}`, slAmount: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address,
     abi: LOVE20SLTokenAbi,
     functionName: 'tokenAmountsBySlAmount',
@@ -190,7 +190,7 @@ export const useTokenAmountsBySlAmount = (address: `0x${string}`, slAmount: bigi
  * Hook for totalSupply
  */
 export const useTotalSupply = (address: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address,
     abi: LOVE20SLTokenAbi,
     functionName: 'totalSupply',
@@ -207,7 +207,7 @@ export const useTotalSupply = (address: `0x${string}`) => {
  * Hook for uniswapV2Pair
  */
 export const useUniswapV2Pair = (address: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address,
     abi: LOVE20SLTokenAbi,
     functionName: 'uniswapV2Pair',

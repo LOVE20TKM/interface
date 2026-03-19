@@ -1,7 +1,7 @@
 // hooks/useExtensionCenter.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -23,7 +23,7 @@ export const useVerificationInfo = (
   account: `0x${string}`,
   verificationKey: string,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'verificationInfo',
@@ -46,7 +46,7 @@ export const useVerificationInfoByRound = (
   verificationKey: string,
   round: bigint,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'verificationInfoByRound',
@@ -63,7 +63,7 @@ export const useVerificationInfoByRound = (
  * Hook for accounts - 获取指定 token 和 actionId 的所有账户地址
  */
 export const useAccounts = (tokenAddress: `0x${string}`, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'accounts',
@@ -80,7 +80,7 @@ export const useAccounts = (tokenAddress: `0x${string}`, actionId: bigint) => {
  * Hook for accountsAtIndex - 根据索引获取账户地址
  */
 export const useAccountsAtIndex = (tokenAddress: `0x${string}`, actionId: bigint, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'accountsAtIndex',
@@ -102,7 +102,7 @@ export const useAccountsByRoundAtIndex = (
   index: bigint,
   round: bigint,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'accountsByRoundAtIndex',
@@ -119,7 +119,7 @@ export const useAccountsByRoundAtIndex = (
  * Hook for accountsCount - 获取账户数量
  */
 export const useAccountsCount = (tokenAddress: `0x${string}`, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'accountsCount',
@@ -136,7 +136,7 @@ export const useAccountsCount = (tokenAddress: `0x${string}`, actionId: bigint) 
  * Hook for accountsCountByRound - 获取指定轮次的账户数量
  */
 export const useAccountsByRoundCount = (tokenAddress: `0x${string}`, actionId: bigint, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'accountsByRoundCount',
@@ -158,7 +158,7 @@ export const useActionIdsByAccount = (
   account: `0x${string}`,
   factories: `0x${string}`[],
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'actionIdsByAccount',
@@ -184,7 +184,7 @@ export const useActionIdsByAccount = (
  * Hook for extension - 获取指定 action 的扩展合约地址
  */
 export const useExtension = (tokenAddress: `0x${string}`, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'extension',
@@ -201,7 +201,7 @@ export const useExtension = (tokenAddress: `0x${string}`, actionId: bigint) => {
  * Hook for isAccountJoined - 检查账户是否已加入
  */
 export const useIsAccountJoined = (tokenAddress: `0x${string}`, actionId: bigint, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'isAccountJoined',
@@ -218,7 +218,7 @@ export const useIsAccountJoined = (tokenAddress: `0x${string}`, actionId: bigint
  * Hook for joinAddress - 获取 Join 合约地址
  */
 export const useJoinAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'joinAddress',
@@ -231,7 +231,7 @@ export const useJoinAddress = () => {
  * Hook for launchAddress - 获取 Launch 合约地址
  */
 export const useLaunchAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'launchAddress',
@@ -244,7 +244,7 @@ export const useLaunchAddress = () => {
  * Hook for mintAddress - 获取 Mint 合约地址
  */
 export const useMintAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'mintAddress',
@@ -257,7 +257,7 @@ export const useMintAddress = () => {
  * Hook for randomAddress - 获取 Random 合约地址
  */
 export const useRandomAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'randomAddress',
@@ -270,7 +270,7 @@ export const useRandomAddress = () => {
  * Hook for stakeAddress - 获取 Stake 合约地址
  */
 export const useStakeAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'stakeAddress',
@@ -283,7 +283,7 @@ export const useStakeAddress = () => {
  * Hook for submitAddress - 获取 Submit 合约地址
  */
 export const useSubmitAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'submitAddress',
@@ -296,7 +296,7 @@ export const useSubmitAddress = () => {
  * Hook for uniswapV2FactoryAddress - 获取 UniswapV2Factory 合约地址
  */
 export const useUniswapV2FactoryAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'uniswapV2FactoryAddress',
@@ -309,7 +309,7 @@ export const useUniswapV2FactoryAddress = () => {
  * Hook for verifyAddress - 获取 Verify 合约地址
  */
 export const useVerifyAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'verifyAddress',
@@ -322,7 +322,7 @@ export const useVerifyAddress = () => {
  * Hook for voteAddress - 获取 Vote 合约地址
  */
 export const useVoteAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'voteAddress',
@@ -335,7 +335,7 @@ export const useVoteAddress = () => {
  * Hook for extensionTokenActionPair - 通过 extension 地址反向查询 token 和 actionId
  */
 export const useExtensionTokenActionPair = (extensionAddress: `0x${string}` | undefined) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'extensionTokenActionPair',
@@ -364,7 +364,7 @@ export const useIsAccountJoinedByRound = (
   account: `0x${string}` | undefined,
   round: bigint | undefined,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: ExtensionCenterAbi,
     functionName: 'isAccountJoinedByRound',

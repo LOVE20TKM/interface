@@ -10,8 +10,6 @@ import Link from 'next/link';
 import { useVotesNumByAccount, useVote } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useValidGovVotes } from '@/src/hooks/contracts/useLOVE20Stake';
 import { useActionInfosByIds } from '@/src/hooks/contracts/useLOVE20RoundViewer';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my types
 import { ActionInfo } from '@/src/types/love20types';
 
@@ -137,23 +135,6 @@ const StepVoteSubmit: React.FC<StepVoteSubmitProps> = ({ selectedIds, currentRou
       toast.error('提交失败，请重试');
     }
   };
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (submitVoteError) {
-      handleContractError(submitVoteError, 'vote');
-    }
-    if (errorVotesNumByAccount) {
-      handleContractError(errorVotesNumByAccount, 'vote');
-    }
-    if (errorActionInfosByIds) {
-      handleContractError(errorActionInfosByIds, 'submit');
-    }
-    if (errorValidGovVotes) {
-      handleContractError(errorValidGovVotes, 'stake');
-    }
-  }, [submitVoteError, errorActionInfosByIds, errorValidGovVotes, errorVotesNumByAccount]);
 
   // 提交成功
   useEffect(() => {

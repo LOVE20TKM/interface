@@ -1,6 +1,6 @@
 // TODO： 自动的LP扩展行动上线后，这个可能要去掉？
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20TokenViewerAbi } from '@/src/abis/LOVE20TokenViewer';
 import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -61,7 +61,7 @@ export const useStakeLpPageData = ({
     ];
   }, [account, tokenAddress, parentTokenAddress]);
 
-  const { data, isPending, error } = useReadContracts({
+  const { data, isPending, error } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: !!account && !!tokenAddress && !!parentTokenAddress && contracts.length > 0,

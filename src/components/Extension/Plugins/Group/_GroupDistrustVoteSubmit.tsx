@@ -186,7 +186,6 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     isPending: isPendingVote,
     isConfirming: isConfirmingVote,
     isConfirmed: isConfirmedVote,
-    writeError: errorVote,
   } = useDistrustVote();
 
   async function handleSubmit(values: FormValues) {
@@ -228,8 +227,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     if (errorVerify) handleError(errorVerify);
     if (errorGroups) handleError(errorGroups);
     if (errorAlreadyVoted) handleError(errorAlreadyVoted);
-    if (errorVote) handleError(errorVote);
-  }, [errorRound, errorVerify, errorGroups, errorAlreadyVoted, errorVote, handleError]);
+  }, [errorRound, errorVerify, errorGroups, errorAlreadyVoted, handleError]);
 
   // 检查必要参数是否完整
   if (!token?.address || !account) {

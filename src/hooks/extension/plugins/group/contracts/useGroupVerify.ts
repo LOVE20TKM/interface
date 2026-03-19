@@ -1,7 +1,7 @@
 // hooks/extension/plugins/group/contracts/useGroupVerify.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -19,7 +19,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROU
  * Hook for FACTORY_ADDRESS - 获取工厂地址
  */
 export const useFactoryAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'FACTORY_ADDRESS',
@@ -32,7 +32,7 @@ export const useFactoryAddress = () => {
  * Hook for canVerify - 检查账户是否可以验证指定组
  */
 export const useCanVerify = (extensionAddress: `0x${string}`, account: `0x${string}`, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'canVerify',
@@ -49,7 +49,7 @@ export const useCanVerify = (extensionAddress: `0x${string}`, account: `0x${stri
  * Hook for isVerified - 检查指定轮次和组ID是否已验证
  */
 export const useIsVerified = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'isVerified',
@@ -66,7 +66,7 @@ export const useIsVerified = (extensionAddress: `0x${string}`, round: bigint, gr
  * Hook for verifiedAccountCount - 获取指定轮次和组ID的已验证账户数量
  */
 export const useVerifiedAccountCount = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifiedAccountCount',
@@ -83,7 +83,7 @@ export const useVerifiedAccountCount = (extensionAddress: `0x${string}`, round: 
  * Hook for verifiedGroupIds - 获取指定轮次已验证的组ID列表
  */
 export const useGroupIds = (extensionAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'groupIds',
@@ -100,7 +100,7 @@ export const useGroupIds = (extensionAddress: `0x${string}`, round: bigint) => {
  * Hook for verifiers - 获取指定轮次的所有验证者
  */
 export const useVerifiers = (extensionAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifiers',
@@ -117,7 +117,7 @@ export const useVerifiers = (extensionAddress: `0x${string}`, round: bigint) => 
  * Hook for verifiersAtIndex - 根据索引获取指定轮次的验证者
  */
 export const useVerifiersAtIndex = (extensionAddress: `0x${string}`, round: bigint, index: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifiersAtIndex',
@@ -134,7 +134,7 @@ export const useVerifiersAtIndex = (extensionAddress: `0x${string}`, round: bigi
  * Hook for verifiersCount - 获取指定轮次的验证者数量
  */
 export const useVerifiersCount = (extensionAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifiersCount',
@@ -151,7 +151,7 @@ export const useVerifiersCount = (extensionAddress: `0x${string}`, round: bigint
  * Hook for verifierByGroupId - 获取指定轮次和组ID的验证者
  */
 export const useVerifierByGroupId = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifierByGroupId',
@@ -168,7 +168,7 @@ export const useVerifierByGroupId = (extensionAddress: `0x${string}`, round: big
  * Hook for delegateByGroupId - 获取指定组ID的委托验证者
  */
 export const useDelegateByGroupId = (extensionAddress: `0x${string}`, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'delegateByGroupId',
@@ -185,7 +185,7 @@ export const useDelegateByGroupId = (extensionAddress: `0x${string}`, groupId: b
  * Hook for groupIdsByVerifier - 获取指定验证者在指定轮次的组ID列表
  */
 export const useGroupIdsByVerifier = (extensionAddress: `0x${string}`, round: bigint, verifier: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'groupIdsByVerifier',
@@ -206,7 +206,7 @@ export const useActionIdsByVerifier = (
   round: bigint | undefined,
   verifier: `0x${string}` | undefined,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'actionIdsByVerifier',
@@ -228,7 +228,7 @@ export const useGroupIdsByVerifierAtIndex = (
   verifier: `0x${string}`,
   index: bigint,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'groupIdsByVerifierAtIndex',
@@ -245,7 +245,7 @@ export const useGroupIdsByVerifierAtIndex = (
  * Hook for groupIdsByVerifierCount - 获取指定验证者在指定轮次的组ID数量
  */
 export const useGroupIdsByVerifierCount = (extensionAddress: `0x${string}`, round: bigint, verifier: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'groupIdsByVerifierCount',
@@ -266,7 +266,7 @@ export const useGroupIdsByVerifierCount = (extensionAddress: `0x${string}`, roun
  * Hook for totalGroupScore - 获取指定轮次的总积分
  */
 export const useTotalGroupScore = (extensionAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'totalGroupScore',
@@ -283,7 +283,7 @@ export const useTotalGroupScore = (extensionAddress: `0x${string}`, round: bigin
  * Hook for accountScore - 获取账户的积分
  */
 export const useAccountScore = (extensionAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'accountScore',
@@ -300,7 +300,7 @@ export const useAccountScore = (extensionAddress: `0x${string}`, round: bigint, 
  * Hook for groupScore - 获取指定组ID的积分
  */
 export const useGroupScore = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'groupScore',
@@ -318,7 +318,7 @@ export const useGroupScore = (extensionAddress: `0x${string}`, round: bigint, gr
  * 注意：此方法在新 ABI 中对应 totalAccountScore，而不是之前的 totalScoreByGroupId
  */
 export const useTotalAccountScore = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'totalAccountScore',
@@ -335,7 +335,7 @@ export const useTotalAccountScore = (extensionAddress: `0x${string}`, round: big
  * Hook for originScoreByAccount - 获取账户的原始积分
  */
 export const useOriginScoreByAccount = (extensionAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'originScoreByAccount',
@@ -360,7 +360,7 @@ export const useDistrustVotesByGroupOwner = (
   round: bigint,
   groupOwner: `0x${string}`,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'distrustVotesByGroupOwner',
@@ -382,7 +382,7 @@ export const useDistrustVotesByVoterByGroupOwner = (
   voter: `0x${string}`,
   groupOwner: `0x${string}`,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'distrustVotesByVoterByGroupOwner',
@@ -403,7 +403,7 @@ export const useDistrustRateByGroupId = (
   round: bigint | undefined,
   groupId: bigint | undefined,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'distrustRateByGroupId',
@@ -425,7 +425,7 @@ export const useDistrustReason = (
   voter: `0x${string}`,
   groupOwner: `0x${string}`,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'distrustReason',
@@ -442,7 +442,7 @@ export const useDistrustReason = (
  * Hook for distrustGroupOwners - 获取指定轮次的不信任组所有者列表
  */
 export const useDistrustGroupOwners = (extensionAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'distrustGroupOwners',
@@ -463,7 +463,7 @@ export const useDistrustVotersByGroupOwner = (
   round: bigint | undefined,
   groupOwner: `0x${string}` | undefined,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'distrustVotersByGroupOwner',

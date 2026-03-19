@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -11,8 +11,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useAccountStakeStatus } from '@/src/hooks/contracts/useLOVE20Stake';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -27,14 +25,6 @@ const MyStakingPanel: React.FC = () => {
     isPending: isPendingAccountStakeStatus,
     error: errorAccountStakeStatus,
   } = useAccountStakeStatus((token?.address as `0x${string}`) || '', (account as `0x${string}`) || '');
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorAccountStakeStatus) {
-      handleContractError(errorAccountStakeStatus, 'stake');
-    }
-  }, [errorAccountStakeStatus]);
 
   if (!token) {
     return '';

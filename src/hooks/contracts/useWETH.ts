@@ -1,7 +1,7 @@
 // hooks/contracts/useWETH.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 
 import { WETH9Abi } from '@/src/abis/WETH9';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -19,7 +19,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TO
  * @param account - Address of the account
  */
 export const useBalanceOf = (token: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: token,
     abi: WETH9Abi,
     functionName: 'balanceOf',

@@ -2,7 +2,7 @@
  * 复合 Hook: 批量获取链群名称
  */
 
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
@@ -38,7 +38,7 @@ export function useGroupNames(groupIds: bigint[] | undefined, enabled: boolean =
     data: groupNamesData,
     isPending,
     error,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts,
     query: {
       enabled: hasGroupIds && enabled,

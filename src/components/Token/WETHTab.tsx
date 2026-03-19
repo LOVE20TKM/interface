@@ -1,12 +1,10 @@
-import React, { useContext, useEffect } from 'react';
+import React from 'react';
 import { useAccount } from 'wagmi';
 // my funcs
 import { formatTokenAmount } from '@/src/lib/format';
 
 // my hooks
 import { useBalanceOf } from '@/src/hooks/contracts/useWETH';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import AddToMetamask from '@/src/components/Common/AddToMetamask';
@@ -23,14 +21,6 @@ export default function WETHTab() {
     (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as `0x${string}`) || '',
     address || '0x0000000000000000000000000000000000000000',
   );
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (balanceError) {
-      handleContractError(balanceError, 'token');
-    }
-  }, [balanceError]);
 
   return (
     <div className="px-4 pt-0 pb-6">

@@ -14,7 +14,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionGroupActionAbi } from '@/src/abis/ExtensionGroupAction';
 import { ExtensionGroupServiceAbi } from '@/src/abis/ExtensionGroupService';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
@@ -175,7 +175,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     data: groupIdsData,
     isPending: isGroupIdsPending,
     error: groupIdsError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: groupIdsContracts,
     query: {
       enabled: !!round && !!verifier && groupIdsContracts.length > 0 && !isActionIdsPending && !isExtensionsPending,
@@ -247,7 +247,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     data: rewardDistributionData,
     isPending: isRewardDistributionPending,
     error: rewardDistributionError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: rewardDistributionContracts,
     query: {
       enabled:
@@ -313,7 +313,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     data: verifierSummaryData,
     isPending: isVerifierSummaryPending,
     error: verifierSummaryError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: verifierSummaryContracts as any,
     query: {
       enabled: !!extensionAddress && !!round && !!verifier && verifierSummaryContracts.length > 0,
@@ -382,7 +382,7 @@ export function useRewardDetailByVerifier(params: UseRewardDetailByVerifierParam
     data: generatedRewardsData,
     isPending: isGeneratedRewardsPending,
     error: generatedRewardsError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: generatedRewardContracts,
     query: {
       enabled: !!round && actionGroupPairs.length > 0 && generatedRewardContracts.length > 0 && !isGroupIdsPending,

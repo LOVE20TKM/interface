@@ -37,7 +37,7 @@
  */
 
 import { useMemo, useEffect, useState } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 import { IExtensionAbi } from '@/src/abis/IExtension';
 import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
@@ -292,7 +292,7 @@ export const useExtensionsByActionIdsWithCache = ({
     data: extensionAddressesData,
     isPending: isPending1,
     error: error1,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: extensionContracts as any,
     query: {
       enabled: enabled && hasActionIds && extensionContracts.length > 0,
@@ -341,7 +341,7 @@ export const useExtensionsByActionIdsWithCache = ({
     data: factoryAddressesData,
     isPending: isPending2,
     error: error2,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: factoryContracts as any,
     query: {
       enabled: factoryContracts.length > 0,
@@ -409,7 +409,7 @@ export const useExtensionsByActionIdsWithCache = ({
     data: joinedAmountTokenAddressData,
     isPending: isPending3,
     error: error3,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: joinedAmountTokenAddressContracts as any,
     query: {
       enabled: joinedAmountTokenAddressContracts.length > 0,
@@ -448,7 +448,7 @@ export const useExtensionsByActionIdsWithCache = ({
     data: joinedTokenFactoryData,
     isPending: isPending4,
     error: error4,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: joinedTokenFactoryCheckContracts as any,
     query: {
       enabled: joinedTokenFactoryCheckContracts.length > 0,
@@ -529,7 +529,7 @@ export const useExtensionsByActionIdsWithCache = ({
     data: lpToken0Token1Data,
     isPending: isPending5,
     error: error5,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: lpToken0Token1Contracts as any,
     query: {
       enabled: lpToken0Token1Contracts.length > 0,
@@ -635,7 +635,7 @@ export const useExtensionsByActionIdsWithCache = ({
     data: tokenSymbolData,
     isPending: isPending6,
     error: error6,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: tokenSymbolContracts as any,
     query: {
       enabled: tokenSymbolContracts.length > 0,

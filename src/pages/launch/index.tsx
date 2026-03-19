@@ -7,7 +7,6 @@ import { Token, TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useLaunchInfo } from '@/src/hooks/contracts/useLOVE20Launch';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my components
 import Header from '@/src/components/Header';
@@ -26,14 +25,6 @@ export default function TokenFairLaunch() {
     isPending: isLaunchInfoPending,
     error: launchInfoError,
   } = useLaunchInfo(token ? token.address : '0x0000000000000000000000000000000000000000');
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (launchInfoError) {
-      handleContractError(launchInfoError, 'launch');
-    }
-  }, [launchInfoError]);
 
   // 如果发射已结束，检查更新 token 的 hasEnded 状态
   useEffect(() => {

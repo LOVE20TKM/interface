@@ -135,7 +135,6 @@ const GroupTrialAddPage: React.FC = () => {
     isPending: isPendingAdd,
     isConfirming: isConfirmingAdd,
     isConfirmed: isConfirmedAdd,
-    writeError: errorAdd,
   } = useTrialAccountsWaitingAdd();
 
   // 代币授权相关
@@ -144,7 +143,6 @@ const GroupTrialAddPage: React.FC = () => {
     isPending: isPendingApprove,
     isConfirming: isConfirmingApprove,
     isConfirmed: isConfirmedApprove,
-    writeError: errorApprove,
   } = useApprove(contractInfo?.joinedAmountTokenAddress as `0x${string}`);
 
   // 获取授权额度
@@ -232,10 +230,8 @@ const GroupTrialAddPage: React.FC = () => {
     if (errorAction) handleError(errorAction);
     if (errorExtension) handleError(errorExtension);
     if (errorGroupDetail) handleError(errorGroupDetail);
-    if (errorAdd) handleError(errorAdd);
-    if (errorApprove) handleError(errorApprove);
     if (errorAllowance) handleError(errorAllowance);
-  }, [errorAction, errorExtension, errorGroupDetail, errorAdd, errorApprove, errorAllowance, handleError]);
+  }, [errorAction, errorExtension, errorGroupDetail, errorAllowance, handleError]);
 
   // 监听授权成功
   useEffect(() => {

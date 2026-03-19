@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useEffect, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { useAccount, useBlockNumber } from 'wagmi';
 import { formatUnits as viemFormatUnits } from 'viem';
 import Link from 'next/link';
@@ -28,7 +28,6 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useCurrentRound as useCurrentRoundForJoin } from '@/src/hooks/contracts/useLOVE20Join';
 import { useUSDTPairTokenBalance } from '@/src/hooks/composite/useUSDTPairTokenBalance';
 import { useActingPageData } from '@/src/hooks/composite/useActingPageData';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { formatPercentage } from '@/src/lib/format';
 
 // 简单的字段组件
@@ -180,15 +179,6 @@ const TokenPage = () => {
     tokenAddress: launchEnded && isConnected ? (currentToken?.address as `0x${string}`) : undefined,
     currentRound: currentRoundForJoin ?? BigInt(0),
   });
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorTokenStatistics) handleContractError(errorTokenStatistics, 'roundViewer');
-    if (errorLaunchInfo) handleContractError(errorLaunchInfo, 'launch');
-    if (actingPageData.errorActions) handleContractError(actingPageData.errorActions, 'dataViewer');
-    if (actingPageData.errorExtension) handleContractError(actingPageData.errorExtension, 'extension');
-  }, [errorTokenStatistics, errorLaunchInfo, actingPageData.errorActions, actingPageData.errorExtension]);
 
   const decimals = currentToken?.decimals ?? 18;
   const parentSymbol = currentToken?.parentTokenSymbol ?? '';

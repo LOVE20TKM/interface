@@ -30,8 +30,6 @@ import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import { useStakeLpPageData } from '@/src/hooks/composite/useStakeLpPageData';
 import { useAccountStakeStatus, useInitialStakeRound } from '@/src/hooks/contracts/useLOVE20Stake';
 import { useStakeLiquidity } from '@/src/hooks/contracts/useLOVE20Hub';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
@@ -330,8 +328,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
       );
     } catch (error) {
       console.error('Stake failed', error);
-      // 使用统一的错误处理
-      handleContractError(error, 'stake');
+      console.error('Stake error:', error);
     }
   }
 
@@ -369,39 +366,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
   }, [token, initialStakeRound]);
 
   // --------------------------------------------------
-  // 2.5 错误处理
-  // --------------------------------------------------
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorStakeLpData) {
-      handleContractError(errorStakeLpData, 'token');
-    }
-    if (errApproveToken) {
-      handleContractError(errApproveToken, 'stake');
-    }
-    if (errApproveParentToken) {
-      handleContractError(errApproveParentToken, 'stake');
-    }
-    if (errStakeLiquidity) {
-      handleContractError(errStakeLiquidity, 'stake');
-    }
-    if (errInitialStakeRound) {
-      handleContractError(errInitialStakeRound, 'stake');
-    }
-    if (errAccountStakeStatus) {
-      handleContractError(errAccountStakeStatus, 'stake');
-    }
-  }, [
-    errorStakeLpData,
-    errApproveToken,
-    errApproveParentToken,
-    errStakeLiquidity,
-    errInitialStakeRound,
-    errAccountStakeStatus,
-  ]);
-
-  // --------------------------------------------------
-  // 2.6 其它状态与提示
+  // 2.5 其它状态与提示
   // --------------------------------------------------
   const isApproving = isPendingApproveToken || isPendingApproveParentToken;
   const isApproveConfirming = isConfirmingApproveToken || isConfirmingApproveParentToken;

@@ -2,7 +2,7 @@
 // 批量获取链群基本信息列表（只包含 GroupId、群组名称、owner地址）
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { useActiveGroupIds } from '../contracts/useGroupManager';
 
@@ -76,7 +76,7 @@ export const useExtensionGroupBaseInfosOfAction = ({
     data: detailData,
     isPending: isDetailPending,
     error: detailError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: detailContracts as any,
     query: {
       enabled: !!activeGroupIds && activeGroupIds.length > 0 && detailContracts.length > 0,

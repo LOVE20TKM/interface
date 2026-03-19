@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { useAccount } from 'wagmi';
-import { useEffect } from 'react';
 import Link from 'next/link';
 
 // my funcs
@@ -8,7 +7,6 @@ import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 import { formatPhaseText } from '@/src/lib/domainUtils';
 
 // my hooks
-import { useHandleContractError } from '@/src/lib/errorUtils';
 import { useAccountStakeStatus, useCurrentRound } from '@/src/hooks/contracts/useLOVE20Stake';
 import { useMyGovData } from '@/src/hooks/composite/useMyGovData';
 
@@ -54,22 +52,6 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
 
   // 我的加速激励的质押占比
   const tokenStakedPercentage = stAmount && govData?.stAmount ? (Number(stAmount) / Number(govData.stAmount)) * 100 : 0;
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorAccountStakeStatus) {
-      handleContractError(errorAccountStakeStatus, 'stake');
-    }
-
-    if (errorCurrentRound) {
-      handleContractError(errorCurrentRound, 'stake');
-    }
-
-    if (errorGovData) {
-      handleContractError(errorGovData, 'common');
-    }
-  }, [errorAccountStakeStatus, errorCurrentRound, errorGovData]);
 
   const isPendingGovRewards = isPendingGovData || isPendingAccountStakeStatus;
 

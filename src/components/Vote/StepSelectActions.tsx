@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { useAccount } from 'wagmi';
 import { toast } from 'react-hot-toast';
 import { UserPen } from 'lucide-react';
@@ -10,8 +10,6 @@ import Link from 'next/link';
 
 // my hooks
 import { useVotingActions, useGovData } from '@/src/hooks/contracts/useLOVE20RoundViewer';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my types & functions
 import { VotingAction } from '@/src/types/love20types';
 import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
@@ -46,14 +44,6 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
 
   // 获取总治理票数
   const { govData, isPending: isPendingGovData } = useGovData((token?.address as `0x${string}`) || '');
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (error) {
-      handleContractError(error, 'vote');
-    }
-  }, [error, handleContractError]);
 
   // 选择复选框
   const handleCheckboxChange = (actionId: bigint) => {

@@ -17,7 +17,7 @@ import {
   useSetRecipients,
   useDefaultMaxRecipients,
 } from '@/src/hooks/extension/plugins/group-service/contracts/useGroupRecipients';
-import { useContractError } from '@/src/errors/useContractError';
+
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { isValidEthAddress, normalizeAddressInput } from '@/src/lib/addressUtils';
 
@@ -72,7 +72,7 @@ export default function _GroupServiceSetRecipients({
   onSuccess,
 }: _GroupServiceSetRecipientsProps) {
   // Contracts - setRecipients 和 maxRecipients 使用 GroupRecipients 合约
-  const { setRecipients, isPending, isConfirming, isConfirmed, writeError } = useSetRecipients();
+  const { setRecipients, isPending, isConfirming, isConfirmed } = useSetRecipients();
   const { maxRecipients } = useDefaultMaxRecipients();
 
   // 用户输入的是百分比，最大值是 100
@@ -149,11 +149,6 @@ export default function _GroupServiceSetRecipients({
     }
   }, [open, currentAddrs, currentRatios, currentRemarks, form]);
 
-  const { handleError } = useContractError();
-
-  useEffect(() => {
-    if (writeError) handleError(writeError);
-  }, [writeError, handleError]);
 
   useEffect(() => {
     // 只有在确认成功且未调用过成功回调时才触发

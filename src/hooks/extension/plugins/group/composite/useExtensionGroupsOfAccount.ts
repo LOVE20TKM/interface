@@ -2,7 +2,7 @@
 // 获取一个账号的所有链群
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
@@ -72,7 +72,7 @@ export const useExtensionGroupsOfAccount = ({
     data: groupIdsData,
     isPending: isGroupIdsPending,
     error: groupIdsError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: groupIdsContract as any,
     query: {
       enabled: !!extensionAddress && !!account && groupIdsContract.length > 0,
@@ -133,7 +133,7 @@ export const useExtensionGroupsOfAccount = ({
     data: detailData,
     isPending: isDetailPending,
     error: detailError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: detailContracts as any,
     query: {
       enabled: !!extensionAddress && !!round && detailContracts.length > 0,

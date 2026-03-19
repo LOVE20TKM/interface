@@ -1,7 +1,7 @@
 // hooks/contracts/useLOVE20RoundViewer.ts
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { LOVE20RoundViewerAbi } from '@/src/abis/LOVE20RoundViewer';
 import {
   JoinedAction,
@@ -29,7 +29,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_ROU
  * Reads the address of the join contract.
  */
 export const useJoinAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'joinAddress',
@@ -43,7 +43,7 @@ export const useJoinAddress = () => {
  * Reads the address of the mint contract.
  */
 export const useMintAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'mintAddress',
@@ -57,7 +57,7 @@ export const useMintAddress = () => {
  * Reads the address of the submit contract.
  */
 export const useSubmitAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'submitAddress',
@@ -71,7 +71,7 @@ export const useSubmitAddress = () => {
  * Reads the address of the verify contract.
  */
 export const useVerifyAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'verifyAddress',
@@ -85,7 +85,7 @@ export const useVerifyAddress = () => {
  * Reads the address of the vote contract.
  */
 export const useVoteAddress = () => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'voteAddress',
@@ -98,7 +98,7 @@ export const useVoteAddress = () => {
  * Hook for actionSubmits
  */
 export const useActionSubmits = (tokenAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'actionSubmits',
@@ -115,7 +115,7 @@ export const useActionSubmits = (tokenAddress: `0x${string}`, round: bigint) => 
  * Hook for actionInfosByIds
  */
 export const useActionInfosByIds = (tokenAddress: `0x${string}`, actionIds: bigint[]) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'actionInfosByIds',
@@ -137,7 +137,7 @@ export const useActionInfosByIds = (tokenAddress: `0x${string}`, actionIds: bigi
  * Hook for actionInfosByPage
  */
 export const useActionInfosByPage = (tokenAddress: `0x${string}`, start: bigint, end: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'actionInfosByPage',
@@ -156,7 +156,7 @@ export const useActionInfosByPage = (tokenAddress: `0x${string}`, start: bigint,
 export const useVotingActions = (tokenAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
   const enableRead = !!tokenAddress && !!account && !!round;
 
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'votingActions',
@@ -183,7 +183,7 @@ export const useVotingActions = (tokenAddress: `0x${string}`, round: bigint, acc
 export const useJoinableActions = (tokenAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
   const enableRead = !!tokenAddress && !!account && !!round;
 
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'joinableActions',
@@ -208,7 +208,7 @@ export const useJoinableActions = (tokenAddress: `0x${string}`, round: bigint, a
  * Hook for joinedActions
  */
 export const useJoinedActions = (tokenAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'joinedActions',
@@ -227,7 +227,7 @@ export const useJoinedActions = (tokenAddress: `0x${string}`, account: `0x${stri
 export const useVerifyingActions = (tokenAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
   const enableRead = !!tokenAddress && !!account && !!round;
 
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'verifyingActions',
@@ -254,7 +254,7 @@ export const useVerifyingActions = (tokenAddress: `0x${string}`, round: bigint, 
 export const useVerifingActionsByAccount = (tokenAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
   const enableRead = !!tokenAddress && !!account && !!round;
 
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'verifyingActionsByAccount',
@@ -280,7 +280,7 @@ export const useVerifingActionsByAccount = (tokenAddress: `0x${string}`, round: 
  * Reads the verified addresses by action.
  */
 export const useVerifiedAddressesByAction = (tokenAddress: `0x${string}`, round: bigint, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'verifiedAddressesByAction',
@@ -296,7 +296,7 @@ export const useVerifiedAddressesByAction = (tokenAddress: `0x${string}`, round:
  * Hook for verificationInfosByAction
  */
 export const useVerificationInfosByAction = (tokenAddress: `0x${string}`, round: bigint, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'verificationInfosByAction',
@@ -316,7 +316,7 @@ export const useVerificationInfosByAccount = (
   actionId: bigint,
   account: `0x${string}`,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'verificationInfosByAccount',
@@ -338,7 +338,7 @@ export const useVerificationInfosByAccount = (
  * Hook for govData
  */
 export const useGovData = (tokenAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'govData',
@@ -355,7 +355,7 @@ export const useGovData = (tokenAddress: `0x${string}`) => {
  * Hook for actionVoters - 一个行动的投票详情
  */
 export const useActionVoters = (tokenAddress: `0x${string}`, round: bigint, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'actionVoters',
@@ -377,7 +377,7 @@ export const useAccountVotingHistory = (
   startRound: bigint,
   endRound: bigint,
 ) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'accountVotingHistory',
@@ -411,7 +411,7 @@ export const useAccountVotingHistory = (
  * Hook for actionVerificationMatrix - 验证矩阵
  */
 export const useActionVerificationMatrix = (tokenAddress: `0x${string}`, round: bigint, actionId: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'actionVerificationMatrix',
@@ -434,7 +434,7 @@ export const useActionVerificationMatrix = (tokenAddress: `0x${string}`, round: 
 export const useVotesNums = (tokenAddress: `0x${string}`, round: bigint) => {
   const enableRead = !!tokenAddress && !!round && round > BigInt(0);
 
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'votesNums',
@@ -497,7 +497,7 @@ export const useActionVerificationMatrixPaged = (
   const verifierStart = currentPage * pageSize;
   const verifierEnd = verifierStart + pageSize;
 
-  const { data: pageData, isPending: isPagePending } = useReadContract({
+  const { data: pageData, isPending: isPagePending } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20RoundViewerAbi,
     functionName: 'actionVerificationMatrixPaged',

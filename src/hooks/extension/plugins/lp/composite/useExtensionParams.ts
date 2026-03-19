@@ -1,6 +1,6 @@
 // hooks/extension/plugins/lp/composite/useExtensionParams.ts
 
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -8,7 +8,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
  * Hook for getting extension parameters by querying the extension contract directly
  */
 export const useExtensionParams = (extensionAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContracts({
+  const { data, isPending, error } = useUniversalReadContracts({
     contracts: [
       {
         address: extensionAddress,

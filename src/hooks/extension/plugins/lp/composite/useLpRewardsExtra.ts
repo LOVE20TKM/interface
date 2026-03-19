@@ -2,7 +2,8 @@
 // 批量获取LP行动中用户在多个轮次的溢出激励（burnReward）
 
 import { useMemo } from 'react';
-import { useReadContracts, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionLpAbi } from '@/src/abis/ExtensionLp';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -49,7 +50,7 @@ export const useLpRewardsExtra = ({
     data: rewardData,
     isPending,
     error,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: enabled && contracts.length > 0,

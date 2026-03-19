@@ -78,7 +78,6 @@ const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
     isPending: isPendingRemove,
     isConfirming: isConfirmingRemove,
     isConfirmed: isConfirmedRemove,
-    writeError: errorRemove,
   } = useTrialAccountsWaitingRemove();
 
   const {
@@ -86,7 +85,6 @@ const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
     isPending: isPendingRemoveAll,
     isConfirming: isConfirmingRemoveAll,
     isConfirmed: isConfirmedRemoveAll,
-    writeError: errorRemoveAll,
   } = useTrialAccountsWaitingRemoveAll();
 
   const hasCalledSuccessRef = useRef(false);
@@ -94,9 +92,7 @@ const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
   const { handleError } = useContractError();
   useEffect(() => {
     if (errorWaitingList) handleError(errorWaitingList);
-    if (errorRemove) handleError(errorRemove);
-    if (errorRemoveAll) handleError(errorRemoveAll);
-  }, [errorWaitingList, errorRemove, errorRemoveAll, handleError]);
+  }, [errorWaitingList, handleError]);
 
   useEffect(() => {
     if ((isConfirmedRemove || isConfirmedRemoveAll) && !hasCalledSuccessRef.current) {

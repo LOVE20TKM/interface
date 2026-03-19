@@ -18,7 +18,7 @@
  */
 
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 
 const CONTRACT_CENTER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
@@ -107,7 +107,7 @@ export function useAccountVerificationInfos(
   // ==========================================
   // 批量调用合约
   // ==========================================
-  const { data, isPending, error } = useReadContracts({
+  const { data, isPending, error } = useUniversalReadContracts({
     contracts,
     query: {
       // 只有在所有必要参数都存在且有 key 需要查询时才启用

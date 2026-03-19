@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20SubmitAbi } from '@/src/abis/LOVE20Submit';
 import { LOVE20JoinAbi } from '@/src/abis/LOVE20Join';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -100,7 +100,7 @@ export const useActionDetailData = ({
     data,
     isPending: isBasicDataPending,
     error: basicDataError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: !!tokenAddress && actionId !== undefined && contracts.length > 0,

@@ -226,7 +226,6 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     isPending: isPendingUpdate,
     isConfirming: isConfirmingUpdate,
     isConfirmed: isConfirmedUpdate,
-    writeError: errorUpdate,
   } = useUpdateGroupInfo();
 
   async function handleUpdate(values: FormValues) {
@@ -281,8 +280,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   useEffect(() => {
     if (errorDetail) handleError(errorDetail);
     if (errorParams) handleError(errorParams);
-    if (errorUpdate) handleError(errorUpdate);
-  }, [errorDetail, errorParams, errorUpdate, handleError]);
+  }, [errorDetail, errorParams, handleError]);
 
   if (isPendingDetail || isPendingParams || isPendingFormattedSymbol) {
     return (

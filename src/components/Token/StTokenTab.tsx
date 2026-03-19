@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { useAccount } from 'wagmi';
 // my funcs
 import { formatTokenAmount } from '@/src/lib/format';
@@ -8,8 +8,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20STToken';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import AddToMetamask from '@/src/components/Common/AddToMetamask';
@@ -27,14 +25,6 @@ export default function StTokenTab() {
     (token?.stTokenAddress as `0x${string}`) || '',
     address || '0x0000000000000000000000000000000000000000',
   );
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (balanceError) {
-      handleContractError(balanceError, 'token');
-    }
-  }, [balanceError]);
 
   if (!token?.stTokenAddress) {
     return <LoadingIcon />;

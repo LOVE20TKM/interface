@@ -114,28 +114,18 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
     isPending: isExitPending,
     isConfirming: isExitConfirming,
     isConfirmed: isExitConfirmed,
-    writeError: exitError,
   } = useExit(extensionAddress);
 
   // Error Handling
   const { handleError } = useContractError();
   useEffect(() => {
-    if (exitError) {
-      handleError(exitError);
-    }
-  }, [exitError, handleError]);
-
-  useEffect(() => {
     if (recipientsError) {
       handleError(recipientsError);
     }
-  }, [recipientsError, handleError]);
-
-  useEffect(() => {
     if (errorJoined) {
       handleError(errorJoined);
     }
-  }, [errorJoined, handleError]);
+  }, [recipientsError, errorJoined, handleError]);
 
   useEffect(() => {
     if (isExitConfirmed) {

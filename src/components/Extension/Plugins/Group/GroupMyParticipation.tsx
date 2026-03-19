@@ -98,7 +98,6 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     isPending: isPendingExit,
     isConfirming: isConfirmingExit,
     isConfirmed: isConfirmedExit,
-    writeError: errorExit,
   } = useExit();
 
   const handleExit = async () => {
@@ -121,9 +120,8 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   useEffect(() => {
     if (errorJoinInfo) handleError(errorJoinInfo);
     if (errorDetail) handleError(errorDetail);
-    if (errorExit) handleError(errorExit);
     if (errorVerificationInfos) handleError(errorVerificationInfos);
-  }, [errorJoinInfo, errorDetail, errorExit, errorVerificationInfos, handleError]);
+  }, [errorJoinInfo, errorDetail, errorVerificationInfos, handleError]);
 
   if (isPendingJoinInfo || isPendingDetail) {
     return (

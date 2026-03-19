@@ -8,7 +8,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Submit';
-import { useHandleContractError } from '@/src/lib/errorUtils';
 
 // my components
 import Header from '@/src/components/Header';
@@ -21,14 +20,6 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
  */
 const SubmitActionsPage = () => {
   const { currentRound, isPending, error: errorCurrentRound } = useCurrentRound();
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorCurrentRound) {
-      handleContractError(errorCurrentRound, 'submit');
-    }
-  }, [errorCurrentRound]);
 
   // 如果还没有人质押，跳转到质押页面
   const router = useRouter();

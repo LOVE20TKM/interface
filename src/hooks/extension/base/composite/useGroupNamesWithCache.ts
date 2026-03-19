@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 
 // 合约地址
@@ -138,7 +138,7 @@ export const useGroupNamesWithCache = ({
     data: contractResults,
     isPending: isRpcPending,
     error: rpcError,
-  } = useReadContracts({
+  } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: enabled && hasGroupIds && contracts.length > 0,

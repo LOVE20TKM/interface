@@ -2,7 +2,7 @@
  * 复合 Hook: 批量查询群名称可用性和铸造成本
  */
 
-import { useReadContracts } from 'wagmi';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { validateGroupName } from '@/src/lib/groupNameValidator';
@@ -26,7 +26,7 @@ export function useGroupNameValidation({
   // 批量查询: isGroupNameUsed 和 calculateMintCost
   // 只有在前端验证通过时才执行链上查询
   const shouldQuery = enabled && !!groupName && frontendValidation.isValid;
-  const { data, isPending, error } = useReadContracts({
+  const { data, isPending, error } = useUniversalReadContracts({
     contracts: [
       {
         address: CONTRACT_ADDRESS,

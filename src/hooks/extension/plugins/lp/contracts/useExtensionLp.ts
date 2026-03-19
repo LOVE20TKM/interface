@@ -1,7 +1,7 @@
 // hooks/useExtensionLp.ts
 
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
@@ -19,7 +19,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
  * Hook for FACTORY_ADDRESS - 获取工厂地址
  */
 export const useFactory = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
     functionName: 'FACTORY_ADDRESS',
@@ -35,7 +35,7 @@ export const useFactory = (contractAddress: `0x${string}`) => {
  * Hook for GOV_RATIO_MULTIPLIER - 获取治理比率乘数
  */
 export const useGovRatioMultiplier = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
     functionName: 'GOV_RATIO_MULTIPLIER',
@@ -51,7 +51,7 @@ export const useGovRatioMultiplier = (contractAddress: `0x${string}`) => {
  * Hook for initialized - 检查是否已初始化
  */
 export const useInitialized = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
     functionName: 'initialized',
@@ -67,7 +67,7 @@ export const useInitialized = (contractAddress: `0x${string}`) => {
  * Hook for joinInfo - 获取账户的加入信息
  */
 export const useJoinInfo = (contractAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
     functionName: 'joinInfo',
@@ -93,7 +93,7 @@ export const useJoinInfo = (contractAddress: `0x${string}`, account: `0x${string
  * Hook for JOIN_TOKEN_ADDRESS - 获取加入代币地址
  */
 export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
     functionName: 'JOIN_TOKEN_ADDRESS',
@@ -109,7 +109,7 @@ export const useJoinTokenAddress = (contractAddress: `0x${string}`) => {
  * Hook for joinedAmount - 获取加入值
  */
 export const useJoinedAmount = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
     functionName: 'joinedAmount',
@@ -125,7 +125,7 @@ export const useJoinedAmount = (contractAddress: `0x${string}`) => {
  * Hook for joinedAmountByAccount - 获取账户的加入值
  */
 export const useJoinedAmountByAccount = (contractAddress: `0x${string}`, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
     functionName: 'joinedAmountByAccount',
@@ -142,7 +142,7 @@ export const useJoinedAmountByAccount = (contractAddress: `0x${string}`, account
  * Hook for reward - 获取指定轮次的奖励
  */
 export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
     functionName: 'reward',
@@ -159,7 +159,7 @@ export const useReward = (contractAddress: `0x${string}`, round: bigint) => {
  * Hook for rewardByAccount - 获取账户的奖励信息
  */
 export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint, account: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
     functionName: 'rewardByAccount',
@@ -183,7 +183,7 @@ export const useRewardByAccount = (contractAddress: `0x${string}`, round: bigint
  * Hook for TOKEN_ADDRESS - 获取代币地址
  */
 export const useTokenAddress = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
     functionName: 'TOKEN_ADDRESS',
@@ -199,7 +199,7 @@ export const useTokenAddress = (contractAddress: `0x${string}`) => {
  * Hook for WAITING_BLOCKS - 获取等待区块数
  */
 export const useWaitingBlocks = (contractAddress: `0x${string}`) => {
-  const { data, isPending, error } = useReadContract({
+  const { data, isPending, error } = useUniversalReadContract({
     address: contractAddress,
     abi: ExtensionLpAbi,
     functionName: 'WAITING_BLOCKS',

@@ -289,7 +289,6 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     isPending: isPendingApprove,
     isConfirming: isConfirmingApprove,
     isConfirmed: isConfirmedApprove,
-    writeError: errorApprove,
   } = useApprove(joinTokenAddress as `0x${string}`);
 
   const approveButtonRef = useRef<HTMLButtonElement>(null);
@@ -343,7 +342,6 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     isPending: isPendingJoin,
     isConfirming: isConfirmingJoin,
     isConfirmed: isConfirmedJoin,
-    writeError: errorJoin,
   } = useJoin();
 
   // 体验加入提交
@@ -352,7 +350,6 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     isPending: isPendingTrialJoin,
     isConfirming: isConfirmingTrialJoin,
     isConfirmed: isConfirmedTrialJoin,
-    writeError: errorTrialJoin,
   } = useTrialJoin();
 
   /**
@@ -419,11 +416,8 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   useEffect(() => {
     if (errorDetail) handleError(errorDetail);
     if (errorJoinInfo) handleError(errorJoinInfo);
-    if (errorApprove) handleError(errorApprove);
-    if (errorJoin) handleError(errorJoin);
-    if (errorTrialJoin) handleError(errorTrialJoin);
     if (errorConstants) handleError(errorConstants);
-  }, [errorDetail, errorJoinInfo, errorApprove, errorJoin, errorTrialJoin, errorConstants, handleError]);
+  }, [errorDetail, errorJoinInfo, errorConstants, handleError]);
 
   // 检查投票状态并显示错误提示
   useEffect(() => {

@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { ChevronRight, UserPen } from 'lucide-react';
@@ -10,8 +10,6 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 // my utils
 import { calculateActionAPY, calculateExpectedActionReward } from '@/src/lib/domainUtils';
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
-import { useHandleContractError } from '@/src/lib/errorUtils';
-
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
@@ -58,18 +56,6 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound, joi
   // 计算预计新增铸币
   const displayRound = token ? currentRound - BigInt(token.initialStakeRound) + BigInt(1) : BigInt(0);
   const expectedReward = calculateExpectedActionReward(rewardAvailable, displayRound);
-
-  // 错误处理
-  const { handleContractError } = useHandleContractError();
-  useEffect(() => {
-    if (errorRewardAvailable) {
-      handleContractError(errorRewardAvailable, 'mint');
-    }
-
-    if (errorAction19Pool) {
-      handleContractError(errorAction19Pool, 'join');
-    }
-  }, [errorRewardAvailable, errorAction19Pool]);
 
   return (
     <div className="px-4 py-6">

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 
 import { UniswapV2RouterAbi } from '@/src/abis/UniswapV2Router';
@@ -15,7 +15,7 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROU
  * Hook for getAmountsOut
  */
 export const useGetAmountsOut = (amountIn: bigint, path: `0x${string}`[], isEnabled = true) => {
-  const { data, error, isLoading } = useReadContract({
+  const { data, error, isLoading } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: UniswapV2RouterAbi,
     functionName: 'getAmountsOut',
@@ -32,7 +32,7 @@ export const useGetAmountsOut = (amountIn: bigint, path: `0x${string}`[], isEnab
  * Hook for getAmountsIn
  */
 export const useGetAmountsIn = (amountOut: bigint, path: `0x${string}`[], isEnabled = true) => {
-  const { data, error, isLoading } = useReadContract({
+  const { data, error, isLoading } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: UniswapV2RouterAbi,
     functionName: 'getAmountsIn',
