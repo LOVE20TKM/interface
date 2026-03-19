@@ -5,7 +5,7 @@
  * 支持多种错误格式：hex 选择器、错误名称、RPC 错误等
  */
 
-import { ContractRevertError } from '@/src/lib/revertDecoder';
+import { ContractRevertError } from '../lib/revertDecoder';
 import { ErrorsBySelector, ErrorsByName } from './unifiedErrorMap';
 
 // ============================================================================
