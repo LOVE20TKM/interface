@@ -16,7 +16,6 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 
 // my hooks
 import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/src/lib/format';
-import { useContractError } from '@/src/errors/useContractError';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
@@ -276,14 +275,6 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   // ------------------------------
   //  错误处理
   // ------------------------------
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorLpBalance) handleError(errorLpBalance);
-    if (errAllowanceLp) handleError(errAllowanceLp);
-    if (errorData) handleError(errorData);
-    if (errorCurrentRound) handleError(errorCurrentRound);
-    if (errorVoted) handleError(errorVoted);
-  }, [errorLpBalance, errAllowanceLp, errorData, errorCurrentRound, errorVoted, handleError]);
 
   // 检查投票状态并显示错误提示
   useEffect(() => {

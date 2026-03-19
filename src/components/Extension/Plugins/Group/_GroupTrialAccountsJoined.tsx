@@ -8,7 +8,6 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 
-import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 import NavigationUtils from '@/src/lib/navigationUtils';
 
@@ -45,11 +44,6 @@ const _GroupTrialAccountsJoined: React.FC<GroupTrialAccountsJoinedProps> = ({
     isConfirming: isConfirmingExit,
     isConfirmed: isConfirmedExit,
   } = useTrialExit();
-
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (error) handleError(error);
-  }, [error, handleError]);
 
   useEffect(() => {
     if (isConfirmedExit && !hasCalledSuccessRef.current) {

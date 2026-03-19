@@ -13,7 +13,6 @@ import { useMyGroupIdsNeedVerifiedByRound } from '@/src/hooks/extension/plugins/
 import { useActionBaseInfosByIdsWithCache } from '@/src/hooks/composite/useActionBaseInfosByIdsWithCache';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 import { useActionsWithActiveGroupsByOwner } from '@/src/hooks/extension/plugins/group-service/composite/useActionsWithActiveGroupsByOwner';
-import { useContractError } from '@/src/errors/useContractError';
 
 
 // Components
@@ -197,13 +196,6 @@ const MyVerifyingGroupsPage: React.FC = () => {
   }, [votedGroups, allGroups, votedGroupsMap, actionInfos, groupNameMap]);
 
   // Error handling
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (groupsError) handleError(groupsError);
-    if (actionsError) handleError(actionsError);
-    if (groupNamesError) handleError(groupNamesError);
-    if (allGroupsError) handleError(allGroupsError);
-  }, [groupsError, actionsError, groupNamesError, allGroupsError, handleError]);
 
   // Handle group click
   const handleGroupClick = (group: GroupedData['groups'][0], actionId: bigint) => {

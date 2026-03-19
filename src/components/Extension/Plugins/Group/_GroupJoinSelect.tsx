@@ -32,7 +32,6 @@ import { useTokenIdOf, useGroupNameOf } from '@/src/hooks/extension/base/contrac
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { LocalCache } from '@/src/lib/LocalCache';
 
 // 组件
@@ -160,12 +159,6 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
   }, [inputGroupName, groupId, isPendingGroupId, errorGroupId, groups]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorGroups) {
-      handleError(errorGroups);
-    }
-  }, [errorGroups, handleError]);
 
   // 处理表单提交
   const handleSubmit = (values: FormValues) => {

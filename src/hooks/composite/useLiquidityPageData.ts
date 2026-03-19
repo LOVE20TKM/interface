@@ -1,7 +1,8 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 import { useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
 import { useGetPair } from '@/src/hooks/contracts/useUniswapV2Factory';
+import { useError } from '@/src/contexts/ErrorContext';
 import {
   useLPBalance,
   useGetReserves,
@@ -29,6 +30,7 @@ interface LiquidityPageDataParams {
  */
 export const useLiquidityPageData = ({ baseToken, targetToken, account }: LiquidityPageDataParams) => {
   const spenderAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER as `0x${string}`;
+  const { setError } = useError();
 
   // 1. 获取交易对地址
   const { pairAddress, isLoading: isLoadingPair } = useGetPair(
@@ -42,6 +44,7 @@ export const useLiquidityPageData = ({ baseToken, targetToken, account }: Liquid
     data: baseNativeBalance,
     isLoading: isLoadingBaseNative,
     refetch: refetchBaseNative,
+    error: baseNativeBalanceError,
   } = useBalance({
     address: account,
     query: {
@@ -118,6 +121,16 @@ export const useLiquidityPageData = ({ baseToken, targetToken, account }: Liquid
       baseTokenIsToken0,
     };
   }, [pairAddress, reserve0, reserve1, token0, token1, baseToken.address, targetToken]);
+
+  // 余额读取失败时给出全局提示
+  useEffect(() => {
+    if (baseNativeBalanceError) {
+      setError({
+        name: '余额查询失败',
+        message: '无法读取基础代币余额，请检查网络后重试',
+      });
+    }
+  }, [baseNativeBalanceError, setError]);
 
   // 合并所有loading状态
   const isLoading =

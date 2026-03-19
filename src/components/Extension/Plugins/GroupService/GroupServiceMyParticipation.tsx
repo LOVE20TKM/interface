@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TokenContext } from '@/src/contexts/TokenContext';
-import { useContractError } from '@/src/errors/useContractError';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -117,15 +116,6 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   } = useExit(extensionAddress);
 
   // Error Handling
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (recipientsError) {
-      handleError(recipientsError);
-    }
-    if (errorJoined) {
-      handleError(errorJoined);
-    }
-  }, [recipientsError, errorJoined, handleError]);
 
   useEffect(() => {
     if (isExitConfirmed) {

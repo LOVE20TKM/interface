@@ -22,7 +22,6 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 
-import { useContractError } from '@/src/errors/useContractError';
 import { parseUnits, formatTokenAmount } from '@/src/lib/format';
 import { isValidEthAddress, normalizeAddressInput } from '@/src/lib/addressUtils';
 import { getMaxJoinAmount } from '@/src/lib/extensionGroup';
@@ -224,14 +223,6 @@ const GroupTrialAddPage: React.FC = () => {
     if (!allowance || totalTrialAmount === BigInt(0)) return false;
     return allowance >= totalTrialAmount;
   }, [allowance, totalTrialAmount]);
-
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorAction) handleError(errorAction);
-    if (errorExtension) handleError(errorExtension);
-    if (errorGroupDetail) handleError(errorGroupDetail);
-    if (errorAllowance) handleError(errorAllowance);
-  }, [errorAction, errorExtension, errorGroupDetail, errorAllowance, handleError]);
 
   // 监听授权成功
   useEffect(() => {

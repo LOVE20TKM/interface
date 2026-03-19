@@ -28,7 +28,6 @@ import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/c
 import { useDeactivateGroup, useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -106,13 +105,6 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
   }, [isConfirmedDeactivate, router]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorDetail) handleError(errorDetail);
-    if (errorInfo) handleError(errorInfo);
-    if (errorAccountsCount) handleError(errorAccountsCount);
-    if (errorRound) handleError(errorRound);
-  }, [errorDetail, errorInfo, errorAccountsCount, errorRound, handleError]);
 
   if (isPendingDetail || isPendingInfo || isPendingAccountsCount || isPendingRound) {
     return (

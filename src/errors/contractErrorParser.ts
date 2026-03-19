@@ -181,6 +181,20 @@ export function parseRpcError(error: string): ErrorInfo | null {
 }
 
 /**
+ * 检查是否为本地参数错误
+ */
+export function parseLocalParameterError(error: string): ErrorInfo | null {
+  if (/InvalidAddressError/i.test(error) || /Address\s+"0x0"\s+is invalid/i.test(error)) {
+    return {
+      name: '参数错误',
+      message: '页面参数异常，请刷新页面后重试',
+    };
+  }
+
+  return null;
+}
+
+/**
  * 检查是否为用户取消交易
  */
 export function isUserCancellation(error: string): boolean {
@@ -307,16 +321,20 @@ export function parseContractError(error: unknown): ErrorInfo | null {
   const timeoutError = parseTimeoutError(rawMessage);
   if (timeoutError) return timeoutError;
 
-  // 3. 检查 RPC 错误
+  // 3. 检查本地参数错误
+  const localParameterError = parseLocalParameterError(rawMessage);
+  if (localParameterError) return localParameterError;
+
+  // 4. 检查 RPC 错误
   const rpcError = parseRpcError(rawMessage);
   if (rpcError) return rpcError;
 
-  // 4. 检查用户取消（返回 null 表示不是错误）
+  // 5. 检查用户取消（返回 null 表示不是错误）
   if (isUserCancellation(rawMessage)) {
     return null;
   }
 
-  // 5. 提取并解析 4 字节选择器
+  // 6. 提取并解析 4 字节选择器
   const selector = extractErrorSelector(rawMessage);
   if (selector) {
     const errorDef = ErrorsBySelector[selector];
@@ -325,7 +343,7 @@ export function parseContractError(error: unknown): ErrorInfo | null {
     }
   }
 
-  // 6. 解析传统格式错误名称
+  // 7. 解析传统格式错误名称
   const errorName = extractErrorName(rawMessage);
   if (errorName) {
     const errorDef = ErrorsByName[errorName];
@@ -334,7 +352,7 @@ export function parseContractError(error: unknown): ErrorInfo | null {
     }
   }
 
-  // 6.5. 检查原始消息是否为 ERC20 格式错误（直接出现在错误消息中）
+  // 7.5. 检查原始消息是否为 ERC20 格式错误（直接出现在错误消息中）
   if (rawMessage.includes('ERC20:')) {
     // 尝试匹配完整的 ERC20 错误消息
     const erc20Match = rawMessage.match(/ERC20:\s*[^\n]+/i);
@@ -347,7 +365,7 @@ export function parseContractError(error: unknown): ErrorInfo | null {
     }
   }
 
-  // 7. 尝试解析原始 revert 消息
+  // 8. 尝试解析原始 revert 消息
   const revertMessage = parseOriginalRevertMessage(rawMessage);
   if (revertMessage) {
     // 优先检查是否为 ERC20 格式错误（如 "ERC20: insufficient allowance"）
@@ -376,7 +394,7 @@ export function parseContractError(error: unknown): ErrorInfo | null {
     return { name: '交易错误', message: revertMessage };
   }
 
-  // 8. 兜底返回
+  // 9. 兜底返回
   return {
     name: '交易错误',
     message: rawMessage || '交易失败，请稍后刷新重试',

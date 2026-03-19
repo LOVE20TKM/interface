@@ -24,6 +24,7 @@ import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 // my hooks
 import { useBalanceOf, useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
 import { useNativeTransfer } from '@/src/hooks/contracts/useNativeTransfer';
+import { useError } from '@/src/contexts/ErrorContext';
 
 // my context
 import useTokenContext from '@/src/hooks/context/useTokenContext';
@@ -146,8 +147,9 @@ const buildSupportedTokens = (token: any): TokenConfig[] => {
 
 // 统一余额查询 Hook
 const useTokenBalance = (tokenConfig: TokenConfig, account: `0x${string}` | undefined) => {
+  const { setError } = useError();
   // 原生代币使用 useBalance
-  const { data: nativeBalance, isLoading: isLoadingNative } = useBalance({
+  const { data: nativeBalance, isLoading: isLoadingNative, error: nativeBalanceError } = useBalance({
     address: account,
     query: {
       enabled: !!account && tokenConfig.isNative,
@@ -160,6 +162,15 @@ const useTokenBalance = (tokenConfig: TokenConfig, account: `0x${string}` | unde
     account as `0x${string}`,
     !tokenConfig.isNative && !!account,
   );
+
+  useEffect(() => {
+    if (nativeBalanceError) {
+      setError({
+        name: '余额查询失败',
+        message: '无法读取原生代币余额，请检查网络后重试',
+      });
+    }
+  }, [nativeBalanceError, setError]);
 
   return {
     balance: tokenConfig.isNative ? nativeBalance?.value : erc20Balance,

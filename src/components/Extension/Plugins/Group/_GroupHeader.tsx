@@ -32,7 +32,6 @@ import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/c
 import { useDelegateByGroupId } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -105,15 +104,6 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
   } = useIsAccountJoined(token?.address as `0x${string}`, actionId, account as `0x${string}`);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorDetail) handleError(errorDetail);
-    if (errorAccountsCount) handleError(errorAccountsCount);
-    if (errorDelegated) handleError(errorDelegated);
-    if (errorRound) handleError(errorRound);
-    if (errorVerify) handleError(errorVerify);
-    if (errorJoined) handleError(errorJoined);
-  }, [errorDetail, errorAccountsCount, errorDelegated, errorRound, errorVerify, errorJoined, handleError]);
 
   if (!token) {
     return <div>Token信息加载中...</div>;

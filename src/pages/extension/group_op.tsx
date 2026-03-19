@@ -7,7 +7,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 import { useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
-import { useContractError } from '@/src/errors/useContractError';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import Header from '@/src/components/Header';
 import _GroupOPActivate from '@/src/components/Extension/Plugins/Group/_GroupOPActivate';
@@ -56,12 +55,6 @@ const ActionGroupOpPage: React.FC = () => {
   } = useGroupNameOf(op === 'verify' && groupIdBigInt ? groupIdBigInt : BigInt(0));
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorAction) handleError(errorAction);
-    if (errorExtension) handleError(errorExtension);
-    if (op === 'verify' && errorGroupName) handleError(errorGroupName);
-  }, [errorAction, errorExtension, errorGroupName, handleError, op]);
 
   // 获取页面标题
   const getPageTitle = () => {

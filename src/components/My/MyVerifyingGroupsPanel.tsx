@@ -16,7 +16,6 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import RoundLite from '@/src/components/Common/RoundLite';
 import AlertBox from '@/src/components/Common/AlertBox';
-import { useContractError } from '@/src/errors/useContractError';
 import { formatPercentage } from '@/src/lib/format';
 
 interface MyVerifyingGroupsPanelProps {
@@ -60,11 +59,6 @@ const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ current
   }, [actionDistrustInfos]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (error) handleError(error);
-    if (errorActionDistrust) handleError(errorActionDistrust);
-  }, [error, errorActionDistrust, handleError]);
 
   // Calculate counts
   const verifiedCount = useMemo(() => groups.filter((g) => g.isVerified).length, [groups]);

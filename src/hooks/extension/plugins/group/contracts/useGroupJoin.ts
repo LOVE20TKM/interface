@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react';
 import { useUniversalReadContract, useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
+import { ZERO_ADDRESS, shouldEnableTrialAccountsWaitingQuery } from '@/src/lib/errorHandlingGuards';
 
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -154,8 +155,7 @@ export const useTrialAccountsWaiting = (extensionAddress: `0x${string}`, groupId
     functionName: 'trialAccountsWaiting',
     args: [extensionAddress, groupId, provider],
     query: {
-      enabled:
-        !!extensionAddress && !!groupId && !!provider && provider !== '0x0000000000000000000000000000000000000000',
+      enabled: shouldEnableTrialAccountsWaitingQuery(extensionAddress, groupId, provider),
     },
   });
 
@@ -191,7 +191,7 @@ export const useTrialAccountsJoined = (
     functionName: 'trialAccountsJoined',
     args: [extensionAddress, groupId, provider],
     query: {
-      enabled: !!extensionAddress && !!groupId && !!provider && provider !== '0x0',
+      enabled: shouldEnableTrialAccountsWaitingQuery(extensionAddress, groupId, provider),
     },
   });
 

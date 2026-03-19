@@ -37,7 +37,6 @@ import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/com
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -186,13 +185,6 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
   }, [isConfirmedUpdate, router, actionId, token?.symbol]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorDetail) handleError(errorDetail);
-    if (errorJoinInfo) handleError(errorJoinInfo);
-    if (errorActionInfo) handleError(errorActionInfo);
-    if (errorVerificationInfos) handleError(errorVerificationInfos);
-  }, [errorDetail, errorJoinInfo, errorActionInfo, errorVerificationInfos, handleError]);
 
   if (isPendingDetail || isPendingActionInfo || isPendingVerificationInfos) {
     return (

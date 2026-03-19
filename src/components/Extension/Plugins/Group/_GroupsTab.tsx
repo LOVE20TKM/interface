@@ -27,7 +27,6 @@ import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/gr
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -63,15 +62,6 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
   } = useJoinInfo(extensionAddress, currentRound || BigInt(0), account as `0x${string}`);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (error) {
-      handleError(error);
-    }
-    if (errorJoinInfo) {
-      handleError(errorJoinInfo);
-    }
-  }, [error, errorJoinInfo, handleError]);
 
   // 按参与代币数从高到低排序
   const sortedGroups = useMemo(() => {

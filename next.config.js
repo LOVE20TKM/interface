@@ -1,6 +1,19 @@
 /** @type {import('next').NextConfig} */
 
+const { execSync } = require('child_process');
+
+let gitHash = 'unknown';
+try {
+  gitHash = execSync('git rev-parse --short HEAD').toString().trim();
+} catch (e) {}
+
+const buildTime = new Date().toISOString().slice(0, 10);
+
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_GIT_HASH: gitHash,
+    NEXT_PUBLIC_BUILD_TIME: buildTime,
+  },
   trailingSlash: true, // GitHub Pages 需要这个设置
   reactStrictMode: false,
   ...(process.env.NODE_ENV !== 'development' && { output: 'export' }),

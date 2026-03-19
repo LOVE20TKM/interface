@@ -17,7 +17,6 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useExtensionGroupsOfAccount } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupsOfAccount';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -48,10 +47,6 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   });
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (groupsError) handleError(groupsError);
-  }, [groupsError, handleError]);
 
   if (!account) {
     return (

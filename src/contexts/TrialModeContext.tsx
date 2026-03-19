@@ -5,6 +5,7 @@ import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 import { useTrialAccountsWaiting } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
+import { toQuerySafeAddress } from '@/src/lib/errorHandlingGuards';
 
 interface TrialModeContextType {
   // 是否处于体验模式
@@ -48,9 +49,9 @@ export const TrialModeProvider: React.FC<TrialModeProviderProps> = ({ children, 
 
   // 查询体验等待列表
   const { waitingList, isPending, error } = useTrialAccountsWaiting(
-    extensionAddress || ('0x0' as `0x${string}`),
+    toQuerySafeAddress(extensionAddress),
     groupId || BigInt(0),
-    provider || ('0x0' as `0x${string}`),
+    toQuerySafeAddress(provider),
   );
 
   // 检查当前用户是否在体验列表中，并获取体验代币数量

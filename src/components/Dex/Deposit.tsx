@@ -64,6 +64,7 @@ const Deposit: React.FC = () => {
   } = useBalance({
     address: account,
   });
+  const { setError } = useError();
 
   // 读取我的代币余额
   const {
@@ -74,6 +75,15 @@ const Deposit: React.FC = () => {
     process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as `0x${string}`,
     account as `0x${string}`,
   );
+
+  useEffect(() => {
+    if (errBalance) {
+      setError({
+        name: '余额查询失败',
+        message: '无法读取钱包余额，请检查网络后重试',
+      });
+    }
+  }, [errBalance, setError]);
 
   // 兑换
   const {
@@ -103,7 +113,6 @@ const Deposit: React.FC = () => {
   }
 
   // 兑换成功后回调
-  const { setError } = useError();
   useEffect(() => {
     if (isConfirmedDeposit) {
       toast.success('兑换成功');

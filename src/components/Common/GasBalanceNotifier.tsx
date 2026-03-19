@@ -5,6 +5,7 @@ import { useAccount, useBalance } from 'wagmi';
 
 // my components
 import AlertBox from '@/src/components/Common/AlertBox';
+import { useError } from '@/src/contexts/ErrorContext';
 
 // my hooks
 import { useIsGovernor } from '@/src/hooks/composite/useIsGovernor';
@@ -29,12 +30,13 @@ const NORMAL_GAS_THRESHOLD = BigInt(1e18); // 普通用户阈值：1 个原生�
  */
 const GasBalanceNotifier: React.FC = () => {
   const { address: account, isConnected } = useAccount();
+  const { setError } = useError();
 
   // 判断是否是治理者
   const { isGovernor } = useIsGovernor(account);
 
   // 获取账户余额
-  const { data: balance } = useBalance({
+  const { data: balance, error: balanceError } = useBalance({
     address: account,
     query: {
       enabled: !!account && isConnected,
@@ -63,6 +65,15 @@ const GasBalanceNotifier: React.FC = () => {
   const formattedThreshold = useMemo(() => {
     return formatTokenAmount(gasThreshold);
   }, [gasThreshold]);
+
+  React.useEffect(() => {
+    if (balanceError) {
+      setError({
+        name: 'Gas 余额查询失败',
+        message: '无法读取原生代币余额，请检查网络后重试',
+      });
+    }
+  }, [balanceError, setError]);
 
   // 未连接钱包或余额充足时不显示
   if (!isConnected || !account) return null;

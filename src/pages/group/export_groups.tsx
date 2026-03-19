@@ -13,7 +13,6 @@ import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/co
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupInfosOfAction';
 import { useAllGroupsAccountsOfAction } from '@/src/hooks/extension/plugins/group/composite/useAllGroupsAccountsOfAction';
 import { useVerificationInfos } from '@/src/hooks/composite/useVerificationInfos';
-import { useContractError } from '@/src/errors/useContractError';
 
 import Header from '@/src/components/Header';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -178,15 +177,6 @@ const ExportGroupsPage: React.FC = () => {
   }, [groupAccountsMap]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorAction) handleError(errorAction);
-    if (errorExtension) handleError(errorExtension);
-    if (errorRound) handleError(errorRound);
-    if (errorGroups) handleError(errorGroups);
-    if (errorAccounts) handleError(errorAccounts);
-    if (errorVerification) handleError(errorVerification);
-  }, [errorAction, errorExtension, errorRound, errorGroups, errorAccounts, errorVerification, handleError]);
 
   // 整体加载状态（各阶段串行）
   const isLoading =

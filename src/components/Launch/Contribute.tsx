@@ -65,6 +65,7 @@ const getFormSchema = (balance: bigint, maxAllowed?: bigint, maxAllowedLabel?: s
 const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: LaunchInfo }> = ({ token, launchInfo }) => {
   const { address: account, isConnected } = useAccount();
   const router = useRouter();
+  const { setError } = useError();
 
   // 判断是否使用native代币申购
   const isNativeContribute = token?.parentTokenSymbol == process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
@@ -190,6 +191,15 @@ const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: Launch
     }
   }, [contributeAmount, allowanceParentTokenApproved, isNativeContribute]);
 
+  useEffect(() => {
+    if (errorETHBalance) {
+      setError({
+        name: '余额查询失败',
+        message: '无法读取钱包余额，请检查网络后重试',
+      });
+    }
+  }, [errorETHBalance, setError]);
+
   const onApprove = async (data: z.infer<ReturnType<typeof getFormSchema>>) => {
     try {
       // parseUnits 用于将 string 转换为 BigInt
@@ -255,7 +265,6 @@ const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: Launch
   }, [isConfirmedContribute, router, token?.symbol]);
 
   // 5. 如果余额为 0，则提示用户获取
-  const { setError } = useError();
   useEffect(() => {
     if (isConnected && !isPendingBalance && balance !== undefined && balance <= BigInt(0)) {
       setError({

@@ -17,6 +17,7 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { config } from '@/src/wagmi';
 import { isTukeWallet } from '@/src/lib/tukeWalletUtils';
 import { formatTokenAmount } from '@/src/lib/format';
+import { useError } from '@/src/contexts/ErrorContext';
 
 interface WalletButtonProps {
   className?: string;
@@ -25,7 +26,7 @@ interface WalletButtonProps {
 export function WalletButton({ className }: WalletButtonProps = {}) {
   const chainId = useChainId();
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
-  const { data: balance } = useBalance({
+  const { data: balance, error: balanceError } = useBalance({
     address,
     chainId,
   });
@@ -35,6 +36,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   const [walletChainId, setWalletChainId] = useState<number | null>(null);
   const [isNetworkMismatch, setIsNetworkMismatch] = useState(false);
   const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
+  const { setError } = useError();
 
   // 跟踪组件是否已挂载，避免在渲染期间更新状态
   const mountedRef = useRef(false);
@@ -261,6 +263,15 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
       };
     }
   }, [connectError]);
+
+  useEffect(() => {
+    if (balanceError) {
+      setError({
+        name: '余额查询失败',
+        message: '无法读取钱包余额，请检查网络后重试',
+      });
+    }
+  }, [balanceError, setError]);
 
   // 监听连接成功事件并切换网络
   const prevConnectedRef = useRef(isConnected);

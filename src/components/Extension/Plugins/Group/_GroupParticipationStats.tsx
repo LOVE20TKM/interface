@@ -21,7 +21,6 @@ import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/com
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 import { getMaxIncreaseAmount } from '@/src/lib/extensionGroup';
 
@@ -100,12 +99,6 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
   const [isOpen, setIsOpen] = useState(false);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorJoinInfo) handleError(errorJoinInfo);
-    if (errorDetail) handleError(errorDetail);
-    if (errorConstants) handleError(errorConstants);
-  }, [errorJoinInfo, errorDetail, errorConstants, handleError]);
 
   // 加载中状态
   if (isPendingJoinInfo || isPendingDetail || isPendingConstants) {

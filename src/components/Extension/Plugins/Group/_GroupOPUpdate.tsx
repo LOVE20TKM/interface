@@ -35,7 +35,6 @@ import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/com
 import { useUpdateGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, parseUnits } from '@/src/lib/format';
 
 // 组件
@@ -276,11 +275,6 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   }, [isConfirmedUpdate, router]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorDetail) handleError(errorDetail);
-    if (errorParams) handleError(errorParams);
-  }, [errorDetail, errorParams, handleError]);
 
   if (isPendingDetail || isPendingParams || isPendingFormattedSymbol) {
     return (

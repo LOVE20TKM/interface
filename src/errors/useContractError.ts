@@ -17,6 +17,7 @@ import { useCallback, useRef } from 'react';
 import * as Sentry from '@sentry/nextjs';
 import { useError } from '@/src/contexts/ErrorContext';
 import { parseContractError, extractErrorMessage } from './contractErrorParser';
+import { shouldReportErrorToSentry } from '@/src/lib/errorHandlingGuards';
 
 /**
  * 合约错误处理 Hook
@@ -49,7 +50,7 @@ export function useContractError() {
       setError(parsedError);
 
       // 上报到 Sentry（非用户取消的错误）
-      if (!parsedError.message.includes('用户取消')) {
+      if (!parsedError.message.includes('用户取消') && shouldReportErrorToSentry(error)) {
         try {
           Sentry.captureException(error ?? new Error(parsedError.message), {
             level: 'error',

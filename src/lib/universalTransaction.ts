@@ -6,6 +6,7 @@ import { config } from '@/src/wagmi';
 import { isTukeWallet, sendTransactionForTuke, waitForTukeTransaction } from './tukeWalletUtils';
 import { checkWalletNetworkStatus } from '@/src/lib/web3';
 import { useContractError } from '@/src/errors/useContractError';
+import { useError } from '@/src/contexts/ErrorContext';
 import {
   isAbiDecodingError,
   fetchRawCallData,
@@ -99,6 +100,7 @@ export function useUniversalTransaction(
 
   const isTuke = isTukeWallet();
   const { handleError } = useContractError();
+  const { setError: setGlobalError } = useError();
 
   // 对于非TUKE钱包，使用标准的useWaitForTransactionReceipt
   const {
@@ -111,6 +113,7 @@ export function useUniversalTransaction(
 
   // 统一的交易执行函数
   const execute = async (args: any[] = [], value?: bigint) => {
+    setGlobalError(null);
     setIsPending(true);
     setError(null);
     setIsManuallyConfirmed(false);

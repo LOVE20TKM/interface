@@ -40,6 +40,9 @@ const Footer: React.FC<FooterProps> = () => {
             </svg>
             https://love20tkm.github.io/docs/
           </a>
+          <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+            v{process.env.NEXT_PUBLIC_APP_VERSION} #{process.env.NEXT_PUBLIC_GIT_HASH}
+          </p>
         </div>
       </div>
     </footer>

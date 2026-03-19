@@ -20,7 +20,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 
 // my hooks
 import { formatTokenAmount } from '@/src/lib/format';
-import { useContractError } from '@/src/errors/useContractError';
 import { useError } from '@/src/contexts/ErrorContext';
 import { useBalanceOf, useAllowance, useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import {
@@ -227,15 +226,6 @@ export default function MintGroup() {
   }, [balance, isBalancePending, isValid, mintCost, setError, FIRST_TOKEN_SYMBOL]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (balanceError) {
-      handleError(balanceError);
-    }
-    if (errAllowance) {
-      handleError(errAllowance);
-    }
-  }, [balanceError, errAllowance, handleError]);
 
   // 控制按钮文案
   const hasStartedApproving = isPendingApprove || isConfirmingApprove;

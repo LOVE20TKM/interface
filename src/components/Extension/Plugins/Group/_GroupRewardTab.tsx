@@ -21,7 +21,6 @@ import { useGroupsRewardOfAction } from '@/src/hooks/extension/plugins/group/com
 import { useDistrustVotesOfRound } from '@/src/hooks/extension/plugins/group/composite/useDistrustVotesOfRound';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 
 // 组件
@@ -111,12 +110,6 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
   }, [groupRewards, distrustVotesMap]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (error) handleError(error);
-    if (errorRound) handleError(errorRound);
-    if (errorDistrust) handleError(errorDistrust);
-  }, [error, errorRound, errorDistrust, handleError]);
 
   // 处理轮次切换
   const handleChangedRound = (round: number) => {

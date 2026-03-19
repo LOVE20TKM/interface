@@ -4,7 +4,6 @@ import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { useRouter } from 'next/router';
 
 // my hooks
-import { useContractError } from '@/src/errors/useContractError';
 import { useRewardDetailByVerifier } from '@/src/hooks/extension/plugins/group-service/composite/useRewardDetailByVerifier';
 import { useExtensionParams } from '@/src/hooks/extension/plugins/group-service/composite/useExtensionParams';
 
@@ -89,12 +88,6 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
   });
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (error) {
-      handleError(error);
-    }
-  }, [error, handleError]);
 
   // 处理轮次切换
   const handleChangedRound = (round: number) => {

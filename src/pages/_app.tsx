@@ -8,15 +8,19 @@ import type { AppProps } from 'next/app';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 import { config } from '@/src/wagmi';
-import { ErrorProvider } from '@/src/contexts/ErrorContext';
+import { ErrorProvider, useError } from '@/src/contexts/ErrorContext';
 import { TokenProvider } from '@/src/contexts/TokenContext';
 import { AppSidebar } from '@/src/components/Common/AppSidebar';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import ActionRewardNotifier from '@/src/components/Common/ActionRewardNotifier';
 import GasBalanceNotifier from '@/src/components/Common/GasBalanceNotifier';
+import { ErrorAlert } from '@/src/components/Common/ErrorAlert';
+import { AppErrorBoundary } from '../components/Common/AppErrorBoundary';
 import Footer from '@/src/components/Footer';
 import { BottomNavigation } from '@/src/components/Common/BottomNavigation';
 import { usePageRecovery } from '@/src/hooks/usePageRecovery';
+import { extractErrorMessage, isUserCancellation, parseContractError } from '@/src/errors/contractErrorParser';
+import * as Sentry from '@sentry/nextjs';
 
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
@@ -53,6 +57,123 @@ const WagmiProvider = dynamic(() => import('wagmi').then((mod) => mod.WagmiProvi
 const ClientWrapper = dynamic(() => Promise.resolve(({ children }: { children: React.ReactNode }) => <>{children}</>), {
   ssr: false,
 });
+
+const GLOBAL_RUNTIME_ERROR_PATTERNS = [
+  /^TypeError:/i,
+  /^ReferenceError:/i,
+  /^RangeError:/i,
+  /^SyntaxError:/i,
+  /^Error:/i,
+  /Cannot read (?:properties|property)/i,
+  /Maximum update depth exceeded/i,
+  /Hydration failed/i,
+  /Rendered more hooks than during the previous render/i,
+];
+
+const CONTRACT_ERROR_PATTERNS = [
+  /execution reverted/i,
+  /reverted with/i,
+  /custom error/i,
+  /insufficient funds/i,
+  /failed to estimate gas/i,
+  /cannot estimate gas/i,
+  /rpc/i,
+  /call exception/i,
+  /0x[a-fA-F0-9]{8}/,
+  /ERC20:/i,
+  /User rejected/i,
+  /User denied/i,
+];
+
+const isLikelyRuntimeError = (message: string) => GLOBAL_RUNTIME_ERROR_PATTERNS.some((pattern) => pattern.test(message));
+
+const isLikelyContractError = (message: string) => CONTRACT_ERROR_PATTERNS.some((pattern) => pattern.test(message));
+
+const buildGlobalErrorInfo = (error: unknown, fallbackName: string) => {
+  const rawMessage = extractErrorMessage(error);
+
+  if (isUserCancellation(rawMessage)) {
+    return null;
+  }
+
+  if (!rawMessage || isLikelyRuntimeError(rawMessage)) {
+    return {
+      name: fallbackName,
+      message: '页面发生异常，请刷新后重试',
+    };
+  }
+
+  if (isLikelyContractError(rawMessage)) {
+    const parsedError = parseContractError(error);
+    if (parsedError) {
+      return parsedError;
+    }
+  }
+
+  return {
+    name: fallbackName,
+    message: rawMessage,
+  };
+};
+
+const GlobalErrorBridge = () => {
+  const { setError } = useError();
+
+  useEffect(() => {
+    const handleWindowError = (event: ErrorEvent) => {
+      const errorInfo = buildGlobalErrorInfo(event.error ?? event.message, '运行时错误');
+      if (!errorInfo) return;
+      setError(errorInfo);
+
+      try {
+        Sentry.captureException(event.error ?? new Error(event.message || errorInfo.message), {
+          level: 'error',
+          tags: {
+            source: 'window.error',
+          },
+          extra: {
+            message: event.message,
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+          },
+        });
+      } catch (captureError) {
+        console.warn('Sentry capture failed:', captureError);
+      }
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const errorInfo = buildGlobalErrorInfo(event.reason, '异步错误');
+      if (!errorInfo) return;
+      setError(errorInfo);
+
+      try {
+        Sentry.captureException(event.reason instanceof Error ? event.reason : new Error(errorInfo.message), {
+          level: 'error',
+          tags: {
+            source: 'window.unhandledrejection',
+          },
+          extra: {
+            rawReason: extractErrorMessage(event.reason),
+          },
+        });
+      } catch (captureError) {
+        console.warn('Sentry capture failed:', captureError);
+      }
+    };
+
+    window.addEventListener('error', handleWindowError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleWindowError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, [setError]);
+
+  return null;
+};
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -174,9 +295,10 @@ function MyApp({ Component, pageProps }: AppProps) {
       <LoadingOverlay isLoading={navLoading} text="网络加载中..." />
       <WagmiProvider config={config}>
         <QueryClientProvider client={client}>
-          <TokenProvider>
-            <SidebarProvider>
-              <ErrorProvider>
+          <ErrorProvider>
+            <GlobalErrorBridge />
+            <TokenProvider>
+              <SidebarProvider>
                 <AppSidebar />
                 <SidebarInset className="min-w-0">
                   <div className="min-h-screen bg-background flex flex-col pb-16 md:pb-0">
@@ -189,16 +311,21 @@ function MyApp({ Component, pageProps }: AppProps) {
                         },
                       }}
                     />
+                    <div className="px-4 pt-4">
+                      <ErrorAlert />
+                    </div>
                     <GasBalanceNotifier />
                     <ActionRewardNotifier />
-                    <Component {...pageProps} />
+                    <AppErrorBoundary key={router.asPath}>
+                      <Component {...pageProps} />
+                    </AppErrorBoundary>
                     <Footer />
                     <BottomNavigation />
                   </div>
                 </SidebarInset>
-              </ErrorProvider>
-            </SidebarProvider>
-          </TokenProvider>
+              </SidebarProvider>
+            </TokenProvider>
+          </ErrorProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </ClientWrapper>

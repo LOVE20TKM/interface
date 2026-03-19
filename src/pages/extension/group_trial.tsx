@@ -6,7 +6,6 @@ import { useRouter } from 'next/router';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
-import { useContractError } from '@/src/errors/useContractError';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AlertBox from '@/src/components/Common/AlertBox';
 import Header from '@/src/components/Header';
@@ -50,13 +49,6 @@ const GroupTrialPage: React.FC = () => {
     actionInfo,
   });
   const extensionAddress = contractInfo?.extension;
-
-  // 错误处理
-  const { handleError } = useContractError();
-  React.useEffect(() => {
-    if (errorAction) handleError(errorAction);
-    if (errorExtension) handleError(errorExtension);
-  }, [errorAction, errorExtension, handleError]);
 
   // 参数校验
   if (groupIdBigInt === undefined || actionId === undefined) {

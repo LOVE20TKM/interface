@@ -8,7 +8,6 @@ import { useAccount } from 'wagmi';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
-import { useContractError } from '@/src/errors/useContractError';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AlertBox from '@/src/components/Common/AlertBox';
 import Header from '@/src/components/Header';
@@ -83,14 +82,6 @@ const ActionGroupPage: React.FC = () => {
   });
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorAction) handleError(errorAction);
-    if (errorExtension) handleError(errorExtension);
-    if (errorGroupDetail) handleError(errorGroupDetail);
-    if (errorVerifyRound) handleError(errorVerifyRound);
-    if (errorWarningRates) handleError(errorWarningRates);
-  }, [errorAction, errorExtension, errorGroupDetail, errorVerifyRound, errorWarningRates, handleError]);
 
   // 判断是否是owner
   const isOwner = account && groupDetail && groupDetail.owner.toLowerCase() === account.toLowerCase();

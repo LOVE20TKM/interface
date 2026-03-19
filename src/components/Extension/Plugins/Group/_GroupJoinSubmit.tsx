@@ -40,7 +40,6 @@ import { useGetInfoForJoin } from '@/src/hooks/extension/plugins/group/composite
 import { useJoin, useTrialJoin } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 import { getMaxJoinAmount, getMaxIncreaseAmount } from '@/src/lib/extensionGroup';
 import { LocalCache } from '@/src/lib/LocalCache';
@@ -412,12 +411,6 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   }, [isConfirmedJoin, isConfirmedTrialJoin, uiIsTrialMode, router, actionId, token?.symbol, groupId]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorDetail) handleError(errorDetail);
-    if (errorJoinInfo) handleError(errorJoinInfo);
-    if (errorConstants) handleError(errorConstants);
-  }, [errorDetail, errorJoinInfo, errorConstants, handleError]);
 
   // 检查投票状态并显示错误提示
   useEffect(() => {

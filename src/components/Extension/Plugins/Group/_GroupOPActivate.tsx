@@ -42,7 +42,6 @@ import {
 import { useValidGovVotes, useGovVotesNum } from '@/src/hooks/contracts/useLOVE20Stake';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount, formatPercentage, parseUnits } from '@/src/lib/format';
 
 // 组件
@@ -375,14 +374,6 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   }, [isConfirmedActivate, router, actionId, token?.symbol]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorActionParams) handleError(errorActionParams);
-    if (errorBalance) handleError(errorBalance);
-    if (errorAllowance) handleError(errorAllowance);
-    if (errorGroups) handleError(errorGroups);
-    if (errorActivatedGroups) handleError(errorActivatedGroups);
-  }, [errorActionParams, errorBalance, errorAllowance, errorGroups, errorActivatedGroups, handleError]);
 
   if (
     isPendingActionParams ||

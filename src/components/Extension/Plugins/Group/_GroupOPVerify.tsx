@@ -33,7 +33,6 @@ import {
 } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { copyWithToast } from '@/src/lib/clipboardUtils';
 import { LocalCache } from '@/src/lib/LocalCache';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
@@ -339,21 +338,6 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   }, [isConfirmedVerify, router, cacheKey]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorRound) handleError(errorRound);
-    if (errorCanVerify) handleError(errorCanVerify);
-    if (errorGetAccounts) handleError(errorGetAccounts);
-    if (errorSubmittedCount) handleError(errorSubmittedCount);
-    if (errorVerificationInfos) handleError(errorVerificationInfos);
-  }, [
-    errorRound,
-    errorCanVerify,
-    errorGetAccounts,
-    errorSubmittedCount,
-    errorVerificationInfos,
-    handleError,
-  ]);
 
   if (
     isPendingRound ||

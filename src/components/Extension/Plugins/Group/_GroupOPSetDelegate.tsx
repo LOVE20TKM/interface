@@ -35,7 +35,6 @@ import {
 import { useGroupInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -145,11 +144,6 @@ const _GroupOPSetDelegate: React.FC<GroupOPSetDelegatedProps> = ({
   }, [isConfirmedSet, router, form]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorInfo) handleError(errorInfo);
-    if (errorDelegated) handleError(errorDelegated);
-  }, [errorInfo, errorDelegated, handleError]);
 
   if (isPendingInfo || isPendingDelegated) {
     return (

@@ -36,7 +36,6 @@ import {
 } from '@/src/hooks/extension/plugins/group-service/contracts/useExtensionGroupService';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -125,13 +124,6 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
   }, [isConfirmedJoin, router, actionId, token?.symbol]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorJoinInfo) handleError(errorJoinInfo);
-    if (errorCurrentRound) handleError(errorCurrentRound);
-    if (errorVoted) handleError(errorVoted);
-    if (errorHasActiveGroups) handleError(errorHasActiveGroups);
-  }, [errorJoinInfo, errorCurrentRound, errorVoted, errorHasActiveGroups, handleError]);
 
   // 检查投票状态并显示错误提示
   useEffect(() => {

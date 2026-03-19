@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 
 // my hooks
-import { useContractError } from '@/src/errors/useContractError';
 import { useAccountRewardsOfRound } from '@/src/hooks/extension/plugins/group-service/composite/useAccountRewardsOfRound';
 
 // my contexts
@@ -75,12 +74,6 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
   });
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (error) {
-      handleError(error);
-    }
-  }, [error, handleError]);
 
   // 处理轮次切换
   const handleChangedRound = (round: number) => {

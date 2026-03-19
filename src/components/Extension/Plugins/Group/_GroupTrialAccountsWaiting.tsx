@@ -11,7 +11,6 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { Button } from '@/components/ui/button';
 
-import { useContractError } from '@/src/errors/useContractError';
 import { formatTokenAmount } from '@/src/lib/format';
 import NavigationUtils from '@/src/lib/navigationUtils';
 
@@ -88,11 +87,6 @@ const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
   } = useTrialAccountsWaitingRemoveAll();
 
   const hasCalledSuccessRef = useRef(false);
-
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorWaitingList) handleError(errorWaitingList);
-  }, [errorWaitingList, handleError]);
 
   useEffect(() => {
     if ((isConfirmedRemove || isConfirmedRemoveAll) && !hasCalledSuccessRef.current) {

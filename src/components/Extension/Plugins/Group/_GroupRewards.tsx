@@ -29,7 +29,6 @@ import { useVerifiedAccountCount } from '@/src/hooks/extension/plugins/group/con
 import { useVerificationInfos } from '@/src/hooks/composite/useVerificationInfos';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { formatPercentage, formatTokenAmount, formatUnits } from '@/src/lib/format';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 
@@ -131,14 +130,6 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
   const hasVerificationKeys = actionInfo?.body.verificationKeys && actionInfo.body.verificationKeys.length > 0;
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorRound) handleError(errorRound);
-    if (errorRecords) handleError(errorRecords);
-    if (errorVerifiedAccountCount) handleError(errorVerifiedAccountCount);
-    if (errorWarningRates) handleError(errorWarningRates);
-    if (errorVerificationInfos) handleError(errorVerificationInfos);
-  }, [errorRound, errorRecords, errorVerifiedAccountCount, errorWarningRates, errorVerificationInfos, handleError]);
 
   const handleChangedRound = (round: number) => {
     const newRound = BigInt(round);

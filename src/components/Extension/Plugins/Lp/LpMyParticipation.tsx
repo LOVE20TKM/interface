@@ -11,7 +11,6 @@ import { HelpCircle } from 'lucide-react';
 import { useIsAccountJoined } from '@/src/hooks/extension/base/contracts/useExtensionCenter';
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite/useMyLpActionData';
 import { useExit } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLp';
-import { useContractError } from '@/src/errors/useContractError';
 
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -109,15 +108,6 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
   }, [isConfirmedExit, router]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorData) {
-      handleError(errorData);
-    }
-    if (errorJoined) {
-      handleError(errorJoined);
-    }
-  }, [errorData, errorJoined, handleError]);
 
   if (isPendingData || isPendingJoined) {
     return (

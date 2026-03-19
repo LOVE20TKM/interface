@@ -31,7 +31,6 @@ import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/com
 import { useExit, useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 import { LinkIfUrl } from '@/src/lib/stringUtils';
 
 // 组件
@@ -116,12 +115,6 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   }, [isConfirmedExit, router]);
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (errorJoinInfo) handleError(errorJoinInfo);
-    if (errorDetail) handleError(errorDetail);
-    if (errorVerificationInfos) handleError(errorVerificationInfos);
-  }, [errorJoinInfo, errorDetail, errorVerificationInfos, handleError]);
 
   if (isPendingJoinInfo || isPendingDetail) {
     return (

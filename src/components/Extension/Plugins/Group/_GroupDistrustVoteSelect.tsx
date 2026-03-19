@@ -14,7 +14,6 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
 
 // 工具函数
-import { useContractError } from '@/src/errors/useContractError';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -42,12 +41,6 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
   });
 
   // 错误处理
-  const { handleError } = useContractError();
-  useEffect(() => {
-    if (error) {
-      handleError(error);
-    }
-  }, [error, handleError]);
 
   // 按服务者分组链群
   const ownerGroups = useMemo(() => {
