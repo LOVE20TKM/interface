@@ -28,6 +28,7 @@ interface WalletButtonProps {
 export function WalletButton({ className }: WalletButtonProps = {}) {
   const tokenContext = useContext(TokenContext);
   const token = tokenContext?.token;
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
   const chainId = useChainId();
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
   const { data: balance, error: balanceError } = useBalance({
@@ -544,7 +545,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                 {hasParent ? (
                   <DropdownMenuItem
                     onClick={() => {
-                      window.location.href = `/acting/?symbol=${token.parentTokenSymbol}`;
+                      window.location.href = `${basePath}/acting/?symbol=${token.parentTokenSymbol}`;
                     }}
                     className="rounded-lg text-base text-gray-700 focus:text-gray-900 focus:bg-gray-50"
                   >
@@ -555,7 +556,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                 ) : (
                   <DropdownMenuItem
                     onClick={() => {
-                      window.location.href = `/tokens/children/?symbol=${token.symbol}`;
+                      window.location.href = `${basePath}/tokens/children/?symbol=${token.symbol}`;
                     }}
                     className="rounded-lg text-base text-gray-700 focus:text-gray-900 focus:bg-gray-50"
                   >
@@ -567,6 +568,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               </>
             );
           })()}
+
         <DropdownMenuItem
           onClick={handleDisconnect}
           className="rounded-lg text-base text-red-600 focus:text-red-600 focus:bg-red-50"
