@@ -8,6 +8,12 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logWeb3Error, logError } from '@/src/lib/debugUtils';
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+
+const canReadErc20 = (token: `0x${string}`, account?: `0x${string}`, flag: boolean = true) => {
+  return !!account && flag && token !== ZERO_ADDRESS;
+};
+
 /* =======================
    ===== Read Hooks ======
    ======================= */
@@ -29,7 +35,7 @@ export const useAllowance = (
     functionName: 'allowance',
     args: [owner, spender],
     query: {
-      enabled: !!token && !!owner && !!spender && flag,
+      enabled: canReadErc20(token, owner, flag) && !!spender,
     },
   });
 
@@ -47,7 +53,7 @@ export const useBalanceOf = (token: `0x${string}`, account: `0x${string}`, flag:
     functionName: 'balanceOf',
     args: [account],
     query: {
-      enabled: !!token && !!account && flag,
+      enabled: canReadErc20(token, account, flag),
     },
   });
 
