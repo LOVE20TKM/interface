@@ -27,6 +27,7 @@ interface WalletButtonProps {
 export function WalletButton({ className }: WalletButtonProps = {}) {
   const tokenContext = useContext(TokenContext);
   const token = tokenContext?.token;
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
   const chainId = useChainId();
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
   const { data: balance } = useBalance({
@@ -531,7 +532,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
             <>
               {hasParent ? (
                 <DropdownMenuItem
-                  onClick={() => { window.location.href = `/acting/?symbol=${token.parentTokenSymbol}`; }}
+                  onClick={() => { window.location.href = `${basePath}/acting/?symbol=${token.parentTokenSymbol}`; }}
                   className="rounded-lg text-gray-700 focus:text-gray-900 focus:bg-gray-50"
                 >
                   <ArrowUpLeft className="w-4 h-4 mr-3 text-gray-500" />
@@ -540,7 +541,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem
-                  onClick={() => { window.location.href = `/tokens/children/?symbol=${token.symbol}`; }}
+                  onClick={() => { window.location.href = `${basePath}/tokens/children/?symbol=${token.symbol}`; }}
                   className="rounded-lg text-gray-700 focus:text-gray-900 focus:bg-gray-50"
                 >
                   <List className="w-4 h-4 mr-3 text-gray-500" />
