@@ -33,8 +33,8 @@ interface TokenConfig {
   isNative: boolean;
 }
 
-// 构建支持的基础代币列表
-const buildBaseTokens = (): TokenConfig[] => {
+// 构建支持的基础代币列表 (TUSDT, 父代币)
+const buildBaseTokens = (parentTokenAddress?: `0x${string}`, parentTokenSymbol?: string): TokenConfig[] => {
   const supportedTokens: TokenConfig[] = [];
 
   // 1. TUSDT (如果配置了地址)
@@ -49,13 +49,11 @@ const buildBaseTokens = (): TokenConfig[] => {
     });
   }
 
-  // 2. TKM20 (父代币)
-  const parentSymbol = process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
-  const parentAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN;
-  if (parentSymbol && parentAddress) {
+  // 2. 父代币 (使用真实的父币信息)
+  if (parentTokenSymbol && parentTokenAddress) {
     supportedTokens.push({
-      symbol: parentSymbol,
-      address: parentAddress as `0x${string}`,
+      symbol: parentTokenSymbol,
+      address: parentTokenAddress,
       decimals: 18,
       isNative: false,
     });
@@ -97,38 +95,68 @@ const WithdrawPage = () => {
   const { address: account } = useAccount();
   const { token } = useTokenContext();
   const router = useRouter();
+  const parentTokenAddress = token?.parentTokenAddress;
+  const parentTokenSymbol = token?.parentTokenSymbol;
 
   // --------------------------------------------------
   // 1. 构建支持的代币列表
   // --------------------------------------------------
-  const baseTokens = useMemo(() => buildBaseTokens(), []);
+  const baseTokens = useMemo(
+    () => buildBaseTokens(parentTokenAddress, parentTokenSymbol),
+    [parentTokenAddress, parentTokenSymbol],
+  );
+
+  // 根据父币是否为根父币，决定默认选择 USDT 还是父币
+  const isRootParent = parentTokenSymbol === process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
 
   // 选中的基础代币状态
   const [baseToken, setBaseToken] = useState<TokenConfig>(() => {
-    const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
-    const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol);
-    return (
-      defaultToken || {
-        symbol: process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL || '',
-        address:
-          (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as `0x${string}`) ||
-          '0x0000000000000000000000000000000000000000',
+    if (isRootParent) {
+      const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+      const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol);
+      return defaultToken || baseTokens[0] || {
+        symbol: parentTokenSymbol || '',
+        address: parentTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
         decimals: 18,
         isNative: false,
-      }
-    );
+      };
+    } else {
+      const defaultToken = baseTokens.find((t) => t.symbol === parentTokenSymbol);
+      return defaultToken || baseTokens[0] || {
+        symbol: parentTokenSymbol || '',
+        address: parentTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
+        decimals: 18,
+        isNative: false,
+      };
+    }
   });
 
   // --------------------------------------------------
-  // 2. 处理 URL 参数，设置默认币对儿
+  // 2. 处理 URL 参数 + baseTokens 变化时同步 baseToken
   // --------------------------------------------------
   useEffect(() => {
-    const { baseToken: baseTokenSymbol } = router.query;
+    if (baseTokens.length === 0) return;
 
-    if (baseTokenSymbol && typeof baseTokenSymbol === 'string' && baseTokens.length > 0) {
+    // 优先使用 URL 参数中的 baseToken
+    const { baseToken: baseTokenSymbol } = router.query;
+    if (baseTokenSymbol && typeof baseTokenSymbol === 'string') {
       const foundToken = baseTokens.find((t) => t.symbol === baseTokenSymbol);
       if (foundToken) {
         setBaseToken(foundToken);
+        return;
+      }
+    }
+
+    // 没有 URL 参数或未匹配时，检查当前选中的是否还在列表中
+    const currentTokenExists = baseTokens.some((t) => t.address === baseToken.address);
+    if (!currentTokenExists) {
+      if (isRootParent) {
+        const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+        const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol) || baseTokens[0];
+        if (defaultToken) setBaseToken(defaultToken);
+      } else {
+        const defaultToken = baseTokens.find((t) => t.symbol === parentTokenSymbol) || baseTokens[0];
+        if (defaultToken) setBaseToken(defaultToken);
       }
     }
   }, [router.query, baseTokens]);

@@ -132,18 +132,31 @@ const LiquidityPanel = () => {
     [parentTokenAddress, parentTokenSymbol],
   );
 
+  // 根据父币是否为根父币，决定默认选择 USDT 还是父币
+  const isRootParent = parentTokenSymbol === process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
+
   // 选中的基础代币状态
   const [baseToken, setBaseToken] = useState<TokenConfig>(() => {
-    const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
-    const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol);
-    return (
-      defaultToken || {
+    if (isRootParent) {
+      // 父币是根父币，默认选 USDT
+      const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+      const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol);
+      return defaultToken || baseTokens[0] || {
         symbol: parentTokenSymbol || '',
         address: parentTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
         decimals: 18,
         isNative: false,
-      }
-    );
+      };
+    } else {
+      // 父币不是根父币，默认选父币
+      const defaultToken = baseTokens.find((t) => t.symbol === parentTokenSymbol);
+      return defaultToken || baseTokens[0] || {
+        symbol: parentTokenSymbol || '',
+        address: parentTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
+        decimals: 18,
+        isNative: false,
+      };
+    }
   });
 
   // 当 baseTokens 更新时，同步更新 baseToken
@@ -153,11 +166,15 @@ const LiquidityPanel = () => {
     // 检查当前选中的 baseToken 是否还在 baseTokens 列表中
     const currentTokenExists = baseTokens.some((t) => t.address === baseToken.address);
     if (!currentTokenExists) {
-      // 如果当前代币不存在，优先选择 TUSDT，否则选择第一个
-      const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
-      const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol) || baseTokens[0];
-      if (defaultToken) {
-        setBaseToken(defaultToken);
+      if (isRootParent) {
+        // 父币是根父币，默认选 USDT
+        const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+        const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol) || baseTokens[0];
+        if (defaultToken) setBaseToken(defaultToken);
+      } else {
+        // 父币不是根父币，默认选父币
+        const defaultToken = baseTokens.find((t) => t.symbol === parentTokenSymbol) || baseTokens[0];
+        if (defaultToken) setBaseToken(defaultToken);
       }
     }
   }, [baseTokens, baseToken.address]);
