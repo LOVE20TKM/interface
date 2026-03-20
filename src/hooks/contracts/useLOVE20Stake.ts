@@ -134,7 +134,12 @@ export const useValidGovVotes = (tokenAddress: `0x${string}`, account: `0x${stri
     functionName: 'validGovVotes',
     args: [tokenAddress, account],
     query: {
-      enabled: enabled && !!tokenAddress && !!account,
+      enabled:
+        enabled &&
+        !!tokenAddress &&
+        tokenAddress !== '0x0000000000000000000000000000000000000000' &&
+        !!account &&
+        account !== '0x0000000000000000000000000000000000000000',
     },
   });
 
