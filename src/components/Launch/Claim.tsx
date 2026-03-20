@@ -80,7 +80,12 @@ const Claim: React.FC<{ token: Token; launchInfo: LaunchInfo }> = ({ token, laun
 
   return (
     <div className="px-4 mt-2">
-      <LeftTitle title="我的申购" />
+      <div className="flex justify-between items-center mb-2">
+        <LeftTitle title="我的申购" />
+        <Button variant="link" className="text-secondary border-secondary underline shrink-0" asChild>
+          <Link href={`/launch/burn?symbol=${token?.symbol}`}>换回父币 &gt;&gt;</Link>
+        </Button>
+      </div>
 
       <div className="stats w-full">
         <div className="stat place-items-center">
@@ -95,14 +100,9 @@ const Claim: React.FC<{ token: Token; launchInfo: LaunchInfo }> = ({ token, laun
       <div className="flex justify-center space-x-4">
         {Number(contributed) <= 0 ||
           (!contributed && (
-            <>
-              <Button className="w-1/2" disabled>
-                未申购
-              </Button>
-              <Button className="w-1/2" asChild>
-                <Link href={`/launch/burn?symbol=${token?.symbol}`}>换回父币</Link>
-              </Button>
-            </>
+            <Button className="w-1/2" disabled>
+              未申购
+            </Button>
           ))}
         {Number(contributed) > 0 && !claimed && (
           <Button
@@ -114,20 +114,16 @@ const Claim: React.FC<{ token: Token; launchInfo: LaunchInfo }> = ({ token, laun
           </Button>
         )}
         {Number(contributed) > 0 && claimed && (
-          <>
-            <Button className="w-1/2" disabled>
-              已领取
-            </Button>
-            <Button className="w-1/2" asChild>
-              <Link href={`/launch/burn?symbol=${token?.symbol}`}>换回父币</Link>
-            </Button>
-          </>
+          <Button className="w-1/2" disabled>
+            已领取
+          </Button>
         )}
       </div>
       {Number(contributed) > 0 && claimed && (
         <div className="text-center text-sm my-2 text-greyscale-400">
           我共申购了 <span className="text-secondary">{formatTokenAmount(contributed ?? BigInt(0))} </span>
-          {parentTokenSymbol}，申购返还了 <span className="text-secondary">{formatTokenAmount(extraRefund ?? BigInt(0))}</span>{' '}
+          {parentTokenSymbol}，申购返还了{' '}
+          <span className="text-secondary">{formatTokenAmount(extraRefund ?? BigInt(0))}</span>{' '}
           {token.parentTokenSymbol}
           {token.parentTokenSymbol == process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL && (
             <Link

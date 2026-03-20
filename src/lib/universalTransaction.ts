@@ -13,6 +13,7 @@ import {
   tryDecodeRevertData,
   extractRawRevertData,
   ContractRevertError,
+  SimulationFailedError,
 } from '@/src/lib/revertDecoder';
 
 /**
@@ -53,7 +54,7 @@ export const sendUniversalTransaction = async (
           value,
         });
       } catch (simError: unknown) {
-        // 先尝试从模拟错误对象本身提取原始 revert data
+        // 先尝试从模拟错误对象的 .data 字段提取原始 revert data
         const directRawData = extractRawRevertData(simError);
         if (directRawData) {
           const decoded = tryDecodeRevertData(directRawData, abi);
@@ -64,7 +65,7 @@ export const sendUniversalTransaction = async (
         }
 
         if (isAbiDecodingError(simError)) {
-          // 非标准 RPC：revert data 被当作成功返回，尝试通过低级 call 恢复
+          // 非标准 RPC：revert data 被当作成功返回，通过低级 call 恢复
           const rawData = await fetchRawCallData(config, address, abi, functionName, args, value);
           if (rawData) {
             const decoded = tryDecodeRevertData(rawData, abi);
@@ -73,6 +74,15 @@ export const sendUniversalTransaction = async (
               throw new ContractRevertError(decoded.errorName, decoded.args, selector);
             }
           }
+
+          // 所有解码均失败，包装成 SimulationFailedError 携带原始上下文
+          throw new SimulationFailedError({
+            rawRevertData: rawData ?? directRawData ?? null,
+            contractAddress: address,
+            functionName,
+            callArgs: args,
+            originalError: simError,
+          });
         }
         throw simError;
       }

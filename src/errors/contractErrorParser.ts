@@ -5,7 +5,7 @@
  * 支持多种错误格式：hex 选择器、错误名称、RPC 错误等
  */
 
-import { ContractRevertError, extractRawRevertData, formatRawErrorMessage } from '../lib/revertDecoder';
+import { ContractRevertError, SimulationFailedError, extractRawRevertData } from '../lib/revertDecoder';
 import { ErrorsBySelector, ErrorsByName } from './unifiedErrorMap';
 
 // ============================================================================
@@ -167,7 +167,7 @@ export function parseRpcError(error: unknown, rawMessage: string): ErrorInfo | n
       if (/position.*out of bounds|index out of bounds/i.test(rawMessage)) {
         return {
           name: '链上交易失败',
-          message: formatRawErrorMessage(error, '链上交易失败'),
+          message: formatPositionOutOfBoundsError(error, rawMessage),
         };
       }
       return {
@@ -290,6 +290,74 @@ export function parseOriginalRevertMessage(errorLog: string): string | null {
 }
 
 // ============================================================================
+// SimulationFailedError / PositionOutOfBounds 格式化
+// ============================================================================
+
+/**
+ * 格式化 SimulationFailedError 为工程师可排查的结构化文案
+ */
+function formatSimulationFailedError(error: SimulationFailedError): ErrorInfo {
+  const rawData = error.rawRevertData;
+  const selector = rawData ? rawData.slice(0, 10).toLowerCase() : null;
+
+  // 先用 selector 在统一错误映射里查找
+  if (selector) {
+    const errorDef = ErrorsBySelector[selector];
+    if (errorDef) {
+      return { name: '交易错误', message: errorDef.message };
+    }
+  }
+
+  const argsStr = error.callArgs
+    .map((a) => (typeof a === 'bigint' ? a.toString() : String(a)))
+    .join(', ');
+
+  const lines = [
+    '合约调用失败 (模拟交易异常，合约可能已revert)',
+    `合约地址: ${error.contractAddress}`,
+    `调用函数: ${error.contractFunctionName}(${argsStr})`,
+    rawData ? `原始 revert data: ${rawData}` : '原始 revert data: 未获取到',
+    selector ? `error selector: ${selector}` : null,
+  ].filter((line): line is string => Boolean(line));
+
+  return { name: '链上交易失败', message: lines.join('\n') };
+}
+
+/**
+ * 格式化 position out of bounds 错误（边缘情况：未经过 universalTransaction 的读操作）
+ *
+ * 从 viem ContractFunctionExecutionError 的属性中提取合约调用上下文
+ */
+function formatPositionOutOfBoundsError(error: unknown, rawMessage: string): string {
+  const rawData = extractRawRevertData(error);
+  const selector = rawData ? rawData.slice(0, 10).toLowerCase() : null;
+
+  // 如果能从 rawData 的 selector 查到业务错误，直接返回
+  if (selector) {
+    const errorDef = ErrorsBySelector[selector];
+    if (errorDef) {
+      return errorDef.message;
+    }
+  }
+
+  const lines: string[] = ['合约调用失败 (ABI解码异常，合约可能已revert)'];
+
+  // viem 的 ContractFunctionExecutionError 会把合约信息存在自身属性上
+  if (error && typeof error === 'object') {
+    const err = error as Record<string, unknown>;
+    if (err.contractAddress) lines.push(`合约地址: ${err.contractAddress}`);
+    if (err.functionName) lines.push(`调用函数: ${err.functionName}`);
+    if (err.sender) lines.push(`发送者: ${err.sender}`);
+  }
+
+  lines.push(rawData ? `原始 revert data: ${rawData}` : '原始 revert data: 未获取到');
+  if (selector) lines.push(`error selector: ${selector}`);
+  lines.push(`原始异常: ${rawMessage.slice(0, 200)}`);
+
+  return lines.join('\n');
+}
+
+// ============================================================================
 // 主解析函数
 // ============================================================================
 
@@ -309,9 +377,13 @@ export function parseContractError(error: unknown): ErrorInfo | null {
     return { name: '交易错误', message: `合约错误: ${error.errorName}` };
   }
 
+  // 0.5 处理模拟交易失败（携带原始 revert data 的结构化错误）
+  if (error instanceof SimulationFailedError) {
+    return formatSimulationFailedError(error);
+  }
+
   // 提取错误消息
   const rawMessage = extractErrorMessage(error);
-  const rawData = extractRawRevertData(error);
 
   // 1. 检查 Gas 费不足
   const gasError = parseGasError(rawMessage);
@@ -391,25 +463,10 @@ export function parseContractError(error: unknown): ErrorInfo | null {
       return { name: '交易错误', message: directErrorDef.message };
     }
 
-    if (rawData) {
-      return {
-        name: '链上交易失败',
-        message: formatRawErrorMessage(error, '链上交易失败'),
-      };
-    }
-
     return { name: '交易错误', message: revertMessage };
   }
 
-  // 9. 如果拿到了原始 revert data，但仍无法解码，直接输出原始上下文方便排查
-  if (rawData) {
-    return {
-      name: '链上交易失败',
-      message: formatRawErrorMessage(error, '链上交易失败'),
-    };
-  }
-
-  // 10. 兜底返回
+  // 9. 兜底返回
   return {
     name: '交易错误',
     message: rawMessage || '交易失败，请稍后刷新重试',
