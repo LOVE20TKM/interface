@@ -47,7 +47,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   const mountedRef = useRef(false);
 
   // 获取注入式连接器
-  const injectedConnector = connectors.find((c) => c.id === 'injected');
+  const injectedConnector = connectors.find((c) => c.id === 'injected') ?? connectors[0];
   const chainName = process.env.NEXT_PUBLIC_CHAIN_NAME ?? process.env.NEXT_PUBLIC_CHAIN;
   const targetChainId = config.chains[0]?.id;
 
