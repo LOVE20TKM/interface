@@ -480,11 +480,9 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
           )}
         >
           <div className="flex items-center">
-            <Avatar className="w-8 h-8 mr-3">
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-bold">
-                {address ? address.slice(2, 4).toUpperCase() : 'W'}
-              </AvatarFallback>
-            </Avatar>
+            <span className="inline-flex items-center justify-center h-7 px-2 mr-3 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold whitespace-nowrap">
+              {token?.symbol || 'TOKEN'}
+            </span>
 
             <div className="flex flex-col items-start min-w-0 mr-2">
               <div className="flex items-center">
