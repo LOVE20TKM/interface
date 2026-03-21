@@ -357,7 +357,18 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
 
       console.log('钱包账户已切换:', accounts);
       if (accounts.length === 0) {
-        // 用户断开连接 - 主动断开 wagmi 连接
+        // 某些钱包 WebView 在特定域名下可能发出虚假的空账户事件
+        // 二次确认：主动查询 eth_accounts 验证是否真的断开
+        try {
+          const currentAccounts = await window.ethereum?.request({ method: 'eth_accounts' });
+          if (currentAccounts && currentAccounts.length > 0) {
+            console.log('accountsChanged 收到空数组，但 eth_accounts 仍有账户，忽略此事件');
+            return;
+          }
+        } catch (e) {
+          console.warn('二次确认 eth_accounts 失败:', e);
+        }
+        // 确认确实断开了
         disconnect();
         setWalletChainId(null);
         setIsNetworkMismatch(false);
@@ -548,8 +559,10 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                     className="rounded-lg text-base text-gray-700 focus:text-gray-900 focus:bg-gray-50"
                   >
                     <ArrowUpLeft className="w-4 h-4 mr-3 text-gray-500" />
-                    返回父币
-                    <span className="ml-auto text-sm text-gray-400">{token.parentTokenSymbol}</span>
+                    <span className="inline-flex items-baseline gap-1">
+                      返回父币
+                      <span className="text-sm text-gray-400">({token.parentTokenSymbol})</span>
+                    </span>
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem

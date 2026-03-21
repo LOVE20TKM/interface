@@ -65,9 +65,11 @@ const selectedChain = CHAIN_MAP[selectedChainName] || mainnet;
 // 创建 wagmi 配置
 export const config = createConfig({
   chains: [selectedChain],
+  multiInjectedProviderDiscovery: false,
   connectors: [
     injected({
       shimDisconnect: true,
+      unstable_shimAsyncInject: 2000,
     }),
   ],
   transports:
