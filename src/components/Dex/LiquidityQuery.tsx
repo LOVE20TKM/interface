@@ -101,18 +101,31 @@ const LiquidityQueryPanel: React.FC = () => {
     return buildBaseTokens(parentToken);
   }, [token?.parentTokenSymbol, token?.parentTokenAddress]);
 
+  // 根据父币是否为根父币，决定默认选择 USDT 还是父币
+  const isRootParent = token?.parentTokenSymbol === process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
+
   // 选中的基础代币状态
   const [baseToken, setBaseToken] = useState<TokenConfig>(() => {
-    const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
-    const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol);
-    return (
-      defaultToken || {
-        symbol: baseTokens[0]?.symbol || '',
-        address: baseTokens[0]?.address || '0x0000000000000000000000000000000000000000',
+    if (isRootParent) {
+      // 父币是根父币，默认选 USDT
+      const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+      const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol);
+      return defaultToken || baseTokens[0] || {
+        symbol: token?.parentTokenSymbol || '',
+        address: token?.parentTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
         decimals: 18,
         isNative: false,
-      }
-    );
+      };
+    } else {
+      // 父币不是根父币，默认选父币
+      const defaultToken = baseTokens.find((t) => t.symbol === token?.parentTokenSymbol);
+      return defaultToken || baseTokens[0] || {
+        symbol: token?.parentTokenSymbol || '',
+        address: token?.parentTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
+        decimals: 18,
+        isNative: false,
+      };
+    }
   });
 
   // 目标代币 (当前token)
@@ -143,13 +156,20 @@ const LiquidityQueryPanel: React.FC = () => {
     const isCurrentValid = baseTokens.some((t) => t.address === baseToken.address);
     if (isCurrentValid) return;
 
-    const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
-    const preferred = (usdtSymbol ? baseTokens.find((t) => t.symbol === usdtSymbol) : undefined) || baseTokens[0];
+    let preferred: TokenConfig | undefined;
+    if (isRootParent) {
+      // 父币是根父币，默认选 USDT
+      const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+      preferred = baseTokens.find((t) => t.symbol === usdtSymbol) || baseTokens[0];
+    } else {
+      // 父币不是根父币，默认选父币
+      preferred = baseTokens.find((t) => t.symbol === token?.parentTokenSymbol) || baseTokens[0];
+    }
     if (!preferred) return;
 
     setBaseToken(preferred);
     form.setValue('baseTokenAddress', preferred.address, { shouldValidate: true });
-  }, [baseTokens, baseToken.address, form]);
+  }, [baseTokens, baseToken.address, form, isRootParent, token?.parentTokenSymbol]);
 
   // 同步表单值与代币状态
   const watchedBaseTokenAddress = form.watch('baseTokenAddress');
