@@ -24,7 +24,7 @@ export default function TokenFairLaunch() {
     launchInfo,
     isPending: isLaunchInfoPending,
     error: launchInfoError,
-  } = useLaunchInfo(token ? token.address : '0x0000000000000000000000000000000000000000');
+  } = useLaunchInfo(token?.address);
 
   // 如果发射已结束，检查更新 token 的 hasEnded 状态
   useEffect(() => {

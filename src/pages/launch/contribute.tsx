@@ -19,7 +19,7 @@ export default function ContributePage() {
     launchInfo,
     isPending: isLaunchInfoPending,
     error: launchInfoError,
-  } = useLaunchInfo(token ? token.address : '0x0000000000000000000000000000000000000000');
+  } = useLaunchInfo(token?.address);
 
   return (
     <>

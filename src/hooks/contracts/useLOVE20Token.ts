@@ -1,7 +1,7 @@
 // hooks/useLove20Token.ts
 
-import { useEffect } from 'react';
-import { useUniversalReadContract } from '@/src/lib/universalReadContract';
+import { useEffect, useMemo } from 'react';
+import { useUniversalReadContract, useUniversalReadContracts } from '@/src/lib/universalReadContract';
 
 import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -58,6 +58,37 @@ export const useBalanceOf = (token: `0x${string}`, account: `0x${string}`, flag:
   });
 
   return { balance: data !== undefined ? safeToBigInt(data) : undefined, isPending, error, refetch };
+};
+
+export const useBalancesOf = (token: `0x${string}`, accounts: readonly `0x${string}`[], flag: boolean = true) => {
+  const contracts = useMemo(
+    () =>
+      accounts.map((account) => ({
+        address: token,
+        abi: LOVE20TokenAbi,
+        functionName: 'balanceOf' as const,
+        args: [account],
+      })),
+    [accounts, token],
+  );
+
+  const { data, isPending, error, refetch } = useUniversalReadContracts({
+    contracts: contracts as any,
+    query: {
+      enabled: flag && token !== ZERO_ADDRESS && contracts.length > 0,
+    },
+  });
+
+  const balances = useMemo(
+    () =>
+      accounts.map((_, index) => {
+        const result = data?.[index]?.result;
+        return result !== undefined ? safeToBigInt(result) : undefined;
+      }),
+    [accounts, data],
+  );
+
+  return { balances, isPending, error, refetch };
 };
 
 /**
