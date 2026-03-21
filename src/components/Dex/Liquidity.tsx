@@ -463,6 +463,38 @@ const LiquidityPanel = () => {
     };
   }, [pairExists, baseReserve, targetReserve]);
 
+  // 预估获得的 LP 数量
+  const estimatedLP = useMemo(() => {
+    if (!parsedBaseAmount || !parsedTokenAmount || parsedBaseAmount <= BigInt(0) || parsedTokenAmount <= BigInt(0)) {
+      return null;
+    }
+
+    if (pairExists && baseReserve && targetReserve && lpTotalSupply && lpTotalSupply > BigInt(0)) {
+      // 已有池子：liquidity = min(amountA * totalSupply / reserveA, amountB * totalSupply / reserveB)
+      const lpFromBase = (parsedBaseAmount * lpTotalSupply) / baseReserve;
+      const lpFromToken = (parsedTokenAmount * lpTotalSupply) / targetReserve;
+      return lpFromBase < lpFromToken ? lpFromBase : lpFromToken;
+    } else if (!pairExists) {
+      // 新池子：liquidity = sqrt(amountA * amountB) - MINIMUM_LIQUIDITY
+      const MINIMUM_LIQUIDITY = BigInt(1000);
+      const product = parsedBaseAmount * parsedTokenAmount;
+      const sqrt = (n: bigint): bigint => {
+        if (n <= BigInt(0)) return BigInt(0);
+        let x = n;
+        let y = (x + BigInt(1)) / BigInt(2);
+        while (y < x) {
+          x = y;
+          y = (x + n / x) / BigInt(2);
+        }
+        return x;
+      };
+      const lp = sqrt(product) - MINIMUM_LIQUIDITY;
+      return lp > BigInt(0) ? lp : BigInt(0);
+    }
+
+    return null;
+  }, [parsedBaseAmount, parsedTokenAmount, pairExists, baseReserve, targetReserve, lpTotalSupply]);
+
   // 移除了旧的 exchangeRate 逻辑，现在使用 priceInfo
 
   // --------------------------------------------------
@@ -711,6 +743,14 @@ const LiquidityPanel = () => {
                 )}
               />
             </div>
+
+            {/* 预估获得 LP 数量 */}
+            {estimatedLP !== null && (
+              <div className="text-sm text-gray-600 mb-2 flex items-center gap-1">
+                <Zap className="w-4 h-4" />
+                预估获得 LP: <span className="font-medium text-gray-800">{formatTokenAmount(estimatedLP)}</span>
+              </div>
+            )}
 
             {/* 价格比例显示 */}
             {priceInfo && (
