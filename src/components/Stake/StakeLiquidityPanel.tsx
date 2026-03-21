@@ -172,6 +172,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
   // --------------------------------------------------
   const [isTokenApproved, setIsTokenApproved] = useState(false);
   const [isParentTokenApproved, setIsParentTokenApproved] = useState(false);
+  const [approveFlowStarted, setApproveFlowStarted] = useState(false);
 
   const {
     approve: approveToken,
@@ -191,6 +192,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
 
   async function onApproveToken(data: z.infer<ReturnType<typeof buildFormSchema>>) {
     try {
+      setApproveFlowStarted(true);
       const stakeAmount = parseUnits(data.stakeToken);
       if (stakeAmount === null) throw new Error('无效的输入格式');
       await approveToken(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB as `0x${string}`, stakeAmount);
@@ -202,6 +204,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
 
   async function onApproveParentToken(data: z.infer<ReturnType<typeof buildFormSchema>>) {
     try {
+      setApproveFlowStarted(true);
       const parentAmount = parseUnits(data.parentToken);
       if (parentAmount === null) throw new Error('无效的输入格式');
       await approveParentToken(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB as `0x${string}`, parentAmount);
@@ -285,6 +288,13 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
       setIsTokenApproved(false);
     }
   }, [parsedStakeToken, allowanceToken]);
+
+  // 当授权流程已启动，但某个 token 授权状态变为不足时，重置授权流程
+  useEffect(() => {
+    if (approveFlowStarted && (!isTokenApproved || !isParentTokenApproved)) {
+      setApproveFlowStarted(false);
+    }
+  }, [approveFlowStarted, isTokenApproved, isParentTokenApproved]);
 
   // --------------------------------------------------
   // 2.4 质押逻辑
@@ -370,7 +380,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
   // --------------------------------------------------
   const isApproving = isPendingApproveToken || isPendingApproveParentToken;
   const isApproveConfirming = isConfirmingApproveToken || isConfirmingApproveParentToken;
-  const hadStartedApprove = isApproving || isApproveConfirming || (isTokenApproved && isParentTokenApproved);
+  const hadStartedApprove = approveFlowStarted || isApproving || isApproveConfirming;
 
   useEffect(() => {
     if (token && isFirstTimeStake === 'true' && !isPendingInitialStakeRound && !initialStakeRound) {

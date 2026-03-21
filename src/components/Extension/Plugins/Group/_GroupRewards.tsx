@@ -4,7 +4,7 @@
 'use client';
 
 // React
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
@@ -15,13 +15,16 @@ import { ChevronRight, ChevronDown } from 'lucide-react';
 
 // 类型
 import { ActionInfo } from '@/src/types/love20types';
+import { AccountRewardRecord } from '@/src/hooks/extension/plugins/group/composite/useGroupAccountsRewardOfRound';
 
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
-import { useGroupAccountsRewardOfRound } from '@/src/hooks/extension/plugins/group/composite/useGroupAccountsRewardOfRound';
+import { useAccountsByGroupIdCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
+import { useGroupAccountsRewardOfPage } from '@/src/hooks/extension/plugins/group/composite/useGroupAccountsRewardOfPage';
+import { useGroupSummaryOfRound } from '@/src/hooks/extension/plugins/group/composite/useGroupSummaryOfRound';
 import { useDistrustRateByGroupId } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useVerifiedAccountCount } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 
@@ -69,6 +72,9 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
     }
   }, [urlRound, currentRound]);
 
+  // 分页常量
+  const PAGE_SIZE = 20;
+
   // 获取指定轮次的已验证账户数量
   const {
     verifiedAccountCount,
@@ -76,13 +82,51 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
     error: errorVerifiedAccountCount,
   } = useVerifiedAccountCount(extensionAddress, selectedRound, groupId);
 
-  // 获取指定轮次的激励记录
+  // 获取账户总数（用于分页）
   const {
-    accountRewardRecords,
-    isPending: isPendingRecords,
-    error: errorRecords,
-  } = useGroupAccountsRewardOfRound({
-    extensionAddress: extensionAddress as `0x${string}`,
+    count: totalCount,
+    isPending: isPendingCount,
+    error: errorCount,
+  } = useAccountsByGroupIdCount(extensionAddress, selectedRound, groupId);
+
+  // 分页状态
+  const [allRecords, setAllRecords] = useState<AccountRewardRecord[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFirstPageLoaded, setIsFirstPageLoaded] = useState(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  // 计算当前页的索引范围
+  const startIndex = BigInt(currentPage * PAGE_SIZE);
+  const endIndex = totalCount
+    ? startIndex + BigInt(PAGE_SIZE) > totalCount
+      ? totalCount
+      : startIndex + BigInt(PAGE_SIZE)
+    : BigInt(0);
+
+  // 分页获取当前页的账户奖励数据
+  const {
+    pageRecords,
+    isPending: isPagePending,
+    error: pageError,
+  } = useGroupAccountsRewardOfPage({
+    extensionAddress,
+    round: selectedRound,
+    groupId,
+    startIndex,
+    endIndex,
+    enabled: !!totalCount && totalCount > BigInt(0) && startIndex < totalCount,
+  });
+
+  // 获取汇总数据（总激励、总得分、总参与代币数）
+  const {
+    totalReward,
+    totalFinalScore,
+    totalJoinedAmount,
+    isPending: isPendingSummary,
+    error: errorSummary,
+  } = useGroupSummaryOfRound({
+    extensionAddress,
     round: selectedRound,
     groupId,
   });
@@ -94,10 +138,63 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
     error: errorWarningRates,
   } = useDistrustRateByGroupId(extensionAddress, selectedRound, groupId);
 
-  // 从激励记录中提取账户地址列表（用于批量获取验证信息）
+  // 数据累积：将新页数据追加到 allRecords
+  useEffect(() => {
+    if (pageRecords && pageRecords.length > 0) {
+      setAllRecords((prev) => {
+        const existingAddresses = new Set(prev.map((r) => r.account.toLowerCase()));
+        const newRecords = pageRecords.filter((r) => !existingAddresses.has(r.account.toLowerCase()));
+        return [...prev, ...newRecords];
+      });
+
+      if (currentPage === 0) {
+        setIsFirstPageLoaded(true);
+      }
+
+      // 检查是否还有更多数据
+      if (totalCount && endIndex >= totalCount) {
+        setHasMore(false);
+      }
+    }
+  }, [pageRecords]);
+
+  // 轮次切换时重置分页状态
+  useEffect(() => {
+    setAllRecords([]);
+    setCurrentPage(0);
+    setHasMore(true);
+    setIsFirstPageLoaded(false);
+  }, [selectedRound]);
+
+  // 无限滚动：IntersectionObserver
+  useEffect(() => {
+    if (!isFirstPageLoaded) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isPagePending) {
+          setCurrentPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, isPagePending, isFirstPageLoaded, currentPage]);
+
+  // 从已加载记录中提取账户地址列表（用于批量获取验证信息）
   const accounts = useMemo(() => {
-    return accountRewardRecords?.map((record) => record.account) || [];
-  }, [accountRewardRecords]);
+    return allRecords.map((record) => record.account);
+  }, [allRecords]);
 
   // 批量获取验证信息
   const {
@@ -153,8 +250,8 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
   const isInitialLoading =
     isPendingRound ||
     !currentRound ||
-    (isPendingRecords && accountRewardRecords === undefined) ||
-    (isPendingVerifiedAccountCount && accountRewardRecords === undefined);
+    isPendingCount ||
+    (currentPage === 0 && isPagePending && allRecords.length === 0);
 
   if (isInitialLoading) {
     return (
@@ -171,47 +268,22 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
     return <div>Token信息加载中...</div>;
   }
 
-  // 计算总激励（链群行动只有 mintReward）
-  const totalReward = accountRewardRecords?.reduce((sum, item) => sum + item.mintReward, BigInt(0)) || BigInt(0);
+  // 计算展示数据（不排序，按链上顺序显示）
+  const combinedData = allRecords.map((record, index) => {
+    const totalRecordReward = record.mintReward;
 
-  // 计算总 finalScore（用于计算百分比）
-  const totalFinalScore =
-    accountRewardRecords?.reduce((sum, scoreInfo) => sum + scoreInfo.finalScore, BigInt(0)) || BigInt(0);
-
-  // 计算总参与代币数（用于汇总行）
-  const totalJoinedAmount =
-    accountRewardRecords?.reduce((sum, item) => sum + item.joinedAmount, BigInt(0)) || BigInt(0);
-
-  // 计算展示数据
-  const combinedData =
-    accountRewardRecords
-      ?.map((record, originalIndex) => {
-        // 链群行动总激励只有 mintReward
-        const totalRecordReward = record.mintReward;
-        const rewardPercentage = totalReward > BigInt(0) ? (Number(totalRecordReward) / Number(totalReward)) * 100 : 0;
-        const finalScorePercentage =
-          totalFinalScore > BigInt(0) ? (Number(record.finalScore) / Number(totalFinalScore)) * 100 : 0;
-
-        return {
-          account: record.account,
-          joinedAmount: record.joinedAmount,
-          joinedRound: record.joinedRound,
-          originScore: record.originScore,
-          finalScore: record.finalScore,
-          finalScorePercentage,
-          mintReward: record.mintReward,
-          totalReward: totalRecordReward,
-          rewardPercentage,
-          trialProvider: record.trialProvider,
-          originalIndex, // 保存原始索引，用于验证状态判断
-        };
-      })
-      .sort((a, b) => {
-        // 按 finalScore 从大到小排序
-        if (a.finalScore > b.finalScore) return -1;
-        if (a.finalScore < b.finalScore) return 1;
-        return 0;
-      }) || [];
+    return {
+      account: record.account,
+      joinedAmount: record.joinedAmount,
+      joinedRound: record.joinedRound,
+      originScore: record.originScore,
+      finalScore: record.finalScore,
+      mintReward: record.mintReward,
+      totalReward: totalRecordReward,
+      trialProvider: record.trialProvider,
+      globalIndex: index, // 链上索引，用于验证状态判断
+    };
+  });
 
   return (
     <div className="relative pb-4">
@@ -278,15 +350,8 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
         );
       })()}
 
-      {/* 加载状态 */}
-      {isPendingRecords && (
-        <div className="flex justify-center py-8">
-          <LoadingIcon />
-        </div>
-      )}
-
       {/* 错误状态 */}
-      {errorRecords && (
+      {(pageError || errorCount) && (
         <div className="alert alert-error">
           <svg className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
             <path
@@ -301,12 +366,12 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
       )}
 
       {/* 激励详情列表 */}
-      {!isPendingRecords &&
-        !errorRecords &&
+      {!pageError &&
+        !errorCount &&
         selectedRound > 0 &&
-        (combinedData.length === 0 ? (
+        (totalCount !== undefined && totalCount === BigInt(0) ? (
           <div className="text-center text-sm text-greyscale-400 p-4">该轮次没有地址记录</div>
-        ) : (
+        ) : combinedData.length > 0 ? (
           <table className="table w-full">
             <thead>
               <tr className="border-b border-gray-100">
@@ -331,7 +396,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
                   selectedRound > currentRound ||
                   (selectedRound === currentRound &&
                     verifiedAccountCount !== undefined &&
-                    item.originalIndex >= Number(verifiedAccountCount));
+                    item.globalIndex >= Number(verifiedAccountCount));
 
                 const isExpanded = expandedRows.has(item.account);
                 const verificationInfo = verificationInfos?.find(
@@ -403,26 +468,39 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
                   </React.Fragment>
                 );
               })}
-              {/* 汇总行 */}
-              <tr className="border-t-1 border-gray-300">
-                <td className="pl-0 pr-[1px] w-[1%] whitespace-nowrap text-center text-greyscale-400">-</td>
-                <td className="pl-0 pr-1 text-left">合计</td>
-                <td className="px-1 text-right">
-                  <div className="font-mono">{formatTokenAmount(totalJoinedAmount)}</div>
-                </td>
-                <td className="px-1 text-right text-greyscale-400">-</td>
-                <td className="px-1 text-right">
-                  {selectedRound >= currentRound ? (
-                    <div className="text-greyscale-500">未生成</div>
-                  ) : (
-                    <div className="font-mono">{formatTokenAmount(totalReward)}</div>
-                  )}
-                  {/* <div className="text-xs text-greyscale-500">100.00%</div> */}
-                </td>
-              </tr>
             </tbody>
           </table>
-        ))}
+        ) : null)}
+
+      {/* 无限滚动触发器 */}
+      {hasMore && (
+        <div ref={observerTarget} className="flex justify-center py-4">
+          {isPagePending && <LoadingIcon />}
+        </div>
+      )}
+
+      {/* 已加载全部数据后显示汇总 */}
+      {!hasMore && allRecords.length > 0 && (
+        <table className="table w-full">
+          <tbody>
+            <tr className="border-t-1 border-gray-300">
+              <td className="pl-0 pr-[1px] w-[1%] whitespace-nowrap text-center text-greyscale-400">-</td>
+              <td className="pl-0 pr-1 text-left">合计</td>
+              <td className="px-1 text-right">
+                <div className="font-mono">{formatTokenAmount(totalJoinedAmount)}</div>
+              </td>
+              <td className="px-1 text-right text-greyscale-400">-</td>
+              <td className="px-1 text-right">
+                {selectedRound >= currentRound ? (
+                  <div className="text-greyscale-500">未生成</div>
+                ) : (
+                  <div className="font-mono">{formatTokenAmount(totalReward)}</div>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };
