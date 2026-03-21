@@ -2,7 +2,7 @@
 
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
-import { ArrowRight, HandCoins, Droplets, Users, Blocks } from 'lucide-react';
+import { ArrowRight, HandCoins, Droplets, ArrowLeftRight, Users, Blocks } from 'lucide-react';
 
 // My Components
 import Header from '@/src/components/Header';
@@ -16,6 +16,7 @@ interface AppItem {
 const APP_LIST: AppItem[] = [
   { name: '代币兑换', href: '/dex/?tab=swap', icon: HandCoins },
   { name: '流动性池', href: '/dex/?tab=liquidity', icon: Droplets },
+  { name: '代币转账', href: '/token/transfer/', icon: ArrowLeftRight },
   { name: '链群NFT', href: '/group/groupids/', icon: Users },
   // { name: '扩展行动', href: '/extension/factories/', icon: Blocks },
 ];
