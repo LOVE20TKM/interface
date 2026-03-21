@@ -140,6 +140,18 @@ const buildSupportedTokens = (token: any): TokenConfig[] => {
         name: `ST代币 (st${token.symbol})`,
       });
     }
+
+    // 8. LP代币（当前代币与父币的交易对）
+    if (token.uniswapV2PairAddress && token.uniswapV2PairAddress !== '0x0000000000000000000000000000000000000000') {
+      const lpSymbolName = `${token.symbol}/${token.parentTokenSymbol}`;
+      addToken({
+        symbol: `LP(${lpSymbolName})`,
+        address: token.uniswapV2PairAddress as `0x${string}`,
+        decimals: 18,
+        isNative: false,
+        name: `LP代币 (${lpSymbolName})`,
+      });
+    }
   }
 
   return supportedTokens;
@@ -149,7 +161,11 @@ const buildSupportedTokens = (token: any): TokenConfig[] => {
 const useTokenBalance = (tokenConfig: TokenConfig, account: `0x${string}` | undefined) => {
   const { setError } = useError();
   // 原生代币使用 useBalance
-  const { data: nativeBalance, isLoading: isLoadingNative, error: nativeBalanceError } = useBalance({
+  const {
+    data: nativeBalance,
+    isLoading: isLoadingNative,
+    error: nativeBalanceError,
+  } = useBalance({
     address: account,
     query: {
       enabled: !!account && tokenConfig.isNative,
