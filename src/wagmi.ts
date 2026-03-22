@@ -69,7 +69,6 @@ export const config = createConfig({
   connectors: [
     injected({
       shimDisconnect: true,
-      unstable_shimAsyncInject: 2000,
     }),
   ],
   transports:
