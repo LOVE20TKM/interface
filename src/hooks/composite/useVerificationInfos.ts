@@ -1,7 +1,7 @@
 // hooks/composite/useVerificationInfos.ts
-// 批量获取验证信息的 Hook
+// 批量获取验证信息的 Hook（支持分批加载，避免单次请求过大导致失败）
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 
@@ -24,9 +24,12 @@ export interface VerificationInfoResult {
 // 获取合约地址
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
 
+// 每批最多请求的合约调用数量（账号数 × key 数不超过此值）
+const BATCH_SIZE = 100;
+
 /**
  * 批量获取多个地址的验证信息
- * 使用 useReadContracts 将多个 RPC 调用合并成一次批量请求，提高效率
+ * 当账号数量较多时自动分批请求，避免单次 RPC 调用过大导致失败
  *
  * @param tokenAddress - 代币地址
  * @param actionId - 行动 ID
@@ -44,19 +47,16 @@ export const useVerificationInfos = ({
   round,
   enabled = true,
 }: VerificationInfosParams) => {
-  // 构建批量合约调用配置
-  // 对于 N 个地址 × M 个验证 key，将生成 N*M 个合约调用
-  const contracts = useMemo(() => {
+  // 将所有合约调用按 BATCH_SIZE 分批
+  const allBatches = useMemo(() => {
     if (!enabled || accounts.length === 0 || verificationKeys.length === 0 || !tokenAddress) {
       return [];
     }
 
-    const contractCalls: any[] = [];
-
-    // 为每个地址和每个验证 key 创建一个合约调用
+    const allCalls: any[] = [];
     accounts.forEach((account) => {
       verificationKeys.forEach((key) => {
-        contractCalls.push({
+        allCalls.push({
           address: CONTRACT_ADDRESS,
           abi: ExtensionCenterAbi,
           functionName: 'verificationInfoByRound' as const,
@@ -65,21 +65,87 @@ export const useVerificationInfos = ({
       });
     });
 
-    return contractCalls;
+    // 分批
+    const batches: any[][] = [];
+    for (let i = 0; i < allCalls.length; i += BATCH_SIZE) {
+      batches.push(allCalls.slice(i, i + BATCH_SIZE));
+    }
+    return batches;
   }, [tokenAddress, actionId, accounts, verificationKeys, round, enabled]);
 
-  // 使用 useReadContracts 进行批量调用 - 这是真正的一次 RPC 请求！
+  // 当前正在请求的批次索引
+  const [currentBatchIndex, setCurrentBatchIndex] = useState(0);
+  // 累积的所有批次结果
+  const [accumulatedResults, setAccumulatedResults] = useState<any[]>([]);
+  // 是否所有批次都已完成
+  const [allBatchesDone, setAllBatchesDone] = useState(false);
+  // 记录上一次的批次配置，用于检测参数变化时重置
+  const prevBatchKeyRef = useRef<string>('');
+
+  const totalBatches = allBatches.length;
+
+  // 当参数变化时重置状态
+  const batchKey = useMemo(
+    () => `${tokenAddress}-${actionId}-${accounts.length}-${verificationKeys.length}-${round}-${enabled}`,
+    [tokenAddress, actionId, accounts.length, verificationKeys.length, round, enabled],
+  );
+
+  useEffect(() => {
+    if (batchKey !== prevBatchKeyRef.current) {
+      prevBatchKeyRef.current = batchKey;
+      setCurrentBatchIndex(0);
+      setAccumulatedResults([]);
+      setAllBatchesDone(false);
+    }
+  }, [batchKey]);
+
+  // 当前批次的合约调用
+  const currentBatchContracts = useMemo(() => {
+    if (allBatchesDone || currentBatchIndex >= totalBatches) {
+      return [];
+    }
+    return allBatches[currentBatchIndex] || [];
+  }, [allBatches, currentBatchIndex, totalBatches, allBatchesDone]);
+
+  // 请求当前批次
   const {
-    data: contractResults,
-    isLoading,
-    error,
-    isSuccess,
+    data: batchResult,
+    error: batchError,
+    isSuccess: isBatchSuccess,
   } = useUniversalReadContracts({
-    contracts,
+    contracts: currentBatchContracts,
     query: {
-      enabled: enabled && contracts.length > 0,
+      enabled: enabled && currentBatchContracts.length > 0 && !allBatchesDone,
     },
   });
+
+  // 当前批次完成后，累积结果并推进到下一批
+  useEffect(() => {
+    if (!isBatchSuccess || !batchResult || allBatchesDone) return;
+    if (currentBatchIndex >= totalBatches) return;
+
+    setAccumulatedResults((prev) => {
+      // 防止重复追加同一批次
+      const expectedLength = currentBatchIndex * BATCH_SIZE;
+      // 如果已经累积了足够的结果，说明这批已经处理过了
+      if (prev.length > expectedLength) return prev;
+      return [...prev, ...batchResult];
+    });
+
+    if (currentBatchIndex + 1 >= totalBatches) {
+      setAllBatchesDone(true);
+    } else {
+      setCurrentBatchIndex((prev) => prev + 1);
+    }
+  }, [isBatchSuccess, batchResult, currentBatchIndex, totalBatches, allBatchesDone]);
+
+  // 整体加载状态
+  const isLoading = enabled && totalBatches > 0 && !allBatchesDone;
+  const isSuccess = allBatchesDone;
+  const error = batchError;
+
+  // 使用最终的累积结果（或在加载中使用已有的部分结果）
+  const contractResults = allBatchesDone ? accumulatedResults : null;
 
   // 计算派生数据
   const verificationInfos = useMemo(() => {
@@ -124,13 +190,13 @@ export const useVerificationInfos = ({
     });
 
     // 计算整体状态
-    const hasError = !!error || infos.some((info) => info.error !== null);
+    const hasAnyError = !!error || infos.some((info) => info.error !== null);
     const allLoaded = isSuccess;
 
     return {
       infos,
       isLoading,
-      hasError,
+      hasError: hasAnyError,
       allLoaded,
     };
   }, [contractResults, accounts, verificationKeys, enabled, isLoading, error, isSuccess]);
