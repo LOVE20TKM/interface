@@ -57,8 +57,8 @@ const Home: NextPage = () => {
     }
 
     console.log('[token]', token);
-    if (token && !isClaimInfoPending) {
-      const needClaim = receivedTokenAmount > 0 && !claimed;
+    if (token && (!account || !isClaimInfoPending)) {
+      const needClaim = account ? receivedTokenAmount > 0 && !claimed : false;
       if (symbol) {
         setHasRedirected(true);
         target = token?.hasEnded && !needClaim ? `/acting/?symbol=${symbol}` : `/launch/?symbol=${symbol}`;

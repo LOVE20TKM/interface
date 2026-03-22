@@ -139,7 +139,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
       {/* 链群关闭提示 */}
       {!groupDetail.isActive && (
         <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
-          当前链群已关闭！ 请及时取回代币。
+          此链群已关闭！ 请退出行动并取回代币。
         </div>
       )}
 

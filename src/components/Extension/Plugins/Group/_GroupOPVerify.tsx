@@ -7,6 +7,7 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 // Next.js
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 // 第三方库
@@ -358,7 +359,14 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   if (!canVerify) {
     return (
       <div className="space-y-4">
-        <LeftTitle title="链群验证" />
+        <div className="flex justify-between items-center">
+          <LeftTitle title="链群验证" />
+          <Button variant="link" className="text-secondary border-secondary underline" asChild>
+            <Link href={`/extension/group/?groupId=${groupId}&actionId=${actionId}&symbol=${token?.symbol}&tab=scores&round=${currentRound}`}>
+              查看链群 &gt;&gt;
+            </Link>
+          </Button>
+        </div>
 
         <div className="text-center py-12">
           <p className="text-red-500 mb-4">您没有打分权限</p>
@@ -371,7 +379,14 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   if (!accounts || accounts.length === 0) {
     return (
       <div className="space-y-4">
-        <LeftTitle title="链群验证" />
+        <div className="flex justify-between items-center">
+          <LeftTitle title="链群验证" />
+          <Button variant="link" className="text-secondary border-secondary underline" asChild>
+            <Link href={`/extension/group/?groupId=${groupId}&actionId=${actionId}&symbol=${token?.symbol}&tab=scores&round=${currentRound}`}>
+              查看链群 &gt;&gt;
+            </Link>
+          </Button>
+        </div>
 
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">暂无待打分的行动者</p>
@@ -422,7 +437,14 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
       <div className="space-y-6">
         {/* 标题 */}
         <div>
-          <LeftTitle title="链群验证" />
+          <div className="flex justify-between items-center">
+            <LeftTitle title="链群验证" />
+            <Button variant="link" className="text-secondary border-secondary underline" asChild>
+              <Link href={`/extension/group/?groupId=${groupId}&actionId=${actionId}&symbol=${token?.symbol}&tab=scores&round=${currentRound}`}>
+                查看链群 &gt;&gt;
+              </Link>
+            </Button>
+          </div>
           <p className="text-sm text-gray-600 mt-2">为链群 #{groupId.toString()} 中的行动者打分</p>
         </div>
 
@@ -442,7 +464,14 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
       <div className="space-y-6">
         {/* 标题 */}
         <div>
-          <LeftTitle title="链群验证" />
+          <div className="flex justify-between items-center">
+            <LeftTitle title="链群验证" />
+            <Button variant="link" className="text-secondary border-secondary underline" asChild>
+              <Link href={`/extension/group/?groupId=${groupId}&actionId=${actionId}&symbol=${token?.symbol}&tab=scores&round=${currentRound}`}>
+                查看链群 &gt;&gt;
+              </Link>
+            </Button>
+          </div>
           {/* 行动信息 */}
           <div className="text-gray-500 mb-2 text-sm">
             <span>行动：</span>

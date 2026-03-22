@@ -139,7 +139,10 @@ const ExportGroupsPage: React.FC = () => {
 
   // 按参与代币数从高到低排序（与链群列表页保持一致）
   const sortedGroups = useMemo(
-    () => [...groups].sort((a, b) => (b.totalJoinedAmount > a.totalJoinedAmount ? 1 : b.totalJoinedAmount < a.totalJoinedAmount ? -1 : 0)),
+    () =>
+      [...groups].sort((a, b) =>
+        b.totalJoinedAmount > a.totalJoinedAmount ? 1 : b.totalJoinedAmount < a.totalJoinedAmount ? -1 : 0,
+      ),
     [groups],
   );
 

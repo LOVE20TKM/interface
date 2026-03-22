@@ -92,12 +92,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   const isJoined = (joinedAmount ?? BigInt(0)) > BigInt(0);
 
   // 退出
-  const {
-    exit,
-    isPending: isPendingExit,
-    isConfirming: isConfirmingExit,
-    isConfirmed: isConfirmedExit,
-  } = useExit();
+  const { exit, isPending: isPendingExit, isConfirming: isConfirmingExit, isConfirmed: isConfirmedExit } = useExit();
 
   const handleExit = async () => {
     if (!joinedAmount || joinedAmount <= BigInt(0)) {
@@ -143,7 +138,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
       {/* 链群关闭提示 */}
       {groupDetail && !groupDetail.isActive && (
         <div className="w-full mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
-          当前链群已关闭！ 请及时取回代币。
+          此链群已关闭！ 请退出行动并取回代币。
         </div>
       )}
 

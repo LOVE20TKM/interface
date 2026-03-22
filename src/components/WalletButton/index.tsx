@@ -193,7 +193,14 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         return;
       }
 
-      // 检查是否有注入式钱包
+      // 等待 window.ethereum 注入（某些钱包 WebView 注入有延迟）
+      if (!window.ethereum) {
+        for (let i = 0; i < 10; i++) {
+          await new Promise((r) => setTimeout(r, 200));
+          if (window.ethereum) break;
+        }
+      }
+
       if (!window.ethereum) {
         toast.error('请安装 MetaMask 或使用支持的钱包浏览器');
         return;
