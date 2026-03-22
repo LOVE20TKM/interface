@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { HandCoins, TableOfContents, Pickaxe, Blocks, BarChart2, Users, Rocket, Info } from 'lucide-react';
+import { HandCoins, TableOfContents, Pickaxe, Blocks, BarChart2, Users, Rocket, Info, Lock } from 'lucide-react';
 
 // my context
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -504,7 +504,7 @@ const TokenPage = () => {
                     <Card>
                       <CardHeader className="px-4 pt-4 pb-2">
                         <CardTitle className="flex items-center gap-2 text-lg">
-                          <HandCoins className="h-5 w-5 text-primary" />
+                          <Lock className="h-5 w-5 text-primary" />
                           TVL
                         </CardTitle>
                       </CardHeader>
