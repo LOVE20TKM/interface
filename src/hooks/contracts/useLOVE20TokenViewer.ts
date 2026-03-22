@@ -6,6 +6,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 import { LaunchInfo, TokenInfo, PairInfo, TokenStats } from '@/src/types/love20types';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_TOKENVIEWER as `0x${string}`;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 // =====================
 // === 读取 Hooks ===
@@ -222,14 +223,14 @@ export const useTokenPairInfoWithAccount = (account: `0x${string}`, tokenAddress
  * Hook for tokenStatistics
  * Reads the statistics of a token.
  */
-export const useTokenStatistics = (tokenAddress: `0x${string}`, flag: boolean = true) => {
+export const useTokenStatistics = (tokenAddress?: `0x${string}`, flag: boolean = true) => {
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'tokenStatistics',
-    args: [tokenAddress],
+    args: [tokenAddress ?? ZERO_ADDRESS],
     query: {
-      enabled: !!tokenAddress && flag,
+      enabled: !!tokenAddress && tokenAddress !== ZERO_ADDRESS && flag,
     },
   });
   return { tokenStatistics: data as TokenStats, isPending, error };

@@ -23,7 +23,7 @@ const Todeploy: React.FC<{ token: Token }> = ({ token }) => {
     launchInfo,
     isPending: isLaunchInfoPending,
     error: launchInfoError,
-  } = useLaunchInfo(token ? token.address : '0x0000000000000000000000000000000000000000');
+  } = useLaunchInfo(token?.address);
 
   const { remainingLaunchCount, isPending: isRemainingLaunchCountPending } = useRemainingLaunchCount(
     token ? token.address : '0x0000000000000000000000000000000000000000',

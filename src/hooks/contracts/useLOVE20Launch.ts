@@ -10,6 +10,7 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 import { LaunchInfo } from '@/src/types/love20types';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_LAUNCH as `0x${string}`;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 // =====================
 // === 读取 Hook ===
@@ -142,14 +143,14 @@ export const useContributed = (tokenAddress: `0x${string}`, account: `0x${string
 /**
  * Hook for launches
  */
-export const useLaunchInfo = (address: `0x${string}`) => {
+export const useLaunchInfo = (address?: `0x${string}`, flag: boolean = true) => {
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'launchInfo',
-    args: [address],
+    args: [address ?? ZERO_ADDRESS],
     query: {
-      enabled: !!address,
+      enabled: !!address && address !== ZERO_ADDRESS && flag,
     },
   });
 

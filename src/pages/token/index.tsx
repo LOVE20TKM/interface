@@ -4,6 +4,7 @@ import React, { useContext, useMemo } from 'react';
 import { useAccount, useBlockNumber } from 'wagmi';
 import { formatUnits as viemFormatUnits } from 'viem';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 // ui
 import { Button } from '@/components/ui/button';
@@ -22,13 +23,15 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 // my hooks
-import { useTokenStatistics } from '@/src/hooks/contracts/useLOVE20TokenViewer';
+import { useBalancesOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenDetailBySymbol, useTokenStatistics } from '@/src/hooks/contracts/useLOVE20TokenViewer';
 import { useLaunchInfo } from '@/src/hooks/contracts/useLOVE20Launch';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useCurrentRound as useCurrentRoundForJoin } from '@/src/hooks/contracts/useLOVE20Join';
 import { useUSDTPairTokenBalance } from '@/src/hooks/composite/useUSDTPairTokenBalance';
-import { useActingPageData } from '@/src/hooks/composite/useActingPageData';
+import { useChildTokenLpBalance } from '@/src/hooks/composite/useChildTokenLpBalance';
 import { formatPercentage } from '@/src/lib/format';
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 // 简单的字段组件
 function Field({
@@ -144,44 +147,80 @@ function formatAmount(value?: bigint, decimals?: number, symbol?: string) {
 const TokenPage = () => {
   const { isConnected } = useAccount();
   const { data: currentBlockNumber } = useBlockNumber({ watch: true });
+  const router = useRouter();
   const { token: currentToken } = useContext(TokenContext) || {};
+  const routeSymbol = typeof router.query.symbol === 'string' ? router.query.symbol : undefined;
+  const shouldFetchRouteToken = !!routeSymbol && (!currentToken || currentToken.symbol !== routeSymbol);
+  const {
+    token: routeTokenInfo,
+    launchInfo: routeLaunchInfo,
+    isPending: isPendingRouteTokenInfo,
+    error: errorRouteTokenInfo,
+  } = useTokenDetailBySymbol(shouldFetchRouteToken ? routeSymbol : '');
+
+  const effectiveToken = shouldFetchRouteToken
+    ? routeTokenInfo && routeLaunchInfo
+      ? {
+          name: routeTokenInfo.name,
+          symbol: routeTokenInfo.symbol,
+          address: routeTokenInfo.tokenAddress,
+          decimals: Number(routeTokenInfo.decimals),
+          hasEnded: routeLaunchInfo.hasEnded,
+          parentTokenAddress: routeLaunchInfo.parentTokenAddress,
+          parentTokenSymbol: routeTokenInfo.parentTokenSymbol,
+          parentTokenName: routeTokenInfo.parentTokenName,
+          slTokenAddress: routeTokenInfo.slAddress,
+          stTokenAddress: routeTokenInfo.stAddress,
+          uniswapV2PairAddress: routeTokenInfo.uniswapV2PairAddress,
+          initialStakeRound: Number(routeTokenInfo.initialStakeRound),
+          voteOriginBlocks: currentToken?.voteOriginBlocks ?? 0,
+        }
+      : null
+    : currentToken;
   const { currentRound, isPending: isPendingCurrentRound } = useCurrentRound();
 
-  const launchEnded = !!currentToken && currentToken.hasEnded;
+  const launchEnded = !!effectiveToken && effectiveToken.hasEnded;
+  const effectiveTokenAddress = effectiveToken?.address as `0x${string}` | undefined;
   const {
     tokenStatistics,
     error: errorTokenStatistics,
     isPending: isPendingTokenStatistics,
-  } = useTokenStatistics(
-    (currentToken?.address as `0x${string}`) || '0x0000000000000000000000000000000000000000',
-    launchEnded,
-  );
+  } = useTokenStatistics(effectiveTokenAddress, launchEnded);
 
   const {
     launchInfo,
     error: errorLaunchInfo,
     isPending: isPendingLaunchInfo,
-  } = useLaunchInfo((currentToken?.address as `0x${string}`) || '0x0000000000000000000000000000000000000000');
+  } = useLaunchInfo(effectiveTokenAddress);
+
+  const tokenAddress = effectiveTokenAddress || ZERO_ADDRESS;
+  const joinContractAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`) || ZERO_ADDRESS;
+  const groupJoinContractAddress =
+    (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`) || ZERO_ADDRESS;
+  const groupManagerContractAddress =
+    (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`) || ZERO_ADDRESS;
+  const actionContractAddresses = useMemo(
+    () => [joinContractAddress, groupJoinContractAddress, groupManagerContractAddress] as const,
+    [groupJoinContractAddress, groupManagerContractAddress, joinContractAddress],
+  );
 
   // 获取 USDT-Token pair 中当前代币的质押量
   const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}` | undefined;
   const { tokenBalanceInUSDTPair, isPending: isPendingUSDTPair } = useUSDTPairTokenBalance(
-    currentToken?.address as `0x${string}` | undefined,
+    effectiveToken?.address as `0x${string}` | undefined,
     usdtAddress,
     launchEnded, // 只有在发射完成后才查询
   );
 
-  // 从 Join 合约获取当前轮次（供 useActingPageData 使用，与 Vote 合约的轮次独立）
-  const { currentRound: currentRoundForJoin } = useCurrentRoundForJoin(launchEnded && isConnected);
+  const { balances: actionContractBalancesRaw, isPending: isPendingActionContractBalances } = useBalancesOf(
+    tokenAddress,
+    actionContractAddresses,
+    launchEnded && tokenAddress !== ZERO_ADDRESS,
+  );
+  const [joinContractBalanceRaw, groupJoinContractBalanceRaw, groupManagerContractBalanceRaw] = actionContractBalancesRaw;
 
-  // 获取行动参与量（含扩展行动修正），仅在发射完成且已连接时有效
-  const actingPageData = useActingPageData({
-    tokenAddress: launchEnded && isConnected ? (currentToken?.address as `0x${string}`) : undefined,
-    currentRound: currentRoundForJoin ?? BigInt(0),
-  });
-
-  const decimals = currentToken?.decimals ?? 18;
-  const parentSymbol = currentToken?.parentTokenSymbol ?? '';
+  const decimals = effectiveToken?.decimals ?? 18;
+  const parentSymbol = effectiveToken?.parentTokenSymbol ?? '';
 
   // 代币统计（变量命名与 TokenStats 保持一致）
   const maxSupply = BigInt(process.env.NEXT_PUBLIC_MAX_SUPPLY ?? 0);
@@ -191,9 +230,8 @@ const TokenPage = () => {
   const reservedAvailable = tokenStatistics?.reservedAvailable ?? BigInt(0);
   const rewardAvailable = tokenStatistics?.rewardAvailable ?? BigInt(0);
   const stakedTokenAmountForSt = tokenStatistics?.stakedTokenAmountForSt ?? BigInt(0);
-  // 使用单边参与量（LP 扩展行动去掉 ×2 溢价），用于占比统计，加载中以 BigInt(0) 兜底
-  const joinedTokenAmount = actingPageData.totalJoinedAmountSingleSide;
   const tokenAmountForSl = tokenStatistics?.tokenAmountForSl ?? BigInt(0);
+  const parentCurrentPairBalance = tokenStatistics?.pairReserveToken ?? BigInt(0);
   const parentPool = tokenStatistics?.parentPool ?? BigInt(0);
   const finishedRounds = tokenStatistics?.finishedRounds ?? BigInt(0);
   const actionsCount = tokenStatistics?.actionsCount ?? BigInt(0);
@@ -201,11 +239,36 @@ const TokenPage = () => {
   const childTokensCount = tokenStatistics?.childTokensCount ?? BigInt(0);
   const launchingChildTokensCount = tokenStatistics?.launchingChildTokensCount ?? BigInt(0);
   const launchedChildTokensCount = tokenStatistics?.launchedChildTokensCount ?? BigInt(0);
+  const { childTokenLpBalance, isPending: isPendingChildTokenLpBalance } = useChildTokenLpBalance(
+    effectiveToken?.address as `0x${string}` | undefined,
+    childTokensCount,
+    launchEnded,
+  );
   const unminted = maxSupply > totalSupply ? maxSupply - totalSupply : BigInt(0);
   const usdtPairBalance = tokenBalanceInUSDTPair ?? BigInt(0);
-  const otherBalance = totalSupply - joinedTokenAmount - tokenAmountForSl - stakedTokenAmountForSt;
-  // 计算 TVL：流动性质押*2 + 加速激励质押 + U池 + 行动参与
-  const tvl = tokenAmountForSl * BigInt(2) + stakedTokenAmountForSt + usdtPairBalance + joinedTokenAmount;
+  const joinContractBalance = joinContractBalanceRaw ?? BigInt(0);
+  const groupJoinContractBalance = groupJoinContractBalanceRaw ?? BigInt(0);
+  const groupManagerContractBalance = groupManagerContractBalanceRaw ?? BigInt(0);
+  const contractBalance = joinContractBalance + groupJoinContractBalance + groupManagerContractBalance;
+  const actionParticipationBalanceBase = contractBalance + usdtPairBalance + parentCurrentPairBalance;
+  const actionParticipationBalance =
+    actionParticipationBalanceBase > tokenAmountForSl ? actionParticipationBalanceBase - tokenAmountForSl : BigInt(0);
+  const distributedSupply = tokenAmountForSl + stakedTokenAmountForSt + actionParticipationBalance + childTokenLpBalance;
+  const otherBalance = totalSupply > distributedSupply ? totalSupply - distributedSupply : BigInt(0);
+  const tvlUsdtPairBalance = usdtPairBalance * BigInt(2);
+  const tvlParentPairBalance = parentCurrentPairBalance * BigInt(2);
+  const tvlChildTokenLpBalance = childTokenLpBalance * BigInt(2);
+  const tvl = stakedTokenAmountForSt + contractBalance + tvlUsdtPairBalance + tvlParentPairBalance + tvlChildTokenLpBalance;
+  const shouldWaitForRouteToken = shouldFetchRouteToken;
+  const shouldWaitForLaunchInfo = !!effectiveTokenAddress;
+  const shouldWaitForTokenStatistics = !!effectiveTokenAddress && launchEnded;
+  const shouldWaitForUSDTPair = !!effectiveTokenAddress && !!usdtAddress && launchEnded;
+  const shouldWaitForActionContractBalances = launchEnded && tokenAddress !== ZERO_ADDRESS;
+  const isPendingDistributionData =
+    (shouldWaitForUSDTPair && isPendingUSDTPair) ||
+    (shouldWaitForActionContractBalances && isPendingActionContractBalances);
+  const formatShare = (value: bigint, total: bigint) =>
+    total > BigInt(0) ? formatPercentage((Number(value) / Number(total)) * 100) : '0%';
 
   // 发射区块
   const startBlock = launchInfo?.startBlock;
@@ -218,7 +281,7 @@ const TokenPage = () => {
     Stake: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE,
     Submit: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_SUBMIT,
     Vote: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VOTE,
-    Join: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN,
+    Join: joinContractAddress,
     Verify: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VERIFY,
     Mint: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_MINT,
     Random: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_RANDOM,
@@ -230,8 +293,8 @@ const TokenPage = () => {
     Hub: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB,
     Group: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP,
     ExtensionCenter: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER,
-    ExtensionGroupManager: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER,
-    ExtensionGroupJoin: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN,
+    ExtensionGroupManager: groupManagerContractAddress,
+    ExtensionGroupJoin: groupJoinContractAddress,
     ExtensionGroupVerify: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY,
     ExtensionGroupRecipients: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_RECIPIENTS,
     ExtensionGroupActionFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_ACTION_FACTORY,
@@ -241,21 +304,13 @@ const TokenPage = () => {
 
   // 当前代币相关地址
   const currentAddresses = {
-    token: currentToken?.address,
-    parent: currentToken?.parentTokenAddress,
+    token: effectiveToken?.address,
+    parent: effectiveToken?.parentTokenAddress,
     usdt: process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}`,
-    sl: currentToken?.slTokenAddress,
-    st: currentToken?.stTokenAddress,
-    pair: currentToken?.uniswapV2PairAddress,
+    sl: effectiveToken?.slTokenAddress,
+    st: effectiveToken?.stTokenAddress,
+    pair: effectiveToken?.uniswapV2PairAddress,
   } as const;
-
-  if ((launchEnded && isPendingTokenStatistics) || isPendingLaunchInfo) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <LoadingIcon />
-      </div>
-    );
-  }
 
   return (
     <>
@@ -265,17 +320,21 @@ const TokenPage = () => {
           <div className="flex flex-col items-center p-4 mt-4">
             <div className="text-center mb-4 text-greyscale-500">没有链接钱包，请先连接钱包</div>
           </div>
-        ) : !currentToken ? (
-          <LoadingIcon />
+        ) : !effectiveToken ? (
+          <div className="flex flex-col items-center p-4 mt-4">
+            <div className="text-center mb-4 text-greyscale-500">
+              {errorRouteTokenInfo ? '代币信息读取失败，请刷新后重试' : '代币信息加载中'}
+            </div>
+          </div>
         ) : (
           <div className="p-4 md:p-6">
             <header className="flex flex-col gap-4">
               <div className="flex items-center gap-4">
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold tracking-tight font-mono">{currentToken.symbol}</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight font-mono">{effectiveToken.symbol}</h1>
                     <Button variant="outline" size="sm" className="text-secondary border-secondary -mt-2" asChild>
-                      <Link href={`/token/intro?symbol=${currentToken.symbol}`}>代币简介 &gt;&gt;</Link>
+                      <Link href={`/token/intro?symbol=${effectiveToken.symbol}`}>代币简介 &gt;&gt;</Link>
                     </Button>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -314,12 +373,12 @@ const TokenPage = () => {
                             基本信息
                           </div>
                           {/* 当存在父币且父币不是第一个父币时显示返回父币链接 */}
-                          {currentToken.parentTokenAddress &&
-                            currentToken.parentTokenAddress !== '0x0000000000000000000000000000000000000000' &&
-                            currentToken.parentTokenSymbol &&
-                            currentToken.parentTokenSymbol !== process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL && (
+                          {effectiveToken.parentTokenAddress &&
+                            effectiveToken.parentTokenAddress !== '0x0000000000000000000000000000000000000000' &&
+                            effectiveToken.parentTokenSymbol &&
+                            effectiveToken.parentTokenSymbol !== process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL && (
                               <Link
-                                href={`/acting/?symbol=${currentToken.parentTokenSymbol}`}
+                                href={`/acting/?symbol=${effectiveToken.parentTokenSymbol}`}
                                 className="text-sm text-secondary hover:text-secondary/80 transition-colors"
                               >
                                 返回父币 &gt;&gt;
@@ -328,10 +387,10 @@ const TokenPage = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="grid gap-4 grid-cols-2 px-4 pt-2 pb-4">
-                        <Field label="Symbol" value={currentToken.symbol} font="font-mono" />
-                        <Field label="Name" value={currentToken.name} font="font-mono" />
+                        <Field label="Symbol" value={effectiveToken.symbol} font="font-mono" />
+                        <Field label="Name" value={effectiveToken.name} font="font-mono" />
                         <Field label="父币 Symbol" value={parentSymbol} font="font-mono" />
-                        <Field label="父币 Name" value={currentToken.parentTokenName} font="font-mono" />
+                        <Field label="父币 Name" value={effectiveToken.parentTokenName} font="font-mono" />
                       </CardContent>
                     </Card>
 
@@ -377,52 +436,145 @@ const TokenPage = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="px-4 pt-2 pb-4">
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+                          <Field
+                            label="流动性质押"
+                            value={formatAmount(tokenAmountForSl, decimals)}
+                            percentage={formatShare(tokenAmountForSl, totalSupply)}
+                          />
+                          <Field
+                            label="加速激励质押"
+                            value={formatAmount(stakedTokenAmountForSt, decimals)}
+                            percentage={formatShare(stakedTokenAmountForSt, totalSupply)}
+                          />
                           <FieldWithInfo
-                            label="TVL"
-                            value={formatAmount(tvl, decimals)}
-                            percentage={formatPercentage((Number(tvl) / Number(totalSupply)) * 100)}
-                            infoTitle="TVL 计算公式"
+                            label="行动参与"
+                            value={formatAmount(actionParticipationBalance, decimals)}
+                            percentage={formatShare(actionParticipationBalance, totalSupply)}
+                            infoTitle="行动参与统计口径"
                             infoContent={
                               <div className="space-y-2">
-                                <p className="font-medium">LOVE20 TVL 计算公式：</p>
+                                <p className="font-medium">行动参与统计口径：</p>
                                 <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
-                                  <div>TVL = 流动性质押 × 2 + 加速激励质押 + U池 + 行动参与</div>
+                                  <div>
+                                    行动参与 = 行动合约托管(Join + GroupJoin + GroupManager) + LP(当前代币/
+                                    {process.env.NEXT_PUBLIC_USDT_SYMBOL}) + LP(当前代币/父币) - 流动性质押
+                                  </div>
                                 </div>
+                                <p>百分比口径：行动参与 / 已铸造量</p>
                               </div>
                             }
                           />
-                          {isConnected && (actingPageData.isPendingActions || actingPageData.isPendingExtension) ? (
-                            <div className="flex flex-col gap-1">
-                              <div className="text-sm text-muted-foreground">行动参与量</div>
-                              <LoadingIcon />
-                            </div>
-                          ) : (
-                            <Field
-                              label="行动参与量(含U池)"
-                              value={formatAmount(joinedTokenAmount, decimals)}
-                              percentage={formatPercentage((Number(joinedTokenAmount) / Number(totalSupply)) * 100)}
-                            />
-                          )}
-                          <Field
-                            label="流动性质押量"
-                            value={formatAmount(tokenAmountForSl, decimals)}
-                            percentage={formatPercentage((Number(tokenAmountForSl) / Number(totalSupply)) * 100)}
+                          <FieldWithInfo
+                            label="子币LP"
+                            value={isPendingChildTokenLpBalance ? '...' : formatAmount(childTokenLpBalance, decimals)}
+                            percentage={isPendingChildTokenLpBalance ? undefined : formatShare(childTokenLpBalance, totalSupply)}
+                            infoTitle="子币LP统计口径"
+                            infoContent={
+                              <div className="space-y-2">
+                                <p className="font-medium">子币LP统计口径：</p>
+                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                  <div>子币LP = 累加 LP(当前代币/子币)</div>
+                                </div>
+                                <p>百分比口径：子币LP / 已铸造量</p>
+                              </div>
+                            }
                           />
-                          <Field
-                            label="加速激励质押量"
-                            value={formatAmount(stakedTokenAmountForSt, decimals)}
-                            percentage={formatPercentage((Number(stakedTokenAmountForSt) / Number(totalSupply)) * 100)}
-                          />
-                          <Field
-                            label="U池"
-                            value={formatAmount(usdtPairBalance, decimals)}
-                            percentage={formatPercentage((Number(usdtPairBalance) / Number(totalSupply)) * 100)}
-                          />
-                          <Field
+                          <FieldWithInfo
                             label="其他"
-                            value={formatAmount(otherBalance, decimals)}
-                            percentage={formatPercentage((Number(otherBalance) / Number(totalSupply)) * 100)}
+                            value={isPendingChildTokenLpBalance ? '...' : formatAmount(otherBalance, decimals)}
+                            percentage={isPendingChildTokenLpBalance ? undefined : formatShare(otherBalance, totalSupply)}
+                            infoTitle="其他统计口径"
+                            infoContent={
+                              <div className="space-y-2">
+                                <p className="font-medium">其他统计口径：</p>
+                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                  <div>
+                                    其他 = 已铸造量 - 流动性质押 - 加速激励质押 - 行动参与 - 子币LP
+                                  </div>
+                                </div>
+                                <p>百分比口径：其他 / 已铸造量</p>
+                              </div>
+                            }
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="px-4 pt-4 pb-2">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <HandCoins className="h-5 w-5 text-primary" />
+                          TVL
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-4 pt-2 pb-4">
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+                          <FieldWithInfo
+                            label="TVL总量"
+                            value={isPendingChildTokenLpBalance ? '...' : formatAmount(tvl, decimals)}
+                            percentage={isPendingChildTokenLpBalance ? undefined : formatShare(tvl, totalSupply)}
+                            infoTitle="TVL统计口径"
+                            infoContent={
+                              <div className="space-y-2">
+                                <p className="font-medium">TVL统计口径：</p>
+                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                  <div>
+                                    TVL = 加速激励质押 + 行动合约托管(Join + GroupJoin + GroupManager) +
+                                    LP(当前代币/{process.env.NEXT_PUBLIC_USDT_SYMBOL}) × 2 + LP(当前代币/父币) × 2 +
+                                    子币LP × 2
+                                  </div>
+                                </div>
+                                <p>LP 项按双边口径计入 TVL，即按当前代币侧储备折算两边总价值。</p>
+                                <p>百分比口径：TVL / 已铸造量</p>
+                              </div>
+                            }
+                          />
+                          <Field
+                            label="加速激励质押"
+                            value={formatAmount(stakedTokenAmountForSt, decimals)}
+                            percentage={formatShare(stakedTokenAmountForSt, totalSupply)}
+                          />
+                          <FieldWithInfo
+                            label="行动合约托管"
+                            value={formatAmount(contractBalance, decimals)}
+                            percentage={formatShare(contractBalance, totalSupply)}
+                            infoTitle="行动合约托管统计口径"
+                            infoContent={
+                              <div className="space-y-2">
+                                <p className="font-medium">行动合约托管统计口径：</p>
+                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                  <div>行动合约托管 = Join + GroupJoin + GroupManager 合约余额</div>
+                                </div>
+                                <p>百分比口径：行动合约托管 / 已铸造量</p>
+                              </div>
+                            }
+                          />
+                          <Field
+                            label="LP（当前代币/父币）"
+                            value={formatAmount(tvlParentPairBalance, decimals)}
+                            percentage={formatShare(tvlParentPairBalance, totalSupply)}
+                          />
+                          <Field
+                            label={`LP（当前代币/${process.env.NEXT_PUBLIC_USDT_SYMBOL}）`}
+                            value={formatAmount(tvlUsdtPairBalance, decimals)}
+                            percentage={formatShare(tvlUsdtPairBalance, totalSupply)}
+                          />
+                          <FieldWithInfo
+                            label="子币LP"
+                            value={isPendingChildTokenLpBalance ? '...' : formatAmount(tvlChildTokenLpBalance, decimals)}
+                            percentage={isPendingChildTokenLpBalance ? undefined : formatShare(tvlChildTokenLpBalance, totalSupply)}
+                            infoTitle="子币LP TVL统计口径"
+                            infoContent={
+                              <div className="space-y-2">
+                                <p className="font-medium">子币LP TVL统计口径：</p>
+                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                  <div>子币LP TVL = 累加 LP(当前代币/子币) × 2</div>
+                                </div>
+                                <p>LP 项按双边口径计入 TVL，即按当前代币侧储备折算两边总价值。</p>
+                                <p>百分比口径：子币LP TVL / 已铸造量</p>
+                              </div>
+                            }
                           />
                         </div>
                       </CardContent>
@@ -460,7 +612,7 @@ const TokenPage = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="grid grid-cols-2 gap-4 px-4 pt-2 pb-4">
-                        <Field label="首次治理轮次" value={String(currentToken.initialStakeRound ?? 0)} />
+                        <Field label="首次治理轮次" value={String(effectiveToken.initialStakeRound ?? 0)} />
                         <Field label="已完成轮数" value={formatBigIntWithCommas(finishedRounds)} />
                         <Field label="最新轮次" value={isPendingCurrentRound ? '...' : String(currentRound)} />
                         <Field label="当前区块高度" value={String(currentBlockNumber)} />
@@ -477,19 +629,19 @@ const TokenPage = () => {
                             子币情况
                           </div>
                           <div>
-                            {currentToken.parentTokenAddress &&
-                              currentToken.parentTokenAddress !== '0x0000000000000000000000000000000000000000' &&
-                              currentToken.parentTokenSymbol &&
-                              currentToken.parentTokenSymbol !== process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL && (
+                            {effectiveToken.parentTokenAddress &&
+                              effectiveToken.parentTokenAddress !== '0x0000000000000000000000000000000000000000' &&
+                              effectiveToken.parentTokenSymbol &&
+                              effectiveToken.parentTokenSymbol !== process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL && (
                                 <Link
-                                  href={`/acting/?symbol=${currentToken.parentTokenSymbol}`}
+                                  href={`/acting/?symbol=${effectiveToken.parentTokenSymbol}`}
                                   className="text-sm text-secondary hover:text-secondary/80 transition-colors mr-4"
                                 >
                                   返回父币 &gt;&gt;
                                 </Link>
                               )}
                             <Link
-                              href={`/tokens/children/?symbol=${currentToken.symbol}`}
+                              href={`/tokens/children/?symbol=${effectiveToken.symbol}`}
                               className="text-sm text-secondary hover:text-secondary/80 transition-colors"
                             >
                               子币列表 &gt;&gt;
@@ -528,11 +680,11 @@ const TokenPage = () => {
 
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
-                      <CardTitle className="text-lg">{`${currentToken.symbol} 相关代币地址：`}</CardTitle>
+                      <CardTitle className="text-lg">{`${effectiveToken.symbol} 相关代币地址：`}</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
-                      <AddressItem name={`${currentToken.symbol}(当前代币)`} address={currentAddresses.token} />
-                      <AddressItem name={`${currentToken.parentTokenSymbol}(父币)`} address={currentAddresses.parent} />
+                      <AddressItem name={`${effectiveToken.symbol}(当前代币)`} address={currentAddresses.token} />
+                      <AddressItem name={`${effectiveToken.parentTokenSymbol}(父币)`} address={currentAddresses.parent} />
                       <AddressItem
                         name={`${process.env.NEXT_PUBLIC_USDT_SYMBOL}(稳定币)`}
                         address={currentAddresses.usdt}

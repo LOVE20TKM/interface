@@ -32,7 +32,7 @@ const TokenIntroPage = () => {
     launchInfo,
     error: errorLaunchInfo,
     isPending: isPendingLaunchInfo,
-  } = useLaunchInfo((token?.address as `0x${string}`) || '0x0000000000000000000000000000000000000000');
+  } = useLaunchInfo(token?.address as `0x${string}` | undefined);
 
   useEffect(() => {
     let cancelled = false;
