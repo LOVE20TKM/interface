@@ -58,17 +58,19 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
 
   // 从URL获取round参数
   const { round: urlRound } = router.query;
-  const [selectedRound, setSelectedRound] = useState<bigint>(currentRound - BigInt(1) || BigInt(1));
+  const [selectedRound, setSelectedRound] = useState<bigint>(BigInt(0));
 
   // 初始化轮次状态
   useEffect(() => {
+    if (!currentRound || currentRound <= BigInt(0)) return;
+
     if (urlRound && !isNaN(Number(urlRound))) {
       const urlRoundBigInt = BigInt(urlRound as string);
-      if (currentRound && urlRoundBigInt < currentRound) {
+      if (urlRoundBigInt > BigInt(0) && urlRoundBigInt <= currentRound + BigInt(1)) {
         setSelectedRound(urlRoundBigInt);
       }
-    } else if (currentRound && currentRound > BigInt(0)) {
-      setSelectedRound(currentRound - BigInt(1));
+    } else {
+      setSelectedRound(currentRound - BigInt(1) > BigInt(0) ? currentRound - BigInt(1) : BigInt(1));
     }
   }, [urlRound, currentRound]);
 
@@ -229,12 +231,9 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
   // 错误处理
 
   const handleChangedRound = (round: number) => {
-    const newRound = BigInt(round);
-    setSelectedRound(newRound);
-
-    // 更新URL参数
+    // 只更新URL参数，由useEffect统一处理selectedRound，避免竞争
     const currentQuery = { ...router.query };
-    currentQuery.round = newRound.toString();
+    currentQuery.round = round.toString();
 
     router.push(
       {
