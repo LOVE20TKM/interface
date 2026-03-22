@@ -224,7 +224,7 @@ export const useExtensionsByActionIdsWithCache = ({
   actionIds,
   enabled = true,
 }: UseExtensionsByActionIdsWithCacheParams): UseExtensionsByActionIdsWithCacheResult => {
-  const tokenAddress = token.address;
+  const tokenAddress = token?.address;
   const [refreshKey, setRefreshKey] = useState(0);
 
   // 检查是否有有效的 actionIds
