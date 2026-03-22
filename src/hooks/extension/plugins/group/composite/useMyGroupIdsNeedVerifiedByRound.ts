@@ -30,6 +30,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
+import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
 import { useBalanceOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -88,6 +89,7 @@ interface GroupTuple {
 const LOVE20_GROUP_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
 const GROUP_VERIFY_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY as `0x${string}`;
 const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
+const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
 
 // ==================== Hook 实现 ====================
 
@@ -163,44 +165,106 @@ export function useMyGroupIdsNeedVerifiedByRound({
   }, [groupIdsData]);
 
   // ==========================================
-  // 步骤4：批量获取每个 groupId 对应的行动 IDs
+  // 步骤4a：批量获取每个 groupId 对应的行动数量
   // ==========================================
 
-  const actionIdsByGroupIdContracts = useMemo(() => {
+  const actionCountContracts = useMemo(() => {
     if (!tokenAddress || groupIds.length === 0) return [];
 
     return groupIds.map((groupId) => ({
-      address: GROUP_JOIN_ADDRESS,
-      abi: GroupJoinAbi,
-      functionName: 'gActionIdsByTokenAddressByGroupId' as const,
+      address: GROUP_MANAGER_ADDRESS,
+      abi: GroupManagerAbi,
+      functionName: 'actionIdsByGroupIdCount' as const,
       args: [tokenAddress, groupId] as const,
     }));
   }, [tokenAddress, groupIds]);
 
   const {
-    data: actionIdsByGroupIdData,
-    isPending: isActionIdsByGroupIdPending,
-    error: actionIdsByGroupIdError,
+    data: actionCountData,
+    isPending: isActionCountPending,
+    error: actionCountError,
   } = useUniversalReadContracts({
-    contracts: actionIdsByGroupIdContracts as any,
+    contracts: actionCountContracts as any,
     query: {
       enabled: !!tokenAddress && groupIds.length > 0,
     },
   });
+
+  // 解析每个 groupId 的行动数量
+  const groupIdCounts = useMemo(() => {
+    if (!actionCountData) return [];
+    return groupIds.map((groupId, index) => {
+      const item = actionCountData[index];
+      const count = item?.status === 'success' ? Number(safeToBigInt(item.result as bigint)) : 0;
+      return { groupId, count };
+    });
+  }, [groupIds, actionCountData]);
+
+  // ==========================================
+  // 步骤4b：批量获取每个 groupId 的所有 actionId
+  // ==========================================
+
+  const actionIdAtIndexContracts = useMemo(() => {
+    if (!tokenAddress || groupIdCounts.length === 0) return [];
+
+    const contracts: Array<{
+      address: `0x${string}`;
+      abi: typeof GroupManagerAbi;
+      functionName: 'actionIdsByGroupIdAtIndex';
+      args: readonly [`0x${string}`, bigint, bigint];
+    }> = [];
+
+    groupIdCounts.forEach(({ groupId, count }) => {
+      for (let i = 0; i < count; i++) {
+        contracts.push({
+          address: GROUP_MANAGER_ADDRESS,
+          abi: GroupManagerAbi,
+          functionName: 'actionIdsByGroupIdAtIndex' as const,
+          args: [tokenAddress, groupId, BigInt(i)] as const,
+        });
+      }
+    });
+
+    return contracts;
+  }, [tokenAddress, groupIdCounts]);
+
+  const totalActionIdCalls = actionIdAtIndexContracts.length;
+
+  const {
+    data: actionIdAtIndexData,
+    isPending: isActionIdAtIndexPending,
+    error: actionIdAtIndexError,
+  } = useUniversalReadContracts({
+    contracts: actionIdAtIndexContracts as any,
+    query: {
+      enabled: !!tokenAddress && totalActionIdCalls > 0,
+    },
+  });
+
+  const isActionIdsByGroupIdPending = isActionCountPending || isActionIdAtIndexPending;
+  const actionIdsByGroupIdError = actionCountError || actionIdAtIndexError;
 
   // 构建 groupId -> actionIds[] 的映射，并收集所有唯一的 actionIds
   const { groupIdToActionIdsMap, allUniqueActionIds } = useMemo(() => {
     const map = new Map<bigint, bigint[]>();
     const actionIdsSet = new Set<bigint>();
 
-    if (!actionIdsByGroupIdData) return { groupIdToActionIdsMap: map, allUniqueActionIds: [] };
+    if (!actionIdAtIndexData || groupIdCounts.length === 0) return { groupIdToActionIdsMap: map, allUniqueActionIds: [] };
 
-    groupIds.forEach((groupId, index) => {
-      const item = actionIdsByGroupIdData[index];
-      if (item?.status === 'success' && item.result) {
-        const actionIds = (item.result as bigint[]).map((id) => safeToBigInt(id));
+    let dataIndex = 0;
+    groupIdCounts.forEach(({ groupId, count }) => {
+      const actionIds: bigint[] = [];
+      for (let i = 0; i < count; i++) {
+        const item = actionIdAtIndexData[dataIndex];
+        if (item?.status === 'success' && item.result != null) {
+          const actionId = safeToBigInt(item.result as bigint);
+          actionIds.push(actionId);
+          actionIdsSet.add(actionId);
+        }
+        dataIndex++;
+      }
+      if (actionIds.length > 0) {
         map.set(groupId, actionIds);
-        actionIds.forEach((actionId) => actionIdsSet.add(actionId));
       }
     });
 
@@ -208,7 +272,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
       groupIdToActionIdsMap: map,
       allUniqueActionIds: Array.from(actionIdsSet),
     };
-  }, [groupIds, actionIdsByGroupIdData]);
+  }, [groupIdCounts, actionIdAtIndexData]);
 
   // ==========================================
   // 步骤5：获取所有 actionIds 对应的扩展信息
