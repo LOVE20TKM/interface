@@ -31,7 +31,7 @@ import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { GroupVerifyAbi } from '@/src/abis/GroupVerify';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
-import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
+import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 import { useBalanceOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
@@ -90,6 +90,8 @@ const LOVE20_GROUP_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `
 const GROUP_VERIFY_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY as `0x${string}`;
 const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
 const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
+const EXTENSION_CENTER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 // ==================== Hook 实现 ====================
 
@@ -161,139 +163,85 @@ export function useMyGroupIdsNeedVerifiedByRound({
   }, [groupIdsData]);
 
   // ==========================================
-  // 步骤4a：批量获取每个 groupId 对应的行动数量
+  // 步骤4：批量获取每个 groupId 对应的 actionIds（一步到位）
   // ==========================================
 
-  const actionCountContracts = useMemo(() => {
+  const actionIdsByGroupIdContracts = useMemo(() => {
     if (!tokenAddress || groupIds.length === 0) return [];
-
     return groupIds.map((groupId) => ({
       address: GROUP_MANAGER_ADDRESS,
       abi: GroupManagerAbi,
-      functionName: 'actionIdsByGroupIdCount' as const,
+      functionName: 'actionIdsByGroupId' as const,
       args: [tokenAddress, groupId] as const,
     }));
   }, [tokenAddress, groupIds]);
 
   const {
-    data: actionCountData,
-    isPending: isActionCountPending,
-    error: actionCountError,
+    data: actionIdsByGroupIdData,
+    isPending: isActionIdsByGroupIdPending,
+    error: actionIdsByGroupIdError,
   } = useUniversalReadContracts({
-    contracts: actionCountContracts as any,
+    contracts: actionIdsByGroupIdContracts as any,
     query: {
       enabled: !!tokenAddress && groupIds.length > 0,
     },
   });
 
-  // 解析每个 groupId 的行动数量
-  const groupIdCounts = useMemo(() => {
-    if (!actionCountData) return [];
-    return groupIds.map((groupId, index) => {
-      const item = actionCountData[index];
-      const count = item?.status === 'success' ? Number(safeToBigInt(item.result as bigint)) : 0;
-      return { groupId, count };
-    });
-  }, [groupIds, actionCountData]);
-
-  // ==========================================
-  // 步骤4b：批量获取每个 groupId 的所有 actionId
-  // ==========================================
-
-  const actionIdAtIndexContracts = useMemo(() => {
-    if (!tokenAddress || groupIdCounts.length === 0) return [];
-
-    const contracts: Array<{
-      address: `0x${string}`;
-      abi: typeof GroupManagerAbi;
-      functionName: 'actionIdsByGroupIdAtIndex';
-      args: readonly [`0x${string}`, bigint, bigint];
-    }> = [];
-
-    groupIdCounts.forEach(({ groupId, count }) => {
-      for (let i = 0; i < count; i++) {
-        contracts.push({
-          address: GROUP_MANAGER_ADDRESS,
-          abi: GroupManagerAbi,
-          functionName: 'actionIdsByGroupIdAtIndex' as const,
-          args: [tokenAddress, groupId, BigInt(i)] as const,
-        });
-      }
-    });
-
-    return contracts;
-  }, [tokenAddress, groupIdCounts]);
-
-  const totalActionIdCalls = actionIdAtIndexContracts.length;
-
-  const {
-    data: actionIdAtIndexData,
-    isPending: isActionIdAtIndexPending,
-    error: actionIdAtIndexError,
-  } = useUniversalReadContracts({
-    contracts: actionIdAtIndexContracts as any,
-    query: {
-      enabled: !!tokenAddress && totalActionIdCalls > 0,
-    },
-  });
-
-  const actionIdsByGroupIdError = actionCountError || actionIdAtIndexError;
-
-  // 构建 groupId -> actionIds[] 的映射，并收集所有唯一的 actionIds
   const { groupIdToActionIdsMap, allUniqueActionIds } = useMemo(() => {
     const map = new Map<bigint, bigint[]>();
     const actionIdsSet = new Set<bigint>();
+    if (!actionIdsByGroupIdData) return { groupIdToActionIdsMap: map, allUniqueActionIds: [] };
 
-    if (!actionIdAtIndexData || groupIdCounts.length === 0)
-      return { groupIdToActionIdsMap: map, allUniqueActionIds: [] };
-
-    let dataIndex = 0;
-    groupIdCounts.forEach(({ groupId, count }) => {
-      const actionIds: bigint[] = [];
-      for (let i = 0; i < count; i++) {
-        const item = actionIdAtIndexData[dataIndex];
-        if (item?.status === 'success' && item.result != null) {
-          const actionId = safeToBigInt(item.result as bigint);
-          actionIds.push(actionId);
-          actionIdsSet.add(actionId);
+    actionIdsByGroupIdData.forEach((item, index) => {
+      if (item?.status === 'success' && item.result) {
+        const actionIds = (item.result as bigint[]).map(safeToBigInt);
+        if (actionIds.length > 0) {
+          map.set(groupIds[index], actionIds);
+          actionIds.forEach((id) => actionIdsSet.add(id));
         }
-        dataIndex++;
-      }
-      if (actionIds.length > 0) {
-        map.set(groupId, actionIds);
       }
     });
-
-    return {
-      groupIdToActionIdsMap: map,
-      allUniqueActionIds: Array.from(actionIdsSet),
-    };
-  }, [groupIdCounts, actionIdAtIndexData]);
+    return { groupIdToActionIdsMap: map, allUniqueActionIds: Array.from(actionIdsSet) };
+  }, [groupIds, actionIdsByGroupIdData]);
 
   // ==========================================
-  // 步骤5：获取所有 actionIds 对应的扩展信息
+  // 步骤5：直接查询 ExtensionCenter.extension 获取扩展地址
   // ==========================================
+
+  const extensionContracts = useMemo(() => {
+    if (!tokenAddress || allUniqueActionIds.length === 0) return [];
+    return allUniqueActionIds.map((actionId) => ({
+      address: EXTENSION_CENTER_ADDRESS,
+      abi: ExtensionCenterAbi,
+      functionName: 'extension' as const,
+      args: [tokenAddress, actionId] as const,
+    }));
+  }, [tokenAddress, allUniqueActionIds]);
 
   const {
-    extensions: extensionsInfo,
+    data: extensionData,
     isPending: isExtensionsPending,
     error: extensionsError,
-  } = useExtensionsByActionIdsWithCache({
-    token: token!,
-    actionIds: allUniqueActionIds,
-    enabled: !!token && allUniqueActionIds.length > 0,
+  } = useUniversalReadContracts({
+    contracts: extensionContracts as any,
+    query: {
+      enabled: !!tokenAddress && allUniqueActionIds.length > 0,
+    },
   });
 
-  // 构建 actionId -> extensionAddress 的映射（只保留有效的扩展行动）
   const actionIdToExtensionMap = useMemo(() => {
     const map = new Map<bigint, `0x${string}`>();
-    extensionsInfo.forEach((info) => {
-      if (info.isExtension && info.extensionAddress) {
-        map.set(info.actionId, info.extensionAddress);
+    if (!extensionData) return map;
+    extensionData.forEach((item, index) => {
+      if (item?.status === 'success' && item.result) {
+        const addr = item.result as `0x${string}`;
+        if (addr !== ZERO_ADDRESS) {
+          map.set(allUniqueActionIds[index], addr);
+        }
       }
     });
     return map;
-  }, [extensionsInfo]);
+  }, [allUniqueActionIds, extensionData]);
 
   // ==========================================
   // 步骤6：构建中间数据结构 (groupTuples)
@@ -421,8 +369,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
     if (groupIds.length === 0) return false;
 
     // 步骤4: 获取每个 groupId 对应的 actionIds
-    if (isActionCountPending) return true;
-    if (totalActionIdCalls > 0 && isActionIdAtIndexPending) return true;
+    if (isActionIdsByGroupIdPending) return true;
 
     // 如果没有有效的 actionIds，直接返回 false
     if (allUniqueActionIds.length === 0) return false;
@@ -443,9 +390,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
     balance,
     isGroupIdsPending,
     groupIds.length,
-    isActionCountPending,
-    totalActionIdCalls,
-    isActionIdAtIndexPending,
+    isActionIdsByGroupIdPending,
     allUniqueActionIds.length,
     isExtensionsPending,
     groupTuples.length,
