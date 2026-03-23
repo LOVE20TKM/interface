@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import { Edit } from 'lucide-react';
@@ -25,6 +25,7 @@ import { useSymbol } from '@/src/hooks/contracts/useLOVE20Token';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import _GroupServiceSetRecipients from './_GroupServiceSetRecipients';
 import LeftTitle from '@/src/components/Common/LeftTitle';
+import { useMyGroupIdsNeedVerifiedByRound } from '@/src/hooks/extension/plugins/group/composite/useMyGroupIdsNeedVerifiedByRound';
 
 interface GroupServiceMyParticipationProps {
   extensionAddress: `0x${string}`;
@@ -58,6 +59,13 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
 
   // 验证轮轮次（recipients 需要）
   const { currentRound } = useCurrentRound();
+
+  // 获取待验证链群数量
+  const { groups: verifyGroups, isPending: isVerifyGroupsPending } = useMyGroupIdsNeedVerifiedByRound({
+    account: account as `0x${string}`,
+    round: currentRound,
+  });
+  const unverifiedCount = useMemo(() => verifyGroups.filter((g) => g.needToVerify).length, [verifyGroups]);
 
   // Fetch all action-group recipients data（按验证轮查询）
   const {
@@ -212,7 +220,16 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
 
       {/* 二次分配地址 */}
       <div className="w-full mt-6">
-        <LeftTitle title="我的链群" />
+        <div className="flex justify-between items-center">
+          <LeftTitle title="我的链群" />
+          {!isVerifyGroupsPending && unverifiedCount > 0 && (
+            <Button variant="link" className="text-secondary border-secondary underline" asChild>
+              <Link href={`/extension/my_verifying_groups?symbol=${token?.symbol}`}>
+                {unverifiedCount}个链群待验证 &gt;&gt;
+              </Link>
+            </Button>
+          )}
+        </div>
 
         {isRecipientsPending ? (
           <div className="flex justify-center p-8">

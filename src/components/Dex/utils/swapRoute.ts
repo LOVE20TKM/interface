@@ -30,13 +30,16 @@ export const buildSwapPath = (fromToken: TokenConfig, toToken: TokenConfig, toke
 const selectOptimalRoute = (fromToken: TokenConfig, toToken: TokenConfig, token: any): `0x${string}`[] => {
   const tkm20Address = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as `0x${string}`;
   const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}`;
+  const firstTokenAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_FIRST_TOKEN as `0x${string}`;
   const currentTokenAddress = token?.address as `0x${string}`;
 
   // 定义实际存在的流动性池
   const directPairs = [
-    // 注意: NATIVE 和 TKM20 是通过 WETH9 协议 1:1 兑换，不是 Uniswap 池子
-    ...(tkm20Address && currentTokenAddress ? [{ token1: tkm20Address, token2: currentTokenAddress }] : []),
-    ...(usdtAddress && currentTokenAddress ? [{ token1: usdtAddress, token2: currentTokenAddress }] : []),
+    // TKM20 ↔ FIRST_TOKEN
+    ...(tkm20Address && firstTokenAddress ? [{ token1: tkm20Address, token2: firstTokenAddress }] : []),
+    // TUSDT ↔ FIRST_TOKEN（TUSDT 只和 FIRST_TOKEN 有池子）
+    ...(usdtAddress && firstTokenAddress ? [{ token1: usdtAddress, token2: firstTokenAddress }] : []),
+    // parentToken ↔ 当前子币（如 FIRST_TOKEN ↔ Life20）
     ...(token?.parentTokenAddress && currentTokenAddress
       ? [{ token1: token.parentTokenAddress, token2: currentTokenAddress }]
       : []),
@@ -47,13 +50,11 @@ const selectOptimalRoute = (fromToken: TokenConfig, toToken: TokenConfig, token:
 
   // 特殊情况: 原生代币兑换需要通过多跳路径（因为原生代币与其他ERC20没有直接池）
   if (fromToken.isNative && !toToken.isNative && !toToken.isWETH) {
-    // TKM -> 目标代币，必须通过 TKM20 -> LOVE20 -> 目标代币
-    return buildNativeToTokenPath(toToken, tkm20Address, currentTokenAddress, usdtAddress, directPairs);
+    return buildNativeToTokenPath(toToken, tkm20Address, firstTokenAddress, directPairs);
   }
 
   if (!fromToken.isNative && !fromToken.isWETH && toToken.isNative) {
-    // 源代币 -> TKM，必须通过 源代币 -> LOVE20 -> TKM20
-    return buildTokenToNativePath(fromToken, tkm20Address, currentTokenAddress, usdtAddress, directPairs);
+    return buildTokenToNativePath(fromToken, tkm20Address, firstTokenAddress, currentTokenAddress, directPairs);
   }
 
   // 检查是否存在直接交易对（仅限ERC20 to ERC20）
@@ -95,72 +96,61 @@ const buildRoutedPath = (
   const fromAddr = fromToken.address;
   const toAddr = toToken.address;
 
-  // 尝试通过 LOVE20 路由
-  if (currentTokenAddress && fromAddr !== currentTokenAddress && toAddr !== currentTokenAddress) {
-    const hasFromToCurrent = directPairs.some(
+  // 收集所有可能的中间代币，逐一尝试单跳路由
+  const intermediates: `0x${string}`[] = [];
+  if (currentTokenAddress) intermediates.push(currentTokenAddress);
+  if (token?.parentTokenAddress) intermediates.push(token.parentTokenAddress as `0x${string}`);
+  if (tkm20Address) intermediates.push(tkm20Address);
+
+  for (const mid of intermediates) {
+    if (mid === fromAddr || mid === toAddr) continue;
+
+    const hasFromToMid = directPairs.some(
       (pair) =>
-        (pair.token1 === fromAddr && pair.token2 === currentTokenAddress) ||
-        (pair.token1 === currentTokenAddress && pair.token2 === fromAddr),
+        (pair.token1 === fromAddr && pair.token2 === mid) || (pair.token1 === mid && pair.token2 === fromAddr),
     );
-    const hasCurrentToTo = directPairs.some(
+    const hasMidToTo = directPairs.some(
       (pair) =>
-        (pair.token1 === currentTokenAddress && pair.token2 === toAddr) ||
-        (pair.token1 === toAddr && pair.token2 === currentTokenAddress),
+        (pair.token1 === mid && pair.token2 === toAddr) || (pair.token1 === toAddr && pair.token2 === mid),
     );
 
-    if (hasFromToCurrent && hasCurrentToTo) {
-      return [fromToken.address as `0x${string}`, currentTokenAddress, toToken.address as `0x${string}`];
+    if (hasFromToMid && hasMidToTo) {
+      return [fromToken.address as `0x${string}`, mid, toToken.address as `0x${string}`];
     }
-  }
-
-  // 尝试通过 TKM20 路由
-  const hasFromToTKM20 = directPairs.some(
-    (pair) =>
-      (pair.token1 === fromAddr && pair.token2 === tkm20Address) ||
-      (pair.token1 === tkm20Address && pair.token2 === fromAddr),
-  );
-  const hasTKM20ToTo = directPairs.some(
-    (pair) =>
-      (pair.token1 === tkm20Address && pair.token2 === toAddr) ||
-      (pair.token1 === toAddr && pair.token2 === tkm20Address),
-  );
-
-  if (hasFromToTKM20 && hasTKM20ToTo) {
-    return [fromToken.address as `0x${string}`, tkm20Address, toToken.address as `0x${string}`];
   }
 
   throw new Error(`No valid routing path found for ${fromToken.symbol} -> ${toToken.symbol}`);
 };
 
 // 处理原生代币到ERC20代币的路径 (TKM -> 目标代币)
+// 原生代币通过 Router 自动 wrap 成 TKM20(WETH)，所以路径从 TKM20 开始
 const buildNativeToTokenPath = (
   toToken: TokenConfig,
   tkm20Address: `0x${string}`,
-  currentTokenAddress: `0x${string}`,
-  usdtAddress: `0x${string}`,
+  firstTokenAddress: `0x${string}`,
   directPairs: Array<{ token1: string; token2: `0x${string}` }>,
 ): `0x${string}`[] => {
-  // 目标是 LOVE20，直接路径: TKM20 -> LOVE20
-  if (toToken.address === currentTokenAddress) {
-    return [tkm20Address, currentTokenAddress];
+  const toAddr = toToken.address as string;
+
+  // 目标是 FIRST_TOKEN，直接路径: TKM20 -> FIRST_TOKEN
+  if (toAddr === firstTokenAddress) {
+    return [tkm20Address, firstTokenAddress];
   }
 
-  // 目标是 TUSDT，需要通过 LOVE20: TKM20 -> LOVE20 -> TUSDT
-  if (toToken.address === usdtAddress) {
-    const hasTKM20ToLOVE20 = directPairs.some(
-      (pair) =>
-        (pair.token1 === tkm20Address && pair.token2 === currentTokenAddress) ||
-        (pair.token1 === currentTokenAddress && pair.token2 === tkm20Address),
-    );
-    const hasLOVE20ToTUSDT = directPairs.some(
-      (pair) =>
-        (pair.token1 === currentTokenAddress && pair.token2 === usdtAddress) ||
-        (pair.token1 === usdtAddress && pair.token2 === currentTokenAddress),
-    );
+  // 目标是其他代币，尝试通过 FIRST_TOKEN 中转: TKM20 -> FIRST_TOKEN -> 目标代币
+  const hasTKM20ToFirst = directPairs.some(
+    (pair) =>
+      (pair.token1 === tkm20Address && pair.token2 === firstTokenAddress) ||
+      (pair.token1 === firstTokenAddress && pair.token2 === tkm20Address),
+  );
+  const hasFirstToTarget = directPairs.some(
+    (pair) =>
+      (pair.token1 === firstTokenAddress && pair.token2 === toAddr) ||
+      (pair.token1 === toAddr && pair.token2 === firstTokenAddress),
+  );
 
-    if (hasTKM20ToLOVE20 && hasLOVE20ToTUSDT) {
-      return [tkm20Address, currentTokenAddress, usdtAddress];
-    }
+  if (hasTKM20ToFirst && hasFirstToTarget) {
+    return [tkm20Address, firstTokenAddress, toToken.address as `0x${string}`];
   }
 
   // 回退: 尝试直接路径
@@ -168,34 +158,35 @@ const buildNativeToTokenPath = (
 };
 
 // 处理ERC20代币到原生代币的路径 (源代币 -> TKM)
+// Router 最终会把 TKM20(WETH) unwrap 成原生代币，所以路径以 TKM20 结尾
 const buildTokenToNativePath = (
   fromToken: TokenConfig,
   tkm20Address: `0x${string}`,
+  firstTokenAddress: `0x${string}`,
   currentTokenAddress: `0x${string}`,
-  usdtAddress: `0x${string}`,
   directPairs: Array<{ token1: string; token2: `0x${string}` }>,
 ): `0x${string}`[] => {
-  // 源是 LOVE20，直接路径: LOVE20 -> TKM20
-  if (fromToken.address === currentTokenAddress) {
-    return [currentTokenAddress, tkm20Address];
+  const fromAddr = fromToken.address as string;
+
+  // 源是 FIRST_TOKEN，直接路径: FIRST_TOKEN -> TKM20
+  if (fromAddr === firstTokenAddress) {
+    return [firstTokenAddress, tkm20Address];
   }
 
-  // 源是 TUSDT，需要通过 LOVE20: TUSDT -> LOVE20 -> TKM20
-  if (fromToken.address === usdtAddress) {
-    const hasTUSDTToLOVE20 = directPairs.some(
-      (pair) =>
-        (pair.token1 === usdtAddress && pair.token2 === currentTokenAddress) ||
-        (pair.token1 === currentTokenAddress && pair.token2 === usdtAddress),
-    );
-    const hasLOVE20ToTKM20 = directPairs.some(
-      (pair) =>
-        (pair.token1 === currentTokenAddress && pair.token2 === tkm20Address) ||
-        (pair.token1 === tkm20Address && pair.token2 === currentTokenAddress),
-    );
+  // 源是其他代币，尝试通过 FIRST_TOKEN 中转: 源代币 -> FIRST_TOKEN -> TKM20
+  const hasSourceToFirst = directPairs.some(
+    (pair) =>
+      (pair.token1 === fromAddr && pair.token2 === firstTokenAddress) ||
+      (pair.token1 === firstTokenAddress && pair.token2 === fromAddr),
+  );
+  const hasFirstToTKM20 = directPairs.some(
+    (pair) =>
+      (pair.token1 === firstTokenAddress && pair.token2 === tkm20Address) ||
+      (pair.token1 === tkm20Address && pair.token2 === firstTokenAddress),
+  );
 
-    if (hasTUSDTToLOVE20 && hasLOVE20ToTKM20) {
-      return [usdtAddress, currentTokenAddress, tkm20Address];
-    }
+  if (hasSourceToFirst && hasFirstToTKM20) {
+    return [fromToken.address as `0x${string}`, firstTokenAddress, tkm20Address];
   }
 
   // 回退: 尝试直接路径
