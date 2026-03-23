@@ -144,10 +144,6 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   const displayPercentage = formatPercentage(percentage);
 
   const handleExit = async () => {
-    if (myParticipation <= 0) {
-      toast.error('您没有参与，无需退出');
-      return;
-    }
     await exit();
   };
 
@@ -205,7 +201,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
           variant="outline"
           className="flex-1 text-secondary border-secondary"
           onClick={handleExit}
-          disabled={isExitPending || isExitConfirming || isExitConfirmed || myParticipation <= 0}
+          disabled={isExitPending || isExitConfirming || isExitConfirmed}
         >
           {isExitPending ? '提交中' : isExitConfirming ? '确认中' : isExitConfirmed ? '已退出' : '退出行动'}
         </Button>
