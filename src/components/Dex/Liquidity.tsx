@@ -731,7 +731,39 @@ const LiquidityPanel = () => {
                             <span className="font-medium text-gray-800 font-mono">{targetToken.symbol}</span>
                           </div>
                         </div>
-                        <div className="flex items-center justify-end">
+                        <div className="flex items-center justify-between">
+                          <div className="flex space-x-1">
+                            {[25, 50].map((percentage) => (
+                              <Button
+                                key={percentage}
+                                variant="outline"
+                                size="sm"
+                                type="button"
+                                onClick={() => {
+                                  const amount = ((tokenBalance ?? BigInt(0)) * BigInt(percentage)) / BigInt(100);
+                                  form.setValue('tokenAmount', formatUnits(amount));
+                                  setIsTokenChangedByUser(true);
+                                }}
+                                disabled={isDisabled || (tokenBalance || BigInt(0)) <= BigInt(0)}
+                                className="text-xs h-7 px-2 rounded-lg"
+                              >
+                                {percentage}%
+                              </Button>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              type="button"
+                              onClick={() => {
+                                form.setValue('tokenAmount', formatUnits(tokenBalance || BigInt(0)));
+                                setIsTokenChangedByUser(true);
+                              }}
+                              disabled={isDisabled || (tokenBalance || BigInt(0)) <= BigInt(0)}
+                              className="text-xs h-7 px-2 rounded-lg"
+                            >
+                              最高
+                            </Button>
+                          </div>
                           <span className="text-sm text-gray-600">
                             {formatTokenAmount(tokenBalance || BigInt(0))} {targetToken.symbol}
                           </span>
