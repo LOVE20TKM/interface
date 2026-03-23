@@ -114,11 +114,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
   // 步骤2：获取账户拥有的链群 NFT 总数
   // ==========================================
 
-  const {
-    balance: balanceData,
-    isPending: isBalancePending,
-    error: balanceError,
-  } = useBalanceOf(account!, !!account);
+  const { balance: balanceData, isPending: isBalancePending, error: balanceError } = useBalanceOf(account!, !!account);
 
   const balance = balanceData || BigInt(0);
 
@@ -241,7 +237,6 @@ export function useMyGroupIdsNeedVerifiedByRound({
     },
   });
 
-  const isActionIdsByGroupIdPending = isActionCountPending || isActionIdAtIndexPending;
   const actionIdsByGroupIdError = actionCountError || actionIdAtIndexError;
 
   // 构建 groupId -> actionIds[] 的映射，并收集所有唯一的 actionIds
@@ -249,7 +244,8 @@ export function useMyGroupIdsNeedVerifiedByRound({
     const map = new Map<bigint, bigint[]>();
     const actionIdsSet = new Set<bigint>();
 
-    if (!actionIdAtIndexData || groupIdCounts.length === 0) return { groupIdToActionIdsMap: map, allUniqueActionIds: [] };
+    if (!actionIdAtIndexData || groupIdCounts.length === 0)
+      return { groupIdToActionIdsMap: map, allUniqueActionIds: [] };
 
     let dataIndex = 0;
     groupIdCounts.forEach(({ groupId, count }) => {
@@ -425,7 +421,8 @@ export function useMyGroupIdsNeedVerifiedByRound({
     if (groupIds.length === 0) return false;
 
     // 步骤4: 获取每个 groupId 对应的 actionIds
-    if (isActionIdsByGroupIdPending) return true;
+    if (isActionCountPending) return true;
+    if (totalActionIdCalls > 0 && isActionIdAtIndexPending) return true;
 
     // 如果没有有效的 actionIds，直接返回 false
     if (allUniqueActionIds.length === 0) return false;
@@ -446,7 +443,9 @@ export function useMyGroupIdsNeedVerifiedByRound({
     balance,
     isGroupIdsPending,
     groupIds.length,
-    isActionIdsByGroupIdPending,
+    isActionCountPending,
+    totalActionIdCalls,
+    isActionIdAtIndexPending,
     allUniqueActionIds.length,
     isExtensionsPending,
     groupTuples.length,
@@ -457,8 +456,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
   // 步骤10：错误处理
   // ==========================================
 
-  const error =
-    balanceError || groupIdsError || actionIdsByGroupIdError || extensionsError || combinedError || null;
+  const error = balanceError || groupIdsError || actionIdsByGroupIdError || extensionsError || combinedError || null;
 
   // ==========================================
   // 步骤11：返回结果
