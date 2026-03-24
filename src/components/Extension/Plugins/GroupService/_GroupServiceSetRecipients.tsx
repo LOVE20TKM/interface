@@ -298,33 +298,38 @@ export default function _GroupServiceSetRecipients({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-3 sm:p-6">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-3 sm:p-6">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>编辑激励分配地址</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* 行动和链群信息 */}
-            <div className="border rounded-lg p-3 bg-gray-50">
-              <div className="flex items-baseline mb-2">
-                <span className="text-greyscale-400 text-sm">{`No.`}</span>
-                <span className="text-secondary text-xl font-bold mr-2">{String(actionId)}</span>
-                <span className="font-bold text-greyscale-800">{actionTitle}</span>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+            {/* 顶部固定区域：行动和链群信息 + 错误提示 */}
+            <div className="flex-shrink-0 space-y-4">
+              {/* 行动和链群信息 */}
+              <div className="border rounded-lg p-3 bg-gray-50">
+                <div className="flex items-baseline mb-2">
+                  <span className="text-greyscale-400 text-sm">{`No.`}</span>
+                  <span className="text-secondary text-xl font-bold mr-2">{String(actionId)}</span>
+                  <span className="font-bold text-greyscale-800">{actionTitle}</span>
+                </div>
+                <div className="text-gray-800">
+                  <span className="text-gray-500 text-xs">链群 #</span>
+                  <span className="text-secondary text-base font-semibold">{groupId.toString()}</span>{' '}
+                  <span>{groupName || `链群 #${groupId}`}</span>
+                </div>
               </div>
-              <div className="text-gray-800">
-                <span className="text-gray-500 text-xs">链群 #</span>
-                <span className="text-secondary text-base font-semibold">{groupId.toString()}</span>{' '}
-                <span>{groupName || `链群 #${groupId}`}</span>
-              </div>
+
+              {form.formState.errors.root && (
+                <div className="text-red-500 text-sm p-2 bg-red-50 rounded-md border border-red-200">
+                  {form.formState.errors.root.message}
+                </div>
+              )}
             </div>
 
-            {form.formState.errors.root && (
-              <div className="text-red-500 text-sm p-2 bg-red-50 rounded-md border border-red-200">
-                {form.formState.errors.root.message}
-              </div>
-            )}
-
+            {/* 中间可滚动区域：地址列表 + 统计条 + 添加按钮 */}
+            <div className="flex-1 overflow-y-auto min-h-0 space-y-4 mt-4 pb-1">
             <div className="space-y-3 -mx-2 sm:mx-0">
               {fields.map((field, index) => {
                 // 计算当前输入框的最大值：剩余百分比 + 当前输入框的值
@@ -468,8 +473,9 @@ export default function _GroupServiceSetRecipients({
             >
               <Plus className="w-4 h-4 mr-2" /> 添加地址
             </Button>
+            </div>{/* 可滚动区域结束 */}
 
-            <div className="flex justify-end gap-2 mt-4">
+            <div className="flex-shrink-0 flex justify-end gap-2 mt-4">
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                 取消
               </Button>
