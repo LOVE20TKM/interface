@@ -77,6 +77,7 @@ const nextConfig = {
       '/extension/group_trial_add': { page: '/extension/group_trial_add' },
       '/extension/group_trial': { page: '/extension/group_trial' },
       '/extension/group': { page: '/extension/group' },
+      '/extension/groups_delegated_to_me': { page: '/extension/groups_delegated_to_me' },
       '/group/groupids': { page: '/group/groupids' },
       '/group/export_groups': { page: '/group/export_groups' },
       '/extension/my_verifying_groups': { page: '/extension/my_verifying_groups' },
