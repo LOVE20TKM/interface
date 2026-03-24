@@ -329,8 +329,8 @@ export default function _GroupServiceSetRecipients({
             </div>
 
             {/* 中间可滚动区域：地址列表 + 统计条 + 添加按钮 */}
-            <div className="flex-1 overflow-y-auto min-h-0 space-y-4 mt-4 pb-1">
-            <div className="space-y-3 -mx-2 sm:mx-0">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 space-y-4 mt-4 pb-1">
+            <div className="space-y-3">
               {fields.map((field, index) => {
                 // 计算当前输入框的最大值：剩余百分比 + 当前输入框的值
                 const otherBasisPointsSum = watchedRecipients.reduce(
