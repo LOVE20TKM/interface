@@ -427,6 +427,12 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     }
   };
 
+  const handleMaxScoreClick = (index: number) => {
+    const newScores = [...accountScores];
+    newScores[index].score = '100';
+    setAccountScores(newScores);
+  };
+
   // 检查是否已经打分完成
   const isAlreadySubmitted =
     verifiedAccountCount !== undefined && accounts && verifiedAccountCount >= BigInt(accounts.length);
@@ -535,7 +541,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
                       </div>
                     </td>
                     <td className="py-1 w-18 px-1">
-                      <div className="flex items-center text-left">
+                      <div className="flex items-center gap-1 text-left">
                         <input
                           type="number"
                           min="0"
@@ -548,6 +554,14 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
                           onChange={(e) => handleScoreChange(index, e.target.value)}
                           className="w-16 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => handleMaxScoreClick(index)}
+                        >
+                          最大
+                        </Button>
                       </div>
                     </td>
                   </tr>
