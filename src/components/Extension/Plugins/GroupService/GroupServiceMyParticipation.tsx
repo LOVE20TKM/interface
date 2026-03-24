@@ -64,6 +64,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   const { groups: verifyGroups, isPending: isVerifyGroupsPending } = useMyGroupIdsNeedVerifiedByRound({
     account: account as `0x${string}`,
     round: currentRound,
+    tokenAddress: groupActionTokenAddress,
   });
   const unverifiedCount = useMemo(() => verifyGroups.filter((g) => g.needToVerify).length, [verifyGroups]);
 
@@ -220,7 +221,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
           <LeftTitle title="我的链群" />
           {!isVerifyGroupsPending && (
             <Button variant="link" className="text-secondary border-secondary underline" asChild>
-              <Link href={`/extension/my_verifying_groups?symbol=${token?.symbol}`}>
+              <Link href={`/extension/my_verifying_groups?symbol=${groupActionTokenSymbol || token?.symbol}`}>
                 {unverifiedCount}个链群待验证 &gt;&gt;
               </Link>
             </Button>

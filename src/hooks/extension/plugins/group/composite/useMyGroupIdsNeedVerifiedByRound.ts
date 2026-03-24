@@ -61,6 +61,8 @@ export interface UseMyGroupIdsNeedVerifiedByRoundParams {
   account: `0x${string}` | undefined;
   /** 验证轮次 */
   round: bigint | undefined;
+  /** 链群行动所在的 token 地址（可选，优先于 TokenContext；用于跨 token 场景） */
+  tokenAddress?: `0x${string}`;
 }
 
 /**
@@ -104,13 +106,14 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 export function useMyGroupIdsNeedVerifiedByRound({
   account,
   round,
+  tokenAddress: tokenAddressProp,
 }: UseMyGroupIdsNeedVerifiedByRoundParams): UseMyGroupIdsNeedVerifiedByRoundResult {
   // ==========================================
   // 步骤1：获取 token 和 tokenAddress
   // ==========================================
 
   const { token } = useContext(TokenContext) || {};
-  const tokenAddress = token?.address;
+  const tokenAddress = tokenAddressProp || token?.address;
 
   // ==========================================
   // 步骤2：获取账户拥有的链群 NFT 总数
