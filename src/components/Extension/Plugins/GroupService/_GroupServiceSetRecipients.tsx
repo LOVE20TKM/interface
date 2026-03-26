@@ -77,7 +77,7 @@ export default function _GroupServiceSetRecipients({
 
   // 用户输入的是百分比，最大值是 100
   // basisPointsBase (1e18) 只在转换为 wei 时使用
-  const base = 100;
+  const base = 99;
 
   // 创建动态 schema，使用 basisPointsBase
   const formSchema = useMemo(
@@ -148,7 +148,6 @@ export default function _GroupServiceSetRecipients({
       hasCalledSuccessRef.current = false;
     }
   }, [open, currentAddrs, currentRatios, currentRemarks, form]);
-
 
   useEffect(() => {
     // 只有在确认成功且未调用过成功回调时才触发
@@ -330,150 +329,151 @@ export default function _GroupServiceSetRecipients({
 
             {/* 中间可滚动区域：地址列表 + 统计条 + 添加按钮 */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 space-y-4 mt-4 pb-1">
-            <div className="space-y-3">
-              {fields.map((field, index) => {
-                // 计算当前输入框的最大值：剩余百分比 + 当前输入框的值
-                const otherBasisPointsSum = watchedRecipients.reduce(
-                  (sum, r, i) => (i !== index ? sum + (Number(r.basisPoints) || 0) : sum),
-                  0,
-                );
-                const maxForThisInput = base - otherBasisPointsSum; // base = 100
-                const isDuplicate = duplicateAddressIndices.has(index);
+              <div className="space-y-3">
+                {fields.map((field, index) => {
+                  // 计算当前输入框的最大值：剩余百分比 + 当前输入框的值
+                  const otherBasisPointsSum = watchedRecipients.reduce(
+                    (sum, r, i) => (i !== index ? sum + (Number(r.basisPoints) || 0) : sum),
+                    0,
+                  );
+                  const maxForThisInput = base - otherBasisPointsSum; // base = 100
+                  const isDuplicate = duplicateAddressIndices.has(index);
 
-                return (
-                  <div
-                    key={field.id}
-                    className={`border rounded-lg p-2 sm:p-3 ${
-                      isDuplicate ? 'bg-red-50 border-red-300' : 'bg-white border-gray-200'
-                    }`}
-                  >
-                    {/* 第一行：序号 + 地址 */}
-                    <div className="flex items-center">
-                      <span className="text-xs text-greyscale-400 min-w-[20px]">{index + 1}.</span>
-                      <FormField
-                        control={form.control}
-                        name={`recipients.${index}.address`}
-                        render={({ field }) => (
-                          <FormItem className="flex-1 min-w-0">
-                            <FormControl>
-                              <Input
-                                placeholder="0x..."
-                                {...field}
-                                onBlur={handleAddressBlur(field.onChange)}
-                                className={`font-mono text-xs sm:text-sm h-8 px-2 ${
-                                  isDuplicate ? 'border-red-500 focus-visible:ring-red-500' : ''
-                                }`}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-xs" />
-                            {isDuplicate && <p className="text-xs text-red-600 mt-1">该地址重复</p>}
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    {/* 第二行：名称/备注 + 百分比 + 删除按钮 */}
-                    <div className="mt-1.5 ml-5 sm:ml-6 flex items-center gap-1 sm:gap-2">
-                      <FormField
-                        control={form.control}
-                        name={`recipients.${index}.remark`}
-                        render={({ field }) => (
-                          <FormItem className="flex-1 min-w-0">
-                            <FormControl>
-                              <Input placeholder="名称/备注" {...field} className="h-8 px-2 text-sm" />
-                            </FormControl>
-                            <FormMessage className="text-xs" />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`recipients.${index}.basisPoints`}
-                        render={({ field }) => (
-                          <FormItem className="shrink-0">
-                            <FormControl>
-                              <div className="relative inline-block">
+                  return (
+                    <div
+                      key={field.id}
+                      className={`border rounded-lg p-2 sm:p-3 ${
+                        isDuplicate ? 'bg-red-50 border-red-300' : 'bg-white border-gray-200'
+                      }`}
+                    >
+                      {/* 第一行：序号 + 地址 */}
+                      <div className="flex items-center">
+                        <span className="text-xs text-greyscale-400 min-w-[20px]">{index + 1}.</span>
+                        <FormField
+                          control={form.control}
+                          name={`recipients.${index}.address`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1 min-w-0">
+                              <FormControl>
                                 <Input
-                                  type="number"
-                                  min={0}
-                                  max={maxForThisInput}
-                                  placeholder="0-100"
+                                  placeholder="0x..."
                                   {...field}
-                                  onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
-                                  className="h-8 px-1 sm:px-2 pr-6 w-16"
+                                  onBlur={handleAddressBlur(field.onChange)}
+                                  className={`font-mono text-xs sm:text-sm h-8 px-2 ${
+                                    isDuplicate ? 'border-red-500 focus-visible:ring-red-500' : ''
+                                  }`}
                                 />
-                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs sm:text-sm">
-                                  %
-                                </span>
-                              </div>
-                            </FormControl>
-                            <FormMessage className="text-xs" />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        className="h-8 w-8 shrink-0"
-                      >
-                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
-                      </Button>
+                              </FormControl>
+                              <FormMessage className="text-xs" />
+                              {isDuplicate && <p className="text-xs text-red-600 mt-1">该地址重复</p>}
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      {/* 第二行：名称/备注 + 百分比 + 删除按钮 */}
+                      <div className="mt-1.5 ml-5 sm:ml-6 flex items-center gap-1 sm:gap-2">
+                        <FormField
+                          control={form.control}
+                          name={`recipients.${index}.remark`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1 min-w-0">
+                              <FormControl>
+                                <Input placeholder="名称/备注" {...field} className="h-8 px-2 text-sm" />
+                              </FormControl>
+                              <FormMessage className="text-xs" />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`recipients.${index}.basisPoints`}
+                          render={({ field }) => (
+                            <FormItem className="shrink-0">
+                              <FormControl>
+                                <div className="relative inline-block">
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    max={maxForThisInput}
+                                    placeholder="0-100"
+                                    {...field}
+                                    onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
+                                    className="h-8 px-1 sm:px-2 pr-6 w-16"
+                                  />
+                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs sm:text-sm">
+                                    %
+                                  </span>
+                                </div>
+                              </FormControl>
+                              <FormMessage className="text-xs" />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => remove(index)}
+                          className="h-8 w-8 shrink-0"
+                        >
+                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
+                        </Button>
+                      </div>
                     </div>
+                  );
+                })}
+                {fields.length === 0 && (
+                  <div className="text-center text-muted-foreground py-8 text-xs sm:text-sm border rounded-lg border-dashed">
+                    暂无接收地址，点击下方按钮添加
                   </div>
-                );
-              })}
-              {fields.length === 0 && (
-                <div className="text-center text-muted-foreground py-8 text-xs sm:text-sm border rounded-lg border-dashed">
-                  暂无接收地址，点击下方按钮添加
-                </div>
-              )}
-            </div>
-
-            {/* 显示总百分比 */}
-            {fields.length > 0 && (
-              <div
-                className={`text-sm p-2 rounded-md border ${
-                  isTotalExceeded || hasDuplicateAddresses
-                    ? 'bg-red-50 border-red-200 text-red-700'
-                    : 'bg-blue-50 border-blue-200 text-blue-700'
-                }`}
-              >
-                <div className="flex justify-between items-center">
-                  <span>总百分比：</span>
-                  <span className="font-semibold">
-                    {totalPercentage}% / {base}%
-                  </span>
-                </div>
-                {!isTotalExceeded && !hasDuplicateAddresses && remainingBasisPoints > 0 && (
-                  <div className="text-xs mt-1">剩余可分配：{remainingBasisPoints.toFixed(2)}%</div>
-                )}
-                {isTotalExceeded && (
-                  <div className="text-xs mt-1 text-red-600">警告：总比例超过 100%，请调整百分比</div>
-                )}
-                {hasDuplicateAddresses && (
-                  <div className="text-xs mt-1 text-red-600">警告：存在重复地址，请修改或删除</div>
                 )}
               </div>
-            )}
 
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full border-dashed"
-              disabled={isTotalExceeded || totalBasisPoints >= base}
-              onClick={() => {
-                // 检查是否超过最大接收者数量限制
-                if (maxRecipients !== undefined && fields.length >= Number(maxRecipients)) {
-                  toast.error(`激励分配地址数量不能超过最大限制 ${maxRecipients.toString()}`);
-                  return;
-                }
-                append({ address: '', basisPoints: 0, remark: '' });
-              }}
-            >
-              <Plus className="w-4 h-4 mr-2" /> 添加地址
-            </Button>
-            </div>{/* 可滚动区域结束 */}
+              {/* 显示总百分比 */}
+              {fields.length > 0 && (
+                <div
+                  className={`text-sm p-2 rounded-md border ${
+                    isTotalExceeded || hasDuplicateAddresses
+                      ? 'bg-red-50 border-red-200 text-red-700'
+                      : 'bg-blue-50 border-blue-200 text-blue-700'
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <span>总百分比：</span>
+                    <span className="font-semibold">{totalPercentage}%</span>
+                  </div>
+                  {!isTotalExceeded && !hasDuplicateAddresses && remainingBasisPoints > 0 && (
+                    <div className="text-xs mt-1">
+                      剩余可分配：{remainingBasisPoints.toFixed(2)}% （最多可分配 {base}%）
+                    </div>
+                  )}
+                  {isTotalExceeded && (
+                    <div className="text-xs mt-1 text-red-600">警告：总比例超过 99%，请调整百分比</div>
+                  )}
+                  {hasDuplicateAddresses && (
+                    <div className="text-xs mt-1 text-red-600">警告：存在重复地址，请修改或删除</div>
+                  )}
+                </div>
+              )}
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-dashed"
+                disabled={isTotalExceeded || totalBasisPoints >= base}
+                onClick={() => {
+                  // 检查是否超过最大接收者数量限制
+                  if (maxRecipients !== undefined && fields.length >= Number(maxRecipients)) {
+                    toast.error(`激励分配地址数量不能超过最大限制 ${maxRecipients.toString()}`);
+                    return;
+                  }
+                  append({ address: '', basisPoints: 0, remark: '' });
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" /> 添加地址
+              </Button>
+            </div>
+            {/* 可滚动区域结束 */}
 
             <div className="flex-shrink-0 flex justify-end gap-2 mt-4">
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
