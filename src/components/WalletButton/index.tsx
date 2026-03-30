@@ -41,6 +41,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   const [walletChainId, setWalletChainId] = useState<number | null>(null);
   const [isNetworkMismatch, setIsNetworkMismatch] = useState(false);
   const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
+  const [ethereumReady, setEthereumReady] = useState(typeof window !== 'undefined' && !!window.ethereum);
   const { setError } = useError();
 
   // 跟踪组件是否已挂载，避免在渲染期间更新状态
@@ -193,16 +194,8 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         return;
       }
 
-      // 等待 window.ethereum 注入（某些钱包 WebView 注入有延迟）
-      if (!window.ethereum) {
-        for (let i = 0; i < 10; i++) {
-          await new Promise((r) => setTimeout(r, 200));
-          if (window.ethereum) break;
-        }
-      }
-
-      if (!window.ethereum) {
-        toast.error('请安装 MetaMask 或使用支持的钱包浏览器');
+      if (!ethereumReady || !window.ethereum) {
+        toast.error('钱包正在加载中，请稍后重试');
         return;
       }
 
@@ -422,19 +415,33 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
     };
   }, [isConnected, targetChainId]);
 
-  // 安全检查：确保注入式钱包可用
+  // 异步检测钱包注入（兼容 TUKE 等 WebView 钱包注入延迟）
   useEffect(() => {
-    const checkWalletAvailability = () => {
-      if (typeof window !== 'undefined' && !window.ethereum) {
-        console.warn('未检测到注入式钱包');
-      }
+    if (ethereumReady) return;
+    if (typeof window === 'undefined') return;
+
+    // 方式1: 监听 ethereum#initialized 事件
+    const handler = () => {
+      if (window.ethereum) setEthereumReady(true);
     };
+    window.addEventListener('ethereum#initialized', handler);
 
-    // 延迟检查，给钱包扩展加载时间
-    const timer = setTimeout(checkWalletAvailability, 1000);
+    // 方式2: 轮询兜底，最多等 5 秒（20×250ms）
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      if (window.ethereum) {
+        setEthereumReady(true);
+        clearInterval(interval);
+      }
+      if (attempts >= 20) clearInterval(interval);
+    }, 250);
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      window.removeEventListener('ethereum#initialized', handler);
+      clearInterval(interval);
+    };
+  }, [ethereumReady]);
 
   // 加载状态
   const isLoading = isConnecting || isReconnecting || isPending;
@@ -476,6 +483,11 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             连接中...
+          </>
+        ) : !ethereumReady ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            检测钱包中...
           </>
         ) : (
           <>
