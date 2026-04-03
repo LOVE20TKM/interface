@@ -41,18 +41,29 @@ export const sendUniversalTransaction = async (
       !!localStorage.getItem('debug') &&
       localStorage.getItem('debug') !== '0' &&
       localStorage.getItem('debug') !== 'false';
+    let simulatedRequest:
+      | {
+          address: `0x${string}`;
+          abi: readonly any[];
+          functionName: string;
+          args: any[];
+          value?: bigint;
+          gas?: bigint;
+        }
+      | undefined;
 
     if (!options?.skipSimulation && !isDebug) {
       console.log('步骤1: (标准模式)执行模拟调用 验证交易...');
 
       try {
-        await simulateContract(config, {
+        const simulated = await simulateContract(config, {
           address,
           abi,
           functionName,
           args,
           value,
         });
+        simulatedRequest = simulated.request as typeof simulatedRequest;
       } catch (simError: unknown) {
         // 先尝试从模拟错误对象的 .data 字段提取原始 revert data
         const directRawData = extractRawRevertData(simError);
@@ -91,6 +102,13 @@ export const sendUniversalTransaction = async (
     }
 
     console.log('步骤2: (标准模式)执行真实交易...');
+    if (simulatedRequest) {
+      console.log('复用模拟请求发送交易，避免钱包侧错误重估 gas', {
+        gas: simulatedRequest.gas?.toString(),
+      });
+      return await writeContract(config, simulatedRequest);
+    }
+
     return await writeContract(config, {
       address,
       abi,
