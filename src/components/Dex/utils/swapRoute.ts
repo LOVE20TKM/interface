@@ -1,4 +1,7 @@
-import { TokenConfig, SwapMethod } from './swapTypes';
+import { MAX_SWAP_ROUTE_HOPS } from './swapConfig';
+import { RouteTokenConfig, SwapMethod, SwapRouteQuote, TokenConfig } from './swapTypes';
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 export const determineSwapMethod = (fromToken: TokenConfig, toToken: TokenConfig): SwapMethod => {
   // 情况1: 原生代币 ↔ WETH9 - 使用 WETH9
@@ -20,175 +23,155 @@ export const determineSwapMethod = (fromToken: TokenConfig, toToken: TokenConfig
   return 'UniswapV2_TOKEN_TO_TOKEN';
 };
 
-export const buildSwapPath = (fromToken: TokenConfig, toToken: TokenConfig, token: any): `0x${string}`[] => {
-  if (determineSwapMethod(fromToken, toToken) === 'WETH9') {
-    return [];
-  }
-  return selectOptimalRoute(fromToken, toToken, token);
+export const isZeroAddress = (address?: string | null) => !address || address === ZERO_ADDRESS;
+
+export const getWrappedNativeAddress = () => process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as
+  | `0x${string}`
+  | undefined;
+
+export const resolveSwapEndpoints = (fromToken: TokenConfig, toToken: TokenConfig) => {
+  const wrappedNativeAddress = getWrappedNativeAddress();
+
+  return {
+    sourceAddress: fromToken.isNative ? wrappedNativeAddress : (fromToken.address as `0x${string}`),
+    targetAddress: toToken.isNative ? wrappedNativeAddress : (toToken.address as `0x${string}`),
+  };
 };
 
-const selectOptimalRoute = (fromToken: TokenConfig, toToken: TokenConfig, token: any): `0x${string}`[] => {
-  const tkm20Address = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as `0x${string}`;
-  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}`;
-  const firstTokenAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_FIRST_TOKEN as `0x${string}`;
-  const currentTokenAddress = token?.address as `0x${string}`;
+export const buildPairCandidates = (routeTokens: RouteTokenConfig[]) => {
+  const pairCandidates: Array<{ tokenA: `0x${string}`; tokenB: `0x${string}` }> = [];
 
-  // 定义实际存在的流动性池
-  const directPairs = [
-    // TKM20 ↔ FIRST_TOKEN
-    ...(tkm20Address && firstTokenAddress ? [{ token1: tkm20Address, token2: firstTokenAddress }] : []),
-    // TUSDT ↔ FIRST_TOKEN（TUSDT 只和 FIRST_TOKEN 有池子）
-    ...(usdtAddress && firstTokenAddress ? [{ token1: usdtAddress, token2: firstTokenAddress }] : []),
-    // parentToken ↔ 当前子币（如 FIRST_TOKEN ↔ Life20）
-    ...(token?.parentTokenAddress && currentTokenAddress
-      ? [{ token1: token.parentTokenAddress, token2: currentTokenAddress }]
-      : []),
-  ];
+  for (let i = 0; i < routeTokens.length; i++) {
+    for (let j = i + 1; j < routeTokens.length; j++) {
+      const tokenA = routeTokens[i]?.address;
+      const tokenB = routeTokens[j]?.address;
 
-  const fromAddr = fromToken.isNative ? 'NATIVE' : fromToken.address;
-  const toAddr = toToken.isNative ? 'NATIVE' : toToken.address;
+      if (!tokenA || !tokenB || tokenA.toLowerCase() === tokenB.toLowerCase()) {
+        continue;
+      }
 
-  // 特殊情况: 原生代币兑换需要通过多跳路径（因为原生代币与其他ERC20没有直接池）
-  if (fromToken.isNative && !toToken.isNative && !toToken.isWETH) {
-    return buildNativeToTokenPath(toToken, tkm20Address, firstTokenAddress, directPairs);
-  }
-
-  if (!fromToken.isNative && !fromToken.isWETH && toToken.isNative) {
-    return buildTokenToNativePath(fromToken, tkm20Address, firstTokenAddress, currentTokenAddress, directPairs);
-  }
-
-  // 检查是否存在直接交易对（仅限ERC20 to ERC20）
-  const hasDirectPair = directPairs.some(
-    (pair) =>
-      (pair.token1 === fromAddr && pair.token2 === toAddr) || (pair.token1 === toAddr && pair.token2 === fromAddr),
-  );
-
-  if (hasDirectPair) {
-    return buildDirectPath(fromToken, toToken, tkm20Address);
-  }
-
-  // 尝试通过中介代币路由
-  return buildRoutedPath(fromToken, toToken, token, directPairs, tkm20Address, currentTokenAddress);
-};
-
-const buildDirectPath = (fromToken: TokenConfig, toToken: TokenConfig, tkm20Address: `0x${string}`): `0x${string}`[] => {
-  // 注意: 这个函数只应该处理 ERC20 to ERC20 的直接路径
-  // 原生代币的路径应该由专门的函数处理
-  if (fromToken.isNative || toToken.isNative) {
-    throw new Error('buildDirectPath should not handle native tokens');
-  }
-  return [fromToken.address as `0x${string}`, toToken.address as `0x${string}`];
-};
-
-const buildRoutedPath = (
-  fromToken: TokenConfig,
-  toToken: TokenConfig,
-  token: any,
-  directPairs: Array<{ token1: string; token2: `0x${string}` }>,
-  tkm20Address: `0x${string}`,
-  currentTokenAddress: `0x${string}`,
-): `0x${string}`[] => {
-  // 这个函数只处理 ERC20 to ERC20 的路由，原生代币应该在之前就被处理了
-  if (fromToken.isNative || toToken.isNative) {
-    throw new Error('buildRoutedPath should not handle native tokens');
-  }
-
-  const fromAddr = fromToken.address;
-  const toAddr = toToken.address;
-
-  // 收集所有可能的中间代币，逐一尝试单跳路由
-  const intermediates: `0x${string}`[] = [];
-  if (currentTokenAddress) intermediates.push(currentTokenAddress);
-  if (token?.parentTokenAddress) intermediates.push(token.parentTokenAddress as `0x${string}`);
-  if (tkm20Address) intermediates.push(tkm20Address);
-
-  for (const mid of intermediates) {
-    if (mid === fromAddr || mid === toAddr) continue;
-
-    const hasFromToMid = directPairs.some(
-      (pair) =>
-        (pair.token1 === fromAddr && pair.token2 === mid) || (pair.token1 === mid && pair.token2 === fromAddr),
-    );
-    const hasMidToTo = directPairs.some(
-      (pair) =>
-        (pair.token1 === mid && pair.token2 === toAddr) || (pair.token1 === toAddr && pair.token2 === mid),
-    );
-
-    if (hasFromToMid && hasMidToTo) {
-      return [fromToken.address as `0x${string}`, mid, toToken.address as `0x${string}`];
+      pairCandidates.push({ tokenA, tokenB });
     }
   }
 
-  throw new Error(`No valid routing path found for ${fromToken.symbol} -> ${toToken.symbol}`);
+  return pairCandidates;
 };
 
-// 处理原生代币到ERC20代币的路径 (TKM -> 目标代币)
-// 原生代币通过 Router 自动 wrap 成 TKM20(WETH)，所以路径从 TKM20 开始
-const buildNativeToTokenPath = (
-  toToken: TokenConfig,
-  tkm20Address: `0x${string}`,
-  firstTokenAddress: `0x${string}`,
-  directPairs: Array<{ token1: string; token2: `0x${string}` }>,
-): `0x${string}`[] => {
-  const toAddr = toToken.address as string;
-
-  // 目标是 FIRST_TOKEN，直接路径: TKM20 -> FIRST_TOKEN
-  if (toAddr === firstTokenAddress) {
-    return [tkm20Address, firstTokenAddress];
-  }
-
-  // 目标是其他代币，尝试通过 FIRST_TOKEN 中转: TKM20 -> FIRST_TOKEN -> 目标代币
-  const hasTKM20ToFirst = directPairs.some(
-    (pair) =>
-      (pair.token1 === tkm20Address && pair.token2 === firstTokenAddress) ||
-      (pair.token1 === firstTokenAddress && pair.token2 === tkm20Address),
-  );
-  const hasFirstToTarget = directPairs.some(
-    (pair) =>
-      (pair.token1 === firstTokenAddress && pair.token2 === toAddr) ||
-      (pair.token1 === toAddr && pair.token2 === firstTokenAddress),
-  );
-
-  if (hasTKM20ToFirst && hasFirstToTarget) {
-    return [tkm20Address, firstTokenAddress, toToken.address as `0x${string}`];
-  }
-
-  // 回退: 尝试直接路径
-  return [tkm20Address, toToken.address as `0x${string}`];
+export const buildTokenSymbolMap = (routeTokens: RouteTokenConfig[]) => {
+  const tokenSymbolMap = new Map<string, string>();
+  routeTokens.forEach((token) => {
+    tokenSymbolMap.set(token.address.toLowerCase(), token.symbol);
+  });
+  return tokenSymbolMap;
 };
 
-// 处理ERC20代币到原生代币的路径 (源代币 -> TKM)
-// Router 最终会把 TKM20(WETH) unwrap 成原生代币，所以路径以 TKM20 结尾
-const buildTokenToNativePath = (
+export const buildRouteGraph = (pairs: Array<{ tokenA: `0x${string}`; tokenB: `0x${string}` }>) => {
+  const graph = new Map<string, Set<`0x${string}`>>();
+
+  const addEdge = (from: `0x${string}`, to: `0x${string}`) => {
+    const key = from.toLowerCase();
+    if (!graph.has(key)) {
+      graph.set(key, new Set());
+    }
+    graph.get(key)!.add(to);
+  };
+
+  pairs.forEach(({ tokenA, tokenB }) => {
+    addEdge(tokenA, tokenB);
+    addEdge(tokenB, tokenA);
+  });
+
+  return graph;
+};
+
+export const enumerateCandidatePaths = (
+  graph: Map<string, Set<`0x${string}`>>,
+  sourceAddress: `0x${string}`,
+  targetAddress: `0x${string}`,
+  maxHops: number = MAX_SWAP_ROUTE_HOPS,
+): `0x${string}`[][] => {
+  const maxPathLength = maxHops + 1;
+  const results: `0x${string}`[][] = [];
+
+  const dfs = (current: `0x${string}`, path: `0x${string}`[], visited: Set<string>) => {
+    if (path.length > maxPathLength) {
+      return;
+    }
+
+    if (current.toLowerCase() === targetAddress.toLowerCase()) {
+      results.push([...path]);
+      return;
+    }
+
+    const neighbors = Array.from(graph.get(current.toLowerCase()) ?? []);
+    for (const next of neighbors) {
+      const normalizedNext = next.toLowerCase();
+      if (visited.has(normalizedNext) || path.length >= maxPathLength) {
+        continue;
+      }
+
+      visited.add(normalizedNext);
+      path.push(next);
+      dfs(next, path, visited);
+      path.pop();
+      visited.delete(normalizedNext);
+    }
+  };
+
+  dfs(sourceAddress, [sourceAddress], new Set([sourceAddress.toLowerCase()]));
+  return results;
+};
+
+export const sortCandidatePaths = (paths: `0x${string}`[][]) =>
+  [...paths].sort((leftPath, rightPath) => {
+    if (leftPath.length !== rightPath.length) {
+      return leftPath.length - rightPath.length;
+    }
+
+    return leftPath.join('-').localeCompare(rightPath.join('-'));
+  });
+
+export const buildDisplayPath = (
+  path: `0x${string}`[],
+  tokenSymbolMap: Map<string, string>,
   fromToken: TokenConfig,
-  tkm20Address: `0x${string}`,
-  firstTokenAddress: `0x${string}`,
-  currentTokenAddress: `0x${string}`,
-  directPairs: Array<{ token1: string; token2: `0x${string}` }>,
-): `0x${string}`[] => {
-  const fromAddr = fromToken.address as string;
-
-  // 源是 FIRST_TOKEN，直接路径: FIRST_TOKEN -> TKM20
-  if (fromAddr === firstTokenAddress) {
-    return [firstTokenAddress, tkm20Address];
-  }
-
-  // 源是其他代币，尝试通过 FIRST_TOKEN 中转: 源代币 -> FIRST_TOKEN -> TKM20
-  const hasSourceToFirst = directPairs.some(
-    (pair) =>
-      (pair.token1 === fromAddr && pair.token2 === firstTokenAddress) ||
-      (pair.token1 === firstTokenAddress && pair.token2 === fromAddr),
-  );
-  const hasFirstToTKM20 = directPairs.some(
-    (pair) =>
-      (pair.token1 === firstTokenAddress && pair.token2 === tkm20Address) ||
-      (pair.token1 === tkm20Address && pair.token2 === firstTokenAddress),
+  toToken: TokenConfig,
+  swapMethod: SwapMethod,
+) => {
+  const displayPath = path.map(
+    (address) => tokenSymbolMap.get(address.toLowerCase()) || `${address.slice(0, 6)}...${address.slice(-4)}`,
   );
 
-  if (hasSourceToFirst && hasFirstToTKM20) {
-    return [fromToken.address as `0x${string}`, firstTokenAddress, tkm20Address];
+  if (swapMethod === 'UniswapV2_ETH_TO_TOKEN' && displayPath.length > 0) {
+    return [fromToken.symbol, ...displayPath.slice(1)];
   }
 
-  // 回退: 尝试直接路径
-  return [fromToken.address as `0x${string}`, tkm20Address];
+  if (swapMethod === 'UniswapV2_TOKEN_TO_ETH' && displayPath.length > 0) {
+    return [...displayPath.slice(0, -1), toToken.symbol];
+  }
+
+  return displayPath;
 };
+
+export const selectBestRouteQuote = (quotes: SwapRouteQuote[]) =>
+  quotes.reduce<SwapRouteQuote | undefined>((bestQuote, currentQuote) => {
+    if (!bestQuote) {
+      return currentQuote;
+    }
+
+    if (currentQuote.outputAmount > bestQuote.outputAmount) {
+      return currentQuote;
+    }
+
+    if (currentQuote.outputAmount === bestQuote.outputAmount) {
+      if (currentQuote.path.length < bestQuote.path.length) {
+        return currentQuote;
+      }
+
+      if (currentQuote.path.length === bestQuote.path.length) {
+        return currentQuote.path.join('-').localeCompare(bestQuote.path.join('-')) < 0 ? currentQuote : bestQuote;
+      }
+    }
+
+    return bestQuote;
+  }, undefined);

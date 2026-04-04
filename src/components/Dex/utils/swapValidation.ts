@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { parseUnits } from '@/src/lib/format';
+import { MAX_SWAP_ROUTE_HOPS } from './swapConfig';
 import { TokenConfig, SwapValidationResult } from './swapTypes';
 import { getSwapContractAddresses } from './swapConfig';
 
@@ -45,9 +46,10 @@ export const validateSwapPath = (
   toToken: TokenConfig,
 ): SwapValidationResult => {
   const { wethAddress } = getSwapContractAddresses();
+  const maxPathLength = MAX_SWAP_ROUTE_HOPS + 1;
 
   if (swapMethod === 'UniswapV2_ETH_TO_TOKEN') {
-    if (swapPath.length < 2 || swapPath.length > 3) {
+    if (swapPath.length < 2 || swapPath.length > maxPathLength) {
       return {
         isValid: false,
         error: '交换路径配置错误',
@@ -63,7 +65,7 @@ export const validateSwapPath = (
   }
 
   if (swapMethod === 'UniswapV2_TOKEN_TO_ETH') {
-    if (swapPath.length < 2 || swapPath.length > 3) {
+    if (swapPath.length < 2 || swapPath.length > maxPathLength) {
       return {
         isValid: false,
         error: '交换路径配置错误',
@@ -74,6 +76,22 @@ export const validateSwapPath = (
       return {
         isValid: false,
         error: 'TKM20/WETH 地址配置错误',
+      };
+    }
+  }
+
+  if (swapMethod === 'UniswapV2_TOKEN_TO_TOKEN') {
+    if (swapPath.length < 2 || swapPath.length > maxPathLength) {
+      return {
+        isValid: false,
+        error: '交换路径配置错误',
+      };
+    }
+
+    if (fromToken.isNative || toToken.isNative) {
+      return {
+        isValid: false,
+        error: 'ERC20 兑换路径配置错误',
       };
     }
   }

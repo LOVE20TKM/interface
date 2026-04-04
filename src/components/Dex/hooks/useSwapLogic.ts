@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { toast } from 'react-hot-toast';
 import { formatUnits, parseUnits } from '@/src/lib/format';
-import { TokenConfig, SwapMethod } from '../utils/swapTypes';
+import { TokenConfig } from '../utils/swapTypes';
 import { useTokenBalance } from './useTokenBalance';
 import { useSwapRoute } from './useSwapRoute';
 import { MIN_NATIVE_TO_TOKEN } from '../utils/swapConfig';
@@ -21,7 +21,7 @@ import {
   useSwapExactTokensForETH,
 } from '@/src/hooks/contracts/useUniswapV2Router';
 
-export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig) => {
+export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig, supportedTokens: TokenConfig[]) => {
   const { address: account } = useAccount();
 
   // 状态管理
@@ -38,9 +38,13 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig) => {
     swapPath,
     amountsOut,
     amountsOutError,
+    isAmountsOutLoading,
     canSwap,
     errInitialStakeRound,
-  } = useSwapRoute(fromToken, toToken, fromAmount);
+    candidateRouteCount,
+    bestRoute,
+    quotedRoutes,
+  } = useSwapRoute(fromToken, toToken, fromAmount, supportedTokens);
 
   // 计算最大输入限制
   const maxNativeInputLimit = useMemo(() => {
@@ -118,7 +122,7 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig) => {
   useEffect(() => {
     if (swapMethod === 'WETH9') {
       setToAmount(fromAmount);
-    } else if (amountsOut && amountsOut.length > 1) {
+    } else if (amountsOut && amountsOut.length > 1 && amountsOut[0] === fromAmount) {
       const finalOutputAmount = amountsOut[amountsOut.length - 1];
       setToAmount(BigInt(finalOutputAmount));
     } else {
@@ -251,8 +255,12 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig) => {
     swapPath,
     amountsOut,
     amountsOutError,
+    isAmountsOutLoading,
     canSwap,
     maxNativeInputLimit,
+    candidateRouteCount,
+    quotedRoutes,
+    bestRoute,
 
     // 操作状态
     needsApproval,

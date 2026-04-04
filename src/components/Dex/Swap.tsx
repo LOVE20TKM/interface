@@ -25,7 +25,7 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
   const { fromToken, toToken, setFromToken, setToToken, handleSwapTokens } = useTokenSelection(supportedTokens, token);
 
   // 交换逻辑管理
-  const swapLogic = useSwapLogic(fromToken, toToken);
+  const swapLogic = useSwapLogic(fromToken, toToken, supportedTokens);
 
   // 加载状态检查
   if (!token) {
@@ -56,6 +56,9 @@ const SwapPanel = ({ showCurrentToken = true }: SwapPanelProps) => {
           onFromAmountChange={swapLogic.setFromAmount}
           onFromAmountStringChange={setWatchFromAmount}
           onSwapTokens={handleSwapTokens}
+          bestRouteDisplay={swapLogic.bestRoute?.displayPath || []}
+          routeCandidateCount={swapLogic.candidateRouteCount}
+          isRouteLoading={swapLogic.isAmountsOutLoading}
           {...swapLogic}
         />
 

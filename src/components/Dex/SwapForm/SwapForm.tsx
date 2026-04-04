@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'react-hot-toast';
@@ -7,7 +6,7 @@ import { ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Form, FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
 import { formatUnits, parseUnits } from '@/src/lib/format';
-import { TokenConfig, SwapFormValues } from '../utils/swapTypes';
+import { TokenConfig, SwapFormValues, SwapMethod } from '../utils/swapTypes';
 import { getSwapFormSchema } from '../utils/swapValidation';
 import TokenSelector from './TokenSelector';
 import AmountInput from './AmountInput';
@@ -24,6 +23,7 @@ interface SwapFormProps {
   onSwapTokens: () => void;
 
   // 从 useSwapLogic 传入的数据
+  swapMethod: SwapMethod;
   fromAmount: bigint;
   toAmount: bigint;
   fromBalance?: bigint;
@@ -31,6 +31,10 @@ interface SwapFormProps {
   maxNativeInputLimit?: bigint;
   isPendingFromBalance: boolean;
   isPendingToBalance: boolean;
+  bestRouteDisplay: string[];
+  routeCandidateCount: number;
+  isRouteLoading: boolean;
+  amountsOutError?: Error | null;
 
   // 操作状态
   needsApproval: boolean;
@@ -54,6 +58,7 @@ const SwapForm = ({
   onFromAmountChange,
   onFromAmountStringChange,
   onSwapTokens,
+  swapMethod,
   fromAmount,
   toAmount,
   fromBalance,
@@ -61,6 +66,10 @@ const SwapForm = ({
   maxNativeInputLimit,
   isPendingFromBalance,
   isPendingToBalance,
+  bestRouteDisplay,
+  routeCandidateCount,
+  isRouteLoading,
+  amountsOutError,
   needsApproval,
   isApproved,
   isApproving,
@@ -70,7 +79,6 @@ const SwapForm = ({
   handleApprove,
   executeSwap,
 }: SwapFormProps) => {
-  const router = useRouter();
   const isDisabled = isPendingFromBalance || isPendingToBalance;
 
   const form = useForm<SwapFormValues>({
@@ -182,7 +190,7 @@ const SwapForm = ({
                     <FormField
                       control={form.control}
                       name="fromTokenAddress"
-                      render={({ field: selectField }) => (
+                      render={() => (
                         <FormItem>
                           <FormControl>
                             <TokenSelector
@@ -248,6 +256,29 @@ const SwapForm = ({
               />
             }
           />
+
+          {fromAmount > BigInt(0) && swapMethod !== 'WETH9' && (
+            <div className="mt-2 px-1 text-xs text-gray-600">
+              {isRouteLoading && (
+                <span>
+                  正在比较可用路由
+                  {routeCandidateCount > 0 ? `（${routeCandidateCount} 条候选）` : ''}...
+                </span>
+              )}
+
+              {!isRouteLoading && bestRouteDisplay.length > 0 && (
+                <span>
+                  最佳路由
+                  {routeCandidateCount > 1 ? `（已比较 ${routeCandidateCount} 条）` : ''}：
+                  {bestRouteDisplay.join(' -> ')}
+                </span>
+              )}
+
+              {!isRouteLoading && bestRouteDisplay.length === 0 && amountsOutError && (
+                <span className="text-amber-600">暂无可用路由</span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 操作按钮 */}

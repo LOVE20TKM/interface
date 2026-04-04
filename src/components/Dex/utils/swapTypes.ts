@@ -6,6 +6,11 @@ export interface TokenConfig {
   isWETH?: boolean;
 }
 
+export interface RouteTokenConfig {
+  symbol: string;
+  address: `0x${string}`;
+}
+
 export type SwapMethod = 'WETH9' | 'UniswapV2_TOKEN_TO_TOKEN' | 'UniswapV2_ETH_TO_TOKEN' | 'UniswapV2_TOKEN_TO_ETH';
 
 export interface SwapFormValues {
@@ -25,6 +30,13 @@ export interface SwapInfo {
   minAmountOut: bigint;
   swapMethod: SwapMethod;
   swapPath: `0x${string}`[];
+}
+
+export interface SwapRouteQuote {
+  path: `0x${string}`[];
+  displayPath: string[];
+  amountsOut: bigint[];
+  outputAmount: bigint;
 }
 
 export interface SwapValidationResult {

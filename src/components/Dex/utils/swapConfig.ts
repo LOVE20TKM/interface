@@ -1,6 +1,27 @@
-import { TokenConfig } from './swapTypes';
+import { RouteTokenConfig, TokenConfig } from './swapTypes';
 
 export const MIN_NATIVE_TO_TOKEN = '0.1';
+export const MAX_SWAP_ROUTE_HOPS = 3;
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
+const addRouteToken = (
+  tokenMap: Map<string, RouteTokenConfig>,
+  token?: { symbol?: string; address?: string | `0x${string}` },
+) => {
+  const address = token?.address;
+  if (!token?.symbol || !address || address === 'NATIVE' || address === ZERO_ADDRESS) {
+    return;
+  }
+
+  const normalizedAddress = address.toLowerCase();
+  if (!tokenMap.has(normalizedAddress)) {
+    tokenMap.set(normalizedAddress, {
+      symbol: token.symbol,
+      address: address as `0x${string}`,
+    });
+  }
+};
 
 export const buildSupportedTokens = (token: any, showCurrentToken: boolean = true): TokenConfig[] => {
   const supportedTokens: TokenConfig[] = [];
@@ -69,6 +90,43 @@ export const buildSupportedTokens = (token: any, showCurrentToken: boolean = tru
   }
 
   return supportedTokens;
+};
+
+export const buildSwapRouteTokens = (
+  supportedTokens: TokenConfig[],
+  token: any,
+  endpoints: TokenConfig[] = [],
+): RouteTokenConfig[] => {
+  const tokenMap = new Map<string, RouteTokenConfig>();
+
+  endpoints.forEach((endpoint) => {
+    if (!endpoint.isNative) {
+      addRouteToken(tokenMap, endpoint);
+    }
+  });
+
+  supportedTokens.forEach((supportedToken) => {
+    if (!supportedToken.isNative) {
+      addRouteToken(tokenMap, supportedToken);
+    }
+  });
+
+  addRouteToken(tokenMap, {
+    symbol: process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL,
+    address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_FIRST_TOKEN,
+  });
+
+  addRouteToken(tokenMap, {
+    symbol: token?.symbol,
+    address: token?.address,
+  });
+
+  addRouteToken(tokenMap, {
+    symbol: token?.parentTokenSymbol,
+    address: token?.parentTokenAddress,
+  });
+
+  return Array.from(tokenMap.values());
 };
 
 export const getSwapContractAddresses = () => ({
