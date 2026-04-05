@@ -106,26 +106,18 @@ const LiquidityQueryPanel: React.FC = () => {
 
   // 选中的基础代币状态
   const [baseToken, setBaseToken] = useState<TokenConfig>(() => {
-    if (isRootParent) {
-      // 父币是根父币，默认选 USDT
-      const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
-      const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol);
-      return defaultToken || baseTokens[0] || {
+    // 父币是根父币，默认选 USDT
+    const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+    const defaultToken = baseTokens.find((t) => t.symbol === usdtSymbol);
+    return (
+      defaultToken ||
+      baseTokens[0] || {
         symbol: token?.parentTokenSymbol || '',
         address: token?.parentTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
         decimals: 18,
         isNative: false,
-      };
-    } else {
-      // 父币不是根父币，默认选父币
-      const defaultToken = baseTokens.find((t) => t.symbol === token?.parentTokenSymbol);
-      return defaultToken || baseTokens[0] || {
-        symbol: token?.parentTokenSymbol || '',
-        address: token?.parentTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
-        decimals: 18,
-        isNative: false,
-      };
-    }
+      }
+    );
   });
 
   // 目标代币 (当前token)
