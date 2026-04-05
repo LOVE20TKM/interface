@@ -8,9 +8,6 @@ import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 import { ExtensionLpFactoryAbi } from '@/src/abis/ExtensionLpFactory';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
-// 需要在环境变量中配置这个合约地址
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY as `0x${string}`;
-
 // =====================
 // === 读取 Hook ===
 // =====================
@@ -18,13 +15,13 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_F
 /**
  * Hook for CENTER_ADDRESS - 获取 ExtensionCenter 地址
  */
-export const useFactoryCenter = (factoryAddress?: `0x${string}`) => {
+export const useFactoryCenter = (factoryAddress: `0x${string}`) => {
   const { data, isPending, error } = useUniversalReadContract({
-    address: factoryAddress || CONTRACT_ADDRESS,
+    address: factoryAddress,
     abi: ExtensionLpFactoryAbi,
     functionName: 'CENTER_ADDRESS',
     query: {
-      enabled: !!(factoryAddress || CONTRACT_ADDRESS),
+      enabled: !!factoryAddress,
     },
   });
 
@@ -103,14 +100,14 @@ export const useFactoryExtensionsCount = (factoryAddress: `0x${string}`) => {
 
 /**
  * Hook for createExtension - 创建新的 Lp 扩展
- * @param factoryAddress 工厂合约地址，如果不提供则使用环境变量中的默认地址
+ * @param factoryAddress 工厂合约地址，必须显式传入
  *
  * 注意：在调用 createExtension 之前，需要先授权 1 个代币给 factory
  */
-export function useCreateExtension(factoryAddress?: `0x${string}`) {
+export function useCreateExtension(factoryAddress: `0x${string}`) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
     ExtensionLpFactoryAbi,
-    factoryAddress || CONTRACT_ADDRESS,
+    factoryAddress,
     'createExtension',
   );
 

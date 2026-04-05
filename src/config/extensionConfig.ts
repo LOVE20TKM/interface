@@ -32,6 +32,11 @@ export interface ExtensionConfig {
   name: string;
   factoryAddress: `0x${string}`;
   actionDetailTabs?: ActionTabConfig[]; // 行动详情页的标签配置
+  versionLabel?: string;
+  isRecommended?: boolean;
+  isDeprecated?: boolean;
+  description?: string;
+  joinTokenDescription?: string;
 }
 
 /**
@@ -39,6 +44,8 @@ export interface ExtensionConfig {
  */
 export const getExtensionConfigs = (): ExtensionConfig[] => {
   const configs: ExtensionConfig[] = [];
+  const lpJoinTokenDescriptionV2 = '已知的 Uniswap V2Factory 创建的 LP 代币（Uniswap V2 Pair）合约地址，不再要求包含当前行动所在代币';
+  const lpJoinTokenDescriptionV1 = '包含当前行动所在代币的 LP 代币（Uniswap V2 Pair）合约地址';
 
   // 链群行动 & 链群服务扩展仅在非正式环境（NEXT_PUBLIC_TOKEN_PREFIX 非空）时启用
   const isTestEnv = !!process.env.NEXT_PUBLIC_TOKEN_PREFIX;
@@ -72,12 +79,30 @@ export const getExtensionConfigs = (): ExtensionConfig[] => {
   }
 
   // LP 扩展配置
+  const stakeLpFactoryV2 = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY_V2;
+  if (stakeLpFactoryV2) {
+    configs.push({
+      type: ExtensionType.LP,
+      name: 'LP行动',
+      factoryAddress: stakeLpFactoryV2 as `0x${string}`,
+      versionLabel: 'V2',
+      isRecommended: true,
+      description: '推荐使用。支持已知 Uniswap V2Factory 创建的任意 LP 代币发起 LP 行动。',
+      joinTokenDescription: lpJoinTokenDescriptionV2,
+      actionDetailTabs: [{ key: 'public', label: 'LP公示', showCondition: 'hasExtension' }],
+    });
+  }
+
   const stakeLpFactory = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY;
   if (stakeLpFactory) {
     configs.push({
       type: ExtensionType.LP,
       name: 'LP行动',
       factoryAddress: stakeLpFactory as `0x${string}`,
+      versionLabel: 'V1',
+      isDeprecated: true,
+      description: '旧版标准 LP 工厂。仍支持查看、加入、退出既有 LP 行动，但发起新的 LP 行动时不推荐使用。',
+      joinTokenDescription: lpJoinTokenDescriptionV1,
       actionDetailTabs: [{ key: 'public', label: 'LP公示', showCondition: 'hasExtension' }],
     });
   }
@@ -117,6 +142,14 @@ export const getExtensionConfigByFactory = (factoryAddress: string): ExtensionCo
 export const getExtensionConfigByType = (type: ExtensionType): ExtensionConfig | null => {
   const configs = getExtensionConfigs();
   return configs.find((config) => config.type === type) || null;
+};
+
+export const getRecommendedExtensionConfigByType = (type: ExtensionType): ExtensionConfig | null => {
+  const configs = getExtensionConfigs().filter((config) => config.type === type);
+  if (configs.length === 0) {
+    return null;
+  }
+  return configs.find((config) => config.isRecommended) || configs[0];
 };
 
 /**

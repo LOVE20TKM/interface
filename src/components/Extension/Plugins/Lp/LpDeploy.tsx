@@ -12,12 +12,18 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useError } from '@/src/contexts/ErrorContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLpFactory';
 import { ExtensionLpFactoryAbi } from '@/src/abis/ExtensionLpFactory';
 import { useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
 import { useCanSubmit } from '@/src/hooks/composite/useCanSubmit';
+import {
+  ExtensionType,
+  getExtensionConfigByFactory,
+  getRecommendedExtensionConfigByType,
+} from '@/src/config/extensionConfig';
 import { formatPercentage } from '@/src/lib/format';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
@@ -60,6 +66,8 @@ type FormValues = z.infer<typeof formSchema>;
  * LP扩展部署组件
  */
 export default function LpDeploy({ factoryAddress }: LpDeployProps) {
+  const extensionConfig = getExtensionConfigByFactory(factoryAddress);
+  const recommendedLpConfig = getRecommendedExtensionConfigByType(ExtensionType.LP);
   const context = useContext(TokenContext);
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
   const tokenSymbol = context?.token?.symbol || '';
@@ -245,8 +253,27 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
     <>
       <Card className="border-0 shadow-none">
         <CardHeader className="px-4 md:px-6 pb-4 md:pb-6 pt-4 md:pt-6">
-          <CardTitle className="text-xl md:text-2xl">部署LP行动扩展合约</CardTitle>
-          <CardDescription className="text-sm"></CardDescription>
+          <CardTitle className="flex flex-wrap items-center gap-2 text-xl md:text-2xl">
+            <span>部署LP行动扩展合约</span>
+            {extensionConfig?.versionLabel && <Badge variant="outline">{extensionConfig.versionLabel}</Badge>}
+            {extensionConfig?.isRecommended && <Badge variant="secondary">推荐</Badge>}
+            {extensionConfig?.isDeprecated && <Badge variant="outline">不推荐</Badge>}
+          </CardTitle>
+          <CardDescription className="space-y-2 text-sm">
+            {extensionConfig?.description && <div>{extensionConfig.description}</div>}
+            {extensionConfig?.isDeprecated &&
+              recommendedLpConfig &&
+              recommendedLpConfig.factoryAddress !== factoryAddress && (
+                <div>
+                  <Link
+                    href={`/extension/deploy?factory=${recommendedLpConfig.factoryAddress}`}
+                    className="text-secondary underline-offset-4 hover:underline"
+                  >
+                    改用推荐的 LP Factory 发起行动 &gt;&gt;
+                  </Link>
+                </div>
+              )}
+          </CardDescription>
         </CardHeader>
         <CardContent className="px-4 md:px-6 pb-4 md:pb-6">
           <Form {...form}>
@@ -271,7 +298,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                       />
                     </FormControl>
                     <FormDescription className="text-sm text-greyscale-500">
-                      包含当前行动所在代币的 LP 代币（Uniswap V2 Pair）合约地址
+                      {extensionConfig?.joinTokenDescription || 'LP 代币（Uniswap V2 Pair）合约地址'}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
