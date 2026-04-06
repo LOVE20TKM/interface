@@ -37,6 +37,17 @@ import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { UniswapV2FactoryAbi } from '@/src/abis/UniswapV2Factory';
 import { UniswapV2PairAbi } from '@/src/abis/UniswapV2Pair';
 import { safeToBigInt } from '@/src/lib/clientUtils';
+import {
+  addressesEqual,
+  type PairReservesData,
+  type IndirectLPPricingRoute,
+  convertLPToDirectTokenValue,
+  convertLPToTokenValueViaRoute,
+  convertViaPairMidPrice,
+  isTokenInPair,
+  parsePairAddress,
+  selectPreferredIndirectLPRoute,
+} from '@/src/lib/uniswapValuation';
 
 // ==================== 常量 ====================
 
@@ -97,23 +108,25 @@ interface IndexMapping {
 /**
  * 储备数据接口
  */
-interface ReservesData {
+type ReservesData = PairReservesData;
+
+interface BridgePairLookupData {
+  token0PairAddress?: `0x${string}`;
+  token1PairAddress?: `0x${string}`;
+}
+
+interface BridgePairData {
+  pairAddress?: `0x${string}`;
   reserves?: [bigint, bigint, number];
   token0?: `0x${string}`;
-  token1?: `0x${string}`;
-  totalSupply?: bigint;
+}
+
+interface BridgeReservesByCandidate {
+  token0Candidate: BridgePairData;
+  token1Candidate: BridgePairData;
 }
 
 // ==================== 公共辅助函数 ====================
-
-/**
- * 解析交易对地址并过滤零地址
- */
-function parsePairAddress(addr: `0x${string}` | undefined): `0x${string}` | undefined {
-  if (!addr) return undefined;
-  // 过滤零地址
-  return addr === '0x0000000000000000000000000000000000000000' ? undefined : addr;
-}
 
 /**
  * 计算相同代币转换结果
@@ -127,8 +140,17 @@ function calculateSameTokenConversion(fromAmount: bigint): UseConvertTokenAmount
   };
 }
 
+function calculateFailedConversion(isPending: boolean, error: any): UseConvertTokenAmountResult {
+  return {
+    convertedAmount: BigInt(0),
+    isSuccess: false,
+    isPending,
+    error,
+  };
+}
+
 /**
- * 计算 LP Token 转换结果
+ * 计算 LP Token 直接转换结果
  */
 function calculateLPTokenConversion(
   fromAmount: bigint,
@@ -144,35 +166,42 @@ function calculateLPTokenConversion(
     !reservesData.token1 ||
     reservesData.totalSupply === undefined
   ) {
-    return {
-      convertedAmount: BigInt(0),
-      isSuccess: false,
-      isPending: isPendingReserves,
-      error: errorReserves,
-    };
+    return calculateFailedConversion(isPendingReserves, errorReserves);
   }
 
-  const { reserves, token0, token1, totalSupply } = reservesData;
-
-  // 边界检查：验证数据有效性
-  if (totalSupply === BigInt(0)) {
-    return {
-      convertedAmount: BigInt(0),
-      isSuccess: false,
-      isPending: false,
-      error: null,
-    };
+  const convertedAmount = convertLPToDirectTokenValue(fromAmount, toToken, reservesData);
+  if (convertedAmount === undefined) {
+    return calculateFailedConversion(false, null);
   }
 
-  const [reserve0, reserve1] = reserves;
+  return {
+    convertedAmount,
+    isSuccess: true,
+    isPending: false,
+    error: null,
+  };
+}
 
-  // 确定 toToken 对应的储备量
-  // 如果 token0 是目标代币，使用 reserve0，否则使用 reserve1
-  const tokenReserve = token0.toLowerCase() === toToken.toLowerCase() ? reserve0 : reserve1;
+/**
+ * 计算 LP Token 间接转换结果
+ */
+function calculateLPTokenIndirectConversion(
+  fromAmount: bigint,
+  toToken: `0x${string}`,
+  lpReservesData: ReservesData,
+  route: IndirectLPPricingRoute | undefined,
+  bridgePairData: BridgePairData,
+  isPending: boolean,
+  error: any,
+): UseConvertTokenAmountResult {
+  if (!route || !bridgePairData.pairAddress || !bridgePairData.reserves || !bridgePairData.token0) {
+    return calculateFailedConversion(isPending, error);
+  }
 
-  // LP 转换公式（参考 Solidity convertLPToTokenValue）：
-  // convertedAmount = (tokenReserve * lpAmount * 2) / totalSupply
-  const convertedAmount = (tokenReserve * fromAmount * BigInt(2)) / totalSupply;
+  const convertedAmount = convertLPToTokenValueViaRoute(fromAmount, toToken, lpReservesData, route, bridgePairData);
+  if (convertedAmount === undefined) {
+    return calculateFailedConversion(false, null);
+  }
 
   return {
     convertedAmount,
@@ -198,58 +227,18 @@ function calculateNormalTokenConversion(
 ): UseConvertTokenAmountResult {
   // 检查是否找到交易对
   if (!pairAddress) {
-    return {
-      convertedAmount: BigInt(0),
-      isSuccess: false,
-      isPending: isPendingPair,
-      error: errorPair,
-    };
+    return calculateFailedConversion(isPendingPair, errorPair);
   }
 
   // 检查储备数据是否完整（需要 reserves、token0）
   if (!reservesData.reserves || !reservesData.token0) {
-    return {
-      convertedAmount: BigInt(0),
-      isSuccess: false,
-      isPending: isPendingReserves,
-      error: errorReserves,
-    };
+    return calculateFailedConversion(isPendingReserves, errorReserves);
   }
 
-  const { reserves, token0 } = reservesData;
-
-  // 边界检查：验证数据有效性
-  if (!reserves || !token0) {
-    return {
-      convertedAmount: BigInt(0),
-      isSuccess: false,
-      isPending: false,
-      error: null,
-    };
+  const convertedAmount = convertViaPairMidPrice(fromAmount, fromToken, toToken, reservesData);
+  if (convertedAmount === undefined) {
+    return calculateFailedConversion(false, null);
   }
-
-  const [reserve0, reserve1] = reserves;
-
-  // 边界检查：储备量不能为零
-  if (reserve0 === BigInt(0) || reserve1 === BigInt(0)) {
-    return {
-      convertedAmount: BigInt(0),
-      isSuccess: false,
-      isPending: false,
-      error: null,
-    };
-  }
-
-  // 确定代币顺序并分配储备量
-  // 如果 fromToken 是 token0，则 fromReserve = reserve0, toReserve = reserve1
-  // 否则 fromReserve = reserve1, toReserve = reserve0
-  const fromIsToken0 = fromToken.toLowerCase() === token0.toLowerCase();
-  const fromReserve = fromIsToken0 ? reserve0 : reserve1;
-  const toReserve = fromIsToken0 ? reserve1 : reserve0;
-
-  // 普通代币转换公式（参考 Solidity convertViaUniswap）：
-  // convertedAmount = (amount * toReserve) / fromReserve
-  const convertedAmount = (fromAmount * toReserve) / fromReserve;
 
   return {
     convertedAmount,
@@ -358,7 +347,161 @@ export const useConvertTokenAmount = ({
     },
   });
 
-  // ========== 阶段 3：计算转换结果 ==========
+  const lpReservesDataObj = useMemo<ReservesData>(() => {
+    if (!isFromTokenLP) {
+      return {};
+    }
+
+    return {
+      reserves: reservesData?.[0]?.result as [bigint, bigint, number] | undefined,
+      token0: reservesData?.[1]?.result as `0x${string}` | undefined,
+      token1: reservesData?.[2]?.result as `0x${string}` | undefined,
+      totalSupply: reservesData?.[3]?.result !== undefined ? safeToBigInt(reservesData?.[3]?.result) : undefined,
+    };
+  }, [isFromTokenLP, reservesData]);
+
+  const needsIndirectLPPairLookup = useMemo(() => {
+    return (
+      isFromTokenLP &&
+      !!lpReservesDataObj.token0 &&
+      !!lpReservesDataObj.token1 &&
+      !isTokenInPair(toToken, lpReservesDataObj)
+    );
+  }, [isFromTokenLP, lpReservesDataObj.token0, lpReservesDataObj.token1, toToken]);
+
+  // ========== 阶段 3：LP 间接转换时，查找桥接 pair ==========
+  const indirectPairContracts = useMemo(() => {
+    if (!needsIndirectLPPairLookup || !lpReservesDataObj.token0 || !lpReservesDataObj.token1) {
+      return [];
+    }
+
+    return [
+      {
+        address: FACTORY_ADDRESS,
+        abi: UniswapV2FactoryAbi,
+        functionName: 'getPair',
+        args: [lpReservesDataObj.token0, toToken],
+        contractType: 'token0ToTargetPair',
+      },
+      {
+        address: FACTORY_ADDRESS,
+        abi: UniswapV2FactoryAbi,
+        functionName: 'getPair',
+        args: [lpReservesDataObj.token1, toToken],
+        contractType: 'token1ToTargetPair',
+      },
+    ];
+  }, [lpReservesDataObj.token0, lpReservesDataObj.token1, needsIndirectLPPairLookup, toToken]);
+
+  const {
+    data: indirectPairData,
+    isPending: isPendingIndirectPair,
+    error: errorIndirectPair,
+  } = useUniversalReadContracts({
+    contracts: indirectPairContracts as any,
+    query: {
+      enabled: indirectPairContracts.length > 0,
+    },
+  });
+
+  const indirectPairLookup = useMemo<BridgePairLookupData>(() => {
+    return {
+      token0PairAddress: parsePairAddress(indirectPairData?.[0]?.result as `0x${string}` | undefined),
+      token1PairAddress: parsePairAddress(indirectPairData?.[1]?.result as `0x${string}` | undefined),
+    };
+  }, [indirectPairData]);
+
+  // ========== 阶段 4：读取桥接 pair 储备 ==========
+  const indirectReservesContracts = useMemo(() => {
+    if (!needsIndirectLPPairLookup) {
+      return [];
+    }
+
+    const contracts: any[] = [];
+
+    if (indirectPairLookup.token0PairAddress) {
+      contracts.push(
+        {
+          address: indirectPairLookup.token0PairAddress,
+          abi: UniswapV2PairAbi,
+          functionName: 'getReserves',
+          args: [],
+          contractType: 'token0Candidate_getReserves',
+        },
+        {
+          address: indirectPairLookup.token0PairAddress,
+          abi: UniswapV2PairAbi,
+          functionName: 'token0',
+          args: [],
+          contractType: 'token0Candidate_token0',
+        },
+      );
+    }
+
+    if (indirectPairLookup.token1PairAddress) {
+      contracts.push(
+        {
+          address: indirectPairLookup.token1PairAddress,
+          abi: UniswapV2PairAbi,
+          functionName: 'getReserves',
+          args: [],
+          contractType: 'token1Candidate_getReserves',
+        },
+        {
+          address: indirectPairLookup.token1PairAddress,
+          abi: UniswapV2PairAbi,
+          functionName: 'token0',
+          args: [],
+          contractType: 'token1Candidate_token0',
+        },
+      );
+    }
+
+    return contracts;
+  }, [indirectPairLookup.token0PairAddress, indirectPairLookup.token1PairAddress, needsIndirectLPPairLookup]);
+
+  const {
+    data: indirectReservesData,
+    isPending: isPendingIndirectReserves,
+    error: errorIndirectReserves,
+  } = useUniversalReadContracts({
+    contracts: indirectReservesContracts as any,
+    query: {
+      enabled: indirectReservesContracts.length > 0,
+    },
+  });
+
+  const indirectBridgeReserves = useMemo<BridgeReservesByCandidate>(() => {
+    const bridgeData: BridgeReservesByCandidate = {
+      token0Candidate: {
+        pairAddress: indirectPairLookup.token0PairAddress,
+      },
+      token1Candidate: {
+        pairAddress: indirectPairLookup.token1PairAddress,
+      },
+    };
+
+    indirectReservesContracts.forEach((contract, index) => {
+      const result = indirectReservesData?.[index];
+      if (!result?.result) {
+        return;
+      }
+
+      if (contract.contractType === 'token0Candidate_getReserves') {
+        bridgeData.token0Candidate.reserves = result.result as [bigint, bigint, number];
+      } else if (contract.contractType === 'token0Candidate_token0') {
+        bridgeData.token0Candidate.token0 = result.result as `0x${string}`;
+      } else if (contract.contractType === 'token1Candidate_getReserves') {
+        bridgeData.token1Candidate.reserves = result.result as [bigint, bigint, number];
+      } else if (contract.contractType === 'token1Candidate_token0') {
+        bridgeData.token1Candidate.token0 = result.result as `0x${string}`;
+      }
+    });
+
+    return bridgeData;
+  }, [indirectPairLookup.token0PairAddress, indirectPairLookup.token1PairAddress, indirectReservesContracts, indirectReservesData]);
+
+  // ========== 阶段 5：计算转换结果 ==========
   const result = useMemo(() => {
     // ===== 场景 1: 相同代币 - 直接返回原数量 =====
     if (fromToken === toToken) {
@@ -367,20 +510,52 @@ export const useConvertTokenAmount = ({
 
     // ===== 场景 2: LP Token 转换 =====
     if (isFromTokenLP) {
-      // 解析合约返回数据
-      const reserves = reservesData?.[0]?.result as [bigint, bigint, number] | undefined;
-      const token0 = reservesData?.[1]?.result as `0x${string}` | undefined;
-      const token1 = reservesData?.[2]?.result as `0x${string}` | undefined;
-      const totalSupply = safeToBigInt(reservesData?.[3]?.result);
+      if (
+        !lpReservesDataObj.reserves ||
+        !lpReservesDataObj.token0 ||
+        !lpReservesDataObj.token1 ||
+        lpReservesDataObj.totalSupply === undefined
+      ) {
+        return calculateFailedConversion(isPendingReserves, errorReserves);
+      }
 
-      const reservesDataObj: ReservesData = {
-        reserves,
-        token0,
-        token1,
-        totalSupply,
-      };
+      if (isTokenInPair(toToken, lpReservesDataObj)) {
+        return calculateLPTokenConversion(fromAmount, toToken, lpReservesDataObj, isPendingReserves, errorReserves);
+      }
 
-      return calculateLPTokenConversion(fromAmount, toToken, reservesDataObj, isPendingReserves, errorReserves);
+      if (indirectPairContracts.length > 0 && isPendingIndirectPair) {
+        return calculateFailedConversion(true, errorIndirectPair);
+      }
+
+      if (!indirectPairLookup.token0PairAddress && !indirectPairLookup.token1PairAddress) {
+        return calculateFailedConversion(false, errorIndirectPair);
+      }
+
+      if (indirectReservesContracts.length > 0 && isPendingIndirectReserves) {
+        return calculateFailedConversion(true, errorIndirectReserves);
+      }
+
+      const route = selectPreferredIndirectLPRoute(
+        toToken,
+        lpReservesDataObj,
+        indirectBridgeReserves.token0Candidate,
+        indirectBridgeReserves.token1Candidate,
+      );
+
+      const bridgePairData =
+        route && lpReservesDataObj.token0 && addressesEqual(route.intermediateToken, lpReservesDataObj.token0)
+          ? indirectBridgeReserves.token0Candidate
+          : indirectBridgeReserves.token1Candidate;
+
+      return calculateLPTokenIndirectConversion(
+        fromAmount,
+        toToken,
+        lpReservesDataObj,
+        route,
+        bridgePairData,
+        false,
+        errorIndirectReserves || errorIndirectPair,
+      );
     }
 
     // ===== 场景 3: 普通代币转换 =====
@@ -411,6 +586,16 @@ export const useConvertTokenAmount = ({
     fromAmount,
     pairAddress,
     reservesData,
+    lpReservesDataObj,
+    needsIndirectLPPairLookup,
+    indirectPairContracts.length,
+    indirectPairLookup,
+    indirectBridgeReserves,
+    indirectReservesContracts.length,
+    isPendingIndirectPair,
+    errorIndirectPair,
+    isPendingIndirectReserves,
+    errorIndirectReserves,
     isPendingReserves,
     errorReserves,
     isPendingPair,
@@ -582,7 +767,194 @@ export const useConvertTokenAmounts = ({ conversions }: UseConvertTokenAmountsPa
     return dataMap;
   }, [reservesData, reservesContracts]);
 
-  // ========== 阶段 3：计算转换结果 ==========
+  // ========== 阶段 3：批量查找 LP 间接转换的桥接 pair ==========
+  const indirectPairContracts = useMemo(() => {
+    if (!conversions || conversions.length === 0) return [];
+
+    const contracts: (any & IndexMapping)[] = [];
+
+    conversions.forEach((conversion, index) => {
+      const { fromToken, toToken, isFromTokenLP } = conversion;
+      if (fromToken === toToken || !isFromTokenLP) return;
+
+      const lpData = reservesDataByConversion.get(index);
+      if (!lpData?.token0 || !lpData?.token1 || isTokenInPair(toToken, lpData)) return;
+
+      contracts.push(
+        {
+          address: FACTORY_ADDRESS,
+          abi: UniswapV2FactoryAbi,
+          functionName: 'getPair',
+          args: [lpData.token0, toToken],
+          conversionIndex: index,
+          contractType: 'token0ToTargetPair',
+        },
+        {
+          address: FACTORY_ADDRESS,
+          abi: UniswapV2FactoryAbi,
+          functionName: 'getPair',
+          args: [lpData.token1, toToken],
+          conversionIndex: index,
+          contractType: 'token1ToTargetPair',
+        },
+      );
+    });
+
+    return contracts;
+  }, [conversions, reservesDataByConversion]);
+
+  const {
+    data: indirectPairData,
+    isPending: isPendingIndirectPair,
+    error: errorIndirectPair,
+  } = useUniversalReadContracts({
+    contracts: indirectPairContracts as any,
+    query: {
+      enabled: indirectPairContracts.length > 0,
+    },
+  });
+
+  const indirectPairLookupByConversion = useMemo(() => {
+    const lookupMap = new Map<number, BridgePairLookupData>();
+
+    indirectPairContracts.forEach((contract, contractIndex) => {
+      const result = indirectPairData?.[contractIndex];
+      const existing = lookupMap.get(contract.conversionIndex) || {};
+      const parsedAddress = parsePairAddress(result?.result as `0x${string}` | undefined);
+
+      if ((contract as any).contractType === 'token0ToTargetPair') {
+        existing.token0PairAddress = parsedAddress;
+      } else if ((contract as any).contractType === 'token1ToTargetPair') {
+        existing.token1PairAddress = parsedAddress;
+      }
+
+      lookupMap.set(contract.conversionIndex, existing);
+    });
+
+    return lookupMap;
+  }, [indirectPairContracts, indirectPairData]);
+
+  // ========== 阶段 4：批量读取桥接 pair 储备 ==========
+  const indirectReservesContracts = useMemo(() => {
+    if (!conversions || conversions.length === 0) return [];
+
+    const contracts: (any & IndexMapping)[] = [];
+
+    conversions.forEach((conversion, index) => {
+      const { fromToken, toToken, isFromTokenLP } = conversion;
+      if (fromToken === toToken || !isFromTokenLP) return;
+
+      const lpData = reservesDataByConversion.get(index);
+      if (!lpData?.token0 || !lpData?.token1 || isTokenInPair(toToken, lpData)) return;
+
+      const pairLookup = indirectPairLookupByConversion.get(index);
+
+      if (pairLookup?.token0PairAddress) {
+        contracts.push(
+          {
+            address: pairLookup.token0PairAddress,
+            abi: UniswapV2PairAbi,
+            functionName: 'getReserves',
+            args: [],
+            conversionIndex: index,
+            contractType: 'token0Candidate_getReserves',
+          },
+          {
+            address: pairLookup.token0PairAddress,
+            abi: UniswapV2PairAbi,
+            functionName: 'token0',
+            args: [],
+            conversionIndex: index,
+            contractType: 'token0Candidate_token0',
+          },
+        );
+      }
+
+      if (pairLookup?.token1PairAddress) {
+        contracts.push(
+          {
+            address: pairLookup.token1PairAddress,
+            abi: UniswapV2PairAbi,
+            functionName: 'getReserves',
+            args: [],
+            conversionIndex: index,
+            contractType: 'token1Candidate_getReserves',
+          },
+          {
+            address: pairLookup.token1PairAddress,
+            abi: UniswapV2PairAbi,
+            functionName: 'token0',
+            args: [],
+            conversionIndex: index,
+            contractType: 'token1Candidate_token0',
+          },
+        );
+      }
+    });
+
+    return contracts;
+  }, [conversions, reservesDataByConversion, indirectPairLookupByConversion]);
+
+  const {
+    data: indirectReservesData,
+    isPending: isPendingIndirectReserves,
+    error: errorIndirectReserves,
+  } = useUniversalReadContracts({
+    contracts: indirectReservesContracts as any,
+    query: {
+      enabled: indirectReservesContracts.length > 0,
+    },
+  });
+
+  const indirectBridgeReservesByConversion = useMemo(() => {
+    const dataMap = new Map<number, BridgeReservesByCandidate>();
+
+    conversions.forEach((_, index) => {
+      const pairLookup = indirectPairLookupByConversion.get(index);
+      if (!pairLookup) return;
+
+      dataMap.set(index, {
+        token0Candidate: {
+          pairAddress: pairLookup.token0PairAddress,
+        },
+        token1Candidate: {
+          pairAddress: pairLookup.token1PairAddress,
+        },
+      });
+    });
+
+    indirectReservesContracts.forEach((contract, contractIndex) => {
+      const result = indirectReservesData?.[contractIndex];
+      const conversionIndex = contract.conversionIndex;
+
+      if (!dataMap.has(conversionIndex)) {
+        dataMap.set(conversionIndex, {
+          token0Candidate: {},
+          token1Candidate: {},
+        });
+      }
+
+      const bridgeData = dataMap.get(conversionIndex)!;
+
+      if (!result?.result) {
+        return;
+      }
+
+      if ((contract as any).contractType === 'token0Candidate_getReserves') {
+        bridgeData.token0Candidate.reserves = result.result as [bigint, bigint, number];
+      } else if ((contract as any).contractType === 'token0Candidate_token0') {
+        bridgeData.token0Candidate.token0 = result.result as `0x${string}`;
+      } else if ((contract as any).contractType === 'token1Candidate_getReserves') {
+        bridgeData.token1Candidate.reserves = result.result as [bigint, bigint, number];
+      } else if ((contract as any).contractType === 'token1Candidate_token0') {
+        bridgeData.token1Candidate.token0 = result.result as `0x${string}`;
+      }
+    });
+
+    return dataMap;
+  }, [conversions, indirectPairLookupByConversion, indirectReservesContracts, indirectReservesData]);
+
+  // ========== 阶段 5：计算转换结果 ==========
   const results = useMemo(() => {
     if (!conversions || conversions.length === 0) return [];
 
@@ -598,15 +970,65 @@ export const useConvertTokenAmounts = ({ conversions }: UseConvertTokenAmountsPa
       if (isFromTokenLP) {
         const reservesData = reservesDataByConversion.get(index);
         if (!reservesData) {
-          return {
-            convertedAmount: BigInt(0),
-            isSuccess: false,
-            isPending: isPendingReserves,
-            error: errorReserves,
-          };
+          return calculateFailedConversion(isPendingReserves, errorReserves);
         }
 
-        return calculateLPTokenConversion(fromAmount, toToken, reservesData, isPendingReserves, errorReserves);
+        if (
+          !reservesData.reserves ||
+          !reservesData.token0 ||
+          !reservesData.token1 ||
+          reservesData.totalSupply === undefined
+        ) {
+          return calculateFailedConversion(isPendingReserves, errorReserves);
+        }
+
+        if (isTokenInPair(toToken, reservesData)) {
+          return calculateLPTokenConversion(fromAmount, toToken, reservesData, isPendingReserves, errorReserves);
+        }
+
+        const pairLookup = indirectPairLookupByConversion.get(index);
+        if (indirectPairContracts.length > 0 && isPendingIndirectPair) {
+          return calculateFailedConversion(true, errorIndirectPair);
+        }
+
+        if (!pairLookup?.token0PairAddress && !pairLookup?.token1PairAddress) {
+          return calculateFailedConversion(false, errorIndirectPair);
+        }
+
+        if (indirectReservesContracts.length > 0 && isPendingIndirectReserves) {
+          return calculateFailedConversion(true, errorIndirectReserves);
+        }
+
+        const bridgeData = indirectBridgeReservesByConversion.get(index) || {
+          token0Candidate: {
+            pairAddress: pairLookup?.token0PairAddress,
+          },
+          token1Candidate: {
+            pairAddress: pairLookup?.token1PairAddress,
+          },
+        };
+
+        const route = selectPreferredIndirectLPRoute(
+          toToken,
+          reservesData,
+          bridgeData.token0Candidate,
+          bridgeData.token1Candidate,
+        );
+
+        const selectedBridgePair =
+          route && reservesData.token0 && addressesEqual(route.intermediateToken, reservesData.token0)
+            ? bridgeData.token0Candidate
+            : bridgeData.token1Candidate;
+
+        return calculateLPTokenIndirectConversion(
+          fromAmount,
+          toToken,
+          reservesData,
+          route,
+          selectedBridgePair,
+          false,
+          errorIndirectReserves || errorIndirectPair,
+        );
       }
 
       // ===== 场景 3: 普通代币转换 =====
@@ -629,6 +1051,14 @@ export const useConvertTokenAmounts = ({ conversions }: UseConvertTokenAmountsPa
     conversions,
     pairAddresses,
     reservesDataByConversion,
+    indirectPairContracts.length,
+    indirectPairLookupByConversion,
+    indirectBridgeReservesByConversion,
+    indirectReservesContracts.length,
+    isPendingIndirectPair,
+    errorIndirectPair,
+    isPendingIndirectReserves,
+    errorIndirectReserves,
     isPendingReserves,
     errorReserves,
     isPendingPair,
@@ -643,13 +1073,26 @@ export const useConvertTokenAmounts = ({ conversions }: UseConvertTokenAmountsPa
     }
     // 只有当对应的 contracts 数组不为空时，才检查对应的 isPending 状态
     return (
-      (pairContracts.length > 0 ? isPendingPair : false) || (reservesContracts.length > 0 ? isPendingReserves : false)
+      (pairContracts.length > 0 ? isPendingPair : false) ||
+      (reservesContracts.length > 0 ? isPendingReserves : false) ||
+      (indirectPairContracts.length > 0 ? isPendingIndirectPair : false) ||
+      (indirectReservesContracts.length > 0 ? isPendingIndirectReserves : false)
     );
-  }, [conversions, pairContracts.length, reservesContracts.length, isPendingPair, isPendingReserves]);
+  }, [
+    conversions,
+    pairContracts.length,
+    reservesContracts.length,
+    indirectPairContracts.length,
+    indirectReservesContracts.length,
+    isPendingPair,
+    isPendingReserves,
+    isPendingIndirectPair,
+    isPendingIndirectReserves,
+  ]);
 
   const error = useMemo(() => {
-    return errorPair || errorReserves;
-  }, [errorPair, errorReserves]);
+    return errorPair || errorReserves || errorIndirectPair || errorIndirectReserves;
+  }, [errorPair, errorReserves, errorIndirectPair, errorIndirectReserves]);
 
   return {
     results,
