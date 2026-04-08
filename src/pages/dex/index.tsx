@@ -60,7 +60,7 @@ export default function DexPage() {
               兑换
             </TabsTrigger>
             <TabsTrigger value="liquidity" className="min-w-0 truncate">
-              添加流动性
+              我的流动性
             </TabsTrigger>
             <TabsTrigger value="liquidity-query" className="min-w-0 truncate">
               流动性查询
@@ -90,7 +90,7 @@ export default function DexPage() {
                 <HelpCircle className="w-4 h-4" />
                 小贴士
               </div>
-              <div className="text-base font-bold text-green-700 pt-2 pb-1">添加流动性：</div>
+              <div className="text-base font-bold text-green-700 pt-2 pb-1">我的流动性：</div>
               <div className="text-sm text-green-700">提供流动性，可获得交易手续费分成(手续费为 0.3%)</div>
               <div className="text-base font-bold text-green-700 pt-2 pb-1">LP代币：</div>
               <div className="text-sm text-green-700">添加流动性后将获得 LP 代币，代表您在流动性池中的份额</div>
