@@ -24,6 +24,7 @@ import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 // my hooks
 import { useBalanceOf, useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
 import { useNativeTransfer } from '@/src/hooks/contracts/useNativeTransfer';
+import { useGetPair } from '@/src/hooks/contracts/useUniswapV2Factory';
 import { useError } from '@/src/contexts/ErrorContext';
 
 // my context
@@ -44,8 +45,16 @@ interface TokenConfig {
   name: string;
 }
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+
 // 构建支持的代币列表
-const buildSupportedTokens = (token: any): TokenConfig[] => {
+const buildSupportedTokens = (
+  token: any,
+  options?: {
+    usdtLpPairAddress?: `0x${string}`;
+    usdtSymbol?: string;
+  },
+): TokenConfig[] => {
   const supportedTokens: TokenConfig[] = [];
   const addedAddresses = new Set<string>(); // 用于追踪已添加的地址，避免重复
 
@@ -152,6 +161,18 @@ const buildSupportedTokens = (token: any): TokenConfig[] => {
         name: `LP代币 (${lpSymbolName})`,
       });
     }
+
+    // 9. LP代币（当前代币与 USDT 的交易对）
+    if (options?.usdtLpPairAddress && options.usdtLpPairAddress !== ZERO_ADDRESS && options.usdtSymbol) {
+      const lpSymbolName = `${token.symbol}/${options.usdtSymbol}`;
+      addToken({
+        symbol: `LP(${lpSymbolName})`,
+        address: options.usdtLpPairAddress,
+        decimals: 18,
+        isNative: false,
+        name: `LP代币 (${lpSymbolName})`,
+      });
+    }
   }
 
   return supportedTokens;
@@ -237,9 +258,26 @@ const TransferPanel = () => {
   const { address: account } = useAccount();
   const { token } = useTokenContext();
   const queryClient = useQueryClient();
+  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}` | undefined;
+  const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
+
+  const shouldQueryUsdtLpPair = !!token?.address && !!usdtAddress;
+  const { pairAddress: usdtLpPairAddress } = useGetPair(
+    token?.address || ZERO_ADDRESS,
+    usdtAddress || ZERO_ADDRESS,
+    shouldQueryUsdtLpPair,
+  );
 
   // 构建支持的代币列表
-  const supportedTokens = useMemo(() => buildSupportedTokens(token), [token]);
+  const supportedTokens = useMemo(
+    () =>
+      buildSupportedTokens(token, {
+        usdtLpPairAddress:
+          usdtLpPairAddress && usdtLpPairAddress !== ZERO_ADDRESS ? usdtLpPairAddress : undefined,
+        usdtSymbol,
+      }),
+    [token, usdtLpPairAddress, usdtSymbol],
+  );
 
   // 选中的代币状态
   const [selectedToken, setSelectedToken] = useState<TokenConfig | undefined>();
@@ -247,6 +285,7 @@ const TransferPanel = () => {
   const [lastProcessedTxHash, setLastProcessedTxHash] = useState<string | null>(null);
   const [addressConversionInfo, setAddressConversionInfo] = useState<string>('');
   const [convertedAddress, setConvertedAddress] = useState<`0x${string}` | null>(null);
+  const [isAssetProtectionEnabled, setIsAssetProtectionEnabled] = useState(true);
 
   // 初始化选择代币逻辑：优先选择当前代币，其次选择第一个可用代币
   useEffect(() => {
@@ -345,6 +384,17 @@ const TransferPanel = () => {
     }
   }, [watchedToAddress]);
 
+  const protectedTargetToken = useMemo(() => {
+    const normalizedAddress = normalizeAddressInput(watchedToAddress || '');
+    if (!normalizedAddress) return undefined;
+
+    return supportedTokens.find(
+      (tokenConfig) => tokenConfig.address !== 'NATIVE' && tokenConfig.address.toLowerCase() === normalizedAddress,
+    );
+  }, [supportedTokens, watchedToAddress]);
+
+  const isAssetProtectionTriggered = isAssetProtectionEnabled && !!protectedTargetToken;
+
   // 监听数量输入
   const watchAmount = form.watch('amount');
   const [transferAmount, setTransferAmount] = useState<bigint>(BigInt(0));
@@ -423,6 +473,11 @@ const TransferPanel = () => {
   // 处理转账
   const handleTransfer = form.handleSubmit(async (data) => {
     if (!selectedToken || !account) return;
+
+    if (isAssetProtectionEnabled && protectedTargetToken) {
+      toast.error(`资产保护已触发：目标地址是 ${protectedTargetToken.symbol} 合约地址，关闭保护开关后才可强制转账`);
+      return;
+    }
 
     // 标准化地址输入，支持TH、0x等格式
     const normalizedAddress = normalizeAddressInput(data.to);
@@ -510,6 +565,33 @@ const TransferPanel = () => {
               )}
             />
 
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="checkbox accent-secondary mt-0.5"
+                  checked={isAssetProtectionEnabled}
+                  onChange={(event) => setIsAssetProtectionEnabled(event.target.checked)}
+                />
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-amber-900">资产保护开关</div>
+                  <div className="text-xs text-amber-800 mt-1">
+                    默认开启。若目标地址填写为下拉列表中的代币合约地址，系统会拦截本次转账，避免误把资产转入代币合约。
+                  </div>
+                </div>
+              </label>
+
+              {isAssetProtectionTriggered && protectedTargetToken && (
+                <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  已触发资产保护开关：目标地址是 {protectedTargetToken.symbol} 的合约地址
+                  {selectedToken?.address !== 'NATIVE' && selectedToken?.address === protectedTargetToken.address
+                    ? '，当前正在尝试把该代币转到它自己的合约地址。'
+                    : '。'}
+                  如需强制转账，请先关闭上方保护开关，再重新提交。
+                </div>
+              )}
+            </div>
+
             {/* 代币选择 */}
             <FormField
               control={form.control}
@@ -518,7 +600,7 @@ const TransferPanel = () => {
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-gray-700">选择代币</FormLabel>
                   <FormControl>
-                    <div className="flex items-center space-x-2">
+                    <div className="space-y-2">
                       <Select
                         value={field.value}
                         onValueChange={(val) => {
@@ -532,7 +614,7 @@ const TransferPanel = () => {
                         }}
                         disabled={isDisabled}
                       >
-                        <SelectTrigger className="flex-1">
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="请选择代币" />
                         </SelectTrigger>
                         <SelectContent>
@@ -543,13 +625,21 @@ const TransferPanel = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      {selectedToken && selectedToken.address !== 'NATIVE' && (
-                        <AddressWithCopyButton
-                          address={selectedToken.address as `0x${string}`}
-                          showAddress={false}
-                          showCopyButton={true}
-                          colorClassName="text-gray-600"
-                        />
+
+                      {selectedToken && (
+                        <div className="text-xs text-gray-600 flex items-center gap-1">
+                          <span className="shrink-0">合约地址:</span>
+                          {selectedToken.address === 'NATIVE' ? (
+                            <span>原生代币，无合约地址</span>
+                          ) : (
+                            <AddressWithCopyButton
+                              address={selectedToken.address as `0x${string}`}
+                              showAddress={true}
+                              showCopyButton={true}
+                              colorClassName="text-gray-600"
+                            />
+                          )}
+                        </div>
                       )}
                     </div>
                   </FormControl>
@@ -625,8 +715,13 @@ const TransferPanel = () => {
 
             {/* 转账按钮 */}
             <div className="flex space-x-2 pt-4">
-              <Button className="w-full" onClick={handleTransfer} disabled={isTransferring || isDisabled} size="lg">
-                {isTransferring ? '转账中...' : '转账'}
+              <Button
+                className="w-full"
+                onClick={handleTransfer}
+                disabled={isTransferring || isDisabled || isAssetProtectionTriggered}
+                size="lg"
+              >
+                {isTransferring ? '转账中...' : isAssetProtectionTriggered ? '资产保护已拦截' : '转账'}
               </Button>
             </div>
           </form>
