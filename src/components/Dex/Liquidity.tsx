@@ -598,7 +598,7 @@ const LiquidityPanel = () => {
       </div>
 
       <div className="flex justify-between items-center mb-4">
-        <LeftTitle title="流动性添加" />
+        <LeftTitle title="我的流动性" />
       </div>
 
       <div className="w-full max-w-md md:max-w-2xl lg:max-w-4xl mx-auto">
