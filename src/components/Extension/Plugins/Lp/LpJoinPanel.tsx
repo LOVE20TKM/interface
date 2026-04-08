@@ -16,6 +16,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 
 // my hooks
 import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/src/lib/format';
+import { useAcquireLpJump } from '@/src/hooks/composite/useAcquireLpJump';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
@@ -29,7 +30,6 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useError } from '@/src/contexts/ErrorContext';
 
 // my components
-import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import LpStatsCard from './_LpStatsCard';
@@ -55,13 +55,12 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   const { setError } = useError();
 
   // 获取当前轮次
-  const { currentRound, isPending: isPendingCurrentRound, error: errorCurrentRound } = useCurrentRound();
+  const { currentRound, isPending: isPendingCurrentRound } = useCurrentRound();
 
   // 获取行动是否已投票
   const {
     isActionIdVoted,
     isPending: isPendingVoted,
-    error: errorVoted,
   } = useIsActionIdVoted(token?.address as `0x${string}`, currentRound || BigInt(0), actionId);
 
   // 获取 Lp 扩展数据（用于显示已参与信息）
@@ -76,7 +75,6 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     userGovRatio,
     lpRatio,
     isPending: isPendingData,
-    error: errorData,
   } = useMyLpActionData({
     extensionAddress,
     tokenAddress: token?.address as `0x${string}`,
@@ -99,11 +97,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   }, [isPendingCurrentRound, isPendingVoted, isActionIdVoted]);
 
   // 获取 LP Token 余额
-  const { balance: lpBalance, error: errorLpBalance } = useBalanceOf(
-    joinTokenAddress as `0x${string}`,
-    account as `0x${string}`,
-    !!joinTokenAddress,
-  );
+  const { balance: lpBalance } = useBalanceOf(joinTokenAddress as `0x${string}`, account as `0x${string}`, !!joinTokenAddress);
 
   // 获取 LP Token 的 symbol
   const { formattedSymbol: lpTokenSymbol } = useFormatLPSymbol({
@@ -111,12 +105,21 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     tokenSymbol: undefined,
     enabled: !!joinTokenAddress,
   });
+  const fallbackDexHref = useMemo(() => {
+    const params = new URLSearchParams({ tab: 'liquidity' });
+    if (token?.symbol) {
+      params.set('symbol', token.symbol);
+    }
+    return `/dex/?${params.toString()}`;
+  }, [token?.symbol]);
+  const acquireLpJump = useAcquireLpJump({
+    pairAddress: joinTokenAddress,
+  });
 
   // 获取已授权数量
   const {
     allowance: allowanceLp,
     isPending: isPendingAllowanceLp,
-    error: errAllowanceLp,
     refetch: refetchAllowance,
   } = useAllowance(joinTokenAddress as `0x${string}`, account as `0x${string}`, extensionAddress, !!joinTokenAddress);
 
@@ -330,15 +333,31 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
       <div className="px-6 pt-6 pb-2">
         <div className="flex justify-between items-center mb-2">
           <h1 className="text-lg font-bold">{isJoined && !isWaitingRedirect ? '追加LP' : '加入行动'}</h1>
-          <button
-            type="button"
-            onClick={() => {
-              router.push('/dex/?tab=liquidity');
-            }}
-            className="text-secondary text-sm hover:underline"
-          >
-            获取LP代币 &gt;&gt;
-          </button>
+          {acquireLpJump.status === 'supported' && acquireLpJump.href ? (
+            <button
+              type="button"
+              onClick={() => {
+                router.push(acquireLpJump.href!);
+              }}
+              className="text-sm text-secondary hover:underline"
+            >
+              获取LP代币 &gt;&gt;
+            </button>
+          ) : acquireLpJump.status === 'error' ? (
+            <button
+              type="button"
+              onClick={() => {
+                router.push(fallbackDexHref);
+              }}
+              className="text-sm text-secondary hover:underline"
+            >
+              前往流动性页 &gt;&gt;
+            </button>
+          ) : acquireLpJump.status === 'unsupported' ? (
+            <span className="text-sm text-gray-400">该LP代币对暂不支持自动跳转</span>
+          ) : (
+            <span className="text-sm text-gray-400">解析LP代币对中...</span>
+          )}
         </div>
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4 pt-2">
