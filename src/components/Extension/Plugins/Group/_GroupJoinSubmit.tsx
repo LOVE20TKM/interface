@@ -34,6 +34,7 @@ import { useTrialMode } from '@/src/contexts/TrialModeContext';
 
 // hooks
 import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import { useAcquireLpJump } from '@/src/hooks/composite/useAcquireLpJump';
 import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useGetInfoForJoin } from '@/src/hooks/extension/plugins/group/composite/useGetInfoForJoin';
@@ -89,7 +90,6 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   const {
     extensions,
     isPending: isPendingConstants,
-    error: errorConstants,
   } = useExtensionsByActionIdsWithCache({
     token: token || ({ address: '0x0000000000000000000000000000000000000000' as `0x${string}` } as any),
     actionIds: [actionId],
@@ -99,6 +99,16 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   const joinTokenAddress = extensions[0]?.joinedAmountTokenAddress;
   const joinTokenSymbol = extensions[0]?.joinedAmountTokenSymbol;
   const joinedAmountTokenIsLP = extensions[0]?.joinedAmountTokenIsLP;
+  const fallbackDexHref = useMemo(() => {
+    const params = new URLSearchParams({ tab: 'liquidity' });
+    if (token?.symbol) {
+      params.set('symbol', token.symbol);
+    }
+    return `/dex/?${params.toString()}`;
+  }, [token?.symbol]);
+  const acquireLpJump = useAcquireLpJump({
+    pairAddress: joinedAmountTokenIsLP ? joinTokenAddress : undefined,
+  });
 
   // 获取验证信息的 key 列表
   const verificationKeys = actionInfo?.body?.verificationKeys as string[] | undefined;
@@ -113,7 +123,6 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     verificationInfos: existingVerificationInfos,
     isPending: isPendingJoinInfo,
     isPendingAllowance,
-    error: errorJoinInfo,
     refetchAllowance,
   } = useGetInfoForJoin({
     tokenAddress: token?.address as `0x${string}`,
@@ -528,14 +537,24 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                         </>
                       )}
                     </span>
-                    {joinedAmountTokenIsLP && !uiIsTrialMode && (
-                      <Link
-                        href="/dex/?tab=liquidity"
-                        className="text-sm text-secondary hover:text-secondary/80 hover:underline ml-2"
-                      >
-                        获取LP代币 &gt;&gt;
-                      </Link>
-                    )}
+                    {joinedAmountTokenIsLP &&
+                      !uiIsTrialMode &&
+                      (acquireLpJump.status === 'supported' && acquireLpJump.href ? (
+                        <Link
+                          href={acquireLpJump.href}
+                          className="text-sm text-secondary hover:text-secondary/80 hover:underline ml-2"
+                        >
+                          获取LP代币 &gt;&gt;
+                        </Link>
+                      ) : acquireLpJump.status === 'error' ? (
+                        <Link href={fallbackDexHref} className="text-sm text-secondary hover:text-secondary/80 hover:underline ml-2">
+                          前往流动性页 &gt;&gt;
+                        </Link>
+                      ) : acquireLpJump.status === 'unsupported' ? (
+                        <span className="text-sm text-gray-400 ml-2">该LP代币对暂不支持自动跳转</span>
+                      ) : (
+                        <span className="text-sm text-gray-400 ml-2">解析LP代币对中...</span>
+                      ))}
                   </FormLabel>
                   <FormControl>
                     <Input

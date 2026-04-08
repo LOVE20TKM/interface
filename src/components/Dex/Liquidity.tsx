@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { ArrowUpDown, HelpCircle, Settings, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 // UI components
 import { Button } from '@/components/ui/button';
@@ -119,6 +120,7 @@ type LiquidityFormValues = z.infer<ReturnType<typeof getLiquidityFormSchema>>;
 // 主组件
 // ================================================
 const LiquidityPanel = () => {
+  const router = useRouter();
   const { address: account } = useAccount();
   const { token } = useTokenContext();
   const parentTokenAddress = token?.parentTokenAddress;
@@ -155,6 +157,15 @@ const LiquidityPanel = () => {
   useEffect(() => {
     if (baseTokens.length === 0) return;
 
+    const routeBaseToken = router.query.baseToken;
+    if (typeof routeBaseToken === 'string') {
+      const matchedToken = baseTokens.find((t) => t.symbol === routeBaseToken);
+      if (matchedToken) {
+        setBaseToken(matchedToken);
+        return;
+      }
+    }
+
     // 检查当前选中的 baseToken 是否还在 baseTokens 列表中
     const currentTokenExists = baseTokens.some((t) => t.address === baseToken.address);
     if (!currentTokenExists) {
@@ -169,7 +180,7 @@ const LiquidityPanel = () => {
         if (defaultToken) setBaseToken(defaultToken);
       }
     }
-  }, [baseTokens, baseToken.address]);
+  }, [router.query.baseToken, baseTokens, isRootParent, parentTokenSymbol]);
 
   // 目标代币 (当前token)
   const targetToken = useMemo(() => {
@@ -574,7 +585,9 @@ const LiquidityPanel = () => {
           </div>
           {(lpBalance || BigInt(0)) > BigInt(0) && (
             <Link
-              href={`/dex/withdraw?baseToken=${encodeURIComponent(baseToken.symbol)}`}
+              href={`/dex/withdraw?symbol=${encodeURIComponent(token?.symbol || '')}&baseToken=${encodeURIComponent(
+                baseToken.symbol,
+              )}`}
               className="inline-flex items-center gap-1 text-sm text-secondary hover:text-blue-800 transition-colors underline"
               title="撤出流动性"
             >
