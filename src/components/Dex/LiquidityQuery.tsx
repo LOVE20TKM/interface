@@ -20,7 +20,6 @@ import { formatTokenAmount, formatPercentage } from '@/src/lib/format';
 // my hooks
 import { useLiquidityQuery } from '@/src/hooks/composite/useLiquidityQuery';
 import { usePairStats } from '@/src/hooks/composite/usePairStats';
-import { useLPSymbol } from '@/src/hooks/contracts/useUniswapV2Pair';
 
 // my context
 import useTokenContext from '@/src/hooks/context/useTokenContext';
@@ -234,9 +233,6 @@ const LiquidityQueryPanel: React.FC = () => {
     targetToken,
   });
 
-  // 获取LP代币的symbol
-  const { lpSymbol } = useLPSymbol(pairAddress);
-
   // 流动性查询
   const {
     pairExists,
@@ -333,8 +329,9 @@ const LiquidityQueryPanel: React.FC = () => {
                         <AddressWithCopyButton address={pairAddress} />
                         <AddToMetamask
                           tokenAddress={pairAddress as `0x${string}`}
-                          tokenSymbol={lpSymbol || 'LP' + baseToken.symbol + '-' + targetToken.symbol}
+                          tokenSymbol={`LP(${baseToken.symbol}/${targetToken.symbol})`}
                           tokenDecimals={token.decimals}
+                          isUniswapV2Lp={true}
                         />
                       </div>
                     </div>
