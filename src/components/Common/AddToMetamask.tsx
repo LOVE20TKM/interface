@@ -11,12 +11,20 @@ interface AddToMetamaskProps {
   tokenSymbol: string;
   tokenDecimals: number;
   tokenImage?: string;
+  isUniswapV2Lp?: boolean;
 }
 
-export default function AddToMetamask({ tokenAddress, tokenSymbol, tokenDecimals, tokenImage }: AddToMetamaskProps) {
+export default function AddToMetamask({
+  tokenAddress,
+  tokenSymbol,
+  tokenDecimals,
+  tokenImage,
+  isUniswapV2Lp = false,
+}: AddToMetamaskProps) {
   const [isAdding, setIsAdding] = useState(false);
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const walletTokenSymbol = isUniswapV2Lp ? 'UNI-V2' : tokenSymbol;
 
   const addToken = async () => {
     if (!isConnected) {
@@ -36,7 +44,7 @@ export default function AddToMetamask({ tokenAddress, tokenSymbol, tokenDecimals
           type: 'ERC20',
           options: {
             address: tokenAddress,
-            symbol: tokenSymbol,
+            symbol: walletTokenSymbol,
             decimals: tokenDecimals,
             image: tokenImage,
           },
@@ -56,7 +64,7 @@ export default function AddToMetamask({ tokenAddress, tokenSymbol, tokenDecimals
     }
   };
 
-  if (tokenSymbol.length > 11) {
+  if (walletTokenSymbol.length > 11) {
     return null;
   }
 

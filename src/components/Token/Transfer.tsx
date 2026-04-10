@@ -35,6 +35,7 @@ import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import AddToMetamask from '@/src/components/Common/AddToMetamask';
 
 // 代币配置接口
 interface TokenConfig {
@@ -43,6 +44,7 @@ interface TokenConfig {
   decimals: number;
   isNative: boolean;
   name: string;
+  isLp?: boolean;
 }
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
@@ -159,6 +161,7 @@ const buildSupportedTokens = (
         decimals: 18,
         isNative: false,
         name: `LP代币 (${lpSymbolName})`,
+        isLp: true,
       });
     }
 
@@ -171,6 +174,7 @@ const buildSupportedTokens = (
         decimals: 18,
         isNative: false,
         name: `LP代币 (${lpSymbolName})`,
+        isLp: true,
       });
     }
   }
@@ -632,12 +636,20 @@ const TransferPanel = () => {
                           {selectedToken.address === 'NATIVE' ? (
                             <span>原生代币，无合约地址</span>
                           ) : (
-                            <AddressWithCopyButton
-                              address={selectedToken.address as `0x${string}`}
-                              showAddress={true}
-                              showCopyButton={true}
-                              colorClassName="text-gray-600"
-                            />
+                            <div className="flex items-center gap-1 min-w-0">
+                              <AddressWithCopyButton
+                                address={selectedToken.address as `0x${string}`}
+                                showAddress={true}
+                                showCopyButton={true}
+                                colorClassName="text-gray-600"
+                              />
+                              <AddToMetamask
+                                tokenAddress={selectedToken.address as `0x${string}`}
+                                tokenSymbol={selectedToken.symbol}
+                                tokenDecimals={selectedToken.decimals}
+                                isUniswapV2Lp={selectedToken.isLp}
+                              />
+                            </div>
                           )}
                         </div>
                       )}
