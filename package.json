@@ -9,6 +9,7 @@
     "test": "cross-env NODE_ENV=test npx next build",
     "public-test": "cp .env.public_test .env.local && npx next build",
     "start": "next start",
+    "release:test-to-interface-main": "bash ./scripts/release-test-to-upstream-main.sh",
     "generate:abi": "cross-env NODE_ENV=development ts-node scripts/generateAbiTs.ts",
     "generate:env": "cross-env NODE_ENV=development ts-node scripts/generate-env.js",
     "generate:selectors": "cross-env NODE_ENV=development ts-node scripts/generateFunctionSelectors.ts",
