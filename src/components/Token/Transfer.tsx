@@ -24,7 +24,7 @@ import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 // my hooks
 import { useBalanceOf, useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
 import { useNativeTransfer } from '@/src/hooks/contracts/useNativeTransfer';
-import { useGetPair } from '@/src/hooks/contracts/useUniswapV2Factory';
+import { useUSDTPairAddress } from '@/src/hooks/composite/useUSDTPairAddress';
 import { useError } from '@/src/contexts/ErrorContext';
 
 // my context
@@ -262,15 +262,7 @@ const TransferPanel = () => {
   const { address: account } = useAccount();
   const { token } = useTokenContext();
   const queryClient = useQueryClient();
-  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS as `0x${string}` | undefined;
-  const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
-
-  const shouldQueryUsdtLpPair = !!token?.address && !!usdtAddress;
-  const { pairAddress: usdtLpPairAddress } = useGetPair(
-    token?.address || ZERO_ADDRESS,
-    usdtAddress || ZERO_ADDRESS,
-    shouldQueryUsdtLpPair,
-  );
+  const { pairAddress: usdtLpPairAddress, usdtSymbol } = useUSDTPairAddress(token?.address);
 
   // 构建支持的代币列表
   const supportedTokens = useMemo(
