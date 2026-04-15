@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useContext, useEffect, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { useRouter } from 'next/router';
 
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -77,6 +77,15 @@ function downloadTsv(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+function getErrorMessage(error: any): string {
+  if (!error) return '未知错误';
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
+  if (typeof error?.shortMessage === 'string') return error.shortMessage;
+  if (typeof error?.message === 'string') return error.message;
+  return '未知错误';
+}
+
 // ==================== 页面组件 ====================
 
 const ExportGroupsPage: React.FC = () => {
@@ -125,7 +134,7 @@ const ExportGroupsPage: React.FC = () => {
     round: currentRound,
   });
 
-  // 批量获取所有群的成员地址（单次 RPC）
+  // 批量获取所有群的成员地址（分批重试，确保完整性）
   const {
     groupAccountsMap,
     allAccounts,
@@ -149,7 +158,7 @@ const ExportGroupsPage: React.FC = () => {
   // verificationKeys
   const verificationKeys: string[] = useMemo(() => actionInfo?.body?.verificationKeys || [], [actionInfo]);
 
-  // 批量获取所有地址的验证信息（单次 RPC）
+  // 批量获取所有地址的验证信息
   const {
     verificationInfos,
     isPending: isPendingVerification,
@@ -172,6 +181,11 @@ const ExportGroupsPage: React.FC = () => {
     return map;
   }, [verificationInfos]);
 
+  const failedVerificationAccounts = useMemo(
+    () => verificationInfos.filter((item) => item.error).map((item) => item.account),
+    [verificationInfos],
+  );
+
   // 统计总地址数
   const totalAccounts = useMemo(() => {
     let count = 0;
@@ -179,7 +193,10 @@ const ExportGroupsPage: React.FC = () => {
     return count;
   }, [groupAccountsMap]);
 
-  // 错误处理
+  const expectedTotalAccounts = useMemo(
+    () => groups.reduce((count, group) => count + Number(group.accountCount), 0),
+    [groups],
+  );
 
   // 整体加载状态（各阶段串行）
   const isLoading =
@@ -199,6 +216,42 @@ const ExportGroupsPage: React.FC = () => {
     if (isPendingVerification) return '加载验证信息...';
     return '';
   }, [isPendingAction, isPendingExtension, isPendingRound, isPendingGroups, isPendingAccounts, isPendingVerification]);
+
+  const mismatchedGroups = useMemo(() => {
+    if (isLoading) return [];
+
+    return sortedGroups
+      .map((group) => {
+        const actualCount = groupAccountsMap.get(group.groupId.toString())?.length ?? 0;
+        const expectedCount = Number(group.accountCount);
+        if (actualCount === expectedCount) return null;
+        return `#${group.groupId.toString()} ${group.groupName}(${actualCount}/${expectedCount})`;
+      })
+      .filter(Boolean) as string[];
+  }, [isLoading, sortedGroups, groupAccountsMap]);
+
+  const dataIntegrityError = useMemo(() => {
+    if (isLoading || sortedGroups.length === 0) return null;
+    if (failedVerificationAccounts.length > 0) {
+      return new Error(
+        `部分地址的验证信息读取失败：${failedVerificationAccounts.slice(0, 5).join(', ')}${
+          failedVerificationAccounts.length > 5 ? ' ...' : ''
+        }`,
+      );
+    }
+    if (mismatchedGroups.length > 0) {
+      return new Error(
+        `链群地址数据不完整：${mismatchedGroups.slice(0, 8).join(', ')}${mismatchedGroups.length > 8 ? ' ...' : ''}`,
+      );
+    }
+    if (totalAccounts !== expectedTotalAccounts) {
+      return new Error(`导出地址总数不完整：当前 ${totalAccounts}，预期 ${expectedTotalAccounts}`);
+    }
+    return null;
+  }, [isLoading, sortedGroups.length, failedVerificationAccounts, mismatchedGroups, totalAccounts, expectedTotalAccounts]);
+
+  const combinedError =
+    errorAction || errorExtension || errorRound || errorGroups || errorAccounts || errorVerification || dataIntegrityError;
 
   // 下载 TSV 文件
   const handleDownload = () => {
@@ -242,7 +295,7 @@ const ExportGroupsPage: React.FC = () => {
         )}
 
         {/* 下载按钮 */}
-        {!isLoading && sortedGroups.length > 0 && (
+        {!isLoading && !combinedError && sortedGroups.length > 0 && (
           <div>
             <Button onClick={handleDownload} disabled={totalAccounts === 0} className="w-full">
               下载 TSV 文件（可直接用 Excel 打开）
@@ -258,6 +311,16 @@ const ExportGroupsPage: React.FC = () => {
           <div className="flex flex-col items-center gap-3 py-6">
             <LoadingIcon />
             <div className="text-gray-500 text-sm">{loadingText}</div>
+          </div>
+        ) : combinedError ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-2">
+            <p className="text-sm font-semibold text-red-700">导出数据加载失败，已阻止错误导出</p>
+            <p className="text-sm text-red-600 break-all">{getErrorMessage(combinedError)}</p>
+            {groups.length > 0 && (
+              <p className="text-xs text-red-500">
+                当前已加载 {totalAccounts} / 预期 {expectedTotalAccounts} 个地址
+              </p>
+            )}
           </div>
         ) : sortedGroups.length === 0 ? (
           <p className="text-gray-500 text-sm py-4">暂无活跃链群</p>

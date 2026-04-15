@@ -2,7 +2,9 @@
 // 批量获取链群列表完整信息
 
 import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
+import { readContractsInBatchesWithRetry } from '@/src/lib/readContractsInBatches';
 import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
@@ -11,6 +13,9 @@ import { safeToBigInt } from '@/src/lib/clientUtils';
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
 const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
 const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
+
+// Thinkium RPC 对大批量读取更敏感，控制每批调用数
+const DETAIL_BATCH_SIZE = 25;
 
 export interface GroupBasicInfo {
   groupId: bigint;
@@ -56,19 +61,16 @@ export const useExtensionGroupInfosOfAction = ({
   extensionAddress,
   round,
 }: UseExtensionGroupInfosOfActionParams): UseExtensionGroupInfosOfActionResult => {
-  // 第一步：批量获取活跃链群NFT列表和行动最大参与代币量
   const firstBatchContracts = useMemo(() => {
     if (!extensionAddress) return [];
 
     return [
-      // 获取活跃链群NFT列表
       {
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
         functionName: 'activeGroupIds',
         args: [extensionAddress],
       },
-      // 获取行动最大参与代币量
       {
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
@@ -89,58 +91,51 @@ export const useExtensionGroupInfosOfAction = ({
     },
   });
 
-  // 解析群组ID列表和行动最大参与代币量
+  const normalizedFirstBatchError = useMemo(() => {
+    if (firstBatchError) return firstBatchError;
+    return firstBatchData?.find((item) => item?.status === 'failure')?.error || null;
+  }, [firstBatchData, firstBatchError]);
+
   const groupIds = useMemo(() => {
-    if (!firstBatchData || !firstBatchData[0]?.result) return [];
+    if (!firstBatchData || firstBatchData[0]?.status !== 'success') return [];
     return firstBatchData[0].result as bigint[];
   }, [firstBatchData]);
 
   const actionMaxJoinAmount = useMemo(() => {
-    if (!firstBatchData || !firstBatchData[1]?.result) return BigInt(0);
+    if (!firstBatchData || firstBatchData[1]?.status !== 'success') return BigInt(0);
     return safeToBigInt(firstBatchData[1].result);
   }, [firstBatchData]);
 
-  // 第二步：批量获取每个群组的详细信息
-  // 新版合约：totalJoinedAmountByGroupId 和 accountsByGroupIdCount 移到 GroupJoin
   const detailContracts = useMemo(() => {
     if (!extensionAddress || !round || groupIds.length === 0) return [];
 
-    const contracts = [];
+    const contracts: any[] = [];
 
     for (const groupId of groupIds) {
-      // 获取群组信息（从 GroupManager）
       contracts.push({
         address: GROUP_MANAGER_ADDRESS,
         abi: GroupManagerAbi,
         functionName: 'groupInfo',
         args: [extensionAddress, groupId],
       });
-
-      // 获取群组名称（通过 LOVE20Group 合约）
       contracts.push({
         address: GROUP_CONTRACT_ADDRESS,
         abi: LOVE20GroupAbi,
         functionName: 'groupNameOf',
         args: [groupId],
       });
-
-      // 获取群组拥有者（通过 LOVE20Group 合约）
       contracts.push({
         address: GROUP_CONTRACT_ADDRESS,
         abi: LOVE20GroupAbi,
         functionName: 'ownerOf',
         args: [groupId],
       });
-
-      // 获取群组总加入数量（新版合约移到 GroupJoin）
       contracts.push({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
         functionName: 'totalJoinedAmountByGroupId',
         args: [extensionAddress, round, groupId],
       });
-
-      // 获取群组成员数量（新版合约移到 GroupJoin）
       contracts.push({
         address: GROUP_JOIN_ADDRESS,
         abi: GroupJoinAbi,
@@ -153,109 +148,133 @@ export const useExtensionGroupInfosOfAction = ({
   }, [extensionAddress, round, groupIds]);
 
   const {
-    data: detailData,
+    data: groups = [],
     isPending: isDetailPending,
     error: detailError,
-  } = useUniversalReadContracts({
-    contracts: detailContracts as any,
-    query: {
-      enabled: !!extensionAddress && !!round && detailContracts.length > 0,
+  } = useQuery({
+    queryKey: [
+      'extensionGroupInfosOfAction',
+      extensionAddress,
+      round?.toString(),
+      groupIds.map((groupId) => groupId.toString()).join(','),
+      actionMaxJoinAmount.toString(),
+    ],
+    queryFn: async () => {
+      const entries = detailContracts.map((contract, index) => ({
+        contract,
+        resultIndex: index,
+        meta: {
+          groupId: groupIds[Math.floor(index / 5)]?.toString(),
+        },
+      }));
+
+      const { results: detailResults, failures } = await readContractsInBatchesWithRetry(entries, {
+        batchSize: DETAIL_BATCH_SIZE,
+      });
+
+      if (failures.length > 0) {
+        const failedGroupIds = [...new Set(failures.map((failure) => failure.meta?.groupId).filter(Boolean))];
+        const failedGroupText =
+          failedGroupIds.length > 0
+            ? ` 失败链群: ${failedGroupIds.slice(0, 8).join(', ')}${failedGroupIds.length > 8 ? ' ...' : ''}`
+            : '';
+        throw new Error(`链群详情读取失败（${failures.length}/${detailContracts.length}）。${failedGroupText}`);
+      }
+
+      const result: GroupBasicInfo[] = [];
+
+      for (let i = 0; i < groupIds.length; i++) {
+        const baseIndex = i * 5;
+        const groupInfoResult = detailResults[baseIndex];
+        const groupNameResult = detailResults[baseIndex + 1];
+        const ownerResult = detailResults[baseIndex + 2];
+        const totalJoinedAmountResult = detailResults[baseIndex + 3];
+        const accountCountResult = detailResults[baseIndex + 4];
+
+        if (
+          groupInfoResult?.status !== 'success' ||
+          groupNameResult?.status !== 'success' ||
+          ownerResult?.status !== 'success' ||
+          totalJoinedAmountResult?.status !== 'success' ||
+          accountCountResult?.status !== 'success'
+        ) {
+          throw new Error(`链群 #${groupIds[i].toString()} 详情不完整，请稍后重试`);
+        }
+
+        const groupInfoData = groupInfoResult.result as {
+          groupId: bigint;
+          description: string;
+          maxCapacity: bigint;
+          minJoinAmount: bigint;
+          maxJoinAmount: bigint;
+          maxAccounts: bigint;
+          isActive: boolean;
+          activatedRound: bigint;
+          deactivatedRound: bigint;
+        };
+        const groupName = groupNameResult.result as string | undefined;
+        const owner = ownerResult.result as `0x${string}` | undefined;
+        const totalJoinedAmount = totalJoinedAmountResult.result as bigint | undefined;
+        const accountCount = accountCountResult.result;
+
+        if (!groupInfoData || groupName === undefined || owner === undefined) {
+          throw new Error(`链群 #${groupIds[i].toString()} 详情为空，请稍后重试`);
+        }
+
+        const description = groupInfoData.description;
+        const maxCapacity = safeToBigInt(groupInfoData.maxCapacity);
+        const minJoinAmount = safeToBigInt(groupInfoData.minJoinAmount);
+        const maxJoinAmount = safeToBigInt(groupInfoData.maxJoinAmount);
+        const maxAccounts = safeToBigInt(groupInfoData.maxAccounts);
+        const isActive = groupInfoData.isActive;
+        const activatedRound = safeToBigInt(groupInfoData.activatedRound);
+        const deactivatedRound = safeToBigInt(groupInfoData.deactivatedRound);
+
+        const actualMinJoinAmount = minJoinAmount;
+        const actualMaxJoinAmount =
+          maxJoinAmount > BigInt(0) && maxJoinAmount < actionMaxJoinAmount ? maxJoinAmount : actionMaxJoinAmount;
+
+        result.push({
+          groupId: groupIds[i],
+          groupName,
+          description,
+          owner,
+          maxCapacity,
+          accountCount: safeToBigInt(accountCount),
+          totalJoinedAmount: safeToBigInt(totalJoinedAmount),
+          isActive,
+          activatedRound,
+          deactivatedRound,
+          minJoinAmount,
+          maxJoinAmount,
+          maxAccounts,
+          actionMaxJoinAmount,
+          actualMinJoinAmount,
+          actualMaxJoinAmount,
+        });
+      }
+
+      if (result.length !== groupIds.length) {
+        throw new Error(`链群详情数量不完整，预期 ${groupIds.length} 个，实际 ${result.length} 个`);
+      }
+
+      return result;
     },
+    enabled: !!extensionAddress && !!round && groupIds.length > 0 && !normalizedFirstBatchError,
+    retry: false,
   });
 
-  // 解析群组详细信息
-  const groups = useMemo(() => {
-    if (!detailData || groupIds.length === 0) return [];
-
-    const result: GroupBasicInfo[] = [];
-
-    for (let i = 0; i < groupIds.length; i++) {
-      const baseIndex = i * 5;
-      // GroupManager 的 groupInfo 返回结构体 GroupInfo
-      const groupInfoData = detailData[baseIndex]?.result as
-        | {
-            groupId: bigint;
-            description: string;
-            maxCapacity: bigint;
-            minJoinAmount: bigint;
-            maxJoinAmount: bigint;
-            maxAccounts: bigint;
-            isActive: boolean;
-            activatedRound: bigint;
-            deactivatedRound: bigint;
-          }
-        | undefined;
-      const groupName = detailData[baseIndex + 1]?.result as string | undefined;
-      const owner = detailData[baseIndex + 2]?.result as `0x${string}` | undefined;
-      const totalJoinedAmount = detailData[baseIndex + 3]?.result as bigint | undefined;
-      const accountCount = detailData[baseIndex + 4]?.result;
-
-      if (!groupInfoData || !groupName || !owner) continue;
-
-      const description = groupInfoData.description;
-      const maxCapacity = safeToBigInt(groupInfoData.maxCapacity);
-      const minJoinAmount = safeToBigInt(groupInfoData.minJoinAmount);
-      const maxJoinAmount = safeToBigInt(groupInfoData.maxJoinAmount);
-      const maxAccounts = safeToBigInt(groupInfoData.maxAccounts);
-      const isActive = groupInfoData.isActive;
-      const activatedRound = safeToBigInt(groupInfoData.activatedRound);
-      const deactivatedRound = safeToBigInt(groupInfoData.deactivatedRound);
-
-      // 计算实际最小参与量
-      const actualMinJoinAmount = minJoinAmount;
-
-      // 计算实际最大参与量
-      // 如果群设置的最大参与量不为0，则实际最大 = min(群设置, 行动最大)
-      // 如果群设置的最大参与量为0，则实际最大 = 行动最大
-      const actualMaxJoinAmount =
-        maxJoinAmount > BigInt(0) && maxJoinAmount < actionMaxJoinAmount ? maxJoinAmount : actionMaxJoinAmount;
-
-      result.push({
-        groupId: groupIds[i],
-        groupName,
-        description,
-        owner,
-        maxCapacity,
-        accountCount: safeToBigInt(accountCount),
-        totalJoinedAmount: safeToBigInt(totalJoinedAmount),
-        isActive: isActive,
-        activatedRound,
-        deactivatedRound,
-        // 最大最小参与量
-        minJoinAmount,
-        maxJoinAmount,
-        maxAccounts,
-        actionMaxJoinAmount,
-        actualMinJoinAmount,
-        actualMaxJoinAmount,
-      });
-    }
-
-    return result;
-  }, [detailData, groupIds, actionMaxJoinAmount]);
-
-  // 计算最终的 isPending 状态
-  // 如果 groupIds 为空且已经获取完成，则不需要等待 detailPending
   const isPending = useMemo(() => {
-    // 如果第一步（获取活跃链群NFT列表和行动最大参与量）还在加载，返回 true
     if (isFirstBatchPending) return true;
-    // 如果 extensionAddress 或 round 不存在，返回 true（等待前置条件）
     if (!extensionAddress || !round) return true;
-    // 如果没有链群（groupIds 为空），且查询已完成，返回 false
-    if (groupIds.length === 0 && !isFirstBatchPending) {
-      return false;
-    }
-    // 如果有链群，需要等待详细信息加载完成
-    if (groupIds.length > 0) {
-      return isDetailPending;
-    }
-    // 其他情况，返回 true
-    return true;
-  }, [isFirstBatchPending, isDetailPending, groupIds.length, extensionAddress, round]);
+    if (normalizedFirstBatchError) return false;
+    if (groupIds.length === 0) return false;
+    return isDetailPending;
+  }, [isFirstBatchPending, extensionAddress, round, normalizedFirstBatchError, groupIds.length, isDetailPending]);
 
   return {
     groups,
     isPending,
-    error: firstBatchError || detailError,
+    error: detailError || normalizedFirstBatchError || null,
   };
 };
