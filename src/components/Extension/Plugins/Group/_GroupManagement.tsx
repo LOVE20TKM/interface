@@ -10,13 +10,21 @@ import React from 'react';
 import { useRouter } from 'next/router';
 
 // 第三方库
-import { CheckCircle, Edit, UserCog, XCircle, Eye, ArrowRight } from 'lucide-react';
+import { Edit, UserCog, XCircle, Eye, ArrowRight } from 'lucide-react';
+
+import _GroupSetRecipientsTrigger from './_GroupSetRecipientsTrigger';
 
 interface GroupManagementProps {
   /** 行动ID */
   actionId: bigint;
+  /** 行动标题 */
+  actionTitle: string;
+  /** 扩展合约地址 */
+  extensionAddress: `0x${string}`;
   /** 链群NFT */
   groupId: bigint;
+  /** 链群名称 */
+  groupName?: string;
   /** 是否显示"查看链群"选项 */
   showViewGroup?: boolean;
 }
@@ -26,13 +34,19 @@ interface GroupManagementProps {
  *
  * 提供链群服务者的常用管理操作入口：
  * - 查看链群（可选）
- * - 链群打分
- * - 追加质押
  * - 更新信息
+ * - 设置激励分配
  * - 设置打分代理
  * - 关闭链群
  */
-const _GroupManagement: React.FC<GroupManagementProps> = ({ actionId, groupId, showViewGroup = false }) => {
+const _GroupManagement: React.FC<GroupManagementProps> = ({
+  actionId,
+  actionTitle,
+  extensionAddress,
+  groupId,
+  groupName,
+  showViewGroup = false,
+}) => {
   const router = useRouter();
 
   // 跳转到操作页面
@@ -61,18 +75,6 @@ const _GroupManagement: React.FC<GroupManagementProps> = ({ actionId, groupId, s
           <ArrowRight className="w-5 h-5 text-greyscale-400 group-hover:text-secondary group-hover:translate-x-1 transition-all" />
         </div>
       )}
-      {/* <div
-        onClick={() => handleNavigateToOp('verify')}
-        className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg hover:border-secondary hover:bg-secondary/5 transition-all group cursor-pointer"
-      >
-        <div className="flex items-center gap-3">
-          <CheckCircle className="w-5 h-5 text-secondary" />
-          <div>
-            <div className="text-base font-medium">链群打分</div>
-          </div>
-        </div>
-        <ArrowRight className="w-5 h-5 text-greyscale-400 group-hover:text-secondary group-hover:translate-x-1 transition-all" />
-      </div> */}
       <div
         onClick={() => handleNavigateToOp('update')}
         className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg hover:border-secondary hover:bg-secondary/5 transition-all group cursor-pointer"
@@ -85,6 +87,13 @@ const _GroupManagement: React.FC<GroupManagementProps> = ({ actionId, groupId, s
         </div>
         <ArrowRight className="w-5 h-5 text-greyscale-400 group-hover:text-secondary group-hover:translate-x-1 transition-all" />
       </div>
+      <_GroupSetRecipientsTrigger
+        actionId={actionId}
+        actionTitle={actionTitle}
+        extensionAddress={extensionAddress}
+        groupId={groupId}
+        groupName={groupName}
+      />
       <div
         onClick={() => handleNavigateToOp('set_delegated')}
         className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg hover:border-secondary hover:bg-secondary/5 transition-all group cursor-pointer"

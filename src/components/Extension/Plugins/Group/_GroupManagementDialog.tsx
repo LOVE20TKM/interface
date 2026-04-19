@@ -10,11 +10,13 @@ import React from 'react';
 import { useRouter } from 'next/router';
 
 // 第三方库
-import { CheckCircle, PlusCircle, Edit, UserCog, XCircle, Eye } from 'lucide-react';
+import { CheckCircle, Edit, UserCog, XCircle, Eye } from 'lucide-react';
 
 // UI 组件
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+import _GroupSetRecipientsTrigger from './_GroupSetRecipientsTrigger';
 
 interface GroupManagementDialogProps {
   /** 是否打开弹窗 */
@@ -23,8 +25,14 @@ interface GroupManagementDialogProps {
   onOpenChange: (open: boolean) => void;
   /** 行动ID */
   actionId: bigint;
+  /** 行动标题 */
+  actionTitle: string;
+  /** 扩展合约地址 */
+  extensionAddress: `0x${string}`;
   /** 链群NFT */
   groupId: bigint;
+  /** 链群名称 */
+  groupName?: string;
   /** 是否显示"查看链群"选项 */
   showViewGroup?: boolean;
 }
@@ -34,9 +42,9 @@ interface GroupManagementDialogProps {
  *
  * 提供链群服务者的常用管理操作入口：
  * - 查看链群（可选）
- * - 链群打分
- * - 追加质押
  * - 更新信息
+ * - 设置激励分配
+ * - 链群打分
  * - 设置打分代理
  * - 关闭链群
  */
@@ -44,7 +52,10 @@ const _GroupManagementDialog: React.FC<GroupManagementDialogProps> = ({
   open,
   onOpenChange,
   actionId,
+  actionTitle,
+  extensionAddress,
   groupId,
+  groupName,
   showViewGroup = false,
 }) => {
   const router = useRouter();
@@ -74,13 +85,23 @@ const _GroupManagementDialog: React.FC<GroupManagementDialogProps> = ({
               查看链群
             </Button>
           )}
-          <Button variant="outline" className="w-full justify-start" onClick={() => handleNavigateToOp('verify')}>
-            <CheckCircle className="w-4 h-4 mr-2" />
-            链群打分
-          </Button>
           <Button variant="outline" className="w-full justify-start" onClick={() => handleNavigateToOp('update')}>
             <Edit className="w-4 h-4 mr-2" />
             更新信息
+          </Button>
+          {open && (
+            <_GroupSetRecipientsTrigger
+              variant="button"
+              actionId={actionId}
+              actionTitle={actionTitle}
+              extensionAddress={extensionAddress}
+              groupId={groupId}
+              groupName={groupName}
+            />
+          )}
+          <Button variant="outline" className="w-full justify-start" onClick={() => handleNavigateToOp('verify')}>
+            <CheckCircle className="w-4 h-4 mr-2" />
+            链群打分
           </Button>
           <Button
             variant="outline"

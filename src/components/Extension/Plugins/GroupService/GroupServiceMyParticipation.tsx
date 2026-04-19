@@ -26,6 +26,7 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import _GroupServiceSetRecipients from './_GroupServiceSetRecipients';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import { useMyGroupIdsNeedVerifiedByRound } from '@/src/hooks/extension/plugins/group/composite/useMyGroupIdsNeedVerifiedByRound';
+import { invalidateGroupRecipientsQueries } from '@/src/hooks/extension/plugins/group-service/contracts/groupRecipientsQueryUtils';
 
 interface GroupServiceMyParticipationProps {
   extensionAddress: `0x${string}`;
@@ -234,7 +235,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
           </div>
         ) : !actionGroupRecipientsData || actionGroupRecipientsData.length === 0 ? (
           <div className="text-center text-sm text-greyscale-400 p-4 bg-gray-50 rounded-lg mt-4">
-            暂无二次分配地址配置
+            暂无激励分配配置
           </div>
         ) : (
           <div className="space-y-6 mt-4">
@@ -264,7 +265,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                           onClick={() => handleEditClick(action, group)}
                         >
                           <Edit className="w-3 h-3 mr-1" />
-                          编辑分配地址 &gt;&gt;
+                          设置激励分配 &gt;&gt;
                         </Button>
                       </div>
 
@@ -294,7 +295,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                           ))}
                         </div>
                       ) : (
-                        <div className="text-sm text-greyscale-400 p-2 bg-gray-50 rounded">未设置分配地址</div>
+                        <div className="text-sm text-greyscale-400 p-2 bg-gray-50 rounded">未设置激励分配</div>
                       )}
                     </div>
                   ))}
@@ -320,22 +321,9 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
           open={editDialogOpen}
           onOpenChange={handleDialogOpenChange}
           onSuccess={() => {
-            toast.success('二次分配设置已更新');
+            toast.success('激励分配已更新');
             handleDialogOpenChange(false);
-            // 刷新所有 readContracts 查询，特别是 recipients 相关的
-            queryClient.invalidateQueries({
-              predicate: (query) => {
-                const queryKey = query.queryKey;
-                if (Array.isArray(queryKey) && queryKey[0] === 'readContracts') {
-                  const contracts = (queryKey[1] as any)?.contracts;
-                  if (Array.isArray(contracts)) {
-                    // 刷新 recipients 函数调用（用于获取二次分配地址）
-                    return contracts.some((contract: any) => contract?.functionName === 'recipients');
-                  }
-                }
-                return false;
-              },
-            });
+            invalidateGroupRecipientsQueries(queryClient);
           }}
         />
       )}

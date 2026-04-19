@@ -180,7 +180,15 @@ const ActionGroupPage: React.FC = () => {
         return <_GroupApps extensionAddress={extensionAddress} groupId={groupIdBigInt} actionId={actionId!} />;
       }
       case 'management': {
-        return <_GroupManagement actionId={actionId!} groupId={groupIdBigInt} />;
+        return (
+          <_GroupManagement
+            actionId={actionId!}
+            actionTitle={actionInfo.body.title}
+            extensionAddress={extensionAddress}
+            groupId={groupIdBigInt}
+            groupName={groupDetail?.groupName}
+          />
+        );
       }
       default:
         return null;

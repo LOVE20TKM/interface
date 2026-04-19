@@ -1,37 +1,37 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Plus, Trash2 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import React, { useEffect, useRef, useMemo, useCallback } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Plus, Trash2 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 // Table 组件不再需要，改为卡片式布局
 
 import {
   useSetRecipients,
   useDefaultMaxRecipients,
-} from '@/src/hooks/extension/plugins/group-service/contracts/useGroupRecipients';
+} from "@/src/hooks/extension/plugins/group-service/contracts/useGroupRecipients";
 
-import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import { isValidEthAddress, normalizeAddressInput } from '@/src/lib/addressUtils';
+import LoadingOverlay from "@/src/components/Common/LoadingOverlay";
+import { isValidEthAddress, normalizeAddressInput } from "@/src/lib/addressUtils";
 
 // Schema - 优化验证，确保类型正确
 const recipientSchema = z.object({
   address: z
     .string()
     .trim() // 自动去除前后空格
-    .regex(/^0x[a-fA-F0-9]{40}$/, '无效的地址格式'),
+    .regex(/^0x[a-fA-F0-9]{40}$/, "无效的地址格式"),
   basisPoints: z.coerce
-    .number({ invalid_type_error: '百分比必须是数字' })
-    .min(0, '百分比不能为负')
-    .max(100, '百分比不能超过100'),
-  remark: z.string().max(50, '备注不能超过50个字符').optional().default(''),
+    .number({ invalid_type_error: "百分比必须是数字" })
+    .min(0, "百分比不能为负")
+    .max(100, "百分比不能超过100"),
+  remark: z.string().max(50, "备注不能超过50个字符").optional().default(""),
 });
 
 type FormValues = {
@@ -93,7 +93,7 @@ export default function _GroupServiceSetRecipients({
           },
           {
             message: `所有地址的百分比总和不能超过 ${base}%`,
-            path: ['root'],
+            path: ["root"],
           },
         )
         .refine(
@@ -106,8 +106,8 @@ export default function _GroupServiceSetRecipients({
             return addresses.length === uniqueAddresses.size;
           },
           {
-            message: '存在重复的地址，同一链群下每个地址只能设置一次',
-            path: ['root'],
+            message: "存在重复的地址，同一链群下每个地址只能设置一次",
+            path: ["root"],
           },
         ),
     [base],
@@ -123,11 +123,12 @@ export default function _GroupServiceSetRecipients({
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: 'recipients',
+    name: "recipients",
   });
 
-  // 使用 ref 追踪是否已经处理过成功回调，避免重复触发
-  const hasCalledSuccessRef = useRef(false);
+  // 仅在“本次提交”真正从未确认变为已确认时触发成功回调，避免复用旧交易状态
+  const hasSubmittedRef = useRef(false);
+  const previousIsConfirmedRef = useRef(isConfirmed);
 
   // Initialize form with current data when dialog opens
   // 从合约读取的是 wei，需要转为百分比显示
@@ -136,29 +137,30 @@ export default function _GroupServiceSetRecipients({
       const initialData = currentAddrs.map((addr, index) => ({
         address: addr,
         basisPoints: Number(currentRatios[index]) / 1e16, // wei 转百分比
-        remark: currentRemarks?.[index] || '',
+        remark: currentRemarks?.[index] || "",
       }));
       form.reset({ recipients: initialData });
-      // 重置成功回调标记
-      hasCalledSuccessRef.current = false;
     } else if (open) {
       // If open but no data, reset to empty
       form.reset({ recipients: [] });
-      // 重置成功回调标记
-      hasCalledSuccessRef.current = false;
     }
   }, [open, currentAddrs, currentRatios, currentRemarks, form]);
 
   useEffect(() => {
-    // 只有在确认成功且未调用过成功回调时才触发
-    if (isConfirmed && !hasCalledSuccessRef.current) {
-      hasCalledSuccessRef.current = true;
+    const confirmedJustNow = isConfirmed && !previousIsConfirmedRef.current;
+
+    if (hasSubmittedRef.current && confirmedJustNow) {
+      hasSubmittedRef.current = false;
       onSuccess?.();
       onOpenChange(false);
     }
+
+    previousIsConfirmedRef.current = isConfirmed;
   }, [isConfirmed, onSuccess, onOpenChange]);
 
   const onSubmit = async (values: FormValues) => {
+    hasSubmittedRef.current = true;
+
     // 格式化和验证地址
     const normalizedAddrs: string[] = [];
     const invalidAddressIndices: number[] = [];
@@ -174,7 +176,7 @@ export default function _GroupServiceSetRecipients({
 
     // 检查是否有无效地址
     if (invalidAddressIndices.length > 0) {
-      form.setError('root', { message: '存在无效的地址格式，请检查并修正所有地址（支持 0x、XE 或 TH 格式）' });
+      form.setError("root", { message: "存在无效的地址格式，请检查并修正所有地址（支持 0x、XE 或 TH 格式）" });
       return;
     }
 
@@ -192,7 +194,7 @@ export default function _GroupServiceSetRecipients({
     const total = values.recipients.reduce((sum, r) => sum + (r.basisPoints || 0), 0);
 
     if (total > base) {
-      form.setError('root', { message: `总比例不能超过 ${base}% (当前: ${total.toFixed(2)}%)` });
+      form.setError("root", { message: `总比例不能超过 ${base}% (当前: ${total.toFixed(2)}%)` });
       return;
     }
 
@@ -200,7 +202,7 @@ export default function _GroupServiceSetRecipients({
     const addressesLower = addrs.map((addr) => addr.toLowerCase());
     const uniqueAddresses = new Set(addressesLower);
     if (addressesLower.length !== uniqueAddresses.size) {
-      form.setError('root', { message: '存在重复的地址，同一链群下每个地址只能设置一次' });
+      form.setError("root", { message: "存在重复的地址，同一链群下每个地址只能设置一次" });
       return;
     }
 
@@ -212,23 +214,23 @@ export default function _GroupServiceSetRecipients({
       })
       .filter((index) => index !== -1);
     if (zeroPercentageIndices.length > 0) {
-      form.setError('root', { message: '每个地址的百分比不能为 0，请为所有地址设置有效的百分比' });
+      form.setError("root", { message: "每个地址的百分比不能为 0，请为所有地址设置有效的百分比" });
       return;
     }
 
     // 收集备注信息
-    const remarks = values.recipients.map((r) => r.remark || '');
+    const remarks = values.recipients.map((r) => r.remark || "");
 
     // Call contract with groupActionTokenAddress, actionId and groupId
     if (!groupActionTokenAddress) {
-      form.setError('root', { message: '无法获取 Group Action Token 地址，请刷新页面重试' });
+      form.setError("root", { message: "无法获取 Group Action Token 地址，请刷新页面重试" });
       return;
     }
     await setRecipients(groupActionTokenAddress, actionId, groupId, addrs, ratios, remarks);
   };
 
   // 实时计算总百分比（强制转换为数字类型，避免字符串拼接）
-  const watchedRecipients = form.watch('recipients');
+  const watchedRecipients = form.watch("recipients");
   const totalBasisPoints = watchedRecipients.reduce((sum, r) => sum + (Number(r.basisPoints) || 0), 0);
   const totalPercentage = totalBasisPoints.toFixed(2); // 用户输入的就是百分比，不需要除以 100
   const isTotalExceeded = totalBasisPoints > base; // base = 100
@@ -279,8 +281,8 @@ export default function _GroupServiceSetRecipients({
       const numValue = Number(value);
 
       // 限制输入：不能为负数，不能超过最大值
-      if (value === '' || value === '-') {
-        fieldOnChange('');
+      if (value === "" || value === "-") {
+        fieldOnChange("");
       } else if (!isNaN(numValue)) {
         if (numValue < 0) {
           fieldOnChange(0);
@@ -299,7 +301,7 @@ export default function _GroupServiceSetRecipients({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-3 sm:p-6">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>编辑激励分配地址</DialogTitle>
+          <DialogTitle>设置激励分配</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -315,7 +317,7 @@ export default function _GroupServiceSetRecipients({
                 </div>
                 <div className="text-gray-800">
                   <span className="text-gray-500 text-xs">链群 #</span>
-                  <span className="text-secondary text-base font-semibold">{groupId.toString()}</span>{' '}
+                  <span className="text-secondary text-base font-semibold">{groupId.toString()}</span>{" "}
                   <span>{groupName || `链群 #${groupId}`}</span>
                 </div>
               </div>
@@ -343,7 +345,7 @@ export default function _GroupServiceSetRecipients({
                     <div
                       key={field.id}
                       className={`border rounded-lg p-2 sm:p-3 ${
-                        isDuplicate ? 'bg-red-50 border-red-300' : 'bg-white border-gray-200'
+                        isDuplicate ? "bg-red-50 border-red-300" : "bg-white border-gray-200"
                       }`}
                     >
                       {/* 第一行：序号 + 地址 */}
@@ -360,7 +362,7 @@ export default function _GroupServiceSetRecipients({
                                   {...field}
                                   onBlur={handleAddressBlur(field.onChange)}
                                   className={`font-mono text-xs sm:text-sm h-8 px-2 ${
-                                    isDuplicate ? 'border-red-500 focus-visible:ring-red-500' : ''
+                                    isDuplicate ? "border-red-500 focus-visible:ring-red-500" : ""
                                   }`}
                                 />
                               </FormControl>
@@ -434,8 +436,8 @@ export default function _GroupServiceSetRecipients({
                 <div
                   className={`text-sm p-2 rounded-md border ${
                     isTotalExceeded || hasDuplicateAddresses
-                      ? 'bg-red-50 border-red-200 text-red-700'
-                      : 'bg-blue-50 border-blue-200 text-blue-700'
+                      ? "bg-red-50 border-red-200 text-red-700"
+                      : "bg-blue-50 border-blue-200 text-blue-700"
                   }`}
                 >
                   <div className="flex justify-between items-center">
@@ -467,7 +469,7 @@ export default function _GroupServiceSetRecipients({
                     toast.error(`激励分配地址数量不能超过最大限制 ${maxRecipients.toString()}`);
                     return;
                   }
-                  append({ address: '', basisPoints: 0, remark: '' });
+                  append({ address: "", basisPoints: 0, remark: "" });
                 }}
               >
                 <Plus className="w-4 h-4 mr-2" /> 添加地址
@@ -480,12 +482,22 @@ export default function _GroupServiceSetRecipients({
                 取消
               </Button>
               <Button type="submit" disabled={isPending || isConfirming || isTotalExceeded || hasDuplicateAddresses}>
-                {isPending || isConfirming ? '提交中...' : '提交'}
+                {isPending || isConfirming ? "提交中..." : "提交"}
               </Button>
+            </div>
+
+            <div className="flex-shrink-0 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2 mt-4">
+              <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
+              <div className="space-y-1 text-gray-600">
+                <div>• 这里的设置需先参与链群服务行动后才会实际生效。</div>
+                <div>• 仅影响链群服务者在链群服务行动中的激励二次分配。</div>
+                <div>• 未分配的剩余部分仍归链群服务者。</div>
+                <div>• 不影响本行动里行动者本身的行动激励分配。</div>
+              </div>
             </div>
           </form>
         </Form>
-        <LoadingOverlay isLoading={isPending || isConfirming} text={isPending ? '正在提交...' : '正在确认...'} />
+        <LoadingOverlay isLoading={isPending || isConfirming} text={isPending ? "正在提交..." : "正在确认..."} />
       </DialogContent>
     </Dialog>
   );
