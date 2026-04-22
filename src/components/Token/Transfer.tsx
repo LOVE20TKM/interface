@@ -47,7 +47,60 @@ interface TokenConfig {
   isLp?: boolean;
 }
 
+interface ProtectedTargetInfo {
+  label: string;
+  address: `0x${string}`;
+  type: 'token' | 'contract';
+}
+
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+
+const buildKnownContractTargets = (): ProtectedTargetInfo[] => {
+  const knownContracts = [
+    { label: 'TUSDT', address: process.env.NEXT_PUBLIC_USDT_ADDRESS },
+    { label: '根父币', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN },
+    { label: 'Uniswap V2 Factory', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY },
+    { label: 'Token Factory', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_TOKEN_FACTORY },
+    { label: 'Launch', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_LAUNCH },
+    { label: 'Stake', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE },
+    { label: 'Submit', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_SUBMIT },
+    { label: 'Vote', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VOTE },
+    { label: 'Join', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN },
+    { label: 'Random', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_RANDOM },
+    { label: 'Verify', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VERIFY },
+    { label: 'Mint', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_MINT },
+    { label: 'First Token', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_FIRST_TOKEN },
+    { label: 'TokenViewer', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_TOKENVIEWER },
+    { label: 'RoundViewer', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_ROUNDVIEWER },
+    { label: 'MintViewer', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_MINTVIEWER },
+    { label: 'Hub', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB },
+    { label: 'Uniswap V2 Router', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER },
+    { label: 'Group', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP },
+    { label: 'Extension Center', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER },
+    { label: 'LP Factory', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY },
+    { label: 'LP Factory V2', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY_V2 },
+    { label: 'Group Manager', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER },
+    { label: 'Group Join', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN },
+    { label: 'Group Verify', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_VERIFY },
+    { label: 'Group Action Factory', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_ACTION_FACTORY },
+    { label: 'Group Recipients', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_RECIPIENTS },
+    { label: 'Group Service Factory', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_SERVICE_FACTORY },
+  ];
+
+  const addedAddresses = new Set<string>();
+
+  return knownContracts.flatMap(({ label, address }) => {
+    if (!address || !isAddress(address)) return [];
+
+    const normalizedAddress = address.toLowerCase();
+    if (normalizedAddress === ZERO_ADDRESS || addedAddresses.has(normalizedAddress)) return [];
+
+    addedAddresses.add(normalizedAddress);
+    return [{ label, address: address as `0x${string}`, type: 'contract' as const }];
+  });
+};
+
+const KNOWN_CONTRACT_TARGETS = buildKnownContractTargets();
 
 // 构建支持的代币列表
 const buildSupportedTokens = (
@@ -380,16 +433,31 @@ const TransferPanel = () => {
     }
   }, [watchedToAddress]);
 
-  const protectedTargetToken = useMemo(() => {
+  const protectedTargetInfo = useMemo<ProtectedTargetInfo | undefined>(() => {
     const normalizedAddress = normalizeAddressInput(watchedToAddress || '');
     if (!normalizedAddress) return undefined;
 
-    return supportedTokens.find(
+    const protectedToken = supportedTokens.find(
       (tokenConfig) => tokenConfig.address !== 'NATIVE' && tokenConfig.address.toLowerCase() === normalizedAddress,
     );
+
+    if (protectedToken) {
+      return {
+        label: protectedToken.symbol,
+        address: protectedToken.address as `0x${string}`,
+        type: 'token',
+      };
+    }
+
+    return KNOWN_CONTRACT_TARGETS.find((contract) => contract.address.toLowerCase() === normalizedAddress);
   }, [supportedTokens, watchedToAddress]);
 
-  const isAssetProtectionTriggered = isAssetProtectionEnabled && !!protectedTargetToken;
+  const isAssetProtectionTriggered = isAssetProtectionEnabled && !!protectedTargetInfo;
+  const isProtectedSelectedTokenSelf =
+    selectedToken?.address !== 'NATIVE' && !!protectedTargetInfo && selectedToken?.address === protectedTargetInfo.address;
+  const protectedTargetLabel = protectedTargetInfo
+    ? `${protectedTargetInfo.label}${protectedTargetInfo.type === 'token' ? ' 代币' : ''}合约地址`
+    : '';
 
   // 监听数量输入
   const watchAmount = form.watch('amount');
@@ -470,8 +538,8 @@ const TransferPanel = () => {
   const handleTransfer = form.handleSubmit(async (data) => {
     if (!selectedToken || !account) return;
 
-    if (isAssetProtectionEnabled && protectedTargetToken) {
-      toast.error(`资产保护已触发：目标地址是 ${protectedTargetToken.symbol} 合约地址，关闭保护开关后才可强制转账`);
+    if (isAssetProtectionEnabled && protectedTargetInfo) {
+      toast.error(`资产保护已触发：目标地址是 ${protectedTargetLabel}，关闭保护开关后才可强制转账`);
       return;
     }
 
@@ -572,17 +640,15 @@ const TransferPanel = () => {
                 <div className="min-w-0">
                   <div className="text-sm font-medium text-amber-900">资产保护开关</div>
                   <div className="text-xs text-amber-800 mt-1">
-                    默认开启。若目标地址填写为下拉列表中的代币合约地址，系统会拦截本次转账，避免误把资产转入代币合约。
+                    默认开启。若目标地址填写为前端已知的任意合约地址，系统会拦截本次转账，避免误把资产转入代币或协议合约。
                   </div>
                 </div>
               </label>
 
-              {isAssetProtectionTriggered && protectedTargetToken && (
+              {isAssetProtectionTriggered && protectedTargetInfo && (
                 <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                  已触发资产保护开关：目标地址是 {protectedTargetToken.symbol} 的合约地址
-                  {selectedToken?.address !== 'NATIVE' && selectedToken?.address === protectedTargetToken.address
-                    ? '，当前正在尝试把该代币转到它自己的合约地址。'
-                    : '。'}
+                  已触发资产保护开关：目标地址是 {protectedTargetLabel}
+                  {isProtectedSelectedTokenSelf ? '，当前正在尝试把该代币转到它自己的合约地址。' : '。'}
                   如需强制转账，请先关闭上方保护开关，再重新提交。
                 </div>
               )}

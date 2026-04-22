@@ -30,7 +30,7 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 
 // 表单 Schema
-const getTransferFormSchema = () =>
+const getTransferFormSchema = (account?: string) =>
   z.object({
     to: z
       .string()
@@ -41,6 +41,19 @@ const getTransferFormSchema = () =>
           return error === null;
         },
         { message: '请输入有效的地址格式（支持 0x、TH 格式）' },
+      )
+      .refine(
+        (val) => {
+          const normalizedAddress = normalizeAddressInput(val);
+          const normalizedAccount = account ? normalizeAddressInput(account) : '';
+
+          if (!normalizedAddress || !normalizedAccount) {
+            return true;
+          }
+
+          return normalizedAddress !== normalizedAccount;
+        },
+        { message: '目标地址不能是当前钱包地址' },
       ),
   });
 
@@ -65,7 +78,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
 
   // 表单设置
   const form = useForm<TransferFormValues>({
-    resolver: zodResolver(getTransferFormSchema()),
+    resolver: zodResolver(getTransferFormSchema(account)),
     defaultValues: {
       to: '',
     },
@@ -142,6 +155,12 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
     const normalizedAddress = normalizeAddressInput(data.to);
     if (!normalizedAddress) {
       toast.error('地址格式无效，请检查输入');
+      return;
+    }
+
+    const normalizedAccount = normalizeAddressInput(account);
+    if (normalizedAccount && normalizedAddress === normalizedAccount) {
+      form.setError('to', { type: 'manual', message: '目标地址不能是当前钱包地址' });
       return;
     }
 
