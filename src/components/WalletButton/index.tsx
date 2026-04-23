@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useContext } from 'react';
+import { useRouter } from 'next/router';
 import { useAccount, useBalance, useConnect, useDisconnect, useChainId } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,16 +21,21 @@ import { isTukeWallet } from '@/src/lib/tukeWalletUtils';
 import { formatTokenAmount } from '@/src/lib/format';
 import { useError } from '@/src/contexts/ErrorContext';
 import { TokenContext } from '@/src/contexts/TokenContext';
+import { isGroupDefaultsEnabled, useDefaultGroupOf } from '@/src/hooks/extension/base/contracts/useGroupDefaults';
+import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
 
 interface WalletButtonProps {
   className?: string;
 }
 
 export function WalletButton({ className }: WalletButtonProps = {}) {
+  const router = useRouter();
   const tokenContext = useContext(TokenContext);
   const token = tokenContext?.token;
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
   const chainId = useChainId();
+  const targetChainId = config.chains[0]?.id;
+  const isOnTargetChain = useIsOnTargetChain();
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
   const { data: balance, error: balanceError } = useBalance({
     address,
@@ -43,6 +49,10 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
   const [ethereumReady, setEthereumReady] = useState(typeof window !== 'undefined' && !!window.ethereum);
   const { setError } = useError();
+  const { defaultGroupId, defaultGroupName, hasDefaultGroup } = useDefaultGroupOf(
+    address,
+    isGroupDefaultsEnabled && isConnected && isOnTargetChain,
+  );
 
   // 跟踪组件是否已挂载，避免在渲染期间更新状态
   const mountedRef = useRef(false);
@@ -50,7 +60,6 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   // 获取注入式连接器
   const injectedConnector = connectors.find((c) => c.id === 'injected') ?? connectors[0];
   const chainName = process.env.NEXT_PUBLIC_CHAIN_NAME ?? process.env.NEXT_PUBLIC_CHAIN;
-  const targetChainId = config.chains[0]?.id;
 
   // 检测钱包当前网络
   const detectWalletNetwork = async () => {
@@ -243,6 +252,12 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
     } else {
       toast.error('复制失败');
     }
+  };
+
+  const myLove20NftHref = `${basePath}/group/groupids`;
+
+  const goToMyLove20NftPage = () => {
+    void router.push(myLove20NftHref);
   };
 
   // 处理连接错误
@@ -505,32 +520,46 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         <Button
           variant="outline"
           className={cn(
-            'h-auto px-3 py-1.5 rounded-xl border hover:border-blue-300 transition-all duration-200 bg-white/50 backdrop-blur-sm',
+            'h-auto min-w-0 max-w-full rounded-xl border bg-white/60 px-2.5 py-2 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:min-w-[280px]',
             className,
           )}
         >
-          <div className="flex items-center">
-            <span className="inline-flex items-center justify-center h-7 px-2 mr-3 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold whitespace-nowrap">
-              {token?.symbol || 'TOKEN'}
-            </span>
-
-            <div className="flex flex-col items-start min-w-0 mr-2">
-              <div className="flex items-center">
-                <span className="font-mono text-sm font-medium text-gray-900 mr-2">
-                  {address ? shortenAddress(address) : ''}
-                </span>
-                {walletChainId && targetChainId && walletChainId !== targetChainId && (
-                  <span className="text-xs text-red-500 font-medium">网络不匹配</span>
-                )}
-              </div>
-              <div className="flex items-center text-xs text-gray-600">
-                <span className="font-semibold">
-                  {balance ? formatTokenAmount(balance.value) : '0'} {balance?.symbol || 'ETH'}
-                </span>
-              </div>
+          <div className="grid w-full grid-cols-[98px_1px_minmax(0,1fr)_16px] grid-rows-2 items-center gap-x-2 gap-y-1 text-left">
+            <div className="col-start-1 row-start-1 justify-self-center">
+              <span className="inline-flex h-6 max-w-full items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600 px-2 text-sm font-bold text-white whitespace-nowrap">
+                <span className="truncate">{token?.symbol || 'TOKEN'}</span>
+              </span>
             </div>
 
-            <ChevronDown className="w-4 h-4 text-gray-500" />
+            <span className="col-start-1 row-start-2 justify-self-center text-[11px] font-medium leading-none text-gray-500 whitespace-nowrap">
+              {balance ? formatTokenAmount(balance.value) : '0'} {balance?.symbol || 'ETH'}
+            </span>
+
+            <div className="col-start-2 row-span-2 h-full w-px self-stretch bg-gray-200" />
+
+            <div className="col-start-3 row-start-1 flex min-w-0 items-center gap-2">
+              <span className="min-w-0 flex-1 truncate font-mono text-[13px] font-medium leading-none text-gray-900">
+                {address ? shortenAddress(address) : ''}
+              </span>
+              {walletChainId && targetChainId && walletChainId !== targetChainId && (
+                <span className="inline-flex shrink-0 items-center rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-red-500">
+                  网络不匹配
+                </span>
+              )}
+            </div>
+
+            <div className="col-start-3 row-start-2 flex min-w-0 items-center">
+              {hasDefaultGroup ? (
+                <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-full bg-secondary/10 px-2 py-0.5 text-[11px] leading-none text-secondary">
+                  <span className="shrink-0 font-medium">NFT#{defaultGroupId?.toString()}</span>
+                  <span className="truncate text-secondary/80">{defaultGroupName || '...'}</span>
+                </span>
+              ) : (
+                <span className="truncate text-[11px] leading-none text-gray-400">未关联NFT</span>
+              )}
+            </div>
+
+            <ChevronDown className="col-start-4 row-span-2 h-4 w-4 self-center shrink-0 text-gray-500" />
           </div>
         </Button>
       </DropdownMenuTrigger>
@@ -558,7 +587,41 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               </CopyToClipboard>
             )}
           </div>
-          <p className="font-mono text-xs text-gray-600 mt-1 break-all">{address}</p>
+          <p className="mt-1 font-mono text-xs text-gray-600 break-all">{address}</p>
+          {isGroupDefaultsEnabled &&
+            (hasDefaultGroup ? (
+              <button
+                type="button"
+                className="mt-2 flex min-w-0 items-center gap-1 rounded-md px-1 py-1 text-left transition-colors hover:bg-secondary/5"
+                onClick={goToMyLove20NftPage}
+                title="前往我的NFT"
+              >
+                <span className="inline-flex shrink-0 items-center rounded-full bg-secondary/10 px-1.5 py-0.5 text-[10px] font-medium text-secondary">
+                  NFT#{defaultGroupId?.toString()}
+                </span>
+                <span className="text-xs text-secondary truncate">{defaultGroupName || '...'}</span>
+              </button>
+            ) : (
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  className="text-xs text-gray-500 transition-colors hover:text-secondary"
+                  onClick={goToMyLove20NftPage}
+                  title="前往我的NFT"
+                >
+                  未关联NFT
+                </button>
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-xs text-secondary"
+                  onClick={goToMyLove20NftPage}
+                >
+                  去设置
+                </Button>
+              </div>
+            ))}
         </div>
 
         {token &&

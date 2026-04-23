@@ -1,43 +1,46 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAccount, useBalance } from 'wagmi';
 import { useForm } from 'react-hook-form';
 import { isAddress } from 'viem';
-
-// 地址转换工具
-import { normalizeAddressInput, validateAddressInput, formatAddressForDisplay } from '@/src/lib/addressUtils';
 import { useQueryClient } from '@tanstack/react-query';
+import { useDebounce } from 'use-debounce';
 
-// UI components
+import { normalizeAddressInput, validateAddressInput } from '@/src/lib/addressUtils';
+
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from '@/components/ui/form';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// my funcs
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
-// my hooks
+import { useUSDTPairAddress } from '@/src/hooks/composite/useUSDTPairAddress';
 import { useBalanceOf, useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
 import { useNativeTransfer } from '@/src/hooks/contracts/useNativeTransfer';
-import { useUSDTPairAddress } from '@/src/hooks/composite/useUSDTPairAddress';
-import { useError } from '@/src/contexts/ErrorContext';
-
-// my context
 import useTokenContext from '@/src/hooks/context/useTokenContext';
+import {
+  useGroupNameOf,
+  useIsGroupNameUsed,
+  useOwnerOf,
+  useTokenIdOf,
+  useTotalSupply,
+} from '@/src/hooks/extension/base/contracts/useLOVE20Group';
+import { isGroupDefaultsEnabled, useDefaultGroupOf } from '@/src/hooks/extension/base/contracts/useGroupDefaults';
+import { useError } from '@/src/contexts/ErrorContext';
+import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
 
-// my components
+import AddToMetamask from '@/src/components/Common/AddToMetamask';
+import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
-import AddToMetamask from '@/src/components/Common/AddToMetamask';
 
-// 代币配置接口
 interface TokenConfig {
   symbol: string;
   address: `0x${string}` | 'NATIVE';
@@ -53,7 +56,39 @@ interface ProtectedTargetInfo {
   type: 'token' | 'contract';
 }
 
+type TransferMode = 'address' | 'nftOwner';
+type NftLookupMode = 'name' | 'id';
+
+type NftLookupResult =
+  | {
+      status: 'resolved';
+      tokenId: bigint;
+      groupName: string;
+      owner: `0x${string}`;
+    }
+  | {
+      status: 'loading';
+    }
+  | {
+      status: 'invalid' | 'not_found' | 'error';
+      message: string;
+    }
+  | null;
+
+type TransferFormValues = {
+  to: string;
+  amount: string;
+  tokenAddress: string;
+};
+
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+const FALLBACK_TOKEN: TokenConfig = {
+  symbol: '',
+  address: 'NATIVE',
+  decimals: 18,
+  isNative: true,
+  name: '',
+};
 
 const buildKnownContractTargets = (): ProtectedTargetInfo[] => {
   const knownContracts = [
@@ -75,7 +110,8 @@ const buildKnownContractTargets = (): ProtectedTargetInfo[] => {
     { label: 'MintViewer', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_MINTVIEWER },
     { label: 'Hub', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB },
     { label: 'Uniswap V2 Router', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER },
-    { label: 'Group', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP },
+    { label: 'LOVE20 NFT', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP },
+    { label: 'Group Defaults', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_DEFAULTS },
     { label: 'Extension Center', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER },
     { label: 'LP Factory', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY },
     { label: 'LP Factory V2', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY_V2 },
@@ -102,7 +138,6 @@ const buildKnownContractTargets = (): ProtectedTargetInfo[] => {
 
 const KNOWN_CONTRACT_TARGETS = buildKnownContractTargets();
 
-// 构建支持的代币列表
 const buildSupportedTokens = (
   token: any,
   options?: {
@@ -111,9 +146,8 @@ const buildSupportedTokens = (
   },
 ): TokenConfig[] => {
   const supportedTokens: TokenConfig[] = [];
-  const addedAddresses = new Set<string>(); // 用于追踪已添加的地址，避免重复
+  const addedAddresses = new Set<string>();
 
-  // 辅助函数：安全添加代币
   const addToken = (tokenConfig: TokenConfig) => {
     const key = tokenConfig.address.toLowerCase();
     if (!addedAddresses.has(key)) {
@@ -122,7 +156,6 @@ const buildSupportedTokens = (
     }
   };
 
-  // 1. 原生代币
   const nativeSymbol = process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL;
   if (nativeSymbol) {
     addToken({
@@ -134,7 +167,6 @@ const buildSupportedTokens = (
     });
   }
 
-  // 2. WETH9 包装代币
   const wethSymbol = process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
   const wethAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN;
   if (wethSymbol && wethAddress) {
@@ -147,7 +179,6 @@ const buildSupportedTokens = (
     });
   }
 
-  // 3. 增加 TUSDT 代币
   const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
   const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS;
   if (usdtSymbol && usdtAddress) {
@@ -161,7 +192,6 @@ const buildSupportedTokens = (
   }
 
   if (token) {
-    // 4. 当前代币
     if (token.symbol && token.address) {
       addToken({
         symbol: token.symbol,
@@ -172,7 +202,6 @@ const buildSupportedTokens = (
       });
     }
 
-    // 5. 父币（避免与WETH9重复）
     if (token.parentTokenSymbol && token.parentTokenAddress) {
       addToken({
         symbol: token.parentTokenSymbol,
@@ -183,7 +212,6 @@ const buildSupportedTokens = (
       });
     }
 
-    // 6. SL代币
     if (token.slTokenAddress && token.symbol) {
       addToken({
         symbol: `sl${token.symbol}`,
@@ -194,7 +222,6 @@ const buildSupportedTokens = (
       });
     }
 
-    // 7. ST代币
     if (token.stTokenAddress && token.symbol) {
       addToken({
         symbol: `st${token.symbol}`,
@@ -205,8 +232,7 @@ const buildSupportedTokens = (
       });
     }
 
-    // 8. LP代币（当前代币与父币的交易对）
-    if (token.uniswapV2PairAddress && token.uniswapV2PairAddress !== '0x0000000000000000000000000000000000000000') {
+    if (token.uniswapV2PairAddress && token.uniswapV2PairAddress !== ZERO_ADDRESS) {
       const lpSymbolName = `${token.symbol}/${token.parentTokenSymbol}`;
       addToken({
         symbol: `LP(${lpSymbolName})`,
@@ -218,7 +244,6 @@ const buildSupportedTokens = (
       });
     }
 
-    // 9. LP代币（当前代币与 USDT 的交易对）
     if (options?.usdtLpPairAddress && options.usdtLpPairAddress !== ZERO_ADDRESS && options.usdtSymbol) {
       const lpSymbolName = `${token.symbol}/${options.usdtSymbol}`;
       addToken({
@@ -235,10 +260,9 @@ const buildSupportedTokens = (
   return supportedTokens;
 };
 
-// 统一余额查询 Hook
 const useTokenBalance = (tokenConfig: TokenConfig, account: `0x${string}` | undefined) => {
   const { setError } = useError();
-  // 原生代币使用 useBalance
+
   const {
     data: nativeBalance,
     isLoading: isLoadingNative,
@@ -250,9 +274,8 @@ const useTokenBalance = (tokenConfig: TokenConfig, account: `0x${string}` | unde
     },
   });
 
-  // ERC20 代币使用 useBalanceOf
   const { balance: erc20Balance, isPending: isPendingERC20 } = useBalanceOf(
-    tokenConfig.isNative ? '0x0000000000000000000000000000000000000000' : (tokenConfig.address as `0x${string}`),
+    tokenConfig.isNative ? ZERO_ADDRESS : (tokenConfig.address as `0x${string}`),
     account as `0x${string}`,
     !tokenConfig.isNative && !!account,
   );
@@ -272,52 +295,69 @@ const useTokenBalance = (tokenConfig: TokenConfig, account: `0x${string}` | unde
   };
 };
 
-// 表单 Schema
-const getTransferFormSchema = (balance: bigint) =>
-  z.object({
-    to: z
-      .string()
-      .nonempty('请输入目标地址')
-      .refine(
-        (val) => {
-          const error = validateAddressInput(val);
-          return error === null;
-        },
-        { message: '请输入有效的地址格式（支持 0x、TH 格式）' },
-      ),
-    amount: z
-      .string()
-      .nonempty('请输入转账数量')
-      .refine(
-        (val) => {
-          if (val.endsWith('.')) return true;
-          if (val === '0') return true;
-          try {
-            const amount = parseUnits(val);
-            return amount > BigInt(0) && amount <= balance;
-          } catch (e) {
-            return false;
-          }
-        },
-        { message: '转账数量必须大于0且不超过您的可用余额' },
-      ),
-    tokenAddress: z.string().nonempty('请选择代币'),
-  });
+const getTransferFormSchema = (balance: bigint, transferMode: TransferMode) =>
+  z
+    .object({
+      to: z.string().default(''),
+      amount: z
+        .string()
+        .nonempty('请输入转账数量')
+        .refine(
+          (val) => {
+            if (val.endsWith('.')) return true;
+            if (val === '0') return true;
+            try {
+              const amount = parseUnits(val);
+              return amount > BigInt(0) && amount <= balance;
+            } catch {
+              return false;
+            }
+          },
+          { message: '转账数量必须大于0且不超过您的可用余额' },
+        ),
+      tokenAddress: z.string().nonempty('请选择代币'),
+    })
+    .superRefine((data, ctx) => {
+      if (transferMode !== 'address') {
+        return;
+      }
 
-// 手动定义类型避免 infer 的问题
-type TransferFormValues = {
-  to: string;
-  amount: string;
-  tokenAddress: string;
-};
+      if (!data.to || data.to.trim() === '') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['to'],
+          message: '请输入目标地址',
+        });
+        return;
+      }
+
+      if (validateAddressInput(data.to) !== null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['to'],
+          message: '请输入有效的地址格式（支持 0x、TH 格式）',
+        });
+      }
+    });
 
 const TransferPanel = () => {
+  const isOnTargetChain = useIsOnTargetChain();
   const { address: account } = useAccount();
   const { token } = useTokenContext();
   const queryClient = useQueryClient();
   const { pairAddress: usdtLpPairAddress, usdtSymbol } = useUSDTPairAddress(token?.address);
 
-  // 构建支持的代币列表
+  const [transferMode, setTransferMode] = useState<TransferMode>('address');
+  const [nftLookupMode, setNftLookupMode] = useState<NftLookupMode>('name');
+  const [nftLookupValue, setNftLookupValue] = useState('');
+  const [selectedToken, setSelectedToken] = useState<TokenConfig | undefined>();
+  const [isUserManuallySelected, setIsUserManuallySelected] = useState(false);
+  const [lastProcessedTxHash, setLastProcessedTxHash] = useState<string | null>(null);
+  const [addressConversionInfo, setAddressConversionInfo] = useState('');
+  const [convertedAddress, setConvertedAddress] = useState<`0x${string}` | null>(null);
+  const [isAssetProtectionEnabled, setIsAssetProtectionEnabled] = useState(true);
+  const [debouncedNftLookupValue] = useDebounce(nftLookupValue, 300);
+
   const supportedTokens = useMemo(
     () =>
       buildSupportedTokens(token, {
@@ -328,65 +368,216 @@ const TransferPanel = () => {
     [token, usdtLpPairAddress, usdtSymbol],
   );
 
-  // 选中的代币状态
-  const [selectedToken, setSelectedToken] = useState<TokenConfig | undefined>();
-  const [isUserManuallySelected, setIsUserManuallySelected] = useState(false);
-  const [lastProcessedTxHash, setLastProcessedTxHash] = useState<string | null>(null);
-  const [addressConversionInfo, setAddressConversionInfo] = useState<string>('');
-  const [convertedAddress, setConvertedAddress] = useState<`0x${string}` | null>(null);
-  const [isAssetProtectionEnabled, setIsAssetProtectionEnabled] = useState(true);
+  const nftLookupValueTrimmed = useMemo(() => nftLookupValue.trim(), [nftLookupValue]);
+  const debouncedNftLookupValueTrimmed = useMemo(() => debouncedNftLookupValue.trim(), [debouncedNftLookupValue]);
+  const nftLookupName = useMemo(
+    () => (nftLookupMode === 'name' ? debouncedNftLookupValueTrimmed : ''),
+    [debouncedNftLookupValueTrimmed, nftLookupMode],
+  );
+  const rawNftLookupId = useMemo(() => {
+    if (nftLookupMode !== 'id') {
+      return undefined;
+    }
 
-  // 初始化选择代币逻辑：优先选择当前代币，其次选择第一个可用代币
-  useEffect(() => {
-    if (supportedTokens.length === 0) return;
+    if (!nftLookupValueTrimmed || !/^\d+$/.test(nftLookupValueTrimmed)) {
+      return undefined;
+    }
 
-    // 如果当前没有选中的代币，或者支持的代币列表发生了变化
-    const currentTokenConfig = token ? supportedTokens.find((t) => t.address === token.address) : null;
+    try {
+      const value = BigInt(nftLookupValueTrimmed);
+      return value > BigInt(0) ? value : undefined;
+    } catch {
+      return undefined;
+    }
+  }, [nftLookupMode, nftLookupValueTrimmed]);
+  const nftLookupId = useMemo(() => {
+    if (nftLookupMode !== 'id') {
+      return undefined;
+    }
 
-    if (!selectedToken) {
-      // 首次选择：优先选择当前代币，否则选择第一个
-      setSelectedToken(currentTokenConfig || supportedTokens[0]);
-    } else if (currentTokenConfig && selectedToken.address !== currentTokenConfig.address && !isUserManuallySelected) {
-      // 只有在用户没有手动选择时，才自动切换到当前代币
-      // 但只在选择的是基础代币（原生代币或WETH）时才自动切换
-      const isBasicToken =
-        selectedToken.isNative || selectedToken.address === process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN;
-      if (isBasicToken) {
-        setSelectedToken(currentTokenConfig);
+    const trimmed = debouncedNftLookupValueTrimmed;
+    if (!trimmed || !/^\d+$/.test(trimmed)) {
+      return undefined;
+    }
+
+    try {
+      const value = BigInt(trimmed);
+      return value > BigInt(0) ? value : undefined;
+    } catch {
+      return undefined;
+    }
+  }, [debouncedNftLookupValueTrimmed, nftLookupMode]);
+  const isNftIdInputInvalid = nftLookupMode === 'id' && !!nftLookupValueTrimmed && rawNftLookupId === undefined;
+  const isNftLookupDebouncing =
+    transferMode === 'nftOwner' &&
+    !!nftLookupValueTrimmed &&
+    nftLookupValueTrimmed !== debouncedNftLookupValueTrimmed &&
+    (nftLookupMode === 'name' || !isNftIdInputInvalid);
+
+  const {
+    isUsed: isLookupNameUsed,
+    isPending: isPendingLookupNameUsed,
+    error: errorLookupNameUsed,
+  } = useIsGroupNameUsed(nftLookupName);
+  const {
+    tokenId: tokenIdByName,
+    isPending: isPendingTokenIdByName,
+    error: errorTokenIdByName,
+  } = useTokenIdOf(
+    nftLookupMode === 'name' && isLookupNameUsed ? nftLookupName : '',
+  );
+  const resolvedTokenIdByName = tokenIdByName && tokenIdByName > BigInt(0) ? tokenIdByName : undefined;
+  const {
+    owner: ownerByName,
+    isPending: isPendingOwnerByName,
+    error: errorOwnerByName,
+  } = useOwnerOf(
+    resolvedTokenIdByName || BigInt(0),
+    transferMode === 'nftOwner' && nftLookupMode === 'name' && !!resolvedTokenIdByName,
+  );
+  const {
+    groupName: groupNameByName,
+    isPending: isPendingGroupNameByName,
+    error: errorGroupNameByName,
+  } = useGroupNameOf(
+    resolvedTokenIdByName || BigInt(0),
+    transferMode === 'nftOwner' && nftLookupMode === 'name' && !!resolvedTokenIdByName,
+  );
+
+  const { totalSupply, error: errorTotalSupply } = useTotalSupply();
+  const canLookupById =
+    transferMode === 'nftOwner' &&
+    nftLookupMode === 'id' &&
+    nftLookupId !== undefined &&
+    totalSupply !== undefined &&
+    nftLookupId <= totalSupply;
+  const {
+    owner: ownerById,
+    isPending: isPendingOwnerById,
+    error: errorOwnerById,
+  } = useOwnerOf(nftLookupId || BigInt(0), canLookupById);
+  const {
+    groupName: groupNameById,
+    isPending: isPendingGroupNameById,
+    error: errorGroupNameById,
+  } = useGroupNameOf(
+    nftLookupId || BigInt(0),
+    canLookupById,
+  );
+
+  const nftLookupResult = useMemo<NftLookupResult>(() => {
+    if (transferMode !== 'nftOwner') {
+      return null;
+    }
+
+    if (nftLookupMode === 'name') {
+      if (!nftLookupValueTrimmed) {
+        return null;
       }
+
+      if (isNftLookupDebouncing || !nftLookupName) {
+        return { status: 'loading' };
+      }
+
+      if (errorLookupNameUsed || errorTokenIdByName || errorOwnerByName || errorGroupNameByName) {
+        return { status: 'error', message: '查询NFT信息失败，请检查网络后重试' };
+      }
+
+      if (isPendingLookupNameUsed || (isLookupNameUsed && (isPendingTokenIdByName || isPendingOwnerByName || isPendingGroupNameByName))) {
+        return { status: 'loading' };
+      }
+
+      if (!isLookupNameUsed) {
+        return { status: 'not_found', message: '未找到对应NFT' };
+      }
+
+      if (resolvedTokenIdByName && ownerByName && groupNameByName) {
+        return {
+          status: 'resolved',
+          tokenId: resolvedTokenIdByName,
+          groupName: groupNameByName,
+          owner: ownerByName,
+        };
+      }
+
+      return { status: 'not_found', message: '未找到对应NFT' };
     }
-  }, [supportedTokens, selectedToken, token, isUserManuallySelected]);
 
-  // 余额查询
-  const { balance, isPending: isPendingBalance } = useTokenBalance(selectedToken || supportedTokens[0], account);
-
-  // 刷新余额的函数
-  const refreshBalance = useCallback(() => {
-    if (!selectedToken || !account) return;
-
-    if (selectedToken.isNative) {
-      // 刷新原生代币余额
-      queryClient.invalidateQueries({
-        queryKey: ['balance', { address: account }],
-      });
-    } else {
-      // 刷新ERC20代币余额
-      queryClient.invalidateQueries({
-        queryKey: [
-          'readContract',
-          {
-            address: selectedToken.address,
-            functionName: 'balanceOf',
-            args: [account],
-          },
-        ],
-      });
+    if (!nftLookupValueTrimmed) {
+      return null;
     }
-  }, [selectedToken, account, queryClient]);
 
-  // 表单设置
+    if (isNftIdInputInvalid || nftLookupId === undefined) {
+      return { status: 'invalid', message: '请输入正整数NFT ID' };
+    }
+
+    if (isNftLookupDebouncing) {
+      return { status: 'loading' };
+    }
+
+    if (errorTotalSupply || errorOwnerById || errorGroupNameById) {
+      return { status: 'error', message: '查询NFT信息失败，请检查网络后重试' };
+    }
+
+    if (totalSupply === undefined) {
+      return { status: 'loading' };
+    }
+
+    if (nftLookupId > totalSupply) {
+      return { status: 'not_found', message: '未找到对应NFT' };
+    }
+
+    if (isPendingOwnerById || isPendingGroupNameById) {
+      return { status: 'loading' };
+    }
+
+    if (ownerById && groupNameById) {
+      return {
+        status: 'resolved',
+        tokenId: nftLookupId,
+        groupName: groupNameById,
+        owner: ownerById,
+      };
+    }
+
+    return { status: 'not_found', message: '未找到对应NFT' };
+  }, [
+    errorGroupNameById,
+    errorGroupNameByName,
+    errorLookupNameUsed,
+    errorOwnerById,
+    errorOwnerByName,
+    errorTokenIdByName,
+    errorTotalSupply,
+    groupNameById,
+    groupNameByName,
+    isLookupNameUsed,
+    isPendingGroupNameById,
+    isPendingGroupNameByName,
+    isPendingLookupNameUsed,
+    isPendingOwnerById,
+    isPendingOwnerByName,
+    isPendingTokenIdByName,
+    isNftIdInputInvalid,
+    isNftLookupDebouncing,
+    nftLookupId,
+    nftLookupMode,
+    nftLookupName,
+    nftLookupValueTrimmed,
+    ownerById,
+    ownerByName,
+    resolvedTokenIdByName,
+    totalSupply,
+    transferMode,
+  ]);
+
+  const hasResolvedNftOwner = nftLookupResult?.status === 'resolved';
+
+  const balanceToken = selectedToken || supportedTokens[0] || FALLBACK_TOKEN;
+  const { balance, isPending: isPendingBalance } = useTokenBalance(balanceToken, account);
+
   const form = useForm<TransferFormValues>({
-    resolver: zodResolver(getTransferFormSchema(balance || BigInt(0))),
+    resolver: zodResolver(getTransferFormSchema(balance || BigInt(0), transferMode)),
     defaultValues: {
       to: '',
       amount: '',
@@ -395,16 +586,38 @@ const TransferPanel = () => {
     mode: 'onChange',
   });
 
-  // 同步表单中的代币地址
+  const watchedToAddress = form.watch('to');
+  const watchedAmount = form.watch('amount');
+
+  useEffect(() => {
+    if (supportedTokens.length === 0) return;
+
+    const currentTokenConfig = token ? supportedTokens.find((item) => item.address === token.address) : null;
+
+    if (!selectedToken) {
+      setSelectedToken(currentTokenConfig || supportedTokens[0]);
+    } else if (currentTokenConfig && selectedToken.address !== currentTokenConfig.address && !isUserManuallySelected) {
+      const isBasicToken =
+        selectedToken.isNative || selectedToken.address === process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN;
+      if (isBasicToken) {
+        setSelectedToken(currentTokenConfig);
+      }
+    }
+  }, [isUserManuallySelected, selectedToken, supportedTokens, token]);
+
   useEffect(() => {
     if (selectedToken) {
       form.setValue('tokenAddress', selectedToken.address);
     }
-  }, [selectedToken, form]);
+  }, [form, selectedToken]);
 
-  // 监听地址输入变化，提供转换提示
-  const watchedToAddress = form.watch('to');
   useEffect(() => {
+    if (transferMode !== 'address') {
+      setAddressConversionInfo('');
+      setConvertedAddress(null);
+      return;
+    }
+
     if (!watchedToAddress || watchedToAddress.trim() === '') {
       setAddressConversionInfo('');
       setConvertedAddress(null);
@@ -420,25 +633,47 @@ const TransferPanel = () => {
       return;
     }
 
-    // 如果输入的不是0x格式，显示转换后的地址
     if (!trimmed.startsWith('0x')) {
       setAddressConversionInfo('将转换为:');
       setConvertedAddress(normalized as `0x${string}`);
-    } else if (trimmed.toLowerCase() !== normalized) {
+      return;
+    }
+
+    if (trimmed.toLowerCase() !== normalized) {
       setAddressConversionInfo('地址已标准化');
       setConvertedAddress(normalized as `0x${string}`);
-    } else {
-      setAddressConversionInfo('');
-      setConvertedAddress(null);
+      return;
     }
-  }, [watchedToAddress]);
+
+    setAddressConversionInfo('');
+    setConvertedAddress(null);
+  }, [transferMode, watchedToAddress]);
+
+  const normalizedToAddress = useMemo(() => normalizeAddressInput(watchedToAddress || ''), [watchedToAddress]);
+  const nftTargetAddress =
+    nftLookupResult?.status === 'resolved' ? (nftLookupResult.owner as `0x${string}`) : undefined;
+  const targetAddress =
+    transferMode === 'address'
+      ? (normalizedToAddress ? (normalizedToAddress as `0x${string}`) : undefined)
+      : nftTargetAddress;
+
+  const {
+    defaultGroupId: targetDefaultGroupId,
+    defaultGroupName: targetDefaultGroupName,
+    hasDefaultGroup: hasTargetDefaultGroup,
+    isPending: isPendingTargetDefaultGroup,
+  } = useDefaultGroupOf(
+    transferMode === 'address' && normalizedToAddress ? (normalizedToAddress as `0x${string}`) : undefined,
+    isGroupDefaultsEnabled && isOnTargetChain && transferMode === 'address' && !!normalizedToAddress,
+  );
 
   const protectedTargetInfo = useMemo<ProtectedTargetInfo | undefined>(() => {
-    const normalizedAddress = normalizeAddressInput(watchedToAddress || '');
-    if (!normalizedAddress) return undefined;
+    if (!targetAddress) {
+      return undefined;
+    }
 
     const protectedToken = supportedTokens.find(
-      (tokenConfig) => tokenConfig.address !== 'NATIVE' && tokenConfig.address.toLowerCase() === normalizedAddress,
+      (tokenConfig) => tokenConfig.address !== 'NATIVE' && tokenConfig.address.toLowerCase() === targetAddress.toLowerCase(),
     );
 
     if (protectedToken) {
@@ -449,8 +684,8 @@ const TransferPanel = () => {
       };
     }
 
-    return KNOWN_CONTRACT_TARGETS.find((contract) => contract.address.toLowerCase() === normalizedAddress);
-  }, [supportedTokens, watchedToAddress]);
+    return KNOWN_CONTRACT_TARGETS.find((contract) => contract.address.toLowerCase() === targetAddress.toLowerCase());
+  }, [supportedTokens, targetAddress]);
 
   const isAssetProtectionTriggered = isAssetProtectionEnabled && !!protectedTargetInfo;
   const isProtectedSelectedTokenSelf =
@@ -459,51 +694,51 @@ const TransferPanel = () => {
     ? `${protectedTargetInfo.label}${protectedTargetInfo.type === 'token' ? ' 代币' : ''}合约地址`
     : '';
 
-  // 监听数量输入
-  const watchAmount = form.watch('amount');
   const [transferAmount, setTransferAmount] = useState<bigint>(BigInt(0));
-
   useEffect(() => {
     try {
-      const amount = parseUnits(watchAmount || '0');
+      const amount = parseUnits(watchedAmount || '0');
       setTransferAmount(amount);
     } catch {
       setTransferAmount(BigInt(0));
     }
-  }, [watchAmount]);
+  }, [watchedAmount]);
 
-  // 设置百分比数量
-  const setPercentageAmount = (percentage: number) => {
-    if (!balance || balance <= BigInt(0)) return;
+  const refreshBalance = useCallback(() => {
+    if (!selectedToken || !account) return;
 
-    const amount = (balance * BigInt(percentage)) / BigInt(100);
-    form.setValue('amount', formatUnits(amount));
-  };
+    if (selectedToken.isNative) {
+      queryClient.invalidateQueries({
+        queryKey: ['balance', { address: account }],
+      });
+      return;
+    }
 
-  // 设置最大数量
-  const setMaxAmount = () => {
-    if (!balance || balance <= BigInt(0)) return;
+    queryClient.invalidateQueries({
+      queryKey: [
+        'readContract',
+        {
+          address: selectedToken.address,
+          functionName: 'balanceOf',
+          args: [account],
+        },
+      ],
+    });
+  }, [account, queryClient, selectedToken]);
 
-    form.setValue('amount', formatUnits(balance));
-  };
-
-  // ERC20 转账
   const {
     transfer: erc20Transfer,
     isPending: isPendingERC20Transfer,
     isConfirming: isConfirmingERC20Transfer,
     isConfirmed: isConfirmedERC20Transfer,
-    writeError: errERC20Transfer,
     hash: erc20TxHash,
-  } = useTransfer((selectedToken?.address as `0x${string}`) || '0x0000000000000000000000000000000000000000');
+  } = useTransfer((selectedToken?.address as `0x${string}`) || ZERO_ADDRESS);
 
-  // 原生代币转账
   const {
     transfer: nativeTransfer,
     isPending: isPendingNativeTransfer,
     isConfirming: isConfirmingNativeTransfer,
     isConfirmed: isConfirmedNativeTransfer,
-    writeError: errNativeTransfer,
     hash: nativeTxHash,
   } = useNativeTransfer();
 
@@ -511,30 +746,40 @@ const TransferPanel = () => {
     isPendingERC20Transfer || isConfirmingERC20Transfer || isPendingNativeTransfer || isConfirmingNativeTransfer;
   const isTransferConfirmed = isConfirmedERC20Transfer || isConfirmedNativeTransfer;
 
-  // 监听转账成功
   useEffect(() => {
-    const currentTxHash = erc20TxHash || nativeTxHash;
+    const currentTxHash = isConfirmedERC20Transfer ? erc20TxHash : isConfirmedNativeTransfer ? nativeTxHash : undefined;
 
     if (isTransferConfirmed && currentTxHash && currentTxHash !== lastProcessedTxHash) {
       toast.success(`转账 ${selectedToken?.symbol} 成功`);
-      // 只清空转账数量，保留目标地址和代币选择
       form.setValue('amount', '');
-      // 刷新余额
       refreshBalance();
-      // 记录已处理的交易哈希，避免重复处理
       setLastProcessedTxHash(currentTxHash);
     }
   }, [
-    isTransferConfirmed,
     erc20TxHash,
-    nativeTxHash,
-    lastProcessedTxHash,
-    selectedToken?.symbol,
+    isConfirmedERC20Transfer,
+    isConfirmedNativeTransfer,
     form,
+    isTransferConfirmed,
+    lastProcessedTxHash,
+    nativeTxHash,
     refreshBalance,
+    selectedToken?.symbol,
   ]);
 
-  // 处理转账
+  const setPercentageAmount = (percentage: number) => {
+    if (!balance || balance <= BigInt(0)) return;
+
+    const amount = (balance * BigInt(percentage)) / BigInt(100);
+    form.setValue('amount', formatUnits(amount));
+  };
+
+  const setMaxAmount = () => {
+    if (!balance || balance <= BigInt(0)) return;
+
+    form.setValue('amount', formatUnits(balance));
+  };
+
   const handleTransfer = form.handleSubmit(async (data) => {
     if (!selectedToken || !account) return;
 
@@ -543,22 +788,27 @@ const TransferPanel = () => {
       return;
     }
 
-    // 标准化地址输入，支持TH、0x等格式
-    const normalizedAddress = normalizeAddressInput(data.to);
-    if (!normalizedAddress) {
-      toast.error('地址格式无效，请检查输入');
+    let toAddress: `0x${string}` | undefined;
+
+    if (transferMode === 'address') {
+      const normalizedAddress = normalizeAddressInput(data.to);
+      if (!normalizedAddress) {
+        toast.error('地址格式无效，请检查输入');
+        return;
+      }
+      toAddress = normalizedAddress as `0x${string}`;
+    } else if (nftLookupResult?.status === 'resolved') {
+      toAddress = nftLookupResult.owner;
+    } else {
+      toast.error('请先选择有效NFT');
       return;
     }
 
     try {
-      const toAddress = normalizedAddress as `0x${string}`;
-
       if (selectedToken.isNative) {
-        // 原生代币转账
         console.log('执行原生代币转账:', { to: toAddress, amount: transferAmount, symbol: selectedToken.symbol });
         await nativeTransfer(toAddress, transferAmount);
       } else {
-        // ERC20代币转账
         console.log('执行ERC20代币转账:', {
           token: selectedToken.address,
           to: toAddress,
@@ -567,13 +817,11 @@ const TransferPanel = () => {
         });
         await erc20Transfer(toAddress, transferAmount);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Transfer error:', error);
-      // 错误会通过 errorUtils 处理，这里不需要额外的toast
     }
   });
 
-  // 加载状态
   if (!token) {
     return <LoadingIcon />;
   }
@@ -589,45 +837,166 @@ const TransferPanel = () => {
 
   const isDisabled = isPendingBalance || !selectedToken;
   const isLoadingOverlay = isTransferring;
+  const isSubmitDisabled =
+    isTransferring || isDisabled || isAssetProtectionTriggered || (transferMode === 'nftOwner' && !hasResolvedNftOwner);
+  const buttonText = isTransferring
+    ? '转账中...'
+    : isAssetProtectionTriggered
+      ? '资产保护已拦截'
+      : transferMode === 'nftOwner'
+        ? '转账给NFT持有地址'
+        : '转账';
 
   return (
     <div className="p-6">
       <LeftTitle title="转账" />
       <div className="w-full max-w-md mt-4">
+        <Tabs
+          value={transferMode}
+          onValueChange={(value) => {
+            setTransferMode(value as TransferMode);
+            form.clearErrors('to');
+          }}
+          className="w-full mb-4"
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="address">目标地址</TabsTrigger>
+            <TabsTrigger value="nftOwner">NFT持有地址</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         <Form {...form}>
           <form className="space-y-4">
-            {/* 目标地址输入 */}
-            <FormField
-              control={form.control}
-              name="to"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">目标地址</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="请输入目标钱包地址（支持 0x、TH 格式）"
-                      {...field}
-                      disabled={isDisabled}
-                      className="font-mono text-sm"
-                    />
-                  </FormControl>
-                  {addressConversionInfo && (
-                    <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
-                      <span>{addressConversionInfo}</span>
-                      {convertedAddress && (
-                        <AddressWithCopyButton
-                          address={convertedAddress}
-                          showCopyButton={true}
-                          showAddress={true}
-                          colorClassName="text-blue-600"
-                        />
-                      )}
+            {transferMode === 'address' ? (
+              <FormField
+                control={form.control}
+                name="to"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700">目标地址</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="请输入目标钱包地址（支持 0x、TH 格式）"
+                        {...field}
+                        disabled={isDisabled}
+                        className="font-mono text-sm"
+                      />
+                    </FormControl>
+
+                    {addressConversionInfo && (
+                      <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                        <span>{addressConversionInfo}</span>
+                        {convertedAddress && (
+                          <AddressWithCopyButton
+                            address={convertedAddress}
+                            showCopyButton={true}
+                            showAddress={true}
+                            colorClassName="text-blue-600"
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    {isGroupDefaultsEnabled && normalizedToAddress && (
+                      <div className="text-xs mt-1">
+                        {isPendingTargetDefaultGroup ? (
+                          <span className="text-gray-400">默认NFT查询中...</span>
+                        ) : hasTargetDefaultGroup ? (
+                          <span className="inline-flex items-center gap-1 text-gray-700">
+                            <span className="inline-flex items-center rounded-full bg-secondary/10 px-1.5 py-0.5 text-[10px] font-medium text-secondary">
+                              NFT#{targetDefaultGroupId?.toString()}
+                            </span>
+                            <span>{targetDefaultGroupName || '...'}</span>
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">该地址未关联默认NFT</span>
+                        )}
+                      </div>
+                    )}
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className={
+                      nftLookupMode === 'name'
+                        ? 'border-secondary bg-secondary text-white hover:bg-secondary/90 hover:text-white'
+                        : ''
+                    }
+                    onClick={() => setNftLookupMode('name')}
+                    disabled={isDisabled}
+                  >
+                    NFT名称
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className={
+                      nftLookupMode === 'id'
+                        ? 'border-secondary bg-secondary text-white hover:bg-secondary/90 hover:text-white'
+                        : ''
+                    }
+                    onClick={() => setNftLookupMode('id')}
+                    disabled={isDisabled}
+                  >
+                    NFT ID
+                  </Button>
+                </div>
+
+                <div>
+                  <FormLabel className="text-sm font-medium text-gray-700">
+                    {nftLookupMode === 'name' ? 'NFT名称' : 'NFT ID'}
+                  </FormLabel>
+                  <Input
+                    value={nftLookupValue}
+                    onChange={(event) => setNftLookupValue(event.target.value)}
+                    placeholder={nftLookupMode === 'name' ? '请输入NFT名称' : '请输入NFT ID'}
+                    disabled={isDisabled}
+                    className={nftLookupMode === 'id' ? 'font-mono text-sm' : ''}
+                  />
+                </div>
+
+                {nftLookupResult?.status === 'loading' && <div className="text-xs text-gray-400">查询中...</div>}
+
+                {(nftLookupResult?.status === 'invalid' || nftLookupResult?.status === 'not_found') && (
+                  <div className="text-xs text-gray-400">{nftLookupResult.message}</div>
+                )}
+
+                {nftLookupResult?.status === 'error' && (
+                  <div className="text-xs text-red-500">{nftLookupResult.message}</div>
+                )}
+
+                {nftLookupResult?.status === 'resolved' && (
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-gray-500">NFT名称</span>
+                      <span className="font-medium text-gray-900">{nftLookupResult.groupName}</span>
                     </div>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-gray-500">NFT ID</span>
+                      <span className="font-mono text-secondary">#{nftLookupResult.tokenId.toString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-gray-500">当前持有人地址</span>
+                      <AddressWithCopyButton
+                        address={nftLookupResult.owner}
+                        showAddress={true}
+                        showCopyButton={true}
+                        colorClassName="text-gray-600"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3">
               <label className="flex items-start gap-3 cursor-pointer">
@@ -654,7 +1023,6 @@ const TransferPanel = () => {
               )}
             </div>
 
-            {/* 代币选择 */}
             <FormField
               control={form.control}
               name="tokenAddress"
@@ -665,14 +1033,14 @@ const TransferPanel = () => {
                     <div className="space-y-2">
                       <Select
                         value={field.value}
-                        onValueChange={(val) => {
-                          const token = supportedTokens.find((t) => t.address === val);
-                          if (token) {
-                            setIsUserManuallySelected(true); // 标记为用户手动选择
-                            setSelectedToken(token);
-                            field.onChange(val);
-                            form.setValue('amount', ''); // 重置数量
-                          }
+                        onValueChange={(value) => {
+                          const nextToken = supportedTokens.find((item) => item.address === value);
+                          if (!nextToken) return;
+
+                          setIsUserManuallySelected(true);
+                          setSelectedToken(nextToken);
+                          field.onChange(value);
+                          form.setValue('amount', '');
                         }}
                         disabled={isDisabled}
                       >
@@ -680,9 +1048,9 @@ const TransferPanel = () => {
                           <SelectValue placeholder="请选择代币" />
                         </SelectTrigger>
                         <SelectContent>
-                          {supportedTokens.map((token) => (
-                            <SelectItem key={token.address} value={token.address}>
-                              <span className="font-mono font-medium">{token.symbol}</span>
+                          {supportedTokens.map((item) => (
+                            <SelectItem key={item.address} value={item.address}>
+                              <span className="font-mono font-medium">{item.symbol}</span>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -718,7 +1086,6 @@ const TransferPanel = () => {
               )}
             />
 
-            {/* 转账数量输入 */}
             <FormField
               control={form.control}
               name="amount"
@@ -783,15 +1150,9 @@ const TransferPanel = () => {
               )}
             />
 
-            {/* 转账按钮 */}
             <div className="flex space-x-2 pt-4">
-              <Button
-                className="w-full"
-                onClick={handleTransfer}
-                disabled={isTransferring || isDisabled || isAssetProtectionTriggered}
-                size="lg"
-              >
-                {isTransferring ? '转账中...' : isAssetProtectionTriggered ? '资产保护已拦截' : '转账'}
+              <Button className="w-full" onClick={handleTransfer} disabled={isSubmitDisabled} size="lg">
+                {buttonText}
               </Button>
             </div>
           </form>

@@ -110,14 +110,14 @@ export const useBalanceOf = (owner: `0x${string}`, enabled: boolean = true) => {
  * Hook for ownerOf
  * 获取指定 tokenId 的所有者
  */
-export const useOwnerOf = (tokenId: bigint) => {
+export const useOwnerOf = (tokenId: bigint, enabled: boolean = true) => {
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'ownerOf',
     args: [tokenId],
     query: {
-      enabled: tokenId !== undefined,
+      enabled: tokenId !== undefined && enabled,
     },
   });
 
@@ -239,14 +239,14 @@ export const useIsGroupNameUsed = (groupName: string) => {
  * Hook for groupNameOf
  * 根据 tokenId 获取组名
  */
-export const useGroupNameOf = (tokenId: bigint) => {
+export const useGroupNameOf = (tokenId: bigint, enabled: boolean = true) => {
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'groupNameOf',
     args: [tokenId],
     query: {
-      enabled: tokenId !== undefined,
+      enabled: tokenId !== undefined && enabled,
     },
   });
 

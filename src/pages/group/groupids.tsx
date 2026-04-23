@@ -1,5 +1,5 @@
 /**
- * 链群 NFT 管理页面
+ * LOVE20 NFT 管理页面
  */
 
 'use client';
@@ -11,7 +11,7 @@ import MyGroups from '@/src/components/Extension/Base/Group/MyGroups';
 export default function GroupPage() {
   return (
     <>
-      <Header title="我的链群NFT" showBackButton={true} />
+      <Header title="我的NFT" showBackButton={true} />
       <main className="flex-grow px-2 sm:px-0">
         <div className="w-full max-w-2xl mx-auto">
           <MyGroups />

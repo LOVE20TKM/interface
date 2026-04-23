@@ -1,5 +1,5 @@
 /**
- * 链群 NFT 转让组件
+ * LOVE20 NFT 转让组件
  */
 
 'use client';
@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
@@ -23,6 +24,7 @@ import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from '
 // my hooks
 import { useTransferFrom } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
+import { invalidateGroupDefaultsQueries } from '@/src/hooks/extension/base/contracts/useGroupDefaults';
 // my components
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -68,6 +70,7 @@ interface GroupTransferProps {
 
 const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { address: account } = useAccount();
   const [addressConversionInfo, setAddressConversionInfo] = useState<string>('');
   const [convertedAddress, setConvertedAddress] = useState<`0x${string}` | null>(null);
@@ -132,17 +135,18 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   // 监听转让成功
   useEffect(() => {
     if (isTransferConfirmed && transferTxHash && transferTxHash !== lastProcessedTxHash) {
-      toast.success(`转让链群NFT成功`);
+      toast.success(`转让LOVE20 NFT成功`);
+      void invalidateGroupDefaultsQueries(queryClient);
       // 清空表单
       form.reset();
       // 记录已处理的交易哈希，避免重复处理
       setLastProcessedTxHash(transferTxHash);
-      // 等待2秒后跳转到链群NFT管理页面
+      // 等待2秒后跳转到LOVE20 NFT管理页面
       setTimeout(() => {
         router.push('/group/groupids');
       }, 2000);
     }
-  }, [isTransferConfirmed, transferTxHash, lastProcessedTxHash, form, router]);
+  }, [isTransferConfirmed, transferTxHash, lastProcessedTxHash, form, queryClient, router]);
 
   // 处理转让
   const handleTransfer = form.handleSubmit(async (data) => {
@@ -178,7 +182,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   if (isPendingGroupName) {
     return (
       <div className="p-6">
-        <LeftTitle title="转让链群NFT" />
+        <LeftTitle title="转让LOVE20 NFT" />
         <div className="flex justify-center py-8">
           <LoadingIcon />
         </div>
@@ -189,7 +193,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   if (groupNameError) {
     return (
       <div className="p-6">
-        <LeftTitle title="转让链群NFT" />
+        <LeftTitle title="转让LOVE20 NFT" />
         <div className="text-center text-red-500 mt-4">加载NFT信息失败: {groupNameError.message}</div>
       </div>
     );
@@ -198,7 +202,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   if (!groupName) {
     return (
       <div className="p-6">
-        <LeftTitle title="转让链群NFT" />
+        <LeftTitle title="转让LOVE20 NFT" />
         <div className="text-center text-gray-500 mt-4">未找到NFT信息</div>
       </div>
     );
@@ -208,13 +212,13 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
 
   return (
     <div className="p-6">
-      <LeftTitle title="转让链群 NFT 给指定地址：" />
+      <LeftTitle title="转让LOVE20 NFT给指定地址：" />
       <div className="w-full max-w-md mx-auto mt-4">
         <Form {...form}>
           <form className="space-y-4">
             {/* NFT 名称显示 */}
             <div className="mb-4">
-              <FormLabel className="text-sm font-medium text-gray-700">链群 NFT</FormLabel>
+              <FormLabel className="text-sm font-medium text-gray-700">LOVE20 NFT</FormLabel>
               <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <span className="mr-2 text-sm text-gray-500 font-mono">(ID: {tokenId.toString()})</span>
                 <span className="font-medium text-gray-800">{groupName}</span>

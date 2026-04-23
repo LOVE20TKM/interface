@@ -1,5 +1,5 @@
 /**
- * 链群 NFT 转移页面
+ * LOVE20 NFT 转移页面
  */
 
 'use client';
@@ -38,7 +38,7 @@ export default function GroupTransferPage() {
   if (!tokenId) {
     return (
       <>
-        <Header title="转让链群NFT" showBackButton={true} />
+        <Header title="转让LOVE20 NFT" showBackButton={true} />
         <main className="flex-grow px-3 sm:px-0">
           <div className="w-full max-w-2xl mx-auto">
             <div className="flex justify-center py-8">
@@ -52,7 +52,7 @@ export default function GroupTransferPage() {
 
   return (
     <>
-      <Header title="转让链群NFT" showBackButton={true} />
+      <Header title="转让LOVE20 NFT" showBackButton={true} />
       <main className="flex-grow px-3 sm:px-0">
         <div className="w-full max-w-2xl mx-auto">
           <GroupTransfer tokenId={tokenId} />

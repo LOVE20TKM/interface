@@ -316,7 +316,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     }
 
     if (!finalGroupId) {
-      toast.error('请选择要激活的链群');
+      toast.error('点击选择NFT');
       return;
     }
 
@@ -395,12 +395,12 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     return (
       <div className="text-center py-12">
         <p className="mb-4 text-gray-500">
-          {myGroups && myGroups.length > 0 ? '您的所有链群已激活，没有未激活链群' : '没有未激活的 链群NFT'}
+          {myGroups && myGroups.length > 0 ? '您的所有链群已激活，没有未激活链群' : '没有可用来激活链群的NFT'}
         </p>
         <p className="mb-4">
           <Link href="/group/groupids/">
             <Button variant="outline" className="w-1/2 text-secondary border-secondary">
-              去铸造链群NFT &gt;&gt;
+              去铸造NFT &gt;&gt;
             </Button>
           </Link>
         </p>
@@ -440,13 +440,13 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
         {/* 链群选择器（如果没有传入 groupId） */}
         {!groupId && (
           <div className="space-y-2">
-            <label className="text-sm font-medium">选择链群NFT</label>
+            <label className="text-sm font-medium">选择一个代表链群的NFT</label>
             <Select
               value={selectedGroupId?.toString() || ''}
               onValueChange={(value) => setSelectedGroupId(BigInt(value))}
             >
               <SelectTrigger className="!ring-secondary-foreground">
-                <SelectValue placeholder="请选择要激活的链群" />
+                <SelectValue placeholder="点击选择NFT" />
               </SelectTrigger>
               <SelectContent>
                 {availableGroups?.map((group) => (
@@ -456,7 +456,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                 ))}
               </SelectContent>
             </Select>
-            {!selectedGroupId && <p className="text-xs text-red-500">请选择一个链群</p>}
+            {!selectedGroupId && <p className="text-xs text-red-500">请选择一个NFT</p>}
           </div>
         )}
         {/* 表单 */}

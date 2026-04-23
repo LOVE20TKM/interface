@@ -1,5 +1,5 @@
 /**
- * 铸造链群 NFT 组件
+ * 铸造 LOVE20 NFT 组件
  */
 
 'use client';
@@ -42,7 +42,7 @@ const getFormSchema = (balance: bigint) =>
   z.object({
     groupName: z
       .string()
-      .nonempty({ message: '请输入群名称' })
+      .nonempty({ message: '请输入名称' })
       .refine((val) => val.trim().length > 0, {
         message: '群名称不能只包含空白字符',
       }),
@@ -245,7 +245,7 @@ export default function MintGroup() {
   return (
     <>
       <div className="px-2 mt-4">
-        <LeftTitle title="铸造链群NFT" />
+        <LeftTitle title="铸造NFT" />
 
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">

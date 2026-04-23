@@ -10,43 +10,29 @@ const envFile = `.env.${env}`;
 // 加载环境变量
 dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 
+const resolveAbiDirPath = (envKey: string) => {
+  const configuredPath = process.env[envKey];
+  if (!configuredPath) {
+    console.error(`Error: ${envKey} is not defined in ${envFile}.`);
+    process.exit(1);
+  }
+
+  const resolvedPath = path.resolve(process.cwd(), configuredPath);
+  if (!fs.existsSync(resolvedPath)) {
+    console.error(`Error: ${envKey} points to a missing path: ${resolvedPath}`);
+    process.exit(1);
+  }
+
+  return resolvedPath;
+};
+
 // 源目录
-const coreAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_CORE_ABI_PATH;
-const peripheralAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_PERIPHERAL_ABI_PATH;
-const groupAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_GROUP_ABI_PATH;
-const extensionsCenterAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_CENTER_ABI_PATH;
-const extensionslpAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_LP_ABI_PATH;
-const extensionsGroupAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_EXTENSIONS_GROUP_ABI_PATH;
-
-if (!coreAbiDirPath) {
-  console.error('Error: NEXT_PUBLIC_FOUNDRY_CORE_ABI_PATH is not defined in .env file.');
-  process.exit(1);
-}
-
-if (!peripheralAbiDirPath) {
-  console.error('Error: NEXT_PUBLIC_FOUNDRY_PERIPHERAL_ABI_PATH is not defined in .env file.');
-  process.exit(1);
-}
-
-if (!groupAbiDirPath) {
-  console.error('Error: NEXT_PUBLIC_FOUNDRY_GROUP_ABI_PATH is not defined in .env file.');
-  process.exit(1);
-}
-
-if (!extensionsCenterAbiDirPath) {
-  console.error('Error: NEXT_PUBLIC_FOUNDRY_EXTENSIONS_CENTER_ABI_PATH is not defined in .env file.');
-  process.exit(1);
-}
-
-if (!extensionslpAbiDirPath) {
-  console.error('Error: NEXT_PUBLIC_FOUNDRY_EXTENSIONS_LP_ABI_PATH is not defined in .env file.');
-  process.exit(1);
-}
-
-if (!extensionsGroupAbiDirPath) {
-  console.error('Error: NEXT_PUBLIC_FOUNDRY_EXTENSIONS_GROUP_ABI_PATH is not defined in .env file.');
-  process.exit(1);
-}
+const coreAbiDirPath = resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_CORE_ABI_PATH');
+const peripheralAbiDirPath = resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_PERIPHERAL_ABI_PATH');
+const groupAbiDirPath = resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_GROUP_ABI_PATH');
+const extensionsCenterAbiDirPath = resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_EXTENSIONS_CENTER_ABI_PATH');
+const extensionslpAbiDirPath = resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_EXTENSIONS_LP_ABI_PATH');
+const extensionsGroupAbiDirPath = resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_EXTENSIONS_GROUP_ABI_PATH');
 
 // 指定要转换的文件名列表
 const coreFilesToConvert = [
@@ -69,7 +55,7 @@ const coreFilesToConvert = [
 
 const peripheralFilesToConvert = ['LOVE20TokenViewer', 'LOVE20RoundViewer', 'LOVE20MintViewer', 'LOVE20Hub'];
 
-const groupFilesToConvert = ['LOVE20Group'];
+const groupFilesToConvert = ['LOVE20Group', 'GroupDefaults'];
 
 const extensionsCenterFilesToConvert = ['ExtensionCenter', 'IExtension', 'IReward', 'ExtensionFactoryBase'];
 

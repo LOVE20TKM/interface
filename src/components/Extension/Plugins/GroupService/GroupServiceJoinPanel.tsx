@@ -208,7 +208,7 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
             </div>
             <div className="space-y-1">
               <div>
-                1. 铸造链群NFT{' '}
+                1. 铸造NFT{' '}
                 <Link href="/group/groupids/" className="underline font-medium">
                   去铸造 &gt;
                 </Link>
@@ -219,7 +219,7 @@ const GroupServiceJoinPanel: React.FC<GroupServiceJoinPanelProps> = ({ actionId,
                   去质押获取治理票 &gt;
                 </Link>
               </div>
-              <div>3. 选择对应行动，在行动下激活链群</div>
+              <div>3. 选择对应行动，在行动下使用NFT激活链群</div>
             </div>
           </div>
         ) : (

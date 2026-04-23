@@ -55,7 +55,7 @@ export function useGroupNameValidation({
   let validationError = frontendValidation.error;
 
   if (frontendValidation.isValid && isGroupNameUsed) {
-    validationError = '该群名称已被使用';
+    validationError = '该名称已被使用';
   }
 
   // 如果前端验证失败，不需要等待链上查询，isPending 应该为 false
