@@ -520,25 +520,21 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         <Button
           variant="outline"
           className={cn(
-            'h-auto min-w-0 max-w-full rounded-xl border bg-white/60 px-2.5 py-2 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:min-w-[280px]',
+            'h-auto w-fit min-w-0 max-w-none rounded-xl border bg-white/60 px-2.5 py-2 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:min-w-[300px]',
             className,
           )}
         >
-          <div className="grid w-full grid-cols-[98px_1px_minmax(0,1fr)_16px] grid-rows-2 items-center gap-x-2 gap-y-1 text-left">
-            <div className="col-start-1 row-start-1 justify-self-center">
-              <span className="inline-flex h-6 max-w-full items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600 px-2 text-sm font-bold text-white whitespace-nowrap">
-                <span className="truncate">{token?.symbol || 'TOKEN'}</span>
+          <div className="grid w-full grid-cols-[max-content_1px_minmax(0,1fr)_16px] grid-rows-3 items-center gap-x-2 gap-y-1 text-left">
+            <div className="col-start-1 row-span-3 flex h-full items-center justify-center">
+              <span className="inline-flex h-8 min-w-max items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600 px-2 text-sm font-bold text-white whitespace-nowrap">
+                <span>{token?.symbol || 'TOKEN'}</span>
               </span>
             </div>
 
-            <span className="col-start-1 row-start-2 justify-self-center text-[11px] font-medium leading-none text-gray-500 whitespace-nowrap">
-              {balance ? formatTokenAmount(balance.value) : '0'} {balance?.symbol || 'ETH'}
-            </span>
+            <div className="col-start-2 row-span-3 h-full w-px self-stretch bg-gray-200" />
 
-            <div className="col-start-2 row-span-2 h-full w-px self-stretch bg-gray-200" />
-
-            <div className="col-start-3 row-start-1 flex min-w-0 items-center gap-2">
-              <span className="min-w-0 flex-1 truncate font-mono text-[13px] font-medium leading-none text-gray-900">
+            <div className="col-start-3 row-start-1 flex min-w-0 items-center justify-end gap-2">
+              <span className="min-w-0 truncate font-mono text-[13px] font-medium leading-none text-gray-900">
                 {address ? shortenAddress(address) : ''}
               </span>
               {walletChainId && targetChainId && walletChainId !== targetChainId && (
@@ -548,18 +544,26 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               )}
             </div>
 
-            <div className="col-start-3 row-start-2 flex min-w-0 items-center">
+            <div className="col-start-3 row-start-2 flex min-w-0 items-center justify-end">
               {hasDefaultGroup ? (
-                <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-full bg-secondary/10 px-2 py-0.5 text-[11px] leading-none text-secondary">
-                  <span className="shrink-0 font-medium">NFT#{defaultGroupId?.toString()}</span>
-                  <span className="truncate text-secondary/80">{defaultGroupName || '...'}</span>
+                <span className="inline-flex min-w-0 max-w-full items-center justify-end gap-1.5 rounded-md border border-secondary/15 bg-secondary/5 px-2 py-0.5 text-[11px] leading-none text-secondary">
+                  <span className="shrink-0 font-semibold">NFT#{defaultGroupId?.toString()}</span>
+                  <span className="min-w-0 truncate text-secondary/80">{defaultGroupName || '...'}</span>
                 </span>
               ) : (
-                <span className="truncate text-[11px] leading-none text-gray-400">未关联NFT</span>
+                <span className="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] leading-none text-gray-400">
+                  未关联 NFT
+                </span>
               )}
             </div>
 
-            <ChevronDown className="col-start-4 row-span-2 h-4 w-4 self-center shrink-0 text-gray-500" />
+            <div className="col-start-3 row-start-3 flex min-w-0 items-center justify-end text-[11px] leading-none">
+              <span className="min-w-0 truncate font-medium text-gray-700">
+                {balance ? formatTokenAmount(balance.value) : '0'} {balance?.symbol || 'ETH'}
+              </span>
+            </div>
+
+            <ChevronDown className="col-start-4 row-span-3 h-4 w-4 self-center shrink-0 text-gray-500" />
           </div>
         </Button>
       </DropdownMenuTrigger>
@@ -592,24 +596,27 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
             (hasDefaultGroup ? (
               <button
                 type="button"
-                className="mt-2 flex min-w-0 items-center gap-1 rounded-md px-1 py-1 text-left transition-colors hover:bg-secondary/5"
+                className="mt-2 flex w-full min-w-0 items-center justify-between gap-2 rounded-md border border-secondary/15 bg-white px-2 py-1.5 text-left transition-colors hover:bg-secondary/5"
                 onClick={goToMyLove20NftPage}
                 title="前往我的NFT"
               >
-                <span className="inline-flex shrink-0 items-center rounded-full bg-secondary/10 px-1.5 py-0.5 text-[10px] font-medium text-secondary">
-                  NFT#{defaultGroupId?.toString()}
+                <span className="inline-flex min-w-0 items-center gap-1.5">
+                  <span className="shrink-0 text-xs font-semibold text-secondary">
+                    NFT#{defaultGroupId?.toString()}
+                  </span>
+                  <span className="truncate text-xs text-secondary/80">{defaultGroupName || '...'}</span>
                 </span>
-                <span className="text-xs text-secondary truncate">{defaultGroupName || '...'}</span>
+                <span className="shrink-0 text-[11px] text-gray-400">查看</span>
               </button>
             ) : (
-              <div className="mt-2 flex items-center justify-between gap-2">
+              <div className="mt-2 flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5">
                 <button
                   type="button"
                   className="text-xs text-gray-500 transition-colors hover:text-secondary"
                   onClick={goToMyLove20NftPage}
                   title="前往我的NFT"
                 >
-                  未关联NFT
+                  未关联 NFT
                 </button>
                 <Button
                   type="button"
