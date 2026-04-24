@@ -520,11 +520,11 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         <Button
           variant="outline"
           className={cn(
-            'h-auto w-fit min-w-0 max-w-none rounded-xl border bg-white/60 px-2.5 py-1 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:min-w-[300px]',
+            'h-auto w-fit min-w-0 max-w-none rounded-xl border bg-white/60 px-2.5 py-0.5 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:min-w-[300px]',
             className,
           )}
         >
-          <div className="grid w-full grid-cols-[max-content_1px_minmax(0,1fr)_16px] grid-rows-3 items-center gap-x-2 gap-y-0.5 text-left">
+          <div className="grid w-full grid-cols-[max-content_1px_minmax(0,1fr)_16px] grid-rows-3 items-center gap-x-2 gap-y-0 text-left">
             <div className="col-start-1 row-span-3 flex h-full items-center justify-center">
               <span className="inline-flex h-7 min-w-max items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600 px-2 text-sm font-bold text-white whitespace-nowrap">
                 <span>{token?.symbol || 'TOKEN'}</span>
@@ -546,7 +546,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
 
             <div className="col-start-3 row-start-2 flex min-w-0 items-center justify-end">
               {hasDefaultGroup ? (
-                <span className="inline-flex min-w-0 max-w-full items-center justify-between gap-2 rounded-md border border-secondary/15 bg-white px-2 py-0.5 text-left leading-none">
+                <span className="inline-flex min-w-0 max-w-full items-center justify-between gap-2 rounded-md border border-secondary/15 bg-white px-2 py-px text-left leading-none">
                   <span className="inline-flex min-w-0 flex-1 items-center gap-1.5">
                     <span className="shrink-0 text-xs font-semibold text-secondary">
                       NFT#{defaultGroupId?.toString()}
@@ -555,7 +555,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                   </span>
                 </span>
               ) : (
-                <span className="inline-flex items-center rounded-md border border-gray-200 bg-white px-2 py-0.5 text-xs leading-none text-gray-500">
+                <span className="inline-flex items-center rounded-md border border-gray-200 bg-white px-2 py-px text-xs leading-none text-gray-500">
                   未关联 NFT
                 </span>
               )}
