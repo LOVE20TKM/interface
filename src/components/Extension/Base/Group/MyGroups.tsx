@@ -309,9 +309,22 @@ export default function MyGroups() {
                             </Button>
                           ))}
 
-                        <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
-                          <Link href={`/group/transfer?tokenId=${group.tokenId.toString()}`}>转让</Link>
-                        </Button>
+                        {isCurrentDefault ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-secondary border-secondary opacity-50 cursor-not-allowed hover:bg-background hover:text-secondary"
+                            aria-disabled="true"
+                            title="当前地址已设置此NFT为默认关联NFT"
+                            onClick={() => toast.error('当前地址已设置此NFT为默认关联NFT')}
+                          >
+                            转让
+                          </Button>
+                        ) : (
+                          <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
+                            <Link href={`/group/transfer?tokenId=${group.tokenId.toString()}`}>转让</Link>
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>

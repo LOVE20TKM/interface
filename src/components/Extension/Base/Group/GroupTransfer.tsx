@@ -24,7 +24,12 @@ import { Form, FormField, FormItem, FormControl, FormMessage, FormLabel } from '
 // my hooks
 import { useTransferFrom } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
-import { invalidateGroupDefaultsQueries } from '@/src/hooks/extension/base/contracts/useGroupDefaults';
+import {
+  invalidateGroupDefaultsQueries,
+  isGroupDefaultsEnabled,
+  useDefaultGroupIdOf,
+} from '@/src/hooks/extension/base/contracts/useGroupDefaults';
+import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
 // my components
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -72,9 +77,20 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { address: account } = useAccount();
+  const isOnTargetChain = useIsOnTargetChain();
   const [addressConversionInfo, setAddressConversionInfo] = useState<string>('');
   const [convertedAddress, setConvertedAddress] = useState<`0x${string}` | null>(null);
   const [lastProcessedTxHash, setLastProcessedTxHash] = useState<string | null>(null);
+  const canCheckDefaultGroup = isGroupDefaultsEnabled && !!account && isOnTargetChain;
+  const {
+    defaultGroupId,
+    isPending: isPendingDefaultGroup,
+    error: defaultGroupError,
+  } = useDefaultGroupIdOf(account, canCheckDefaultGroup);
+  const isCurrentDefaultGroup =
+    canCheckDefaultGroup && defaultGroupId !== undefined && defaultGroupId > BigInt(0) && defaultGroupId === tokenId;
+  const isCheckingDefaultGroup = canCheckDefaultGroup && isPendingDefaultGroup;
+  const hasDefaultGroupLookupError = canCheckDefaultGroup && !!defaultGroupError;
 
   // 获取 NFT 名称
   const { groupName, isPending: isPendingGroupName, error: groupNameError } = useGroupNameOf(tokenId);
@@ -155,6 +171,21 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
       return;
     }
 
+    if (isCheckingDefaultGroup) {
+      toast.error('默认NFT状态检查中，请稍后再试');
+      return;
+    }
+
+    if (hasDefaultGroupLookupError) {
+      toast.error('默认NFT状态校验失败，请稍后重试');
+      return;
+    }
+
+    if (isCurrentDefaultGroup) {
+      toast.error('默认NFT不可转让，请先取消默认');
+      return;
+    }
+
     // 标准化地址输入，支持TH、0x等格式
     const normalizedAddress = normalizeAddressInput(data.to);
     if (!normalizedAddress) {
@@ -209,6 +240,8 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
   }
 
   const isDisabled = !account;
+  const isTransferDisabled =
+    isTransferring || isDisabled || isCheckingDefaultGroup || hasDefaultGroupLookupError || isCurrentDefaultGroup;
 
   return (
     <div className="p-6">
@@ -224,6 +257,20 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
                 <span className="font-medium text-gray-800">{groupName}</span>
               </div>
             </div>
+
+            {isCheckingDefaultGroup && <div className="text-xs text-gray-500">正在检查默认NFT状态...</div>}
+
+            {hasDefaultGroupLookupError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                默认NFT状态校验失败，暂时无法转让，请稍后重试。
+              </div>
+            )}
+
+            {isCurrentDefaultGroup && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                当前NFT已设为默认NFT，请先在“我的NFT”中取消默认后再转让。
+              </div>
+            )}
 
             {/* 目标地址输入 */}
             <FormField
@@ -260,7 +307,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
 
             {/* 转让按钮 */}
             <div className="flex space-x-2 pt-4">
-              <Button className="w-full" onClick={handleTransfer} disabled={isTransferring || isDisabled} size="lg">
+              <Button className="w-full" onClick={handleTransfer} disabled={isTransferDisabled} size="lg">
                 {isTransferring ? '转让中...' : '确认转让'}
               </Button>
             </div>
