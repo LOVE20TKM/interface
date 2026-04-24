@@ -520,7 +520,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         <Button
           variant="outline"
           className={cn(
-            'h-auto w-fit min-w-0 max-w-none rounded-xl border bg-white/60 px-2.5 py-0.5 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:min-w-[300px]',
+            'h-auto w-fit min-w-0 max-w-[calc(100vw-2rem)] rounded-xl border bg-white/60 px-2.5 py-0.5 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:max-w-[320px]',
             className,
           )}
         >
