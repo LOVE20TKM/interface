@@ -292,6 +292,7 @@ const TokenPage = () => {
     MintViewer: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_MINTVIEWER,
     Hub: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB,
     Group: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP,
+    GroupDefaults: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_DEFAULTS,
     ExtensionCenter: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER,
     ExtensionGroupManager: groupManagerContractAddress,
     ExtensionGroupJoin: groupJoinContractAddress,
@@ -726,6 +727,7 @@ const TokenPage = () => {
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
                       <AddressItem name="Group" address={constantsAddresses.Group} />
+                      <AddressItem name="GroupDefaults" address={constantsAddresses.GroupDefaults} />
                       <AddressItem name="ExtensionCenter" address={constantsAddresses.ExtensionCenter} />
                       {constantsAddresses.ExtensionLpFactoryV2 ? (
                         <>
@@ -735,7 +737,7 @@ const TokenPage = () => {
                       ) : (
                         <AddressItem name="ExtensionLpFactory" address={constantsAddresses.ExtensionLpFactory} />
                       )}
-                      {/* <AddressItem name="GroupManager" address={constantsAddresses.ExtensionGroupManager} />
+                      <AddressItem name="GroupManager" address={constantsAddresses.ExtensionGroupManager} />
                       <AddressItem name="GroupJoin" address={constantsAddresses.ExtensionGroupJoin} />
                       <AddressItem name="GroupVerify" address={constantsAddresses.ExtensionGroupVerify} />
                       <AddressItem name="GroupRecipients" address={constantsAddresses.ExtensionGroupRecipients} />
@@ -748,7 +750,7 @@ const TokenPage = () => {
                         name="ExtensionGroupServiceFactory"
                         nameClassName="text-sm"
                         address={constantsAddresses.ExtensionGroupServiceFactory}
-                      /> */}
+                      />
                     </CardContent>
                   </Card>
                 </div>
