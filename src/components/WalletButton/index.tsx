@@ -547,10 +547,10 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               {hasDefaultGroup ? (
                 <span className="inline-flex min-w-0 max-w-full items-center justify-between gap-2 rounded-md border border-secondary/15 bg-white px-2 py-px text-left leading-none">
                   <span className="inline-flex min-w-0 flex-1 items-center gap-1.5">
+                    <span className="min-w-0 truncate text-xs text-secondary/80">{defaultGroupName || '...'}</span>
                     <span className="shrink-0 text-xs font-semibold text-secondary">
                       NFT#{defaultGroupId?.toString()}
                     </span>
-                    <span className="min-w-0 truncate text-xs text-secondary/80">{defaultGroupName || '...'}</span>
                   </span>
                 </span>
               ) : (
@@ -604,10 +604,10 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                 title="前往我的NFT"
               >
                 <span className="inline-flex min-w-0 flex-1 items-center gap-1.5">
+                  <span className="min-w-0 truncate text-xs text-secondary/80">{defaultGroupName || '...'}</span>
                   <span className="shrink-0 text-xs font-semibold text-secondary">
                     NFT#{defaultGroupId?.toString()}
                   </span>
-                  <span className="min-w-0 truncate text-xs text-secondary/80">{defaultGroupName || '...'}</span>
                 </span>
                 <span className="shrink-0 text-[11px] text-gray-400">查看</span>
               </button>
