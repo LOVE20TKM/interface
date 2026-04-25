@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useContext } from 'react';
-import { useRouter } from 'next/router';
 import { useAccount, useBalance, useConnect, useDisconnect, useChainId } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,13 +22,13 @@ import { useError } from '@/src/contexts/ErrorContext';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { isGroupDefaultsEnabled, useDefaultGroupOf } from '@/src/hooks/extension/base/contracts/useGroupDefaults';
 import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
+import { NavigationUtils } from '@/src/lib/navigationUtils';
 
 interface WalletButtonProps {
   className?: string;
 }
 
 export function WalletButton({ className }: WalletButtonProps = {}) {
-  const router = useRouter();
   const tokenContext = useContext(TokenContext);
   const token = tokenContext?.token;
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
@@ -254,10 +253,10 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
     }
   };
 
-  const myLove20NftHref = `${basePath}/group/groupids`;
+  const myLove20NftHref = `${basePath}/group/groupids/`;
 
   const goToMyLove20NftPage = () => {
-    void router.push(myLove20NftHref);
+    NavigationUtils.redirectWithOverlay(myLove20NftHref, '正在打开我的NFT...');
   };
 
   // 处理连接错误
@@ -613,25 +612,15 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                 <span className="shrink-0 text-[11px] text-gray-400">查看</span>
               </button>
             ) : (
-              <div className="mt-2 flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5">
-                <button
-                  type="button"
-                  className="text-xs text-gray-500 transition-colors hover:text-secondary"
-                  onClick={goToMyLove20NftPage}
-                  title="前往我的NFT"
-                >
-                  未关联 NFT
-                </button>
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  className="h-auto p-0 text-xs text-secondary"
-                  onClick={goToMyLove20NftPage}
-                >
-                  去设置
-                </Button>
-              </div>
+              <button
+                type="button"
+                className="mt-2 flex w-full items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-left transition-colors hover:bg-secondary/5"
+                onClick={goToMyLove20NftPage}
+                title="前往我的NFT"
+              >
+                <span className="text-xs text-gray-500">未关联 NFT</span>
+                <span className="text-xs font-medium text-secondary">去设置</span>
+              </button>
             ))}
         </div>
 
