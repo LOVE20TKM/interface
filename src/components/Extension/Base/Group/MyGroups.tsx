@@ -2,40 +2,38 @@
  * 我的 LOVE20 NFT 列表组件
  */
 
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { toast } from 'react-hot-toast';
-import { useQueryClient } from '@tanstack/react-query';
-import { useAccount } from 'wagmi';
-import Link from 'next/link';
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAccount } from "wagmi";
+import Link from "next/link";
 
 // my hooks
-import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
-import { useTotalBurnedForMint, useTotalSupply } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
+import { useMyGroups } from "@/src/hooks/extension/base/composite/useMyGroups";
+import { useTotalBurnedForMint, useTotalSupply } from "@/src/hooks/extension/base/contracts/useLOVE20Group";
 import {
   invalidateGroupDefaultsQueries,
   isGroupDefaultsEnabled,
   useClearDefaultGroupId,
   useDefaultGroupIdOf,
   useSetDefaultGroupId,
-} from '@/src/hooks/extension/base/contracts/useGroupDefaults';
-import { formatTokenAmount } from '@/src/lib/format';
-import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
+} from "@/src/hooks/extension/base/contracts/useGroupDefaults";
+import { formatTokenAmount } from "@/src/lib/format";
+import { useIsOnTargetChain } from "@/src/hooks/useIsOnTargetChain";
 
 // my components
-import LeftTitle from '@/src/components/Common/LeftTitle';
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import { Button } from '@/components/ui/button';
+import LeftTitle from "@/src/components/Common/LeftTitle";
+import LoadingIcon from "@/src/components/Common/LoadingIcon";
+import { Button } from "@/components/ui/button";
 
 const FIRST_TOKEN_SYMBOL = process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL as string;
 
-type PendingDefaultAction =
-  | {
-      type: 'set' | 'clear';
-      tokenId: string;
-    }
-  | null;
+type PendingDefaultAction = {
+  type: "set" | "clear";
+  tokenId: string;
+} | null;
 
 export default function MyGroups() {
   const { address: account, isConnected } = useAccount();
@@ -87,7 +85,7 @@ export default function MyGroups() {
   useEffect(() => {
     const currentTxHash = setDefaultHash;
     if (
-      pendingDefaultAction?.type !== 'set' ||
+      pendingDefaultAction?.type !== "set" ||
       !isConfirmedSetDefault ||
       !currentTxHash ||
       currentTxHash === lastProcessedSetDefaultHash
@@ -95,7 +93,7 @@ export default function MyGroups() {
       return;
     }
 
-    toast.success('默认NFT设置成功');
+    toast.success("默认NFT设置成功");
     void refetchDefaultGroup();
     void invalidateGroupDefaultsQueries(queryClient);
     setLastProcessedSetDefaultHash(currentTxHash);
@@ -112,7 +110,7 @@ export default function MyGroups() {
   useEffect(() => {
     const currentTxHash = clearDefaultHash;
     if (
-      pendingDefaultAction?.type !== 'clear' ||
+      pendingDefaultAction?.type !== "clear" ||
       !isConfirmedClearDefault ||
       !currentTxHash ||
       currentTxHash === lastProcessedClearDefaultHash
@@ -120,7 +118,7 @@ export default function MyGroups() {
       return;
     }
 
-    toast.success('默认NFT已取消');
+    toast.success("默认NFT已取消");
     void refetchDefaultGroup();
     void invalidateGroupDefaultsQueries(queryClient);
     setLastProcessedClearDefaultHash(currentTxHash);
@@ -142,28 +140,28 @@ export default function MyGroups() {
 
   const handleSetDefault = async (groupId: bigint) => {
     setPendingDefaultAction({
-      type: 'set',
+      type: "set",
       tokenId: groupId.toString(),
     });
 
     try {
       await setDefaultGroupId(groupId);
     } catch (error) {
-      console.error('set default group failed:', error);
+      console.error("set default group failed:", error);
       setPendingDefaultAction(null);
     }
   };
 
   const handleClearDefault = async (groupId: bigint) => {
     setPendingDefaultAction({
-      type: 'clear',
+      type: "clear",
       tokenId: groupId.toString(),
     });
 
     try {
       await clearDefaultGroupId();
     } catch (error) {
-      console.error('clear default group failed:', error);
+      console.error("clear default group failed:", error);
       setPendingDefaultAction(null);
     }
   };
@@ -208,13 +206,13 @@ export default function MyGroups() {
         <div className="text-sm text-gray-600">
           社区共铸造 NFT：
           <span className="font-medium text-gray-800 ml-1">
-            {totalSupply !== undefined ? totalSupply.toString() : '...'} 个
+            {totalSupply !== undefined ? totalSupply.toString() : "..."} 个
           </span>
         </div>
         <div className="text-sm text-gray-600">
           累计销毁 {FIRST_TOKEN_SYMBOL} 代币：
           <span className="font-medium text-gray-800 ml-1">
-            {totalBurnedForMint !== undefined ? formatTokenAmount(totalBurnedForMint) : '...'}
+            {totalBurnedForMint !== undefined ? formatTokenAmount(totalBurnedForMint) : "..."}
           </span>
         </div>
       </div>
@@ -237,7 +235,7 @@ export default function MyGroups() {
 
       {canManageDefaultGroup && (
         <div className="text-xs text-gray-500 mb-3">
-          可为此地址设置一个默认NFT，转账、群聊等场景可直接使用NFT身份。
+          可为此地址设置一个默认NFT，转账、群聊等应用场景可将使用默认NFT身份。
         </div>
       )}
       {isGroupDefaultsEnabled && !isOnTargetChain && (
@@ -269,12 +267,12 @@ export default function MyGroups() {
                 return (
                   <tr
                     key={group.tokenId.toString()}
-                    className={`border-b border-gray-100 hover:bg-gray-50 ${isCurrentDefault ? 'bg-secondary/5' : ''}`}
+                    className={`border-b border-gray-100 hover:bg-gray-50 ${isCurrentDefault ? "bg-secondary/5" : ""}`}
                   >
                     <td className="px-2 font-mono text-secondary">{group.tokenId.toString()}</td>
                     <td className="px-2">
                       <div className="flex flex-col gap-1">
-                        <span className={`font-medium break-all ${isCurrentDefault ? 'text-secondary' : ''}`}>
+                        <span className={`font-medium break-all ${isCurrentDefault ? "text-secondary" : ""}`}>
                           {group.groupName}
                         </span>
                         {isCurrentDefault && (
@@ -295,7 +293,7 @@ export default function MyGroups() {
                               onClick={() => handleClearDefault(group.tokenId)}
                               disabled={isUpdatingDefault}
                             >
-                              {isRowPending && pendingDefaultAction?.type === 'clear' ? '处理中...' : '取消默认'}
+                              {isRowPending && pendingDefaultAction?.type === "clear" ? "处理中..." : "取消默认"}
                             </Button>
                           ) : (
                             <Button
@@ -305,7 +303,7 @@ export default function MyGroups() {
                               onClick={() => handleSetDefault(group.tokenId)}
                               disabled={isUpdatingDefault}
                             >
-                              {isRowPending && pendingDefaultAction?.type === 'set' ? '处理中...' : '设为默认'}
+                              {isRowPending && pendingDefaultAction?.type === "set" ? "处理中..." : "设为默认"}
                             </Button>
                           ))}
 
@@ -316,7 +314,7 @@ export default function MyGroups() {
                             className="text-secondary border-secondary opacity-50 cursor-not-allowed hover:bg-background hover:text-secondary"
                             aria-disabled="true"
                             title="当前地址已设置此NFT为默认关联NFT"
-                            onClick={() => toast.error('当前地址已设置此NFT为默认关联NFT')}
+                            onClick={() => toast.error("当前地址已设置此NFT为默认关联NFT")}
                           >
                             转让
                           </Button>

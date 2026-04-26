@@ -254,6 +254,19 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   };
 
   const myLove20NftHref = `${basePath}/group/groupids/`;
+  const tokenInfoHref = token?.symbol ? `${basePath}/token/?symbol=${token.symbol}` : '';
+  const hasTokenInfoHref = !!tokenInfoHref;
+
+  const goToTokenInfoPage = (event: React.MouseEvent<HTMLSpanElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!tokenInfoHref) return;
+    NavigationUtils.redirectWithOverlay(tokenInfoHref, '正在打开代币信息...');
+  };
+
+  const stopTokenBadgePointerDown = (event: React.PointerEvent<HTMLSpanElement>) => {
+    event.stopPropagation();
+  };
 
   const goToMyLove20NftPage = () => {
     NavigationUtils.redirectWithOverlay(myLove20NftHref, '正在打开我的NFT...');
@@ -525,7 +538,15 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         >
           <div className="grid w-full grid-cols-[max-content_1px_minmax(0,1fr)_16px] grid-rows-3 items-center gap-x-2 gap-y-0 text-left">
             <div className="col-start-1 row-span-3 flex h-full items-center justify-center">
-              <span className="inline-flex h-7 min-w-max items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600 px-2 text-sm font-bold text-white whitespace-nowrap">
+              <span
+                className={cn(
+                  'inline-flex h-7 min-w-max items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600 px-2 text-sm font-bold text-white whitespace-nowrap',
+                  hasTokenInfoHref && 'cursor-pointer transition-opacity hover:opacity-85',
+                )}
+                onPointerDown={hasTokenInfoHref ? stopTokenBadgePointerDown : undefined}
+                onClick={hasTokenInfoHref ? goToTokenInfoPage : undefined}
+                title={hasTokenInfoHref ? '查看代币信息' : undefined}
+              >
                 <span>{token?.symbol || 'TOKEN'}</span>
               </span>
             </div>
