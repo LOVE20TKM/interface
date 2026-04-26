@@ -546,10 +546,10 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
             <div className="col-start-3 row-start-2 flex min-w-0 items-center justify-end">
               {hasDefaultGroup ? (
                 <span className="inline-flex min-w-0 max-w-full items-center justify-between gap-2 rounded-md border border-secondary/15 bg-white px-2 py-px text-left leading-none">
-                  <span className="inline-flex min-w-0 flex-1 items-center gap-1.5">
-                    <span className="min-w-0 truncate text-xs text-secondary/80">{defaultGroupName || '...'}</span>
-                    <span className="shrink-0 text-xs font-semibold text-secondary">
-                      NFT#{defaultGroupId?.toString()}
+                  <span className="inline-flex min-w-0 flex-1 items-baseline gap-1.5">
+                    <span className="min-w-0 truncate text-xs font-medium text-gray-800">{defaultGroupName || '...'}</span>
+                    <span className="shrink-0 text-[10px] font-normal text-gray-400">
+                      NFT #{defaultGroupId?.toString()}
                     </span>
                   </span>
                 </span>
@@ -560,9 +560,12 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               )}
             </div>
 
-            <div className="col-start-3 row-start-3 flex min-w-0 items-center justify-end text-[11px] leading-none">
+            <div className="col-start-3 row-start-3 flex min-w-0 items-baseline justify-end text-[11px] leading-none">
               <span className="min-w-0 truncate font-medium text-gray-700">
-                {balance ? formatTokenAmount(balance.value) : '0'} {balance?.symbol || 'ETH'}
+                {balance ? formatTokenAmount(balance.value) : '0'}
+              </span>
+              <span className="ml-1 shrink-0 text-[10px] font-normal text-gray-400">
+                {balance?.symbol || 'ETH'}
               </span>
             </div>
 
@@ -603,10 +606,10 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                 onClick={goToMyLove20NftPage}
                 title="前往我的NFT"
               >
-                <span className="inline-flex min-w-0 flex-1 items-center gap-1.5">
-                  <span className="min-w-0 truncate text-xs text-secondary/80">{defaultGroupName || '...'}</span>
-                  <span className="shrink-0 text-xs font-semibold text-secondary">
-                    NFT#{defaultGroupId?.toString()}
+                <span className="inline-flex min-w-0 flex-1 items-baseline gap-1.5">
+                  <span className="min-w-0 truncate text-xs font-medium text-gray-800">{defaultGroupName || '...'}</span>
+                  <span className="shrink-0 text-[10px] font-normal text-gray-400">
+                    NFT #{defaultGroupId?.toString()}
                   </span>
                 </span>
                 <span className="shrink-0 text-[11px] text-gray-400">查看</span>
