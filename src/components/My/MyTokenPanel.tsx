@@ -1,4 +1,4 @@
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -41,8 +41,11 @@ const AssetItem: React.FC<AssetItemProps> = ({
   isUniswapV2Lp,
 }) => {
   return (
-    <div className={`px-4 py-4 min-w-0 ${className || ''}`}>
-      <div className="flex items-center justify-center gap-1 text-center text-sm font-mono leading-5 break-words min-w-0">
+    <div className={`flex flex-col justify-center px-4 py-4 min-w-0 ${className || ''}`}>
+      <div className="text-center text-xl font-semibold break-all">
+        {isLoading ? <LoadingIcon /> : formatTokenAmount(value)}
+      </div>
+      <div className="mt-2 flex items-center justify-center gap-1 text-center text-xs font-mono leading-5 text-gray-500 break-words min-w-0">
         <span className="break-all">{title}</span>
         {tokenAddress && tokenSymbol && tokenDecimals !== undefined && (
           <AddToMetamask
@@ -53,16 +56,35 @@ const AssetItem: React.FC<AssetItemProps> = ({
           />
         )}
       </div>
-      <div className="mt-3 text-center text-xl font-semibold break-all">
-        {isLoading ? <LoadingIcon /> : formatTokenAmount(value)}
-      </div>
     </div>
   );
 };
 
 const MyTokenPanel: React.FC<{ token: Token | null | undefined }> = ({ token }) => {
   const { address: account } = useAccount();
-  const { pairAddress: usdtLpPairAddress, usdtSymbol, isLoading: isLoadingUsdtLpPair } = useUSDTPairAddress(token?.address);
+  const nativeSymbol = process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL || 'TKM';
+  const {
+    pairAddress: usdtLpPairAddress,
+    usdtAddress,
+    usdtSymbol: configuredUsdtSymbol,
+    isLoading: isLoadingUsdtLpPair,
+  } = useUSDTPairAddress(token?.address);
+  const usdtSymbol = configuredUsdtSymbol || 'TUSDT';
+
+  // 获取 TKM 余额
+  const { data: nativeBalance, isLoading: isLoadingNativeBalance } = useBalance({
+    address: account,
+    query: {
+      enabled: !!account,
+    },
+  });
+
+  // 获取 TUSDT 余额
+  const { balance: usdtBalance, isPending: isPendingUsdtBalance } = useBalanceOf(
+    (usdtAddress || ZERO_ADDRESS) as `0x${string}`,
+    account as `0x${string}`,
+    !!usdtAddress,
+  );
 
   // 获取代币余额
   const { balance, isPending: isPendingBalance } = useBalanceOf(
@@ -113,44 +135,59 @@ const MyTokenPanel: React.FC<{ token: Token | null | undefined }> = ({ token }) 
         </Button>
       </div>
       <div className="mt-2 overflow-hidden rounded-lg bg-gray-100">
-        <div className="grid grid-cols-1 sm:grid-cols-2">
-        <AssetItem
-          title={`持有 ${token.symbol}`}
-          value={balance || BigInt(0)}
-          isLoading={isPendingBalance}
-          className="border-b border-gray-200 sm:border-r"
-          tokenAddress={token.address as `0x${string}`}
-          tokenSymbol={token.symbol}
-          tokenDecimals={token.decimals}
-        />
-        <AssetItem
-          title={`持有 ${token.parentTokenSymbol}`}
-          value={parentTokenBalance || BigInt(0)}
-          isLoading={isPendingParentTokenBalance}
-          className="border-b border-gray-200"
-          tokenAddress={token.parentTokenAddress as `0x${string}`}
-          tokenSymbol={token.parentTokenSymbol}
-          tokenDecimals={token.decimals}
-        />
-        <AssetItem
-          title={`持有 LP(${token.symbol}/${token.parentTokenSymbol})`}
-          value={parentLpBalance || BigInt(0)}
-          isLoading={isLoadingParentLpBalance}
-          className="border-b border-gray-200 sm:border-b-0 sm:border-r"
-          tokenAddress={token.uniswapV2PairAddress !== ZERO_ADDRESS ? (token.uniswapV2PairAddress as `0x${string}`) : undefined}
-          tokenSymbol={`LP(${token.symbol}/${token.parentTokenSymbol})`}
-          tokenDecimals={18}
-          isUniswapV2Lp={true}
-        />
-        <AssetItem
-          title={`持有 LP(${token.symbol}/${usdtSymbol || 'TUSDT'})`}
-          value={usdtLpBalance || BigInt(0)}
-          isLoading={isLoadingUsdtLpPair || isLoadingUsdtLpBalance}
-          tokenAddress={usdtLpPairAddress}
-          tokenSymbol={`LP(${token.symbol}/${usdtSymbol || 'TUSDT'})`}
-          tokenDecimals={18}
-          isUniswapV2Lp={true}
-        />
+        <div className="grid grid-cols-2">
+          <AssetItem
+            title={nativeSymbol}
+            value={nativeBalance?.value || BigInt(0)}
+            isLoading={isLoadingNativeBalance}
+            className="border-b border-r border-gray-200"
+          />
+          <AssetItem
+            title={usdtSymbol}
+            value={usdtBalance || BigInt(0)}
+            isLoading={isPendingUsdtBalance}
+            className="border-b border-gray-200"
+            tokenAddress={usdtAddress}
+            tokenSymbol={usdtSymbol}
+            tokenDecimals={18}
+          />
+          <AssetItem
+            title={token.symbol}
+            value={balance || BigInt(0)}
+            isLoading={isPendingBalance}
+            className="border-b border-r border-gray-200"
+            tokenAddress={token.address as `0x${string}`}
+            tokenSymbol={token.symbol}
+            tokenDecimals={token.decimals}
+          />
+          <AssetItem
+            title={token.parentTokenSymbol}
+            value={parentTokenBalance || BigInt(0)}
+            isLoading={isPendingParentTokenBalance}
+            className="border-b border-gray-200"
+            tokenAddress={token.parentTokenAddress as `0x${string}`}
+            tokenSymbol={token.parentTokenSymbol}
+            tokenDecimals={token.decimals}
+          />
+          <AssetItem
+            title={`LP(${token.symbol}/${token.parentTokenSymbol})`}
+            value={parentLpBalance || BigInt(0)}
+            isLoading={isLoadingParentLpBalance}
+            className="border-r border-gray-200"
+            tokenAddress={token.uniswapV2PairAddress !== ZERO_ADDRESS ? (token.uniswapV2PairAddress as `0x${string}`) : undefined}
+            tokenSymbol={`LP(${token.symbol}/${token.parentTokenSymbol})`}
+            tokenDecimals={18}
+            isUniswapV2Lp={true}
+          />
+          <AssetItem
+            title={`LP(${token.symbol}/${usdtSymbol})`}
+            value={usdtLpBalance || BigInt(0)}
+            isLoading={isLoadingUsdtLpPair || isLoadingUsdtLpBalance}
+            tokenAddress={usdtLpPairAddress}
+            tokenSymbol={`LP(${token.symbol}/${usdtSymbol})`}
+            tokenDecimals={18}
+            isUniswapV2Lp={true}
+          />
         </div>
       </div>
     </div>
