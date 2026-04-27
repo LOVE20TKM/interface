@@ -256,6 +256,8 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   const myLove20NftHref = `${basePath}/group/groupids/`;
   const tokenInfoHref = token?.symbol ? `${basePath}/token/?symbol=${token.symbol}` : '';
   const hasTokenInfoHref = !!tokenInfoHref;
+  const nativeBalanceValue = balance ? formatTokenAmount(balance.value) : '0';
+  const nativeBalanceSymbol = balance?.symbol || process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL || 'TKM';
 
   const goToTokenInfoPage = (event: React.MouseEvent<HTMLSpanElement>) => {
     event.preventDefault();
@@ -532,15 +534,15 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         <Button
           variant="outline"
           className={cn(
-            'h-auto w-fit min-w-0 max-w-[calc(100vw-2rem)] rounded-xl border bg-white/60 px-2.5 py-0.5 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:max-w-[320px]',
+            'h-auto min-h-[48px] w-fit min-w-0 max-w-[calc(100vw-2rem)] rounded-xl border bg-white/60 px-3 py-1.5 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:max-w-[320px]',
             className,
           )}
         >
-          <div className="grid w-full grid-cols-[max-content_1px_minmax(0,1fr)_16px] grid-rows-3 items-center gap-x-2 gap-y-0 text-left">
-            <div className="col-start-1 row-span-3 flex h-full items-center justify-center">
+          <div className="grid w-full grid-cols-[max-content_1px_minmax(0,1fr)_16px] grid-rows-2 items-center gap-x-2.5 gap-y-0.5 text-left">
+            <div className="col-start-1 row-span-2 flex h-full items-center justify-center">
               <span
                 className={cn(
-                  'inline-flex h-7 min-w-max items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600 px-2 text-sm font-bold text-white whitespace-nowrap',
+                  'inline-flex h-8 min-w-max items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600 px-2.5 text-sm font-bold text-white whitespace-nowrap',
                   hasTokenInfoHref && 'cursor-pointer transition-opacity hover:opacity-85',
                 )}
                 onPointerDown={hasTokenInfoHref ? stopTokenBadgePointerDown : undefined}
@@ -551,7 +553,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               </span>
             </div>
 
-            <div className="col-start-2 row-span-3 h-full w-px self-stretch bg-gray-200" />
+            <div className="col-start-2 row-span-2 h-full w-px self-stretch bg-gray-200" />
 
             <div className="col-start-3 row-start-1 flex min-w-0 items-center justify-end gap-2">
               <span className="min-w-0 truncate font-mono text-[13px] font-medium leading-none text-gray-900">
@@ -564,33 +566,17 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               )}
             </div>
 
-            <div className="col-start-3 row-start-2 flex min-w-0 items-center justify-end">
+            <div className="col-start-3 row-start-2 flex min-w-0 items-center justify-end text-xs leading-none">
               {hasDefaultGroup ? (
-                <span className="inline-flex min-w-0 max-w-full items-center justify-between gap-2 rounded-md border border-secondary/15 bg-white px-2 py-px text-left leading-none">
-                  <span className="inline-flex min-w-0 flex-1 items-baseline gap-1.5">
-                    <span className="min-w-0 truncate text-xs font-medium text-gray-800">{defaultGroupName || '...'}</span>
-                    <span className="shrink-0 text-[10px] font-normal text-gray-400">
-                      NFT #{defaultGroupId?.toString()}
-                    </span>
-                  </span>
+                <span className="inline-flex min-w-0 max-w-full items-baseline justify-end gap-1.5 text-right">
+                  <span className="min-w-0 truncate font-medium text-gray-600">{defaultGroupName || '...'}</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center rounded-md border border-gray-200 bg-white px-2 py-px text-xs leading-none text-gray-500">
-                  未关联 NFT
-                </span>
+                <span className="text-gray-400">未关联 NFT</span>
               )}
             </div>
 
-            <div className="col-start-3 row-start-3 flex min-w-0 items-baseline justify-end text-[11px] leading-none">
-              <span className="min-w-0 truncate font-medium text-gray-700">
-                {balance ? formatTokenAmount(balance.value) : '0'}
-              </span>
-              <span className="ml-1 shrink-0 text-[10px] font-normal text-gray-400">
-                {balance?.symbol || 'ETH'}
-              </span>
-            </div>
-
-            <ChevronDown className="col-start-4 row-span-3 h-4 w-4 self-center shrink-0 text-gray-500" />
+            <ChevronDown className="col-start-4 row-span-2 h-4 w-4 self-center shrink-0 text-gray-500" />
           </div>
         </Button>
       </DropdownMenuTrigger>
@@ -629,11 +615,8 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               >
                 <span className="inline-flex min-w-0 flex-1 items-baseline gap-1.5">
                   <span className="min-w-0 truncate text-xs font-medium text-gray-800">{defaultGroupName || '...'}</span>
-                  <span className="shrink-0 text-[10px] font-normal text-gray-400">
-                    NFT #{defaultGroupId?.toString()}
-                  </span>
                 </span>
-                <span className="shrink-0 text-[11px] text-gray-400">查看</span>
+                <span className="shrink-0 text-[11px] text-gray-400">查看NFT</span>
               </button>
             ) : (
               <button
@@ -646,6 +629,10 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                 <span className="text-xs font-medium text-secondary">去设置</span>
               </button>
             ))}
+          <div className="mt-2 flex w-full items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5">
+            <span className="min-w-0 truncate text-left text-xs font-medium text-gray-800">{nativeBalanceValue}</span>
+            <span className="shrink-0 text-right text-xs font-medium text-gray-500">{nativeBalanceSymbol}</span>
+          </div>
         </div>
 
         {token &&
