@@ -235,7 +235,8 @@ export default function MyGroups() {
 
       {canManageDefaultGroup && (
         <div className="text-xs text-gray-500 mb-3">
-          可为此地址设置一个默认NFT，转账、群聊等应用场景可将使用默认NFT身份。
+          LOVE20 NFT
+          是LOVE20生态的身份凭证，既可作为链上社群的唯一凭证，又可作为个人的身份凭证。个人可将自己的钱包地址设置一个默认NFT，以用于转账、群聊等应用场景下的默认身份。
         </div>
       )}
       {isGroupDefaultsEnabled && !isOnTargetChain && (
