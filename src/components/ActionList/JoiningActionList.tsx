@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useMemo } from 'react';
+import React, { useContext } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { ChevronRight, UserPen } from 'lucide-react';
@@ -9,7 +9,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 // my utils
 import { calculateActionAPY, calculateExpectedActionReward } from '@/src/lib/domainUtils';
-import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+import { formatPercentage } from '@/src/lib/format';
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
@@ -83,10 +83,7 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound, joi
               const votesB = Number(b.votesNum);
               return votesB - votesA;
             })
-            .map((actionDetail: JoinableAction, index: number) => {
-              // 参与代币数（已包含扩展数据）
-              const joinedAmount = actionDetail.joinedAmount;
-
+            .map((actionDetail: JoinableAction) => {
               // 计算投票占比
               const voteRatio =
                 Number(totalVotes) > 0 ? Number(actionDetail.votesNum || BigInt(0)) / Number(totalVotes) : 0;
@@ -136,12 +133,6 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound, joi
                         <span>
                           <span className="text-greyscale-400 text-xs mr-1">投票占</span>
                           <span className="text-secondary text-xs">{formatPercentage(voteRatio * 100)}</span>
-                        </span>
-                        <span>
-                          <span className="text-greyscale-400 text-xs mr-1">
-                            参与代币{actionDetail.isConvertedJoinedValueSuccess ? '(估)' : ''}
-                          </span>
-                          <span className="text-secondary text-xs">{formatTokenAmount(joinedAmount)}</span>
                         </span>
                         {!actionDetail.hasReward ? (
                           <span className="flex justify-between text-error text-sm">无铸币激励</span>
