@@ -12,7 +12,7 @@ export default function LiquidityQueryPage() {
 
   return (
     <>
-      <Header title="流动性查询" showBackButton={true} />
+      <Header title="社区流动性" showBackButton={true} />
       <main className="flex-grow px-3 sm:px-0">
         <div className="w-full max-w-2xl mx-auto">
           <LiquidityQueryPanel />

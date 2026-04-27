@@ -63,7 +63,7 @@ export default function DexPage() {
               我的流动性
             </TabsTrigger>
             <TabsTrigger value="liquidity-query" className="min-w-0 truncate">
-              流动性查询
+              社区流动性
             </TabsTrigger>
           </TabsList>
 
