@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -21,6 +21,7 @@ import { BottomNavigation } from '@/src/components/Common/BottomNavigation';
 import { usePageRecovery } from '@/src/hooks/usePageRecovery';
 import { extractErrorMessage } from '@/src/errors/contractErrorParser';
 import { buildGlobalErrorInfo } from '@/src/errors/globalErrorInfo';
+import { takeRouteLoadingSuppression } from '@/src/lib/routeLoading';
 import * as Sentry from '@sentry/nextjs';
 
 import 'core-js/stable';
@@ -48,6 +49,7 @@ const initVConsole = () => {
 };
 
 const client = new QueryClient();
+const NAV_LOADING_DELAY_MS = 240;
 
 // 动态导入所有Web3相关组件，禁用SSR
 const WagmiProvider = dynamic(() => import('wagmi').then((mod) => mod.WagmiProvider), {
@@ -122,6 +124,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [navLoading, setNavLoading] = useState(false);
+  const navLoadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // iOS钱包环境页面恢复功能
   usePageRecovery();
@@ -140,24 +143,28 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   // 路由切换时显示全局加载遮罩
   useEffect(() => {
-    const handleStart = (url: string) => {
-      // 检查是否是外部链接跳转
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        const isExternalRedirect = window.sessionStorage.getItem('love20_external_link_redirect');
-        if (isExternalRedirect) {
-          // 如果是外部链接跳转，不显示加载状态
-          return;
-        }
+    const clearNavLoadingTimer = () => {
+      if (navLoadingTimerRef.current) {
+        clearTimeout(navLoadingTimerRef.current);
+        navLoadingTimerRef.current = null;
       }
-      setNavLoading(true);
+    };
+
+    const handleStart = (url: string) => {
+      clearNavLoadingTimer();
+      if (takeRouteLoadingSuppression(url)) {
+        setNavLoading(false);
+        return;
+      }
+      navLoadingTimerRef.current = setTimeout(() => {
+        setNavLoading(true);
+        navLoadingTimerRef.current = null;
+      }, NAV_LOADING_DELAY_MS);
     };
 
     const handleDone = () => {
+      clearNavLoadingTimer();
       setNavLoading(false);
-      // 清除外部链接跳转标记
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        window.sessionStorage.removeItem('love20_external_link_redirect');
-      }
     };
 
     router.events.on('routeChangeStart', handleStart);
@@ -165,35 +172,12 @@ function MyApp({ Component, pageProps }: AppProps) {
     router.events.on('routeChangeError', handleDone);
 
     return () => {
+      clearNavLoadingTimer();
       router.events.off('routeChangeStart', handleStart);
       router.events.off('routeChangeComplete', handleDone);
       router.events.off('routeChangeError', handleDone);
     };
   }, [router.events]);
-
-  // 处理页面可见性变化，清理可能残留的加载状态
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        // 页面重新可见时，检查并清理加载状态
-        setTimeout(() => {
-          if (typeof window !== 'undefined' && window.sessionStorage) {
-            const isExternalRedirect = window.sessionStorage.getItem('love20_external_link_redirect');
-            if (isExternalRedirect) {
-              setNavLoading(false);
-              window.sessionStorage.removeItem('love20_external_link_redirect');
-            }
-          }
-        }, 100);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
 
   // 在服务端或客户端未完成挂载时显示loading
   if (!mounted) {

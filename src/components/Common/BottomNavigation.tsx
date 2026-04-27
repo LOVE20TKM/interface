@@ -1,10 +1,12 @@
 'use client';
-import { useContext, useMemo, useEffect, useState } from 'react';
+import { useContext, useMemo, useEffect, useState, type MouseEvent } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { cn } from '@/lib/utils';
 import { CircleDollarSign, Users, Vote, User, Layers } from 'lucide-react';
 import { isTukeWallet } from '@/src/lib/tukeWalletUtils';
+import { normalizeRouteKey, suppressNextRouteLoading } from '@/src/lib/routeLoading';
 
 export function BottomNavigation() {
   const { token } = useContext(TokenContext) || {};
@@ -80,6 +82,25 @@ export function BottomNavigation() {
 
   if (!token) return null;
 
+  const handleNavigate = (event: MouseEvent<HTMLAnchorElement>, url: string) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    if (normalizeRouteKey(router.asPath) === normalizeRouteKey(url)) {
+      return;
+    }
+
+    suppressNextRouteLoading(url);
+  };
+
   return (
     <nav
       className={cn(
@@ -91,11 +112,13 @@ export function BottomNavigation() {
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
-            <button
+            <Link
               key={item.title}
-              onClick={() => router.push(item.url)}
+              href={item.url}
+              prefetch={false}
+              onClick={(event) => handleNavigate(event, item.url)}
               className={cn(
-                'flex flex-col items-center justify-end transition-all duration-200 ease-in-out relative',
+                'flex flex-col items-center justify-end transition-all duration-200 ease-in-out relative active:scale-95',
                 'min-w-0 flex-1',
                 item.isMain && 'transform -translate-y-1',
               )}
@@ -157,7 +180,7 @@ export function BottomNavigation() {
               {!item.isMain && item.isActive && (
                 <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full" />
               )}
-            </button>
+            </Link>
           );
         })}
       </div>

@@ -1,11 +1,13 @@
 'use client';
 
+import { useContext } from 'react';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
-import { ArrowRight, HandCoins, Droplets, ArrowLeftRight, Users, Blocks } from 'lucide-react';
+import { ArrowRight, HandCoins, Droplets, ArrowLeftRight, Users, Coins } from 'lucide-react';
 
 // My Components
 import Header from '@/src/components/Header';
+import { TokenContext } from '@/src/contexts/TokenContext';
 
 interface AppItem {
   name: string;
@@ -23,6 +25,8 @@ const APP_LIST: AppItem[] = [
 
 export default function AppsPage() {
   const { isConnected } = useAccount();
+  const { token } = useContext(TokenContext) || {};
+  const tokenInfoHref = token?.symbol ? `/token/?symbol=${token.symbol}` : '/token/';
 
   return (
     <>
@@ -35,6 +39,16 @@ export default function AppsPage() {
         ) : (
           <div className="container mx-auto px-4 py-6 max-w-4xl">
             <div className="space-y-3">
+              <Link
+                href={tokenInfoHref}
+                className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg hover:border-secondary hover:bg-secondary/5 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <Coins className="w-5 h-5 text-secondary" />
+                  <span className="text-base font-medium">代币信息</span>
+                </div>
+                <ArrowRight className="w-5 h-5 text-greyscale-400 group-hover:text-secondary group-hover:translate-x-1 transition-all" />
+              </Link>
               {APP_LIST.map((app) => {
                 const Icon = app.icon;
                 return (
