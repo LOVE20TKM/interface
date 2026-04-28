@@ -1,6 +1,5 @@
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import { NftLookupMode, NftLookupResult } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
@@ -26,41 +25,35 @@ const NftOwnerLookup: React.FC<NftOwnerLookupProps> = ({
 }) => {
   return (
     <div className={cn('space-y-3', className)}>
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className={
-            lookupMode === 'name' ? 'border-secondary bg-secondary text-white hover:bg-secondary/90 hover:text-white' : ''
-          }
-          onClick={() => onLookupModeChange('name')}
+      <div
+        className={cn(
+          'flex h-10 overflow-hidden rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
+          disabled && 'cursor-not-allowed opacity-50',
+        )}
+      >
+        <Select
+          value={lookupMode}
+          onValueChange={(value) => onLookupModeChange(value as NftLookupMode)}
           disabled={disabled}
         >
-          NFT名称
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className={
-            lookupMode === 'id' ? 'border-secondary bg-secondary text-white hover:bg-secondary/90 hover:text-white' : ''
-          }
-          onClick={() => onLookupModeChange('id')}
-          disabled={disabled}
-        >
-          NFT ID
-        </Button>
-      </div>
-
-      <div>
-        <Label className="text-sm font-medium text-gray-700">{lookupMode === 'name' ? 'NFT名称' : 'NFT ID'}</Label>
+          <SelectTrigger className="h-full w-[112px] shrink-0 rounded-none border-0 border-r border-input bg-gray-50 px-3 focus:ring-0 focus:ring-offset-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="id">NFT ID</SelectItem>
+            <SelectItem value="name">NFT名称</SelectItem>
+          </SelectContent>
+        </Select>
         <Input
+          aria-label={lookupMode === 'name' ? 'NFT名称' : 'NFT ID'}
           value={lookupValue}
           onChange={(event) => onLookupValueChange(event.target.value)}
           placeholder={lookupMode === 'name' ? '请输入NFT名称' : '请输入NFT ID'}
           disabled={disabled}
-          className={lookupMode === 'id' ? 'font-mono text-sm' : ''}
+          className={cn(
+            'h-full rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0',
+            lookupMode === 'id' ? 'font-mono text-sm' : '',
+          )}
         />
       </div>
 
@@ -75,12 +68,12 @@ const NftOwnerLookup: React.FC<NftOwnerLookupProps> = ({
       {lookupResult?.status === 'resolved' && (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2 text-sm">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-gray-500">NFT名称</span>
-            <span className="font-medium text-gray-900">{lookupResult.groupName}</span>
-          </div>
-          <div className="flex items-center justify-between gap-3">
             <span className="text-gray-500">NFT ID</span>
             <span className="font-mono text-secondary">#{lookupResult.tokenId.toString()}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-gray-500">NFT名称</span>
+            <span className="font-medium text-gray-900">{lookupResult.groupName}</span>
           </div>
           <div className="flex items-center justify-between gap-3">
             <span className="text-gray-500">当前持有人地址</span>
