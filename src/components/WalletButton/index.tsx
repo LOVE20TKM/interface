@@ -649,6 +649,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               token.parentTokenSymbol !== process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
             return (
               <>
+                <DropdownMenuSeparator className="my-1" />
                 {hasParent ? (
                   <DropdownMenuItem
                     onClick={() => {
