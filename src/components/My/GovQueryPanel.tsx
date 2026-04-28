@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { isAddress } from 'viem';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { normalizeAddressInput, validateAddressInput } from '@/src/lib/addressUtils';
 
 // 导入格式化函数
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
@@ -14,21 +15,34 @@ import { useGovData } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 
 // 导入组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import NftOwnerLookup from '@/src/components/Extension/Base/Group/NftOwnerLookup';
 import { Copy, Check } from 'lucide-react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import toast from 'react-hot-toast';
+import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
 
 // 导入contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
+type GovQueryMode = 'address' | 'nftOwner';
+
 const GovQueryPanel = () => {
   const { token: currentToken } = useContext(TokenContext) || {};
 
+  const [queryMode, setQueryMode] = useState<GovQueryMode>('address');
   const [inputAddress, setInputAddress] = useState<string>('');
   const [queryAddress, setQueryAddress] = useState<`0x${string}` | null>(null);
   const [hasQueried, setHasQueried] = useState<boolean>(false);
   const [copiedVotes, setCopiedVotes] = useState<boolean>(false);
   const [copiedPercentage, setCopiedPercentage] = useState<boolean>(false);
+  const {
+    lookupMode: nftLookupMode,
+    setLookupMode: setNftLookupMode,
+    lookupValue: nftLookupValue,
+    setLookupValue: setNftLookupValue,
+    lookupResult: nftLookupResult,
+    resetLookup,
+  } = useNftOwnerLookup({ enabled: queryMode === 'nftOwner' });
 
   // 获取指定地址的治理票数 - 使用封装好的hook
   const {
@@ -57,26 +71,36 @@ const GovQueryPanel = () => {
 
   // 处理查询
   const handleQuery = () => {
-    console.log('handleQuery called with:', inputAddress);
+    if (queryMode === 'nftOwner') {
+      if (nftLookupResult?.status !== 'resolved') {
+        alert('请先输入并解析有效NFT');
+        return;
+      }
+
+      setQueryAddress(nftLookupResult.owner);
+      setHasQueried(true);
+      return;
+    }
 
     if (!inputAddress.trim()) {
       alert('请输入有效的地址');
       return;
     }
 
-    if (!isAddress(inputAddress)) {
-      alert('请输入有效的以太坊地址格式');
+    const normalizedAddress = normalizeAddressInput(inputAddress);
+    if (validateAddressInput(inputAddress) !== null || !normalizedAddress) {
+      alert('请输入有效的地址格式（支持 0x、TH 格式）');
       return;
     }
 
-    console.log('Setting query address:', inputAddress);
-    setQueryAddress(inputAddress as `0x${string}`);
+    setQueryAddress(normalizedAddress as `0x${string}`);
     setHasQueried(true);
   };
 
   // 重置查询
   const handleReset = () => {
     setInputAddress('');
+    resetLookup();
     setQueryAddress(null);
     setHasQueried(false);
   };
@@ -102,43 +126,74 @@ const GovQueryPanel = () => {
     }
   };
 
+  const isQuerying = hasQueried && (isPendingValidGovVotes || isPendingGovData);
+  const isQueryDisabled =
+    queryMode === 'address' ? !inputAddress.trim() || isQuerying : nftLookupResult?.status !== 'resolved' || isQuerying;
+
   return (
     <div className="mt-4">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="text-lg">地址治理票查询</CardTitle>
+          <CardTitle className="text-lg">治理票查询</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* 地址输入区域 */}
+            <Tabs value={queryMode} onValueChange={(value) => setQueryMode(value as GovQueryMode)} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="address">地址</TabsTrigger>
+                <TabsTrigger value="nftOwner">NFT持有地址</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
             <div className="space-y-2">
-              <Label htmlFor="address-input">输入要查询的地址:</Label>
-              <div className="flex space-x-2">
-                <Input
-                  id="address-input"
-                  type="text"
-                  placeholder="0x..."
-                  value={inputAddress}
-                  onChange={(e) => setInputAddress(e.target.value)}
-                  className="flex-1"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleQuery();
-                    }
-                  }}
-                />
-                <Button
-                  onClick={handleQuery}
-                  disabled={!inputAddress.trim() || (hasQueried && (isPendingValidGovVotes || isPendingGovData))}
-                >
-                  {hasQueried && (isPendingValidGovVotes || isPendingGovData) ? '查询中...' : '查询'}
-                </Button>
-                {hasQueried && (
-                  <Button variant="outline" onClick={handleReset}>
-                    重置
-                  </Button>
-                )}
-              </div>
+              {queryMode === 'address' ? (
+                <>
+                  <Label htmlFor="address-input">输入要查询的地址:</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="address-input"
+                      type="text"
+                      placeholder="请输入地址（支持 0x、TH 格式）"
+                      value={inputAddress}
+                      onChange={(e) => setInputAddress(e.target.value)}
+                      className="flex-1"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleQuery();
+                        }
+                      }}
+                    />
+                    <Button onClick={handleQuery} disabled={isQueryDisabled}>
+                      {isQuerying ? '查询中...' : '查询'}
+                    </Button>
+                    {hasQueried && (
+                      <Button variant="outline" onClick={handleReset}>
+                        重置
+                      </Button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <NftOwnerLookup
+                    lookupMode={nftLookupMode}
+                    onLookupModeChange={setNftLookupMode}
+                    lookupValue={nftLookupValue}
+                    onLookupValueChange={setNftLookupValue}
+                    lookupResult={nftLookupResult}
+                  />
+                  <div className="flex space-x-2">
+                    <Button onClick={handleQuery} disabled={isQueryDisabled}>
+                      {isQuerying ? '查询中...' : '查询'}
+                    </Button>
+                    {hasQueried && (
+                      <Button variant="outline" onClick={handleReset}>
+                        重置
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* 错误显示 */}
@@ -152,7 +207,7 @@ const GovQueryPanel = () => {
             {hasQueried && queryAddress && (
               <div className="space-y-4">
                 <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                  <span className="font-medium">查询地址:</span>
+                  <span className="font-medium">查询目标地址:</span>
                   <div className="font-mono text-xs mt-1 break-all">{queryAddress}</div>
                 </div>
 
@@ -167,7 +222,7 @@ const GovQueryPanel = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* 治理票数 */}
                     <div className="border rounded-lg p-6 bg-white">
-                      <div className="text-sm text-gray-600 mb-3">该地址治理票数</div>
+                      <div className="text-sm text-gray-600 mb-3">治理票数</div>
                       <div className="flex items-center justify-between">
                         <div className="text-2xl font-bold text-gray-900">
                           {formatTokenAmount(validGovVotes || BigInt(0))}

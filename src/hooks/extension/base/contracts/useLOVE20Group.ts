@@ -158,12 +158,15 @@ export const useSymbol = () => {
  * Hook for totalSupply
  * 获取 NFT 总供应量
  */
-export const useTotalSupply = () => {
+export const useTotalSupply = (enabled: boolean = true) => {
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20GroupAbi,
     functionName: 'totalSupply',
     args: [],
+    query: {
+      enabled,
+    },
   });
 
   return { totalSupply: data ? safeToBigInt(data) : undefined, isPending, error };

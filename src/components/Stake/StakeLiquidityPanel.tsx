@@ -433,7 +433,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
       <div className="bg-white px-4">
         <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-full mx-auto space-y-4">
           <div className="w-full flex justify-between items-center">
-            <LeftTitle title="质押获取治理票：" />
+            <LeftTitle title="质押获取治理票" />
           </div>
 
           <Form {...form}>

@@ -1,10 +1,14 @@
 'use client';
 
+import { useContext } from 'react';
+
 // my components
 import Header from '@/src/components/Header';
 // import SlTokenTab from '@/src/components/Token/SlTokenTab';
 import MyLiquidityStakePanel from '@/src/components/My/MyLiquidityStakePanel';
 import StakeLiquidityPanel from '@/src/components/Stake/StakeLiquidityPanel';
+import GovernorIntroCard from '@/src/components/Governance/GovernorIntroCard';
+import { TokenContext } from '@/src/contexts/TokenContext';
 import { HelpCircle } from 'lucide-react';
 
 /**
@@ -12,10 +16,15 @@ import { HelpCircle } from 'lucide-react';
  * 用户可以质押流动性LP代币获取SL代币和治理票
  */
 const StakeLPPage = () => {
+  const { token } = useContext(TokenContext) || {};
+
   return (
     <>
       <Header title="质押LP" />
-      <main className="flex-grow">
+      <main className="flex-grow bg-white">
+        <div className="px-4 pt-4 pb-3">
+          <GovernorIntroCard symbol={token?.symbol} className="mt-0" />
+        </div>
         <MyLiquidityStakePanel />
         <StakeLiquidityPanel />
         <div className="flex flex-col w-full p-4">

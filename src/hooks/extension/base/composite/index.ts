@@ -13,6 +13,7 @@ export * from './useExtensionParticipationData';
 export * from './useAccountVerificationInfos';
 export * from './useAccountsByActionByRound';
 export * from './useActionParticipationAdapter';
+export * from './useNftOwnerLookup';
 
 export { useGroupNameValidation } from './useGroupNameValidation';
 export { useMyGroups } from './useMyGroups';

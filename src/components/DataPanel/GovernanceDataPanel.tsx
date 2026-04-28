@@ -17,7 +17,36 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 // my utils
 import { calculateAPY } from '@/src/lib/domainUtils';
 import { formatTokenAmount } from '@/src/lib/format';
-const GovernanceDataPanel: React.FC = () => {
+
+interface GovernanceApyCardProps {
+  isPending: boolean;
+  expectedReward: bigint | undefined;
+  tokenAmountForSl: bigint | undefined;
+  stAmount: bigint | undefined;
+}
+
+export const GovernanceApyCard: React.FC<GovernanceApyCardProps> = ({
+  isPending,
+  expectedReward,
+  tokenAmountForSl,
+  stAmount,
+}) => {
+  return (
+    <div className="mx-3 mt-3 mb-2 px-4 py-4 text-center">
+      <div className="text-sm font-medium text-greyscale-500">预估年化收益率</div>
+      <div className="mt-1 text-3xl font-bold text-secondary">
+        {isPending ? <LoadingIcon /> : calculateAPY(expectedReward, tokenAmountForSl, stAmount)}
+      </div>
+      <div className="mt-1 text-xs text-greyscale-400">APY</div>
+    </div>
+  );
+};
+
+interface GovernanceDataPanelProps {
+  afterApy?: React.ReactNode;
+}
+
+const GovernanceDataPanel: React.FC<GovernanceDataPanelProps> = ({ afterApy }) => {
   const { token } = useContext(TokenContext) || {};
 
   // 获取治理数据
@@ -35,27 +64,28 @@ const GovernanceDataPanel: React.FC = () => {
   return (
     <div className="mb-2">
       <div className="border rounded-lg p-0">
+        <GovernanceApyCard
+          isPending={isPending || isPendingEstimatedGovReward}
+          expectedReward={expectedReward}
+          tokenAmountForSl={govData?.tokenAmountForSl}
+          stAmount={govData?.stAmount}
+        />
+
+        {afterApy}
+
         <div className="stats w-full grid grid-cols-2 divide-x-0">
-          <div className="stat place-items-center pb-2 pl-1">
-            <div className="stat-title text-sm pb-1">总治理票数</div>
-            <div className="stat-value text-secondary text-xl">
-              {isPending ? <LoadingIcon /> : formatTokenAmount(govData?.govVotes ?? BigInt(0))}
-            </div>
-          </div>
           <div className="stat place-items-center pb-2 pl-1">
             <div className="stat-title text-sm pb-1">预计新增铸币</div>
             <div className="stat-value text-secondary text-xl">
               {isPendingEstimatedGovReward ? <LoadingIcon /> : formatTokenAmount(expectedReward ?? BigInt(0))}
             </div>
           </div>
-        </div>
-        <div className="text-center text-xs mx-8 text-greyscale-500 border-b border-greyscale-200 pb-2">
-          预估年化收益率（APY）：
-          {isPending || isPendingEstimatedGovReward ? (
-            <LoadingIcon />
-          ) : (
-            calculateAPY(expectedReward, govData?.tokenAmountForSl, govData?.stAmount)
-          )}
+          <div className="stat place-items-center pb-2 pl-1">
+            <div className="stat-title text-sm pb-1">总治理票数</div>
+            <div className="stat-value text-secondary text-xl">
+              {isPending ? <LoadingIcon /> : formatTokenAmount(govData?.govVotes ?? BigInt(0))}
+            </div>
+          </div>
         </div>
 
         <div className="stats w-full grid grid-cols-2 divide-x-0 mt-2">

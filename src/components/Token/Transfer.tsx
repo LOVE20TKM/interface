@@ -8,7 +8,6 @@ import { useAccount, useBalance } from 'wagmi';
 import { useForm } from 'react-hook-form';
 import { isAddress } from 'viem';
 import { useQueryClient } from '@tanstack/react-query';
-import { useDebounce } from 'use-debounce';
 
 import { normalizeAddressInput, validateAddressInput } from '@/src/lib/addressUtils';
 
@@ -24,14 +23,8 @@ import { useUSDTPairAddress } from '@/src/hooks/composite/useUSDTPairAddress';
 import { useBalanceOf, useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
 import { useNativeTransfer } from '@/src/hooks/contracts/useNativeTransfer';
 import useTokenContext from '@/src/hooks/context/useTokenContext';
-import {
-  useGroupNameOf,
-  useIsGroupNameUsed,
-  useOwnerOf,
-  useTokenIdOf,
-  useTotalSupply,
-} from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { isGroupDefaultsEnabled, useDefaultGroupOf } from '@/src/hooks/extension/base/contracts/useGroupDefaults';
+import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
 import { useError } from '@/src/contexts/ErrorContext';
 import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
 
@@ -40,6 +33,7 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import NftOwnerLookup from '@/src/components/Extension/Base/Group/NftOwnerLookup';
 
 interface TokenConfig {
   symbol: string;
@@ -57,23 +51,6 @@ interface ProtectedTargetInfo {
 }
 
 type TransferMode = 'address' | 'nftOwner';
-type NftLookupMode = 'name' | 'id';
-
-type NftLookupResult =
-  | {
-      status: 'resolved';
-      tokenId: bigint;
-      groupName: string;
-      owner: `0x${string}`;
-    }
-  | {
-      status: 'loading';
-    }
-  | {
-      status: 'invalid' | 'not_found' | 'error';
-      message: string;
-    }
-  | null;
 
 type TransferFormValues = {
   to: string;
@@ -348,15 +325,20 @@ const TransferPanel = () => {
   const { pairAddress: usdtLpPairAddress, usdtSymbol } = useUSDTPairAddress(token?.address);
 
   const [transferMode, setTransferMode] = useState<TransferMode>('address');
-  const [nftLookupMode, setNftLookupMode] = useState<NftLookupMode>('name');
-  const [nftLookupValue, setNftLookupValue] = useState('');
   const [selectedToken, setSelectedToken] = useState<TokenConfig | undefined>();
   const [isUserManuallySelected, setIsUserManuallySelected] = useState(false);
   const [lastProcessedTxHash, setLastProcessedTxHash] = useState<string | null>(null);
   const [addressConversionInfo, setAddressConversionInfo] = useState('');
   const [convertedAddress, setConvertedAddress] = useState<`0x${string}` | null>(null);
   const [isAssetProtectionEnabled, setIsAssetProtectionEnabled] = useState(true);
-  const [debouncedNftLookupValue] = useDebounce(nftLookupValue, 300);
+  const {
+    lookupMode: nftLookupMode,
+    setLookupMode: setNftLookupMode,
+    lookupValue: nftLookupValue,
+    setLookupValue: setNftLookupValue,
+    lookupResult: nftLookupResult,
+    hasResolvedOwner: hasResolvedNftOwner,
+  } = useNftOwnerLookup({ enabled: transferMode === 'nftOwner' });
 
   const supportedTokens = useMemo(
     () =>
@@ -367,211 +349,6 @@ const TransferPanel = () => {
       }),
     [token, usdtLpPairAddress, usdtSymbol],
   );
-
-  const nftLookupValueTrimmed = useMemo(() => nftLookupValue.trim(), [nftLookupValue]);
-  const debouncedNftLookupValueTrimmed = useMemo(() => debouncedNftLookupValue.trim(), [debouncedNftLookupValue]);
-  const nftLookupName = useMemo(
-    () => (nftLookupMode === 'name' ? debouncedNftLookupValueTrimmed : ''),
-    [debouncedNftLookupValueTrimmed, nftLookupMode],
-  );
-  const rawNftLookupId = useMemo(() => {
-    if (nftLookupMode !== 'id') {
-      return undefined;
-    }
-
-    if (!nftLookupValueTrimmed || !/^\d+$/.test(nftLookupValueTrimmed)) {
-      return undefined;
-    }
-
-    try {
-      const value = BigInt(nftLookupValueTrimmed);
-      return value > BigInt(0) ? value : undefined;
-    } catch {
-      return undefined;
-    }
-  }, [nftLookupMode, nftLookupValueTrimmed]);
-  const nftLookupId = useMemo(() => {
-    if (nftLookupMode !== 'id') {
-      return undefined;
-    }
-
-    const trimmed = debouncedNftLookupValueTrimmed;
-    if (!trimmed || !/^\d+$/.test(trimmed)) {
-      return undefined;
-    }
-
-    try {
-      const value = BigInt(trimmed);
-      return value > BigInt(0) ? value : undefined;
-    } catch {
-      return undefined;
-    }
-  }, [debouncedNftLookupValueTrimmed, nftLookupMode]);
-  const isNftIdInputInvalid = nftLookupMode === 'id' && !!nftLookupValueTrimmed && rawNftLookupId === undefined;
-  const isNftLookupDebouncing =
-    transferMode === 'nftOwner' &&
-    !!nftLookupValueTrimmed &&
-    nftLookupValueTrimmed !== debouncedNftLookupValueTrimmed &&
-    (nftLookupMode === 'name' || !isNftIdInputInvalid);
-
-  const {
-    isUsed: isLookupNameUsed,
-    isPending: isPendingLookupNameUsed,
-    error: errorLookupNameUsed,
-  } = useIsGroupNameUsed(nftLookupName);
-  const {
-    tokenId: tokenIdByName,
-    isPending: isPendingTokenIdByName,
-    error: errorTokenIdByName,
-  } = useTokenIdOf(
-    nftLookupMode === 'name' && isLookupNameUsed ? nftLookupName : '',
-  );
-  const resolvedTokenIdByName = tokenIdByName && tokenIdByName > BigInt(0) ? tokenIdByName : undefined;
-  const {
-    owner: ownerByName,
-    isPending: isPendingOwnerByName,
-    error: errorOwnerByName,
-  } = useOwnerOf(
-    resolvedTokenIdByName || BigInt(0),
-    transferMode === 'nftOwner' && nftLookupMode === 'name' && !!resolvedTokenIdByName,
-  );
-  const {
-    groupName: groupNameByName,
-    isPending: isPendingGroupNameByName,
-    error: errorGroupNameByName,
-  } = useGroupNameOf(
-    resolvedTokenIdByName || BigInt(0),
-    transferMode === 'nftOwner' && nftLookupMode === 'name' && !!resolvedTokenIdByName,
-  );
-
-  const { totalSupply, error: errorTotalSupply } = useTotalSupply();
-  const canLookupById =
-    transferMode === 'nftOwner' &&
-    nftLookupMode === 'id' &&
-    nftLookupId !== undefined &&
-    totalSupply !== undefined &&
-    nftLookupId <= totalSupply;
-  const {
-    owner: ownerById,
-    isPending: isPendingOwnerById,
-    error: errorOwnerById,
-  } = useOwnerOf(nftLookupId || BigInt(0), canLookupById);
-  const {
-    groupName: groupNameById,
-    isPending: isPendingGroupNameById,
-    error: errorGroupNameById,
-  } = useGroupNameOf(
-    nftLookupId || BigInt(0),
-    canLookupById,
-  );
-
-  const nftLookupResult = useMemo<NftLookupResult>(() => {
-    if (transferMode !== 'nftOwner') {
-      return null;
-    }
-
-    if (nftLookupMode === 'name') {
-      if (!nftLookupValueTrimmed) {
-        return null;
-      }
-
-      if (isNftLookupDebouncing || !nftLookupName) {
-        return { status: 'loading' };
-      }
-
-      if (errorLookupNameUsed || errorTokenIdByName || errorOwnerByName || errorGroupNameByName) {
-        return { status: 'error', message: '查询NFT信息失败，请检查网络后重试' };
-      }
-
-      if (isPendingLookupNameUsed || (isLookupNameUsed && (isPendingTokenIdByName || isPendingOwnerByName || isPendingGroupNameByName))) {
-        return { status: 'loading' };
-      }
-
-      if (!isLookupNameUsed) {
-        return { status: 'not_found', message: '未找到对应NFT' };
-      }
-
-      if (resolvedTokenIdByName && ownerByName && groupNameByName) {
-        return {
-          status: 'resolved',
-          tokenId: resolvedTokenIdByName,
-          groupName: groupNameByName,
-          owner: ownerByName,
-        };
-      }
-
-      return { status: 'not_found', message: '未找到对应NFT' };
-    }
-
-    if (!nftLookupValueTrimmed) {
-      return null;
-    }
-
-    if (isNftIdInputInvalid || nftLookupId === undefined) {
-      return { status: 'invalid', message: '请输入正整数NFT ID' };
-    }
-
-    if (isNftLookupDebouncing) {
-      return { status: 'loading' };
-    }
-
-    if (errorTotalSupply || errorOwnerById || errorGroupNameById) {
-      return { status: 'error', message: '查询NFT信息失败，请检查网络后重试' };
-    }
-
-    if (totalSupply === undefined) {
-      return { status: 'loading' };
-    }
-
-    if (nftLookupId > totalSupply) {
-      return { status: 'not_found', message: '未找到对应NFT' };
-    }
-
-    if (isPendingOwnerById || isPendingGroupNameById) {
-      return { status: 'loading' };
-    }
-
-    if (ownerById && groupNameById) {
-      return {
-        status: 'resolved',
-        tokenId: nftLookupId,
-        groupName: groupNameById,
-        owner: ownerById,
-      };
-    }
-
-    return { status: 'not_found', message: '未找到对应NFT' };
-  }, [
-    errorGroupNameById,
-    errorGroupNameByName,
-    errorLookupNameUsed,
-    errorOwnerById,
-    errorOwnerByName,
-    errorTokenIdByName,
-    errorTotalSupply,
-    groupNameById,
-    groupNameByName,
-    isLookupNameUsed,
-    isPendingGroupNameById,
-    isPendingGroupNameByName,
-    isPendingLookupNameUsed,
-    isPendingOwnerById,
-    isPendingOwnerByName,
-    isPendingTokenIdByName,
-    isNftIdInputInvalid,
-    isNftLookupDebouncing,
-    nftLookupId,
-    nftLookupMode,
-    nftLookupName,
-    nftLookupValueTrimmed,
-    ownerById,
-    ownerByName,
-    resolvedTokenIdByName,
-    totalSupply,
-    transferMode,
-  ]);
-
-  const hasResolvedNftOwner = nftLookupResult?.status === 'resolved';
 
   const balanceToken = selectedToken || supportedTokens[0] || FALLBACK_TOKEN;
   const { balance, isPending: isPendingBalance } = useTokenBalance(balanceToken, account);
@@ -919,83 +696,14 @@ const TransferPanel = () => {
                 )}
               />
             ) : (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className={
-                      nftLookupMode === 'name'
-                        ? 'border-secondary bg-secondary text-white hover:bg-secondary/90 hover:text-white'
-                        : ''
-                    }
-                    onClick={() => setNftLookupMode('name')}
-                    disabled={isDisabled}
-                  >
-                    NFT名称
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className={
-                      nftLookupMode === 'id'
-                        ? 'border-secondary bg-secondary text-white hover:bg-secondary/90 hover:text-white'
-                        : ''
-                    }
-                    onClick={() => setNftLookupMode('id')}
-                    disabled={isDisabled}
-                  >
-                    NFT ID
-                  </Button>
-                </div>
-
-                <div>
-                  <FormLabel className="text-sm font-medium text-gray-700">
-                    {nftLookupMode === 'name' ? 'NFT名称' : 'NFT ID'}
-                  </FormLabel>
-                  <Input
-                    value={nftLookupValue}
-                    onChange={(event) => setNftLookupValue(event.target.value)}
-                    placeholder={nftLookupMode === 'name' ? '请输入NFT名称' : '请输入NFT ID'}
-                    disabled={isDisabled}
-                    className={nftLookupMode === 'id' ? 'font-mono text-sm' : ''}
-                  />
-                </div>
-
-                {nftLookupResult?.status === 'loading' && <div className="text-xs text-gray-400">查询中...</div>}
-
-                {(nftLookupResult?.status === 'invalid' || nftLookupResult?.status === 'not_found') && (
-                  <div className="text-xs text-gray-400">{nftLookupResult.message}</div>
-                )}
-
-                {nftLookupResult?.status === 'error' && (
-                  <div className="text-xs text-red-500">{nftLookupResult.message}</div>
-                )}
-
-                {nftLookupResult?.status === 'resolved' && (
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2 text-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-gray-500">NFT名称</span>
-                      <span className="font-medium text-gray-900">{nftLookupResult.groupName}</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-gray-500">NFT ID</span>
-                      <span className="font-mono text-secondary">#{nftLookupResult.tokenId.toString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-gray-500">当前持有人地址</span>
-                      <AddressWithCopyButton
-                        address={nftLookupResult.owner}
-                        showAddress={true}
-                        showCopyButton={true}
-                        colorClassName="text-gray-600"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
+              <NftOwnerLookup
+                lookupMode={nftLookupMode}
+                onLookupModeChange={setNftLookupMode}
+                lookupValue={nftLookupValue}
+                onLookupValueChange={setNftLookupValue}
+                lookupResult={nftLookupResult}
+                disabled={isDisabled}
+              />
             )}
 
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3">

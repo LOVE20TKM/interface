@@ -9,12 +9,14 @@ import { formatPhaseText } from '@/src/lib/domainUtils';
 // my hooks
 import { useAccountStakeStatus, useCurrentRound } from '@/src/hooks/contracts/useLOVE20Stake';
 import { useMyGovData } from '@/src/hooks/composite/useMyGovData';
+import { useEstimatedGovRewardOfCurrentRound } from '@/src/hooks/contracts/useLOVE20MintViewer';
 
 // my contexts
 import { Token } from '@/src/contexts/TokenContext';
 
 // my components
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import { GovernanceApyCard } from '@/src/components/DataPanel/GovernanceDataPanel';
 
 interface MyGovInfoPanelProps {
   token: Token | null | undefined;
@@ -49,6 +51,9 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
     tokenAddress: token?.address as `0x${string}`,
     account: account as `0x${string}`,
   });
+  const { reward: expectedReward, isPending: isPendingEstimatedGovReward } = useEstimatedGovRewardOfCurrentRound(
+    (token?.address as `0x${string}`) || '',
+  );
 
   // 我的加速激励的质押占比
   const tokenStakedPercentage = stAmount && govData?.stAmount ? (Number(stAmount) / Number(govData.stAmount)) * 100 : 0;
@@ -59,7 +64,16 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
     return <LoadingIcon />;
   }
   if (!isPendingAccountStakeStatus && !slAmount) {
-    return <div className="text-sm mt-4 text-greyscale-500 text-center">您没有质押</div>;
+    return (
+      <div className="py-1">
+        <GovernanceApyCard
+          isPending={isPendingGovData || isPendingEstimatedGovReward}
+          expectedReward={expectedReward}
+          tokenAmountForSl={govData?.tokenAmountForSl}
+          stAmount={govData?.stAmount}
+        />
+      </div>
+    );
   }
 
   return (

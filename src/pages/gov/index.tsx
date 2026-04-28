@@ -20,7 +20,7 @@ import Todeploy from '@/src/components/Launch/Todeploy';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import MyGovInfoPanel from '@/src/components/My/MyGovInfoPanel';
 import GovQueryPanel from '@/src/components/My/GovQueryPanel';
-import { Card, CardTitle, CardHeader, CardContent } from '@/components/ui/card';
+import GovPublicCard from '@/src/components/Governance/GovPublicCard';
 
 const GovPage = () => {
   // 当前token
@@ -107,49 +107,23 @@ const GovPage = () => {
                   <>
                     {/* 无治理票时显示质押按钮 */}
                     <div className="flex flex-col items-center p-4 mt-4">
-                      <div className="text-center mb-4 text-greyscale-500">您当前没有治理票，获取治理票后才能治理</div>
+                      <div className="text-center mb-4 text-greyscale-500">
+                        想为自己喜欢的行动投票？想发起好玩有趣的行动？
+                      </div>
                       <Button className="w-1/2" asChild>
-                        <Link href={`/stake/stakelp/?symbol=${currentToken?.symbol}`}>质押获取治理票</Link>
+                        <Link href={`/stake/stakelp/?symbol=${currentToken?.symbol}`}>立即成为治理者</Link>
                       </Button>
                     </div>
-                    <div className="flex space-x-8 mt-4 justify-center text-sm pb-4">
-                      <Link
-                        href={`/vote/actions/?symbol=${currentToken?.symbol}`}
-                        className="text-secondary hover:text-blue-800"
-                      >
-                        投票中的行动 &gt;&gt;
-                      </Link>
-                      <Link
-                        href={`/verify/actions/?symbol=${currentToken?.symbol}`}
-                        className="text-secondary hover:text-blue-800"
-                      >
-                        验证中的行动 &gt;&gt;
-                      </Link>
-                    </div>
+                    <GovPublicCard symbol={currentToken?.symbol} className="mt-4 pb-4" />
                   </>
                 )}
               </TabsContent>
               <TabsContent value="community-assets">
-                <GovernanceDataPanel />
+                <GovernanceDataPanel
+                  afterApy={<GovPublicCard symbol={currentToken?.symbol} className="mx-3 mb-4" />}
+                />
                 {/* 查询组件放在社区tab的最下面 */}
                 <GovQueryPanel />
-                <div className="mt-4">
-                  <Card className="w-full">
-                    <CardHeader>
-                      <CardTitle className="text-lg">治理公示</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex space-x-8 justify-center text-sm">
-                        <Button className="w-1/2 text-secondary border-secondary" asChild variant="outline">
-                          <Link href={`/vote/actions/?symbol=${currentToken?.symbol}`}>投票中的行动 &gt;&gt;</Link>
-                        </Button>
-                        <Button className="w-1/2 text-secondary border-secondary" asChild variant="outline">
-                          <Link href={`/verify/actions/?symbol=${currentToken?.symbol}`}>验证中的行动 &gt;&gt;</Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
               </TabsContent>
             </Tabs>
           </>
