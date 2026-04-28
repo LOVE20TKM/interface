@@ -581,8 +581,8 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-64 p-2 rounded-xl shadow-xl border">
-        <div className="px-3 py-2 mb-2 bg-gray-50 rounded-lg">
+      <DropdownMenuContent align="end" className="w-64 rounded-xl border p-2 shadow-xl">
+        <div className="px-3 py-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">钱包地址</span>
             {address && (
@@ -605,11 +605,16 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
             )}
           </div>
           <p className="mt-1 font-mono text-xs text-gray-600 break-all">{address}</p>
+        </div>
+
+        <DropdownMenuSeparator className="my-1" />
+
+        <div className="px-3 py-1">
           {isGroupDefaultsEnabled &&
             (hasDefaultGroup ? (
               <button
                 type="button"
-                className="mt-2 flex w-full min-w-0 items-center justify-between gap-2 rounded-md border border-secondary/15 bg-white px-2 py-1.5 text-left transition-colors hover:bg-secondary/5"
+                className="-mx-1 flex w-[calc(100%+0.5rem)] min-w-0 items-center justify-between gap-2 rounded-md px-1 py-2 text-left transition-colors hover:bg-gray-50"
                 onClick={goToMyLove20NftPage}
                 title="前往我的NFT"
               >
@@ -621,7 +626,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
             ) : (
               <button
                 type="button"
-                className="mt-2 flex w-full items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-left transition-colors hover:bg-secondary/5"
+                className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between gap-2 rounded-md px-1 py-2 text-left transition-colors hover:bg-gray-50"
                 onClick={goToMyLove20NftPage}
                 title="前往我的NFT"
               >
@@ -629,9 +634,9 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                 <span className="text-xs font-medium text-secondary">去设置</span>
               </button>
             ))}
-          <div className="mt-2 flex w-full items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5">
-            <span className="min-w-0 truncate text-left text-xs font-medium text-gray-800">{nativeBalanceValue}</span>
-            <span className="shrink-0 text-right text-xs font-medium text-gray-500">{nativeBalanceSymbol}</span>
+          <div className={cn('flex w-full items-center justify-between gap-2 py-2', isGroupDefaultsEnabled && 'mt-1 border-t border-gray-100')}>
+            <span className="text-xs text-gray-500">{nativeBalanceSymbol} 余额</span>
+            <span className="min-w-0 truncate text-right text-xs font-medium text-gray-800">{nativeBalanceValue}</span>
           </div>
         </div>
 
