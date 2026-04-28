@@ -140,8 +140,8 @@ const GovQueryPanel = () => {
           <div className="space-y-4">
             <Tabs value={queryMode} onValueChange={(value) => setQueryMode(value as GovQueryMode)} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="address">地址</TabsTrigger>
-                <TabsTrigger value="nftOwner">NFT持有地址</TabsTrigger>
+                <TabsTrigger value="address">按钱包地址</TabsTrigger>
+                <TabsTrigger value="nftOwner">按NFT持有人地址</TabsTrigger>
               </TabsList>
             </Tabs>
 

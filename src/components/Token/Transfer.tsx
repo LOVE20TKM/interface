@@ -621,7 +621,7 @@ const TransferPanel = () => {
     : isAssetProtectionTriggered
       ? '资产保护已拦截'
       : transferMode === 'nftOwner'
-        ? '转账给NFT持有地址'
+        ? '转账给NFT持有人地址'
         : '转账';
 
   return (
@@ -637,8 +637,8 @@ const TransferPanel = () => {
           className="w-full mb-4"
         >
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="address">目标地址</TabsTrigger>
-            <TabsTrigger value="nftOwner">NFT持有地址</TabsTrigger>
+            <TabsTrigger value="address">按钱包地址</TabsTrigger>
+            <TabsTrigger value="nftOwner">按NFT持有人地址</TabsTrigger>
           </TabsList>
         </Tabs>
 
