@@ -53,7 +53,7 @@ import {
 } from '@/src/lib/myGroupsPage';
 
 const NFT_PAGE_SIZE = 100;
-const MyVerifyingGroupsPage: React.FC = () => {
+const MyGroupsPage: React.FC = () => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
@@ -63,7 +63,7 @@ const MyVerifyingGroupsPage: React.FC = () => {
   const [hasShownPageContent, setHasShownPageContent] = useState(false);
 
   const groupActionTokenAddress = token?.address as `0x${string}` | undefined;
-  const activationReturnTo = router.asPath || '/extension/my_verifying_groups';
+  const activationReturnTo = router.asPath || '/extension/my_groups';
   const mintGroupHref = buildMintGroupHref(activationReturnTo);
 
   const { currentRound, isPending: isPendingCurrentRound, error: currentRoundError } = useCurrentRound();
@@ -608,4 +608,4 @@ const ActivateActionDialog: React.FC<ActivateActionDialogProps> = ({
   );
 };
 
-export default MyVerifyingGroupsPage;
+export default MyGroupsPage;

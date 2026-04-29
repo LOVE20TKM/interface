@@ -222,7 +222,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
           <LeftTitle title="我的链群" />
           {!isVerifyGroupsPending && (
             <Button variant="link" className="text-secondary border-secondary underline" asChild>
-              <Link href={`/extension/my_verifying_groups?symbol=${groupActionTokenSymbol || token?.symbol}`}>
+              <Link href={`/extension/my_groups?symbol=${groupActionTokenSymbol || token?.symbol}`}>
                 {unverifiedCount}个链群待验证 &gt;&gt;
               </Link>
             </Button>

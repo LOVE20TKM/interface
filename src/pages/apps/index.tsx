@@ -22,7 +22,7 @@ const APP_LIST: AppItem[] = [
   { name: 'LOVE20 NFT', href: '/group/groupids/', icon: Users },
   {
     name: '我的链群',
-    href: (symbol?: string) => (symbol ? `/extension/my_verifying_groups?symbol=${symbol}` : '/extension/my_verifying_groups'),
+    href: (symbol?: string) => (symbol ? `/extension/my_groups?symbol=${symbol}` : '/extension/my_groups'),
     icon: ShieldCheck,
   },
   // { name: '扩展行动', href: '/extension/factories/', icon: Blocks },

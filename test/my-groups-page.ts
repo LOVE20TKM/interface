@@ -169,12 +169,12 @@ assert.strictEqual(
   '/extension/group_op/?actionId=2&groupId=10&op=activate',
 );
 assert.strictEqual(
-  buildMintGroupHref('/extension/my_verifying_groups?symbol=LOVE'),
-  '/group/mint?returnTo=%2Fextension%2Fmy_verifying_groups%3Fsymbol%3DLOVE',
+  buildMintGroupHref('/extension/my_groups?symbol=LOVE'),
+  '/group/mint?returnTo=%2Fextension%2Fmy_groups%3Fsymbol%3DLOVE',
 );
 assert.strictEqual(
   buildMintGroupHref(undefined),
-  '/group/mint?returnTo=%2Fextension%2Fmy_verifying_groups',
+  '/group/mint?returnTo=%2Fextension%2Fmy_groups',
 );
 
 assert.strictEqual(formatRetainedRewardRatio(undefined), '--');

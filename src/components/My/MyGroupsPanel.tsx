@@ -18,11 +18,11 @@ import RoundLite from '@/src/components/Common/RoundLite';
 import AlertBox from '@/src/components/Common/AlertBox';
 import { formatPercentage } from '@/src/lib/format';
 
-interface MyVerifyingGroupsPanelProps {
+interface MyGroupsPanelProps {
   currentRound: bigint; // This is verify round (vote round - 2)
 }
 
-const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ currentRound }) => {
+const MyGroupsPanel: React.FC<MyGroupsPanelProps> = ({ currentRound }) => {
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
@@ -97,7 +97,7 @@ const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ current
     return {
       text: '去验证',
       disabled: false,
-      href: `/extension/my_verifying_groups?symbol=${token?.symbol}`,
+        href: `/extension/my_groups?symbol=${token?.symbol}`,
     };
   };
 
@@ -123,7 +123,7 @@ const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ current
       <div className="flex justify-between items-center mb-2">
         <LeftTitle title="我的链群" />
         <Button variant="link" className="text-secondary border-secondary underline" asChild>
-          <Link href={`/extension/my_verifying_groups?symbol=${token?.symbol}`}>查看链群 &gt;&gt;</Link>
+          <Link href={`/extension/my_groups?symbol=${token?.symbol}`}>查看链群 &gt;&gt;</Link>
         </Button>
       </div>
 
@@ -183,4 +183,4 @@ const MyVerifyingGroupsPanel: React.FC<MyVerifyingGroupsPanelProps> = ({ current
   );
 };
 
-export default MyVerifyingGroupsPanel;
+export default MyGroupsPanel;

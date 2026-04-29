@@ -15,7 +15,7 @@ import TokenTab from '@/src/components/Token/TokenTab';
 import GovernanceDataPanel from '@/src/components/DataPanel/GovernanceDataPanel';
 import MyVotingPanel from '@/src/components/My/MyVotingPanel';
 import MyVerifingPanel from '@/src/components/My/MyVerifingPanel';
-import MyVerifyingGroupsPanel from '@/src/components/My/MyVerifyingGroupsPanel';
+import MyGroupsPanel from '@/src/components/My/MyGroupsPanel';
 import Todeploy from '@/src/components/Launch/Todeploy';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import MyGovInfoPanel from '@/src/components/My/MyGovInfoPanel';
@@ -98,7 +98,7 @@ const GovPage = () => {
                       isPendingValidGovVotes={isPendingValidGovVotes}
                     />
                     <MyVerifingPanel currentRound={currentVoteRound > 2 ? currentVoteRound - BigInt(2) : BigInt(0)} />
-                    <MyVerifyingGroupsPanel
+                    <MyGroupsPanel
                       currentRound={currentVoteRound > 2 ? currentVoteRound - BigInt(2) : BigInt(0)}
                     />
                     <Todeploy token={currentToken} />

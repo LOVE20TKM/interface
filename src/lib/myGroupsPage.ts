@@ -357,7 +357,7 @@ export function buildGroupVerifyHref({ actionId, groupId }: { actionId: bigint; 
 }
 
 export function buildMintGroupHref(returnTo: string | undefined) {
-  const path = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/extension/my_verifying_groups';
+  const path = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/extension/my_groups';
   return `/group/mint?returnTo=${encodeURIComponent(path)}`;
 }
 

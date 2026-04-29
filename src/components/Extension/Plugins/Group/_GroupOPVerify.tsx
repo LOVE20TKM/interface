@@ -333,7 +333,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
       }
       toast.success('打分提交成功');
       setTimeout(() => {
-        router.push(`/extension/my_verifying_groups?symbol=${token?.symbol}`);
+        router.push(`/extension/my_groups?symbol=${token?.symbol}`);
       }, 1500);
     }
   }, [isConfirmedVerify, router, cacheKey]);
