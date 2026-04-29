@@ -4,7 +4,7 @@
 'use client';
 
 // React
-import React from 'react';
+import React, { useContext } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
@@ -12,19 +12,14 @@ import { useRouter } from 'next/router';
 // 第三方库
 import { Edit, UserCog, XCircle, Eye, ArrowRight } from 'lucide-react';
 
+import { TokenContext } from '@/src/contexts/TokenContext';
 import _GroupSetRecipientsTrigger from './_GroupSetRecipientsTrigger';
 
 interface GroupManagementProps {
   /** 行动ID */
   actionId: bigint;
-  /** 行动标题 */
-  actionTitle: string;
-  /** 扩展合约地址 */
-  extensionAddress: `0x${string}`;
   /** 链群NFT */
   groupId: bigint;
-  /** 链群名称 */
-  groupName?: string;
   /** 是否显示"查看链群"选项 */
   showViewGroup?: boolean;
 }
@@ -41,13 +36,11 @@ interface GroupManagementProps {
  */
 const _GroupManagement: React.FC<GroupManagementProps> = ({
   actionId,
-  actionTitle,
-  extensionAddress,
   groupId,
-  groupName,
   showViewGroup = false,
 }) => {
   const router = useRouter();
+  const { token } = useContext(TokenContext) || {};
 
   // 跳转到操作页面
   const handleNavigateToOp = (op: string) => {
@@ -87,13 +80,7 @@ const _GroupManagement: React.FC<GroupManagementProps> = ({
         </div>
         <ArrowRight className="w-5 h-5 text-greyscale-400 group-hover:text-secondary group-hover:translate-x-1 transition-all" />
       </div>
-      <_GroupSetRecipientsTrigger
-        actionId={actionId}
-        actionTitle={actionTitle}
-        extensionAddress={extensionAddress}
-        groupId={groupId}
-        groupName={groupName}
-      />
+      {token?.address && <_GroupSetRecipientsTrigger tokenAddress={token.address} actionId={actionId} groupId={groupId} />}
       <div
         onClick={() => handleNavigateToOp('set_delegated')}
         className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg hover:border-secondary hover:bg-secondary/5 transition-all group cursor-pointer"

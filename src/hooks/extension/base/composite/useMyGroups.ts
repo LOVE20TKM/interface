@@ -2,9 +2,11 @@
  * 复合 Hook: 获取用户拥有的所有链群 NFT
  */
 
+import { useEffect, useMemo, useState } from 'react';
 import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { useBalanceOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
+import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
@@ -55,35 +57,29 @@ export function useMyGroups(account: `0x${string}` | undefined) {
   });
 
   // 获取每个 tokenId 的 groupName
-  const tokenIds = tokenIdsData
-    ?.map((item) => (item.result ? safeToBigInt(item.result) : undefined))
-    .filter(Boolean) as bigint[];
-
-  const groupNameContracts =
-    tokenIds?.map((tokenId) => ({
-      address: CONTRACT_ADDRESS,
-      abi: LOVE20GroupAbi,
-      functionName: 'groupNameOf',
-      args: [tokenId],
-    })) || [];
+  const tokenIds = useMemo(
+    () =>
+      tokenIdsData
+        ?.map((item) => (item.result !== undefined ? safeToBigInt(item.result) : undefined))
+        .filter((tokenId): tokenId is bigint => tokenId !== undefined),
+    [tokenIdsData],
+  );
 
   const {
-    data: groupNamesData,
+    groupNameMap,
     isPending: isGroupNamesPending,
     error: groupNamesError,
-  } = useUniversalReadContracts({
-    contracts: groupNameContracts,
-    query: {
-      enabled: hasAccount && tokenIds && tokenIds.length > 0,
-    },
+  } = useGroupNamesWithCache({
+    groupIds: tokenIds,
+    enabled: hasAccount && !!tokenIds && tokenIds.length > 0,
   });
 
   // 组合结果
   const myGroups: GroupNFT[] =
     hasAccount && tokenIds
-      ? tokenIds.map((tokenId, index) => ({
+      ? tokenIds.map((tokenId) => ({
           tokenId,
-          groupName: (groupNamesData?.[index]?.result as string) || '',
+          groupName: groupNameMap.get(tokenId) || '',
         }))
       : [];
 
@@ -97,6 +93,101 @@ export function useMyGroups(account: `0x${string}` | undefined) {
   return {
     myGroups,
     balance: hasAccount && balance !== undefined ? balance : BigInt(0),
+    isPending,
+    error,
+  };
+}
+
+export function useMyGroupsPage(account: `0x${string}` | undefined, limit: number = 10) {
+  const hasAccount = !!account;
+
+  const {
+    balance,
+    isPending: isBalancePending,
+    error: balanceError,
+  } = useBalanceOf(
+    account || '0x0000000000000000000000000000000000000000',
+    hasAccount,
+  );
+
+  const nftCount = hasAccount && balance !== undefined ? Number(balance) : 0;
+  const safeLimit = Math.max(0, Math.min(limit, nftCount));
+
+  const tokenIdContracts = [];
+  for (let i = 0; i < safeLimit; i++) {
+    tokenIdContracts.push({
+      address: CONTRACT_ADDRESS,
+      abi: LOVE20GroupAbi,
+      functionName: 'tokenOfOwnerByIndex',
+      args: [account!, BigInt(i)],
+    });
+  }
+
+  const {
+    data: tokenIdsData,
+    isPending: isTokenIdsPending,
+    error: tokenIdsError,
+  } = useUniversalReadContracts({
+    contracts: tokenIdContracts,
+    query: {
+      enabled: hasAccount && safeLimit > 0,
+    },
+  });
+
+  const tokenIds = useMemo(
+    () =>
+      tokenIdsData
+        ?.map((item) => (item.result !== undefined ? safeToBigInt(item.result) : undefined))
+        .filter((tokenId): tokenId is bigint => tokenId !== undefined),
+    [tokenIdsData],
+  );
+
+  const {
+    groupNameMap,
+    isPending: isGroupNamesPending,
+    error: groupNamesError,
+  } = useGroupNamesWithCache({
+    groupIds: tokenIds,
+    enabled: hasAccount && !!tokenIds && tokenIds.length > 0,
+  });
+
+  const completeMyGroups = useMemo<GroupNFT[]>(() => {
+    if (!hasAccount || !tokenIds || tokenIds.length === 0) return [];
+    if (!tokenIds.every((tokenId) => groupNameMap.has(tokenId))) return [];
+
+    return tokenIds.map((tokenId) => ({
+      tokenId,
+      groupName: groupNameMap.get(tokenId) || '',
+    }));
+  }, [groupNameMap, hasAccount, tokenIds]);
+
+  const [stableMyGroups, setStableMyGroups] = useState<GroupNFT[]>([]);
+
+  useEffect(() => {
+    setStableMyGroups([]);
+  }, [account]);
+
+  useEffect(() => {
+    if (!hasAccount || safeLimit === 0) {
+      setStableMyGroups([]);
+      return;
+    }
+
+    if (completeMyGroups.length === safeLimit) {
+      setStableMyGroups(completeMyGroups);
+    }
+  }, [completeMyGroups, hasAccount, safeLimit]);
+
+  const isPending = hasAccount
+    ? isBalancePending || (safeLimit > 0 && (isTokenIdsPending || isGroupNamesPending))
+    : false;
+  const error = hasAccount ? balanceError || tokenIdsError || groupNamesError : undefined;
+
+  return {
+    myGroups: stableMyGroups,
+    balance: hasAccount && balance !== undefined ? balance : BigInt(0),
+    hasMore: safeLimit < nftCount,
+    loadedCount: stableMyGroups.length,
     isPending,
     error,
   };

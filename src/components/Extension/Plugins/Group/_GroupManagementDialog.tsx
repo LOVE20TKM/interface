@@ -4,7 +4,7 @@
 'use client';
 
 // React
-import React from 'react';
+import React, { useContext } from 'react';
 
 // Next.js
 import { useRouter } from 'next/router';
@@ -16,6 +16,7 @@ import { CheckCircle, Edit, UserCog, XCircle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
+import { TokenContext } from '@/src/contexts/TokenContext';
 import _GroupSetRecipientsTrigger from './_GroupSetRecipientsTrigger';
 
 interface GroupManagementDialogProps {
@@ -25,14 +26,8 @@ interface GroupManagementDialogProps {
   onOpenChange: (open: boolean) => void;
   /** 行动ID */
   actionId: bigint;
-  /** 行动标题 */
-  actionTitle: string;
-  /** 扩展合约地址 */
-  extensionAddress: `0x${string}`;
   /** 链群NFT */
   groupId: bigint;
-  /** 链群名称 */
-  groupName?: string;
   /** 是否显示"查看链群"选项 */
   showViewGroup?: boolean;
 }
@@ -52,13 +47,11 @@ const _GroupManagementDialog: React.FC<GroupManagementDialogProps> = ({
   open,
   onOpenChange,
   actionId,
-  actionTitle,
-  extensionAddress,
   groupId,
-  groupName,
   showViewGroup = false,
 }) => {
   const router = useRouter();
+  const { token } = useContext(TokenContext) || {};
 
   // 跳转到操作页面
   const handleNavigateToOp = (op: string) => {
@@ -89,15 +82,8 @@ const _GroupManagementDialog: React.FC<GroupManagementDialogProps> = ({
             <Edit className="w-4 h-4 mr-2" />
             更新信息
           </Button>
-          {open && (
-            <_GroupSetRecipientsTrigger
-              variant="button"
-              actionId={actionId}
-              actionTitle={actionTitle}
-              extensionAddress={extensionAddress}
-              groupId={groupId}
-              groupName={groupName}
-            />
+          {open && token?.address && (
+            <_GroupSetRecipientsTrigger variant="button" tokenAddress={token.address} actionId={actionId} groupId={groupId} />
           )}
           <Button variant="outline" className="w-full justify-start" onClick={() => handleNavigateToOp('verify')}>
             <CheckCircle className="w-4 h-4 mr-2" />

@@ -147,7 +147,7 @@ const ActionGroupOpPage: React.FC = () => {
 
     switch (op as OpType) {
       case 'activate':
-        return <_GroupOPActivate {...baseProps} />;
+        return <_GroupOPActivate {...baseProps} groupId={groupIdBigInt} />;
       case 'deactivate':
         return <_GroupOPDeactivate {...baseProps} groupId={groupIdBigInt!} />;
       case 'update':

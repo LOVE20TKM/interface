@@ -8,13 +8,10 @@ import React, { useContext } from 'react';
 
 // Next.js
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 
 // 第三方库
 import { ChevronRight } from 'lucide-react';
-
-// UI 组件
-import { Button } from '@/components/ui/button';
 
 // 上下文
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -24,6 +21,7 @@ import { AccountGroupInfo } from '@/src/hooks/extension/plugins/group/composite'
 
 // 工具函数
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+import { buildGroupActivateHref } from '@/src/lib/myGroupsPage';
 
 // 组件
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -42,6 +40,7 @@ interface MyGroupsProps {
  * 3. 容量使用百分比计算：分子使用 totalJoinedAmount（参与量）
  */
 const _MyGroups: React.FC<MyGroupsProps> = ({ groups, actionId }) => {
+  const router = useRouter();
   const { token } = useContext(TokenContext) || {};
 
   return (
@@ -49,7 +48,7 @@ const _MyGroups: React.FC<MyGroupsProps> = ({ groups, actionId }) => {
       <div className="flex items-center justify-between">
         <LeftTitle title={`我的链群 (${groups.length})`} />
         <Link
-          href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}
+          href={buildGroupActivateHref({ actionId, returnTo: router.asPath })}
           className="text-sm text-secondary hover:text-secondary/80 transition-colors"
         >
           激活链群 &gt;&gt;

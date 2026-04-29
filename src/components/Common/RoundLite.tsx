@@ -21,7 +21,7 @@ const RoundLite: React.FC<RoundProps> = ({ currentRound, roundType, showCountdow
   const token = context ? context.token : undefined;
 
   // 计算加载状态。注意：此处仅用于渲染判断，不影响 Hook 的调用顺序
-  const isLoading = !blockNumber || !token || token.voteOriginBlocks === undefined;
+  const isLoading = showCountdown && (!blockNumber || !token || token.voteOriginBlocks === undefined);
 
   const [currentTokenRound, setCurrentTokenRound] = useState(BigInt(0));
 
@@ -71,6 +71,16 @@ const RoundLite: React.FC<RoundProps> = ({ currentRound, roundType, showCountdow
       console.log('currentRound', currentRound);
     }
     return <LoadingIcon />;
+  }
+
+  if (!showCountdown) {
+    return (
+      <div className="flex items-center mb-3">
+        <span className="text-sm text-greyscale-400">
+          (第<span className="text-greyscale-400">{displayRound}</span>轮{roundName}阶段)
+        </span>
+      </div>
+    );
   }
 
   return (

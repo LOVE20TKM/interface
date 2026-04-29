@@ -33,6 +33,7 @@ import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/gr
 
 // 工具函数
 import { LocalCache } from '@/src/lib/LocalCache';
+import { buildGroupActivateHref } from '@/src/lib/myGroupsPage';
 
 // 组件
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -188,7 +189,7 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
         <div className="text-center py-8 text-gray-500">
           <p>链群行动，需要先激活链群，才能加入行动</p>
           <div className="mt-4 flex justify-center">
-            <Link href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}>
+            <Link href={buildGroupActivateHref({ actionId, returnTo: router.asPath })}>
               <Button className="text-secondary border-secondary" variant="outline">
                 去激活链群 &gt;&gt;
               </Button>

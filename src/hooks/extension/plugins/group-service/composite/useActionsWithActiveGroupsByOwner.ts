@@ -5,7 +5,7 @@
  * 1. 使用 useActionIdsWithActiveGroupIdsByOwner 获取行动ID和链群ID列表（使用传入的代币地址）
  * 2. 使用 useActionBaseInfosByIdsWithCache 批量获取行动信息
  * 3. 使用 useGroupNamesWithCache 批量获取链群名称
- * 4. 使用 GroupJoin.totalJoinedAmountByGroupId 批量获取链群代币参与量
+ * 4. 使用 GroupJoin 批量获取链群参与代币量和参与地址数
  * 5. 组合并返回结构化数据
  *
  * 使用示例：
@@ -42,6 +42,8 @@ export interface GroupWithAmount {
   groupName: string | undefined;
   /** 链群的代币参与量 */
   totalJoinedAmount: bigint;
+  /** 链群的参与地址数 */
+  accountCount: bigint;
 }
 
 /**
@@ -151,6 +153,14 @@ export function useActionsWithActiveGroupsByOwner({
     enabled: !!groupActionTokenAddress && allActionIds.length > 0 && !isExtensionsPending,
   });
 
+  const actionInfoById = useMemo(() => {
+    const map = new Map<string, (typeof actionInfos)[number]>();
+    for (const actionInfo of actionInfos) {
+      map.set(actionInfo.head.id.toString(), actionInfo);
+    }
+    return map;
+  }, [actionInfos]);
+
   // ==========================================
   // 步骤5：批量获取链群名称（使用缓存）
   // ==========================================
@@ -176,7 +186,7 @@ export function useActionsWithActiveGroupsByOwner({
   });
 
   // ==========================================
-  // 步骤6：批量获取链群代币参与量
+  // 步骤6：批量获取链群参与统计
   // ==========================================
 
   // 构建所有 (extensionAddress, groupId) 对
@@ -205,46 +215,60 @@ export function useActionsWithActiveGroupsByOwner({
     return pairs;
   }, [actionIdsWithGroupIds, actionIdToExtensionMap]);
 
-  const totalJoinedAmountContracts = useMemo(() => {
+  const groupStatsContracts = useMemo(() => {
     if (extensionGroupPairs.length === 0 || !round) {
       return [];
     }
 
-    return extensionGroupPairs.map(({ extensionAddress, groupId }) => ({
-      address: GROUP_JOIN_ADDRESS,
-      abi: GroupJoinAbi,
-      functionName: 'totalJoinedAmountByGroupId' as const,
-      args: [extensionAddress, round, groupId] as const,
-    }));
+    return extensionGroupPairs.flatMap(({ extensionAddress, groupId }) => [
+      {
+        address: GROUP_JOIN_ADDRESS,
+        abi: GroupJoinAbi,
+        functionName: 'totalJoinedAmountByGroupId' as const,
+        args: [extensionAddress, round, groupId] as const,
+      },
+      {
+        address: GROUP_JOIN_ADDRESS,
+        abi: GroupJoinAbi,
+        functionName: 'accountsByGroupIdCount' as const,
+        args: [extensionAddress, round, groupId] as const,
+      },
+    ]);
   }, [extensionGroupPairs, round]);
 
   const {
-    data: totalJoinedAmountData,
-    isPending: isTotalJoinedAmountPending,
-    error: totalJoinedAmountError,
+    data: groupStatsData,
+    isPending: isGroupStatsPending,
+    error: groupStatsError,
   } = useUniversalReadContracts({
-    contracts: totalJoinedAmountContracts as any,
+    contracts: groupStatsContracts as any,
     query: {
-      enabled: !!round && totalJoinedAmountContracts.length > 0 && !isExtensionsPending,
+      enabled: !!round && groupStatsContracts.length > 0 && !isExtensionsPending,
     },
   });
 
-  // 构建 (actionId, groupId) -> totalJoinedAmount 的映射
-  const totalJoinedAmountMap = useMemo(() => {
-    const map = new Map<string, bigint>();
+  // 构建 (actionId, groupId) -> 参与统计 的映射
+  const { totalJoinedAmountMap, accountCountMap } = useMemo(() => {
+    const amountMap = new Map<string, bigint>();
+    const countMap = new Map<string, bigint>();
 
-    if (totalJoinedAmountData && extensionGroupPairs.length > 0) {
+    if (groupStatsData && extensionGroupPairs.length > 0) {
       extensionGroupPairs.forEach(({ actionId, groupId }, index) => {
-        const result = totalJoinedAmountData[index];
-        if (result?.status === 'success' && result.result !== undefined) {
-          const key = `${actionId}_${groupId}`;
-          map.set(key, safeToBigInt(result.result));
+        const amountResult = groupStatsData[index * 2];
+        const countResult = groupStatsData[index * 2 + 1];
+        const key = `${actionId}_${groupId}`;
+
+        if (amountResult?.status === 'success' && amountResult.result !== undefined) {
+          amountMap.set(key, safeToBigInt(amountResult.result));
+        }
+        if (countResult?.status === 'success' && countResult.result !== undefined) {
+          countMap.set(key, safeToBigInt(countResult.result));
         }
       });
     }
 
-    return map;
-  }, [totalJoinedAmountData, extensionGroupPairs]);
+    return { totalJoinedAmountMap: amountMap, accountCountMap: countMap };
+  }, [groupStatsData, extensionGroupPairs]);
 
   // ==========================================
   // 步骤7：组合数据并返回
@@ -256,12 +280,11 @@ export function useActionsWithActiveGroupsByOwner({
     const result: ActionWithGroups[] = [];
 
     // 遍历每个 actionId
-    actionIdsWithGroupIds.forEach((item, index) => {
+    actionIdsWithGroupIds.forEach((item) => {
       const actionId = item.actionId;
 
       // 获取行动基本信息
-      const actionInfo = actionInfos[index];
-      if (!actionInfo) return; // 如果行动信息还未加载，跳过
+      const actionInfo = actionInfoById.get(actionId.toString());
 
       // 获取扩展地址
       const extensionAddr = actionIdToExtensionMap.get(actionId);
@@ -271,24 +294,26 @@ export function useActionsWithActiveGroupsByOwner({
       const groups: GroupWithAmount[] = item.groupIds.map((groupId) => {
         const key = `${actionId}_${groupId}`;
         const totalJoinedAmount = totalJoinedAmountMap.get(key) || BigInt(0);
+        const accountCount = accountCountMap.get(key) || BigInt(0);
 
         return {
           groupId,
           groupName: groupNameMap.get(groupId),
           totalJoinedAmount,
+          accountCount,
         };
       });
 
       result.push({
         actionId,
-        actionTitle: actionInfo.body.title || `行动 #${actionId.toString()}`,
+        actionTitle: actionInfo?.body.title || `行动 #${actionId.toString()}`,
         extensionAddress: extensionAddr,
         groups,
       });
     });
 
     return result;
-  }, [actionIdsWithGroupIds, actionInfos, actionIdToExtensionMap, groupNameMap, totalJoinedAmountMap]);
+  }, [actionIdsWithGroupIds, actionInfoById, actionIdToExtensionMap, groupNameMap, totalJoinedAmountMap, accountCountMap]);
 
   // ==========================================
   // 计算 isPending 状态
@@ -312,8 +337,8 @@ export function useActionsWithActiveGroupsByOwner({
     // 步骤4：获取链群名称
     if (isGroupNamesPending) return true;
 
-    // 步骤5：获取代币参与量
-    return isTotalJoinedAmountPending;
+    // 步骤5：获取参与统计
+    return isGroupStatsPending;
   }, [
     groupActionTokenAddress,
     account,
@@ -324,7 +349,7 @@ export function useActionsWithActiveGroupsByOwner({
     actionIdToExtensionMap.size,
     isActionInfosPending,
     isGroupNamesPending,
-    isTotalJoinedAmountPending,
+    isGroupStatsPending,
   ]);
 
   // ==========================================
@@ -336,7 +361,7 @@ export function useActionsWithActiveGroupsByOwner({
     extensionsError ||
     actionInfosError ||
     groupNamesError ||
-    totalJoinedAmountError;
+    groupStatsError;
 
   // ==========================================
   // 返回结果

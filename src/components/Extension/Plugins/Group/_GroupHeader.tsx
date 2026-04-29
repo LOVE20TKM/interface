@@ -232,10 +232,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
         open={isManageDialogOpen}
         onOpenChange={setIsManageDialogOpen}
         actionId={actionId}
-        actionTitle={actionInfo.body.title}
-        extensionAddress={extensionAddress}
         groupId={groupId}
-        groupName={groupDetail?.groupName}
       />
     </div>
   );

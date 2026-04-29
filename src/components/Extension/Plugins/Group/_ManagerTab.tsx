@@ -8,6 +8,7 @@ import React, { useEffect } from 'react';
 
 // Next.js
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 // 类型
 import { ActionInfo } from '@/src/types/love20types';
@@ -17,6 +18,7 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useExtensionGroupsOfAccount } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupsOfAccount';
 
 // 工具函数
+import { buildGroupActivateHref } from '@/src/lib/myGroupsPage';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -32,6 +34,8 @@ interface ManagerTabProps {
 }
 
 const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensionAddress, account }) => {
+  const router = useRouter();
+
   // 获取当前加入轮次
   const { currentRound } = useCurrentRound();
 
@@ -72,7 +76,7 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
       <div className="text-center py-10">
         <p className="text-gray-500 mb-6">您还不是链群服务者</p>
         <Button variant="outline" asChild className="w-1/2 text-secondary border-secondary">
-          <Link href={`/extension/group_op/?actionId=${actionId}&op=activate`}>去激活链群 &gt;&gt;</Link>
+          <Link href={buildGroupActivateHref({ actionId, returnTo: router.asPath })}>去激活链群 &gt;&gt;</Link>
         </Button>
       </div>
     );

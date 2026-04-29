@@ -6,7 +6,7 @@ import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
 
 // 缓存 key 前缀
-const CACHE_KEY_PREFIX = 'group_name_';
+const CACHE_KEY_PREFIX = `group_name_${process.env.NEXT_PUBLIC_CHAIN || 'default'}_${CONTRACT_ADDRESS || 'unknown'}_`;
 
 /**
  * 构建缓存 key
@@ -142,6 +142,8 @@ export const useGroupNamesWithCache = ({
     contracts: contracts as any,
     query: {
       enabled: enabled && hasGroupIds && contracts.length > 0,
+      staleTime: Infinity,
+      gcTime: Infinity,
     },
   });
 
@@ -215,4 +217,3 @@ export const useGroupNamesWithCache = ({
     error: rpcError || null,
   };
 };
-

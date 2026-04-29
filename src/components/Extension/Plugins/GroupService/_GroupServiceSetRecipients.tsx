@@ -43,7 +43,6 @@ type FormValues = {
 };
 
 interface _GroupServiceSetRecipientsProps {
-  extensionAddress: `0x${string}`;
   groupActionTokenAddress: `0x${string}` | undefined;
   actionId: bigint;
   actionTitle: string;
@@ -58,7 +57,6 @@ interface _GroupServiceSetRecipientsProps {
 }
 
 export default function _GroupServiceSetRecipients({
-  extensionAddress,
   groupActionTokenAddress,
   actionId,
   actionTitle,

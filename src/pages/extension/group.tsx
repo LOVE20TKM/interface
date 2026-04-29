@@ -20,14 +20,22 @@ import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/com
 import { useDistrustRateByGroupId } from '@/src/hooks/extension/plugins/group/contracts/useGroupVerify';
 import { useCurrentRound as useVerifyCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { formatPercentage, formatUnits } from '@/src/lib/format';
+import { shouldRedirectGroupManagementTab } from '@/src/lib/myGroupsPage';
 
 type TabType = 'detail' | 'rewards' | 'apps' | 'management';
+const validTabs: TabType[] = ['detail', 'rewards', 'apps', 'management'];
+
+const normalizeTab = (tab: string): TabType | undefined => {
+  if (tab === 'scores') return 'rewards';
+  if (validTabs.includes(tab as TabType)) return tab as TabType;
+  return undefined;
+};
 
 const ActionGroupPage: React.FC = () => {
   const router = useRouter();
   const { groupId, tab } = router.query;
   const { token } = useContext(TokenContext) || {};
-  const { address: account } = useAccount();
+  const { address: account, status: accountStatus } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('detail');
 
   // 从 query 获取必要参数
@@ -84,13 +92,26 @@ const ActionGroupPage: React.FC = () => {
   // 错误处理
 
   // 判断是否是owner
-  const isOwner = account && groupDetail && groupDetail.owner.toLowerCase() === account.toLowerCase();
+  const isOwner = !!account && !!groupDetail && groupDetail.owner.toLowerCase() === account.toLowerCase();
+  const canEvaluateOwner =
+    !isPendingGroupDetail && !!groupDetail && accountStatus !== 'connecting' && accountStatus !== 'reconnecting';
 
   // 初始化tab状态
   useEffect(() => {
-    if (tab && ['detail', 'rewards', 'apps', 'management'].includes(tab as string)) {
-      // 如果尝试访问 management tab 但不是 owner，重定向到 detail
-      if (tab === 'management' && !isOwner) {
+    if (tab && typeof tab === 'string') {
+      const normalizedTab = normalizeTab(tab);
+      if (!normalizedTab) return;
+
+      // 如果尝试访问 management tab，等 owner 数据可判断后再决定是否重定向
+      if (normalizedTab === 'management' && !canEvaluateOwner) return;
+
+      if (
+        shouldRedirectGroupManagementTab({
+          requestedTab: normalizedTab,
+          isOwner,
+          canEvaluateOwner,
+        })
+      ) {
         setActiveTab('detail');
         const currentQuery = { ...router.query };
         currentQuery.tab = 'detail';
@@ -103,10 +124,22 @@ const ActionGroupPage: React.FC = () => {
           { shallow: true },
         );
       } else {
-        setActiveTab(tab as TabType);
+        setActiveTab(normalizedTab);
+        if (tab !== normalizedTab) {
+          const currentQuery = { ...router.query };
+          currentQuery.tab = normalizedTab;
+          router.replace(
+            {
+              pathname: router.pathname,
+              query: currentQuery,
+            },
+            undefined,
+            { shallow: true },
+          );
+        }
       }
     }
-  }, [tab, isOwner, router]);
+  }, [tab, isOwner, canEvaluateOwner, router]);
 
   // Tab配置
   const tabs: { key: TabType; label: string }[] = [
@@ -183,10 +216,7 @@ const ActionGroupPage: React.FC = () => {
         return (
           <_GroupManagement
             actionId={actionId!}
-            actionTitle={actionInfo.body.title}
-            extensionAddress={extensionAddress}
             groupId={groupIdBigInt}
-            groupName={groupDetail?.groupName}
           />
         );
       }

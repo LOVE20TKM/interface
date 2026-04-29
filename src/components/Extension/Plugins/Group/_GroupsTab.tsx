@@ -28,6 +28,7 @@ import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGr
 
 // 工具函数
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
+import { buildGroupActivateHref } from '@/src/lib/myGroupsPage';
 
 // 组件
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -91,7 +92,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
         <p className="text-gray-500 mb-2">暂无被激活的链群</p>
         <div className="">
           <Button asChild className="w-1/2 text-secondary border-secondary" variant="outline">
-            <Link href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}>去激活链群 &gt;&gt;</Link>
+            <Link href={buildGroupActivateHref({ actionId, returnTo: router.asPath })}>去激活链群 &gt;&gt;</Link>
           </Button>
         </div>
       </div>
@@ -103,7 +104,7 @@ const _GroupsTab: React.FC<GroupsTabProps> = ({ actionId, actionInfo, extensionA
       <div className="flex items-center justify-between">
         <LeftTitle title={`链群列表 (${groups.length})`} />
         <Link
-          href={`/extension/group_op?actionId=${actionId.toString()}&op=activate`}
+          href={buildGroupActivateHref({ actionId, returnTo: router.asPath })}
           className="text-sm text-secondary hover:text-secondary/80 ml-2"
         >
           激活链群 &gt;&gt;

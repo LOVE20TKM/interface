@@ -3,7 +3,7 @@
 import { useContext } from 'react';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
-import { ArrowRight, HandCoins, Droplets, ArrowLeftRight, Users, Coins } from 'lucide-react';
+import { ArrowRight, HandCoins, Droplets, ArrowLeftRight, Users, Coins, ShieldCheck } from 'lucide-react';
 
 // My Components
 import Header from '@/src/components/Header';
@@ -11,7 +11,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 interface AppItem {
   name: string;
-  href: string;
+  href: string | ((symbol?: string) => string);
   icon: React.ComponentType<{ className?: string }>;
 }
 
@@ -20,6 +20,11 @@ const APP_LIST: AppItem[] = [
   { name: '流动性池', href: '/dex/?tab=liquidity', icon: Droplets },
   { name: '代币转账', href: '/token/transfer/', icon: ArrowLeftRight },
   { name: 'LOVE20 NFT', href: '/group/groupids/', icon: Users },
+  {
+    name: '我的链群',
+    href: (symbol?: string) => (symbol ? `/extension/my_verifying_groups?symbol=${symbol}` : '/extension/my_verifying_groups'),
+    icon: ShieldCheck,
+  },
   // { name: '扩展行动', href: '/extension/factories/', icon: Blocks },
 ];
 
@@ -51,10 +56,11 @@ export default function AppsPage() {
               </Link>
               {APP_LIST.map((app) => {
                 const Icon = app.icon;
+                const href = typeof app.href === 'function' ? app.href(token?.symbol) : app.href;
                 return (
                   <Link
-                    key={app.href}
-                    href={app.href}
+                    key={href}
+                    href={href}
                     className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg hover:border-secondary hover:bg-secondary/5 transition-all group"
                   >
                     <div className="flex items-center gap-3">

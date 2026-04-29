@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -9,25 +9,23 @@ import { ArrowRight, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import _GroupServiceSetRecipients from "@/src/components/Extension/Plugins/GroupService/_GroupServiceSetRecipients";
 import { useCurrentRound } from "@/src/hooks/contracts/useLOVE20Verify";
-import { useExtensionParams } from "@/src/hooks/extension/plugins/group/composite/useExtensionParams";
+import { useActionBaseInfosByIdsWithCache } from "@/src/hooks/composite/useActionBaseInfosByIdsWithCache";
+import { useGroupNamesWithCache } from "@/src/hooks/extension/base/composite/useGroupNamesWithCache";
 import { useRecipients } from "@/src/hooks/extension/plugins/group-service/contracts/useGroupRecipients";
 import { invalidateGroupRecipientsQueries } from "@/src/hooks/extension/plugins/group-service/contracts/groupRecipientsQueryUtils";
+import { formatRetainedRewardRatio } from "@/src/lib/myGroupsPage";
 
 interface GroupSetRecipientsTriggerProps {
+  tokenAddress: `0x${string}`;
   actionId: bigint;
-  actionTitle: string;
-  extensionAddress: `0x${string}`;
   groupId: bigint;
-  groupName?: string;
-  variant?: "card" | "button";
+  variant?: "card" | "button" | "retention";
 }
 
 const _GroupSetRecipientsTrigger: React.FC<GroupSetRecipientsTriggerProps> = ({
+  tokenAddress,
   actionId,
-  actionTitle,
-  extensionAddress,
   groupId,
-  groupName,
   variant = "card",
 }) => {
   const { address: account } = useAccount();
@@ -35,7 +33,19 @@ const _GroupSetRecipientsTrigger: React.FC<GroupSetRecipientsTriggerProps> = ({
   const [open, setOpen] = useState(false);
 
   const { currentRound, isPending: isRoundPending } = useCurrentRound();
-  const { tokenAddress, isPending: isParamsPending } = useExtensionParams(extensionAddress);
+  const actionIds = useMemo(() => [actionId], [actionId]);
+  const groupIds = useMemo(() => [groupId], [groupId]);
+  const { actionInfos } = useActionBaseInfosByIdsWithCache({
+    tokenAddress,
+    actionIds,
+    enabled: !!tokenAddress,
+  });
+  const { groupNameMap } = useGroupNamesWithCache({
+    groupIds,
+    enabled: true,
+  });
+  const actionTitle = actionInfos[0]?.body.title || `行动 #${actionId.toString()}`;
+  const groupName = groupNameMap.get(groupId);
   const {
     addrs,
     ratios,
@@ -44,7 +54,8 @@ const _GroupSetRecipientsTrigger: React.FC<GroupSetRecipientsTriggerProps> = ({
   } = useRecipients(account as `0x${string}` | undefined, tokenAddress, actionId, groupId, currentRound);
 
   const isReady = !!account && !!tokenAddress && currentRound !== undefined;
-  const isLoading = isRoundPending || isParamsPending || isRecipientsPending;
+  const isLoading = isRoundPending || isRecipientsPending;
+  const retainedRatioLabel = isReady && !isLoading ? formatRetainedRewardRatio(ratios) : '--';
 
   const handleOpen = () => {
     if (!account) {
@@ -52,7 +63,7 @@ const _GroupSetRecipientsTrigger: React.FC<GroupSetRecipientsTriggerProps> = ({
       return;
     }
 
-    if (!isReady) {
+    if (!isReady || isLoading) {
       toast.error("激励分配信息加载中，请稍后重试");
       return;
     }
@@ -67,11 +78,20 @@ const _GroupSetRecipientsTrigger: React.FC<GroupSetRecipientsTriggerProps> = ({
           variant="outline"
           className="w-full justify-start"
           onClick={handleOpen}
-          disabled={!isReady && isLoading}
+          disabled={!isReady || isLoading}
         >
           <Coins className="w-4 h-4 mr-2" />
           设置激励分配
         </Button>
+      ) : variant === "retention" ? (
+        <button
+          type="button"
+          onClick={handleOpen}
+          disabled={!isReady || isLoading}
+          className="underline underline-offset-2 hover:text-secondary disabled:cursor-wait disabled:text-greyscale-400"
+        >
+          激励保留 {retainedRatioLabel}
+        </button>
       ) : (
         <div
           onClick={handleOpen}
@@ -99,7 +119,6 @@ const _GroupSetRecipientsTrigger: React.FC<GroupSetRecipientsTriggerProps> = ({
       )}
 
       <_GroupServiceSetRecipients
-        extensionAddress={extensionAddress}
         groupActionTokenAddress={tokenAddress}
         actionId={actionId}
         actionTitle={actionTitle}

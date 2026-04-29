@@ -3,7 +3,7 @@
  *
  * 功能：
  * 1. 使用 GroupManager.actionIds 一次性获取所有含激活链群的行动列表
- * 2. 使用 useExtensionsByActionIdsWithCache 获取每个 actionId 对应的行动扩展地址
+ * 2. 直接从 ExtensionCenter.extension 获取每个 actionId 对应的扩展地址
  * 3. 批量对于每个 actionId 用 activeGroupIdsByOwner 获取在该行动扩展下激活的链群NFT列表
  *
  * 使用示例：
@@ -18,8 +18,8 @@
 import { useMemo } from 'react';
 import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { GroupManagerAbi } from '@/src/abis/GroupManager';
+import { ExtensionCenterAbi } from '@/src/abis/ExtensionCenter';
 import { useActionIds } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
-import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
 
 // ==================== 类型定义 ====================
 
@@ -58,6 +58,8 @@ export interface UseActionIdsWithActiveGroupIdsByOwnerResult {
 // ==================== 常量定义 ====================
 
 const GROUP_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`;
+const EXTENSION_CENTER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER as `0x${string}`;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 // ==================== Hook 实现 ====================
 
@@ -85,26 +87,42 @@ export function useActionIdsWithActiveGroupIdsByOwner({
   // 步骤1.5：获取每个 actionId 对应的行动扩展地址
   // ==========================================
 
+  const extensionContracts = useMemo(() => {
+    if (!tokenAddress || !actionIds || actionIds.length === 0) return [];
+
+    return actionIds.map((actionId) => ({
+      address: EXTENSION_CENTER_ADDRESS,
+      abi: ExtensionCenterAbi,
+      functionName: 'extension' as const,
+      args: [tokenAddress, actionId] as const,
+    }));
+  }, [tokenAddress, actionIds]);
+
   const {
-    extensions,
+    data: extensionsData,
     isPending: isExtensionsPending,
     error: extensionsError,
-  } = useExtensionsByActionIdsWithCache({
-    token: { address: tokenAddress as `0x${string}` } as any,
-    actionIds: actionIds || [],
-    enabled: !!tokenAddress && !!actionIds && actionIds.length > 0,
+  } = useUniversalReadContracts({
+    contracts: extensionContracts as any,
+    query: {
+      enabled: !!tokenAddress && !!actionIds && actionIds.length > 0,
+    },
   });
 
   // 创建 actionId 到扩展地址的映射（只包含有效的扩展）
   const extensionAddressMap = useMemo(() => {
     const map = new Map<bigint, `0x${string}`>();
-    extensions.forEach((ext) => {
-      if (ext.isExtension && ext.extensionAddress) {
-        map.set(ext.actionId, ext.extensionAddress);
+    extensionsData?.forEach((result, index) => {
+      if (result?.status === 'success' && result.result) {
+        const extensionAddress = result.result as `0x${string}`;
+        const actionId = actionIds?.[index];
+        if (actionId !== undefined && extensionAddress !== ZERO_ADDRESS) {
+          map.set(actionId, extensionAddress);
+        }
       }
     });
     return map;
-  }, [extensions]);
+  }, [actionIds, extensionsData]);
 
   // ==========================================
   // 步骤2：批量获取每个 actionId 的激活链群NFT列表

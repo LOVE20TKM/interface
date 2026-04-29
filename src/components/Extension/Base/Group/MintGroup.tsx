@@ -37,6 +37,12 @@ const FIRST_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_FIRST_TOKEN
 const GROUP_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}`;
 const FIRST_TOKEN_SYMBOL = process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL as string;
 
+const getSafeReturnPath = (returnTo: string | string[] | undefined) => {
+  const path = Array.isArray(returnTo) ? returnTo[0] : returnTo;
+  if (!path || !path.startsWith('/') || path.startsWith('//')) return '/group/groupids';
+  return path;
+};
+
 // 定义表单验证 Schema
 const getFormSchema = (balance: bigint) =>
   z.object({
@@ -208,9 +214,9 @@ export default function MintGroup() {
     if (isConfirmedMint && !hasHandledMintSuccessRef.current) {
       hasHandledMintSuccessRef.current = true;
       toast.success('铸造成功！');
-      // 2秒后跳转到"我的"页面
+      const returnPath = getSafeReturnPath(router.query.returnTo);
       setTimeout(() => {
-        router.push('/group/groupids');
+        router.push(returnPath);
       }, 2000);
     }
   }, [isConfirmedMint, router]);
@@ -258,7 +264,7 @@ export default function MintGroup() {
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder="请输入NFT名称"
+                      placeholder="请输入链上社群名字"
                       disabled={hasStartedApproving || isPendingMint || isConfirmingMint}
                       className="!ring-secondary-foreground"
                       {...field}
