@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext, useEffect, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -27,7 +27,7 @@ const MyGroupsPanel: React.FC<MyGroupsPanelProps> = ({ currentRound }) => {
   const { address: account } = useAccount();
 
   // Fetch groups that need verification
-  const { groups, isPending, error } = useMyGroupIdsNeedVerifiedByRound({
+  const { groups, isPending } = useMyGroupIdsNeedVerifiedByRound({
     account: account as `0x${string}`,
     round: currentRound,
   });
@@ -46,7 +46,6 @@ const MyGroupsPanel: React.FC<MyGroupsPanelProps> = ({ currentRound }) => {
   const {
     items: actionDistrustInfos,
     isPending: isPendingActionDistrust,
-    error: errorActionDistrust,
   } = useMyGroupActionsDistrustInfoOfRound({
     tokenAddress: token?.address as `0x${string}` | undefined,
     round: currentRound,
@@ -60,48 +59,40 @@ const MyGroupsPanel: React.FC<MyGroupsPanelProps> = ({ currentRound }) => {
 
   // 错误处理
 
+  const groupsNeedVerify = useMemo(() => groups.filter((group) => group.needToVerify), [groups]);
+
   // Calculate counts
-  const verifiedCount = useMemo(() => groups.filter((g) => g.isVerified).length, [groups]);
+  const verifiedCount = useMemo(() => groups.filter((group) => group.isVerified).length, [groups]);
 
-  const unverifiedCount = useMemo(() => groups.filter((g) => g.needToVerify).length, [groups]);
-
-  const firstUnverifiedGroup = useMemo(() => groups.find((g) => g.needToVerify), [groups]);
-
+  const unverifiedCount = groupsNeedVerify.length;
   // Determine button configuration
-  const getButtonConfig = () => {
-    if (groups.length === 0) {
-      return {
-        text: '没有需验证的链群',
-        disabled: true,
-        href: null,
-      };
-    }
-
-    if (unverifiedCount === 0) {
-      return {
-        text: '已验证',
-        disabled: true,
-        href: null,
-      };
-    }
-
-    if (unverifiedCount === 1 && firstUnverifiedGroup) {
+  const buttonConfig = useMemo(() => {
+    if (unverifiedCount > 0) {
       return {
         text: '去验证',
-        disabled: false,
-        href: `/extension/group_op/?actionId=${firstUnverifiedGroup.actionId}&groupId=${firstUnverifiedGroup.groupId}&op=verify`,
+        href: `/extension/my_groups?symbol=${token?.symbol}`,
       };
     }
 
-    // unverifiedCount > 1
-    return {
-      text: '去验证',
-      disabled: false,
-        href: `/extension/my_groups?symbol=${token?.symbol}`,
-    };
-  };
+    if (verifiedCount > 0) {
+      return {
+        text: '已验证',
+        href: null,
+      };
+    }
 
-  const buttonConfig = getButtonConfig();
+    if (groups.length > 0) {
+      return {
+        text: '暂无需验证',
+        href: null,
+      };
+    }
+
+    return {
+      text: '没有需验证的链群',
+      href: null,
+    };
+  }, [unverifiedCount, verifiedCount, groups.length, token?.symbol]);
 
   if (!token) {
     return '';
