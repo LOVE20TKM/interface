@@ -32,6 +32,7 @@ import { useError } from '@/src/contexts/ErrorContext';
 // my components
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import InfoTooltip from '@/src/components/Common/InfoTooltip';
 import LpStatsCard from './_LpStatsCard';
 
 // ------------------------------
@@ -47,6 +48,8 @@ interface LpJoinPanelProps {
   actionInfo: ActionInfo;
   extensionAddress: `0x${string}`;
 }
+
+const LP_RATIO_PRECISION = BigInt(1e18);
 
 const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensionAddress }) => {
   const router = useRouter();
@@ -66,6 +69,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
   // 获取 Lp 扩展数据（用于显示已参与信息）
   const {
     joinedAmount,
+    totalJoinedAmount,
     waitingBlocks,
     joinTokenAddress,
     rewardRatio,
@@ -74,6 +78,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     minGovRatio,
     userGovRatio,
     lpRatio,
+    govRatioMultiplier,
     isPending: isPendingData,
   } = useMyLpActionData({
     extensionAddress,
@@ -98,6 +103,126 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
 
   // 获取 LP Token 余额
   const { balance: lpBalance } = useBalanceOf(joinTokenAddress as `0x${string}`, account as `0x${string}`, !!joinTokenAddress);
+
+  // 推荐值：理论上追加后 LP 占比不超过 治理票占比 × 倍数，余额不参与计算
+  const recommendedLpAmount = useMemo<bigint | undefined>(() => {
+    if (isGovRatioInsufficient) return BigInt(0);
+
+    // 倍数为 0 表示不受治理票上限约束，没有有限推荐值
+    if (govRatioMultiplier === BigInt(0)) return undefined;
+
+    if (!totalGovVotes || totalGovVotes === BigInt(0) || userGovVotes <= BigInt(0)) {
+      return BigInt(0);
+    }
+
+    const govCapRatio = (userGovVotes * LP_RATIO_PRECISION * govRatioMultiplier) / totalGovVotes;
+    if (govCapRatio >= LP_RATIO_PRECISION) return undefined;
+    if (govCapRatio <= BigInt(0)) return BigInt(0);
+
+    // 解 (joinedAmount + x) / (totalJoinedAmount + x) <= govCapRatio
+    const numerator = govCapRatio * totalJoinedAmount - joinedAmount * LP_RATIO_PRECISION;
+    if (numerator <= BigInt(0)) return BigInt(0);
+
+    const recommended = numerator / (LP_RATIO_PRECISION - govCapRatio);
+    if (recommended <= BigInt(0)) return BigInt(0);
+
+    return recommended;
+  }, [
+    isGovRatioInsufficient,
+    govRatioMultiplier,
+    totalGovVotes,
+    userGovVotes,
+    totalJoinedAmount,
+    joinedAmount,
+  ]);
+  const hasRecommendedLpAmount = recommendedLpAmount !== undefined && recommendedLpAmount > BigInt(0);
+  const recommendedLpAmountText =
+    recommendedLpAmount === undefined ? '不限' : formatTokenAmount(recommendedLpAmount, 4);
+  const recommendedLpAmountHelp = useMemo(() => {
+    const govCapRatio =
+      totalGovVotes > BigInt(0)
+        ? (userGovVotes * LP_RATIO_PRECISION * govRatioMultiplier) / totalGovVotes
+        : BigInt(0);
+    const numeratorAmount = (govCapRatio * totalJoinedAmount) / LP_RATIO_PRECISION - joinedAmount;
+    const denominatorRatio = govCapRatio < LP_RATIO_PRECISION ? LP_RATIO_PRECISION - govCapRatio : BigInt(0);
+    const govCapRatioText = formatPercentage((Number(govCapRatio) / Number(LP_RATIO_PRECISION)) * 100);
+    const denominatorRatioText = formatPercentage((Number(denominatorRatio) / Number(LP_RATIO_PRECISION)) * 100);
+    const formatSignedTokenAmount = (amount: bigint) => {
+      if (amount < BigInt(0)) return `-${formatTokenAmount(-amount, 4)}`;
+      return formatTokenAmount(amount, 4);
+    };
+    const noFiniteReason =
+      govRatioMultiplier === BigInt(0)
+        ? '治理票占比倍数为 0，不启用治理票激励上限。'
+        : '治理票有效占比大于等于 100%。';
+
+    return (
+      <div className="space-y-2 text-sm leading-relaxed">
+        <p>推荐值是理论上不浪费治理票激励上限的追加 LP 数量，不考虑你当前钱包 LP 余额。</p>
+        <p>治理票有效占比 = 我的有效治理票 / 总治理票 × 治理票占比倍数。</p>
+        <p>推荐追加量 = (治理票有效占比 × 当前总参与 LP - 我已参与 LP) / (1 - 治理票有效占比)。</p>
+        <div className="space-y-1 rounded border border-gray-200 bg-gray-50 p-3">
+          <div className="flex justify-between gap-3">
+            <span>我的有效治理票</span>
+            <span className="font-mono text-secondary">{formatTokenAmount(userGovVotes, 4)}</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span>总治理票</span>
+            <span className="font-mono text-secondary">{formatTokenAmount(totalGovVotes, 4)}</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span>治理票占比倍数</span>
+            <span className="font-mono text-secondary">{govRatioMultiplier.toString()}</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span>治理票有效占比 r</span>
+            <span className="font-mono text-secondary">{govCapRatioText}</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span>当前总参与 LP T</span>
+            <span className="font-mono text-secondary">{formatTokenAmount(totalJoinedAmount, 4)}</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span>我已参与 LP A</span>
+            <span className="font-mono text-secondary">{formatTokenAmount(joinedAmount, 4)}</span>
+          </div>
+          <div className="border-t border-gray-200 pt-2 text-xs text-gray-600">
+            公式：x = (r × T - A) / (1 - r)
+          </div>
+          {recommendedLpAmount === undefined ? (
+            <div className="text-secondary">{noFiniteReason}</div>
+          ) : (
+            <>
+              <div className="flex justify-between gap-3">
+                <span>r × T - A</span>
+                <span className="font-mono text-secondary">{formatSignedTokenAmount(numeratorAmount)}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span>1 - r</span>
+                <span className="font-mono text-secondary">{denominatorRatioText}</span>
+              </div>
+              <div className="flex justify-between gap-3 font-medium">
+                <span>推荐追加 x</span>
+                <span className="font-mono text-secondary">{recommendedLpAmountText}</span>
+              </div>
+            </>
+          )}
+        </div>
+        <p className="text-xs text-gray-500">
+          钱包 LP 余额 {formatTokenAmount(lpBalance || BigInt(0), 4)} 不参与推荐值计算，但实际提交仍受余额限制。
+        </p>
+      </div>
+    );
+  }, [
+    userGovVotes,
+    totalGovVotes,
+    govRatioMultiplier,
+    totalJoinedAmount,
+    joinedAmount,
+    recommendedLpAmount,
+    recommendedLpAmountText,
+    lpBalance,
+  ]);
 
   // 获取 LP Token 的 symbol
   const { formattedSymbol: lpTokenSymbol } = useFormatLPSymbol({
@@ -384,25 +509,55 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                     />
                   </FormControl>
                   <FormMessage />
-                  <FormDescription className="flex items-center justify-between">
-                    <span>
-                      共有 <span className="text-secondary">{formatTokenAmount(lpBalance || BigInt(0), 4)}</span>{' '}
-                      {lpTokenSymbol}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      onClick={() => {
-                        if (lpBalance && lpBalance > BigInt(0)) {
-                          form.setValue('joinAmount', formatUnits(lpBalance));
-                        }
-                      }}
-                      className="text-secondary p-0"
-                      disabled={!lpBalance || lpBalance <= BigInt(0) || isGovRatioInsufficient}
-                    >
-                      全部
-                    </Button>
+                  <FormDescription className="space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0">
+                        共有 <span className="text-secondary">{formatTokenAmount(lpBalance || BigInt(0), 4)}</span>{' '}
+                        {lpTokenSymbol}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        onClick={() => {
+                          if (lpBalance && lpBalance > BigInt(0)) {
+                            form.setValue('joinAmount', formatUnits(lpBalance), {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                          }
+                        }}
+                        className="text-secondary p-0"
+                        disabled={!lpBalance || lpBalance <= BigInt(0) || isGovRatioInsufficient}
+                      >
+                        全部
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 inline-flex items-center gap-1">
+                        <span>
+                          推荐 <span className="text-secondary">{recommendedLpAmountText}</span> {lpTokenSymbol}
+                        </span>
+                        <InfoTooltip title="推荐值说明" content={recommendedLpAmountHelp} className="p-0" />
+                      </span>
+                      <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        onClick={() => {
+                          if (hasRecommendedLpAmount) {
+                            form.setValue('joinAmount', formatUnits(recommendedLpAmount), {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                          }
+                        }}
+                        className="text-secondary p-0"
+                        disabled={!hasRecommendedLpAmount || isGovRatioInsufficient}
+                      >
+                        推荐
+                      </Button>
+                    </div>
                   </FormDescription>
                 </FormItem>
               )}

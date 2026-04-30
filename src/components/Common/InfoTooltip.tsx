@@ -10,12 +10,13 @@ interface InfoTooltipProps {
   className?: string;
 }
 
-export default function InfoTooltip({ title, content, className = '' }: InfoTooltipProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+interface TooltipTriggerButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  title: string;
+  className?: string;
+}
 
-  // 共享的触发按钮 - 使用 forwardRef
-  const TriggerButton = React.forwardRef<HTMLButtonElement>((props, ref) => (
+const TooltipTriggerButton = React.forwardRef<HTMLButtonElement, TooltipTriggerButtonProps>(
+  ({ title, className = '', ...props }, ref) => (
     <button
       ref={ref}
       type="button"
@@ -25,11 +26,15 @@ export default function InfoTooltip({ title, content, className = '' }: InfoTool
     >
       <Info className="h-4 w-4 text-gray-500 hover:text-gray-700" />
     </button>
-  ));
-  TriggerButton.displayName = 'TriggerButton';
+  ),
+);
+TooltipTriggerButton.displayName = 'TooltipTriggerButton';
 
-  // 共享的内容组件
-  const InfoContent = () => (
+export default function InfoTooltip({ title, content, className = '' }: InfoTooltipProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+
+  const contentNode = (
     <div className="text-gray-700">
       {typeof content === 'string' ? (
         <p className="leading-relaxed text-sm whitespace-pre-line">{content}</p>
@@ -45,12 +50,12 @@ export default function InfoTooltip({ title, content, className = '' }: InfoTool
       {isDesktop && (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <div onClick={() => setIsOpen(true)}>
-            <TriggerButton />
+            <TooltipTriggerButton title={title} className={className} />
           </div>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] data-[state=closed]:animate-none data-[state=open]:animate-none">
             <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
             <div className="pt-2 pb-4">
-              <InfoContent />
+              {contentNode}
             </div>
           </DialogContent>
         </Dialog>
@@ -58,16 +63,16 @@ export default function InfoTooltip({ title, content, className = '' }: InfoTool
 
       {/* 移动端使用 Drawer */}
       {!isDesktop && (
-        <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <Drawer open={isOpen} onOpenChange={setIsOpen} shouldScaleBackground={false}>
           <div onClick={() => setIsOpen(true)}>
-            <TriggerButton />
+            <TooltipTriggerButton title={title} className={className} />
           </div>
           <DrawerContent className="pb-safe">
             <DrawerHeader>
               <DrawerTitle className="text-lg font-semibold">{title}</DrawerTitle>
             </DrawerHeader>
             <div className="px-4 pb-8 mb-10">
-              <InfoContent />
+              {contentNode}
             </div>
           </DrawerContent>
         </Drawer>
