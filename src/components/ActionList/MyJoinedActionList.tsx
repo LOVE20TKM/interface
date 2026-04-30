@@ -1,6 +1,6 @@
 'use client';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { ChevronRight, UserPen } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
@@ -21,7 +21,6 @@ import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import RoundLite from '@/src/components/Common/RoundLite';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import AddressWithCopyButton from '../Common/AddressWithCopyButton';
 import { Button } from '@/components/ui/button';
 
 interface MyJoinedActionListProps {
@@ -115,10 +114,11 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
 
               return 0;
             })
-            .map((action: JoinedAction, index: number) => {
+            .map((action: JoinedAction) => {
               // 根据是否有激励且有投票设置背景色和标题颜色
               const isGoodAction = action.hasReward && action.votesNum > 0;
               const cardClassName = isGoodAction ? 'shadow-none' : 'shadow-none bg-gray-50';
+              const joinedAmountTokenSymbol = action.joinedAmountTokenSymbol || token?.symbol;
 
               return (
                 <Card key={action.action.head.id} className={cardClassName}>
@@ -146,28 +146,23 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
                       )}
                     </CardHeader>
                     <CardContent className="px-3 pt-1 pb-2">
-                      <div className="flex justify-between mt-1 text-sm">
-                        <span className="flex items-center">
-                          <UserPen className="text-greyscale-400 mr-1 h-3 w-3 -translate-y-0.5" />
-                          <span className="text-greyscale-400">
-                            <AddressWithCopyButton
-                              address={action.action.head.author as `0x${string}`}
-                              showCopyButton={false}
-                              colorClassName2="text-secondary"
-                            />
-                          </span>
-                        </span>
-                        {action.votesNum > 0 && (
-                          <span>
+                      <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 pr-6 mt-1 text-sm">
+                        <span className="min-w-0">
+                          {action.votesNum > 0 && (
+                            <>
                             <span className="text-greyscale-400 mr-1">投票</span>
                             <span className="text-secondary">
                               {formatPercentage(Number(action.votePercentPerTenThousand) / 100)}
                             </span>
-                          </span>
-                        )}
-                        <span>
+                            </>
+                          )}
+                        </span>
+                        <span className="text-right">
                           <span className="text-greyscale-400 mr-1">我参与代币</span>
-                          <span className="text-secondary">{formatTokenAmount(action.joinedAmountOfAccount)}</span>
+                          <span className="text-secondary">
+                            {formatTokenAmount(action.joinedAmountOfAccount)}
+                            {joinedAmountTokenSymbol ? ` ${joinedAmountTokenSymbol}` : ''}
+                          </span>
                         </span>
                       </div>
                     </CardContent>

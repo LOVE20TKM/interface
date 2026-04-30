@@ -62,6 +62,7 @@ export interface JoinedAction {
   votePercentPerTenThousand: bigint;
   hasReward: boolean;
   joinedAmountOfAccount: bigint;
+  joinedAmountTokenSymbol?: string;
 }
 
 export interface VerifyingAction {

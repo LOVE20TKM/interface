@@ -228,6 +228,7 @@ export const useMyJoinedExtensionActions = ({
           extension: validationInfo.extensionAddress,
           joinedAmountTokenAddress: validationInfo.joinedAmountTokenAddress,
           joinedAmountTokenIsLP: validationInfo.joinedAmountTokenIsLP,
+          joinedAmountTokenSymbol: validationInfo.joinedAmountTokenSymbol,
         });
       } else {
         // 非扩展行动
@@ -383,6 +384,7 @@ export const useMyJoinedExtensionActions = ({
         votePercentPerTenThousand,
         hasReward,
         joinedAmountOfAccount,
+        joinedAmountTokenSymbol: contractInfo?.joinedAmountTokenSymbol,
       });
     }
 
