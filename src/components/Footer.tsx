@@ -1,14 +1,14 @@
 // src/components/Footer.tsx
-'use client';
-import React from 'react';
-import { NavigationUtils } from '@/src/lib/navigationUtils';
+"use client";
+import React from "react";
+import { NavigationUtils } from "@/src/lib/navigationUtils";
 
 interface FooterProps {}
 
 const Footer: React.FC<FooterProps> = () => {
   const handleExternalLink = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    NavigationUtils.handleExternalLink('https://love20tkm.github.io/docs/');
+    NavigationUtils.handleExternalLink("https://love20tkm.github.io/docs/");
   };
 
   return (
@@ -16,7 +16,7 @@ const Footer: React.FC<FooterProps> = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="p-4 border rounded-lg bg-slate-50 dark:bg-slate-900 flex flex-col items-center space-y-2">
           <p className="text-center text-sm text-slate-700 dark:text-slate-300">
-            LOVE20 所有合约 及 前端代码，都在全球最大开源平台 GitHub 上开源。地址：
+            LOVE20 白皮书、所有合约 及 前端代码，都在全球最大开源平台 GitHub 上开源。地址：
           </p>
           <a
             href="https://love20tkm.github.io/docs/"
