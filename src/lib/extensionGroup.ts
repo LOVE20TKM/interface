@@ -25,6 +25,8 @@ const formatLimitAmount = (amount: bigint): string =>
   amount < BigInt(0) ? `-${formatTokenAmount(-amount)}` : formatTokenAmount(amount);
 const formatUnlimited = (amount: bigint): string =>
   amount > BigInt(0) ? formatLimitAmount(amount) : '不限';
+const formatRemainingAmount = (amount: bigint): string =>
+  amount > BigInt(0) ? formatLimitAmount(amount) : `${formatLimitAmount(amount)}（已达到或超过上限，追加余量按 0 处理）`;
 const PRECISION = BigInt('1000000000000000000');
 const PERCENT_DECIMAL_SCALE = BigInt(10000);
 
@@ -117,17 +119,18 @@ export const getMaxIncreaseAmountDetail = (
   const actionMaxJoinAmountLine =
     buildActionMaxJoinAmountLine(actionLimitDetail) || `行动单地址上限：${formatLimitAmount(groupDetail.actionMaxJoinAmount)}`;
   const lines = [
-    '还可追加数量取以下有效限制中的最小值：',
+    '还可追加数量只限制新增追加，不影响已参与代币有效性。',
+    '可追加数量取以下剩余额度中的最小值：',
     `1. 链群单地址剩余：${
       groupDetail.maxJoinAmount > BigInt(0)
-        ? `${formatLimitAmount(groupDetail.maxJoinAmount)} - ${formatLimitAmount(oldAmount)} = ${formatLimitAmount(
+        ? `${formatLimitAmount(groupDetail.maxJoinAmount)} - ${formatLimitAmount(oldAmount)} = ${formatRemainingAmount(
             groupDetail.maxJoinAmount - oldAmount,
           )}`
         : '不限，不参与最小值计算'
     }`,
     `2. ${actionMaxJoinAmountLine}\n行动单地址剩余：${formatLimitAmount(groupDetail.actionMaxJoinAmount)} - ${formatLimitAmount(
       oldAmount,
-    )} = ${formatLimitAmount(groupDetail.actionMaxJoinAmount - oldAmount)}`,
+    )} = ${formatRemainingAmount(groupDetail.actionMaxJoinAmount - oldAmount)}`,
     `3. 链群剩余容量：${
       groupDetail.maxCapacity > BigInt(0)
         ? `${formatLimitAmount(groupDetail.maxCapacity)} - ${formatLimitAmount(groupDetail.totalJoinedAmount)} = ${formatLimitAmount(groupDetail.remainingCapacity)}`
@@ -138,13 +141,13 @@ export const getMaxIncreaseAmountDetail = (
 
   if (result.amount > BigInt(0)) {
     lines.push(`所以当前还可追加 = ${formatLimitAmount(result.amount)}。`);
-    lines.push(`当前生效限制：${result.reason}。`);
+    lines.push(`当前最小剩余额度来自：${result.reason}。`);
   } else {
     lines.push('所以当前还可追加 = 0。');
-    if (result.reason) lines.push(`当前生效限制：${result.reason}。`);
+    if (result.reason) lines.push(`不能继续追加的原因：${result.reason}。`);
   }
 
-  lines.push(`我的当前参与 = ${formatLimitAmount(oldAmount)}。`);
+  lines.push(`我的当前参与 = ${formatLimitAmount(oldAmount)}，已参与代币仍有效。`);
   return lines.join('\n');
 };
 
@@ -229,7 +232,12 @@ export const getMaxIncreaseAmount = (groupDetail: GroupDetailInfo, oldAmount: bi
     const maxJoinRemaining = groupDetail.maxJoinAmount - oldAmount;
     limits.push({
       amount: maxJoinRemaining,
-      reason: `链群最大参与代币 ${formatTokenAmount(groupDetail.maxJoinAmount)}`,
+      reason:
+        maxJoinRemaining > BigInt(0)
+          ? `链群最大参与代币 ${formatTokenAmount(groupDetail.maxJoinAmount)}`
+          : `已参与代币仍有效；当前已达到或超过链群最大参与代币 ${formatTokenAmount(
+              groupDetail.maxJoinAmount,
+            )}，不能继续追加`,
     });
   }
 
@@ -237,7 +245,12 @@ export const getMaxIncreaseAmount = (groupDetail: GroupDetailInfo, oldAmount: bi
   const actionMaxJoinRemaining = groupDetail.actionMaxJoinAmount - oldAmount;
   limits.push({
     amount: actionMaxJoinRemaining,
-    reason: `行动参与代币上限 ${formatTokenAmount(groupDetail.actionMaxJoinAmount)}`,
+    reason:
+      actionMaxJoinRemaining > BigInt(0)
+        ? `行动参与代币上限 ${formatTokenAmount(groupDetail.actionMaxJoinAmount)}`
+        : `已参与代币仍有效；当前已达到或超过行动参与代币上限 ${formatTokenAmount(
+            groupDetail.actionMaxJoinAmount,
+          )}，不能继续追加`,
   });
 
   // 3. 链群剩余容量（maxCapacity为0时表示无限制，不添加）
