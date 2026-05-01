@@ -2,7 +2,7 @@
 // 链群参与限制计算工具
 
 import { formatTokenAmount } from './format';
-import { GroupDetailInfo } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
+import type { GroupDetailInfo } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 
 /**
  * 参与量计算结果接口
@@ -11,6 +11,142 @@ export interface JoinAmountResult {
   amount: bigint; // 可参与的最大代币量
   reason: string; // 限制原因描述（包含格式化的数值）
 }
+
+export interface ActionJoinLimitDetail {
+  actionMaxJoinAmount: bigint;
+  actionVotes: bigint;
+  joinTokenTotalSupply: bigint;
+  maxJoinAmountRatio: bigint;
+  round: bigint;
+  totalVotes: bigint;
+}
+
+const formatLimitAmount = (amount: bigint): string =>
+  amount < BigInt(0) ? `-${formatTokenAmount(-amount)}` : formatTokenAmount(amount);
+const formatUnlimited = (amount: bigint): string =>
+  amount > BigInt(0) ? formatLimitAmount(amount) : '不限';
+const PRECISION = BigInt('1000000000000000000');
+const PERCENT_DECIMAL_SCALE = BigInt(10000);
+
+const formatPercentByRatio = (numerator: bigint, denominator: bigint): string => {
+  if (denominator <= BigInt(0)) return '0%';
+  const scaled = (numerator * BigInt(100) * PERCENT_DECIMAL_SCALE) / denominator;
+  const integerPart = scaled / PERCENT_DECIMAL_SCALE;
+  const fractionalPart = scaled % PERCENT_DECIMAL_SCALE;
+  const fractionalText = fractionalPart.toString().padStart(4, '0').replace(/0+$/, '');
+  return `${integerPart.toString()}${fractionalText ? `.${fractionalText}` : ''}%`;
+};
+const formatRatio = (ratio: bigint): string => formatPercentByRatio(ratio, PRECISION);
+const formatVoteRatio = (actionVotes: bigint, totalVotes: bigint): string =>
+  formatPercentByRatio(actionVotes, totalVotes);
+
+const buildActionMaxJoinAmountLine = (actionLimitDetail?: ActionJoinLimitDetail): string => {
+  if (!actionLimitDetail) return '';
+
+  if (actionLimitDetail.totalVotes <= BigInt(0)) {
+    return `行动单地址上限 = 0；当前第 ${actionLimitDetail.round.toString()} 轮总投票为 0，因此不参与最小值计算。`;
+  }
+
+  if (actionLimitDetail.actionVotes <= BigInt(0)) {
+    return `行动单地址上限 = 0；当前第 ${actionLimitDetail.round.toString()} 轮该行动投票为 0，总投票为 ${formatLimitAmount(
+      actionLimitDetail.totalVotes,
+    )}，因此不参与最小值计算。`;
+  }
+
+  return [
+    `行动单地址上限 = 已铸造参与代币总量 × 最大参与代币占比 × 行动投票占比。`,
+    `= ${formatLimitAmount(actionLimitDetail.joinTokenTotalSupply)} × ${formatRatio(
+      actionLimitDetail.maxJoinAmountRatio,
+    )} × ${formatVoteRatio(actionLimitDetail.actionVotes, actionLimitDetail.totalVotes)}`,
+    `其中行动投票占比 = ${formatLimitAmount(actionLimitDetail.actionVotes)} / ${formatLimitAmount(
+      actionLimitDetail.totalVotes,
+    )}。`,
+    `所以行动单地址上限 = ${formatLimitAmount(actionLimitDetail.actionMaxJoinAmount)}。`,
+  ].join('\n');
+};
+
+/**
+ * 生成新用户参与上限的详细计算说明。
+ */
+export const getMaxJoinAmountDetail = (
+  groupDetail: GroupDetailInfo,
+  result: JoinAmountResult,
+  actionLimitDetail?: ActionJoinLimitDetail,
+): string => {
+  const actionMaxJoinAmountDetail = buildActionMaxJoinAmountLine(actionLimitDetail);
+  const actionMaxJoinAmountLine = actionMaxJoinAmountDetail || `行动单地址上限：${formatUnlimited(groupDetail.actionMaxJoinAmount)}`;
+  const actionMaxJoinAmountSuffix =
+    !actionMaxJoinAmountDetail && groupDetail.actionMaxJoinAmount <= BigInt(0) ? '，不参与最小值计算' : '';
+  const lines = [
+    '参与代币上限取以下有效限制中的最小值：',
+    `1. 链群单地址上限：${formatUnlimited(groupDetail.maxJoinAmount)}${
+      groupDetail.maxJoinAmount > BigInt(0) ? '' : '，不参与最小值计算'
+    }`,
+    `2. ${actionMaxJoinAmountLine}${actionMaxJoinAmountSuffix}`,
+    `3. 链群剩余容量：${
+      groupDetail.maxCapacity > BigInt(0)
+        ? `${formatLimitAmount(groupDetail.maxCapacity)} - ${formatLimitAmount(groupDetail.totalJoinedAmount)} = ${formatLimitAmount(groupDetail.remainingCapacity)}`
+        : '不限，不参与最小值计算'
+    }`,
+    '',
+  ];
+
+  if (result.amount > BigInt(0)) {
+    lines.push(`所以当前参与代币上限 = ${formatLimitAmount(result.amount)}。`);
+    lines.push(`当前生效限制：${result.reason}。`);
+  } else if (result.reason === '无限制') {
+    lines.push('所以当前没有参与代币上限。');
+  } else {
+    lines.push(`所以当前参与代币上限 = 0。`);
+    lines.push(`当前生效限制：${result.reason}。`);
+  }
+
+  lines.push(`参与代币下限 = ${formatLimitAmount(groupDetail.actualMinJoinAmount)}。`);
+  return lines.join('\n');
+};
+
+/**
+ * 生成老用户追加上限的详细计算说明。
+ */
+export const getMaxIncreaseAmountDetail = (
+  groupDetail: GroupDetailInfo,
+  oldAmount: bigint,
+  result: JoinAmountResult,
+  actionLimitDetail?: ActionJoinLimitDetail,
+): string => {
+  const actionMaxJoinAmountLine =
+    buildActionMaxJoinAmountLine(actionLimitDetail) || `行动单地址上限：${formatLimitAmount(groupDetail.actionMaxJoinAmount)}`;
+  const lines = [
+    '还可追加数量取以下有效限制中的最小值：',
+    `1. 链群单地址剩余：${
+      groupDetail.maxJoinAmount > BigInt(0)
+        ? `${formatLimitAmount(groupDetail.maxJoinAmount)} - ${formatLimitAmount(oldAmount)} = ${formatLimitAmount(
+            groupDetail.maxJoinAmount - oldAmount,
+          )}`
+        : '不限，不参与最小值计算'
+    }`,
+    `2. ${actionMaxJoinAmountLine}\n行动单地址剩余：${formatLimitAmount(groupDetail.actionMaxJoinAmount)} - ${formatLimitAmount(
+      oldAmount,
+    )} = ${formatLimitAmount(groupDetail.actionMaxJoinAmount - oldAmount)}`,
+    `3. 链群剩余容量：${
+      groupDetail.maxCapacity > BigInt(0)
+        ? `${formatLimitAmount(groupDetail.maxCapacity)} - ${formatLimitAmount(groupDetail.totalJoinedAmount)} = ${formatLimitAmount(groupDetail.remainingCapacity)}`
+        : '不限，不参与最小值计算'
+    }`,
+    '',
+  ];
+
+  if (result.amount > BigInt(0)) {
+    lines.push(`所以当前还可追加 = ${formatLimitAmount(result.amount)}。`);
+    lines.push(`当前生效限制：${result.reason}。`);
+  } else {
+    lines.push('所以当前还可追加 = 0。');
+    if (result.reason) lines.push(`当前生效限制：${result.reason}。`);
+  }
+
+  lines.push(`我的当前参与 = ${formatLimitAmount(oldAmount)}。`);
+  return lines.join('\n');
+};
 
 /**
  * 获取新用户的最大参与量

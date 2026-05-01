@@ -37,12 +37,18 @@ import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
 import { useAcquireLpJump } from '@/src/hooks/composite/useAcquireLpJump';
 import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
+import { useGroupActionJoinLimitDetail } from '@/src/hooks/extension/plugins/group/composite/useGroupActionJoinLimitDetail';
 import { useGetInfoForJoin } from '@/src/hooks/extension/plugins/group/composite/useGetInfoForJoin';
 import { useJoin, useTrialJoin } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
-import { getMaxJoinAmount, getMaxIncreaseAmount } from '@/src/lib/extensionGroup';
+import {
+  getMaxJoinAmount,
+  getMaxJoinAmountDetail,
+  getMaxIncreaseAmount,
+  getMaxIncreaseAmountDetail,
+} from '@/src/lib/extensionGroup';
 import { LocalCache } from '@/src/lib/LocalCache';
 
 // 组件
@@ -150,11 +156,22 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     round: currentRound,
   });
 
+  const { detail: actionLimitDetail } = useGroupActionJoinLimitDetail({
+    actionId,
+    extensionAddress,
+    joinTokenAddress,
+    tokenAddress: token?.address as `0x${string}` | undefined,
+  });
+
   // 计算新用户最大参与量
   const maxJoinResult = useMemo(() => {
     if (!groupDetail) return { amount: BigInt(0), reason: '' };
     return getMaxJoinAmount(groupDetail);
   }, [groupDetail]);
+  const maxJoinDetail = useMemo(() => {
+    if (!groupDetail) return '';
+    return getMaxJoinAmountDetail(groupDetail, maxJoinResult, actionLimitDetail);
+  }, [groupDetail, maxJoinResult, actionLimitDetail]);
 
   // 计算老用户最大追加量
   const maxIncreaseResult = useMemo(() => {
@@ -163,6 +180,10 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     }
     return getMaxIncreaseAmount(groupDetail, joinedAmount);
   }, [isJoined, groupDetail, joinedAmount]);
+  const maxIncreaseDetail = useMemo(() => {
+    if (!isJoined || !groupDetail || !joinedAmount) return '';
+    return getMaxIncreaseAmountDetail(groupDetail, joinedAmount, maxIncreaseResult, actionLimitDetail);
+  }, [isJoined, groupDetail, joinedAmount, maxIncreaseResult, actionLimitDetail]);
 
   // 根据场景选择使用哪个结果
   const effectiveMaxAmount = isJoined ? maxIncreaseResult.amount : maxJoinResult.amount;
@@ -518,7 +539,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                               <span className="text-xs text-gray-500 inline-flex items-center gap-1">
                                 限 {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
                                 {formatTokenAmount(maxJoinResult.amount)}
-                                <InfoTooltip title="参与上限说明" content={maxJoinResult.reason} />
+                                <InfoTooltip title="参与上限说明" content={maxJoinDetail} />
                               </span>
                             ))}
                         </>
@@ -531,7 +552,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                             ) : (
                               <span className="text-xs text-gray-500 inline-flex items-center gap-1">
                                 最大 {formatTokenAmount(maxIncreaseResult.amount)}
-                                <InfoTooltip title="追加上限说明" content={maxIncreaseResult.reason} />
+                                <InfoTooltip title="追加上限说明" content={maxIncreaseDetail} />
                               </span>
                             ))}
                         </>

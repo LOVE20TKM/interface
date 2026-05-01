@@ -18,14 +18,16 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
+import { useGroupActionJoinLimitDetail } from '@/src/hooks/extension/plugins/group/composite/useGroupActionJoinLimitDetail';
 import { useJoinInfo } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 
 // 工具函数
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
-import { getMaxIncreaseAmount } from '@/src/lib/extensionGroup';
+import { getMaxIncreaseAmount, getMaxIncreaseAmountDetail } from '@/src/lib/extensionGroup';
 
 // 组件
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import InfoTooltip from '@/src/components/Common/InfoTooltip';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { DialogTitle, Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
@@ -57,6 +59,7 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
   });
 
   const joinTokenSymbol = extensions[0]?.joinedAmountTokenSymbol;
+  const joinTokenAddress = extensions[0]?.joinedAmountTokenAddress;
 
   // 计算显示的 symbol 和对应的字体大小
   const displaySymbol = joinTokenSymbol || token?.symbol || '';
@@ -84,6 +87,13 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
     round: currentRound,
   });
 
+  const { detail: actionLimitDetail } = useGroupActionJoinLimitDetail({
+    actionId,
+    extensionAddress,
+    joinTokenAddress,
+    tokenAddress: token?.address as `0x${string}` | undefined,
+  });
+
   // 计算还可以追加的代币数及原因
   const increaseResult = useMemo(() => {
     if (!groupDetail || !joinedAmount) {
@@ -91,6 +101,10 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
     }
     return getMaxIncreaseAmount(groupDetail, joinedAmount);
   }, [groupDetail, joinedAmount]);
+  const increaseDetail = useMemo(() => {
+    if (!groupDetail || !joinedAmount) return '';
+    return getMaxIncreaseAmountDetail(groupDetail, joinedAmount, increaseResult, actionLimitDetail);
+  }, [groupDetail, joinedAmount, increaseResult, actionLimitDetail]);
 
   const additionalAllowed = increaseResult.amount;
 
@@ -141,7 +155,10 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
       {/* 还可追加 */}
       <div className="stat place-items-center flex flex-col justify-center">
         <div className="stat-title">还可追加</div>
-        <div className="stat-value text-2xl text-secondary">{formatTokenAmount(additionalAllowed)}</div>
+        <div className="stat-value text-2xl text-secondary inline-flex items-center gap-1">
+          {formatTokenAmount(additionalAllowed)}
+          <InfoTooltip title="还可追加说明" content={increaseDetail} className="-mr-1" />
+        </div>
         <div className={`stat-desc ${symbolTextSize} mt-2 whitespace-normal break-words text-center`}>
           {displaySymbol}
         </div>
