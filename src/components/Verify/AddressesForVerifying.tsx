@@ -520,9 +520,8 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
       }
     });
 
-    //todo: 去掉19号行动的特殊检查
     // 检查1: 0分地址是否超过1/10
-    if (zeroScoreAddresses.length > totalAddresses / 10 && actionId !== BigInt(19)) {
+    if (zeroScoreAddresses.length > totalAddresses / 10) {
       warnings.push(`有 ${zeroScoreAddresses.length} 个地址被打了0分`);
     }
 

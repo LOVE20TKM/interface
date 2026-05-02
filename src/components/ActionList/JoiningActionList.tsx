@@ -8,14 +8,10 @@ import { JoinableAction } from '@/src/types/love20types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 // my utils
-import { calculateActionAPY, calculateExpectedActionReward } from '@/src/lib/domainUtils';
+import { calculateActionAPY } from '@/src/lib/domainUtils';
 import { formatPercentage } from '@/src/lib/format';
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
-
-// my hooks
-import { useRewardAvailable } from '@/src/hooks/contracts/useLOVE20Mint';
-import { useAction19PoolValue } from '@/src/hooks/composite/useAction19PoolValue';
 
 // my components
 import RoundLite from '@/src/components/Common/RoundLite';
@@ -27,35 +23,26 @@ interface JoiningActionListProps {
   currentRound: bigint;
   joinableActions: JoinableAction[] | undefined;
   isPendingActions: boolean;
+  expectedReward: bigint | undefined;
+  isPendingReward: boolean;
 }
 
-const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound, joinableActions, isPendingActions }) => {
+const JoiningActionList: React.FC<JoiningActionListProps> = ({
+  currentRound,
+  joinableActions,
+  isPendingActions,
+  expectedReward,
+  isPendingReward,
+}) => {
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
-  // 获取奖励可用额度
-  const {
-    rewardAvailable,
-    isPending: isPendingRewardAvailable,
-    error: errorRewardAvailable,
-  } = useRewardAvailable((token?.address as `0x${string}`) || '');
-
-  // 获取19号行动的u池资产价值
-  const {
-    totalPoolValue: action19PoolValue,
-    isLoading: isLoadingAction19Pool,
-    error: errorAction19Pool,
-  } = useAction19PoolValue({
-    tokenAddress: token?.address as `0x${string}`,
-    enabled: !!token?.address,
-  });
-
   // 计算所有 joinableActions 的总票数，用于计算投票占比
   const totalVotes = joinableActions?.reduce((acc, action) => acc + action.votesNum, BigInt(0)) || BigInt(0);
-
-  // 计算预计新增铸币
-  const displayRound = token ? currentRound - BigInt(token.initialStakeRound) + BigInt(1) : BigInt(0);
-  const expectedReward = calculateExpectedActionReward(rewardAvailable, displayRound);
+  // 只有 hasReward 的行动会进入行动激励分配，未达标行动的票数不应稀释奖励份额。
+  const totalRewardVotes =
+    joinableActions?.reduce((acc, action) => (action.hasReward ? acc + action.votesNum : acc), BigInt(0)) ||
+    BigInt(0);
 
   return (
     <div className="px-4 py-6">
@@ -94,10 +81,12 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound, joi
               // 根据是否有激励设置背景色
               const cardClassName = actionDetail.hasReward ? 'shadow-none' : 'shadow-none bg-gray-50';
 
-              // 计算成本：对于19号行动，需要加上u池资产价值
-              const isAction19 =
-                actionDetail.action.head.id === BigInt(19) || actionDetail.action.head.id === BigInt(15);
-              const actionCost = isAction19 ? actionDetail.joinedAmount + action19PoolValue : actionDetail.joinedAmount;
+              const actionExpectedReward =
+                actionDetail.hasReward && totalRewardVotes > BigInt(0) && expectedReward
+                  ? (expectedReward * actionDetail.votesNum) / totalRewardVotes
+                  : BigInt(0);
+
+              const actionCost = actionDetail.joinedAmount;
 
               return (
                 <Card key={actionDetail.action.head.id} className={cardClassName}>
@@ -140,13 +129,10 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({ currentRound, joi
                           <span>
                             <span className="text-greyscale-400 text-xs mr-1">APY</span>
                             <span className="text-secondary text-xs">
-                              {isPendingRewardAvailable || (isAction19 && isLoadingAction19Pool) ? (
+                              {isPendingReward ? (
                                 <LoadingIcon />
                               ) : (
-                                calculateActionAPY(
-                                  BigInt(Math.floor(Number(expectedReward || BigInt(0)) * voteRatio)),
-                                  actionCost,
-                                )
+                                calculateActionAPY(actionExpectedReward, actionCost)
                               )}
                             </span>
                           </span>

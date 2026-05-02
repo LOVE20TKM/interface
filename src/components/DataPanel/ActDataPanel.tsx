@@ -1,11 +1,5 @@
 'use client';
-import React, { useContext, useMemo } from 'react';
-
-// my hooks
-import { useAction19PoolValue } from '@/src/hooks/composite/useAction19PoolValue';
-
-// my contexts
-import { TokenContext } from '@/src/contexts/TokenContext';
+import React from 'react';
 
 // my components
 import { formatTokenAmount } from '@/src/lib/format';
@@ -27,22 +21,7 @@ const ActDataPanel: React.FC<ActDataPanelProps> = ({
   isPendingJoinedAmount,
   isPendingReward,
 }) => {
-  const { token } = useContext(TokenContext) || {};
-
-  // 获取19号行动的u池资产价值
-  const {
-    totalPoolValue: action19PoolValue,
-    isLoading: isLoadingAction19Pool,
-    error: errorAction19Pool,
-  } = useAction19PoolValue({
-    tokenAddress: token?.address as `0x${string}`,
-    enabled: !!token?.address,
-  });
-
-  // 计算总成本：参与代币 + 19号行动的u池资产
-  const totalCost = useMemo(() => {
-    return (totalJoinedAmount ?? BigInt(0)) + action19PoolValue;
-  }, [totalJoinedAmount, action19PoolValue]);
+  const totalCost = totalJoinedAmount ?? BigInt(0);
 
   return (
     <div className="px-4">
@@ -63,7 +42,7 @@ const ActDataPanel: React.FC<ActDataPanelProps> = ({
         </div>
         <div className="text-center text-xs mb-2 text-greyscale-500">
           预估年化收益率（APY）：
-          {isPendingJoinedAmount || isPendingReward || isLoadingAction19Pool ? (
+          {isPendingJoinedAmount || isPendingReward ? (
             <LoadingIcon />
           ) : (
             calculateActionAPY(expectedReward, totalCost)

@@ -49,8 +49,10 @@ export const calculateAPY = (
  * @returns 格式化后的APY百分比字符串
  */
 export const calculateActionAPY = (expectedReward?: bigint, joinedAmount?: bigint): string => {
-  // 如果没有数据，返回0%
-  if (!expectedReward || !joinedAmount || joinedAmount === BigInt(0)) return '∞';
+  // 无奖励时收益率为 0；只有正奖励且参与成本为 0 时才是数学意义上的无限大。
+  if (expectedReward === undefined || expectedReward === BigInt(0)) return '0%';
+  if (joinedAmount === undefined) return '0%';
+  if (joinedAmount === BigInt(0)) return '∞';
 
   // 年区块数 = 365天 * 86400秒/天 / 每个区块的秒数
   const blocksPerYear = (365 * 86400 * 1000) / Number(process.env.NEXT_PUBLIC_BLOCK_TIME_MS || 0);
@@ -63,7 +65,9 @@ export const calculateActionAPY = (expectedReward?: bigint, joinedAmount?: bigin
   }
 
   // 计算APY: 当轮行动激励 / 参与行动代币 / (一个阶段区块数/年区块数) * 100%
-  const apy = (Number(expectedReward) / Number(joinedAmount) / (Number(phaseBlocks) / blocksPerYear)) * 100;
+  const ratioScale = BigInt(1_000_000_000_000);
+  const rewardRatio = Number((expectedReward * ratioScale) / joinedAmount) / Number(ratioScale);
+  const apy = (rewardRatio / (Number(phaseBlocks) / blocksPerYear)) * 100;
 
   // 格式化APY，显示整数加2位小数，如果小数最后是0，则去掉
   return formatPercentage(apy);
