@@ -5,7 +5,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 
 // my hooks
 import { useVerificationInfosByAction, useVerifiedAddressesByAction } from '@/src/hooks/contracts/useLOVE20RoundViewer';
-import { useScoreByActionIdByAccount } from '@/src/hooks/contracts/useLOVE20Verify';
+import { useScore, useScoreByActionId, useScoreByActionIdByAccount } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useVotesNumByActionId } from '@/src/hooks/contracts/useLOVE20Vote';
 
 // my contexts
@@ -39,6 +39,11 @@ const VerifiedAddressesByAction: React.FC<{
 
   // Define verification round constant for clarity
   const verifyRound = currentJoinRound - BigInt(1);
+
+  const getBigIntPercentage = (part: bigint, total: bigint) => {
+    if (total === BigInt(0)) return 0;
+    return Number((part * BigInt(1000000)) / total) / 10000;
+  };
 
   // 从URL获取round参数
   const { round: urlRound } = router.query;
@@ -86,11 +91,25 @@ const VerifiedAddressesByAction: React.FC<{
     '0x0000000000000000000000000000000000000000',
   );
 
-  // 总验证票数
+  // 本行动验证票数
   const {
-    votesNumByActionId: totalVotesNum,
-    isPending: isPendingTotalVotesNum,
-    error: errorTotalVotesNum,
+    scoreByActionId: actionVerifyVotesNum,
+    isPending: isPendingActionVerifyVotesNum,
+    error: errorActionVerifyVotesNum,
+  } = useScoreByActionId(token?.address as `0x${string}`, selectedRound, actionId);
+
+  // 所在验证轮总验证票数
+  const {
+    score: roundVerifyVotesNum,
+    isPending: isPendingRoundVerifyVotesNum,
+    error: errorRoundVerifyVotesNum,
+  } = useScore(token?.address as `0x${string}`, selectedRound);
+
+  // 本行动投票总数，用于计算当前验证进度
+  const {
+    votesNumByActionId: actionVotesNum,
+    isPending: isPendingActionVotesNum,
+    error: errorActionVotesNum,
   } = useVotesNumByActionId(token?.address as `0x${string}`, selectedRound, actionId);
 
   const [addresses, setAddresses] = useState<VerifiedAddress[]>([]);
@@ -154,7 +173,11 @@ const VerifiedAddressesByAction: React.FC<{
   // 累计当前已验证票数（包含弃权票）
   const addressVotesNum = addresses.reduce((acc, addr) => acc + addr.score, BigInt(0));
   const verifiedVotesNum = addressVotesNum + (abstainVotes || BigInt(0));
-  const verifiedVotesPercent = (Number(verifiedVotesNum) / Number(totalVotesNum || BigInt(0))) * 100;
+  const verifiedVotesPercent = getBigIntPercentage(verifiedVotesNum, actionVotesNum || BigInt(0));
+  const actionVerifyVotesPercent = getBigIntPercentage(
+    actionVerifyVotesNum || BigInt(0),
+    roundVerifyVotesNum || BigInt(0),
+  );
 
   // 判断是否应该显示验证信息（决定是否显示展开按钮列）
   const shouldShowVerificationInfo = !isExtensionAction && actionInfo?.body.verificationKeys.length > 0;
@@ -192,13 +215,26 @@ const VerifiedAddressesByAction: React.FC<{
           </button>
         )}
       </div>
-      <div className="flex justify-left mb-2">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2 text-sm text-greyscale-500">
+        {selectedRound > BigInt(0) && (
+          <span>
+            本行动验证票占比：
+            {isPendingActionVerifyVotesNum || isPendingRoundVerifyVotesNum ? (
+              <LoadingIcon />
+            ) : (
+              formatPercentage(actionVerifyVotesPercent)
+            )}
+          </span>
+        )}
         {selectedRound === currentJoinRound - BigInt(1) && verifiedVotesPercent > 0 && (
-          <span className="text-sm text-greyscale-500">(当前验证进度：{formatPercentage(verifiedVotesPercent)})</span>
+          <span>当前验证进度：{formatPercentage(verifiedVotesPercent)}</span>
         )}
       </div>
 
-      {isPendingVerifiedAddresses || isPendingVerificationInfosByAction || isPendingAbstainVotes ? (
+      {isPendingVerifiedAddresses ||
+      isPendingVerificationInfosByAction ||
+      isPendingAbstainVotes ||
+      isPendingActionVerifyVotesNum ? (
         <div className="flex justify-center items-center h-full">
           <LoadingIcon />
         </div>

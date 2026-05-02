@@ -7,6 +7,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useActionVoters } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { useVotesNum } from '@/src/hooks/contracts/useLOVE20Vote';
 
 // my components
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -22,10 +23,16 @@ interface VotingDetailsProps {
   currentRound: bigint | undefined;
 }
 
+const getBigIntPercentage = (part: bigint, total: bigint) => {
+  if (total === BigInt(0)) return 0;
+  return Number((part * BigInt(1000000)) / total) / 10000;
+};
+
 export default function VotingDetails({ actionId, currentRound }: VotingDetailsProps) {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const [selectedRound, setSelectedRound] = useState<bigint>(currentRound || BigInt(1));
+  const tokenAddress = token?.address || '0x0000000000000000000000000000000000000000';
 
   // 从URL获取round参数
   const { round: urlRound } = router.query;
@@ -39,11 +46,8 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
     }
   }, [urlRound, currentRound]);
 
-  const { actionVoters, isPending, error } = useActionVoters(
-    token?.address || '0x0000000000000000000000000000000000000000',
-    selectedRound,
-    actionId,
-  );
+  const { actionVoters, isPending, error } = useActionVoters(tokenAddress, selectedRound, actionId);
+  const { votes: roundVotes, isPending: isPendingRoundVotes } = useVotesNum(tokenAddress, selectedRound);
 
   const handleChangedRound = (round: number) => {
     const newRound = BigInt(round);
@@ -69,6 +73,7 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
 
   // 计算投票总数
   const totalVotes = actionVoters?.reduce((sum, voter) => sum + voter.voteCount, BigInt(0)) || BigInt(0);
+  const voteRate = roundVotes ? getBigIntPercentage(totalVotes, roundVotes) : 0;
 
   // 按投票数量降序排列
   const sortedVoters = actionVoters
@@ -107,7 +112,7 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
       </div>
 
       {selectedRound > 0 && actionVoters && (
-        <div className="grid grid-cols-2 gap-0 mt-4 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 mt-4 mb-4">
           <div className="">
             <span className="text-gray-500 mr-1">投票地址数:</span>
             <span className="font-mono text-secondary">{actionVoters.length}</span>
@@ -115,6 +120,12 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
           <div className="">
             <span className="text-gray-500 mr-1">票数:</span>
             <span className="font-mono text-secondary">{formatTokenAmount(totalVotes)}</span>
+          </div>
+          <div>
+            <span className="text-gray-500 mr-1">所在轮投票率:</span>
+            <span className="font-mono text-secondary inline-flex items-center">
+              {isPendingRoundVotes ? <LoadingIcon /> : formatPercentage(voteRate)}
+            </span>
           </div>
         </div>
       )}
