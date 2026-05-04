@@ -30,10 +30,10 @@ export const formatTokenAmountInteger = (balance: bigint): string => {
 // 取整方式枚举
 export type RoundingMode = 'round' | 'floor' | 'ceil';
 
-// 【显示函数-自动选择小数位数】从wei到eth 并带有逗号分隔 例如从 1000000000000000000 转换为 1.0000
+// 【显示函数-自动选择小数位数】从 wei 到 token 单位并带有逗号分隔，例如从 1000000000000000000 转换为 1
 export const formatTokenAmount = (
   balance: bigint,
-  maximumFractionDigits_ = 4,
+  maximumFractionDigits = 4,
   roundingMode: RoundingMode = 'floor',
 ): string => {
   const formatted = formatUnits(balance);
@@ -247,8 +247,8 @@ export const formatTokenAmount = (
     : formatWithRound;
 
   // 如果指定了小数位数，直接使用指定的位数
-  if (maximumFractionDigits_ !== 4) {
-    return formatFunction(numberFormatted, maximumFractionDigits_);
+  if (maximumFractionDigits !== 4) {
+    return formatFunction(numberFormatted, maximumFractionDigits);
   }
 
   // 根据数值大小使用不同的格式化规则
@@ -352,13 +352,13 @@ export const removeExtraZeros = (value: string) => {
 
 // 将秒转换为小时和分钟
 export const formatSeconds = (seconds: number): string => {
-  if (seconds > 86400) {
+  if (seconds >= 86400) {
     return `${Math.floor(seconds / 86400)}天${Math.floor((seconds % 86400) / 3600)}小时${Math.floor(
       (seconds % 3600) / 60,
     )}分`;
-  } else if (seconds > 3600) {
+  } else if (seconds >= 3600) {
     return `${Math.floor(seconds / 3600)}小时${Math.floor((seconds % 3600) / 60)}分`;
-  } else if (seconds > 60) {
+  } else if (seconds >= 60) {
     return `${Math.floor(seconds / 60)}分${Math.ceil(seconds % 60)}秒`;
   } else {
     return `${Math.ceil(seconds)}秒`;

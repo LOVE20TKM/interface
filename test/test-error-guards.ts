@@ -38,6 +38,12 @@ assert.equal(
   '本地非法地址错误不应上报到 Sentry',
 );
 
+
+assert.equal(
+  shouldReportErrorToSentry(new Error('invalidaddresserror: Address "0x0" is invalid.')),
+  false,
+  '大小写混合的 InvalidAddressError 也不应上报到 Sentry',
+);
 assert.equal(
   shouldReportErrorToSentry(new Error('execution reverted: custom error 0x12345678')),
   true,
