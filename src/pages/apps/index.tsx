@@ -1,21 +1,12 @@
-'use client';
+"use client";
 
-import { useContext } from 'react';
-import { useAccount } from 'wagmi';
-import Link from 'next/link';
-import {
-  ArrowLeftRight,
-  Coins,
-  Droplets,
-  HandCoins,
-  Lock,
-  LucideIcon,
-  ShieldCheck,
-  Users,
-} from 'lucide-react';
+import { useContext } from "react";
+import { useAccount } from "wagmi";
+import Link from "next/link";
+import { ArrowLeftRight, Coins, Droplets, HandCoins, Lock, LucideIcon, ShieldCheck, Users } from "lucide-react";
 
-import Header from '@/src/components/Header';
-import { TokenContext } from '@/src/contexts/TokenContext';
+import Header from "@/src/components/Header";
+import { TokenContext } from "@/src/contexts/TokenContext";
 
 interface AppItem {
   name: string;
@@ -31,43 +22,43 @@ interface AppSection {
 
 const appSections: AppSection[] = [
   {
-    title: '代币',
+    title: "代币",
     items: [
       {
-        name: '代币信息',
-        href: (symbol?: string) => (symbol ? `/token/?symbol=${symbol}` : '/token/'),
+        name: "代币信息",
+        href: (symbol?: string) => (symbol ? `/token/?symbol=${symbol}` : "/token/"),
         icon: Coins,
       },
       {
-        name: '代币兑换',
-        href: (symbol?: string) => (symbol ? `/dex/?symbol=${symbol}&tab=swap` : '/dex/?tab=swap'),
+        name: "代币兑换",
+        href: (symbol?: string) => (symbol ? `/dex/?symbol=${symbol}&tab=swap` : "/dex/?tab=swap"),
         icon: HandCoins,
       },
       {
-        name: '流动性池',
-        href: (symbol?: string) => (symbol ? `/dex/?symbol=${symbol}&tab=liquidity` : '/dex/?tab=liquidity'),
+        name: "流动性池",
+        href: (symbol?: string) => (symbol ? `/dex/?symbol=${symbol}&tab=liquidity` : "/dex/?tab=liquidity"),
         icon: Droplets,
       },
       {
-        name: '代币转账',
-        href: (symbol?: string) => (symbol ? `/token/transfer/?symbol=${symbol}` : '/token/transfer/'),
+        name: "代币转账",
+        href: (symbol?: string) => (symbol ? `/token/transfer/?symbol=${symbol}` : "/token/transfer/"),
         icon: ArrowLeftRight,
         requiresWallet: true,
       },
     ],
   },
   {
-    title: 'NFT',
+    title: "NFT",
     items: [
       {
-        name: 'LOVE20 NFT',
-        href: '/group/groupids/',
+        name: "LOVE20 NFT",
+        href: "/group/groupids/",
         icon: Users,
         requiresWallet: true,
       },
       {
-        name: '链群管理',
-        href: (symbol?: string) => (symbol ? `/extension/my_groups?symbol=${symbol}` : '/extension/my_groups'),
+        name: "链群管理",
+        href: (symbol?: string) => (symbol ? `/extension/my_groups?symbol=${symbol}` : "/extension/my_groups"),
         icon: ShieldCheck,
         requiresWallet: true,
       },
@@ -75,15 +66,17 @@ const appSections: AppSection[] = [
   },
 ];
 
-function resolveHref(href: AppItem['href'], symbol?: string) {
-  return typeof href === 'function' ? href(symbol) : href;
+function resolveHref(href: AppItem["href"], symbol?: string) {
+  return typeof href === "function" ? href(symbol) : href;
 }
 
 function SectionHeader({ title, symbol }: { title: string; symbol?: string }) {
   return (
     <div className="mb-3 flex items-center justify-between gap-3">
       <h2 className="shrink-0 text-base font-bold text-greyscale-900">{title}</h2>
-      {symbol && <span className="rounded-full bg-greyscale-100 px-3 py-1 text-xs font-semibold text-secondary">{symbol}</span>}
+      {symbol && (
+        <span className="rounded-full bg-greyscale-100 px-3 py-1 text-xs font-semibold text-secondary">{symbol}</span>
+      )}
       <div className="h-px flex-1 bg-greyscale-200" />
     </div>
   );
@@ -106,18 +99,14 @@ function AppIcon({
       className="group relative flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-lg bg-white px-2 py-3 text-center transition-all hover:bg-secondary/5"
     >
       {showWalletHint && item.requiresWallet && (
-        <span
-          className="absolute right-2 top-2 text-greyscale-400"
-          title="需要钱包"
-          aria-label="需要钱包"
-        >
+        <span className="absolute right-2 top-2 text-greyscale-400" title="需要钱包" aria-label="需要钱包">
           <Lock className="h-3.5 w-3.5" />
         </span>
       )}
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-greyscale-100 text-secondary">
         <Icon className="h-5 w-5" />
       </span>
-      <div className="w-full truncate text-sm font-semibold text-greyscale-900">{item.name}</div>
+      <div className="line-clamp-2 w-full text-sm font-semibold leading-tight text-greyscale-900">{item.name}</div>
     </Link>
   );
 }
@@ -141,7 +130,7 @@ export default function AppsPage() {
           <div className="space-y-6">
             {appSections.map((section) => (
               <section key={section.title}>
-                <SectionHeader title={section.title} symbol={section.title === '代币' ? symbol : undefined} />
+                <SectionHeader title={section.title} symbol={section.title === "代币" ? symbol : undefined} />
                 <div className="grid grid-cols-4 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(92px,1fr))]">
                   {section.items.map((app) => (
                     <AppIcon key={app.name} item={app} symbol={symbol} showWalletHint={!isConnected} />
