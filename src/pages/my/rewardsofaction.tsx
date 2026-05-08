@@ -115,23 +115,18 @@ const ActRewardsPage: React.FC = () => {
     if (rewards && rewards.length > 0) {
       const sortedRewards = [...rewards].sort((a, b) => (a.round < b.round ? 1 : a.round > b.round ? -1 : 0));
 
-      // 追加新数据，避免重复
       setRewardList((prev) => {
-        // 创建已存在的轮次集合
-        const existingRounds = new Set(prev.map((item) => item.round.toString()));
-        // 过滤出新的激励数据
-        const newRewards = sortedRewards.filter((item) => !existingRounds.has(item.round.toString()));
-        // 合并并重新排序
-        const merged = [...prev, ...newRewards];
-        return merged.sort((a, b) => (a.round < b.round ? 1 : a.round > b.round ? -1 : 0));
+        const mergedByRound = new Map(prev.map((item) => [item.round.toString(), item]));
+        sortedRewards.forEach((item) => mergedByRound.set(item.round.toString(), item));
+        return Array.from(mergedByRound.values()).sort((a, b) => (a.round < b.round ? 1 : a.round > b.round ? -1 : 0));
       });
     }
   }, [rewards, isInitialized]);
 
   // 铸造回调函数
-  const handleMintStart = useCallback(() => {
+  const handleMintStart = useCallback((message = '铸造中，等待链上确认...') => {
     setIsMinting(true);
-    setMintingMessage('提交交易...');
+    setMintingMessage(message);
   }, []);
 
   const handleMintEnd = useCallback(() => {
@@ -145,6 +140,19 @@ const ActRewardsPage: React.FC = () => {
       // 更新本地状态（扩展行动使用 claimed，普通行动使用兼容的 claimed 字段）
       setRewardList((prev) => prev.map((item) => (item.round === round ? { ...item, claimed: true } : item)));
       // 刷新底层数据，确保缓存更新
+      if (refetchRewards) {
+        refetchRewards();
+      }
+    },
+    [refetchRewards],
+  );
+
+  const handleBatchMintSuccess = useCallback(
+    (rounds: bigint[]) => {
+      const claimedRounds = new Set(rounds.map((round) => round.toString()));
+      setRewardList((prev) =>
+        prev.map((item) => (claimedRounds.has(item.round.toString()) ? { ...item, claimed: true } : item)),
+      );
       if (refetchRewards) {
         refetchRewards();
       }
@@ -252,6 +260,8 @@ const ActRewardsPage: React.FC = () => {
                     onMintStart={handleMintStart}
                     onMintEnd={handleMintEnd}
                     onMintSuccess={handleMintSuccess}
+                    onBatchMintSuccess={handleBatchMintSuccess}
+                    enableBatchMint={true}
                     isLoading={isLoadingRewards}
                   />
                 ) : extensionInfo?.factory?.type === ExtensionType.LP ? (
@@ -264,6 +274,8 @@ const ActRewardsPage: React.FC = () => {
                     onMintStart={handleMintStart}
                     onMintEnd={handleMintEnd}
                     onMintSuccess={handleMintSuccess}
+                    onBatchMintSuccess={handleBatchMintSuccess}
+                    enableBatchMint={true}
                     isLoading={isLoadingRewards}
                   />
                 ) : extensionInfo?.factory?.type === ExtensionType.GROUP_SERVICE ? (
@@ -277,6 +289,8 @@ const ActRewardsPage: React.FC = () => {
                     onMintStart={handleMintStart}
                     onMintEnd={handleMintEnd}
                     onMintSuccess={handleMintSuccess}
+                    onBatchMintSuccess={handleBatchMintSuccess}
+                    enableBatchMint={true}
                     isLoading={isLoadingRewards}
                   />
                 ) : (

@@ -1,12 +1,16 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
-import toast from 'react-hot-toast';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // 导入铸造 hooks
-import { useClaimReward } from '@/src/hooks/extension/base/contracts/useIReward';
+import { useClaimReward, useClaimRewards } from '@/src/hooks/extension/base/contracts/useIReward';
+import {
+  BatchMintControls,
+  BatchSelectionCell,
+  useRewardMinting,
+} from '@/src/components/Extension/Plugins/common/rewardMinting';
 
 /**
  * 激励数据结构
@@ -34,11 +38,15 @@ export interface LpActionRewardsListProps {
   /** 行动 ID（用于跳转） */
   actionId?: bigint;
   /** 铸造开始回调 */
-  onMintStart?: () => void;
+  onMintStart?: (message?: string) => void;
   /** 铸造结束回调 */
   onMintEnd?: () => void;
   /** 铸造成功回调 */
   onMintSuccess?: (round: bigint) => void;
+  /** 批量铸造成功回调 */
+  onBatchMintSuccess?: (rounds: bigint[]) => void;
+  /** 是否启用批量铸造 */
+  enableBatchMint?: boolean;
   /** 是否正在加载 */
   isLoading?: boolean;
 }
@@ -56,6 +64,8 @@ export const LpActionRewardsList: React.FC<LpActionRewardsListProps> = ({
   onMintStart,
   onMintEnd,
   onMintSuccess,
+  onBatchMintSuccess,
+  enableBatchMint = false,
   isLoading = false,
 }) => {
   const { token } = useContext(TokenContext) || {};
@@ -66,42 +76,49 @@ export const LpActionRewardsList: React.FC<LpActionRewardsListProps> = ({
     isConfirming,
     isConfirmed,
     hash,
+    writeError,
   } = useClaimReward(extensionAddress);
+  const {
+    claimRewards: extensionClaimRewards,
+    isPending: isBatchPending,
+    isConfirming: isBatchConfirming,
+    isConfirmed: isBatchConfirmed,
+    hash: batchHash,
+    writeError: batchWriteError,
+  } = useClaimRewards(extensionAddress);
 
-  // ========== 状态管理 ==========
-  const [mintingTarget, setMintingTarget] = useState<bigint | null>(null);
-  const [locallyMinted, setLocallyMinted] = useState<Set<string>>(new Set());
-  const [mintingHash, setMintingHash] = useState<`0x${string}` | undefined>(undefined);
-
-  // ========== 铸造成功处理 ==========
-  useEffect(() => {
-    if (isConfirmed && mintingTarget !== null && hash && hash === mintingHash) {
-      toast.success('铸造成功');
-      setLocallyMinted((prev) => new Set(prev).add(mintingTarget.toString()));
-      onMintSuccess?.(mintingTarget);
-      onMintEnd?.();
-      setMintingTarget(null);
-      setMintingHash(undefined);
-    }
-  }, [isConfirmed, mintingTarget, hash, mintingHash, onMintSuccess, onMintEnd]);
-
-  // ========== 铸造处理函数 ==========
-  const handleMint = async (round: bigint) => {
-    setMintingTarget(round);
-    onMintStart?.();
-
-    try {
-      const txHash = await extensionClaimReward(round);
-      if (txHash) {
-        setMintingHash(txHash);
-      }
-    } catch (error) {
-      console.error('铸造失败:', error);
-      setMintingTarget(null);
-      setMintingHash(undefined);
-      onMintEnd?.();
-    }
-  };
+  const {
+    columnCount,
+    selectedRoundKeys,
+    selectedClaimableRounds,
+    allClaimableSelected,
+    isMintBusy,
+    isSelectAllDisabled,
+    isBatchMintDisabled,
+    handleMint,
+    handleBatchMint,
+    toggleAllClaimable,
+    toggleRoundSelection,
+    isRewardClaimed,
+    isRewardClaimable,
+  } = useRewardMinting({
+    rewards,
+    enableBatchMint,
+    singleTx: { isPending, isConfirming, isConfirmed, hash, error: writeError },
+    batchTx: {
+      isPending: isBatchPending,
+      isConfirming: isBatchConfirming,
+      isConfirmed: isBatchConfirmed,
+      hash: batchHash,
+      error: batchWriteError,
+    },
+    claimReward: extensionClaimReward,
+    claimRewards: extensionClaimRewards,
+    onMintStart,
+    onMintEnd,
+    onMintSuccess,
+    onBatchMintSuccess,
+  });
 
   // ========== 渲染 ==========
   if (rewards.length === 0 && !isLoading) {
@@ -110,9 +127,19 @@ export const LpActionRewardsList: React.FC<LpActionRewardsListProps> = ({
 
   return (
     <div className="mb-4">
+      <BatchMintControls
+        enabled={enableBatchMint}
+        isSelectAllDisabled={isSelectAllDisabled}
+        isBatchMintDisabled={isBatchMintDisabled}
+        allClaimableSelected={allClaimableSelected}
+        selectedCount={selectedClaimableRounds.length}
+        onToggleAll={toggleAllClaimable}
+        onBatchMint={handleBatchMint}
+      />
       <table className="table w-full table-auto">
         <thead>
           <tr className="border-b border-gray-100">
+            {enableBatchMint && <th className="w-10 text-center">选择</th>}
             <th>轮次</th>
             <th className="text-center">溢出激励</th>
             <th className="text-center">可铸造激励</th>
@@ -122,20 +149,19 @@ export const LpActionRewardsList: React.FC<LpActionRewardsListProps> = ({
         <tbody>
           {rewards.length === 0 && isLoading ? (
             <tr>
-              <td colSpan={4} className="text-center text-sm text-gray-500 py-4">
+              <td colSpan={columnCount} className="text-center text-sm text-gray-500 py-4">
                 加载中...
               </td>
             </tr>
           ) : rewards.length === 0 ? (
             <tr>
-              <td colSpan={4} className="text-center text-sm text-gray-500 py-4">
+              <td colSpan={columnCount} className="text-center text-sm text-gray-500 py-4">
                 该行动在指定轮次范围内没有获得激励
               </td>
             </tr>
           ) : (
             rewards.map((item, index) => {
-              const isLocallyClaimed = locallyMinted.has(item.round.toString());
-              const displayClaimed = isLocallyClaimed || item.claimed;
+              const displayClaimed = isRewardClaimed(item);
               // 溢出激励 = burnReward，可铸造激励 = mintReward
               const burnReward = item.burnReward || BigInt(0);
               const mintReward = item.mintReward || BigInt(0);
@@ -156,6 +182,14 @@ export const LpActionRewardsList: React.FC<LpActionRewardsListProps> = ({
                   key={`reward-${item.round.toString()}`}
                   className={index === rewards.length - 1 ? 'border-none' : 'border-b border-gray-100'}
                 >
+                  {enableBatchMint && (
+                    <BatchSelectionCell
+                      isClaimable={isRewardClaimable(item)}
+                      checked={selectedRoundKeys.has(item.round.toString())}
+                      disabled={isMintBusy}
+                      onChange={(checked) => toggleRoundSelection(item.round, checked)}
+                    />
+                  )}
                   <td>{formatRoundForDisplay(item.round, tokenData).toString()}</td>
                   {/* 溢出激励 = burnReward */}
                   <td className="text-center">
@@ -190,7 +224,7 @@ export const LpActionRewardsList: React.FC<LpActionRewardsListProps> = ({
                         size="sm"
                         className="text-secondary border-secondary"
                         onClick={() => handleMint(item.round)}
-                        disabled={isPending || isConfirming}
+                        disabled={isMintBusy}
                       >
                         铸造
                       </Button>

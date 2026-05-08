@@ -380,6 +380,45 @@ export function useClaimReward(contractAddress: `0x${string}`) {
 }
 
 /**
+ * Hook for claimRewards - 批量领取奖励
+ * 使用 ExtensionGroupServiceAbi，包含完整 error 定义，便于正确解析合约 revert
+ */
+export function useClaimRewards(contractAddress: `0x${string}`) {
+  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
+    ExtensionGroupServiceAbi,
+    contractAddress,
+    'claimRewards',
+  );
+
+  const claimRewards = async (rounds: bigint[]) => {
+    console.log('提交 claimRewards 交易:', { contractAddress, rounds, isTukeMode });
+    return await execute([rounds]);
+  };
+
+  // 错误日志记录
+  useEffect(() => {
+    if (hash) {
+      console.log('claimRewards tx hash:', hash);
+    }
+    if (error) {
+      console.log('提交 claimRewards 交易错误:');
+      logWeb3Error(error);
+      logError(error);
+    }
+  }, [hash, error]);
+
+  return {
+    claimRewards,
+    isPending,
+    isConfirming,
+    writeError: error,
+    isConfirmed,
+    hash,
+    isTukeMode,
+  };
+}
+
+/**
  * Hook for join - 加入
  */
 export function useJoin(contractAddress: `0x${string}`) {
