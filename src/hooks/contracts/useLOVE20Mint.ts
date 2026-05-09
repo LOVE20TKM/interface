@@ -50,6 +50,24 @@ export const useRoundRewardGovPerThousand = () => {
 };
 
 /**
+ * Hook for MAX_GOV_BOOST_REWARD_MULTIPLIER
+ */
+export const useMaxGovBoostRewardMultiplier = () => {
+  const { data, isLoading, error } = useUniversalReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20MintAbi,
+    functionName: 'MAX_GOV_BOOST_REWARD_MULTIPLIER',
+    args: [],
+  });
+
+  return {
+    maxGovBoostRewardMultiplier: data ? safeToBigInt(data) : undefined,
+    isPending: isLoading,
+    error,
+  };
+};
+
+/**
  * Hook for numOfMintGovRewardByAccount
  * 查询账户已铸造的治理次数
  */

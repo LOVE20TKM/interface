@@ -82,12 +82,15 @@ export const useMyGovData = ({ tokenAddress, account }: MyGovDataParams): MyGovD
 
     const [validGovVotesResult, govDataResult] = data;
 
-    const validGovVotes = validGovVotesResult?.result ? safeToBigInt(validGovVotesResult.result) : undefined;
+    const validGovVotes =
+      validGovVotesResult?.result !== undefined ? safeToBigInt(validGovVotesResult.result) : undefined;
     const govData = govDataResult?.result as GovData | undefined;
 
     // 计算治理票占比
     const governancePercentage =
-      govData?.govVotes && validGovVotes ? (Number(validGovVotes) / Number(govData.govVotes)) * 100 : 0;
+      govData?.govVotes && govData.govVotes > BigInt(0) && validGovVotes !== undefined
+        ? (Number(validGovVotes) / Number(govData.govVotes)) * 100
+        : 0;
 
     return {
       validGovVotes,
@@ -100,4 +103,3 @@ export const useMyGovData = ({ tokenAddress, account }: MyGovDataParams): MyGovD
 
   return result;
 };
-
