@@ -6,6 +6,7 @@ import { TokenConfig } from '../utils/swapTypes';
 
 export const useTokenBalance = (tokenConfig: TokenConfig, account: `0x${string}` | undefined) => {
   const { setError } = useError();
+  const hasAccount = !!account;
 
   // 原生代币使用 useBalance
   const { data: nativeBalance, isLoading: isLoadingNative, error: nativeBalanceError } = useBalance({
@@ -32,6 +33,6 @@ export const useTokenBalance = (tokenConfig: TokenConfig, account: `0x${string}`
 
   return {
     balance: tokenConfig.isNative ? nativeBalance?.value : erc20Balance,
-    isPending: tokenConfig.isNative ? isLoadingNative : isPendingERC20,
+    isPending: hasAccount && (tokenConfig.isNative ? isLoadingNative : isPendingERC20),
   };
 };

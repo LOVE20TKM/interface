@@ -25,6 +25,9 @@ export const determineSwapMethod = (fromToken: TokenConfig, toToken: TokenConfig
 
 export const isZeroAddress = (address?: string | null) => !address || address === ZERO_ADDRESS;
 
+export const buildPairCacheKey = (tokenA: `0x${string}`, tokenB: `0x${string}`) =>
+  [tokenA.toLowerCase(), tokenB.toLowerCase()].sort().join('|');
+
 export const getWrappedNativeAddress = () => process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN as
   | `0x${string}`
   | undefined;

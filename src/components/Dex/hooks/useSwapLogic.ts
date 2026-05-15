@@ -40,7 +40,6 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig, suppo
     amountsOutError,
     isAmountsOutLoading,
     canSwap,
-    errInitialStakeRound,
     candidateRouteCount,
     bestRoute,
     quotedRoutes,
@@ -159,6 +158,11 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig, suppo
 
   // 执行授权
   const handleApprove = async () => {
+    if (!account) {
+      toast.error('请先连接钱包');
+      return;
+    }
+
     try {
       await approve(approvalTarget, fromAmount);
     } catch (error: any) {
@@ -168,8 +172,28 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig, suppo
 
   // 执行交换
   const executeSwap = async () => {
+    if (!account) {
+      toast.error('请先连接钱包');
+      return;
+    }
+
+    if (isAmountsOutLoading) {
+      toast.error('正在查询可用路由，请稍后重试');
+      return;
+    }
+
     if (!canSwap) {
       toast.error('流动池为空，无法兑换，请稍后重试');
+      return;
+    }
+
+    if (fromBalance === undefined) {
+      toast.error('正在读取余额，请稍后重试');
+      return;
+    }
+
+    if (fromAmount > fromBalance) {
+      toast.error(`${fromToken.symbol} 余额不足`);
       return;
     }
 

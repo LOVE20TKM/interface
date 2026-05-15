@@ -1,11 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'react-hot-toast';
 import { TokenConfig } from '../utils/swapTypes';
 import { getDefaultTokenPair } from '../utils/swapConfig';
 
+const isSameTokenConfig = (left?: TokenConfig, right?: TokenConfig) =>
+  !!left &&
+  !!right &&
+  left.address === right.address &&
+  left.symbol === right.symbol &&
+  left.decimals === right.decimals &&
+  left.isNative === right.isNative &&
+  left.isWETH === right.isWETH;
+
 export const useTokenSelection = (supportedTokens: TokenConfig[], token: any) => {
   const router = useRouter();
+  const lastInitializedRouteKeyRef = useRef<string | null>(null);
 
   // 初始化默认代币对
   const defaultPair = getDefaultTokenPair(supportedTokens);
@@ -37,9 +47,32 @@ export const useTokenSelection = (supportedTokens: TokenConfig[], token: any) =>
 
   // 从URL参数初始化代币选择
   useEffect(() => {
-    if (!token || supportedTokens.length === 0) return;
+    if (!router.isReady || !token || supportedTokens.length === 0) return;
 
     const { from: fromSymbol, to: toSymbol } = router.query;
+    const currentRouteSelectionKey = [
+      typeof fromSymbol === 'string' ? fromSymbol.toLowerCase() : '',
+      typeof toSymbol === 'string' ? toSymbol.toLowerCase() : '',
+    ].join('|');
+
+    const matchingFromToken = supportedTokens.find((t) => t.address === fromToken.address);
+    const matchingToToken = supportedTokens.find((t) => t.address === toToken.address);
+
+    if (
+      lastInitializedRouteKeyRef.current === currentRouteSelectionKey &&
+      matchingFromToken &&
+      matchingToToken &&
+      matchingFromToken.address !== matchingToToken.address
+    ) {
+      // 路由参数没变时，只同步同一代币的最新对象，避免后台 token 刷新覆盖用户手动选择
+      if (!isSameTokenConfig(matchingFromToken, fromToken)) {
+        setFromToken(matchingFromToken);
+      }
+      if (!isSameTokenConfig(matchingToToken, toToken)) {
+        setToToken(matchingToToken);
+      }
+      return;
+    }
 
     let selectedFromToken: TokenConfig | undefined = undefined;
     let selectedToToken: TokenConfig | undefined = undefined;
@@ -107,7 +140,18 @@ export const useTokenSelection = (supportedTokens: TokenConfig[], token: any) =>
         { shallow: true },
       );
     }
-  }, [supportedTokens, router, token]);
+
+    lastInitializedRouteKeyRef.current = currentRouteSelectionKey;
+  }, [
+    fromToken,
+    router.isReady,
+    router.query,
+    setFromToken,
+    setToToken,
+    supportedTokens,
+    toToken,
+    token,
+  ]);
 
   return {
     fromToken,

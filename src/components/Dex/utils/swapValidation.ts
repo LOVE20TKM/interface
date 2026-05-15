@@ -4,7 +4,7 @@ import { MAX_SWAP_ROUTE_HOPS } from './swapConfig';
 import { TokenConfig, SwapValidationResult } from './swapTypes';
 import { getSwapContractAddresses } from './swapConfig';
 
-export const getSwapFormSchema = (balance: bigint) =>
+export const getSwapFormSchema = (balance?: bigint) =>
   z.object({
     fromTokenAmount: z
       .string()
@@ -15,12 +15,20 @@ export const getSwapFormSchema = (balance: bigint) =>
           if (val === '0') return true;
           try {
             const amount = parseUnits(val);
-            return amount > BigInt(0) && amount <= balance;
+            if (amount <= BigInt(0)) {
+              return false;
+            }
+
+            if (balance === undefined) {
+              return true;
+            }
+
+            return amount <= balance;
           } catch (e) {
             return false;
           }
         },
-        { message: '输入数量必须大于0且不超过您的可用余额' },
+        { message: balance === undefined ? '输入数量必须大于0' : '输入数量必须大于0且不超过您的可用余额' },
       ),
     fromTokenAddress: z.string(),
     toTokenAddress: z.string(),

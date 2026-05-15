@@ -80,9 +80,10 @@ const SwapForm = ({
   executeSwap,
 }: SwapFormProps) => {
   const isDisabled = isPendingFromBalance || isPendingToBalance;
+  const balanceForValidation = fromBalance === undefined ? undefined : (fromBalance || BigInt(0));
 
   const form = useForm<SwapFormValues>({
-    resolver: zodResolver(getSwapFormSchema(fromBalance || BigInt(0))),
+    resolver: zodResolver(getSwapFormSchema(balanceForValidation)),
     defaultValues: {
       fromTokenAmount: '',
       fromTokenAddress: fromToken.address,

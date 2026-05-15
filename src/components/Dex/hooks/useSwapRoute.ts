@@ -1,14 +1,14 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { UniswapV2FactoryAbi } from '@/src/abis/UniswapV2Factory';
 import { UniswapV2RouterAbi } from '@/src/abis/UniswapV2Router';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
-import { useInitialStakeRound } from '@/src/hooks/contracts/useLOVE20Stake';
 import useTokenContext from '@/src/hooks/context/useTokenContext';
 import { buildSwapRouteTokens } from '../utils/swapConfig';
 import { SwapRouteQuote, TokenConfig } from '../utils/swapTypes';
 import {
   buildDisplayPath,
+  buildPairCacheKey,
   buildPairCandidates,
   buildRouteGraph,
   buildTokenSymbolMap,
@@ -22,6 +22,7 @@ import {
 
 const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY as `0x${string}`;
 const ROUTER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER as `0x${string}`;
+const KNOWN_PAIR_KEYS = new Set<string>();
 
 export const useSwapRoute = (
   fromToken: TokenConfig,
@@ -55,28 +56,58 @@ export const useSwapRoute = (
     error: pairError,
     isPending: isPendingPairs,
   } = useUniversalReadContracts({
-    contracts: pairCandidates.map(({ tokenA, tokenB }) => ({
-      address: FACTORY_ADDRESS,
-      abi: UniswapV2FactoryAbi,
-      functionName: 'getPair' as const,
-      args: [tokenA, tokenB] as const,
-    })) as any,
+    contracts: pairCandidates
+      .filter(({ tokenA, tokenB }) => !KNOWN_PAIR_KEYS.has(buildPairCacheKey(tokenA, tokenB)))
+      .map(({ tokenA, tokenB }) => ({
+        address: FACTORY_ADDRESS,
+        abi: UniswapV2FactoryAbi,
+        functionName: 'getPair' as const,
+        args: [tokenA, tokenB] as const,
+      })) as any,
     query: {
-      enabled: pairCandidates.length > 0,
+      enabled: pairCandidates.some(({ tokenA, tokenB }) => !KNOWN_PAIR_KEYS.has(buildPairCacheKey(tokenA, tokenB))),
     },
   });
 
-  const availablePairs = useMemo(() => {
+  const uncachedPairCandidates = useMemo(
+    () => pairCandidates.filter(({ tokenA, tokenB }) => !KNOWN_PAIR_KEYS.has(buildPairCacheKey(tokenA, tokenB))),
+    [pairCandidates],
+  );
+
+  const fetchedAvailablePairs = useMemo(() => {
     if (!pairData || pairData.length === 0) {
       return [];
     }
 
-    return pairCandidates.filter((pair, index) => {
+    return uncachedPairCandidates.filter((pair, index) => {
       const result = pairData[index] as { result?: `0x${string}`; status?: string } | undefined;
       const pairAddress = result?.result as `0x${string}` | undefined;
       return result?.status !== 'failure' && !isZeroAddress(pairAddress);
     });
-  }, [pairCandidates, pairData]);
+  }, [pairData, uncachedPairCandidates]);
+
+  useEffect(() => {
+    fetchedAvailablePairs.forEach(({ tokenA, tokenB }) => {
+      KNOWN_PAIR_KEYS.add(buildPairCacheKey(tokenA, tokenB));
+    });
+  }, [fetchedAvailablePairs]);
+
+  const availablePairs = useMemo(() => {
+    const mergedPairs = new Map<string, { tokenA: `0x${string}`; tokenB: `0x${string}` }>();
+
+    pairCandidates.forEach((pair) => {
+      const key = buildPairCacheKey(pair.tokenA, pair.tokenB);
+      if (KNOWN_PAIR_KEYS.has(key)) {
+        mergedPairs.set(key, pair);
+      }
+    });
+
+    fetchedAvailablePairs.forEach((pair) => {
+      mergedPairs.set(buildPairCacheKey(pair.tokenA, pair.tokenB), pair);
+    });
+
+    return Array.from(mergedPairs.values());
+  }, [fetchedAvailablePairs, pairCandidates]);
 
   const routeGraph = useMemo(() => buildRouteGraph(availablePairs), [availablePairs]);
 
@@ -88,20 +119,10 @@ export const useSwapRoute = (
     return sortCandidatePaths(enumerateCandidatePaths(routeGraph, sourceAddress, targetAddress));
   }, [routeGraph, sourceAddress, swapMethod, targetAddress]);
 
-  const {
-    initialStakeRound,
-    isPending: isPendingInitialStakeRound,
-    error: errInitialStakeRound,
-  } = useInitialStakeRound(token?.address as `0x${string}`);
-
-  const useCurrentToken = fromToken.symbol === token?.symbol || toToken.symbol === token?.symbol;
-  const canUseCurrentToken = !useCurrentToken || !!initialStakeRound;
-
   const quoteContracts = useMemo(() => {
     if (
       swapMethod === 'WETH9' ||
       !ROUTER_ADDRESS ||
-      !canUseCurrentToken ||
       fromAmount <= BigInt(0) ||
       candidatePaths.length === 0
     ) {
@@ -114,7 +135,7 @@ export const useSwapRoute = (
       functionName: 'getAmountsOut' as const,
       args: [fromAmount, path] as const,
     }));
-  }, [canUseCurrentToken, candidatePaths, fromAmount, swapMethod]);
+  }, [candidatePaths, fromAmount, swapMethod]);
 
   const {
     data: quoteData,
@@ -193,10 +214,10 @@ export const useSwapRoute = (
 
   const hasRouteCandidates = swapMethod === 'WETH9' ? true : candidatePaths.length > 0;
   const hasBestRoute = swapMethod === 'WETH9' ? true : fromAmount === BigInt(0) ? hasRouteCandidates : !!bestRoute;
-  const canSwap = canUseCurrentToken && hasBestRoute;
+  const canSwap = hasBestRoute;
 
   const amountsOutError = useMemo(() => {
-    if (swapMethod === 'WETH9' || fromAmount <= BigInt(0) || !canUseCurrentToken) {
+    if (swapMethod === 'WETH9' || fromAmount <= BigInt(0)) {
       return null;
     }
 
@@ -211,7 +232,6 @@ export const useSwapRoute = (
     return null;
   }, [
     bestRoute,
-    canUseCurrentToken,
     candidatePaths.length,
     firstQuoteFailure,
     fromAmount,
@@ -227,7 +247,6 @@ export const useSwapRoute = (
   const isAmountsOutLoading =
     swapMethod !== 'WETH9' &&
     fromAmount > BigInt(0) &&
-    canUseCurrentToken &&
     (isPendingPairs || (quoteContracts.length > 0 && isPendingQuotes));
 
   return {
@@ -237,9 +256,6 @@ export const useSwapRoute = (
     amountsOutError,
     isAmountsOutLoading,
     canSwap,
-    initialStakeRound,
-    isPendingInitialStakeRound,
-    errInitialStakeRound,
     candidateRouteCount: candidatePaths.length,
     quotedRoutes,
     bestRoute,

@@ -110,7 +110,8 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children }) => {
             // 情况2：有 symbol，且与缓存一致，则直接使用缓存
             if (ifNoSymbol || (parsed && parsed.symbol === tokenSymbol)) {
               setToken(parsed);
-              return; // 命中缓存，直接返回
+              setSymbolToGetDetail(parsed.symbol || process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL || '');
+              return; // 先使用缓存渲染，随后通过 symbolToGetDetail 刷新链上状态
             }
           }
         } catch (error) {

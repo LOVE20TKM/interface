@@ -246,32 +246,14 @@ export const formatTokenAmount = (
     ? formatWithCeil
     : formatWithRound;
 
-  // 如果指定了小数位数，直接使用指定的位数
-  if (maximumFractionDigits !== 4) {
-    return formatFunction(numberFormatted, maximumFractionDigits);
-  }
-
-  // 根据数值大小使用不同的格式化规则
-  if (numberFormatted >= 1000) {
-    return formatFunction(numberFormatted, 0);
-  } else if (numberFormatted >= 10) {
-    return formatFunction(numberFormatted, 2);
-  } else if (numberFormatted >= 1) {
-    return formatFunction(numberFormatted, 4);
-  } else if (numberFormatted >= 0.001) {
-    return formatFunction(numberFormatted, 4);
-  } else {
-    // 数字 < 0.001：使用折叠显示，例如 0.0000229 显示为 0.0{4}229
+  const formatTinyValue = (): string => {
     if (numberFormatted === 0) return '0';
 
-    // 对于极小的数值，使用字符串处理来保持精度
-    const formattedStr = formatUnits(balance);
-    const parts = formattedStr.split('.');
-    if (parts.length < 2) return formattedStr;
+    const parts = formatted.split('.');
+    if (parts.length < 2) return formatted;
 
     const fractionalPart = parts[1];
 
-    // 计算小数部分前导 0 的个数
     let zeroCount = 0;
     for (const ch of fractionalPart) {
       if (ch === '0') {
@@ -281,15 +263,11 @@ export const formatTokenAmount = (
       }
     }
 
-    // 截取从第一个非 0 数字开始后的 4 位有效数字
     let significant = fractionalPart.slice(zeroCount, zeroCount + 4);
 
-    // 如果是向下取整模式，保持原有的截取逻辑
-    // 如果是四舍五入模式，需要对第5位数字进行判断
     if (roundingMode === 'round' && fractionalPart.length > zeroCount + 4) {
       const fifthDigit = fractionalPart[zeroCount + 4];
       if (fifthDigit && parseInt(fifthDigit) >= 5) {
-        // 需要进位
         let carry = 1;
         const significantDigits = significant.split('').map((d) => parseInt(d));
 
@@ -304,12 +282,10 @@ export const formatTokenAmount = (
         }
 
         if (carry) {
-          // 需要向前进位，减少一个前导0
           if (zeroCount > 0) {
             zeroCount--;
             significant = '1' + '0'.repeat(3);
           } else {
-            // 已经没有前导0了，这种情况应该用常规格式化
             return formatFunction(numberFormatted, 4);
           }
         } else {
@@ -319,6 +295,29 @@ export const formatTokenAmount = (
     }
 
     return `0.0{${zeroCount}}${significant}`;
+  };
+
+  // 如果指定了小数位数，直接使用指定的位数
+  if (maximumFractionDigits !== 4) {
+    const formattedValue = formatFunction(numberFormatted, maximumFractionDigits);
+    if (maximumFractionDigits > 0 && formattedValue === '0' && numberFormatted > 0) {
+      return formatTinyValue();
+    }
+    return formattedValue;
+  }
+
+  // 根据数值大小使用不同的格式化规则
+  if (numberFormatted >= 1000) {
+    return formatFunction(numberFormatted, 0);
+  } else if (numberFormatted >= 10) {
+    return formatFunction(numberFormatted, 2);
+  } else if (numberFormatted >= 1) {
+    return formatFunction(numberFormatted, 4);
+  } else if (numberFormatted >= 0.001) {
+    return formatFunction(numberFormatted, 4);
+  } else {
+    // 数字 < 0.001：使用折叠显示，例如 0.0000229 显示为 0.0{4}229
+    return formatTinyValue();
   }
 };
 
