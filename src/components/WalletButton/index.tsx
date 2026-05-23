@@ -768,18 +768,22 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
           </button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" className="w-72 rounded-xl border p-2 shadow-xl">
-          <div className="px-2 pb-1 pt-2 text-xs font-medium text-gray-500">最近访问</div>
+        <DropdownMenuContent
+          align="start"
+          className="rounded-md border p-0.5 shadow-lg"
+          style={{ width: '10rem', minWidth: '10rem' }}
+        >
+          <div className="px-2 py-1 text-xs font-medium text-gray-500">最近访问</div>
           <div className="space-y-1">
             {visibleRecentTokens.length > 0 ? (
               visibleRecentTokens.map((recentToken) => {
                 return (
                   <div
                     key={recentToken.symbol}
-                    className="flex min-w-0 items-center gap-1 rounded-lg transition-colors hover:bg-gray-50"
+                    className="flex min-w-0 items-center gap-0.5 rounded-md transition-colors hover:bg-gray-50"
                   >
                     <DropdownMenuItem
-                      className="flex min-w-0 flex-1 items-center rounded-lg px-2 py-2 text-left focus:bg-gray-50 focus:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      className="flex min-h-12 min-w-0 flex-1 items-center rounded-md px-2 py-2.5 text-left focus:bg-gray-50 focus:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
                       onSelect={() => goToRecentToken(recentToken)}
                       title={recentToken.symbol}
                     >
@@ -794,7 +798,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                     <button
                       type="button"
                       className={cn(
-                        'mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-white hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300',
+                        'mr-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-white hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300',
                         recentToken.pinned && 'text-blue-600',
                       )}
                       onClick={(event) => {
@@ -811,27 +815,27 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                 );
               })
             ) : (
-              <div className="px-2 py-4 text-center text-sm text-gray-400">暂无其他访问记录</div>
+              <div className="px-2 py-3 text-center text-sm text-gray-400">暂无其他访问记录</div>
             )}
           </div>
 
-          <DropdownMenuSeparator className="my-2" />
+          <DropdownMenuSeparator className="my-1" />
 
           <DropdownMenuItem
             disabled={isTokenInfoDisabled}
             onClick={goToTokenInfoPage}
-            className="rounded-lg text-base text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+            className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
           >
-            <Info className="w-4 h-4 mr-3 text-gray-500" />
+            <Info className="mr-1.5 h-4 w-4 text-gray-500" />
             <span className="min-w-0 flex-1">代币信息</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
             disabled={isChildTokensDisabled}
             onClick={goToChildTokensPage}
-            className="rounded-lg text-base text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+            className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
           >
-            <List className="w-4 h-4 mr-3 text-gray-500" />
+            <List className="mr-1.5 h-4 w-4 text-gray-500" />
             <span className="min-w-0 flex-1">子币列表</span>
             {childTokenNum !== undefined && (
               <span className="ml-auto text-xs text-gray-400">{childTokenNum.toString()}</span>
@@ -841,9 +845,9 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
           <DropdownMenuItem
             disabled={isReturnParentDisabled}
             onClick={goToParentTokenPage}
-            className="rounded-lg text-base text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+            className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
           >
-            <ArrowUpLeft className="w-4 h-4 mr-3 text-gray-500" />
+            <ArrowUpLeft className="mr-1.5 h-4 w-4 text-gray-500" />
             <span className="min-w-0 flex-1">返回父币</span>
             {hasReturnParentToken && token?.parentTokenSymbol && (
               <span className="ml-auto max-w-[96px] truncate font-mono text-xs text-gray-400">
