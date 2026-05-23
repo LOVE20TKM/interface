@@ -43,29 +43,42 @@ export const useStakeAddress = () => {
 /**
  * Hook for tokensByPage
  */
-export const useTokensByPage = (start: bigint, end: bigint) => {
+export const useTokensByPage = (start: bigint, end: bigint, enabled: boolean = true) => {
+  const shouldRead = enabled && start <= end;
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'tokensByPage',
     args: [start, end],
+    query: {
+      enabled: shouldRead,
+    },
   });
 
-  return { tokens: data as `0x${string}`[] | undefined, isPending, error };
+  return { tokens: data as `0x${string}`[] | undefined, isPending: shouldRead && isPending, error };
 };
 
 /**
  * Hook for childTokensByPage
  */
-export const useChildTokensByPage = (parentTokenAddress: `0x${string}`, start: bigint, end: bigint) => {
+export const useChildTokensByPage = (
+  parentTokenAddress: `0x${string}` | undefined,
+  start: bigint,
+  end: bigint,
+  enabled: boolean = true,
+) => {
+  const shouldRead = !!parentTokenAddress && enabled && start <= end;
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'childTokensByPage',
-    args: [parentTokenAddress, start, end],
+    args: [parentTokenAddress ?? ZERO_ADDRESS, start, end],
+    query: {
+      enabled: shouldRead,
+    },
   });
 
-  return { childTokens: data as `0x${string}`[] | undefined, isPending, error };
+  return { childTokens: data as `0x${string}`[] | undefined, isPending: shouldRead && isPending, error };
 };
 
 /**
@@ -188,16 +201,20 @@ export const useTokenDetailBySymbol = (symbol: string) => {
  * Reads the details of multiple tokens.
  */
 export const useTokenDetails = (tokenAddresses: `0x${string}`[]) => {
+  const shouldRead = tokenAddresses.length > 0;
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20TokenViewerAbi,
     functionName: 'tokenDetails',
     args: [tokenAddresses],
+    query: {
+      enabled: shouldRead,
+    },
   });
   return {
     tokens: data?.[0] as TokenInfo[] | undefined,
     launchInfos: data?.[1] as LaunchInfo[] | undefined,
-    isPending,
+    isPending: shouldRead && isPending,
     error,
   };
 };

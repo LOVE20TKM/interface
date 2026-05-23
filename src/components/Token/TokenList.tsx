@@ -6,6 +6,7 @@ import { useDebouncedCallback } from 'use-debounce';
 
 // my hooks
 import { useTokenDetails, useTokensByPage, useChildTokensByPage } from '@/src/hooks/contracts/useLOVE20TokenViewer';
+import { useChildTokensCount, useTokenCount } from '@/src/hooks/contracts/useLOVE20Launch';
 import { formatPercentage } from '@/src/lib/format';
 import { NavigationUtils } from '@/src/lib/navigationUtils';
 // my contexts
@@ -18,6 +19,7 @@ import { TokenInfo } from '@/src/types/love20types';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 const PAGE_SIZE = 50;
+const PAGE_SIZE_BIGINT = BigInt(PAGE_SIZE);
 
 interface TokenListProps {
   parentTokenAddress?: `0x${string}`;
@@ -33,24 +35,45 @@ export default function TokenList({ parentTokenAddress }: TokenListProps) {
   const { token: currentToken } = useContext(TokenContext) || {};
 
   const [start, setStart] = useState<bigint>(BigInt(0));
-  const [end, setEnd] = useState<bigint>(BigInt(PAGE_SIZE));
   const [allTokens, setAllTokens] = useState<TokenWithLaunchInfo[]>([]);
+
+  const isChildMode = !!parentTokenAddress;
+  const {
+    tokenNum,
+    isPending: isLoadingTokenCount,
+    error: tokenCountError,
+  } = useTokenCount(!isChildMode);
+  const {
+    childTokenNum,
+    isPending: isLoadingChildTokenCount,
+    error: childTokenCountError,
+  } = useChildTokensCount(parentTokenAddress, isChildMode);
+
+  const totalTokenCount = isChildMode ? childTokenNum : tokenNum;
+  const pageEndCandidate = start + PAGE_SIZE_BIGINT - BigInt(1);
+  const end =
+    totalTokenCount !== undefined && totalTokenCount > BigInt(0)
+      ? pageEndCandidate < totalTokenCount
+        ? pageEndCandidate
+        : totalTokenCount - BigInt(1)
+      : BigInt(0);
+  const canReadPage = totalTokenCount !== undefined && totalTokenCount > BigInt(0) && start < totalTokenCount;
+  const hasMore = totalTokenCount !== undefined && start + PAGE_SIZE_BIGINT < totalTokenCount;
 
   // 初始化时重置 allTokens
   useEffect(() => {
     setAllTokens([]);
     setStart(BigInt(0));
-    setEnd(BigInt(PAGE_SIZE));
   }, [parentTokenAddress]); // 当 parentTokenAddress 改变时也重置
 
   // 获取token列表
-  const tokensResult = parentTokenAddress
-    ? useChildTokensByPage(parentTokenAddress, start, end)
-    : useTokensByPage(start, end);
+  const rootTokensResult = useTokensByPage(start, end, !isChildMode && canReadPage);
+  const childTokensResult = useChildTokensByPage(parentTokenAddress, start, end, isChildMode && canReadPage);
 
-  const tokenAddresses = 'childTokens' in tokensResult ? tokensResult.childTokens : tokensResult.tokens;
-  const isLoadingTokens = tokensResult.isPending;
-  const tokensError = tokensResult.error;
+  const tokenAddresses = isChildMode ? childTokensResult.childTokens : rootTokensResult.tokens;
+  const isLoadingCount = isChildMode ? isLoadingChildTokenCount : isLoadingTokenCount;
+  const isLoadingTokens = isLoadingCount || (isChildMode ? childTokensResult.isPending : rootTokensResult.isPending);
+  const tokensError = tokenCountError || childTokenCountError || childTokensResult.error || rootTokensResult.error;
 
   // 获取tokens详情
   const {
@@ -61,7 +84,7 @@ export default function TokenList({ parentTokenAddress }: TokenListProps) {
   } = useTokenDetails(tokenAddresses || []);
 
   useEffect(() => {
-    if (tokenAddresses && tokens && launchInfos) {
+    if (tokenAddresses && tokens && launchInfos && tokens.length === tokenAddresses.length) {
       const newTokens: TokenWithLaunchInfo[] = tokens.map((token: TokenInfo, index: number) => ({
         name: token.name,
         symbol: token.symbol,
@@ -86,15 +109,14 @@ export default function TokenList({ parentTokenAddress }: TokenListProps) {
         return [...prev, ...filteredNewTokens];
       });
     }
-  }, [tokens, launchInfos]);
+  }, [tokenAddresses, tokens, launchInfos, currentToken?.voteOriginBlocks]);
 
   // 加载更多tokens
   const loadMoreTokens = useCallback(() => {
-    if (!isLoadingTokens && tokens && tokens.length > 0) {
-      setStart(end);
-      setEnd(end + BigInt(PAGE_SIZE));
+    if (!isLoadingTokens && !isLoadingDetails && hasMore) {
+      setStart((prev) => prev + PAGE_SIZE_BIGINT);
     }
-  }, [isLoadingTokens, tokens, end]);
+  }, [hasMore, isLoadingDetails, isLoadingTokens]);
 
   const handleScroll = useDebouncedCallback(() => {
     if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {

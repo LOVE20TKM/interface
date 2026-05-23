@@ -75,15 +75,19 @@ export const useTokenSymbolLength = () => {
 /**
  * Hook for childTokensCount
  */
-export const useChildTokensCount = (parentTokenAddress: `0x${string}`) => {
+export const useChildTokensCount = (parentTokenAddress?: `0x${string}`, enabled: boolean = true) => {
+  const shouldRead = !!parentTokenAddress && parentTokenAddress !== ZERO_ADDRESS && enabled;
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'childTokensCount',
-    args: [parentTokenAddress],
+    args: [parentTokenAddress ?? ZERO_ADDRESS],
+    query: {
+      enabled: shouldRead,
+    },
   });
 
-  return { childTokenNum: data ? safeToBigInt(data) : undefined, isPending, error };
+  return { childTokenNum: data !== undefined ? safeToBigInt(data) : undefined, isPending: shouldRead && isPending, error };
 };
 
 /**
@@ -190,15 +194,18 @@ export const useTokenAddressBySymbol = (symbol: string) => {
 /**
  * Hook for tokenNum
  */
-export const useTokenCount = () => {
+export const useTokenCount = (enabled: boolean = true) => {
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20LaunchAbi,
     functionName: 'tokensCount',
     args: [],
+    query: {
+      enabled,
+    },
   });
 
-  return { tokenNum: data ? safeToBigInt(data) : undefined, isPending, error };
+  return { tokenNum: data !== undefined ? safeToBigInt(data) : undefined, isPending: enabled && isPending, error };
 };
 
 /**
