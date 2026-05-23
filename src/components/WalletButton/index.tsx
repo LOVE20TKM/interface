@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useContext } from 'react';
 import { useAccount, useBalance, useConnect, useDisconnect, useChainId } from 'wagmi';
+import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Wallet, Copy, LogOut, ChevronDown, Check, Loader2, ArrowUpLeft, List } from 'lucide-react';
+import { Wallet, Copy, LogOut, ChevronDown, Check, Loader2, ArrowUpLeft, List, Pin, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
@@ -19,16 +20,115 @@ import { config } from '@/src/wagmi';
 import { isTukeWallet } from '@/src/lib/tukeWalletUtils';
 import { formatTokenAmount } from '@/src/lib/format';
 import { useError } from '@/src/contexts/ErrorContext';
-import { TokenContext } from '@/src/contexts/TokenContext';
+import { Token, TokenContext } from '@/src/contexts/TokenContext';
 import { isGroupDefaultsEnabled, useDefaultGroupOf } from '@/src/hooks/extension/base/contracts/useGroupDefaults';
 import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
 import { NavigationUtils } from '@/src/lib/navigationUtils';
+import { useChildTokensCount } from '@/src/hooks/contracts/useLOVE20Launch';
 
 interface WalletButtonProps {
   className?: string;
 }
 
+const PINNED_TOKEN_LIMIT = 5;
+const RECENT_TOKEN_LIMIT = 3;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+const RECENT_TOKENS_KEY = (process.env.NEXT_PUBLIC_BASE_PATH || '') + '_recentTokens';
+
+type RecentToken = Pick<
+  Token,
+  | 'name'
+  | 'symbol'
+  | 'address'
+  | 'hasEnded'
+  | 'parentTokenAddress'
+  | 'parentTokenSymbol'
+  | 'parentTokenName'
+> & {
+  pinned: boolean;
+  lastVisitedAt: number;
+};
+
+const isValidRecentToken = (value: unknown): value is RecentToken => {
+  const item = value as Partial<RecentToken>;
+  return (
+    !!item &&
+    typeof item === 'object' &&
+    typeof item.symbol === 'string' &&
+    item.symbol.length > 0 &&
+    typeof item.address === 'string' &&
+    item.address.startsWith('0x')
+  );
+};
+
+const sortAndLimitRecentTokens = (items: RecentToken[]) => {
+  const bySymbol = new Map<string, RecentToken>();
+
+  items.forEach((item) => {
+    const previous = bySymbol.get(item.symbol);
+    if (!previous || item.lastVisitedAt >= previous.lastVisitedAt) {
+      bySymbol.set(item.symbol, {
+        ...previous,
+        ...item,
+        pinned: Boolean(previous?.pinned || item.pinned),
+      });
+    }
+  });
+
+  const sorted = Array.from(bySymbol.values()).sort((a, b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    return b.lastVisitedAt - a.lastVisitedAt;
+  });
+
+  const pinned = sorted.filter((item) => item.pinned).slice(0, PINNED_TOKEN_LIMIT);
+  const recent = sorted.filter((item) => !item.pinned).slice(0, RECENT_TOKEN_LIMIT);
+
+  return [...pinned, ...recent];
+};
+
+const readRecentTokens = (): RecentToken[] => {
+  try {
+    const raw = localStorage.getItem(RECENT_TOKENS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return sortAndLimitRecentTokens(parsed.filter(isValidRecentToken));
+  } catch (error) {
+    console.error('读取最近代币失败:', error);
+    return [];
+  }
+};
+
+const saveRecentTokens = (tokens: RecentToken[]) => {
+  try {
+    localStorage.setItem(RECENT_TOKENS_KEY, JSON.stringify(sortAndLimitRecentTokens(tokens)));
+  } catch (error) {
+    console.error('保存最近代币失败:', error);
+  }
+};
+
+const snapshotRecentToken = (token: Token, previous?: RecentToken): RecentToken => ({
+  name: token.name,
+  symbol: token.symbol,
+  address: token.address,
+  hasEnded: token.hasEnded,
+  parentTokenAddress: token.parentTokenAddress,
+  parentTokenSymbol: token.parentTokenSymbol,
+  parentTokenName: token.parentTokenName,
+  pinned: Boolean(previous?.pinned),
+  lastVisitedAt: Date.now(),
+});
+
+const upsertRecentToken = (items: RecentToken[], token: Token) => {
+  const previous = items.find((item) => item.symbol === token.symbol);
+  return sortAndLimitRecentTokens([
+    snapshotRecentToken(token, previous),
+    ...items.filter((item) => item.symbol !== token.symbol),
+  ]);
+};
+
 export function WalletButton({ className }: WalletButtonProps = {}) {
+  const router = useRouter();
   const tokenContext = useContext(TokenContext);
   const token = tokenContext?.token;
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
@@ -48,11 +148,15 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
   const [ethereumReady, setEthereumReady] = useState(typeof window !== 'undefined' && !!window.ethereum);
   const [isCheckingEthereum, setIsCheckingEthereum] = useState(typeof window !== 'undefined' && !window.ethereum);
+  const [recentTokens, setRecentTokens] = useState<RecentToken[]>([]);
+  const [isTokenMenuOpen, setIsTokenMenuOpen] = useState(false);
   const { setError } = useError();
   const { defaultGroupId, defaultGroupName, hasDefaultGroup } = useDefaultGroupOf(
     address,
     isGroupDefaultsEnabled && isConnected && isOnTargetChain,
   );
+  const shouldReadChildTokens = !!token?.address && token.address !== ZERO_ADDRESS && isOnTargetChain;
+  const { childTokenNum } = useChildTokensCount(token?.address, shouldReadChildTokens);
 
   // 跟踪组件是否已挂载，避免在渲染期间更新状态
   const mountedRef = useRef(false);
@@ -259,26 +363,125 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
     }
   };
 
+  const routeSymbol = typeof router.query.symbol === 'string' ? router.query.symbol : undefined;
+  const isRouteTokenSymbol = !!routeSymbol && routeSymbol.charAt(0) !== routeSymbol.charAt(0).toLowerCase();
+  const displayTokenSymbol = isRouteTokenSymbol ? routeSymbol : token?.symbol || 'TOKEN';
+  const isTokenSymbolPending = isRouteTokenSymbol && token?.symbol !== routeSymbol;
+
+  const handleTokenMenuOpenChange = (open: boolean) => {
+    setIsTokenMenuOpen(isTokenSymbolPending ? false : open);
+  };
+
   const myLove20NftHref = `${basePath}/group/groupids/`;
   const tokenInfoHref = token?.symbol ? `${basePath}/token/?symbol=${token.symbol}` : '';
-  const hasTokenInfoHref = !!tokenInfoHref;
+  const childTokensHref = token?.symbol ? `${basePath}/tokens/children/?symbol=${token.symbol}` : '';
+  const rootParentTokenSymbol = process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL || 'TKM20';
+  const hasReturnParentToken = Boolean(
+    token?.parentTokenAddress &&
+      token.parentTokenAddress !== ZERO_ADDRESS &&
+      token.parentTokenSymbol &&
+      token.parentTokenSymbol !== rootParentTokenSymbol,
+  );
+  const parentTokenHref = hasReturnParentToken ? `${basePath}/acting/?symbol=${token?.parentTokenSymbol}` : '';
+  const isTokenInfoDisabled = isTokenSymbolPending || !tokenInfoHref;
+  const isChildTokensDisabled = isTokenSymbolPending || !childTokensHref || !isOnTargetChain || childTokenNum === BigInt(0);
+  const isReturnParentDisabled = isTokenSymbolPending || !parentTokenHref;
   const nativeBalanceValue = balance ? formatTokenAmount(balance.value) : '0';
   const nativeBalanceSymbol = balance?.symbol || process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL || 'TKM';
 
-  const goToTokenInfoPage = (event: React.MouseEvent<HTMLSpanElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!tokenInfoHref) return;
+  const goToRecentToken = (recentToken: RecentToken) => {
+    NavigationUtils.redirectWithOverlay(
+      `${basePath}/${recentToken.hasEnded ? 'acting' : 'launch'}/?symbol=${recentToken.symbol}`,
+      '正在切换代币...',
+    );
+  };
+
+  const toggleRecentTokenPinned = (symbol: string) => {
+    const target = recentTokens.find((item) => item.symbol === symbol);
+    if (!target) return;
+
+    const isPinning = !target.pinned;
+    const pinnedCount = recentTokens.filter((item) => item.pinned).length;
+    if (isPinning && pinnedCount >= PINNED_TOKEN_LIMIT) {
+      toast.error(`最多锚定 ${PINNED_TOKEN_LIMIT} 个代币`);
+      return;
+    }
+
+    setRecentTokens((prev) => {
+      const next = sortAndLimitRecentTokens(
+        prev.map((item) =>
+          item.symbol === symbol
+            ? {
+                ...item,
+                pinned: !item.pinned,
+                lastVisitedAt: Date.now(),
+              }
+            : item,
+        ),
+      );
+      saveRecentTokens(next);
+      return next;
+    });
+  };
+
+  const goToChildTokensPage = () => {
+    if (isChildTokensDisabled) {
+      toast.error(childTokenNum === BigInt(0) ? '当前代币暂无子币' : '当前代币尚未加载');
+      return;
+    }
+
+    NavigationUtils.redirectWithOverlay(childTokensHref, '正在打开子币列表...');
+  };
+
+  const goToTokenInfoPage = () => {
+    if (isTokenInfoDisabled) {
+      toast.error('当前代币尚未加载');
+      return;
+    }
+
     NavigationUtils.redirectWithOverlay(tokenInfoHref, '正在打开代币信息...');
   };
 
-  const stopTokenBadgePointerDown = (event: React.PointerEvent<HTMLSpanElement>) => {
-    event.stopPropagation();
+  const goToParentTokenPage = () => {
+    if (isReturnParentDisabled) {
+      toast.error('当前代币没有可返回的父币');
+      return;
+    }
+
+    NavigationUtils.redirectWithOverlay(parentTokenHref, '正在返回父币...');
   };
 
   const goToMyLove20NftPage = () => {
     NavigationUtils.redirectWithOverlay(myLove20NftHref, '正在打开我的NFT...');
   };
+
+  useEffect(() => {
+    setRecentTokens(readRecentTokens());
+  }, []);
+
+  useEffect(() => {
+    if (isTokenSymbolPending) {
+      setIsTokenMenuOpen(false);
+    }
+  }, [isTokenSymbolPending]);
+
+  useEffect(() => {
+    if (!token?.symbol || !token.address || token.address === ZERO_ADDRESS) return;
+
+    setRecentTokens((prev) => {
+      const next = upsertRecentToken(prev, token);
+      saveRecentTokens(next);
+      return next;
+    });
+  }, [
+    token?.address,
+    token?.hasEnded,
+    token?.name,
+    token?.parentTokenAddress,
+    token?.parentTokenName,
+    token?.parentTokenSymbol,
+    token?.symbol,
+  ]);
 
   // 处理连接错误
   React.useEffect(() => {
@@ -487,6 +690,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
 
   // 加载状态
   const isLoading = isConnecting || isReconnecting || isPending;
+  const visibleRecentTokens = recentTokens.filter((recentToken) => recentToken.symbol !== token?.symbol);
 
   // 如果网络不匹配，显示网络错误按钮
   if (isConnected && isNetworkMismatch) {
@@ -542,33 +746,122 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            'h-auto min-h-[48px] w-fit min-w-0 max-w-[calc(100vw-2rem)] rounded-xl border bg-white/60 px-3 py-1.5 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:max-w-[320px]',
-            className,
-          )}
-        >
-          <div className="grid w-full grid-cols-[max-content_1px_minmax(0,1fr)_16px] grid-rows-2 items-center gap-x-2.5 gap-y-0.5 text-left">
-            <div className="col-start-1 row-span-2 flex h-full items-center justify-center">
-              <span
-                className={cn(
-                  'inline-flex h-8 min-w-max items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600 px-2.5 text-sm font-bold text-white whitespace-nowrap',
-                  hasTokenInfoHref && 'cursor-pointer transition-opacity hover:opacity-85',
-                )}
-                onPointerDown={hasTokenInfoHref ? stopTokenBadgePointerDown : undefined}
-                onClick={hasTokenInfoHref ? goToTokenInfoPage : undefined}
-                title={hasTokenInfoHref ? '查看代币信息' : undefined}
-              >
-                <span>{token?.symbol || 'TOKEN'}</span>
+    <div
+      className={cn(
+        'inline-flex min-h-[48px] w-fit min-w-0 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border bg-white/60 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:max-w-[360px]',
+        className,
+      )}
+    >
+      <DropdownMenu open={isTokenSymbolPending ? false : isTokenMenuOpen} onOpenChange={handleTokenMenuOpenChange}>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            disabled={isTokenSymbolPending}
+            aria-busy={isTokenSymbolPending}
+            className="flex min-h-[48px] max-w-[145px] shrink-0 items-center border-r border-gray-200 px-3 py-1.5 text-left transition-colors hover:bg-blue-50/50 focus-visible:bg-blue-50/50 focus-visible:outline-none disabled:cursor-wait disabled:hover:bg-transparent"
+            title={isTokenSymbolPending ? '正在切换代币' : '最近访问代币'}
+          >
+            <span className="inline-flex h-8 min-w-0 max-w-full items-center justify-center gap-1.5 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 px-2.5 text-sm font-bold text-white">
+              <span className="truncate">{displayTokenSymbol}</span>
+              {isTokenSymbolPending && <Loader2 className="h-3 w-3 shrink-0 animate-spin" />}
+            </span>
+          </button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end" className="w-72 rounded-xl border p-2 shadow-xl">
+          <div className="px-2 pb-1 pt-2 text-xs font-medium text-gray-500">最近访问</div>
+          <div className="space-y-1">
+            {visibleRecentTokens.length > 0 ? (
+              visibleRecentTokens.map((recentToken) => {
+                return (
+                  <div
+                    key={recentToken.symbol}
+                    className="flex min-w-0 items-center gap-1 rounded-lg transition-colors hover:bg-gray-50"
+                  >
+                    <DropdownMenuItem
+                      className="flex min-w-0 flex-1 items-center rounded-lg px-2 py-2 text-left focus:bg-gray-50 focus:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      onSelect={() => goToRecentToken(recentToken)}
+                      title={recentToken.symbol}
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <span className="truncate font-mono text-sm font-medium text-gray-900">
+                            {recentToken.symbol}
+                          </span>
+                        </span>
+                      </span>
+                    </DropdownMenuItem>
+                    <button
+                      type="button"
+                      className={cn(
+                        'mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-white hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300',
+                        recentToken.pinned && 'text-blue-600',
+                      )}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        toggleRecentTokenPinned(recentToken.symbol);
+                      }}
+                      title={recentToken.pinned ? '取消锚定' : '锚定代币'}
+                      aria-label={recentToken.pinned ? `取消锚定 ${recentToken.symbol}` : `锚定 ${recentToken.symbol}`}
+                    >
+                      <Pin className={cn('h-4 w-4', recentToken.pinned && 'fill-current')} />
+                    </button>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="px-2 py-4 text-center text-sm text-gray-400">暂无其他访问记录</div>
+            )}
+          </div>
+
+          <DropdownMenuSeparator className="my-2" />
+
+          <DropdownMenuItem
+            disabled={isTokenInfoDisabled}
+            onClick={goToTokenInfoPage}
+            className="rounded-lg text-base text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+          >
+            <Info className="w-4 h-4 mr-3 text-gray-500" />
+            <span className="min-w-0 flex-1">代币信息</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            disabled={isChildTokensDisabled}
+            onClick={goToChildTokensPage}
+            className="rounded-lg text-base text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+          >
+            <List className="w-4 h-4 mr-3 text-gray-500" />
+            <span className="min-w-0 flex-1">子币列表</span>
+            {childTokenNum !== undefined && (
+              <span className="ml-auto text-xs text-gray-400">{childTokenNum.toString()}</span>
+            )}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            disabled={isReturnParentDisabled}
+            onClick={goToParentTokenPage}
+            className="rounded-lg text-base text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+          >
+            <ArrowUpLeft className="w-4 h-4 mr-3 text-gray-500" />
+            <span className="min-w-0 flex-1">返回父币</span>
+            {hasReturnParentToken && token?.parentTokenSymbol && (
+              <span className="ml-auto max-w-[96px] truncate font-mono text-xs text-gray-400">
+                {token.parentTokenSymbol}
               </span>
-            </div>
+            )}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-            <div className="col-start-2 row-span-2 h-full w-px self-stretch bg-gray-200" />
-
-            <div className="col-start-3 row-start-1 flex min-w-0 items-center justify-end gap-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="grid min-h-[48px] min-w-0 grid-cols-[minmax(0,1fr)_16px] grid-rows-2 items-center gap-x-2 gap-y-0.5 px-3 py-1.5 text-left transition-colors hover:bg-blue-50/40 focus-visible:bg-blue-50/40 focus-visible:outline-none sm:min-w-[190px]"
+            title="钱包"
+          >
+            <div className="col-start-1 row-start-1 flex min-w-0 items-center justify-end gap-2">
               <span className="min-w-0 truncate font-mono text-[13px] font-medium leading-none text-gray-900">
                 {address ? shortenAddress(address) : ''}
               </span>
@@ -579,7 +872,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               )}
             </div>
 
-            <div className="col-start-3 row-start-2 flex min-w-0 items-center justify-end text-xs leading-none">
+            <div className="col-start-1 row-start-2 flex min-w-0 items-center justify-end text-xs leading-none">
               {hasDefaultGroup ? (
                 <span className="inline-flex min-w-0 max-w-full items-baseline justify-end gap-1.5 text-right">
                   <span className="min-w-0 truncate font-medium text-gray-600">{defaultGroupName || '...'}</span>
@@ -589,12 +882,11 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               )}
             </div>
 
-            <ChevronDown className="col-start-4 row-span-2 h-4 w-4 self-center shrink-0 text-gray-500" />
-          </div>
-        </Button>
-      </DropdownMenuTrigger>
+            <ChevronDown className="col-start-2 row-span-2 h-4 w-4 shrink-0 self-center text-gray-500" />
+          </button>
+        </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-64 rounded-xl border p-2 shadow-xl">
+        <DropdownMenuContent align="end" className="w-64 rounded-xl border p-2 shadow-xl">
         <div className="px-3 py-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">钱包地址</span>
@@ -653,45 +945,6 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
           </div>
         </div>
 
-        {token &&
-          (() => {
-            const hasParent =
-              token.parentTokenAddress &&
-              token.parentTokenAddress !== '0x0000000000000000000000000000000000000000' &&
-              token.parentTokenSymbol &&
-              token.parentTokenSymbol !== process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
-            return (
-              <>
-                <DropdownMenuSeparator className="my-1" />
-                {hasParent ? (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      window.location.href = `${basePath}/acting/?symbol=${token.parentTokenSymbol}`;
-                    }}
-                    className="rounded-lg text-base text-gray-700 focus:text-gray-900 focus:bg-gray-50"
-                  >
-                    <ArrowUpLeft className="w-4 h-4 mr-3 text-gray-500" />
-                    <span className="inline-flex items-baseline gap-1">
-                      返回父币
-                      <span className="text-sm text-gray-400">({token.parentTokenSymbol})</span>
-                    </span>
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      window.location.href = `${basePath}/tokens/children/?symbol=${token.symbol}`;
-                    }}
-                    className="rounded-lg text-base text-gray-700 focus:text-gray-900 focus:bg-gray-50"
-                  >
-                    <List className="w-4 h-4 mr-3 text-gray-500" />
-                    子币列表
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator className="my-1" />
-              </>
-            );
-          })()}
-
         <DropdownMenuItem
           onClick={handleDisconnect}
           className="rounded-lg text-base text-red-600 focus:text-red-600 focus:bg-red-50"
@@ -701,6 +954,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
   );
 }
 

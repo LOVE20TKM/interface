@@ -87,7 +87,11 @@ export const useChildTokensCount = (parentTokenAddress?: `0x${string}`, enabled:
     },
   });
 
-  return { childTokenNum: data !== undefined ? safeToBigInt(data) : undefined, isPending: shouldRead && isPending, error };
+  return {
+    childTokenNum: shouldRead && data !== undefined ? safeToBigInt(data) : undefined,
+    isPending: shouldRead ? isPending : false,
+    error: shouldRead ? error : undefined,
+  };
 };
 
 /**
