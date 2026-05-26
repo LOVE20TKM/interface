@@ -217,7 +217,7 @@ export const useCalculateMintCost = (groupName: string) => {
     },
   });
 
-  return { mintCost: data ? safeToBigInt(data) : undefined, isPending, error };
+  return { mintCost: data !== undefined ? safeToBigInt(data) : undefined, isPending, error };
 };
 
 /**

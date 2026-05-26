@@ -33,6 +33,9 @@ const groupAbiDirPath = resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_GROUP_ABI_PATH');
 const extensionsCenterAbiDirPath = resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_EXTENSIONS_CENTER_ABI_PATH');
 const extensionslpAbiDirPath = resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_EXTENSIONS_LP_ABI_PATH');
 const extensionsGroupAbiDirPath = resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_EXTENSIONS_GROUP_ABI_PATH');
+const groupChatAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_GROUP_CHAT_ABI_PATH
+  ? resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_GROUP_CHAT_ABI_PATH')
+  : undefined;
 
 // 指定要转换的文件名列表
 const coreFilesToConvert = [
@@ -70,6 +73,21 @@ const extensionsGroupFilesToConvert = [
   'GroupJoin',
   'GroupVerify',
   'GroupRecipients',
+];
+
+const groupChatFilesToConvert = [
+  'GroupChat',
+  'GroupAdmin',
+  'GroupBanList',
+  'AdminBanSource',
+  'GovVotedBanSource',
+  'GroupMember',
+  'GroupMemberScope',
+  'GroupJoinScopeSource',
+  'TokenMainManager',
+  'TokenGovManager',
+  'TokenActionMainManager',
+  'TokenActionGovManager',
 ];
 
 // 用于生成 TypeScript 文件的函数
@@ -118,3 +136,8 @@ generateTsFiles(extensionsGroupAbiDirPath, extensionsGroupFilesToConvert);
 
 // 处理链群 NFT ABI 文件
 generateTsFiles(groupAbiDirPath, groupFilesToConvert);
+
+// 处理群聊 ABI 文件
+if (groupChatAbiDirPath) {
+  generateTsFiles(groupChatAbiDirPath, groupChatFilesToConvert);
+}

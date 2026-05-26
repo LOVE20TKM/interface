@@ -157,6 +157,7 @@ export function useUniversalTransaction(
     setError(null);
     setIsManuallyConfirmed(false);
     setIsConfirming(false);
+    setHash(undefined);
 
     try {
       // 交易前网络检查

@@ -7,6 +7,7 @@ import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { ActionSubmitInfo } from '@/src/types/love20types';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_SUBMIT as `0x${string}`;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 // =====================
 // === 读取 Hook ===
@@ -29,32 +30,45 @@ export const useSubmitMinPerThousand = () => {
 /**
  * Hook for actionInfo
  */
-export const useActionInfo = (tokenAddress: `0x${string}`, actionId: bigint | undefined) => {
+export const useActionInfo = (tokenAddress: `0x${string}` | undefined, actionId: bigint | undefined) => {
+  const isQueryEnabled = !!tokenAddress && actionId !== undefined;
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20SubmitAbi,
     functionName: 'actionInfo',
-    args: [tokenAddress, actionId || BigInt(0)],
+    args: [tokenAddress || ZERO_ADDRESS, actionId || BigInt(0)],
     query: {
-      enabled: !!tokenAddress && actionId !== undefined,
+      enabled: isQueryEnabled,
     },
   });
 
-  return { actionInfo: data as any | undefined, isPending, error };
+  return {
+    actionInfo: data as any | undefined,
+    isPending: isQueryEnabled ? isPending : false,
+    error: isQueryEnabled ? error : undefined,
+  };
 };
 
 /**
  * Hook for actionNum
  */
-export const useActionsCount = (tokenAddress: `0x${string}`) => {
+export const useActionsCount = (tokenAddress: `0x${string}` | undefined, enabled: boolean = true) => {
+  const isQueryEnabled = enabled && !!tokenAddress;
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20SubmitAbi,
     functionName: 'actionsCount',
-    args: [tokenAddress],
+    args: [tokenAddress || ZERO_ADDRESS],
+    query: {
+      enabled: isQueryEnabled,
+    },
   });
 
-  return { actionNum: data ? safeToBigInt(data) : undefined, isPending, error };
+  return {
+    actionNum: isQueryEnabled && data !== undefined ? safeToBigInt(data) : undefined,
+    isPending: isQueryEnabled ? isPending : false,
+    error: isQueryEnabled ? error : undefined,
+  };
 };
 
 /**

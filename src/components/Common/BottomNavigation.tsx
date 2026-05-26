@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { cn } from '@/lib/utils';
-import { CircleDollarSign, Users, Vote, User, Layers } from 'lucide-react';
+import { MessageCircle, Users, Vote, User, Layers } from 'lucide-react';
 import { isTukeWallet } from '@/src/lib/tukeWalletUtils';
 import { normalizeRouteKey, suppressNextRouteLoading } from '@/src/lib/routeLoading';
 
@@ -43,10 +43,10 @@ export function BottomNavigation() {
 
     return [
       {
-        title: '代币',
-        url: `/token/?symbol=${token.symbol}`,
-        icon: CircleDollarSign,
-        isActive: router.pathname.startsWith('/token'),
+        title: '聊天',
+        url: `/chat/?symbol=${token.symbol}`,
+        icon: MessageCircle,
+        isActive: router.pathname.startsWith('/chat'),
         isMain: false,
       },
       {

@@ -383,7 +383,13 @@ export const useAccountVotingHistory = (
     functionName: 'accountVotingHistory',
     args: [tokenAddress, account, startRound, endRound],
     query: {
-      enabled: !!tokenAddress && !!account && startRound !== undefined && endRound !== undefined,
+      enabled:
+        !!tokenAddress &&
+        !!account &&
+        startRound !== undefined &&
+        endRound !== undefined &&
+        startRound > BigInt(0) &&
+        endRound >= startRound,
     },
   });
 

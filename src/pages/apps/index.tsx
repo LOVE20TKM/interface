@@ -3,7 +3,17 @@
 import { useContext } from "react";
 import { useAccount } from "wagmi";
 import Link from "next/link";
-import { ArrowLeftRight, Coins, Droplets, HandCoins, Lock, LucideIcon, ShieldCheck, Users } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Coins,
+  Droplets,
+  HandCoins,
+  Lock,
+  LucideIcon,
+  MessageCircle,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 
 import Header from "@/src/components/Header";
 import { TokenContext } from "@/src/contexts/TokenContext";
@@ -60,6 +70,12 @@ const appSections: AppSection[] = [
         name: "链群管理",
         href: (symbol?: string) => (symbol ? `/extension/my_groups?symbol=${symbol}` : "/extension/my_groups"),
         icon: ShieldCheck,
+        requiresWallet: true,
+      },
+      {
+        name: "聊天",
+        href: (symbol?: string) => (symbol ? `/chat/?symbol=${symbol}` : "/chat/"),
+        icon: MessageCircle,
         requiresWallet: true,
       },
     ],

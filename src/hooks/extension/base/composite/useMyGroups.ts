@@ -16,6 +16,8 @@ export interface GroupNFT {
   groupName: string;
 }
 
+export type MyGroupsPageOrder = 'owner-index' | 'recent';
+
 export function useMyGroups(account: `0x${string}` | undefined) {
   // 如果没有账户，balance 查询会被禁用
   const hasAccount = !!account;
@@ -98,7 +100,11 @@ export function useMyGroups(account: `0x${string}` | undefined) {
   };
 }
 
-export function useMyGroupsPage(account: `0x${string}` | undefined, limit: number = 10) {
+export function useMyGroupsPage(
+  account: `0x${string}` | undefined,
+  limit: number = 10,
+  order: MyGroupsPageOrder = 'owner-index',
+) {
   const hasAccount = !!account;
 
   const {
@@ -115,11 +121,12 @@ export function useMyGroupsPage(account: `0x${string}` | undefined, limit: numbe
 
   const tokenIdContracts = [];
   for (let i = 0; i < safeLimit; i++) {
+    const ownerIndex = order === 'recent' ? nftCount - 1 - i : i;
     tokenIdContracts.push({
       address: CONTRACT_ADDRESS,
       abi: LOVE20GroupAbi,
       functionName: 'tokenOfOwnerByIndex',
-      args: [account!, BigInt(i)],
+      args: [account!, BigInt(ownerIndex)],
     });
   }
 
