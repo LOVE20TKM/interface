@@ -1,12 +1,12 @@
 import { MESSAGE_PREFERENCES_STORAGE_KEY } from './chatConstants';
 
 export type MessagePreferences = {
-  showBlacklistedMessages: boolean;
+  showBannedMessages: boolean;
   showMessageTimes: boolean;
 };
 
 export const DEFAULT_MESSAGE_PREFERENCES: MessagePreferences = {
-  showBlacklistedMessages: false,
+  showBannedMessages: false,
   showMessageTimes: false,
 };
 
@@ -38,7 +38,7 @@ export function readMessagePreferences(): MessagePreferences {
   try {
     const parsed = JSON.parse(window.localStorage.getItem(MESSAGE_PREFERENCES_STORAGE_KEY) || '{}');
     return {
-      showBlacklistedMessages: parsed?.showBlacklistedMessages === true,
+      showBannedMessages: parsed?.showBannedMessages === true,
       showMessageTimes: parsed?.showMessageTimes === true,
     };
   } catch {

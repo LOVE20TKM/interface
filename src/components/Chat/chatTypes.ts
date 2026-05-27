@@ -1,1 +1,1 @@
-export type ChatWorkspaceView = 'inbox' | 'activate' | 'chat' | 'members' | 'admins' | 'blacklist' | 'settings';
+export type ChatWorkspaceView = 'inbox' | 'chat' | 'members' | 'admins' | 'banList' | 'settings';

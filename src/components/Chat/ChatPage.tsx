@@ -27,14 +27,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { cn } from '@/lib/utils';
-import { ActionChatPanel } from './ActionChatPanel';
-import { ActivationPanel } from './ActivationPanels';
-import { ChainChatPanel } from './ChainChatPanel';
-import { AdminsPanel } from './AdminsPanel';
-import { BlacklistPanel } from './BlacklistPanel';
-import { ChatSettingsPanel } from './ChatSettingsPanel';
 import { InboxPanel } from './InboxPanel';
-import { MembersPanel } from './MembersPanel';
 import { RoomPanel } from './RoomPanel';
 import styles from './ChatPage.module.css';
 import {
@@ -83,18 +76,10 @@ export default function ChatPage() {
   const [readCursors, setReadCursors] = useState<Record<string, string>>({});
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [messagePreferences, setMessagePreferences] = useState<MessagePreferences>(DEFAULT_MESSAGE_PREFERENCES);
-  const showBlacklistedMessages = messagePreferences.showBlacklistedMessages;
+  const showBannedMessages = messagePreferences.showBannedMessages;
   const showMessageTimes = messagePreferences.showMessageTimes;
   const selectedGroupId = parseGroupId(router.query.groupId);
-  const view = Array.isArray(router.query.view) ? router.query.view[0] : router.query.view;
-  const activationTypeQuery = Array.isArray(router.query.activationType)
-    ? router.query.activationType[0]
-    : router.query.activationType;
-  const activationType = activationTypeQuery === 'action' || activationTypeQuery === 'chain' ? activationTypeQuery : 'token';
-  const detailViews: ChatWorkspaceView[] = ['members', 'admins', 'blacklist', 'settings'];
-  const workspaceView: ChatWorkspaceView = selectedGroupId
-    ? detailViews.includes(view as ChatWorkspaceView) ? (view as ChatWorkspaceView) : 'chat'
-    : view === 'activate' ? 'activate' : 'inbox';
+  const workspaceView: ChatWorkspaceView = selectedGroupId ? 'chat' : 'inbox';
   const accountAddress = account as `0x${string}` | undefined;
   const tokenAddress = token?.address as `0x${string}` | undefined;
   const { myGroups } = useMyGroups(accountAddress);
@@ -234,9 +219,8 @@ export default function ChatPage() {
   const onOpenActivate = useCallback(() => {
     const query = {
       ...(token?.symbol ? { symbol: token.symbol } : {}),
-      view: 'activate',
     };
-    router.push({ pathname: '/chat', query }, undefined, { shallow: true });
+    router.push({ pathname: '/chat/activate', query });
   }, [router, token?.symbol]);
 
   const onOpenGroupPanel = useCallback(
@@ -245,23 +229,26 @@ export default function ChatPage() {
       const query = {
         ...(token?.symbol ? { symbol: token.symbol } : {}),
         groupId: selectedGroupId.toString(),
-        view: nextView,
       };
+      if (nextView === 'members') {
+        router.push({ pathname: '/chat/members', query });
+        return;
+      }
+      if (nextView === 'banList') {
+        router.push({ pathname: '/chat/ban-list', query });
+        return;
+      }
+      if (nextView === 'admins') {
+        router.push({ pathname: '/chat/admins', query });
+        return;
+      }
+      if (nextView === 'settings') {
+        router.push({ pathname: '/chat/settings', query });
+        return;
+      }
       router.push({ pathname: '/chat', query }, undefined, { shallow: true });
     },
     [router, selectedGroupId, token?.symbol],
-  );
-
-  const setActivationType = useCallback(
-    (nextType: 'token' | 'action' | 'chain') => {
-      const query = {
-        ...(token?.symbol ? { symbol: token.symbol } : {}),
-        view: 'activate',
-        activationType: nextType,
-      };
-      router.replace({ pathname: '/chat', query }, undefined, { shallow: true });
-    },
-    [router, token?.symbol],
   );
 
   const refreshAll = useCallback(() => {
@@ -303,37 +290,13 @@ export default function ChatPage() {
                 account={accountAddress}
                 title={selectedInboxItem?.title}
                 isPinned={pinnedGroupIds.includes(selectedGroupId.toString())}
-                showBlacklistedMessages={showBlacklistedMessages}
+                showBannedMessages={showBannedMessages}
                 showMessageTimes={showMessageTimes}
                 tokenAddress={token?.address}
                 tokenSymbol={token?.symbol}
                 onPosted={refreshAll}
                 onOpenPanel={onOpenGroupPanel}
                 onTogglePin={togglePinnedGroup}
-              />
-            ) : workspaceView === 'settings' && selectedGroupId ? (
-              <ChatSettingsPanel
-                groupId={selectedGroupId}
-                account={accountAddress}
-                onChanged={refreshAll}
-              />
-            ) : workspaceView === 'members' && selectedGroupId ? (
-              <MembersPanel
-                groupId={selectedGroupId}
-                account={accountAddress}
-                onChanged={refreshAll}
-              />
-            ) : workspaceView === 'admins' && selectedGroupId ? (
-              <AdminsPanel
-                groupId={selectedGroupId}
-                account={accountAddress}
-                onChanged={refreshAll}
-              />
-            ) : workspaceView === 'blacklist' && selectedGroupId ? (
-              <BlacklistPanel
-                groupId={selectedGroupId}
-                account={accountAddress}
-                onChanged={refreshAll}
               />
             ) : (
               <section className={cn('workspace-screen', workspaceView === 'inbox' && 'inbox-screen')} aria-label="聊天工作区">
@@ -342,76 +305,26 @@ export default function ChatPage() {
                     <AlertBox type="warning" message="当前环境未配置 GroupChat 合约地址。" />
                   </div>
                 )}
-                {workspaceView === 'activate' ? (
-                  <>
-                    <div className="activation-header">
-                      <div className="screen-heading">
-                        <h1>激活群聊</h1>
-                      </div>
-                      <div className="chat-picker activation-tabs">
-                        <button className={cn('picker-button inline-flex', activationType === 'token' && 'active')} type="button" onClick={() => setActivationType('token')}>
-                          代币群
-                        </button>
-                        <button className={cn('picker-button inline-flex', activationType === 'action' && 'active')} type="button" onClick={() => setActivationType('action')}>
-                          行动群
-                        </button>
-                        <button className={cn('picker-button inline-flex', activationType === 'chain' && 'active')} type="button" onClick={() => setActivationType('chain')}>
-                          链群
-                        </button>
-                      </div>
-                    </div>
-                    {activationType === 'token' && (
-                      <ActivationPanel
-                        isConnected={isConnected}
-                        account={accountAddress}
-                        tokenAddress={token?.address}
-                        tokenSymbol={token?.symbol}
-                        onOpen={onOpen}
-                        onConfirmed={refreshAll}
-                      />
-                    )}
-                    {activationType === 'action' && (
-                      <ActionChatPanel
-                        isConnected={isConnected}
-                        account={accountAddress}
-                        tokenAddress={token?.address}
-                        tokenSymbol={token?.symbol}
-                        onOpen={onOpen}
-                        onConfirmed={refreshAll}
-                      />
-                    )}
-                    {activationType === 'chain' && (
-                      <ChainChatPanel
-                        isConnected={isConnected}
-                        account={accountAddress}
-                        tokenSymbol={token?.symbol}
-                        onOpen={onOpen}
-                        onConfirmed={refreshAll}
-                      />
-                    )}
-                  </>
-                ) : (
-                  <InboxPanel
-                    items={inbox.items}
-                    selectedGroupId={selectedGroupId}
-                    isPending={inbox.isPending}
-                    isConnected={isConnected}
-                    tokenSymbol={token?.symbol}
-                    pinnedGroupIds={pinnedGroupIds}
-                    myChainGroupIds={myChainGroupIds}
-                    recommendedGroupIds={recommendedGroupIds}
-                    readCursors={readCursors}
-                    preferencesOpen={preferencesOpen}
-                    showBlacklistedMessages={showBlacklistedMessages}
-                    showMessageTimes={showMessageTimes}
-                    onOpen={onOpen}
-                    onOpenActivate={onOpenActivate}
-                    onTogglePin={togglePinnedGroup}
-                    onTogglePreferences={() => setPreferencesOpen((value) => !value)}
-                    onSetShowBlacklistedMessages={(value) => updateMessagePreference('showBlacklistedMessages', value)}
-                    onSetShowMessageTimes={(value) => updateMessagePreference('showMessageTimes', value)}
-                  />
-                )}
+                <InboxPanel
+                  items={inbox.items}
+                  selectedGroupId={selectedGroupId}
+                  isPending={inbox.isPending}
+                  isConnected={isConnected}
+                  tokenSymbol={token?.symbol}
+                  pinnedGroupIds={pinnedGroupIds}
+                  myChainGroupIds={myChainGroupIds}
+                  recommendedGroupIds={recommendedGroupIds}
+                  readCursors={readCursors}
+                  preferencesOpen={preferencesOpen}
+                  showBannedMessages={showBannedMessages}
+                  showMessageTimes={showMessageTimes}
+                  onOpen={onOpen}
+                  onOpenActivate={onOpenActivate}
+                  onTogglePin={togglePinnedGroup}
+                  onTogglePreferences={() => setPreferencesOpen((value) => !value)}
+                  onSetShowBannedMessages={(value) => updateMessagePreference('showBannedMessages', value)}
+                  onSetShowMessageTimes={(value) => updateMessagePreference('showMessageTimes', value)}
+                />
               </section>
             )}
           </section>

@@ -29,24 +29,24 @@ import {
 import { useGroupChatRoomData, useGroupNames } from '@/src/hooks/composite/useGroupChatData';
 import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
 import { cn } from '@/lib/utils';
-import { BlacklistQueryControls } from './BlacklistQueryControls';
-import { AdminBlacklistRows, GovBlacklistRows } from './BlacklistRows';
+import { BanListQueryControls } from './BanListQueryControls';
+import { AdminBanListRows, GovBanListRows } from './BanListRows';
 import { GroupDetailHeader, useGroupDetailSubtitle } from './ChatGroupDetailHeader';
 import { GovVoterSheet } from './GovVoterSheet';
-import { BLACKLIST_PAGE_SIZE } from './chatConstants';
+import { BAN_LIST_PAGE_SIZE } from './chatConstants';
 import {
   formatGovWeightShare,
-  govBlacklistMechanismText,
+  govBanListMechanismText,
   parseAddressInput,
   sameAddress,
 } from './chatUtils';
 import {
-  useBlacklistPanelState,
-  type BlacklistTarget,
-} from './useBlacklistPanelState';
+  useBanListPanelState,
+  type BanListTarget,
+} from './useBanListPanelState';
 import { useConfirmedTransactionEffect } from './useConfirmedTransactionEffect';
 
-export function BlacklistPanel({
+export function BanListPanel({
   groupId,
   account,
   onChanged,
@@ -77,27 +77,27 @@ export function BlacklistPanel({
     setAdminPage,
     govPage,
     setGovPage,
-    activeBlacklistMenuKey,
-    setActiveBlacklistMenuKey,
+    activeBanListMenuKey,
+    setActiveBanListMenuKey,
     adminOffset,
     govOffset,
     voterOffset,
-  } = useBlacklistPanelState();
+  } = useBanListPanelState();
   const nftLookup = useNftOwnerLookup({ enabled: queryType === 'nft', initialMode: 'name' });
   const adminBan = useGroupBanLists(
     groupId,
     adminOffset,
-    BigInt(BLACKLIST_PAGE_SIZE),
+    BigInt(BAN_LIST_PAGE_SIZE),
     adminOffset,
-    BigInt(BLACKLIST_PAGE_SIZE),
+    BigInt(BAN_LIST_PAGE_SIZE),
     isGroupBanListEnabled && activeAdminBanSource,
   );
   const govBan = useGovVotedBanLists(
     groupId,
     govOffset,
-    BigInt(BLACKLIST_PAGE_SIZE),
+    BigInt(BAN_LIST_PAGE_SIZE),
     govOffset,
-    BigInt(BLACKLIST_PAGE_SIZE),
+    BigInt(BAN_LIST_PAGE_SIZE),
     account,
     isGovVotedBanSourceEnabled && activeGovBanSource,
   );
@@ -121,7 +121,7 @@ export function BlacklistPanel({
     activeGovTarget?.type === 'address' ? activeGovTarget.value : undefined,
     activeGovTarget?.type === 'nft' ? activeGovTarget.value : undefined,
     voterOffset,
-    BigInt(BLACKLIST_PAGE_SIZE),
+    BigInt(BAN_LIST_PAGE_SIZE),
     !!activeGovTarget,
   );
   const banAddressTx = useBanSenderAddresses();
@@ -141,22 +141,22 @@ export function BlacklistPanel({
   const canEditAdminBan = activeAdminBanSource && adminBanPermission.canOperate;
   const canVoteGovBan = activeGovBanSource && govVotingPower.voteWeight > BigInt(0);
   const adminBanPermissionText = adminBanPermission.operatorKind === 'owner-or-delegate'
-    ? `当前 owner/delegate NFT #${adminBanPermission.ownerOrDelegateId.toString()} 可维护 AdminBanSource。`
+    ? '当前链群NFT持有者、代理、群管理可维护禁言名单。'
     : adminBanPermission.operatorKind === 'admin'
-      ? `当前 GroupAdmin 管理员 NFT #${adminBanPermission.adminId.toString()} 可维护 AdminBanSource。`
+      ? '当前链群NFT持有者、代理、群管理可维护禁言名单。'
       : adminBanPermission.isPending
         ? '正在读取 AdminBanSource 管理权限。'
-        : '当前地址不是 owner/delegate，也没有 GroupAdmin 管理员 NFT；AdminBanSource 只能查看和查询。';
+        : '当前地址不是链群NFT持有者、代理或群管理；禁言名单只能查看和查询。';
   const detailSubtitle = useGroupDetailSubtitle(groupId, room);
-  const govBlacklistNotice = activeGovBanSource
+  const govBanListNotice = activeGovBanSource
     ? govVotingPower.isPending || govBanMechanism.isPending
-      ? '正在读取当前地址治理票权和黑名单阈值。'
+      ? '正在读取当前地址治理票权和禁言阈值。'
       : canVoteGovBan
-        ? `当前地址有 ${formatGovWeightShare(govVotingPower.voteWeight, govVotingPower.totalVoteWeight)} 票权，可参与治理黑名单投票。${govBlacklistMechanismText(govVotingPower.totalVoteWeight, govBanMechanism.banThresholdRatio, govBanMechanism.precision)}`
-        : `当前地址没有票权，只能查看和查询治理黑名单。${govBlacklistMechanismText(govVotingPower.totalVoteWeight, govBanMechanism.banThresholdRatio, govBanMechanism.precision)}`
+        ? `当前地址有 ${formatGovWeightShare(govVotingPower.voteWeight, govVotingPower.totalVoteWeight)} 票权，可参与治理禁言投票。${govBanListMechanismText(govVotingPower.totalVoteWeight, govBanMechanism.banThresholdRatio, govBanMechanism.precision)}`
+        : `当前地址没有票权，只能查看和查询治理禁言名单。${govBanListMechanismText(govVotingPower.totalVoteWeight, govBanMechanism.banThresholdRatio, govBanMechanism.precision)}`
     : '';
-  const activeBlacklistVersion = activeGovBanSource ? govBanStateVersion.stateVersion : undefined;
-  const canAddBlacklistTarget = activeAdminBanSource || activeGovBanSource;
+  const activeBanListVersion = activeGovBanSource ? govBanStateVersion.stateVersion : undefined;
+  const canAddBanListTarget = activeAdminBanSource || activeGovBanSource;
   const refetchAdminBan = useCallback(() => {
     adminBan.refetch();
     onChanged();
@@ -187,9 +187,9 @@ export function BlacklistPanel({
   const govRows = queryType === 'address' ? govBan.addressRecords : govBan.senderRecords;
   const adminTotal = queryType === 'address' ? adminBan.addressCount : adminBan.senderCount;
   const govTotal = queryType === 'address' ? govBan.addressCount : govBan.senderCount;
-  const adminTotalPages = Math.max(1, Math.ceil(Number(adminTotal || BigInt(0)) / BLACKLIST_PAGE_SIZE));
-  const govTotalPages = Math.max(1, Math.ceil(Number(govTotal || BigInt(0)) / BLACKLIST_PAGE_SIZE));
-  const voterTotalPages = Math.max(1, Math.ceil(Number(govVoters.count || BigInt(0)) / BLACKLIST_PAGE_SIZE));
+  const adminTotalPages = Math.max(1, Math.ceil(Number(adminTotal || BigInt(0)) / BAN_LIST_PAGE_SIZE));
+  const govTotalPages = Math.max(1, Math.ceil(Number(govTotal || BigInt(0)) / BAN_LIST_PAGE_SIZE));
+  const voterTotalPages = Math.max(1, Math.ceil(Number(govVoters.count || BigInt(0)) / BAN_LIST_PAGE_SIZE));
   const visibleAdminRows = adminRows;
   const visibleGovRows = govRows;
   const senderNameIds = useMemo(() => {
@@ -272,7 +272,7 @@ export function BlacklistPanel({
     }
     try {
       await banAddressTx.banBySenderAddresses(groupId, [target]);
-      toast.success('已提交地址黑名单');
+      toast.success('已提交地址禁言');
     } catch (error) {
       console.error(error);
     }
@@ -284,7 +284,7 @@ export function BlacklistPanel({
     if (!target) return;
     try {
       await banSenderTx.banBySenderIds(groupId, [target]);
-      toast.success('已提交 NFT 黑名单');
+      toast.success('已提交 NFT 禁言');
     } catch (error) {
       console.error(error);
     }
@@ -296,7 +296,7 @@ export function BlacklistPanel({
     setQueryTarget(target);
     if (activeGovBanSource) {
       if (!canVoteGovBan) {
-        toast.error('当前地址没有治理票权，只能查看和查询治理黑名单。');
+        toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
         return;
       }
       voteCurrentTarget(true, target);
@@ -310,12 +310,12 @@ export function BlacklistPanel({
       }
       return;
     }
-    toast.error('当前群聊未启用可写黑名单源');
+    toast.error('当前群聊未启用可写禁言源');
   };
 
-  const voteCurrentTarget = async (support: boolean, resolvedTarget?: BlacklistTarget) => {
+  const voteCurrentTarget = async (support: boolean, resolvedTarget?: BanListTarget) => {
     if (!canVoteGovBan) {
-      toast.error('当前地址没有治理票权，只能查看和查询治理黑名单。');
+      toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
       return;
     }
     const target = resolvedTarget || resolveQueryTarget();
@@ -333,15 +333,15 @@ export function BlacklistPanel({
     }
   };
 
-  const toggleBlacklistMenu = (key: string) => {
-    setActiveBlacklistMenuKey((current) => (current === key ? undefined : key));
+  const toggleBanListMenu = (key: string) => {
+    setActiveBanListMenuKey((current) => (current === key ? undefined : key));
   };
 
   const removeAddressBan = async (address: `0x${string}`) => {
     try {
       await unbanAddressTx.unbanBySenderAddresses(groupId, [address]);
-      toast.success('已提交移出地址黑名单');
-      setActiveBlacklistMenuKey(undefined);
+      toast.success('已提交移出地址禁言名单');
+      setActiveBanListMenuKey(undefined);
     } catch (error) {
       console.error(error);
     }
@@ -350,8 +350,8 @@ export function BlacklistPanel({
   const removeSenderBan = async (senderId: bigint) => {
     try {
       await unbanSenderTx.unbanBySenderIds(groupId, [senderId]);
-      toast.success('已提交移出 NFT 黑名单');
-      setActiveBlacklistMenuKey(undefined);
+      toast.success('已提交移出 NFT 禁言名单');
+      setActiveBanListMenuKey(undefined);
     } catch (error) {
       console.error(error);
     }
@@ -359,13 +359,13 @@ export function BlacklistPanel({
 
   const voteGovAddress = async (address: `0x${string}`, support: boolean) => {
     if (!canVoteGovBan) {
-      toast.error('当前地址没有治理票权，只能查看和查询治理黑名单。');
+      toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
       return;
     }
     try {
       await voteAddressTx.voteBySenderAddress(groupId, address, support);
       toast.success(support ? '已提交地址治理支持' : '已提交地址治理反对');
-      setActiveBlacklistMenuKey(undefined);
+      setActiveBanListMenuKey(undefined);
     } catch (error) {
       console.error(error);
     }
@@ -373,13 +373,13 @@ export function BlacklistPanel({
 
   const voteGovSender = async (senderId: bigint, support: boolean) => {
     if (!canVoteGovBan) {
-      toast.error('当前地址没有治理票权，只能查看和查询治理黑名单。');
+      toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
       return;
     }
     try {
       await voteSenderTx.voteBySenderId(groupId, senderId, support);
       toast.success(support ? '已提交 NFT 治理支持' : '已提交 NFT 治理反对');
-      setActiveBlacklistMenuKey(undefined);
+      setActiveBanListMenuKey(undefined);
     } catch (error) {
       console.error(error);
     }
@@ -387,13 +387,13 @@ export function BlacklistPanel({
 
   const clearGovAddressVote = async (address: `0x${string}`) => {
     if (!canVoteGovBan) {
-      toast.error('当前地址没有治理票权，只能查看和查询治理黑名单。');
+      toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
       return;
     }
     try {
       await clearAddressTx.clearVoteBySenderAddress(groupId, address);
       toast.success('已提交地址撤票');
-      setActiveBlacklistMenuKey(undefined);
+      setActiveBanListMenuKey(undefined);
     } catch (error) {
       console.error(error);
     }
@@ -401,13 +401,13 @@ export function BlacklistPanel({
 
   const clearGovSenderVote = async (senderId: bigint) => {
     if (!canVoteGovBan) {
-      toast.error('当前地址没有治理票权，只能查看和查询治理黑名单。');
+      toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
       return;
     }
     try {
       await clearSenderTx.clearVoteBySenderId(groupId, senderId);
       toast.success('已提交 NFT 撤票');
-      setActiveBlacklistMenuKey(undefined);
+      setActiveBanListMenuKey(undefined);
     } catch (error) {
       console.error(error);
     }
@@ -433,7 +433,7 @@ export function BlacklistPanel({
   };
 
   const openGovAddressVoters = (record: (typeof govBan.addressRecords)[number]) => {
-    setActiveBlacklistMenuKey(undefined);
+    setActiveBanListMenuKey(undefined);
     setActiveGovTarget({
       type: 'address',
       value: record.senderAddress,
@@ -444,7 +444,7 @@ export function BlacklistPanel({
   };
 
   const openGovSenderVoters = (record: (typeof govBan.senderRecords)[number]) => {
-    setActiveBlacklistMenuKey(undefined);
+    setActiveBanListMenuKey(undefined);
     setActiveGovTarget({
       type: 'nft',
       value: record.senderId,
@@ -495,11 +495,11 @@ export function BlacklistPanel({
     ? activeAdminBanSource
       ? [
           `${queryLabel}`,
-          `AdminBanSource：${adminQuery.isPending ? '读取中' : adminQuery.banned ? '在黑名单' : '不在黑名单'}`,
+          `AdminBanSource：${adminQuery.isPending ? '读取中' : adminQuery.banned ? '在禁言名单' : '不在禁言名单'}`,
         ].join(' · ')
       : activeGovBanSource
         ? [`${queryLabel}`, `GovVotedBanSource：${govQueryStatusText}`].join(' · ')
-        : `${queryLabel} · 当前群聊未启用黑名单源`
+        : `${queryLabel} · 当前群聊未启用禁言源`
     : '';
   const queryResultTone = queryTarget
     ? activeAdminBanSource
@@ -521,14 +521,14 @@ export function BlacklistPanel({
     <section className="workspace-screen">
       <section className="workspace-band">
         <GroupDetailHeader
-          title="黑名单"
+          title="禁言名单"
           groupId={groupId}
           subtitle={detailSubtitle}
           meta={
             activeAdminBanSource
               ? canEditAdminBan ? '可管理' : '只读'
               : activeGovBanSource
-                ? activeBlacklistVersion !== undefined ? `v${activeBlacklistVersion.toString()}` : '读取中'
+                ? activeBanListVersion !== undefined ? `v${activeBanListVersion.toString()}` : '读取中'
                 : '只读'
           }
         />
@@ -536,16 +536,16 @@ export function BlacklistPanel({
           {activeAdminBanSource
             ? adminBanPermissionText
             : activeGovBanSource
-              ? govBlacklistNotice
-              : '当前群聊未启用黑名单源；本页只展示底层来源状态。'}
+              ? govBanListNotice
+              : '当前群聊未启用禁言源；本页只展示底层来源状态。'}
         </div>
-        <BlacklistQueryControls
+        <BanListQueryControls
           queryType={queryType}
           queryInput={queryInput}
           nftLookupMode={nftLookup.lookupMode}
           nftLookupValue={nftLookup.lookupValue}
           nftLookupResult={nftLookup.lookupResult}
-          canAddBlacklistTarget={canAddBlacklistTarget}
+          canAddBanListTarget={canAddBanListTarget}
           canAdd={activeAdminBanSource ? canEditAdminBan : canVoteGovBan}
           onQueryTypeChange={(value) => {
             setQueryType(value);
@@ -567,7 +567,7 @@ export function BlacklistPanel({
           onAdd={addCurrentTarget}
         />
         {queryResultText && (
-          <div className={cn('query-result blacklist-query-result', `tone-${queryResultTone}`)}>
+          <div className={cn('query-result ban-list-query-result', `tone-${queryResultTone}`)}>
             <strong>查询结果</strong>
             <span>{queryResultText}</span>
           </div>
@@ -596,35 +596,35 @@ export function BlacklistPanel({
           />
         )}
         {activeAdminBanSource && (
-          <AdminBlacklistRows
+          <AdminBanListRows
             queryType={queryType}
             rows={visibleAdminRows}
             total={adminTotal}
             page={adminPage}
             totalPages={adminTotalPages}
             isPending={adminBan.isPending}
-            activeMenuKey={activeBlacklistMenuKey}
+            activeMenuKey={activeBanListMenuKey}
             canEdit={canEditAdminBan}
             senderNames={senderNames}
-            onToggleMenu={toggleBlacklistMenu}
+            onToggleMenu={toggleBanListMenu}
             onRemoveAddress={removeAddressBan}
             onRemoveSender={removeSenderBan}
             onPageChange={setAdminPage}
           />
         )}
         {activeGovBanSource && (
-          <GovBlacklistRows
+          <GovBanListRows
             queryType={queryType}
             rows={visibleGovRows}
             total={govTotal}
             page={govPage}
             totalPages={govTotalPages}
             isPending={govBan.isPending}
-            activeMenuKey={activeBlacklistMenuKey}
+            activeMenuKey={activeBanListMenuKey}
             canVote={canVoteGovBan}
             totalVoteWeight={govVotingPower.totalVoteWeight}
             senderNames={senderNames}
-            onToggleMenu={toggleBlacklistMenu}
+            onToggleMenu={toggleBanListMenu}
             onVoteAddress={voteGovAddress}
             onVoteSender={voteGovSender}
             onClearAddressVote={clearGovAddressVote}

@@ -6,7 +6,7 @@ import type {
   GovVotedAddressRecord,
   GovVotedSenderRecord,
 } from '@/src/hooks/contracts/useGroupChatModeration';
-import { BLACKLIST_PAGE_SIZE } from './chatConstants';
+import { BAN_LIST_PAGE_SIZE } from './chatConstants';
 import { formatGovWeight, formatGovWeightShare } from './chatUtils';
 
 function govMyVoteText(record: GovVotedAddressRecord | GovVotedSenderRecord, totalVoteWeight: bigint) {
@@ -21,7 +21,7 @@ function nftLabel(senderNames: Record<string, string>, senderId: bigint) {
   return name && name !== `LOVE20 NFT #${senderId.toString()}` ? name : fallback;
 }
 
-export function AdminBlacklistRows({
+export function AdminBanListRows({
   queryType,
   rows,
   total,
@@ -54,7 +54,7 @@ export function AdminBlacklistRows({
 
   return (
     <div className="tab-content-block">
-      <div className="card-topline blacklist-list-head">
+      <div className="card-topline ban-list-list-head">
         <h2>{queryType === 'address' ? '地址列表' : 'NFT列表'}</h2>
         <span>{total?.toString() || '0'} 条</span>
       </div>
@@ -62,15 +62,15 @@ export function AdminBlacklistRows({
         if ('senderAddress' in record) {
           const key = menuKey('admin-address', record.senderAddress);
           return (
-            <article className="list-row blacklist-row" key={record.senderAddress} onClick={() => onToggleMenu(key)}>
+            <article className="list-row ban-list-row" key={record.senderAddress} onClick={() => onToggleMenu(key)}>
               <div>
                 <strong>{record.senderAddress}</strong>
                 <small>操作者 NFT #{record.operatorId.toString()} · {abbreviateAddress(record.operatorAddress)}</small>
               </div>
-              <span className="pill pill-bad">已拉黑</span>
+              <span className="pill pill-bad">已禁言</span>
               {activeMenuKey === key && (
-                <div className="blacklist-menu" onClick={(event) => event.stopPropagation()}>
-                  <button type="button" onClick={() => onRemoveAddress(record.senderAddress)} disabled={!canEdit}>移出黑名单</button>
+                <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
+                  <button type="button" onClick={() => onRemoveAddress(record.senderAddress)} disabled={!canEdit}>移出禁言名单</button>
                 </div>
               )}
             </article>
@@ -78,15 +78,15 @@ export function AdminBlacklistRows({
         }
         const key = menuKey('admin-nft', record.senderId.toString());
         return (
-          <article className="list-row blacklist-row" key={record.senderId.toString()} onClick={() => onToggleMenu(key)}>
+          <article className="list-row ban-list-row" key={record.senderId.toString()} onClick={() => onToggleMenu(key)}>
             <div>
               <strong>{nftLabel(senderNames, record.senderId)}</strong>
               <small>NFT #{record.senderId.toString()} · 操作者 NFT #{record.operatorId.toString()} · {abbreviateAddress(record.operatorAddress)}</small>
             </div>
-            <span className="pill pill-bad">已拉黑</span>
+            <span className="pill pill-bad">已禁言</span>
             {activeMenuKey === key && (
-              <div className="blacklist-menu" onClick={(event) => event.stopPropagation()}>
-                <button type="button" onClick={() => onRemoveSender(record.senderId)} disabled={!canEdit}>移出黑名单</button>
+              <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
+                <button type="button" onClick={() => onRemoveSender(record.senderId)} disabled={!canEdit}>移出禁言名单</button>
               </div>
             )}
           </article>
@@ -94,7 +94,7 @@ export function AdminBlacklistRows({
       }) : isPending ? (
         <div className="empty-state">读取中</div>
       ) : <div className="empty-state">暂无{queryType === 'address' ? '地址' : 'NFT'}记录</div>}
-      {total !== undefined && total > BigInt(BLACKLIST_PAGE_SIZE) && (
+      {total !== undefined && total > BigInt(BAN_LIST_PAGE_SIZE) && (
         <div className="pager-row">
           <button className="sheet-button inline-flex" type="button" disabled={page <= 1} onClick={() => onPageChange(Math.max(1, page - 1))}>上一页</button>
           <span>{Math.min(page, totalPages)} / {totalPages}</span>
@@ -105,7 +105,7 @@ export function AdminBlacklistRows({
   );
 }
 
-export function GovBlacklistRows({
+export function GovBanListRows({
   queryType,
   rows,
   total,
@@ -148,7 +148,7 @@ export function GovBlacklistRows({
 
   return (
     <div className="tab-content-block">
-      <div className="card-topline blacklist-list-head">
+      <div className="card-topline ban-list-list-head">
         <h2>{queryType === 'address' ? '地址列表' : 'NFT列表'}</h2>
         <span>{total?.toString() || '0'} 条</span>
       </div>
@@ -156,7 +156,7 @@ export function GovBlacklistRows({
         if ('senderAddress' in record) {
           const key = menuKey('gov-address', record.senderAddress);
           return (
-            <article className="list-row blacklist-row" key={record.senderAddress} onClick={() => onToggleMenu(key)}>
+            <article className="list-row ban-list-row" key={record.senderAddress} onClick={() => onToggleMenu(key)}>
               <div>
                 <strong>{record.senderAddress}</strong>
                 <small>
@@ -164,10 +164,10 @@ export function GovBlacklistRows({
                 </small>
               </div>
               <span className={cn('pill', record.banned ? 'pill-bad' : 'pill-ok')}>
-                {record.banned ? '已拉黑' : '未拉黑'}
+                {record.banned ? '已禁言' : '未禁言'}
               </span>
               {activeMenuKey === key && (
-                <div className="blacklist-menu" onClick={(event) => event.stopPropagation()}>
+                <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
                   <button type="button" onClick={() => onVoteAddress(record.senderAddress, true)} disabled={!canVote}>支持</button>
                   <button type="button" onClick={() => onVoteAddress(record.senderAddress, false)} disabled={!canVote}>反对</button>
                   <button type="button" onClick={() => onClearAddressVote(record.senderAddress)} disabled={!canVote}>撤票</button>
@@ -179,7 +179,7 @@ export function GovBlacklistRows({
         }
         const key = menuKey('gov-nft', record.senderId.toString());
         return (
-          <article className="list-row blacklist-row" key={record.senderId.toString()} onClick={() => onToggleMenu(key)}>
+          <article className="list-row ban-list-row" key={record.senderId.toString()} onClick={() => onToggleMenu(key)}>
             <div>
               <strong>{nftLabel(senderNames, record.senderId)}</strong>
               <small>
@@ -187,10 +187,10 @@ export function GovBlacklistRows({
               </small>
             </div>
             <span className={cn('pill', record.banned ? 'pill-bad' : 'pill-ok')}>
-              {record.banned ? '已拉黑' : '未拉黑'}
+              {record.banned ? '已禁言' : '未禁言'}
             </span>
             {activeMenuKey === key && (
-              <div className="blacklist-menu" onClick={(event) => event.stopPropagation()}>
+              <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
                 <button type="button" onClick={() => onVoteSender(record.senderId, true)} disabled={!canVote}>支持</button>
                 <button type="button" onClick={() => onVoteSender(record.senderId, false)} disabled={!canVote}>反对</button>
                 <button type="button" onClick={() => onClearSenderVote(record.senderId)} disabled={!canVote}>撤票</button>
@@ -202,7 +202,7 @@ export function GovBlacklistRows({
       }) : isPending ? (
         <div className="empty-state">读取中</div>
       ) : <div className="empty-state">暂无{queryType === 'address' ? '地址' : 'NFT'}投票目标</div>}
-      {total !== undefined && total > BigInt(BLACKLIST_PAGE_SIZE) && (
+      {total !== undefined && total > BigInt(BAN_LIST_PAGE_SIZE) && (
         <div className="pager-row">
           <button className="sheet-button inline-flex" type="button" disabled={page <= 1} onClick={() => onPageChange(Math.max(1, page - 1))}>上一页</button>
           <span>{Math.min(page, totalPages)} / {totalPages}</span>

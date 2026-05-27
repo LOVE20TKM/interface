@@ -74,7 +74,7 @@ export function ChatRoomToolbar({
         <div className="chat-menu">
           <button type="button" onClick={togglePin}>{isPinned ? '取消置顶' : '置顶'}</button>
           <button type="button" onClick={() => openPanel('members')}>群成员</button>
-          <button type="button" onClick={() => openPanel('blacklist')}>黑名单</button>
+          <button type="button" onClick={() => openPanel('banList')}>禁言名单</button>
           <button type="button" onClick={() => openPanel('admins')}>管理员</button>
           <button type="button" onClick={() => openPanel('settings')}>群设置</button>
         </div>

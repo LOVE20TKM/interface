@@ -266,10 +266,10 @@ function checkFrontendArchitecture() {
   checkFileContains('src/components/Chat/ChatPage.tsx', /import Header from '@\/src\/components\/Header'/, 'must use existing Header');
   checkFileContains('src/components/Chat/ChatPage.tsx', /TokenContext/, 'must read token from TokenContext');
   checkFileContains('src/components/Chat/ChatPage.tsx', /symbol: token\.symbol/g, 'must keep symbol query routing');
-  checkFileContains('src/components/Chat/ChatPage.tsx', /import \{ ActionChatPanel \} from '\.\/ActionChatPanel'/, 'action activation panel must stay split from ChatPage');
-  checkFileContains('src/components/Chat/ChatPage.tsx', /import \{ ChainChatPanel \} from '\.\/ChainChatPanel'/, 'chain activation panel must stay split from ChatPage');
+  checkFileContains('src/components/Chat/ChatActivationPage.tsx', /import \{ ActionChatPanel \} from '\.\/ActionChatPanel'/, 'action activation panel must stay split from the activation page');
+  checkFileContains('src/components/Chat/ChatActivationPage.tsx', /import \{ ChainChatPanel \} from '\.\/ChainChatPanel'/, 'chain activation panel must stay split from the activation page');
   checkFileContains('src/components/Chat/RoomPanel.tsx', /import \{ ChatRoomToolbar \} from '\.\/ChatRoomToolbar'/, 'room toolbar must stay split from RoomPanel');
-  checkFileContains('src/components/Chat/BlacklistPanel.tsx', /import \{ GovVoterSheet \} from '\.\/GovVoterSheet'/, 'governance voter sheet must stay split from BlacklistPanel');
+  checkFileContains('src/components/Chat/BanListPanel.tsx', /import \{ GovVoterSheet \} from '\.\/GovVoterSheet'/, 'governance voter sheet must stay split from BanListPanel');
   checkFileContains('src/components/Common/BottomNavigation.tsx', /title: '聊天'[\s\S]*url: `\/chat\/\?symbol=\$\{token\.symbol\}`/, 'first bottom nav slot must be chat with symbol URL');
   checkFileContains('src/components/Header.tsx', /<WalletButton \/>/, 'must keep existing wallet button in Header');
 
@@ -292,7 +292,7 @@ function checkPrototypeStructure() {
   const inboxPanel = read('src/components/Chat/InboxPanel.tsx');
   const activationCard = read('src/components/Chat/ActivationCard.tsx');
   const actionChatPanel = read('src/components/Chat/ActionChatPanel.tsx');
-  const chatPage = read('src/components/Chat/ChatPage.tsx');
+  const chatActivationPage = read('src/components/Chat/ChatActivationPage.tsx');
   [
     'conversation-list',
     'inbox-action-row',
@@ -319,7 +319,7 @@ function checkPrototypeStructure() {
   assert(/activationActionButtonClass\(activated\)\} inline-flex/.test(activationCard), 'activation card buttons must opt out of the global bare-button reset');
   assert(/sheet-button activation-enter-button/.test(activationCard), 'activated chats must render the lighter prototype enter button style');
   assert(/sheet-button primary/.test(activationCard), 'inactive chats must render the primary activation button style');
-  assert(/picker-button inline-flex/.test(chatPage), 'activation tabs must opt out of the global bare-button reset');
+  assert(/picker-button inline-flex/.test(chatActivationPage), 'activation tabs must opt out of the global bare-button reset');
   const managerActivationPage = read('src/components/Chat/ManagerActivationPage.tsx');
   assert(
     /<div className="screen-heading">\s*<h1>\{pageTitle\}<\/h1>\s*<span>\{tokenSymbol \|\| '当前代币'\}<\/span>\s*<\/div>/.test(managerActivationPage),
@@ -330,7 +330,7 @@ function checkPrototypeStructure() {
       /const pageTitle = isMain \? '激活行动主群' : '激活行动治理群'/.test(managerActivationPage),
     'manager activation pages must use explicit token/action activation titles',
   );
-  assert(!/activation-subtitle-row/.test(chatPage), 'activation header must not split the prototype token label into an extra subtitle row');
+  assert(!/activation-subtitle-row/.test(chatActivationPage), 'activation header must not split the prototype token label into an extra subtitle row');
   const managerActivationForm = read('src/components/Chat/ManagerActivationForm.tsx');
   assert(/openedConfirmedGroupRef/.test(managerActivationForm) && /onOpen\(existingGroupId\)/.test(managerActivationForm), 'manager activation must switch into the newly minted group after the manager mapping refreshes');
   assert(
@@ -377,9 +377,9 @@ function checkPrototypeStructure() {
   assert(/pathname: '\/chat\/activate\/chain'/.test(chainChatPanel), 'chain activation must open the selected NFT detail route');
   assert(/selected-chain-nft/.test(chainChatActivationDetail), 'chain activation detail must show the selected NFT');
   assert(
-    /const chainListUrl =/.test(chainChatActivationPage) &&
+      /const chainListUrl =/.test(chainChatActivationPage) &&
       /activationType: 'chain'/.test(chainChatActivationPage) &&
-      /<Header title="激活链群" backUrl=\{chainListUrl\} \/>/.test(chainChatActivationPage),
+      /<Header title="激活链群" backUrl=\{chainListUrl\}[^>]*\/>/.test(chainChatActivationPage),
     'chain activation page must allow going back to the NFT list',
   );
   assert(/activateTx\.activateChat\(\s*groupId/.test(chainChatActivationDetail), 'chain activation must submit the selected wallet NFT id');
@@ -404,8 +404,8 @@ function checkPrototypeStructure() {
 
 function checkExistingControlReuse() {
   checkFileContains('src/components/Chat/ChatNftLookupActions.tsx', /NftOwnerLookup/, 'must reuse existing NFT lookup control');
-  checkFileContains('src/components/Chat/BlacklistPanel.tsx', /BlacklistQueryControls/, 'blacklist query controls must stay split from the main panel');
-  checkFileContains('src/components/Chat/BlacklistQueryControls.tsx', /NftOwnerLookup/, 'blacklist NFT query must reuse existing NFT lookup control');
+  checkFileContains('src/components/Chat/BanListPanel.tsx', /BanListQueryControls/, 'ban list query controls must stay split from the main panel');
+  checkFileContains('src/components/Chat/BanListQueryControls.tsx', /NftOwnerLookup/, 'ban list NFT query must reuse existing NFT lookup control');
   checkFileContains('src/components/Chat/ChatSettingsPanel.tsx', /NftOwnerLookup/, 'delegate NFT query must reuse existing NFT lookup control');
   checkFileContains('src/components/Chat/chatUtils.ts', /normalizeAddressInput/, 'address parsing must reuse shared address utility');
 }
@@ -454,10 +454,10 @@ function checkMobileLayoutGuards() {
   assert(/className="sheet-button inline-flex inbox-preference-button"/.test(inboxPanel), 'preference button must opt out of the global bare-button reset');
   assert(/className="sheet-button primary inline-flex inbox-activate-button"/.test(inboxPanel), 'activate button must opt out of the global bare-button reset');
 
-  const blacklistQueryControls = read('src/components/Chat/BlacklistQueryControls.tsx');
-  assert(/'filter-tab inline-flex'/.test(blacklistQueryControls), 'blacklist query tabs must opt out of the global bare-button reset');
-  assert(/className="sheet-button inline-flex"/.test(blacklistQueryControls), 'blacklist secondary action buttons must opt out of the global bare-button reset');
-  assert(/className="sheet-button primary inline-flex"/.test(blacklistQueryControls), 'blacklist primary action buttons must opt out of the global bare-button reset');
+  const banListQueryControls = read('src/components/Chat/BanListQueryControls.tsx');
+  assert(/'filter-tab inline-flex'/.test(banListQueryControls), 'ban list query tabs must opt out of the global bare-button reset');
+  assert(/className="sheet-button inline-flex"/.test(banListQueryControls), 'ban list secondary action buttons must opt out of the global bare-button reset');
+  assert(/className="sheet-button primary inline-flex"/.test(banListQueryControls), 'ban list primary action buttons must opt out of the global bare-button reset');
 }
 
 function checkRoomDetailGuards() {
@@ -490,7 +490,7 @@ function checkRoomDetailGuards() {
     'src/components/Chat/ChatSettingsPanel.tsx',
     'src/components/Chat/MembersPanel.tsx',
     'src/components/Chat/AdminsPanel.tsx',
-    'src/components/Chat/BlacklistPanel.tsx',
+    'src/components/Chat/BanListPanel.tsx',
   ].forEach((file) => {
     checkFileContains(file, /useGroupDetailSubtitle/, 'group detail page must pass the resolved group subtitle');
     checkFileContains(file, /subtitle=\{detailSubtitle\}/, 'group detail page must render the resolved group subtitle');
@@ -565,11 +565,16 @@ function checkMembersPanelScopeGuards() {
   assert(/managerMemberScopeDescription\(room\.chatInfo\?\.owner\)/.test(members), 'members page must branch first by manager owner');
   assert(/const hasMemberListScope = !managerScope && \(hasGroupMemberScope \|\| hasGroupJoinScope\)/.test(members), 'members page must only show GroupMember lists for known non-manager member scopes');
   assert(/useGroupMemberIds\(groupId, memberOffset, BigInt\(MEMBER_PAGE_SIZE\), hasMemberListScope\)/.test(members), 'members page must not read member lists for manager-owned or unknown-scope chats');
-  assert(/ownerOrDelegateId/.test(read('src/hooks/contracts/useGroupChatModeration.ts')) && /operatorKind/.test(members), 'member management permission must accept owner/delegate as well as GroupAdmin admins');
+  assert(/ownerOrDelegateId/.test(read('src/hooks/contracts/useGroupChatModeration.ts')) && /memberPermission\.canOperate/.test(members), 'member management permission must accept owner/delegate as well as GroupAdmin admins');
   assert(!/defaultGroupId 不在 GroupAdmin 管理员名单/.test(members), 'members page must not describe GroupAdmin adminId as the only management permission');
-  assert(/managerScope \? null : !hasMemberListScope/.test(members), 'manager-owned members page must show only the manager scope description, not the generic source rule table');
+  assert(/managerScope(?: \|\| !room\.chatInfo)? \? null : !hasMemberListScope/.test(members), 'manager-owned members page must show only the manager scope description, not the generic source rule table');
   assert(/TokenMainManager/.test(members) || /managerScope\.label/.test(members), 'members page must display manager rule descriptions');
-  assert(/GroupJoinScopeSource/.test(members) && /GroupMemberScope/.test(members), 'members page must describe known member scopes');
+  assert(
+    /GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS/.test(members) &&
+      /GROUP_CHAT_MEMBER_SCOPE_ADDRESS/.test(members) &&
+      /GroupMemberScope/.test(members),
+    'members page must describe known member scopes',
+  );
 
   const utils = read('src/components/Chat/chatUtils.ts');
   assert(/managerMemberScopeDescription/.test(utils), 'manager member scope descriptions must be centralized');
@@ -612,20 +617,20 @@ function checkGovBlacklistStateGuards() {
   checkFileContains('src/hooks/contracts/useGroupChatModeration.ts', /functionName: 'voteWeightsBySenderIdsByVoter'/, 'governance blacklist NFT rows must read the current account vote state');
   checkFileContains('src/hooks/contracts/groupChatModerationTypes.ts', /mySupportWeight:\s*bigint/, 'governance blacklist records must expose current account support weight');
   checkFileContains('src/hooks/contracts/groupChatModerationTypes.ts', /myOpposeWeight:\s*bigint/, 'governance blacklist records must expose current account oppose weight');
-  checkFileContains('src/components/Chat/BlacklistRows.tsx', /record\.banned \? 'pill-bad' : 'pill-ok'/, 'governance blacklist rows must display contract banned status');
-  checkFileContains('src/components/Chat/BlacklistRows.tsx', /我的投票：支持/, 'governance blacklist rows must show current account support votes');
-  checkFileContains('src/components/Chat/BlacklistRows.tsx', /我的投票：反对/, 'governance blacklist rows must show current account oppose votes');
-  checkFileContains('src/components/Chat/BlacklistRows.tsx', /我的投票：未投票/, 'governance blacklist rows must show current account no-vote state');
-  checkFileContains('src/components/Chat/BlacklistPanel.tsx', /useGroupNames/, 'NFT blacklist rows must reuse the existing group name read path');
-  checkFileContains('src/components/Chat/BlacklistRows.tsx', /function nftLabel/, 'NFT blacklist rows must centralize NFT name fallback');
-  checkFileContains('src/components/Chat/BlacklistRows.tsx', /<strong>\{nftLabel\(senderNames, record\.senderId\)\}<\/strong>/, 'NFT blacklist rows must show the NFT name as the primary label when available');
-  checkFileContains('src/components/Chat/BlacklistRows.tsx', /NFT #\{record\.senderId\.toString\(\)\}/, 'NFT blacklist rows must keep the token id in detail text');
-  const rows = read('src/components/Chat/BlacklistRows.tsx');
+  checkFileContains('src/components/Chat/BanListRows.tsx', /record\.banned \? 'pill-bad' : 'pill-ok'/, 'governance blacklist rows must display contract banned status');
+  checkFileContains('src/components/Chat/BanListRows.tsx', /我的投票：支持/, 'governance blacklist rows must show current account support votes');
+  checkFileContains('src/components/Chat/BanListRows.tsx', /我的投票：反对/, 'governance blacklist rows must show current account oppose votes');
+  checkFileContains('src/components/Chat/BanListRows.tsx', /我的投票：未投票/, 'governance blacklist rows must show current account no-vote state');
+  checkFileContains('src/components/Chat/BanListPanel.tsx', /useGroupNames/, 'NFT blacklist rows must reuse the existing group name read path');
+  checkFileContains('src/components/Chat/BanListRows.tsx', /function nftLabel/, 'NFT blacklist rows must centralize NFT name fallback');
+  checkFileContains('src/components/Chat/BanListRows.tsx', /<strong>\{nftLabel\(senderNames, record\.senderId\)\}<\/strong>/, 'NFT blacklist rows must show the NFT name as the primary label when available');
+  checkFileContains('src/components/Chat/BanListRows.tsx', /NFT #\{record\.senderId\.toString\(\)\}/, 'NFT blacklist rows must keep the token id in detail text');
+  const rows = read('src/components/Chat/BanListRows.tsx');
   assert(!/supportWeight > record\.opposeWeight/.test(rows), 'governance blacklist UI must not infer banned status from support > oppose');
 
-  const panel = read('src/components/Chat/BlacklistPanel.tsx');
-  assert(/const openGovAddressVoters[\s\S]*setActiveBlacklistMenuKey\(undefined\);[\s\S]*setActiveGovTarget/.test(panel), 'opening governance address voters must close the row menu like the prototype');
-  assert(/const openGovSenderVoters[\s\S]*setActiveBlacklistMenuKey\(undefined\);[\s\S]*setActiveGovTarget/.test(panel), 'opening governance NFT voters must close the row menu like the prototype');
+  const panel = read('src/components/Chat/BanListPanel.tsx');
+  assert(/const openGovAddressVoters[\s\S]*setActiveBanListMenuKey\(undefined\);[\s\S]*setActiveGovTarget/.test(panel), 'opening governance address voters must close the row menu like the prototype');
+  assert(/const openGovSenderVoters[\s\S]*setActiveBanListMenuKey\(undefined\);[\s\S]*setActiveGovTarget/.test(panel), 'opening governance NFT voters must close the row menu like the prototype');
   assert(/onOpenAddressVoters=\{openGovAddressVoters\}/.test(panel), 'governance address voter sheet must use the menu-closing opener');
   assert(/onOpenSenderVoters=\{openGovSenderVoters\}/.test(panel), 'governance NFT voter sheet must use the menu-closing opener');
 
@@ -684,7 +689,7 @@ function checkTransactionLifecycleGuards() {
     'src/components/Chat/AdminsPanel.tsx',
     'src/components/Chat/MembersPanel.tsx',
     'src/components/Chat/RoomPanel.tsx',
-    'src/components/Chat/BlacklistPanel.tsx',
+    'src/components/Chat/BanListPanel.tsx',
   ].forEach((file) => {
     checkFileContains(file, /useConfirmedTransactionEffect/, 'writes must refetch after transaction confirmation');
   });

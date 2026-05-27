@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 
 import { GroupAdminAbi } from '@/src/abis/GroupAdmin';
 import { GroupBanListAbi } from '@/src/abis/GroupBanList';
+import { GroupJoinAbi } from '@/src/abis/GroupJoin';
 import { GroupMemberAbi } from '@/src/abis/GroupMember';
 import { GovVotedBanSourceAbi } from '@/src/abis/GovVotedBanSource';
 import { safeToBigInt } from '@/src/lib/clientUtils';
@@ -43,6 +44,7 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 const GROUP_ADMIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_ADMIN as `0x${string}` | undefined;
 const GROUP_MEMBER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_MEMBER as `0x${string}` | undefined;
 const GROUP_BAN_LIST_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_BAN_LIST as `0x${string}` | undefined;
+const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}` | undefined;
 const ADMIN_BAN_SOURCE_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_ADMIN_BAN_SOURCE as
   | `0x${string}`
   | undefined;
@@ -59,6 +61,7 @@ const GROUP_JOIN_SCOPE_SOURCE_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS
 const getGroupAdminAddress = () => (GROUP_ADMIN_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
 const getGroupMemberAddress = () => (GROUP_MEMBER_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
 const getGroupBanListAddress = () => (GROUP_BAN_LIST_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
+const getGroupJoinAddress = () => (GROUP_JOIN_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
 const getAdminBanSourceAddress = () => (ADMIN_BAN_SOURCE_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
 const getGovVotedBanSourceAddress = () => (GOV_VOTED_BAN_SOURCE_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
 const getGroupMemberScopeAddress = () => (GROUP_MEMBER_SCOPE_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
@@ -67,6 +70,7 @@ const getGroupJoinScopeSourceAddress = () => (GROUP_JOIN_SCOPE_SOURCE_ADDRESS ||
 export const isGroupAdminEnabled = !!GROUP_ADMIN_ADDRESS;
 export const isGroupMemberEnabled = !!GROUP_MEMBER_ADDRESS;
 export const isGroupBanListEnabled = !!GROUP_BAN_LIST_ADDRESS;
+export const isGroupJoinEnabled = !!GROUP_JOIN_ADDRESS;
 export const isGovVotedBanSourceEnabled = !!GOV_VOTED_BAN_SOURCE_ADDRESS;
 export const isGroupMemberScopeEnabled = !!GROUP_MEMBER_SCOPE_ADDRESS;
 export const isGroupJoinScopeSourceEnabled = !!GROUP_JOIN_SCOPE_SOURCE_ADDRESS;
@@ -298,6 +302,30 @@ export function useGroupMemberIdStatus(
 
   return {
     isMember: isQueryEnabled && data !== undefined ? Boolean(data) : undefined,
+    isPending: isQueryEnabled ? isPending : false,
+    error: isQueryEnabled ? error : undefined,
+    refetch,
+  };
+}
+
+export function useGroupJoinParticipationCount(
+  groupId: bigint | undefined,
+  account: `0x${string}` | undefined,
+  enabled: boolean = true,
+) {
+  const isQueryEnabled = isGroupJoinEnabled && enabled && isPositiveId(groupId) && !!account;
+  const { data, isPending, error, refetch } = useUniversalReadContract({
+    address: getGroupJoinAddress(),
+    abi: GroupJoinAbi,
+    functionName: 'gTokenAddressesByGroupIdByAccountCount',
+    args: [groupId || BigInt(0), account || ZERO_ADDRESS],
+    query: { enabled: isQueryEnabled },
+  });
+  const count = isQueryEnabled && data !== undefined ? safeToBigInt(data) : undefined;
+
+  return {
+    count,
+    hasJoinedByGroupAction: count !== undefined ? count > BigInt(0) : false,
     isPending: isQueryEnabled ? isPending : false,
     error: isQueryEnabled ? error : undefined,
     refetch,

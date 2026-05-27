@@ -137,7 +137,7 @@ function explainScopeContract(address?: `0x${string}`): ContractExplanation {
     return {
       label: 'GroupJoinScopeSource',
       title: '成员名单或加入关系',
-      description: '普通发言者需要使用 GroupMember 成员名单里的 NFT ID，或由 GroupJoin 规则确认已加入这个链群。',
+      description: '通过此链群参与行动的地址或显式加入成员名单的 NFT，即为群成员，可发言。',
       status: '成员制',
     };
   }
@@ -163,7 +163,7 @@ function explainBanContract(address?: `0x${string}`): ContractExplanation {
     return {
       label: 'banSource',
       title: '正在读取禁言规则',
-      description: '读取完成后会显示这个群是否启用了管理员黑名单、治理禁言或自定义禁言源。',
+      description: '读取完成后会显示这个群是否启用了管理员禁言名单、治理禁言或自定义禁言源。',
       status: '读取中',
     };
   }
@@ -178,8 +178,8 @@ function explainBanContract(address?: `0x${string}`): ContractExplanation {
   if (sameAddress(address, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS)) {
     return {
       label: 'AdminBanSource',
-      title: '管理员黑名单',
-      description: 'owner、delegate 或 GroupAdmin 管理员可以维护地址/NFT 黑名单；命中后不能发言。',
+      title: '管理员禁言名单',
+      description: 'owner、delegate 或 GroupAdmin 管理员可以维护地址/NFT 禁言名单；命中后不能发言。',
       status: '管理员维护',
     };
   }

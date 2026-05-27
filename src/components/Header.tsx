@@ -14,9 +14,10 @@ interface HeaderProps {
   title: string;
   showBackButton?: boolean;
   backUrl?: string;
+  replaceBack?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ title, showBackButton = false, backUrl = '' }) => {
+const Header: React.FC<HeaderProps> = ({ title, showBackButton = false, backUrl = '', replaceBack = false }) => {
   const { address, status } = useAccount();
   const chainId = useChainId();
   const chainName = process.env.NEXT_PUBLIC_CHAIN_NAME ?? process.env.NEXT_PUBLIC_CHAIN;
@@ -37,7 +38,11 @@ const Header: React.FC<HeaderProps> = ({ title, showBackButton = false, backUrl 
   // 返回上一页处理函数
   const handleGoBack = () => {
     if (backUrl) {
-      router.push(backUrl);
+      if (replaceBack) {
+        router.replace(backUrl);
+      } else {
+        router.push(backUrl);
+      }
     } else {
       router.back();
     }

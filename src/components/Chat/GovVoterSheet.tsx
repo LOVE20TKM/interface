@@ -2,10 +2,10 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import type { GovVoterRecord } from '@/src/hooks/contracts/useGroupChatModeration';
-import { BLACKLIST_PAGE_SIZE } from './chatConstants';
+import { BAN_LIST_PAGE_SIZE } from './chatConstants';
 import { formatGovWeight, formatGovWeightShare } from './chatUtils';
 
-export type GovBlacklistTarget =
+export type GovBanListTarget =
   | { type: 'address'; value: `0x${string}`; supportWeight: bigint; opposeWeight: bigint; voterCount: bigint }
   | { type: 'nft'; value: bigint; supportWeight: bigint; opposeWeight: bigint; voterCount: bigint };
 
@@ -27,7 +27,7 @@ export function GovVoterSheet({
   onPageChange,
   onClose,
 }: {
-  target: GovBlacklistTarget;
+  target: GovBanListTarget;
   voters: GovVoterRecord[];
   count: bigint | undefined;
   totalVoteWeight: bigint;
@@ -62,7 +62,7 @@ export function GovVoterSheet({
         </dl>
       </div>
       <section className="workspace-band gov-voter-panel">
-        <div className="query-row blacklist-query-row">
+        <div className="query-row ban-list-query-row">
           <Input
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
@@ -90,7 +90,7 @@ export function GovVoterSheet({
             </div>
           </article>
         )) : <div className="empty-state">暂无投票</div>}
-        {count !== undefined && count > BigInt(BLACKLIST_PAGE_SIZE) && (
+        {count !== undefined && count > BigInt(BAN_LIST_PAGE_SIZE) && (
           <div className="pager-row">
             <button className="sheet-button inline-flex" type="button" disabled={page <= 1} onClick={() => onPageChange(Math.max(1, page - 1))}>上一页</button>
             <span>{Math.min(page, totalPages)} / {totalPages}</span>

@@ -41,13 +41,12 @@ function firstQueryValue(value: string | string[] | undefined) {
 
 function buildActivationListUrl(tokenSymbol: string | undefined, activationType: ActivationType) {
   const params = new URLSearchParams({
-    view: 'activate',
     activationType,
   });
   if (tokenSymbol) {
     params.set('symbol', tokenSymbol);
   }
-  return `/chat?${params.toString()}`;
+  return `/chat/activate?${params.toString()}`;
 }
 
 function useManagerActivationContext(activationType: ActivationType) {
@@ -99,7 +98,7 @@ function ManagerActivationShell({
 }) {
   return (
     <>
-      <Header title={pageTitle} backUrl={backUrl} />
+      <Header title={pageTitle} backUrl={backUrl} replaceBack />
       <main className={styles.chatPrototype} data-detail="false">
         <div className={styles.chatWorkspace} data-entry="love20-chat-manager-activation">
           <section className={styles.chatSurface}>

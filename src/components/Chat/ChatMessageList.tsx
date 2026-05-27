@@ -112,7 +112,7 @@ export function ChatMessageList({
         </div>
       ) : visibleMessages.length === 0 ? (
         <div className="rounded-md border border-dashed border-greyscale-300 bg-white p-5 text-center text-sm text-greyscale-500">
-          {room.messages.length === 0 ? '还没有链上消息' : '黑名单消息已按本机偏好隐藏'}
+          {room.messages.length === 0 ? '还没有链上消息' : '禁言消息已按本机偏好隐藏'}
         </div>
       ) : (
         <div className="space-y-3">
@@ -153,7 +153,7 @@ export function ChatMessageList({
                     <div className="message-meta">
                       {senderName}
                       {messageTime && <span className="message-meta-time">{messageTime}</span>}
-                      {banned && <span className="message-ban-badge">黑名单</span>}
+                      {banned && <span className="message-ban-badge">禁言</span>}
                     </div>
                     <div className={cn('message-bubble', mine && 'mine')}>
                       {message.quotedMessageId > BigInt(0) && (
@@ -169,7 +169,7 @@ export function ChatMessageList({
                           banned ? (
                             <button type="button" onClick={() => onUnbanMessageSender(message)} disabled={!messageAdminCanOperate}>解除sender</button>
                           ) : (
-                            <button type="button" onClick={() => onBanMessageSender(message)} disabled={!messageAdminCanOperate}>拉黑sender</button>
+                            <button type="button" onClick={() => onBanMessageSender(message)} disabled={!messageAdminCanOperate}>禁言 sender</button>
                           )
                         )}
                         {canUseMessageGovBan && (

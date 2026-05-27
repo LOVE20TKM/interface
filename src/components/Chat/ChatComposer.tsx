@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Quote, Send, ShieldCheck, X } from 'lucide-react';
+import { Loader2, Quote, Send, ShieldCheck, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import AlertBox from '@/src/components/Common/AlertBox';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -57,6 +57,8 @@ export function ChatComposer({
   const activeSenderLabel = activeSenderId
     ? formatSenderIdentity(activeSenderName, activeSenderId)
     : '';
+  const sending = isPending || isConfirming;
+  const sendButtonLabel = sending ? (isConfirming ? '确认中' : '发送中') : '发送';
 
   return (
     <footer className={composerLocked ? 'composer-banned' : 'composer'}>
@@ -135,8 +137,15 @@ export function ChatComposer({
               className="composer-input min-h-0 resize-none"
               aria-label="消息内容"
             />
-            <button type="button" className="send-button inline-flex" disabled={sendDisabled} onClick={onSend}>
-              {isPending ? <LoadingIcon /> : isConfirming ? '确认中' : <Send className="h-4 w-4" />}
+            <button
+              type="button"
+              className="send-button inline-flex"
+              disabled={sendDisabled}
+              onClick={onSend}
+              aria-label={sendButtonLabel}
+              title={sendButtonLabel}
+            >
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
           </div>
           {mentionValidationHint && (

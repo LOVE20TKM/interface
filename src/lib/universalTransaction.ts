@@ -16,6 +16,13 @@ import {
   SimulationFailedError,
 } from '@/src/lib/revertDecoder';
 
+const SIMULATED_GAS_BUFFER_NUMERATOR = BigInt(13);
+const SIMULATED_GAS_BUFFER_DENOMINATOR = BigInt(10);
+
+const addGasBuffer = (gas: bigint) =>
+  (gas * SIMULATED_GAS_BUFFER_NUMERATOR + SIMULATED_GAS_BUFFER_DENOMINATOR - BigInt(1)) /
+  SIMULATED_GAS_BUFFER_DENOMINATOR;
+
 /**
  * 统一交易发送函数
  * 根据钱包类型选择合适的发送方式
@@ -103,10 +110,15 @@ export const sendUniversalTransaction = async (
 
     console.log('步骤2: (标准模式)执行真实交易...');
     if (simulatedRequest) {
+      const gasWithBuffer = simulatedRequest.gas ? addGasBuffer(simulatedRequest.gas) : undefined;
       console.log('复用模拟请求发送交易，避免钱包侧错误重估 gas', {
         gas: simulatedRequest.gas?.toString(),
+        gasWithBuffer: gasWithBuffer?.toString(),
       });
-      return await writeContract(config, simulatedRequest);
+      return await writeContract(config, {
+        ...simulatedRequest,
+        gas: gasWithBuffer,
+      });
     }
 
     return await writeContract(config, {

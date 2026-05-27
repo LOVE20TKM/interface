@@ -1,0 +1,73 @@
+import { Input } from '@/components/ui/input';
+import NftOwnerLookup from '@/src/components/Extension/Base/Group/NftOwnerLookup';
+import {
+  type NftLookupMode,
+  type NftLookupResult,
+} from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
+import { cn } from '@/lib/utils';
+
+export function BanListQueryControls({
+  queryType,
+  queryInput,
+  nftLookupMode,
+  nftLookupValue,
+  nftLookupResult,
+  canAddBanListTarget,
+  canAdd,
+  onQueryTypeChange,
+  onQueryInputChange,
+  onNftLookupModeChange,
+  onNftLookupValueChange,
+  onQuerySelf,
+  onAdd,
+}: {
+  queryType: 'address' | 'nft';
+  queryInput: string;
+  nftLookupMode: NftLookupMode;
+  nftLookupValue: string;
+  nftLookupResult: NftLookupResult;
+  canAddBanListTarget: boolean;
+  canAdd: boolean;
+  onQueryTypeChange: (queryType: 'address' | 'nft') => void;
+  onQueryInputChange: (value: string) => void;
+  onNftLookupModeChange: (mode: NftLookupMode) => void;
+  onNftLookupValueChange: (value: string) => void;
+  onQuerySelf: () => void;
+  onAdd: () => void;
+}) {
+  return (
+    <div className="admin-id-controls ban-list-query-controls">
+      <div className="filter-tabs ban-list-query-tabs">
+        <button className={cn('filter-tab inline-flex', queryType === 'address' && 'active')} type="button" onClick={() => onQueryTypeChange('address')}>按地址</button>
+        <button className={cn('filter-tab inline-flex', queryType === 'nft' && 'active')} type="button" onClick={() => onQueryTypeChange('nft')}>按NFT</button>
+      </div>
+      {queryType === 'nft' ? (
+        <NftOwnerLookup
+          className="ban-list-nft-lookup"
+          lookupMode={nftLookupMode}
+          onLookupModeChange={onNftLookupModeChange}
+          lookupValue={nftLookupValue}
+          onLookupValueChange={onNftLookupValueChange}
+          lookupResult={nftLookupResult}
+        />
+      ) : (
+        <Input
+          value={queryInput}
+          onChange={(event) => onQueryInputChange(event.target.value)}
+          inputMode="text"
+          placeholder="输入地址 0x..."
+        />
+      )}
+      <div className="admin-action-row ban-list-action-row">
+        <button className="sheet-button inline-flex" type="button" onClick={onQuerySelf}>
+          {queryType === 'address' ? '我的地址' : '我的 NFT'}
+        </button>
+        {canAddBanListTarget && (
+          <button className="sheet-button primary inline-flex" type="button" onClick={onAdd} disabled={!canAdd}>
+            加入禁言名单
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}

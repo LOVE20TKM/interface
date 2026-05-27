@@ -13,7 +13,7 @@ function ConversationItem({
   active,
   pinned,
   readCursor,
-  showBlacklistedMessages,
+  showBannedMessages,
   onOpen,
   onTogglePin,
 }: {
@@ -21,19 +21,19 @@ function ConversationItem({
   active: boolean;
   pinned: boolean;
   readCursor: bigint;
-  showBlacklistedMessages: boolean;
+  showBannedMessages: boolean;
   onOpen: (groupId: bigint) => void;
   onTogglePin: (groupId: bigint) => void;
 }) {
   const typeClass = `conversation-type-${item.kind}`;
   const unreadRecentMessages = item.recentMessages.filter((message) => message.messageId > readCursor);
-  const hiddenUnreadRecentCount = showBlacklistedMessages
+  const hiddenUnreadRecentCount = showBannedMessages
     ? BigInt(0)
     : BigInt(unreadRecentMessages.filter((message) => item.recentBannedMessageIds[message.messageId.toString()]).length);
   const rawUnreadCount = item.messagesCount > readCursor ? item.messagesCount - readCursor : BigInt(0);
   const visibleUnreadCount = rawUnreadCount > hiddenUnreadRecentCount ? rawUnreadCount - hiddenUnreadRecentCount : BigInt(0);
-  const hasUnreadMentionMe = (showBlacklistedMessages ? item.latestMentionMeMessageId : item.latestVisibleMentionMeMessageId) > readCursor;
-  const hasUnreadMentionAll = (showBlacklistedMessages ? item.latestMentionAllMessageId : item.latestVisibleMentionAllMessageId) > readCursor;
+  const hasUnreadMentionMe = (showBannedMessages ? item.latestMentionMeMessageId : item.latestVisibleMentionMeMessageId) > readCursor;
+  const hasUnreadMentionAll = (showBannedMessages ? item.latestMentionAllMessageId : item.latestVisibleMentionAllMessageId) > readCursor;
   const [menuOpen, setMenuOpen] = useState(false);
   const rowRef = useRef<HTMLElement | null>(null);
   const pressRef = useRef<{
@@ -185,13 +185,13 @@ export function InboxPanel({
   recommendedGroupIds,
   readCursors,
   preferencesOpen,
-  showBlacklistedMessages,
+  showBannedMessages,
   showMessageTimes,
   onOpen,
   onOpenActivate,
   onTogglePin,
   onTogglePreferences,
-  onSetShowBlacklistedMessages,
+  onSetShowBannedMessages,
   onSetShowMessageTimes,
 }: {
   items: GroupChatListItem[];
@@ -204,13 +204,13 @@ export function InboxPanel({
   recommendedGroupIds: bigint[];
   readCursors: Record<string, string>;
   preferencesOpen: boolean;
-  showBlacklistedMessages: boolean;
+  showBannedMessages: boolean;
   showMessageTimes: boolean;
   onOpen: (groupId: bigint) => void;
   onOpenActivate: () => void;
   onTogglePin: (groupId: bigint) => void;
   onTogglePreferences: () => void;
-  onSetShowBlacklistedMessages: (value: boolean) => void;
+  onSetShowBannedMessages: (value: boolean) => void;
   onSetShowMessageTimes: (value: boolean) => void;
 }) {
   const pinnedSet = useMemo(() => new Set(pinnedGroupIds), [pinnedGroupIds]);
@@ -257,7 +257,7 @@ export function InboxPanel({
                 active={selectedGroupId === item.groupId}
                 pinned
                 readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                showBlacklistedMessages={showBlacklistedMessages}
+                showBannedMessages={showBannedMessages}
                 onOpen={onOpen}
                 onTogglePin={onTogglePin}
               />
@@ -275,7 +275,7 @@ export function InboxPanel({
                 active={selectedGroupId === item.groupId}
                 pinned={false}
                 readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                showBlacklistedMessages={showBlacklistedMessages}
+                showBannedMessages={showBannedMessages}
                 onOpen={onOpen}
                 onTogglePin={onTogglePin}
               />
@@ -293,7 +293,7 @@ export function InboxPanel({
                 active={selectedGroupId === item.groupId}
                 pinned={false}
                 readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                showBlacklistedMessages={showBlacklistedMessages}
+                showBannedMessages={showBannedMessages}
                 onOpen={onOpen}
                 onTogglePin={onTogglePin}
               />
@@ -333,19 +333,19 @@ export function InboxPanel({
             </div>
           </div>
           <div className="field-row activation-choice-row">
-            <label>显示黑名单消息</label>
+            <label>显示禁言消息</label>
             <div className="choice-group">
               <button
-                className={cn('picker-button inline-flex', showBlacklistedMessages && 'active')}
+                className={cn('picker-button inline-flex', showBannedMessages && 'active')}
                 type="button"
-                onClick={() => onSetShowBlacklistedMessages(true)}
+                onClick={() => onSetShowBannedMessages(true)}
               >
                 开启
               </button>
               <button
-                className={cn('picker-button inline-flex', !showBlacklistedMessages && 'active')}
+                className={cn('picker-button inline-flex', !showBannedMessages && 'active')}
                 type="button"
-                onClick={() => onSetShowBlacklistedMessages(false)}
+                onClick={() => onSetShowBannedMessages(false)}
               >
                 关闭
               </button>

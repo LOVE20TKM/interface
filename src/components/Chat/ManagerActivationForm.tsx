@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
@@ -9,6 +9,21 @@ import { useConfirmedTransactionEffect } from './useConfirmedTransactionEffect';
 
 const APPROVAL_BUFFER_NUMERATOR = BigInt(1001);
 const APPROVAL_BUFFER_DENOMINATOR = BigInt(1000);
+const ALLOWANCE_SYNC_ATTEMPTS = 6;
+const ALLOWANCE_SYNC_DELAY_MS = 800;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function toBigIntOrUndefined(value: unknown): bigint | undefined {
+  if (value === undefined || value === null) return undefined;
+  try {
+    return typeof value === 'bigint' ? value : BigInt(value as string | number | boolean);
+  } catch {
+    return undefined;
+  }
+}
 
 export type ManagerActivationField = {
   label: string;
@@ -73,10 +88,45 @@ export function ManagerActivationForm({
   } = useApprove(paymentToken || ZERO_ADDRESS);
   const openedConfirmedGroupRef = useRef(false);
   const confirmedActivationHashRef = useRef<`0x${string}` | undefined>();
+  const [isAllowanceSyncing, setIsAllowanceSyncing] = useState(false);
+  const [syncedApprovalHash, setSyncedApprovalHash] = useState<`0x${string}` | undefined>();
+  const isMintCostKnown = mintCost !== undefined;
+  const requiresApproval = isMintCostKnown && mintCost > BigInt(0);
+  const approveAmount = mintCost
+    ? (mintCost * APPROVAL_BUFFER_NUMERATOR) / APPROVAL_BUFFER_DENOMINATOR
+    : BigInt(0);
+
+  const waitForSyncedAllowance = useCallback(async (forceRefresh: boolean = false) => {
+    if (!requiresApproval) return true;
+    if (!forceRefresh && allowance !== undefined && allowance >= approveAmount) return true;
+
+    setIsAllowanceSyncing(true);
+    try {
+      for (let attempt = 0; attempt < ALLOWANCE_SYNC_ATTEMPTS; attempt++) {
+        if (forceRefresh || attempt > 0) {
+          await sleep(ALLOWANCE_SYNC_DELAY_MS);
+        }
+        const result = await refetchAllowance();
+        const refreshedAllowance = toBigIntOrUndefined(result.data);
+        if (refreshedAllowance !== undefined && refreshedAllowance >= approveAmount) {
+          return true;
+        }
+      }
+      return false;
+    } finally {
+      setIsAllowanceSyncing(false);
+    }
+  }, [allowance, approveAmount, refetchAllowance, requiresApproval]);
 
   useConfirmedTransactionEffect({ hash: approveHash, isConfirmed: isConfirmedApprove }, () => {
-    toast.success('授权成功');
-    refetchAllowance();
+    void waitForSyncedAllowance(true).then((synced) => {
+      if (synced) {
+        setSyncedApprovalHash(approveHash);
+        toast.success('授权成功');
+      } else {
+        toast('授权已确认，正在等待 RPC 同步额度，请稍后再试。');
+      }
+    });
   });
 
   useEffect(() => {
@@ -107,18 +157,15 @@ export function ManagerActivationForm({
     onOpen(existingGroupId);
   }, [activationHash, existingGroupId, onOpen]);
 
-  const isMintCostKnown = mintCost !== undefined;
-  const requiresApproval = isMintCostKnown && mintCost > BigInt(0);
-  const approveAmount = mintCost
-    ? (mintCost * APPROVAL_BUFFER_NUMERATOR) / APPROVAL_BUFFER_DENOMINATOR
-    : BigInt(0);
   const approved = isMintCostKnown && (!requiresApproval || (!!allowance && allowance >= approveAmount));
   const hasEnoughBalance = isMintCostKnown && (!requiresApproval || (!!balance && balance >= mintCost));
   const hasExistingGroup = !!existingGroupId && existingGroupId > BigInt(0);
+  const hasUnsyncedApproval = !!approveHash && isConfirmedApprove && syncedApprovalHash !== approveHash;
   const isBusy = isPending || isConfirming || isPendingApprove || isConfirmingApprove;
   const isLoadingReads =
     isExistingPending ||
     isPendingMintCost ||
+    isAllowanceSyncing ||
     (requiresApproval && (isPendingBalance || isPendingAllowance));
   const approveLabel = isPendingApprove
     ? '1.授权中...'
@@ -145,22 +192,33 @@ export function ManagerActivationForm({
   const approveDisabled =
     !enabled || !account || !requiresApproval || approved || !isMintCostKnown || !hasEnoughBalance || isBusy || isLoadingReads;
   const activateDisabled =
-    !enabled || !account || !isMintCostKnown || !hasEnoughBalance || !approved || isBusy || isLoadingReads || hasExistingGroup;
+    !enabled ||
+    !account ||
+    !isMintCostKnown ||
+    !hasEnoughBalance ||
+    (!approved && !hasUnsyncedApproval) ||
+    isBusy ||
+    isLoadingReads ||
+    hasExistingGroup;
   const notice = !enabled
     ? '当前环境未配置该 Manager 地址。'
     : !account
       ? '请先连接钱包。'
       : !isMintCostKnown
         ? '正在读取激活成本，请稍后重试。'
-      : hasExistingGroup
-        ? `该群聊已激活：G#${existingGroupId.toString()}。`
-      : !hasEnoughBalance
-        ? `${FIRST_TOKEN_SYMBOL} 余额不足。`
-      : requiresApproval && !approved
-        ? `激活成本约 ${formatTokenAmount(mintCost)} ${FIRST_TOKEN_SYMBOL}，请先授权，额度会预留 0.1% 浮动。`
-      : requiresApproval
-        ? `激活成本约 ${formatTokenAmount(mintCost)} ${FIRST_TOKEN_SYMBOL}。`
-      : '';
+        : isAllowanceSyncing
+          ? '授权已确认，正在同步链上授权额度，请稍后继续。'
+          : hasUnsyncedApproval
+            ? '授权已确认，点击激活会重新同步链上授权额度。'
+          : hasExistingGroup
+            ? `该群聊已激活：G#${existingGroupId.toString()}。`
+            : !hasEnoughBalance
+              ? `${FIRST_TOKEN_SYMBOL} 余额不足。`
+              : requiresApproval && !approved
+                ? `激活成本约 ${formatTokenAmount(mintCost)} ${FIRST_TOKEN_SYMBOL}，请先授权，额度会预留 0.1% 浮动。`
+                : requiresApproval
+                  ? `激活成本约 ${formatTokenAmount(mintCost)} ${FIRST_TOKEN_SYMBOL}。`
+                  : '';
 
   const submitApproval = async () => {
     if (!paymentToken || !mintCost || mintCost <= BigInt(0)) {
@@ -171,9 +229,17 @@ export function ManagerActivationForm({
   };
 
   const submitActivation = async () => {
-    if (!approved) {
+    if (!approved && !hasUnsyncedApproval) {
       toast.error('请先完成授权');
       return;
+    }
+    const synced = await waitForSyncedAllowance(hasUnsyncedApproval);
+    if (!synced) {
+      toast.error('授权额度尚未同步，请稍后再试。');
+      return;
+    }
+    if (approveHash && isConfirmedApprove) {
+      setSyncedApprovalHash(approveHash);
     }
     await onActivate();
   };

@@ -46,7 +46,7 @@ export function RoomPanel({
   account,
   title,
   isPinned,
-  showBlacklistedMessages,
+  showBannedMessages,
   showMessageTimes,
   tokenAddress,
   tokenSymbol,
@@ -58,7 +58,7 @@ export function RoomPanel({
   account: `0x${string}` | undefined;
   title?: string;
   isPinned: boolean;
-  showBlacklistedMessages: boolean;
+  showBannedMessages: boolean;
   showMessageTimes: boolean;
   tokenAddress?: `0x${string}`;
   tokenSymbol?: string;
@@ -176,8 +176,8 @@ export function RoomPanel({
     return map;
   }, [room.messages, room.quotedMessages]);
   const visibleMessages = useMemo(
-    () => room.messages.filter((message) => showBlacklistedMessages || !room.bannedMessageIds[message.messageId.toString()]),
-    [room.bannedMessageIds, room.messages, showBlacklistedMessages],
+    () => room.messages.filter((message) => showBannedMessages || !room.bannedMessageIds[message.messageId.toString()]),
+    [room.bannedMessageIds, room.messages, showBannedMessages],
   );
   const latestVisibleMessageId = visibleMessages[visibleMessages.length - 1]?.messageId.toString();
   const hasMoreMessages =
@@ -296,7 +296,7 @@ export function RoomPanel({
     }
     try {
       await banSenderTx.banBySenders(groupId, [message.senderId], [message.senderAddress]);
-      toast.success('已提交拉黑 sender');
+      toast.success('已提交禁言 sender');
       setActiveMenuMessageId(undefined);
       setActiveAvatarMessageId(undefined);
     } catch (error) {
@@ -312,7 +312,7 @@ export function RoomPanel({
     }
     try {
       await unbanSenderTx.unbanBySenders(groupId, [message.senderId], [message.senderAddress]);
-      toast.success('已提交解除 sender 黑名单');
+      toast.success('已提交解除 sender 禁言');
       setActiveMenuMessageId(undefined);
       setActiveAvatarMessageId(undefined);
     } catch (error) {
@@ -323,7 +323,7 @@ export function RoomPanel({
   const voteMessageSender = async (message: ParsedGroupChatMessage, support: boolean) => {
     if (!groupId) return;
     if (!canVoteMessageGovBan) {
-      toast.error('当前地址没有治理票权，只能查看和查询治理黑名单。');
+      toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
       return;
     }
     try {
@@ -339,7 +339,7 @@ export function RoomPanel({
   const clearMessageSenderVote = async (message: ParsedGroupChatMessage) => {
     if (!groupId) return;
     if (!canVoteMessageGovBan) {
-      toast.error('当前地址没有治理票权，只能查看和查询治理黑名单。');
+      toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
       return;
     }
     try {

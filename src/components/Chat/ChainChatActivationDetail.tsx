@@ -257,7 +257,7 @@ export function ChainChatActivationDetail({
       chineseName: '参与链群行动或管理员指定的群成员',
       contractName: 'GroupJoinScopeSource',
       address: GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS,
-      description: '允许参与链群行动的人发言，同时保留管理员指定群成员的发言资格。适合把行动参与和管理员维护的成员名单合并为发言资格来源。',
+      description: '通过此链群参与行动的地址或显式加入成员名单的 NFT，即为群成员，可发言。',
       enabled: isGroupJoinScopeSourceEnabled,
     },
   ];
@@ -267,7 +267,7 @@ export function ChainChatActivationDetail({
       chineseName: '不设置',
       contractName: 'ZeroAddress',
       address: ZERO_ADDRESS,
-      description: '不启用禁言管理。群聊不会从这个槽读取黑名单或禁言状态，适合不需要维护禁言名单的轻量群聊。',
+      description: '不启用禁言管理。群聊不会从这个槽读取禁言状态，适合不需要维护禁言名单的轻量群聊。',
       enabled: true,
     },
     {

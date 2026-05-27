@@ -19,9 +19,8 @@ const ChainChatActivationPage: NextPage = () => {
   const groupNameQuery = Array.isArray(router.query.groupName) ? router.query.groupName[0] : router.query.groupName;
   const symbolQuery = Array.isArray(router.query.symbol) ? router.query.symbol[0] : router.query.symbol;
   const tokenSymbol = token?.symbol || symbolQuery;
-  const chainListUrl = `/chat?${new URLSearchParams({
+  const chainListUrl = `/chat/activate?${new URLSearchParams({
     ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
-    view: 'activate',
     activationType: 'chain',
   }).toString()}`;
 
@@ -44,7 +43,7 @@ const ChainChatActivationPage: NextPage = () => {
 
   return (
     <>
-      <Header title="激活链群" backUrl={chainListUrl} />
+      <Header title="激活链群" backUrl={chainListUrl} replaceBack />
       <main className={styles.chatPrototype} data-detail="false">
         <div className={styles.chatWorkspace} data-entry="love20-chat-chain-activation">
           <section className={styles.chatSurface}>
