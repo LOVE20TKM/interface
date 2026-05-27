@@ -1,3 +1,12 @@
+.chatRoomPage {
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .chatPrototype {
   --primary: #191c1f;
   --primary-action: #1e3a8a;
@@ -16,7 +25,7 @@
   --greyscale-500: #5f6972;
   --greyscale-700: #34404c;
   --greyscale-900: #191c1f;
-  --global-bottom-nav-offset: 4rem;
+  --global-bottom-nav-offset: calc(72px + env(safe-area-inset-bottom));
   --detail-input-bottom-safe: calc(128px + env(safe-area-inset-bottom));
   flex: 1 1 auto;
   min-height: 0;
@@ -44,12 +53,18 @@
   opacity: 0.5;
 }
 
+.chatPrototype[data-detail="false"] {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
 .chatWorkspace {
   min-height: 0;
   display: flex;
   justify-content: center;
   max-width: 100%;
   overflow-x: hidden;
+  overflow-y: hidden;
   padding: 0 16px 16px;
 }
 
@@ -65,6 +80,15 @@
   overflow: hidden;
   border: 1px solid var(--greyscale-200);
   border-radius: 8px;
+}
+
+.chatWorkspace[data-entry="love20-chat"] .chatSurface {
+  height: auto;
+  min-height: 0;
+}
+
+.chatWorkspace[data-entry="love20-chat"] :global(.workspace-screen) {
+  overflow: visible;
 }
 
 .chatPrototype :global(.icon-button),
@@ -210,6 +234,14 @@
   margin-top: 0;
 }
 
+.chatPrototype :global(.conversation-row-wrap) {
+  position: relative;
+}
+
+.chatPrototype :global(.conversation-row-wrap[data-menu-open="true"]) {
+  z-index: 20;
+}
+
 .chatPrototype :global(.conversation-row) {
   --chat-rail: #94a3b8;
   position: relative;
@@ -225,6 +257,8 @@
   padding: 10px 12px 10px 14px;
   text-align: left;
   cursor: pointer;
+  color: inherit;
+  text-decoration: none;
 }
 
 .chatPrototype :global(.conversation-row[data-menu-open="true"]) {
@@ -275,10 +309,8 @@
 
 .chatPrototype :global(.conversation-menu) {
   position: absolute;
-  top: 46px;
-  right: 8px;
-  z-index: 5;
-  min-width: 116px;
+  z-index: 30;
+  width: 132px;
   display: grid;
   gap: 4px;
   padding: 6px;
@@ -392,6 +424,10 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: 16px;
+}
+
+.chatPrototype :global(.inbox-bottom-spacer) {
+  display: none;
 }
 
 .chatPrototype :global(.type-card),
@@ -1650,6 +1686,7 @@
   min-height: 0;
   padding: 12px 16px;
   overflow: auto;
+  overflow-anchor: none;
   overscroll-behavior: contain;
   scroll-padding-top: 92px;
   background:
@@ -1906,24 +1943,22 @@
   -webkit-backdrop-filter: blur(14px);
 }
 
-.chatPrototype[data-detail="true"] {
-  --detail-composer-bottom: 0px;
-}
-
 .chatPrototype[data-detail="true"] :global(.message-list) {
-  padding-bottom: var(--detail-input-bottom-safe);
-  scroll-padding-bottom: var(--detail-input-bottom-safe);
+  padding-bottom: 16px;
+  scroll-padding-bottom: 16px;
 }
 
-.chatPrototype[data-detail="true"] :global(.composer),
-.chatPrototype[data-detail="true"] :global(.composer-banned) {
-  position: fixed;
-  right: 0;
-  bottom: var(--detail-composer-bottom);
-  left: 0;
-  z-index: 45;
-  width: min(100%, 760px);
-  margin: 0 auto;
+.chatPrototype[data-detail="true"] {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chatPrototype[data-detail="true"] .chatWorkspace,
+.chatPrototype[data-detail="true"] .chatSurface {
+  height: 100%;
+  min-height: 0;
 }
 
 .chatPrototype :global(.composer-row) {
@@ -2335,20 +2370,12 @@
     min-height: min(620px, calc(100dvh - 126px));
   }
 
-  .chatPrototype[data-detail="true"] :global(.composer),
-  .chatPrototype[data-detail="true"] :global(.composer-banned) {
-    bottom: 0;
-    right: 0;
-    left: var(--sidebar-width, 16rem);
-    width: min(100vw - var(--sidebar-width, 16rem), 760px);
-  }
 }
 
 @media (max-width: 899px) {
   .chatPrototype {
     --chat-mobile-chrome-offset: 90px;
     --detail-input-bottom-safe: calc(176px + env(safe-area-inset-bottom));
-    --detail-composer-bottom: var(--global-bottom-nav-offset);
   }
 
   .chatWorkspace {
@@ -2362,21 +2389,50 @@
     border-radius: 0;
   }
 
+  .chatWorkspace[data-entry="love20-chat"] .chatSurface {
+    height: auto;
+    min-height: 0;
+  }
+
+  .chatPrototype :global(.inbox-screen) {
+    padding-bottom: calc(16px + var(--global-bottom-nav-offset));
+    scroll-padding-bottom: calc(16px + var(--global-bottom-nav-offset));
+  }
+
+  .chatWorkspace[data-entry="love20-chat"] :global(.inbox-screen) {
+    padding-bottom: 16px;
+    scroll-padding-bottom: 16px;
+  }
+
+  .chatPrototype :global(.inbox-bottom-spacer) {
+    display: block;
+    height: calc(24px + var(--global-bottom-nav-offset));
+    flex: 0 0 auto;
+  }
+
+  .chatWorkspace[data-entry="love20-chat"] :global(.inbox-bottom-spacer) {
+    display: none;
+  }
+
   .chatPrototype[data-detail="true"] {
     height: calc(100dvh - var(--chat-mobile-chrome-offset) - var(--global-bottom-nav-offset));
     min-height: 0;
     overflow: hidden;
   }
 
-  .chatPrototype[data-detail="true"] .chatWorkspace,
-  .chatPrototype[data-detail="true"] .chatSurface {
-    height: 100%;
-    min-height: 0;
+  .chatPrototype[data-detail="true"] :global(.message-list) {
+    height: var(--detail-message-list-height, auto);
+    flex: 0 0 var(--detail-message-list-height, auto);
   }
 
   .chatPrototype[data-detail="true"] :global(.composer),
   .chatPrototype[data-detail="true"] :global(.composer-banned) {
-    bottom: var(--global-bottom-nav-offset);
+    position: fixed;
+    right: 0;
+    bottom: var(--detail-bottom-nav-height, var(--global-bottom-nav-offset));
+    left: 0;
+    z-index: 45;
     width: 100%;
+    margin: 0 auto;
   }
 }

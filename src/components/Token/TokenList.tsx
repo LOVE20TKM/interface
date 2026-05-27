@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { useChildTokensCount, useTokenCount } from '@/src/hooks/contracts/useLOV
 import { formatPercentage } from '@/src/lib/format';
 import { NavigationUtils } from '@/src/lib/navigationUtils';
 // my contexts
-import { Token, TokenContext } from '@/src/contexts/TokenContext';
+import { Token } from '@/src/contexts/TokenContext';
 
 // my types
 import { TokenInfo } from '@/src/types/love20types';
@@ -32,8 +32,6 @@ interface TokenWithLaunchInfo extends Token {
 }
 
 export default function TokenList({ parentTokenAddress }: TokenListProps) {
-  const { token: currentToken } = useContext(TokenContext) || {};
-
   const [start, setStart] = useState<bigint>(BigInt(0));
   const [allTokens, setAllTokens] = useState<TokenWithLaunchInfo[]>([]);
 
@@ -98,7 +96,6 @@ export default function TokenList({ parentTokenAddress }: TokenListProps) {
         uniswapV2PairAddress: token.uniswapV2PairAddress,
         initialStakeRound: Number(token.initialStakeRound),
         hasEnded: launchInfos[index].hasEnded,
-        voteOriginBlocks: currentToken?.voteOriginBlocks ?? 0,
         totalContributed: launchInfos[index].totalContributed,
         parentTokenFundraisingGoal: launchInfos[index].parentTokenFundraisingGoal,
       }));
@@ -109,7 +106,7 @@ export default function TokenList({ parentTokenAddress }: TokenListProps) {
         return [...prev, ...filteredNewTokens];
       });
     }
-  }, [tokenAddresses, tokens, launchInfos, currentToken?.voteOriginBlocks]);
+  }, [tokenAddresses, tokens, launchInfos]);
 
   // 加载更多tokens
   const loadMoreTokens = useCallback(() => {

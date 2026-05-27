@@ -28,6 +28,8 @@ import styles from '@/src/components/Chat/ChatPage.module.css';
 import { ManagerActivationForm } from './ManagerActivationForm';
 import {
   actionInfoTitle,
+  buildChatActivationHref,
+  buildChatRoomHref,
   invalidateContractReads,
   parseActionIdInput,
 } from './chatUtils';
@@ -40,13 +42,7 @@ function firstQueryValue(value: string | string[] | undefined) {
 }
 
 function buildActivationListUrl(tokenSymbol: string | undefined, activationType: ActivationType) {
-  const params = new URLSearchParams({
-    activationType,
-  });
-  if (tokenSymbol) {
-    params.set('symbol', tokenSymbol);
-  }
-  return `/chat/activate?${params.toString()}`;
+  return buildChatActivationHref(tokenSymbol, activationType);
 }
 
 function useManagerActivationContext(activationType: ActivationType) {
@@ -60,13 +56,7 @@ function useManagerActivationContext(activationType: ActivationType) {
 
   const openChat = useCallback(
     (groupId: bigint) => {
-      router.push({
-        pathname: '/chat/room',
-        query: {
-          ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
-          groupId: groupId.toString(),
-        },
-      });
+      router.push(buildChatRoomHref(tokenSymbol, groupId));
     },
     [router, tokenSymbol],
   );

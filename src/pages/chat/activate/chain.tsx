@@ -8,7 +8,7 @@ import Header from '@/src/components/Header';
 import { ChainChatActivationDetail } from '@/src/components/Chat/ChainChatActivationDetail';
 import styles from '@/src/components/Chat/ChatPage.module.css';
 import { TokenContext } from '@/src/contexts/TokenContext';
-import { invalidateContractReads, parseGroupId } from '@/src/components/Chat/chatUtils';
+import { buildChatActivationHref, buildChatRoomHref, invalidateContractReads, parseGroupId } from '@/src/components/Chat/chatUtils';
 
 const ChainChatActivationPage: NextPage = () => {
   const router = useRouter();
@@ -19,20 +19,11 @@ const ChainChatActivationPage: NextPage = () => {
   const groupNameQuery = Array.isArray(router.query.groupName) ? router.query.groupName[0] : router.query.groupName;
   const symbolQuery = Array.isArray(router.query.symbol) ? router.query.symbol[0] : router.query.symbol;
   const tokenSymbol = token?.symbol || symbolQuery;
-  const chainListUrl = `/chat/activate?${new URLSearchParams({
-    ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
-    activationType: 'chain',
-  }).toString()}`;
+  const chainListUrl = buildChatActivationHref(tokenSymbol, 'chain');
 
   const openChat = useCallback(
     (nextGroupId: bigint) => {
-      router.push({
-        pathname: '/chat/room',
-        query: {
-          ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
-          groupId: nextGroupId.toString(),
-        },
-      });
+      router.push(buildChatRoomHref(tokenSymbol, nextGroupId));
     },
     [router, tokenSymbol],
   );

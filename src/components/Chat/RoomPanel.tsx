@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useGroupChatVotingPower } from '@/src/hooks/contracts/useGroupChatManagers';
@@ -42,6 +42,8 @@ import {
 import { useChatComposerState } from './useChatComposerState';
 import { useConfirmedTransactionEffect } from './useConfirmedTransactionEffect';
 
+const useBrowserLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
 export function RoomPanel({
   groupId,
   account,
@@ -77,10 +79,16 @@ export function RoomPanel({
   const [activeAvatarMessageId, setActiveAvatarMessageId] = useState<string | undefined>();
   const [messageWindowSize, setMessageWindowSize] = useState(DEFAULT_MESSAGE_WINDOW_SIZE);
   const messageListRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLElement | null>(null);
   const restoreScrollAfterPrependRef = useRef(false);
   const previousScrollHeightRef = useRef(0);
   const lastAutoScrollGroupIdRef = useRef<string | undefined>();
   const lastAutoScrollLatestMessageIdRef = useRef<string | undefined>();
+  const bottomResizeObserverRef = useRef<ResizeObserver | undefined>();
+  const bottomResizeFrameRef = useRef<number | undefined>();
+  const [composerHeight, setComposerHeight] = useState(0);
+  const [messageListHeight, setMessageListHeight] = useState<number | undefined>();
+  const [bottomNavHeight, setBottomNavHeight] = useState(0);
   const avatarPressRef = useRef<{
     pointerId: number;
     x: number;
@@ -136,6 +144,79 @@ export function RoomPanel({
     lastAutoScrollLatestMessageIdRef.current = undefined;
   }, [groupId]);
 
+  const stopBottomResizeObserver = useCallback(() => {
+    bottomResizeObserverRef.current?.disconnect();
+    bottomResizeObserverRef.current = undefined;
+    if (bottomResizeFrameRef.current !== undefined) {
+      cancelAnimationFrame(bottomResizeFrameRef.current);
+      bottomResizeFrameRef.current = undefined;
+    }
+  }, []);
+
+  const scrollMessageListToBottom = useCallback(() => {
+    const messageList = messageListRef.current;
+    if (!messageList) return;
+    const scrollToBottom = () => {
+      messageList.scrollTop = Math.max(0, messageList.scrollHeight - messageList.clientHeight);
+    };
+    scrollToBottom();
+    requestAnimationFrame(() => {
+      scrollToBottom();
+      requestAnimationFrame(() => {
+        scrollToBottom();
+      });
+    });
+  }, []);
+
+  const keepMessageListAtBottomWhileLayoutSettles = useCallback(() => {
+    stopBottomResizeObserver();
+    scrollMessageListToBottom();
+    const messageList = messageListRef.current;
+    if (!messageList || typeof ResizeObserver === 'undefined') return;
+
+    let stableFrames = 0;
+    let lastScrollHeight = -1;
+    let lastClientHeight = -1;
+
+    const settle = () => {
+      bottomResizeFrameRef.current = undefined;
+      const currentList = messageListRef.current;
+      if (!currentList) {
+        stopBottomResizeObserver();
+        return;
+      }
+
+      const sizeChanged =
+        currentList.scrollHeight !== lastScrollHeight ||
+        currentList.clientHeight !== lastClientHeight;
+      lastScrollHeight = currentList.scrollHeight;
+      lastClientHeight = currentList.clientHeight;
+      stableFrames = sizeChanged ? 0 : stableFrames + 1;
+      scrollMessageListToBottom();
+
+      if (stableFrames >= 8) {
+        stopBottomResizeObserver();
+        return;
+      }
+      bottomResizeFrameRef.current = requestAnimationFrame(settle);
+    };
+
+    const scheduleSettle = () => {
+      stableFrames = 0;
+      if (bottomResizeFrameRef.current !== undefined) return;
+      bottomResizeFrameRef.current = requestAnimationFrame(settle);
+    };
+
+    bottomResizeObserverRef.current = new ResizeObserver(scheduleSettle);
+    bottomResizeObserverRef.current.observe(messageList);
+    Array.from(messageList.children).forEach((child) => {
+      bottomResizeObserverRef.current?.observe(child);
+    });
+    scheduleSettle();
+  }, [scrollMessageListToBottom, stopBottomResizeObserver]);
+
+  useEffect(() => stopBottomResizeObserver, [stopBottomResizeObserver]);
+
   useEffect(() => {
     if (isPending || isConfirming) {
       postedHandledRef.current = false;
@@ -190,16 +271,63 @@ export function RoomPanel({
   const hasMoreMessages =
     publicRoom.messagesCount !== undefined && BigInt(publicRoom.messages.length) < publicRoom.messagesCount;
 
+  const measureDetailLayout = useCallback(() => {
+    const messageList = messageListRef.current;
+    const composer = composerRef.current;
+    if (!messageList || !composer) return;
+
+    const nextComposerHeight = Math.ceil(composer.getBoundingClientRect().height);
+    const bottomNav = document.querySelector('nav.fixed.bottom-0') as HTMLElement | null;
+    const bottomNavRect = bottomNav?.getBoundingClientRect();
+    const bottomNavVisible =
+      !!bottomNav &&
+      !!bottomNavRect &&
+      bottomNavRect.height > 0 &&
+      window.getComputedStyle(bottomNav).display !== 'none';
+    const bottomBoundary = bottomNavVisible ? bottomNavRect.top : window.innerHeight;
+    const nextBottomNavHeight = bottomNavVisible ? Math.max(0, window.innerHeight - bottomBoundary) : 0;
+    const nextMessageListHeight = Math.max(
+      120,
+      Math.floor(bottomBoundary - nextComposerHeight - messageList.getBoundingClientRect().top),
+    );
+
+    setComposerHeight((current) => (current === nextComposerHeight ? current : nextComposerHeight));
+    setBottomNavHeight((current) => (current === nextBottomNavHeight ? current : nextBottomNavHeight));
+    setMessageListHeight((current) => (current === nextMessageListHeight ? current : nextMessageListHeight));
+  }, []);
+
+  useBrowserLayoutEffect(() => {
+    measureDetailLayout();
+
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? undefined
+      : new ResizeObserver(measureDetailLayout);
+    if (composerRef.current) resizeObserver?.observe(composerRef.current);
+    if (messageListRef.current) resizeObserver?.observe(messageListRef.current);
+
+    window.addEventListener('resize', measureDetailLayout);
+    window.visualViewport?.addEventListener('resize', measureDetailLayout);
+    window.visualViewport?.addEventListener('scroll', measureDetailLayout);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', measureDetailLayout);
+      window.visualViewport?.removeEventListener('resize', measureDetailLayout);
+      window.visualViewport?.removeEventListener('scroll', measureDetailLayout);
+    };
+  }, [groupId, measureDetailLayout]);
+
   useEffect(() => {
     if (!groupId || publicRoom.isMessageFeedPending) return;
     onReadLatest?.(groupId, publicRoom.messagesCount);
   }, [groupId, onReadLatest, publicRoom.isMessageFeedPending, publicRoom.messagesCount]);
 
-  useEffect(() => {
+  useBrowserLayoutEffect(() => {
     const messageList = messageListRef.current;
     if (!messageList) return;
     if (restoreScrollAfterPrependRef.current) {
-      if (publicRoom.isPending || accountRoom.isPending) return;
+      if (publicRoom.isMessageFeedPending) return;
+      stopBottomResizeObserver();
       const previousScrollHeight = previousScrollHeightRef.current;
       restoreScrollAfterPrependRef.current = false;
       previousScrollHeightRef.current = 0;
@@ -211,7 +339,7 @@ export function RoomPanel({
       lastAutoScrollLatestMessageIdRef.current = latestVisibleMessageId;
       return;
     }
-    if (publicRoom.isPending || accountRoom.isPending) return;
+    if (publicRoom.isMessageFeedPending) return;
 
     const groupKey = groupId?.toString();
     const groupChanged = lastAutoScrollGroupIdRef.current !== groupKey;
@@ -220,12 +348,27 @@ export function RoomPanel({
       lastAutoScrollLatestMessageIdRef.current !== latestVisibleMessageId;
     if (!groupChanged && !latestChanged) return;
 
-    requestAnimationFrame(() => {
-      messageList.scrollTop = messageList.scrollHeight;
-    });
+    keepMessageListAtBottomWhileLayoutSettles();
     lastAutoScrollGroupIdRef.current = groupKey;
     lastAutoScrollLatestMessageIdRef.current = latestVisibleMessageId;
-  }, [accountRoom.isPending, groupId, latestVisibleMessageId, publicRoom.isPending]);
+  }, [
+    groupId,
+    keepMessageListAtBottomWhileLayoutSettles,
+    latestVisibleMessageId,
+    publicRoom.isMessageFeedPending,
+    stopBottomResizeObserver,
+  ]);
+
+  useEffect(() => {
+    const messageList = messageListRef.current;
+    if (!messageList || composerHeight <= 0) return;
+    if (restoreScrollAfterPrependRef.current || publicRoom.isPending || accountRoom.isPending) return;
+
+    const distanceFromBottom = messageList.scrollHeight - messageList.clientHeight - messageList.scrollTop;
+    if (distanceFromBottom <= composerHeight + 80) {
+      scrollMessageListToBottom();
+    }
+  }, [accountRoom.isPending, composerHeight, publicRoom.isPending, scrollMessageListToBottom]);
 
   const loadEarlierMessages = () => {
     if (!hasMoreMessages || publicRoom.isPending || accountRoom.isPending) return;
@@ -429,7 +572,14 @@ export function RoomPanel({
     : '/group/groupids/';
 
   return (
-    <section className="chat-room-shell flex min-h-0 flex-1 flex-col bg-white">
+    <section
+      className="chat-room-shell flex min-h-0 flex-1 flex-col bg-white"
+      style={{
+        '--detail-composer-height': `${composerHeight || 128}px`,
+        '--detail-bottom-nav-height': `${bottomNavHeight}px`,
+        ...(messageListHeight ? { '--detail-message-list-height': `${messageListHeight}px` } : {}),
+      } as CSSProperties}
+    >
       <ChatRoomToolbar
         groupId={groupId}
         title={displayGroupName}
@@ -482,6 +632,7 @@ export function RoomPanel({
       />
 
       <ChatComposer
+        ref={composerRef}
         account={account}
         postingAllowed={publicRoom.chatInfo?.postingAllowed}
         activeSenderId={composerState.activeSenderId}

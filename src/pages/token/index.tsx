@@ -173,7 +173,6 @@ const TokenPage = () => {
           stTokenAddress: routeTokenInfo.stAddress,
           uniswapV2PairAddress: routeTokenInfo.uniswapV2PairAddress,
           initialStakeRound: Number(routeTokenInfo.initialStakeRound),
-          voteOriginBlocks: currentToken?.voteOriginBlocks ?? 0,
         }
       : null
     : currentToken;

@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import type { AppProps } from 'next/app';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 
 import { config } from '@/src/wagmi';
 import { ErrorProvider, useError } from '@/src/contexts/ErrorContext';
@@ -125,6 +126,8 @@ function MyApp({ Component, pageProps }: AppProps) {
   const [mounted, setMounted] = useState(false);
   const [navLoading, setNavLoading] = useState(false);
   const navLoadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isChatRoomPage = router.pathname === '/chat/room';
+  const hideFooter = isChatRoomPage;
 
   // iOS钱包环境页面恢复功能
   usePageRecovery();
@@ -149,11 +152,14 @@ function MyApp({ Component, pageProps }: AppProps) {
         navLoadingTimerRef.current = null;
       }
     };
+    const stopNavLoading = () => {
+      clearNavLoadingTimer();
+      setNavLoading(false);
+    };
 
     const handleStart = (url: string) => {
-      clearNavLoadingTimer();
+      stopNavLoading();
       if (takeRouteLoadingSuppression(url)) {
-        setNavLoading(false);
         return;
       }
       navLoadingTimerRef.current = setTimeout(() => {
@@ -162,22 +168,26 @@ function MyApp({ Component, pageProps }: AppProps) {
       }, NAV_LOADING_DELAY_MS);
     };
 
-    const handleDone = () => {
-      clearNavLoadingTimer();
-      setNavLoading(false);
-    };
-
     router.events.on('routeChangeStart', handleStart);
-    router.events.on('routeChangeComplete', handleDone);
-    router.events.on('routeChangeError', handleDone);
+    router.events.on('routeChangeComplete', stopNavLoading);
+    router.events.on('routeChangeError', stopNavLoading);
 
     return () => {
       clearNavLoadingTimer();
       router.events.off('routeChangeStart', handleStart);
-      router.events.off('routeChangeComplete', handleDone);
-      router.events.off('routeChangeError', handleDone);
+      router.events.off('routeChangeComplete', stopNavLoading);
+      router.events.off('routeChangeError', stopNavLoading);
     };
-  }, [router.events]);
+  }, [router.asPath, router.events]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    if (navLoadingTimerRef.current) {
+      clearTimeout(navLoadingTimerRef.current);
+      navLoadingTimerRef.current = null;
+    }
+    setNavLoading(false);
+  }, [mounted, router.asPath]);
 
   // 在服务端或客户端未完成挂载时显示loading
   if (!mounted) {
@@ -227,8 +237,13 @@ function MyApp({ Component, pageProps }: AppProps) {
             <TokenProvider>
               <SidebarProvider>
                 <AppSidebar />
-                <SidebarInset className="min-w-0">
-                  <div className="min-h-screen bg-background flex flex-col pb-16 md:pb-0">
+                <SidebarInset className={cn('min-w-0', isChatRoomPage && 'h-svh min-h-0 overflow-hidden')}>
+                  <div
+                    className={cn(
+                      'bg-background flex flex-col',
+                      isChatRoomPage ? 'h-svh min-h-0 overflow-hidden pb-0' : 'min-h-screen pb-16 md:pb-0',
+                    )}
+                  >
                     <Toaster
                       position="top-center"
                       toastOptions={{
@@ -238,15 +253,17 @@ function MyApp({ Component, pageProps }: AppProps) {
                         },
                       }}
                     />
-                    <div className="px-4 pt-4">
-                      <ErrorAlert />
-                    </div>
-                    <GasBalanceNotifier />
-                    <ActionRewardNotifier />
+                    {!isChatRoomPage && (
+                      <div className="px-4 pt-4">
+                        <ErrorAlert />
+                      </div>
+                    )}
+                    {!isChatRoomPage && <GasBalanceNotifier />}
+                    {!isChatRoomPage && <ActionRewardNotifier />}
                     <AppErrorBoundary key={router.asPath}>
                       <Component {...pageProps} />
                     </AppErrorBoundary>
-                    <Footer />
+                    {!hideFooter && <Footer />}
                     <BottomNavigation />
                   </div>
                 </SidebarInset>

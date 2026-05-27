@@ -227,7 +227,7 @@ export function useGroupChatInboxData(
   useEffect(() => {
     setCachedManagerChatInfos(readCachedManagerChatInfos(groupIds));
     setCacheReadyKey(groupIdsCacheKey);
-  }, [groupIds, groupIdsCacheKey]);
+  }, [groupIdsCacheKey]);
 
   const isCacheReady = cacheReadyKey === groupIdsCacheKey;
   const uncachedInfoGroupIds = useMemo(

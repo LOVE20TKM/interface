@@ -1,5 +1,6 @@
 'use client';
 
+import { forwardRef } from 'react';
 import Link from 'next/link';
 import { Loader2, Quote, Send, ShieldCheck, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,28 +10,7 @@ import type { ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatD
 import { cn } from '@/lib/utils';
 import { formatCanPostReason, quotedMessageSummary } from './chatUtils';
 
-export function ChatComposer({
-  account,
-  postingAllowed,
-  activeSenderId,
-  activeSenderName,
-  activeCanPost,
-  activeCanPostReasonCode,
-  activeCanPostPending,
-  isDefaultSenderPending,
-  needsDefaultSenderSetup,
-  defaultNftHref,
-  content,
-  quotedMessage,
-  mentionValidationHint,
-  mentionValidationBlocking,
-  sendDisabled,
-  isPending,
-  isConfirming,
-  onContentChange,
-  onSend,
-  onClearQuote,
-}: {
+export const ChatComposer = forwardRef<HTMLElement, {
   account: `0x${string}` | undefined;
   postingAllowed: boolean | undefined;
   activeSenderId: bigint | undefined;
@@ -51,7 +31,28 @@ export function ChatComposer({
   onContentChange: (value: string) => void;
   onSend: () => void;
   onClearQuote: () => void;
-}) {
+}>(function ChatComposer({
+  account,
+  postingAllowed,
+  activeSenderId,
+  activeSenderName,
+  activeCanPost,
+  activeCanPostReasonCode,
+  activeCanPostPending,
+  isDefaultSenderPending,
+  needsDefaultSenderSetup,
+  defaultNftHref,
+  content,
+  quotedMessage,
+  mentionValidationHint,
+  mentionValidationBlocking,
+  sendDisabled,
+  isPending,
+  isConfirming,
+  onContentChange,
+  onSend,
+  onClearQuote,
+}, ref) {
   const postingExplicitlyDisabled = postingAllowed === false;
   const composerLocked = !account || postingExplicitlyDisabled || isDefaultSenderPending || needsDefaultSenderSetup;
   const activeSenderLabel = activeSenderId
@@ -61,7 +62,7 @@ export function ChatComposer({
   const sendButtonLabel = sending ? (isConfirming ? '确认中' : '发送中') : '发送';
 
   return (
-    <footer className={composerLocked ? 'composer-banned' : 'composer'}>
+    <footer ref={ref} className={composerLocked ? 'composer-banned' : 'composer'}>
       {!account ? (
         <div className="cannot-post">
           <AlertBox type="info" message="连接钱包后可使用 NFT 身份发言。" />
@@ -157,7 +158,7 @@ export function ChatComposer({
       )}
     </footer>
   );
-}
+});
 
 function formatSenderIdentity(name: string, senderId: bigint) {
   const idLabel = `NFT #${senderId.toString()}`;

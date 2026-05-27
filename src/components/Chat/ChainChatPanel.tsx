@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import type { GroupNFT } from '@/src/hooks/extension/base/composite/useMyGroups';
 import { ChainGroupNftPicker } from './ChainGroupNftPicker';
+import { buildChatChainActivationHref } from './chatUtils';
 
 export function ChainChatPanel({
   account,
@@ -19,14 +20,7 @@ export function ChainChatPanel({
 
   const openActivationDetail = useCallback(
     (group: GroupNFT) => {
-      router.push({
-        pathname: '/chat/activate/chain',
-        query: {
-          ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
-          groupId: group.tokenId.toString(),
-          ...(group.groupName ? { groupName: group.groupName } : {}),
-        },
-      });
+      router.push(buildChatChainActivationHref(tokenSymbol, group.tokenId, group.groupName));
     },
     [router, tokenSymbol],
   );

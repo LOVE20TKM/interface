@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { MessagesSquare } from 'lucide-react';
 
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
@@ -6,19 +7,23 @@ import type { GroupChatListItem } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
 import { ChatBadge } from './ChatBadge';
 import { LONG_PRESS_MOVE_TOLERANCE, LONG_PRESS_MS } from './chatConstants';
-import { safeBigIntFromString } from './chatUtils';
+import { buildChatRoomHref, safeBigIntFromString } from './chatUtils';
+
+const CONVERSATION_MENU_WIDTH = 132;
+const CONVERSATION_MENU_HEIGHT = 44;
+const CONVERSATION_MENU_GUTTER = 8;
 
 function ConversationItem({
   item,
   pinned,
   readCursor,
-  onOpen,
+  tokenSymbol,
   onTogglePin,
 }: {
   item: GroupChatListItem;
   pinned: boolean;
   readCursor: bigint;
-  onOpen: (groupId: bigint) => void;
+  tokenSymbol?: string;
   onTogglePin: (groupId: bigint) => void;
 }) {
   const typeClass = `conversation-type-${item.kind}`;
@@ -27,7 +32,9 @@ function ConversationItem({
   const hasUnreadMentionMe = item.latestMentionMeMessageId > readCursor;
   const hasUnreadMentionAll = item.latestMentionAllMessageId > readCursor;
   const [menuOpen, setMenuOpen] = useState(false);
-  const rowRef = useRef<HTMLElement | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ left: CONVERSATION_MENU_GUTTER, top: CONVERSATION_MENU_GUTTER });
+  const rowRef = useRef<HTMLDivElement | null>(null);
+  const href = buildChatRoomHref(tokenSymbol, item.groupId);
   const pressRef = useRef<{
     pointerId: number;
     x: number;
@@ -59,12 +66,22 @@ function ConversationItem({
     if (event.button !== 0 || (event.target as HTMLElement).closest('.conversation-menu')) {
       return;
     }
+    const { clientX, clientY, pointerId } = event;
     clearPress();
     pressRef.current = {
-      pointerId: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
+      pointerId,
+      x: clientX,
+      y: clientY,
       timer: setTimeout(() => {
+        const rect = rowRef.current?.getBoundingClientRect();
+        if (rect) {
+          const maxLeft = Math.max(CONVERSATION_MENU_GUTTER, rect.width - CONVERSATION_MENU_WIDTH - CONVERSATION_MENU_GUTTER);
+          const maxTop = Math.max(CONVERSATION_MENU_GUTTER, rect.height - CONVERSATION_MENU_HEIGHT - CONVERSATION_MENU_GUTTER);
+          setMenuPosition({
+            left: Math.min(Math.max(clientX - rect.left - CONVERSATION_MENU_WIDTH / 2, CONVERSATION_MENU_GUTTER), maxLeft),
+            top: Math.min(Math.max(clientY - rect.top - CONVERSATION_MENU_HEIGHT / 2, CONVERSATION_MENU_GUTTER), maxTop),
+          });
+        }
         pressRef.current = null;
         suppressClickRef.current = true;
         setMenuOpen((value) => !value);
@@ -82,52 +99,59 @@ function ConversationItem({
   };
 
   return (
-    <article
+    <div
       ref={rowRef}
       onPointerDown={startLongPress}
       onPointerMove={cancelMovedPress}
       onPointerUp={clearPress}
       onPointerCancel={clearPress}
       onContextMenu={(event) => event.preventDefault()}
-      onClick={() => {
-        if (suppressClickRef.current) {
-          suppressClickRef.current = false;
-          return;
-        }
-        onOpen(item.groupId);
-      }}
-      className={cn('conversation-row group-row', typeClass, pinned && 'pinned')}
+      className="conversation-row-wrap"
       data-menu-open={menuOpen ? 'true' : 'false'}
       data-long-press-conversation
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') onOpen(item.groupId);
-      }}
     >
-      <div className="conversation-type-rail" aria-hidden="true" />
-      <div className="conversation-main">
-        <div className="conversation-title">
-          <span>{item.title.replace(` ${item.typeLabel}`, '')}</span>
-          <ChatBadge>{item.typeLabel}</ChatBadge>
-        </div>
-        <div className="conversation-kicker">
-          <span className="conversation-meta-text">
-            G#{item.groupId.toString()}
-          </span>
-          {(hasUnreadMentionMe || hasUnreadMentionAll || visibleUnreadCount > BigInt(0)) && (
-            <span className="conversation-reminders">
-              {hasUnreadMentionMe && <span className="conversation-badge mention-me">@我</span>}
-              {hasUnreadMentionAll && <span className="conversation-badge mention-all">@全部</span>}
-              {visibleUnreadCount > BigInt(0) && (
-                <span className="conversation-badge unread-meta">未读 {visibleUnreadCount.toString()}</span>
-              )}
+      <Link
+        href={href}
+        prefetch={false}
+        className={cn('conversation-row group-row', typeClass, pinned && 'pinned')}
+        data-menu-open={menuOpen ? 'true' : 'false'}
+        onClick={(event) => {
+          if (!suppressClickRef.current) return;
+          suppressClickRef.current = false;
+          event.preventDefault();
+        }}
+      >
+        <div className="conversation-type-rail" aria-hidden="true" />
+        <div className="conversation-main">
+          <div className="conversation-title">
+            <span>{item.title.replace(` ${item.typeLabel}`, '')}</span>
+            <ChatBadge>{item.typeLabel}</ChatBadge>
+          </div>
+          <div className="conversation-kicker">
+            <span className="conversation-meta-text">
+              G#{item.groupId.toString()}
             </span>
-          )}
+            {(hasUnreadMentionMe || hasUnreadMentionAll || visibleUnreadCount > BigInt(0)) && (
+              <span className="conversation-reminders">
+                {hasUnreadMentionMe && <span className="conversation-badge mention-me">@我</span>}
+                {hasUnreadMentionAll && <span className="conversation-badge mention-all">@全部</span>}
+                {visibleUnreadCount > BigInt(0) && (
+                  <span className="conversation-badge unread-meta">未读 {visibleUnreadCount.toString()}</span>
+                )}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      </Link>
       {menuOpen && (
-        <div className="conversation-menu" onClick={(event) => event.stopPropagation()}>
+        <div
+          className="conversation-menu"
+          style={{
+            left: menuPosition.left,
+            top: menuPosition.top,
+          }}
+          onClick={(event) => event.stopPropagation()}
+        >
           <button
             type="button"
             onPointerDown={(event) => event.stopPropagation()}
@@ -142,7 +166,7 @@ function ConversationItem({
           </button>
         </div>
       )}
-    </article>
+    </div>
   );
 }
 
@@ -177,7 +201,6 @@ export function InboxPanel({
   preferencesOpen,
   showBannedMessages,
   showMessageTimes,
-  onOpen,
   onOpenActivate,
   onTogglePin,
   onTogglePreferences,
@@ -195,7 +218,6 @@ export function InboxPanel({
   preferencesOpen: boolean;
   showBannedMessages: boolean;
   showMessageTimes: boolean;
-  onOpen: (groupId: bigint) => void;
   onOpenActivate: () => void;
   onTogglePin: (groupId: bigint) => void;
   onTogglePreferences: () => void;
@@ -245,7 +267,7 @@ export function InboxPanel({
                 item={item}
                 pinned
                 readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                onOpen={onOpen}
+                tokenSymbol={tokenSymbol}
                 onTogglePin={onTogglePin}
               />
             )) : <div className="empty-state compact">暂无置顶群聊</div>}
@@ -261,7 +283,7 @@ export function InboxPanel({
                 item={item}
                 pinned={false}
                 readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                onOpen={onOpen}
+                tokenSymbol={tokenSymbol}
                 onTogglePin={onTogglePin}
               />
             )) : <div className="empty-state compact">暂无已激活链群</div>}
@@ -277,7 +299,7 @@ export function InboxPanel({
                 item={item}
                 pinned={false}
                 readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                onOpen={onOpen}
+                tokenSymbol={tokenSymbol}
                 onTogglePin={onTogglePin}
               />
             )) : <div className="empty-state compact">暂无更多推荐群聊</div>}
@@ -336,6 +358,7 @@ export function InboxPanel({
           </div>
         </section>
       )}
+      <div className="inbox-bottom-spacer" aria-hidden="true" />
     </>
   );
 }

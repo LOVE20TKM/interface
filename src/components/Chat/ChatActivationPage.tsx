@@ -14,7 +14,7 @@ import { ActionChatPanel } from './ActionChatPanel';
 import { ActivationPanel } from './ActivationPanels';
 import { ChainChatPanel } from './ChainChatPanel';
 import styles from './ChatPage.module.css';
-import { invalidateContractReads } from './chatUtils';
+import { buildChatActivationHref, buildChatIndexHref, buildChatRoomHref, invalidateContractReads } from './chatUtils';
 
 type ActivationType = 'token' | 'action' | 'chain';
 
@@ -39,26 +39,14 @@ export default function ChatActivationPage() {
 
   const openChat = useCallback(
     (groupId: bigint) => {
-      router.push({
-        pathname: '/chat/room',
-        query: {
-          ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
-          groupId: groupId.toString(),
-        },
-      });
+      router.push(buildChatRoomHref(tokenSymbol, groupId));
     },
     [router, tokenSymbol],
   );
 
   const setActivationType = useCallback(
     (nextType: ActivationType) => {
-      router.replace({
-        pathname: '/chat/activate',
-        query: {
-          ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
-          activationType: nextType,
-        },
-      });
+      router.replace(buildChatActivationHref(tokenSymbol, nextType));
     },
     [router, tokenSymbol],
   );
@@ -67,7 +55,7 @@ export default function ChatActivationPage() {
     invalidateContractReads(queryClient);
   }, [queryClient]);
 
-  const backUrl = tokenSymbol ? `/chat?${new URLSearchParams({ symbol: tokenSymbol }).toString()}` : '/chat';
+  const backUrl = buildChatIndexHref(tokenSymbol);
 
   return (
     <>

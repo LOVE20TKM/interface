@@ -8,7 +8,7 @@ import Header from '@/src/components/Header';
 import { AdminsPanel } from '@/src/components/Chat/AdminsPanel';
 import styles from '@/src/components/Chat/ChatPage.module.css';
 import { TokenContext } from '@/src/contexts/TokenContext';
-import { invalidateContractReads, parseGroupId } from '@/src/components/Chat/chatUtils';
+import { buildChatIndexHref, buildChatRoomHref, invalidateContractReads, parseGroupId } from '@/src/components/Chat/chatUtils';
 
 const ChatAdminsPage: NextPage = () => {
   const router = useRouter();
@@ -17,14 +17,7 @@ const ChatAdminsPage: NextPage = () => {
   const { token } = useContext(TokenContext) || {};
   const groupId = parseGroupId(router.query.groupId);
   const tokenSymbol = Array.isArray(router.query.symbol) ? router.query.symbol[0] : router.query.symbol || token?.symbol;
-  const backUrl = groupId
-    ? `/chat/room?${new URLSearchParams({
-        ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
-        groupId: groupId.toString(),
-      }).toString()}`
-    : tokenSymbol
-      ? `/chat?symbol=${encodeURIComponent(tokenSymbol)}`
-      : '/chat';
+  const backUrl = groupId ? buildChatRoomHref(tokenSymbol, groupId) : buildChatIndexHref(tokenSymbol);
 
   const refreshAll = useCallback(() => {
     invalidateContractReads(queryClient);

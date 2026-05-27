@@ -16,6 +16,7 @@ import {
   Bitcoin,
   UserCog,
   Layers,
+  MessageCircle,
 } from 'lucide-react';
 
 import {
@@ -120,6 +121,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           title: '社区',
           url: '#',
           items: [
+            {
+              title: '聊天',
+              url: `/chat/?symbol=${token.symbol}`,
+              isActive: isActiveUrl(`${basePath}/chat/`),
+              icon: MessageCircle,
+            },
             {
               title: '社区行动',
               url: `/acting/?symbol=${token.symbol}`,

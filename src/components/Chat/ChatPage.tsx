@@ -42,6 +42,7 @@ import {
   writeMessagePreferences,
 } from './chatStorage';
 import {
+  buildChatActivationHref,
   safeBigIntFromString,
 } from './chatUtils';
 
@@ -180,22 +181,8 @@ export default function ChatPage() {
     setMessagePreferences(readMessagePreferences());
   }, []);
 
-  const onOpen = useCallback(
-    (groupId: bigint) => {
-      const query = {
-        ...(token?.symbol ? { symbol: token.symbol } : {}),
-        groupId: groupId.toString(),
-      };
-      router.push({ pathname: '/chat/room', query });
-    },
-    [router, token?.symbol],
-  );
-
   const onOpenActivate = useCallback(() => {
-    const query = {
-      ...(token?.symbol ? { symbol: token.symbol } : {}),
-    };
-    router.push({ pathname: '/chat/activate', query });
+    router.push(buildChatActivationHref(token?.symbol));
   }, [router, token?.symbol]);
 
   const togglePinnedGroup = useCallback((groupId: bigint) => {
@@ -244,7 +231,6 @@ export default function ChatPage() {
                 preferencesOpen={preferencesOpen}
                 showBannedMessages={showBannedMessages}
                 showMessageTimes={showMessageTimes}
-                onOpen={onOpen}
                 onOpenActivate={onOpenActivate}
                 onTogglePin={togglePinnedGroup}
                 onTogglePreferences={() => setPreferencesOpen((value) => !value)}

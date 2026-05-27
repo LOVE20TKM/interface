@@ -1,9 +1,7 @@
 'use client';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useBlockNumber } from 'wagmi';
-
-// my context
-import { TokenContext } from '@/src/contexts/TokenContext';
+import { useOriginBlocks } from '@/src/hooks/contracts/useLOVE20Vote';
 
 // my components
 import LeftTime from '@/src/components/Common/LeftTime';
@@ -17,11 +15,10 @@ interface RoundProps {
 
 const RoundLite: React.FC<RoundProps> = ({ currentRound, roundType, showCountdown = true }) => {
   const { data: blockNumber } = useBlockNumber({ watch: true });
-  const context = useContext(TokenContext);
-  const token = context ? context.token : undefined;
+  const { originBlocks } = useOriginBlocks(showCountdown);
 
   // 计算加载状态。注意：此处仅用于渲染判断，不影响 Hook 的调用顺序
-  const isLoading = showCountdown && (!blockNumber || !token || token.voteOriginBlocks === undefined);
+  const isLoading = showCountdown && (!blockNumber || originBlocks === undefined);
 
   const [currentTokenRound, setCurrentTokenRound] = useState(BigInt(0));
 
@@ -30,7 +27,7 @@ const RoundLite: React.FC<RoundProps> = ({ currentRound, roundType, showCountdow
   const BLOCK_TIME = Number(process.env.NEXT_PUBLIC_BLOCK_TIME_MS) || 0;
 
   // 使用默认值防止 undefined 导致 NaN
-  const voteOriginBlocks = token ? Number(token.voteOriginBlocks) : 0;
+  const voteOriginBlocks = originBlocks ? Number(originBlocks) : 0;
 
   // 根据当前区块数计算初始剩余区块数及剩余时间（秒）
   const leftBlocksStatic = ROUND_BLOCKS - ((Number(blockNumber) - voteOriginBlocks) % ROUND_BLOCKS);

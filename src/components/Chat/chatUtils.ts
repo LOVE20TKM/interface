@@ -17,6 +17,48 @@ export function parseGroupId(value: string | string[] | undefined) {
   return parsed > BigInt(0) ? parsed : undefined;
 }
 
+export function buildChatRoomHref(tokenSymbol: string | undefined, groupId: bigint) {
+  const params = new URLSearchParams();
+  if (tokenSymbol) params.set('symbol', tokenSymbol);
+  params.set('groupId', groupId.toString());
+  return `/chat/room/?${params.toString()}`;
+}
+
+export function buildChatIndexHref(tokenSymbol: string | undefined) {
+  return tokenSymbol ? `/chat/?symbol=${encodeURIComponent(tokenSymbol)}` : '/chat/';
+}
+
+export function buildChatActivationHref(tokenSymbol: string | undefined, activationType?: 'token' | 'action' | 'chain') {
+  const params = new URLSearchParams();
+  if (tokenSymbol) params.set('symbol', tokenSymbol);
+  if (activationType) params.set('activationType', activationType);
+  const query = params.toString();
+  return query ? `/chat/activate/?${query}` : '/chat/activate/';
+}
+
+export function buildChatChainActivationHref(
+  tokenSymbol: string | undefined,
+  groupId: bigint,
+  groupName: string | undefined,
+) {
+  const params = new URLSearchParams();
+  if (tokenSymbol) params.set('symbol', tokenSymbol);
+  params.set('groupId', groupId.toString());
+  if (groupName) params.set('groupName', groupName);
+  return `/chat/activate/chain/?${params.toString()}`;
+}
+
+export function buildChatPanelHref(
+  panel: 'members' | 'ban-list' | 'admins' | 'settings',
+  tokenSymbol: string | undefined,
+  groupId: bigint,
+) {
+  const params = new URLSearchParams();
+  if (tokenSymbol) params.set('symbol', tokenSymbol);
+  params.set('groupId', groupId.toString());
+  return `/chat/${panel}/?${params.toString()}`;
+}
+
 export function parseActionIdInput(value: string) {
   const trimmed = value.trim();
   if (!trimmed || !/^\d+$/.test(trimmed)) return undefined;

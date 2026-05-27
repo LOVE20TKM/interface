@@ -159,7 +159,6 @@ export const useMyJoinedExtensionActions = ({
         stTokenAddress: '0x0000000000000000000000000000000000000000' as `0x${string}`,
         uniswapV2PairAddress: '0x0000000000000000000000000000000000000000' as `0x${string}`,
         initialStakeRound: 0,
-        voteOriginBlocks: 0,
       };
     }
     return {
@@ -175,7 +174,6 @@ export const useMyJoinedExtensionActions = ({
       stTokenAddress: '0x0000000000000000000000000000000000000000' as `0x${string}`,
       uniswapV2PairAddress: '0x0000000000000000000000000000000000000000' as `0x${string}`,
       initialStakeRound: 0,
-      voteOriginBlocks: 0,
     };
   }, [tokenAddress]);
 

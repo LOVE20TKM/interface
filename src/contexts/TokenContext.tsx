@@ -2,7 +2,6 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/router';
 import { useTokenDetailBySymbol } from '@/src/hooks/contracts/useLOVE20TokenViewer';
-import { useOriginBlocks } from '@/src/hooks/contracts/useLOVE20Vote';
 import { isClient } from '@/src/lib/clientUtils';
 
 // 定义 Token 类型
@@ -19,7 +18,6 @@ export interface Token {
   stTokenAddress: `0x${string}`;
   uniswapV2PairAddress: `0x${string}`;
   initialStakeRound: number;
-  voteOriginBlocks: number;
 }
 
 // 定义 Context 的类型
@@ -106,11 +104,14 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children }) => {
           const storedToken = localStorage.getItem(CURRENT_TOKEN_KEY);
           if (storedToken) {
             const parsed = JSON.parse(storedToken);
+            if (!parsed) return;
+            const cachedToken = { ...parsed };
+            delete cachedToken.voteOriginBlocks;
             // 情况1：无 symbol，则直接沿用最近一次的 token
             // 情况2：有 symbol，且与缓存一致，则直接使用缓存
-            if (ifNoSymbol || (parsed && parsed.symbol === tokenSymbol)) {
-              setToken(parsed);
-              setSymbolToGetDetail(parsed.symbol || process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL || '');
+            if (ifNoSymbol || (cachedToken && cachedToken.symbol === tokenSymbol)) {
+              setToken(cachedToken);
+              setSymbolToGetDetail(cachedToken.symbol || process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL || '');
               return; // 先使用缓存渲染，随后通过 symbolToGetDetail 刷新链上状态
             }
           }
@@ -143,25 +144,20 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children }) => {
   // 合约返回成功，更新 token
   useEffect(() => {
     if (tokenInfoBySymbol && launchInfoBySymbol) {
-      setToken(
-        (prevToken) =>
-          ({
-            ...(prevToken || {}),
-            name: tokenInfoBySymbol.name,
-            symbol: tokenInfoBySymbol.symbol,
-            address: tokenInfoBySymbol.tokenAddress,
-            decimals: Number(tokenInfoBySymbol.decimals),
-            hasEnded: launchInfoBySymbol.hasEnded,
-            parentTokenAddress: launchInfoBySymbol.parentTokenAddress,
-            parentTokenName: tokenInfoBySymbol.parentTokenName,
-            parentTokenSymbol: tokenInfoBySymbol.parentTokenSymbol,
-            slTokenAddress: tokenInfoBySymbol.slAddress,
-            stTokenAddress: tokenInfoBySymbol.stAddress,
-            uniswapV2PairAddress: tokenInfoBySymbol.uniswapV2PairAddress,
-            initialStakeRound: Number(tokenInfoBySymbol.initialStakeRound),
-            voteOriginBlocks: prevToken === null ? 0 : prevToken.voteOriginBlocks,
-          } as Token),
-      );
+      setToken({
+        name: tokenInfoBySymbol.name,
+        symbol: tokenInfoBySymbol.symbol,
+        address: tokenInfoBySymbol.tokenAddress,
+        decimals: Number(tokenInfoBySymbol.decimals),
+        hasEnded: launchInfoBySymbol.hasEnded,
+        parentTokenAddress: launchInfoBySymbol.parentTokenAddress,
+        parentTokenName: tokenInfoBySymbol.parentTokenName,
+        parentTokenSymbol: tokenInfoBySymbol.parentTokenSymbol,
+        slTokenAddress: tokenInfoBySymbol.slAddress,
+        stTokenAddress: tokenInfoBySymbol.stAddress,
+        uniswapV2PairAddress: tokenInfoBySymbol.uniswapV2PairAddress,
+        initialStakeRound: Number(tokenInfoBySymbol.initialStakeRound),
+      } as Token);
     }
   }, [tokenInfoBySymbol, launchInfoBySymbol]);
 
@@ -172,24 +168,7 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children }) => {
     }
   }, [errorBySymbol]);
 
-  // Step 4. 获取投票轮开始区块
-  const shouldFetchOriginBlocks =
-    isProviderReady && !!token && (token.voteOriginBlocks === undefined || token.voteOriginBlocks === 0);
-  const { originBlocks } = useOriginBlocks(shouldFetchOriginBlocks);
-
-  useEffect(() => {
-    if (originBlocks && token && (!token.voteOriginBlocks || token.voteOriginBlocks === 0)) {
-      setToken(
-        (prevToken) =>
-          ({
-            ...(prevToken || {}),
-            voteOriginBlocks: originBlocks ? Number(originBlocks) : 0,
-          } as Token),
-      );
-    }
-  }, [originBlocks]); // 只依赖 originBlocks，避免因 token 变化造成的循环
-
-  // Step 5. 当 token 变化时，更新 Local Storage
+  // Step 4. 当 token 变化时，更新 Local Storage
   useEffect(() => {
     if (!isClient()) return;
 

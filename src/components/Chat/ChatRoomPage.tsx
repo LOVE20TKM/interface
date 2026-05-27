@@ -23,6 +23,9 @@ import {
 } from './chatStorage';
 import type { ChatWorkspaceView } from './chatTypes';
 import {
+  buildChatIndexHref,
+  buildChatPanelHref,
+  buildChatRoomHref,
   invalidateContractReads,
   parseGroupId,
   safeBigIntFromString,
@@ -33,7 +36,7 @@ export default function ChatRoomPage() {
   const queryClient = useQueryClient();
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
-  const groupId = parseGroupId(router.query.groupId);
+  const groupId = router.isReady ? parseGroupId(router.query.groupId) : undefined;
   const tokenSymbol = Array.isArray(router.query.symbol) ? router.query.symbol[0] : router.query.symbol || token?.symbol;
   const [pinnedGroupIds, setPinnedGroupIds] = useState<string[]>([]);
   const [readCursors, setReadCursors] = useState<Record<string, string>>({});
@@ -79,40 +82,40 @@ export default function ChatRoomPage() {
   const onOpenGroupPanel = useCallback(
     (nextView: ChatWorkspaceView) => {
       if (!groupId) return;
-      const query = {
-        ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
-        groupId: groupId.toString(),
-      };
       if (nextView === 'members') {
-        router.push({ pathname: '/chat/members', query });
+        router.push(buildChatPanelHref('members', tokenSymbol, groupId));
         return;
       }
       if (nextView === 'banList') {
-        router.push({ pathname: '/chat/ban-list', query });
+        router.push(buildChatPanelHref('ban-list', tokenSymbol, groupId));
         return;
       }
       if (nextView === 'admins') {
-        router.push({ pathname: '/chat/admins', query });
+        router.push(buildChatPanelHref('admins', tokenSymbol, groupId));
         return;
       }
       if (nextView === 'settings') {
-        router.push({ pathname: '/chat/settings', query });
+        router.push(buildChatPanelHref('settings', tokenSymbol, groupId));
         return;
       }
-      router.push({ pathname: '/chat/room', query }, undefined, { shallow: true });
+      router.push(buildChatRoomHref(tokenSymbol, groupId), undefined, { shallow: true });
     },
     [groupId, router, tokenSymbol],
   );
 
-  const backUrl = tokenSymbol ? `/chat?symbol=${encodeURIComponent(tokenSymbol)}` : '/chat';
+  const backUrl = buildChatIndexHref(tokenSymbol);
 
   return (
-    <>
+    <div className={styles.chatRoomPage}>
       <Header title="聊天" backUrl={backUrl} replaceBack />
       <main className={styles.chatPrototype} data-detail="true">
         <div className={styles.chatWorkspace} data-entry="love20-chat-room">
           <section className={styles.chatSurface}>
-            {groupId ? (
+            {!router.isReady ? (
+              <section className={cn('workspace-screen', 'inbox-screen')} aria-label="聊天工作区">
+                <div className="empty-state">页面初始化中...</div>
+              </section>
+            ) : groupId ? (
               <RoomPanel
                 groupId={groupId}
                 account={accountAddress}
@@ -134,6 +137,6 @@ export default function ChatRoomPage() {
           </section>
         </div>
       </main>
-    </>
+    </div>
   );
 }
