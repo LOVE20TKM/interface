@@ -61,7 +61,7 @@ function useManagerActivationContext(activationType: ActivationType) {
   const openChat = useCallback(
     (groupId: bigint) => {
       router.push({
-        pathname: '/chat',
+        pathname: '/chat/room',
         query: {
           ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
           groupId: groupId.toString(),

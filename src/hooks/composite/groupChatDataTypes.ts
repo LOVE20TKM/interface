@@ -33,11 +33,6 @@ export interface ParsedGroupChatMessage {
   quotedMessageId: bigint;
 }
 
-export interface ParsedGroupChatMeta {
-  title: string;
-  description: string;
-}
-
 export interface GroupChatListItem {
   groupId: bigint;
   kind: GroupChatKind;
@@ -49,35 +44,33 @@ export interface GroupChatListItem {
   actionId?: bigint;
   actionTitle?: string;
   info?: ParsedGroupChatInfo;
-  meta: ParsedGroupChatMeta;
   latestMentionMeMessageId: bigint;
   latestMentionAllMessageId: bigint;
   messagesCount: bigint;
-  latestMessage?: ParsedGroupChatMessage;
-  latestMessageBanned: boolean;
-  recentMessages: ParsedGroupChatMessage[];
-  recentBannedMessageIds: Record<string, boolean>;
-  latestVisibleMentionMeMessageId: bigint;
-  latestVisibleMentionAllMessageId: bigint;
 }
 
-export interface GroupChatRoomData {
+export interface GroupChatRoomPublicData {
   groupId: bigint | undefined;
   chatInfo?: ParsedGroupChatInfo;
-  meta: ParsedGroupChatMeta;
   groupName: string;
   messagesCount: bigint | undefined;
   messages: ParsedGroupChatMessage[];
   quotedMessages: Record<string, ParsedGroupChatMessage>;
   bannedMessageIds: Record<string, boolean>;
   senderNames: Record<string, string>;
+  isMessageFeedPending: boolean;
+  isPending: boolean;
+  error?: unknown;
+  refetch: () => void;
+}
+
+export interface GroupChatRoomAccountData {
   defaultSenderId: bigint | undefined;
   defaultSenderName: string;
   hasDefaultSender: boolean;
   isDefaultSenderPending: boolean;
   canPost: boolean;
   canPostReasonCode?: `0x${string}`;
-  isMessageFeedPending: boolean;
   isPending: boolean;
   error?: unknown;
   refetch: () => void;
@@ -160,7 +153,6 @@ export function typeLabel(kind: GroupChatKind) {
 export function buildChatTitle(item: {
   kind: GroupChatKind;
   groupId: bigint;
-  meta?: ParsedGroupChatMeta;
   groupName?: string;
   tokenSymbol?: string;
   tokenAddress?: `0x${string}`;
@@ -173,7 +165,6 @@ export function buildChatTitle(item: {
   if (item.kind === 'token-gov') return `${managerLabel} 治理群`;
   if (item.kind === 'action') return `No.${item.actionId ?? '?'} ${item.actionTitle || '行动'} 行动主群`;
   if (item.kind === 'action-gov') return `No.${item.actionId ?? '?'} ${item.actionTitle || '行动'} 行动治理群`;
-  if (item.meta?.title) return item.meta.title;
   return item.groupName || `群聊 #${item.groupId}`;
 }
 

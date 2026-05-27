@@ -2,7 +2,6 @@
 
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useQueryClient } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 
 import { TokenActionGovManagerAbi } from '@/src/abis/TokenActionGovManager';
@@ -23,12 +22,12 @@ import {
 import { useGroupChatInboxData } from '@/src/hooks/composite/useGroupChatData';
 import { useIsGovernor } from '@/src/hooks/composite/useIsGovernor';
 import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
+import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite/useMyJoinedExtensionActions';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { cn } from '@/lib/utils';
 import { InboxPanel } from './InboxPanel';
-import { RoomPanel } from './RoomPanel';
 import styles from './ChatPage.module.css';
 import {
   PINNED_GROUPS_STORAGE_KEY,
@@ -42,10 +41,7 @@ import {
   readRecordStorage,
   writeMessagePreferences,
 } from './chatStorage';
-import type { ChatWorkspaceView } from './chatTypes';
 import {
-  invalidateContractReads,
-  parseGroupId,
   safeBigIntFromString,
 } from './chatUtils';
 
@@ -69,7 +65,6 @@ function resultAt(data: readonly { status?: string; result?: unknown }[] | undef
 
 export default function ChatPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { address: account, isConnected } = useAccount();
   const { token } = useContext(TokenContext) || {};
   const [pinnedGroupIds, setPinnedGroupIds] = useState<string[]>([]);
@@ -78,8 +73,6 @@ export default function ChatPage() {
   const [messagePreferences, setMessagePreferences] = useState<MessagePreferences>(DEFAULT_MESSAGE_PREFERENCES);
   const showBannedMessages = messagePreferences.showBannedMessages;
   const showMessageTimes = messagePreferences.showMessageTimes;
-  const selectedGroupId = parseGroupId(router.query.groupId);
-  const workspaceView: ChatWorkspaceView = selectedGroupId ? 'chat' : 'inbox';
   const accountAddress = account as `0x${string}` | undefined;
   const tokenAddress = token?.address as `0x${string}` | undefined;
   const { myGroups } = useMyGroups(accountAddress);
@@ -87,12 +80,20 @@ export default function ChatPage() {
   const { isGovernor } = useIsGovernor(accountAddress);
   const { groupId: tokenMainGroupId } = useTokenMainChatGroupIdOfToken(tokenAddress, !!tokenAddress);
   const { groupId: tokenGovGroupId } = useTokenGovChatGroupIdOfToken(tokenAddress, !!tokenAddress && isGovernor);
-  const { joinedActions } = useJoinedActions(tokenAddress as `0x${string}`, accountAddress as `0x${string}`);
-  const joinedActionIds = useMemo(
-    () => uniqueGroupIds(joinedActions.map((item) => item.action?.head?.id)),
-    [joinedActions],
-  );
   const { currentRound } = useCurrentRound();
+  const { joinedActions } = useJoinedActions(tokenAddress as `0x${string}`, accountAddress as `0x${string}`);
+  const { joinedExtensionActions } = useMyJoinedExtensionActions({
+    tokenAddress,
+    account: accountAddress,
+    currentRound,
+  });
+  const joinedActionIds = useMemo(
+    () =>
+      uniqueGroupIds(
+        [...joinedActions, ...joinedExtensionActions].map((item) => item.action?.head?.id),
+      ),
+    [joinedActions, joinedExtensionActions],
+  );
   const recentVoteRange = useMemo(() => {
     if (!currentRound || currentRound <= BigInt(0)) return { startRound: BigInt(0), endRound: BigInt(0) };
     const startRound = currentRound > BigInt(2) ? currentRound - BigInt(2) : BigInt(1);
@@ -172,10 +173,6 @@ export default function ChatPage() {
     [myChainGroupIds, pinnedPriorityGroupIds, recommendedGroupIds],
   );
   const inbox = useGroupChatInboxData(token, accountAddress, 50, inboxPriorityGroupIds);
-  const selectedInboxItem = selectedGroupId
-    ? inbox.items.find((entry) => entry.groupId === selectedGroupId)
-    : undefined;
-  const isChatDetail = workspaceView === 'chat' && !!selectedGroupId;
 
   useEffect(() => {
     setPinnedGroupIds(readJsonArrayStorage(PINNED_GROUPS_STORAGE_KEY));
@@ -183,37 +180,15 @@ export default function ChatPage() {
     setMessagePreferences(readMessagePreferences());
   }, []);
 
-  const markGroupRead = useCallback((groupId: bigint, latestMessageId: bigint | undefined) => {
-    const key = groupId.toString();
-    const cursor = latestMessageId && latestMessageId > BigInt(0) ? latestMessageId : BigInt(0);
-    setReadCursors((prev) => {
-      const previous = safeBigIntFromString(prev[key]);
-      if (cursor <= previous) return prev;
-      const next = { ...prev, [key]: cursor.toString() };
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(READ_CURSORS_STORAGE_KEY, JSON.stringify(next));
-      }
-      return next;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!selectedGroupId || workspaceView !== 'chat') return;
-    const item = inbox.items.find((entry) => entry.groupId === selectedGroupId);
-    markGroupRead(selectedGroupId, item?.latestMessage?.messageId || item?.messagesCount);
-  }, [inbox.items, markGroupRead, selectedGroupId, workspaceView]);
-
   const onOpen = useCallback(
     (groupId: bigint) => {
-      const item = inbox.items.find((entry) => entry.groupId === groupId);
-      markGroupRead(groupId, item?.latestMessage?.messageId || item?.messagesCount);
       const query = {
         ...(token?.symbol ? { symbol: token.symbol } : {}),
         groupId: groupId.toString(),
       };
-      router.push({ pathname: '/chat', query }, undefined, { shallow: true });
+      router.push({ pathname: '/chat/room', query });
     },
-    [inbox.items, markGroupRead, router, token?.symbol],
+    [router, token?.symbol],
   );
 
   const onOpenActivate = useCallback(() => {
@@ -222,39 +197,6 @@ export default function ChatPage() {
     };
     router.push({ pathname: '/chat/activate', query });
   }, [router, token?.symbol]);
-
-  const onOpenGroupPanel = useCallback(
-    (nextView: ChatWorkspaceView) => {
-      if (!selectedGroupId) return;
-      const query = {
-        ...(token?.symbol ? { symbol: token.symbol } : {}),
-        groupId: selectedGroupId.toString(),
-      };
-      if (nextView === 'members') {
-        router.push({ pathname: '/chat/members', query });
-        return;
-      }
-      if (nextView === 'banList') {
-        router.push({ pathname: '/chat/ban-list', query });
-        return;
-      }
-      if (nextView === 'admins') {
-        router.push({ pathname: '/chat/admins', query });
-        return;
-      }
-      if (nextView === 'settings') {
-        router.push({ pathname: '/chat/settings', query });
-        return;
-      }
-      router.push({ pathname: '/chat', query }, undefined, { shallow: true });
-    },
-    [router, selectedGroupId, token?.symbol],
-  );
-
-  const refreshAll = useCallback(() => {
-    inbox.refetch();
-    invalidateContractReads(queryClient);
-  }, [inbox, queryClient]);
 
   const togglePinnedGroup = useCallback((groupId: bigint) => {
     const key = groupId.toString();
@@ -280,53 +222,36 @@ export default function ChatPage() {
 
   return (
     <>
-      <Header title="聊天" showBackButton={workspaceView !== 'inbox'} />
-      <main className={styles.chatPrototype} data-detail={isChatDetail ? 'true' : 'false'}>
+      <Header title="聊天" showBackButton={false} />
+      <main className={styles.chatPrototype} data-detail="false">
         <div className={styles.chatWorkspace} data-entry="love20-chat">
           <section className={styles.chatSurface}>
-            {workspaceView === 'chat' && selectedGroupId ? (
-              <RoomPanel
-                groupId={selectedGroupId}
-                account={accountAddress}
-                title={selectedInboxItem?.title}
-                isPinned={pinnedGroupIds.includes(selectedGroupId.toString())}
+            <section className={cn('workspace-screen', 'inbox-screen')} aria-label="聊天工作区">
+              {!isGroupChatEnabled && (
+                <div className="mb-3">
+                  <AlertBox type="warning" message="当前环境未配置 GroupChat 合约地址。" />
+                </div>
+              )}
+              <InboxPanel
+                items={inbox.items}
+                isPending={inbox.isPending}
+                isConnected={isConnected}
+                tokenSymbol={token?.symbol}
+                pinnedGroupIds={pinnedGroupIds}
+                myChainGroupIds={myChainGroupIds}
+                recommendedGroupIds={recommendedGroupIds}
+                readCursors={readCursors}
+                preferencesOpen={preferencesOpen}
                 showBannedMessages={showBannedMessages}
                 showMessageTimes={showMessageTimes}
-                tokenAddress={token?.address}
-                tokenSymbol={token?.symbol}
-                onPosted={refreshAll}
-                onOpenPanel={onOpenGroupPanel}
+                onOpen={onOpen}
+                onOpenActivate={onOpenActivate}
                 onTogglePin={togglePinnedGroup}
+                onTogglePreferences={() => setPreferencesOpen((value) => !value)}
+                onSetShowBannedMessages={(value) => updateMessagePreference('showBannedMessages', value)}
+                onSetShowMessageTimes={(value) => updateMessagePreference('showMessageTimes', value)}
               />
-            ) : (
-              <section className={cn('workspace-screen', workspaceView === 'inbox' && 'inbox-screen')} aria-label="聊天工作区">
-                {!isGroupChatEnabled && (
-                  <div className="mb-3">
-                    <AlertBox type="warning" message="当前环境未配置 GroupChat 合约地址。" />
-                  </div>
-                )}
-                <InboxPanel
-                  items={inbox.items}
-                  selectedGroupId={selectedGroupId}
-                  isPending={inbox.isPending}
-                  isConnected={isConnected}
-                  tokenSymbol={token?.symbol}
-                  pinnedGroupIds={pinnedGroupIds}
-                  myChainGroupIds={myChainGroupIds}
-                  recommendedGroupIds={recommendedGroupIds}
-                  readCursors={readCursors}
-                  preferencesOpen={preferencesOpen}
-                  showBannedMessages={showBannedMessages}
-                  showMessageTimes={showMessageTimes}
-                  onOpen={onOpen}
-                  onOpenActivate={onOpenActivate}
-                  onTogglePin={togglePinnedGroup}
-                  onTogglePreferences={() => setPreferencesOpen((value) => !value)}
-                  onSetShowBannedMessages={(value) => updateMessagePreference('showBannedMessages', value)}
-                  onSetShowMessageTimes={(value) => updateMessagePreference('showMessageTimes', value)}
-                />
-              </section>
-            )}
+            </section>
           </section>
         </div>
       </main>

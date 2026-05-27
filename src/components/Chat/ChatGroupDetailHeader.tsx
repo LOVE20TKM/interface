@@ -1,11 +1,11 @@
 import {
   useGroupChatManagedTitle,
-  type GroupChatRoomData,
+  type GroupChatRoomPublicData,
 } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
 import { isManagerOwnedChat } from './chatUtils';
 
-export function useGroupDetailSubtitle(groupId: bigint, room: GroupChatRoomData) {
+export function useGroupDetailSubtitle(groupId: bigint, room: GroupChatRoomPublicData) {
   const managedTitle = useGroupChatManagedTitle(groupId);
   const managerOwned = isManagerOwnedChat(room.chatInfo?.owner);
 

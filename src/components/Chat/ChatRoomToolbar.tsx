@@ -6,7 +6,6 @@ import type { ChatWorkspaceView } from './chatTypes';
 export function ChatRoomToolbar({
   groupId,
   title,
-  description,
   messagesCount,
   menuOpen,
   isPinned,
@@ -17,7 +16,6 @@ export function ChatRoomToolbar({
 }: {
   groupId: bigint;
   title: string;
-  description?: string;
   messagesCount: bigint | undefined;
   menuOpen: boolean;
   isPinned: boolean;
@@ -63,7 +61,6 @@ export function ChatRoomToolbar({
         <strong>{title}</strong>
         <span className="chat-tools-meta">
           G#{groupId.toString()}
-          {description ? ` · ${description}` : ''}
           {messagesCount !== undefined ? ` · ${messagesCount.toString()} 条消息` : ''}
         </span>
       </div>

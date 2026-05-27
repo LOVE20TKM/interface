@@ -31,7 +31,10 @@ import {
   GROUP_CHAT_TOKEN_GOV_MANAGER_ADDRESS,
   GROUP_CHAT_TOKEN_MAIN_MANAGER_ADDRESS,
 } from '@/src/hooks/contracts/useGroupChatManagers';
-import { useGroupChatRoomData } from '@/src/hooks/composite/useGroupChatData';
+import {
+  useGroupChatRoomAccountData,
+  useGroupChatRoomPublicData,
+} from '@/src/hooks/composite/useGroupChatData';
 import NftOwnerLookup from '@/src/components/Extension/Base/Group/NftOwnerLookup';
 import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
 import { resolveOwnerManagedChatPermission } from '@/src/lib/groupChatPermissions';
@@ -289,7 +292,8 @@ export function ChatSettingsPanel({
   account: `0x${string}` | undefined;
   onChanged: () => void;
 }) {
-  const room = useGroupChatRoomData(groupId, account);
+  const room = useGroupChatRoomPublicData(groupId);
+  const accountRoom = useGroupChatRoomAccountData(groupId, account, room.senderNames);
   const [scopeSource, setScopeSource] = useState('');
   const [banSource, setBanSource] = useState('');
   const [beforePostPlugin, setBeforePostPlugin] = useState('');
@@ -320,9 +324,9 @@ export function ChatSettingsPanel({
   const banExplanation = explainBanContract(room.chatInfo?.banSource);
   const beforePluginExplanation = explainPluginContract(room.chatInfo?.beforePostPlugin, 'before');
   const afterPluginExplanation = explainPluginContract(room.chatInfo?.afterPostPlugin, 'after');
-  const canPostText = room.canPost
+  const canPostText = accountRoom.canPost
     ? '可以发言'
-    : formatCanPostReason(room.canPostReasonCode) || '当前地址暂时不满足这个群聊的发言条件。';
+    : formatCanPostReason(accountRoom.canPostReasonCode) || '当前地址暂时不满足这个群聊的发言条件。';
   const systemContractRows = [
     {
       label: 'GroupChat 主合约',
@@ -465,7 +469,7 @@ export function ChatSettingsPanel({
             <dt>发言总开关</dt>
             <dd>{room.chatInfo ? (room.chatInfo.postingAllowed ? '允许发言' : '暂停发言') : '读取中'}</dd>
             <dt>当前发言身份</dt>
-            <dd>{room.defaultSenderId ? `NFT #${room.defaultSenderId.toString()}` : '未设置默认 NFT'}</dd>
+            <dd>{accountRoom.defaultSenderId ? `NFT #${accountRoom.defaultSenderId.toString()}` : '未设置默认 NFT'}</dd>
             <dt>我能否发言</dt>
             <dd>{room.chatInfo ? canPostText : '读取中'}</dd>
           </dl>

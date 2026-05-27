@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { LOVE20GroupAbi } from '@/src/abis/LOVE20Group';
 import { LOVE20SubmitAbi } from '@/src/abis/LOVE20Submit';
@@ -39,10 +39,10 @@ import {
   type ClassifierKind,
   type GroupChatKind,
   type GroupChatListItem,
-  type GroupChatRoomData,
+  type GroupChatRoomAccountData,
+  type GroupChatRoomPublicData,
   type ParsedGroupChatInfo,
   type ParsedGroupChatMessage,
-  type ParsedGroupChatMeta,
   type ReadContractResult,
 } from './groupChatDataTypes';
 
@@ -51,14 +51,13 @@ export {
   parseGroupChatMessage,
   type GroupChatKind,
   type GroupChatListItem,
-  type GroupChatRoomData,
+  type GroupChatRoomAccountData,
+  type GroupChatRoomPublicData,
   type ParsedGroupChatInfo,
   type ParsedGroupChatMessage,
-  type ParsedGroupChatMeta,
 } from './groupChatDataTypes';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const INBOX_RECENT_MESSAGE_LIMIT = 10;
 const GROUP_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP as `0x${string}` | undefined;
 const SUBMIT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_SUBMIT as `0x${string}` | undefined;
 const TOKEN_MAIN_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_TOKEN_MAIN_MANAGER as
@@ -73,6 +72,8 @@ const TOKEN_ACTION_MAIN_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRE
 const TOKEN_ACTION_GOV_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_TOKEN_ACTION_GOV_MANAGER as
   | `0x${string}`
   | undefined;
+const MANAGER_CHAT_INFO_CACHE_PREFIX = 'love20:group-chat:manager-info';
+const CHAIN_CACHE_KEY = process.env.NEXT_PUBLIC_CHAIN || 'unknown-chain';
 const POST_BAN_SOURCE_ABI = [
   {
     type: 'function',
@@ -87,6 +88,10 @@ const POST_BAN_SOURCE_ABI = [
   },
 ] as const;
 
+function messageSenderKey(senderId: bigint, senderAddress: `0x${string}`) {
+  return `${senderId.toString()}:${senderAddress.toLowerCase()}`;
+}
+
 function actionInfoTitle(raw: unknown) {
   const item = raw as (Record<string, unknown> & readonly unknown[]) | undefined;
   const body = (item?.body ?? item?.[1]) as (Record<string, unknown> & readonly unknown[]) | undefined;
@@ -100,6 +105,57 @@ function managerKindByOwner(owner: `0x${string}` | undefined): ClassifierKind | 
   if (addressesEqual(owner, TOKEN_ACTION_MAIN_MANAGER_ADDRESS)) return 'action';
   if (addressesEqual(owner, TOKEN_ACTION_GOV_MANAGER_ADDRESS)) return 'action-gov';
   return undefined;
+}
+
+function managerChatInfoCacheKey(groupId: bigint) {
+  return `${MANAGER_CHAT_INFO_CACHE_PREFIX}:${CHAIN_CACHE_KEY}:${GROUP_CHAT_CONTRACT_ADDRESS.toLowerCase()}:${groupId.toString()}`;
+}
+
+function serializeGroupChatInfo(info: ParsedGroupChatInfo) {
+  return {
+    groupId: info.groupId.toString(),
+    owner: info.owner,
+    activated: info.activated,
+    postingAllowed: info.postingAllowed,
+    scopeSource: info.scopeSource,
+    banSource: info.banSource,
+    beforePostPlugin: info.beforePostPlugin,
+    afterPostPlugin: info.afterPostPlugin,
+    firstActivatedOwner: info.firstActivatedOwner,
+    firstActivatedBlockNumber: info.firstActivatedBlockNumber.toString(),
+    firstActivatedTimestamp: info.firstActivatedTimestamp.toString(),
+  };
+}
+
+function parseCachedGroupChatInfo(raw: string | null): ParsedGroupChatInfo | undefined {
+  if (!raw) return undefined;
+  try {
+    const item = JSON.parse(raw);
+    const info = parseGroupChatInfo({
+      ...item,
+      groupId: item?.groupId,
+      firstActivatedBlockNumber: item?.firstActivatedBlockNumber,
+      firstActivatedTimestamp: item?.firstActivatedTimestamp,
+    });
+    return info && managerKindByOwner(info.owner) ? info : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function readCachedManagerChatInfos(groupIds: readonly bigint[]) {
+  if (typeof window === 'undefined') return {};
+  const map: Record<string, ParsedGroupChatInfo> = {};
+  groupIds.forEach((groupId) => {
+    const cached = parseCachedGroupChatInfo(window.localStorage.getItem(managerChatInfoCacheKey(groupId)));
+    if (cached) map[groupId.toString()] = cached;
+  });
+  return map;
+}
+
+function writeCachedManagerChatInfo(info: ParsedGroupChatInfo) {
+  if (typeof window === 'undefined' || !managerKindByOwner(info.owner)) return;
+  window.localStorage.setItem(managerChatInfoCacheKey(info.groupId), JSON.stringify(serializeGroupChatInfo(info)));
 }
 
 export function useGroupNames(groupIds: readonly (bigint | undefined)[], enabled: boolean = true) {
@@ -161,25 +217,97 @@ export function useGroupChatInboxData(
     () => uniqueBigInts([...priorityGroupIds, ...recentGroupIds]),
     [priorityGroupIds, recentGroupIds],
   );
+  const groupIdsCacheKey = useMemo(() => groupIds.map((groupId) => groupId.toString()).join(','), [groupIds]);
+  const [cachedManagerChatInfos, setCachedManagerChatInfos] = useState<Record<string, ParsedGroupChatInfo>>({});
+  const [cacheReadyKey, setCacheReadyKey] = useState('');
 
-  const { groupNames, isPending: isPendingGroupNames, refetch: refetchGroupNames } = useGroupNames(groupIds);
   const { defaultGroupId, hasDefaultGroup, isPending: isPendingDefaultGroup, refetch: refetchDefaultGroup } =
     useDefaultGroupOf(account, !!account);
 
-  const { chatInfos, isPending: isPendingInfos, error: infoError, refetch: refetchInfos } =
-    useGroupChatInfos(groupIds, groupIds.length > 0);
-  const parsedChatInfos = useMemo(
-    () => groupIds.map((_, index) => parseGroupChatInfo(chatInfos[index])),
-    [chatInfos, groupIds],
-  );
+  useEffect(() => {
+    setCachedManagerChatInfos(readCachedManagerChatInfos(groupIds));
+    setCacheReadyKey(groupIdsCacheKey);
+  }, [groupIds, groupIdsCacheKey]);
 
-  const metaByGroup = useMemo(() => {
-    const map: Record<string, ParsedGroupChatMeta> = {};
-    groupIds.forEach((groupId) => {
-      map[groupId.toString()] = { title: '', description: '' };
+  const isCacheReady = cacheReadyKey === groupIdsCacheKey;
+  const uncachedInfoGroupIds = useMemo(
+    () =>
+      isCacheReady
+        ? groupIds.filter((groupId) => !cachedManagerChatInfos[groupId.toString()])
+        : [],
+    [cachedManagerChatInfos, groupIds, isCacheReady],
+  );
+  const chatInfoContracts = useMemo(
+    () =>
+      uncachedInfoGroupIds.map((groupId) => ({
+        address: GROUP_CHAT_CONTRACT_ADDRESS,
+        abi: GroupChatAbi,
+        functionName: 'chatInfo' as const,
+        args: [groupId],
+      })),
+    [uncachedInfoGroupIds],
+  );
+  const {
+    data: chatInfoData,
+    isPending: rawIsPendingInfos,
+    error: infoError,
+    refetch: refetchInfos,
+  } = useUniversalReadContracts({
+    contracts: chatInfoContracts as any,
+    query: {
+      enabled: isGroupChatEnabled && isCacheReady && chatInfoContracts.length > 0,
+    },
+  });
+  const isPendingInfos = isCacheReady && chatInfoContracts.length > 0 ? rawIsPendingInfos : !isCacheReady;
+  const parsedChatInfos = useMemo(() => {
+    const liveInfosByGroup: Record<string, ParsedGroupChatInfo | undefined> = {};
+    uncachedInfoGroupIds.forEach((groupId, index) => {
+      liveInfosByGroup[groupId.toString()] = parseGroupChatInfo(
+        resultAt(chatInfoData as readonly ReadContractResult[] | undefined, index),
+      );
     });
-    return map;
-  }, [groupIds]);
+    return groupIds.map((groupId) => cachedManagerChatInfos[groupId.toString()] || liveInfosByGroup[groupId.toString()]);
+  }, [cachedManagerChatInfos, chatInfoData, groupIds, uncachedInfoGroupIds]);
+
+  useEffect(() => {
+    const nextCachedInfos: Record<string, ParsedGroupChatInfo> = {};
+    parsedChatInfos.forEach((info) => {
+      if (!info || !managerKindByOwner(info.owner)) return;
+      writeCachedManagerChatInfo(info);
+      nextCachedInfos[info.groupId.toString()] = info;
+    });
+    if (Object.keys(nextCachedInfos).length === 0) return;
+    setCachedManagerChatInfos((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      Object.entries(nextCachedInfos).forEach(([key, info]) => {
+        const previous = prev[key];
+        if (
+          previous?.owner === info.owner &&
+          previous?.firstActivatedBlockNumber === info.firstActivatedBlockNumber &&
+          previous?.postingAllowed === info.postingAllowed &&
+          previous?.scopeSource === info.scopeSource &&
+          previous?.banSource === info.banSource &&
+          previous?.beforePostPlugin === info.beforePostPlugin &&
+          previous?.afterPostPlugin === info.afterPostPlugin
+        ) {
+          return;
+        }
+        next[key] = info;
+        changed = true;
+      });
+      return changed ? next : prev;
+    });
+  }, [parsedChatInfos]);
+
+  const groupNameIds = useMemo(
+    () => groupIds.filter((_, index) => !managerKindByOwner(parsedChatInfos[index]?.owner)),
+    [groupIds, parsedChatInfos],
+  );
+  const { groupNames, isPending: isPendingGroupNames, refetch: refetchGroupNames } = useGroupNames(
+    groupNameIds,
+    groupNameIds.length > 0,
+  );
 
   const messageCountContracts = useMemo(
     () =>
@@ -281,206 +409,6 @@ export function useGroupChatInboxData(
     return ids;
   }, [groupIds, latestMentionAllData]);
 
-  const latestMessageContracts = useMemo(
-    () =>
-      groupIds
-        .map((groupId) => {
-          const count = messagesCountByGroup[groupId.toString()] || BigInt(0);
-          if (count <= BigInt(0)) return null;
-          return {
-            address: GROUP_CHAT_CONTRACT_ADDRESS,
-            abi: GroupChatAbi,
-            functionName: 'message' as const,
-            args: [groupId, count],
-          };
-        })
-        .filter(Boolean),
-    [groupIds, messagesCountByGroup],
-  );
-  const {
-    data: latestMessageData,
-    isPending: rawIsPendingLatestMessages,
-    error: latestMessageError,
-    refetch: refetchLatestMessages,
-  } = useUniversalReadContracts({
-    contracts: latestMessageContracts as any,
-    query: {
-      enabled: isGroupChatEnabled && latestMessageContracts.length > 0,
-    },
-  });
-  const shouldReadLatestMessages = isGroupChatEnabled && latestMessageContracts.length > 0;
-  const isPendingLatestMessages = shouldReadLatestMessages ? rawIsPendingLatestMessages : false;
-
-  const latestMessageByGroup = useMemo(() => {
-    const latest: Record<string, ParsedGroupChatMessage> = {};
-    let resultIndex = 0;
-    groupIds.forEach((groupId) => {
-      const count = messagesCountByGroup[groupId.toString()] || BigInt(0);
-      if (count <= BigInt(0)) return;
-      const parsed = parseGroupChatMessage(
-        resultAt(latestMessageData as readonly ReadContractResult[] | undefined, resultIndex),
-      );
-      if (parsed) latest[groupId.toString()] = parsed;
-      resultIndex++;
-    });
-    return latest;
-  }, [groupIds, latestMessageData, messagesCountByGroup]);
-
-  const latestMessageBanContracts = useMemo(
-    () =>
-      groupIds
-        .map((groupId, index) => {
-          const info = parsedChatInfos[index];
-          const message = latestMessageByGroup[groupId.toString()];
-          if (!info?.banSource || info.banSource.toLowerCase() === ZERO_ADDRESS || !message) return null;
-          return {
-            address: info.banSource,
-            abi: POST_BAN_SOURCE_ABI,
-            functionName: 'isBanned' as const,
-            args: [groupId, message.senderId, message.senderAddress],
-          };
-        })
-        .filter(Boolean),
-    [groupIds, latestMessageByGroup, parsedChatInfos],
-  );
-  const shouldReadLatestMessageBans = isGroupChatEnabled && latestMessageBanContracts.length > 0;
-  const {
-    data: latestMessageBanData,
-    isPending: rawIsPendingLatestMessageBans,
-    error: latestMessageBanError,
-    refetch: refetchLatestMessageBans,
-  } = useUniversalReadContracts({
-    contracts: latestMessageBanContracts as any,
-    query: {
-      enabled: shouldReadLatestMessageBans,
-    },
-  });
-  const isPendingLatestMessageBans = shouldReadLatestMessageBans ? rawIsPendingLatestMessageBans : false;
-
-  const latestMessageBannedByGroup = useMemo(() => {
-    const map: Record<string, boolean> = {};
-    let resultIndex = 0;
-    groupIds.forEach((groupId, index) => {
-      const info = parsedChatInfos[index];
-      const message = latestMessageByGroup[groupId.toString()];
-      if (!message || !info?.banSource || info.banSource.toLowerCase() === ZERO_ADDRESS) {
-        map[groupId.toString()] = false;
-        return;
-      }
-      map[groupId.toString()] = Boolean(
-        resultAt(latestMessageBanData as readonly ReadContractResult[] | undefined, resultIndex),
-      );
-      resultIndex++;
-    });
-    return map;
-  }, [groupIds, latestMessageBanData, latestMessageByGroup, parsedChatInfos]);
-
-  const recentMessageContracts = useMemo(
-    () =>
-      groupIds.flatMap((groupId) => {
-        const count = messagesCountByGroup[groupId.toString()] || BigInt(0);
-        if (count <= BigInt(0)) return [];
-        const limit = count < BigInt(INBOX_RECENT_MESSAGE_LIMIT) ? count : BigInt(INBOX_RECENT_MESSAGE_LIMIT);
-        const offset = count > limit ? count - limit : BigInt(0);
-        return [
-          {
-            address: GROUP_CHAT_CONTRACT_ADDRESS,
-            abi: GroupChatAbi,
-            functionName: 'messages' as const,
-            args: [groupId, offset, limit, false],
-          },
-        ];
-      }),
-    [groupIds, messagesCountByGroup],
-  );
-  const shouldReadRecentMessages = isGroupChatEnabled && recentMessageContracts.length > 0;
-  const {
-    data: recentMessageData,
-    isPending: rawIsPendingRecentMessages,
-    error: recentMessageError,
-    refetch: refetchRecentMessages,
-  } = useUniversalReadContracts({
-    contracts: recentMessageContracts as any,
-    query: {
-      enabled: shouldReadRecentMessages,
-    },
-  });
-  const isPendingRecentMessages = shouldReadRecentMessages ? rawIsPendingRecentMessages : false;
-
-  const recentMessagesByGroup = useMemo(() => {
-    const map: Record<string, ParsedGroupChatMessage[]> = {};
-    let resultIndex = 0;
-    groupIds.forEach((groupId) => {
-      const count = messagesCountByGroup[groupId.toString()] || BigInt(0);
-      if (count <= BigInt(0)) {
-        map[groupId.toString()] = [];
-        return;
-      }
-      const rawMessages = resultAt(recentMessageData as readonly ReadContractResult[] | undefined, resultIndex);
-      map[groupId.toString()] = Array.isArray(rawMessages)
-        ? rawMessages
-            .map((message) => parseGroupChatMessage(message))
-            .filter((message): message is ParsedGroupChatMessage => !!message)
-        : [];
-      resultIndex++;
-    });
-    return map;
-  }, [groupIds, messagesCountByGroup, recentMessageData]);
-
-  const recentMessageBanContracts = useMemo(
-    () =>
-      groupIds.flatMap((groupId, index) => {
-        const info = parsedChatInfos[index];
-        const recentMessages = recentMessagesByGroup[groupId.toString()] || [];
-        if (!info?.banSource || info.banSource.toLowerCase() === ZERO_ADDRESS || recentMessages.length === 0) return [];
-        return recentMessages.map((message) => ({
-          address: info.banSource,
-          abi: POST_BAN_SOURCE_ABI,
-          functionName: 'isBanned' as const,
-          args: [groupId, message.senderId, message.senderAddress],
-        }));
-      }),
-    [groupIds, parsedChatInfos, recentMessagesByGroup],
-  );
-  const shouldReadRecentMessageBans = isGroupChatEnabled && recentMessageBanContracts.length > 0;
-  const {
-    data: recentMessageBanData,
-    isPending: rawIsPendingRecentMessageBans,
-    error: recentMessageBanError,
-    refetch: refetchRecentMessageBans,
-  } = useUniversalReadContracts({
-    contracts: recentMessageBanContracts,
-    query: {
-      enabled: shouldReadRecentMessageBans,
-    },
-  });
-  const isPendingRecentMessageBans = shouldReadRecentMessageBans ? rawIsPendingRecentMessageBans : false;
-
-  const recentBannedMessageIdsByGroup = useMemo(() => {
-    const map: Record<string, Record<string, boolean>> = {};
-    let resultIndex = 0;
-    groupIds.forEach((groupId, index) => {
-      const info = parsedChatInfos[index];
-      const recentMessages = recentMessagesByGroup[groupId.toString()] || [];
-      const bannedByMessageId: Record<string, boolean> = {};
-      if (!info?.banSource || info.banSource.toLowerCase() === ZERO_ADDRESS || recentMessages.length === 0) {
-        recentMessages.forEach((message) => {
-          bannedByMessageId[message.messageId.toString()] = false;
-        });
-        map[groupId.toString()] = bannedByMessageId;
-        return;
-      }
-      recentMessages.forEach((message) => {
-        bannedByMessageId[message.messageId.toString()] = Boolean(
-          resultAt(recentMessageBanData as readonly ReadContractResult[] | undefined, resultIndex),
-        );
-        resultIndex++;
-      });
-      map[groupId.toString()] = bannedByMessageId;
-    });
-    return map;
-  }, [groupIds, parsedChatInfos, recentMessageBanData, recentMessagesByGroup]);
-
   const classifierContracts = useMemo(() => {
     const contracts: Array<{
       groupId: bigint;
@@ -497,8 +425,9 @@ export function useGroupChatInboxData(
       };
     }> = [];
 
-    groupIds.forEach((groupId) => {
-      if (TOKEN_MAIN_MANAGER_ADDRESS) {
+    groupIds.forEach((groupId, index) => {
+      const ownerKind = managerKindByOwner(parsedChatInfos[index]?.owner);
+      if (ownerKind === 'token-community' && TOKEN_MAIN_MANAGER_ADDRESS) {
         contracts.push({
           groupId,
           kind: 'token-community',
@@ -510,7 +439,7 @@ export function useGroupChatInboxData(
           },
         });
       }
-      if (TOKEN_GOV_MANAGER_ADDRESS) {
+      if (ownerKind === 'token-gov' && TOKEN_GOV_MANAGER_ADDRESS) {
         contracts.push({
           groupId,
           kind: 'token-gov',
@@ -522,7 +451,7 @@ export function useGroupChatInboxData(
           },
         });
       }
-      if (TOKEN_ACTION_MAIN_MANAGER_ADDRESS) {
+      if (ownerKind === 'action' && TOKEN_ACTION_MAIN_MANAGER_ADDRESS) {
         contracts.push({
           groupId,
           kind: 'action',
@@ -534,7 +463,7 @@ export function useGroupChatInboxData(
           },
         });
       }
-      if (TOKEN_ACTION_GOV_MANAGER_ADDRESS) {
+      if (ownerKind === 'action-gov' && TOKEN_ACTION_GOV_MANAGER_ADDRESS) {
         contracts.push({
           groupId,
           kind: 'action-gov',
@@ -549,7 +478,7 @@ export function useGroupChatInboxData(
     });
 
     return contracts;
-  }, [groupIds]);
+  }, [groupIds, parsedChatInfos]);
 
   const {
     data: classifierData,
@@ -686,13 +615,11 @@ export function useGroupChatInboxData(
           ? actionTitleByTokenAndId[`${classification.tokenAddress.toLowerCase()}:${classification.actionId.toString()}`]
           : undefined;
       const groupName = groupNames[key] || `${GROUP_NAME_UNKNOWN} #${groupId}`;
-      const meta = metaByGroup[key] || { title: '', description: '' };
 
       const base = {
         groupId,
         kind: classification.kind,
         typeLabel: typeLabel(classification.kind),
-        meta,
         groupName,
         tokenAddress: classification.tokenAddress,
         tokenSymbol,
@@ -702,39 +629,12 @@ export function useGroupChatInboxData(
         messagesCount: messagesCountByGroup[key] || BigInt(0),
         latestMentionMeMessageId: latestMentionMeByGroup[key] || BigInt(0),
         latestMentionAllMessageId: latestMentionAllByGroup[key] || BigInt(0),
-        latestMessage: latestMessageByGroup[key],
-        latestMessageBanned: latestMessageBannedByGroup[key] || false,
-        recentMessages: recentMessagesByGroup[key] || [],
-        recentBannedMessageIds: recentBannedMessageIdsByGroup[key] || {},
-        latestVisibleMentionMeMessageId: BigInt(0),
-        latestVisibleMentionAllMessageId: BigInt(0),
       };
-
-      const latestVisibleMentionMeMessageId = base.recentMessages.reduce(
-        (latest, message) =>
-          !base.recentBannedMessageIds[message.messageId.toString()] &&
-          defaultGroupId &&
-          message.mentionedSenderIds.some((senderId) => senderId === defaultGroupId) &&
-          message.messageId > latest
-            ? message.messageId
-            : latest,
-        BigInt(0),
-      );
-      const latestVisibleMentionAllMessageId = base.recentMessages.reduce(
-        (latest, message) =>
-          !base.recentBannedMessageIds[message.messageId.toString()] && message.mentionAll && message.messageId > latest
-            ? message.messageId
-            : latest,
-        BigInt(0),
-      );
 
       return {
         ...base,
-        latestVisibleMentionMeMessageId,
-        latestVisibleMentionAllMessageId,
         title: buildChatTitle({
           ...base,
-          meta: info && !ownerManagerKind ? meta : { ...meta, title: '' },
           groupName: info && !ownerManagerKind ? groupName : undefined,
         }),
       };
@@ -744,18 +644,12 @@ export function useGroupChatInboxData(
     classificationByGroup,
     currentToken?.address,
     currentToken?.symbol,
-    defaultGroupId,
     groupIds,
     groupNames,
-    latestMessageByGroup,
-    latestMessageBannedByGroup,
     latestMentionAllByGroup,
     latestMentionMeByGroup,
-    metaByGroup,
     messagesCountByGroup,
     parsedChatInfos,
-    recentBannedMessageIdsByGroup,
-    recentMessagesByGroup,
     symbolByToken,
   ]);
 
@@ -771,10 +665,6 @@ export function useGroupChatInboxData(
       isPendingMessageCounts ||
       isPendingLatestMentionMe ||
       isPendingLatestMentionAll ||
-      isPendingLatestMessages ||
-      isPendingLatestMessageBans ||
-      isPendingRecentMessages ||
-      isPendingRecentMessageBans ||
       isPendingClassifiers ||
       isPendingActionInfos,
     error:
@@ -784,10 +674,6 @@ export function useGroupChatInboxData(
       messageCountError ||
       latestMentionMeError ||
       latestMentionAllError ||
-      latestMessageError ||
-      latestMessageBanError ||
-      recentMessageError ||
-      recentMessageBanError ||
       classifierError ||
       actionInfoError,
     refetch: () => {
@@ -799,10 +685,6 @@ export function useGroupChatInboxData(
       refetchMessageCounts();
       refetchLatestMentionMe();
       refetchLatestMentionAll();
-      refetchLatestMessages();
-      refetchLatestMessageBans();
-      refetchRecentMessages();
-      refetchRecentMessageBans();
       refetchClassifiers();
       refetchSymbols();
       refetchActionInfos();
@@ -810,14 +692,12 @@ export function useGroupChatInboxData(
   };
 }
 
-export function useGroupChatRoomData(
+export function useGroupChatRoomPublicData(
   groupId: bigint | undefined,
-  account: `0x${string}` | undefined,
   limit: number = 100,
-): GroupChatRoomData {
+): GroupChatRoomPublicData {
   const { chatInfo: rawInfo, isPending: isPendingInfo, error: infoError, refetch: refetchInfo } = useGroupChatInfo(groupId);
   const chatInfo = useMemo(() => parseGroupChatInfo(rawInfo), [rawInfo]);
-  const meta = useMemo<ParsedGroupChatMeta>(() => ({ title: '', description: '' }), []);
   const { messagesCount, isPending: isPendingCount, error: countError, refetch: refetchCount } =
     useGroupChatMessagesCount(groupId);
   const limitBigInt = BigInt(limit);
@@ -874,92 +754,119 @@ export function useGroupChatRoomData(
     });
     return map;
   }, [messages, quotedMessageData, quotedMessageIds]);
+  const messageSenders = useMemo(() => {
+    const seen = new Set<string>();
+    return messages.filter((message) => {
+      const key = messageSenderKey(message.senderId, message.senderAddress);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [messages]);
   const shouldReadMessageBans = Boolean(
     groupId &&
     chatInfo?.banSource &&
     chatInfo.banSource.toLowerCase() !== ZERO_ADDRESS &&
-    messages.length > 0,
+    messageSenders.length > 0,
   );
   const banContracts = useMemo(
     () =>
       shouldReadMessageBans && groupId && chatInfo?.banSource
-        ? messages.map((message) => ({
+        ? messageSenders.map((sender) => ({
             address: chatInfo.banSource,
             abi: POST_BAN_SOURCE_ABI,
             functionName: 'isBanned',
-            args: [groupId, message.senderId, message.senderAddress],
+            args: [groupId, sender.senderId, sender.senderAddress],
           }))
         : [],
-    [chatInfo?.banSource, groupId, messages, shouldReadMessageBans],
+    [chatInfo?.banSource, groupId, messageSenders, shouldReadMessageBans],
   );
   const { data: messageBanData, isPending: isPendingMessageBans, refetch: refetchMessageBans } =
     useUniversalReadContracts({
       contracts: banContracts,
       query: { enabled: shouldReadMessageBans && banContracts.length > 0 },
     });
-  const bannedMessageIds = useMemo(() => {
+  const bannedSenderMap = useMemo(() => {
     const map: Record<string, boolean> = {};
-    messages.forEach((message, index) => {
-      map[message.messageId.toString()] = Boolean(
+    messageSenders.forEach((sender, index) => {
+      map[messageSenderKey(sender.senderId, sender.senderAddress)] = Boolean(
         resultAt(messageBanData as readonly ReadContractResult[] | undefined, index),
       );
     });
     return map;
-  }, [messageBanData, messages]);
-
-  const { defaultGroup, defaultGroupId, defaultGroupName, hasDefaultGroup, isPending: isPendingDefaultGroup } =
-    useDefaultGroupOf(account, !!account);
-  const { canPost, reasonCode, isPending: isPendingCanPost, error: canPostError, refetch: refetchCanPost } =
-    useGroupChatCanPost(groupId, defaultGroupId, account, !!account && hasDefaultGroup);
+  }, [messageBanData, messageSenders]);
+  const bannedMessageIds = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    messages.forEach((message) => {
+      map[message.messageId.toString()] = bannedSenderMap[messageSenderKey(message.senderId, message.senderAddress)] === true;
+    });
+    return map;
+  }, [bannedSenderMap, messages]);
   const isMessageFeedPending = isPendingCount || (readLimit > BigInt(0) && isPendingMessages);
 
   const senderIds = useMemo(
     () =>
       uniqueBigInts([
         groupId,
-        defaultGroupId,
         ...messages.flatMap((message) => [message.senderId, ...message.mentionedSenderIds]),
         ...Object.values(quotedMessages).flatMap((message) => [message.senderId, ...message.mentionedSenderIds]),
       ]),
-    [defaultGroupId, groupId, messages, quotedMessages],
+    [groupId, messages, quotedMessages],
   );
   const { groupNames, isPending: isPendingNames, refetch: refetchNames } = useGroupNames(senderIds);
 
   return {
     groupId,
     chatInfo,
-    meta,
     groupName: groupId ? groupNames[groupId.toString()] || `${GROUP_NAME_UNKNOWN} #${groupId}` : '',
     messagesCount,
     messages,
     quotedMessages,
     bannedMessageIds,
     senderNames: groupNames,
-    defaultSenderId: defaultGroup?.groupId || defaultGroupId,
-    defaultSenderName: defaultGroupName || (defaultGroupId ? groupNames[defaultGroupId.toString()] : '') || '',
-    hasDefaultSender: hasDefaultGroup,
-    isDefaultSenderPending: isPendingDefaultGroup,
-    canPost,
-    canPostReasonCode: reasonCode,
     isMessageFeedPending,
     isPending:
       isPendingInfo ||
       isPendingCount ||
       isPendingMessages ||
       isPendingQuotedMessages ||
-      isPendingDefaultGroup ||
-      isPendingCanPost ||
       isPendingNames ||
       isPendingMessageBans,
-    error: infoError || countError || messagesError || canPostError,
+    error: infoError || countError || messagesError,
     refetch: () => {
       refetchInfo();
       refetchCount();
       refetchMessages();
       refetchQuotedMessages();
       refetchMessageBans();
-      refetchCanPost();
       refetchNames();
+    },
+  };
+}
+
+export function useGroupChatRoomAccountData(
+  groupId: bigint | undefined,
+  account: `0x${string}` | undefined,
+  senderNames: Record<string, string> = {},
+): GroupChatRoomAccountData {
+  const { defaultGroup, defaultGroupId, defaultGroupName, hasDefaultGroup, isPending: isPendingDefaultGroup, refetch: refetchDefaultGroup } =
+    useDefaultGroupOf(account, !!account);
+  const { canPost, reasonCode, isPending: isPendingCanPost, error: canPostError, refetch: refetchCanPost } =
+    useGroupChatCanPost(groupId, defaultGroupId, account, !!account && hasDefaultGroup);
+  const effectiveDefaultSenderId = defaultGroup?.groupId || defaultGroupId;
+
+  return {
+    defaultSenderId: effectiveDefaultSenderId,
+    defaultSenderName: defaultGroupName || (effectiveDefaultSenderId ? senderNames[effectiveDefaultSenderId.toString()] : '') || '',
+    hasDefaultSender: hasDefaultGroup,
+    isDefaultSenderPending: isPendingDefaultGroup,
+    canPost,
+    canPostReasonCode: reasonCode,
+    isPending: isPendingDefaultGroup || isPendingCanPost,
+    error: canPostError,
+    refetch: () => {
+      refetchDefaultGroup();
+      refetchCanPost();
     },
   };
 }

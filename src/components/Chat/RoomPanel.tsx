@@ -19,7 +19,8 @@ import {
 } from '@/src/hooks/contracts/useGroupChatModeration';
 import {
   useGroupChatManagedTitle,
-  useGroupChatRoomData,
+  useGroupChatRoomAccountData,
+  useGroupChatRoomPublicData,
   type ParsedGroupChatMessage,
 } from '@/src/hooks/composite/useGroupChatData';
 import { ChatComposer } from './ChatComposer';
@@ -53,6 +54,7 @@ export function RoomPanel({
   onPosted,
   onOpenPanel,
   onTogglePin,
+  onReadLatest,
 }: {
   groupId: bigint | undefined;
   account: `0x${string}` | undefined;
@@ -65,6 +67,7 @@ export function RoomPanel({
   onPosted: () => void;
   onOpenPanel: (view: ChatWorkspaceView) => void;
   onTogglePin: (groupId: bigint) => void;
+  onReadLatest?: (groupId: bigint, latestMessageId: bigint | undefined) => void;
 }) {
   const [content, setContent] = useState('');
   const [quotedMessage, setQuotedMessage] = useState<ParsedGroupChatMessage | undefined>();
@@ -85,16 +88,17 @@ export function RoomPanel({
     timer: ReturnType<typeof setTimeout>;
   } | null>(null);
   const suppressAvatarClickRef = useRef(false);
-  const room = useGroupChatRoomData(groupId, account, messageWindowSize);
+  const publicRoom = useGroupChatRoomPublicData(groupId, messageWindowSize);
+  const accountRoom = useGroupChatRoomAccountData(groupId, account, publicRoom.senderNames);
   const managedTitle = useGroupChatManagedTitle(
     groupId,
     tokenAddress && tokenSymbol ? { address: tokenAddress, symbol: tokenSymbol } : undefined,
   );
-  const activeGovBanSource = sameAddress(room.chatInfo?.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS);
-  const activeAdminBanSource = sameAddress(room.chatInfo?.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS);
+  const activeGovBanSource = sameAddress(publicRoom.chatInfo?.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS);
+  const activeAdminBanSource = sameAddress(publicRoom.chatInfo?.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS);
   const messageGovVotingPower = useGroupChatVotingPower(
     groupId,
-    room.chatInfo?.owner,
+    publicRoom.chatInfo?.owner,
     account,
     activeGovBanSource,
   );
@@ -109,9 +113,10 @@ export function RoomPanel({
   const clearSenderVoteTx = useGovClearVoteBySender();
   const postedHandledRef = useRef(false);
   const refetchRoomAfterModeration = useCallback(() => {
-    room.refetch();
+    publicRoom.refetch();
+    accountRoom.refetch();
     onPosted();
-  }, [onPosted, room]);
+  }, [accountRoom, onPosted, publicRoom]);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
   useConfirmedTransactionEffect(banSenderTx, refetchRoomAfterModeration);
   useConfirmedTransactionEffect(unbanSenderTx, refetchRoomAfterModeration);
@@ -144,10 +149,11 @@ export function RoomPanel({
       setQuotedMessage(undefined);
       setMentionedSenderIds([]);
       toast.success('已发送');
-      room.refetch();
+      publicRoom.refetch();
+      accountRoom.refetch();
       onPosted();
     }
-  }, [isConfirmed, onPosted, room]);
+  }, [accountRoom, isConfirmed, onPosted, publicRoom]);
 
   const clearAvatarPress = useCallback(() => {
     if (avatarPressRef.current) clearTimeout(avatarPressRef.current.timer);
@@ -159,7 +165,8 @@ export function RoomPanel({
   const composerState = useChatComposerState({
     groupId,
     account,
-    room,
+    publicRoom,
+    accountRoom,
     content,
     mentionedSenderIds,
     isPending,
@@ -167,27 +174,32 @@ export function RoomPanel({
   });
   const messageById = useMemo(() => {
     const map: Record<string, ParsedGroupChatMessage> = {};
-    room.messages.forEach((message) => {
+    publicRoom.messages.forEach((message) => {
       map[message.messageId.toString()] = message;
     });
-    Object.entries(room.quotedMessages).forEach(([messageId, message]) => {
+    Object.entries(publicRoom.quotedMessages).forEach(([messageId, message]) => {
       map[messageId] = message;
     });
     return map;
-  }, [room.messages, room.quotedMessages]);
+  }, [publicRoom.messages, publicRoom.quotedMessages]);
   const visibleMessages = useMemo(
-    () => room.messages.filter((message) => showBannedMessages || !room.bannedMessageIds[message.messageId.toString()]),
-    [room.bannedMessageIds, room.messages, showBannedMessages],
+    () => publicRoom.messages.filter((message) => showBannedMessages || !publicRoom.bannedMessageIds[message.messageId.toString()]),
+    [publicRoom.bannedMessageIds, publicRoom.messages, showBannedMessages],
   );
   const latestVisibleMessageId = visibleMessages[visibleMessages.length - 1]?.messageId.toString();
   const hasMoreMessages =
-    room.messagesCount !== undefined && BigInt(room.messages.length) < room.messagesCount;
+    publicRoom.messagesCount !== undefined && BigInt(publicRoom.messages.length) < publicRoom.messagesCount;
+
+  useEffect(() => {
+    if (!groupId || publicRoom.isMessageFeedPending) return;
+    onReadLatest?.(groupId, publicRoom.messagesCount);
+  }, [groupId, onReadLatest, publicRoom.isMessageFeedPending, publicRoom.messagesCount]);
 
   useEffect(() => {
     const messageList = messageListRef.current;
     if (!messageList) return;
     if (restoreScrollAfterPrependRef.current) {
-      if (room.isPending) return;
+      if (publicRoom.isPending || accountRoom.isPending) return;
       const previousScrollHeight = previousScrollHeightRef.current;
       restoreScrollAfterPrependRef.current = false;
       previousScrollHeightRef.current = 0;
@@ -199,7 +211,7 @@ export function RoomPanel({
       lastAutoScrollLatestMessageIdRef.current = latestVisibleMessageId;
       return;
     }
-    if (room.isPending) return;
+    if (publicRoom.isPending || accountRoom.isPending) return;
 
     const groupKey = groupId?.toString();
     const groupChanged = lastAutoScrollGroupIdRef.current !== groupKey;
@@ -213,22 +225,22 @@ export function RoomPanel({
     });
     lastAutoScrollGroupIdRef.current = groupKey;
     lastAutoScrollLatestMessageIdRef.current = latestVisibleMessageId;
-  }, [groupId, latestVisibleMessageId, room.isPending]);
+  }, [accountRoom.isPending, groupId, latestVisibleMessageId, publicRoom.isPending]);
 
   const loadEarlierMessages = () => {
-    if (!hasMoreMessages || room.isPending) return;
+    if (!hasMoreMessages || publicRoom.isPending || accountRoom.isPending) return;
     const messageList = messageListRef.current;
     previousScrollHeightRef.current = messageList?.scrollHeight || 0;
     restoreScrollAfterPrependRef.current = true;
     setMessageWindowSize((current) => {
-      const total = room.messagesCount ? Number(room.messagesCount) : current + MESSAGE_PAGE_SIZE;
+      const total = publicRoom.messagesCount ? Number(publicRoom.messagesCount) : current + MESSAGE_PAGE_SIZE;
       return Math.min(total, current + MESSAGE_PAGE_SIZE);
     });
   };
 
   const addMention = (senderId: bigint) => {
     const key = senderId.toString();
-    const token = `@${room.senderNames[key] || `NFT #${key}`}`;
+    const token = `@${publicRoom.senderNames[key] || `NFT #${key}`}`;
     const alreadySelected = mentionedSenderIds.some((id) => id.toString() === key);
     if (!alreadySelected && mentionedSenderIds.length >= MAX_MENTIONED_SENDER_IDS) {
       toast.error(`最多提及 ${MAX_MENTIONED_SENDER_IDS} 个 NFT 身份`);
@@ -406,11 +418,11 @@ export function RoomPanel({
     );
   }
 
-  const managerOwned = isManagerOwnedChat(room.chatInfo?.owner);
+  const managerOwned = isManagerOwnedChat(publicRoom.chatInfo?.owner);
   const displayGroupName =
     managedTitle.title ||
     title ||
-    (!managerOwned && !managedTitle.isPending ? room.groupName : '') ||
+    (!managerOwned && !managedTitle.isPending ? publicRoom.groupName : '') ||
     (groupId ? `群聊 #${groupId.toString()}` : '群聊');
   const defaultNftHref = tokenSymbol
     ? `/group/groupids/?symbol=${encodeURIComponent(tokenSymbol)}`
@@ -421,8 +433,7 @@ export function RoomPanel({
       <ChatRoomToolbar
         groupId={groupId}
         title={displayGroupName}
-        description={room.meta.description}
-        messagesCount={room.messagesCount}
+        messagesCount={publicRoom.messagesCount}
         menuOpen={menuOpen}
         isPinned={isPinned}
         onToggleMenu={() => setMenuOpen((value) => !value)}
@@ -433,7 +444,7 @@ export function RoomPanel({
 
       <ChatMessageList
         account={account}
-        room={room}
+        room={publicRoom}
         groupId={groupId}
         messageListRef={messageListRef}
         hasMoreMessages={hasMoreMessages}
@@ -472,13 +483,13 @@ export function RoomPanel({
 
       <ChatComposer
         account={account}
-        postingAllowed={room.chatInfo?.postingAllowed}
+        postingAllowed={publicRoom.chatInfo?.postingAllowed}
         activeSenderId={composerState.activeSenderId}
         activeSenderName={composerState.activeSenderName}
         activeCanPost={composerState.activeCanPost}
         activeCanPostReasonCode={composerState.activeCanPostReasonCode}
-        activeCanPostPending={composerState.activeCanPostQuery.isPending || room.isDefaultSenderPending}
-        isDefaultSenderPending={room.isDefaultSenderPending}
+        activeCanPostPending={accountRoom.isPending}
+        isDefaultSenderPending={accountRoom.isDefaultSenderPending}
         needsDefaultSenderSetup={composerState.needsDefaultSenderSetup}
         defaultNftHref={defaultNftHref}
         content={content}

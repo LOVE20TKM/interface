@@ -12,7 +12,11 @@ import {
   useGroupMemberIds,
   useRemoveGroupMembers,
 } from '@/src/hooks/contracts/useGroupChatModeration';
-import { useGroupChatRoomData, useGroupNames } from '@/src/hooks/composite/useGroupChatData';
+import {
+  useGroupChatRoomAccountData,
+  useGroupChatRoomPublicData,
+  useGroupNames,
+} from '@/src/hooks/composite/useGroupChatData';
 import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
 import { cn } from '@/lib/utils';
 import { ChatNftLookupActions } from './ChatNftLookupActions';
@@ -42,7 +46,8 @@ export function MembersPanel({
   const [pendingRemoveId, setPendingRemoveId] = useState<bigint | undefined>();
   const [page, setPage] = useState(1);
   const memberOffset = BigInt((Math.max(1, page) - 1) * MEMBER_PAGE_SIZE);
-  const room = useGroupChatRoomData(groupId, account);
+  const room = useGroupChatRoomPublicData(groupId);
+  const accountRoom = useGroupChatRoomAccountData(groupId, account, room.senderNames);
   const nftLookup = useNftOwnerLookup({ initialMode: 'name' });
   const addTx = useAddGroupMembers();
   const removeTx = useRemoveGroupMembers();
@@ -55,7 +60,11 @@ export function MembersPanel({
   const members = useGroupMemberIds(groupId, memberOffset, BigInt(MEMBER_PAGE_SIZE), hasMemberListScope);
   const { groupNames: memberNames } = useGroupNames(members.memberIds, members.memberIds.length > 0);
   const memberStatus = useGroupMemberIdStatus(groupId, queryMemberTarget?.id, hasMemberListScope && !!queryMemberTarget);
-  const defaultSenderMemberStatus = useGroupMemberIdStatus(groupId, room.defaultSenderId, hasMemberListScope && !!room.defaultSenderId);
+  const defaultSenderMemberStatus = useGroupMemberIdStatus(
+    groupId,
+    accountRoom.defaultSenderId,
+    hasMemberListScope && !!accountRoom.defaultSenderId,
+  );
   const joinParticipation = useGroupJoinParticipationCount(groupId, account, hasGroupJoinScope && !!account);
   const isPermissionLoading = hasMemberListScope && (room.isPending || !room.chatInfo || memberPermission.isPending);
   const canEditMembers = hasMemberListScope && memberPermission.canOperate;
@@ -140,14 +149,14 @@ export function MembersPanel({
         : joinParticipation.error
           ? '当前地址的链群行动参与状态读取失败。'
           : '当前地址未通过此链群参与行动。';
-    const defaultNftText = room.defaultSenderId
+    const defaultNftText = accountRoom.defaultSenderId
       ? defaultSenderMemberStatus.isPending
-        ? `正在读取默认 NFT #${room.defaultSenderId.toString()} 是否在成员名单。`
+        ? `正在读取默认 NFT #${accountRoom.defaultSenderId.toString()} 是否在成员名单。`
         : defaultSenderMemberStatus.error
-          ? `默认 NFT #${room.defaultSenderId.toString()} 的成员名单状态读取失败。`
+          ? `默认 NFT #${accountRoom.defaultSenderId.toString()} 的成员名单状态读取失败。`
           : defaultSenderMemberStatus.isMember
-            ? `默认 NFT #${room.defaultSenderId.toString()} 已在成员名单，可发言。`
-            : `默认 NFT #${room.defaultSenderId.toString()} 未加入成员名单。`
+            ? `默认 NFT #${accountRoom.defaultSenderId.toString()} 已在成员名单，可发言。`
+            : `默认 NFT #${accountRoom.defaultSenderId.toString()} 未加入成员名单。`
       : '当前钱包未设置默认 NFT。';
     setQueryResult(`${actionJoinText} ${defaultNftText}`);
   }, [
@@ -162,7 +171,7 @@ export function MembersPanel({
     joinParticipation.hasJoinedByGroupAction,
     joinParticipation.isPending,
     room.chatInfo,
-    room.defaultSenderId,
+    accountRoom.defaultSenderId,
     selfQueryNonce,
   ]);
 
@@ -186,22 +195,22 @@ export function MembersPanel({
       setSelfQueryNonce((value) => value + 1);
       joinParticipation.refetch();
       defaultSenderMemberStatus.refetch();
-      if (room.defaultSenderId) {
+      if (accountRoom.defaultSenderId) {
         nftLookup.setLookupMode('id');
-        nftLookup.setLookupValue(room.defaultSenderId.toString());
-        setQueryMemberTarget({ id: room.defaultSenderId, label: room.defaultSenderName });
+        nftLookup.setLookupValue(accountRoom.defaultSenderId.toString());
+        setQueryMemberTarget({ id: accountRoom.defaultSenderId, label: accountRoom.defaultSenderName });
       } else {
         setQueryMemberTarget(undefined);
       }
       return;
     }
-    if (!room.defaultSenderId) {
+    if (!accountRoom.defaultSenderId) {
       toast.error('当前钱包未设置默认 NFT');
       return;
     }
     nftLookup.setLookupMode('id');
-    nftLookup.setLookupValue(room.defaultSenderId.toString());
-    describeMember(room.defaultSenderId, room.defaultSenderName, hasGroupJoinScope);
+    nftLookup.setLookupValue(accountRoom.defaultSenderId.toString());
+    describeMember(accountRoom.defaultSenderId, accountRoom.defaultSenderName, hasGroupJoinScope);
   };
 
   const addMember = async () => {

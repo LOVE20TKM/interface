@@ -7,7 +7,11 @@ import {
   useGroupOwnerOrDelegatePermission,
   useRemoveGroupAdmins,
 } from '@/src/hooks/contracts/useGroupChatModeration';
-import { useGroupChatRoomData, useGroupNames } from '@/src/hooks/composite/useGroupChatData';
+import {
+  useGroupChatRoomAccountData,
+  useGroupChatRoomPublicData,
+  useGroupNames,
+} from '@/src/hooks/composite/useGroupChatData';
 import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
 import { resolveOwnerManagedChatPermission } from '@/src/lib/groupChatPermissions';
 import { cn } from '@/lib/utils';
@@ -25,7 +29,8 @@ export function AdminsPanel({
   account: `0x${string}` | undefined;
   onChanged: () => void;
 }) {
-  const room = useGroupChatRoomData(groupId, account);
+  const room = useGroupChatRoomPublicData(groupId);
+  const accountRoom = useGroupChatRoomAccountData(groupId, account, room.senderNames);
   const admins = useGroupAdminIds(groupId);
   const adminIds = useMemo(() => admins.adminRecords.map((admin) => admin.id), [admins.adminRecords]);
   const { groupNames: adminNames } = useGroupNames(adminIds);
@@ -69,13 +74,13 @@ export function AdminsPanel({
   }, [describeAdmin, nftLookup.lookupResult, resolvedLookupId]);
 
   const querySelf = () => {
-    if (!room.defaultSenderId) {
+    if (!accountRoom.defaultSenderId) {
       toast.error('当前钱包未设置默认 NFT');
       return;
     }
     nftLookup.setLookupMode('id');
-    nftLookup.setLookupValue(room.defaultSenderId.toString());
-    describeAdmin(room.defaultSenderId, room.defaultSenderName);
+    nftLookup.setLookupValue(accountRoom.defaultSenderId.toString());
+    describeAdmin(accountRoom.defaultSenderId, accountRoom.defaultSenderName);
   };
 
   const addAdmin = async () => {

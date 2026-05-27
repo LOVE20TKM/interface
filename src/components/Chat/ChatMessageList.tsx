@@ -2,7 +2,7 @@
 
 import { Fragment } from 'react';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import type { ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
+import type { GroupChatRoomPublicData, ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
 import {
   formatMessageDividerTime,
@@ -68,7 +68,7 @@ export function ChatMessageList({
   onClearMessageSenderVote,
 }: {
   account: `0x${string}` | undefined;
-  room: ReturnType<typeof import('@/src/hooks/composite/useGroupChatData').useGroupChatRoomData>;
+  room: GroupChatRoomPublicData;
   groupId: bigint;
   messageListRef: React.RefObject<HTMLDivElement>;
   hasMoreMessages: boolean;

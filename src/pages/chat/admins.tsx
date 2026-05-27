@@ -18,7 +18,7 @@ const ChatAdminsPage: NextPage = () => {
   const groupId = parseGroupId(router.query.groupId);
   const tokenSymbol = Array.isArray(router.query.symbol) ? router.query.symbol[0] : router.query.symbol || token?.symbol;
   const backUrl = groupId
-    ? `/chat?${new URLSearchParams({
+    ? `/chat/room?${new URLSearchParams({
         ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
         groupId: groupId.toString(),
       }).toString()}`

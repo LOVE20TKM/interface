@@ -27,7 +27,7 @@ const ChainChatActivationPage: NextPage = () => {
   const openChat = useCallback(
     (nextGroupId: bigint) => {
       router.push({
-        pathname: '/chat',
+        pathname: '/chat/room',
         query: {
           ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
           groupId: nextGroupId.toString(),

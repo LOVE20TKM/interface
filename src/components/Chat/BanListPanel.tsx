@@ -26,7 +26,11 @@ import {
   useUnbanSenderAddresses,
   useUnbanSenderIds,
 } from '@/src/hooks/contracts/useGroupChatModeration';
-import { useGroupChatRoomData, useGroupNames } from '@/src/hooks/composite/useGroupChatData';
+import {
+  useGroupChatRoomAccountData,
+  useGroupChatRoomPublicData,
+  useGroupNames,
+} from '@/src/hooks/composite/useGroupChatData';
 import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
 import { cn } from '@/lib/utils';
 import { BanListQueryControls } from './BanListQueryControls';
@@ -55,7 +59,8 @@ export function BanListPanel({
   account: `0x${string}` | undefined;
   onChanged: () => void;
 }) {
-  const room = useGroupChatRoomData(groupId, account);
+  const room = useGroupChatRoomPublicData(groupId);
+  const accountRoom = useGroupChatRoomAccountData(groupId, account, room.senderNames);
   const activeAdminBanSource = sameAddress(room.chatInfo?.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS);
   const activeGovBanSource = sameAddress(room.chatInfo?.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS);
   const {
@@ -255,13 +260,13 @@ export function BanListPanel({
       setQueryTarget({ type: 'address', value: account });
       return;
     }
-    if (!room.defaultSenderId) {
+    if (!accountRoom.defaultSenderId) {
       toast.error('当前钱包未设置默认 NFT');
       return;
     }
     nftLookup.setLookupMode('id');
-    nftLookup.setLookupValue(room.defaultSenderId.toString());
-    setQueryTarget({ type: 'nft', value: room.defaultSenderId });
+    nftLookup.setLookupValue(accountRoom.defaultSenderId.toString());
+    setQueryTarget({ type: 'nft', value: accountRoom.defaultSenderId });
   };
 
   const addAddressBan = async (address?: `0x${string}`) => {

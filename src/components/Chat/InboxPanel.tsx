@@ -10,30 +10,22 @@ import { safeBigIntFromString } from './chatUtils';
 
 function ConversationItem({
   item,
-  active,
   pinned,
   readCursor,
-  showBannedMessages,
   onOpen,
   onTogglePin,
 }: {
   item: GroupChatListItem;
-  active: boolean;
   pinned: boolean;
   readCursor: bigint;
-  showBannedMessages: boolean;
   onOpen: (groupId: bigint) => void;
   onTogglePin: (groupId: bigint) => void;
 }) {
   const typeClass = `conversation-type-${item.kind}`;
-  const unreadRecentMessages = item.recentMessages.filter((message) => message.messageId > readCursor);
-  const hiddenUnreadRecentCount = showBannedMessages
-    ? BigInt(0)
-    : BigInt(unreadRecentMessages.filter((message) => item.recentBannedMessageIds[message.messageId.toString()]).length);
   const rawUnreadCount = item.messagesCount > readCursor ? item.messagesCount - readCursor : BigInt(0);
-  const visibleUnreadCount = rawUnreadCount > hiddenUnreadRecentCount ? rawUnreadCount - hiddenUnreadRecentCount : BigInt(0);
-  const hasUnreadMentionMe = (showBannedMessages ? item.latestMentionMeMessageId : item.latestVisibleMentionMeMessageId) > readCursor;
-  const hasUnreadMentionAll = (showBannedMessages ? item.latestMentionAllMessageId : item.latestVisibleMentionAllMessageId) > readCursor;
+  const visibleUnreadCount = rawUnreadCount;
+  const hasUnreadMentionMe = item.latestMentionMeMessageId > readCursor;
+  const hasUnreadMentionAll = item.latestMentionAllMessageId > readCursor;
   const [menuOpen, setMenuOpen] = useState(false);
   const rowRef = useRef<HTMLElement | null>(null);
   const pressRef = useRef<{
@@ -104,7 +96,7 @@ function ConversationItem({
         }
         onOpen(item.groupId);
       }}
-      className={cn('conversation-row group-row', typeClass, (active || pinned) && 'pinned')}
+      className={cn('conversation-row group-row', typeClass, pinned && 'pinned')}
       data-menu-open={menuOpen ? 'true' : 'false'}
       data-long-press-conversation
       role="button"
@@ -122,7 +114,6 @@ function ConversationItem({
         <div className="conversation-kicker">
           <span className="conversation-meta-text">
             G#{item.groupId.toString()}
-            {item.meta.description ? ` · ${item.meta.description}` : ''}
           </span>
           {(hasUnreadMentionMe || hasUnreadMentionAll || visibleUnreadCount > BigInt(0)) && (
             <span className="conversation-reminders">
@@ -176,7 +167,6 @@ function EmptyInbox({
 
 export function InboxPanel({
   items,
-  selectedGroupId,
   isPending,
   isConnected,
   tokenSymbol,
@@ -195,7 +185,6 @@ export function InboxPanel({
   onSetShowMessageTimes,
 }: {
   items: GroupChatListItem[];
-  selectedGroupId: bigint | undefined;
   isPending: boolean;
   isConnected: boolean;
   tokenSymbol?: string;
@@ -254,10 +243,8 @@ export function InboxPanel({
               <ConversationItem
                 key={item.groupId.toString()}
                 item={item}
-                active={selectedGroupId === item.groupId}
                 pinned
                 readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                showBannedMessages={showBannedMessages}
                 onOpen={onOpen}
                 onTogglePin={onTogglePin}
               />
@@ -272,10 +259,8 @@ export function InboxPanel({
               <ConversationItem
                 key={item.groupId.toString()}
                 item={item}
-                active={selectedGroupId === item.groupId}
                 pinned={false}
                 readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                showBannedMessages={showBannedMessages}
                 onOpen={onOpen}
                 onTogglePin={onTogglePin}
               />
@@ -290,10 +275,8 @@ export function InboxPanel({
               <ConversationItem
                 key={item.groupId.toString()}
                 item={item}
-                active={selectedGroupId === item.groupId}
                 pinned={false}
                 readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                showBannedMessages={showBannedMessages}
                 onOpen={onOpen}
                 onTogglePin={onTogglePin}
               />
