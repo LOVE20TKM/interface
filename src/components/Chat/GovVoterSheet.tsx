@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import type { GovVoterRecord } from '@/src/hooks/contracts/useGroupChatModeration';
 import { BAN_LIST_PAGE_SIZE } from './chatConstants';
-import { formatGovWeight, formatGovWeightShare } from './chatUtils';
+import { formatGovCount, formatGovWeightShare } from './chatUtils';
 
 export type GovBanListTarget =
   | { type: 'address'; value: `0x${string}`; supportWeight: bigint; opposeWeight: bigint; voterCount: bigint }
@@ -58,7 +58,7 @@ export function GovVoterSheet({
           <dt>投票</dt>
           <dd>支持 {formatGovWeightShare(target.supportWeight, totalVoteWeight)} · 反对 {formatGovWeightShare(target.opposeWeight, totalVoteWeight)}</dd>
           <dt>投票人数</dt>
-          <dd>{formatGovWeight(count || target.voterCount)}</dd>
+          <dd>{formatGovCount(count || target.voterCount)}</dd>
         </dl>
       </div>
       <section className="workspace-band gov-voter-panel">

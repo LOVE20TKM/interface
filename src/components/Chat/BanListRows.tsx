@@ -7,7 +7,7 @@ import type {
   GovVotedSenderRecord,
 } from '@/src/hooks/contracts/useGroupChatModeration';
 import { BAN_LIST_PAGE_SIZE } from './chatConstants';
-import { formatGovWeight, formatGovWeightShare } from './chatUtils';
+import { formatGovCount, formatGovWeightShare } from './chatUtils';
 
 function govMyVoteText(record: GovVotedAddressRecord | GovVotedSenderRecord, totalVoteWeight: bigint) {
   if (record.mySupportWeight > BigInt(0)) return `我的投票：支持 ${formatGovWeightShare(record.mySupportWeight, totalVoteWeight)}`;
@@ -160,7 +160,7 @@ export function GovBanListRows({
               <div>
                 <strong>{record.senderAddress}</strong>
                 <small>
-                  支持 {formatGovWeightShare(record.supportWeight, totalVoteWeight)} · 反对 {formatGovWeightShare(record.opposeWeight, totalVoteWeight)} · {formatGovWeight(record.voterCount)} 人 · {govMyVoteText(record, totalVoteWeight)}
+                  支持 {formatGovWeightShare(record.supportWeight, totalVoteWeight)} · 反对 {formatGovWeightShare(record.opposeWeight, totalVoteWeight)} · {formatGovCount(record.voterCount)} 人 · {govMyVoteText(record, totalVoteWeight)}
                 </small>
               </div>
               <span className={cn('pill', record.banned ? 'pill-bad' : 'pill-ok')}>
@@ -183,7 +183,7 @@ export function GovBanListRows({
             <div>
               <strong>{nftLabel(senderNames, record.senderId)}</strong>
               <small>
-                NFT #{record.senderId.toString()} · 支持 {formatGovWeightShare(record.supportWeight, totalVoteWeight)} · 反对 {formatGovWeightShare(record.opposeWeight, totalVoteWeight)} · {formatGovWeight(record.voterCount)} 人 · {govMyVoteText(record, totalVoteWeight)}
+                NFT #{record.senderId.toString()} · 支持 {formatGovWeightShare(record.supportWeight, totalVoteWeight)} · 反对 {formatGovWeightShare(record.opposeWeight, totalVoteWeight)} · {formatGovCount(record.voterCount)} 人 · {govMyVoteText(record, totalVoteWeight)}
               </small>
             </div>
             <span className={cn('pill', record.banned ? 'pill-bad' : 'pill-ok')}>

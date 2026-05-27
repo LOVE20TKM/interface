@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 
+import { formatNumber, formatTokenAmount } from '@/src/lib/format';
 import {
   GROUP_CHAT_TOKEN_ACTION_GOV_MANAGER_ADDRESS,
   GROUP_CHAT_TOKEN_ACTION_MAIN_MANAGER_ADDRESS,
@@ -131,7 +132,12 @@ export function formatGovRatio(ratio: bigint, precision: bigint) {
 
 export function formatGovWeight(weight: bigint | undefined) {
   if (weight === undefined) return '0';
-  return weight.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return formatTokenAmount(weight);
+}
+
+export function formatGovCount(count: bigint | undefined) {
+  if (count === undefined) return '0';
+  return formatNumber(count);
 }
 
 export function formatGovWeightPercent(weight: bigint | undefined, totalWeight: bigint | undefined) {
