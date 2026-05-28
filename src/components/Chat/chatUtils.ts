@@ -156,12 +156,20 @@ export function formatGovWeightShare(weight: bigint | undefined, totalWeight: bi
   return `${formatGovWeight(weight)}（${formatGovWeightPercent(weight, totalWeight)}）`;
 }
 
-export function govBanListMechanismText(totalWeight: bigint, thresholdRatio: bigint, precision: bigint) {
+export function govBanListMechanismText(
+  totalWeight: bigint,
+  thresholdRatio: bigint,
+  precision: bigint,
+  minSupportToOpposeRatio: bigint,
+) {
+  const supportToOpposeText = minSupportToOpposeRatio > BigInt(0)
+    ? `严格超过反对票 ${formatNumber(minSupportToOpposeRatio)} 倍`
+    : '严格超过反对票';
   if (totalWeight <= BigInt(0) || thresholdRatio <= BigInt(0) || precision <= BigInt(0)) {
-    return '禁言名单实时计票：赞成票大于反对票时生效；普通发言者的地址或 NFT 任一命中都会拒绝发言。';
+    return `禁言名单实时计票：赞成票${supportToOpposeText}时生效；普通发言者的地址或 NFT 任一命中都会拒绝发言。`;
   }
   const thresholdWeight = (totalWeight * thresholdRatio + precision - BigInt(1)) / precision;
-  return `禁言名单实时计票：赞成票大于反对票，且赞成票达到全 token 治理票的 ${formatGovRatio(thresholdRatio, precision)}（当前至少 ${formatGovWeight(thresholdWeight)} 票）时生效；普通发言者的地址或 NFT 任一命中都会拒绝发言。`;
+  return `禁言名单实时计票：赞成票${supportToOpposeText}，且赞成票达到全 token 治理票的 ${formatGovRatio(thresholdRatio, precision)}（当前至少 ${formatGovWeight(thresholdWeight)} 票）时生效；普通发言者的地址或 NFT 任一命中都会拒绝发言。`;
 }
 
 function escapeRegExp(value: string) {

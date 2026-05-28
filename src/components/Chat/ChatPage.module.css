@@ -682,15 +682,193 @@
   overflow-wrap: anywhere;
 }
 
-.chatPrototype :global(.settings-status-card) {
-  display: grid;
-  grid-template-columns: minmax(96px, 0.5fr) minmax(0, 1fr);
-  gap: 7px 12px;
+.chatPrototype :global(.settings-screen) {
+  height: calc(100dvh - 72px);
+  padding-top: 12px;
+  overflow-y: auto;
 }
 
-.chatPrototype :global(.settings-status-card dt),
-.chatPrototype :global(.settings-status-card dd) {
+.chatPrototype :global(.settings-workspace) {
+  display: grid;
+  gap: 12px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 14px;
+}
+
+.chatPrototype :global(.settings-overview) {
+  overflow: hidden;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.chatPrototype :global(.settings-overview-main) {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 0.96));
+}
+
+.chatPrototype :global(.settings-overview-title) {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.chatPrototype :global(.settings-overview-title h2),
+.chatPrototype :global(.settings-section-heading h2) {
   margin: 0;
+  color: var(--greyscale-900);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.chatPrototype :global(.settings-overview-title p) {
+  margin: 2px 0 0;
+  color: var(--greyscale-500);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.chatPrototype :global(.settings-section-icon) {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 6px;
+  background: #eff6ff;
+  color: var(--accent);
+}
+
+.chatPrototype :global(.settings-metric-grid) {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.chatPrototype :global(.settings-metric) {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  min-height: 62px;
+  align-content: center;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 8px;
+  background: #fff;
+  padding: 9px 10px;
+}
+
+.chatPrototype :global(.settings-metric span) {
+  color: var(--greyscale-500);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.chatPrototype :global(.settings-metric strong) {
+  min-width: 0;
+  color: var(--greyscale-900);
+  font-size: 13px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.chatPrototype :global(.settings-metric.tone-good) {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.chatPrototype :global(.settings-metric.tone-good strong) {
+  color: var(--success);
+}
+
+.chatPrototype :global(.settings-metric.tone-warn) {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.chatPrototype :global(.settings-metric.tone-warn strong) {
+  color: var(--warning);
+}
+
+.chatPrototype :global(.settings-layout) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.chatPrototype :global(.settings-main-column),
+.chatPrototype :global(.settings-side-column) {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.chatPrototype :global(.settings-panel-section) {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(25, 28, 31, 0.03);
+}
+
+.chatPrototype :global(.settings-section-heading) {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.chatPrototype :global(.settings-control-card) {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 8px;
+  background: var(--greyscale-50);
+  padding: 10px;
+}
+
+.chatPrototype :global(.settings-control-card > div:first-child) {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.chatPrototype :global(.settings-control-card > div:first-child strong) {
+  color: var(--greyscale-900);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.chatPrototype :global(.settings-control-card > div:first-child span) {
+  color: var(--greyscale-500);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.chatPrototype :global(.settings-switch-group) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chatPrototype :global(.settings-switch-group .picker-button) {
+  min-height: 36px;
+}
+
+.chatPrototype :global(.settings-permission-banner) {
+  margin-top: 0;
+  line-height: 1.5;
 }
 
 .chatPrototype :global(.contract-rule-grid) {
@@ -738,8 +916,7 @@
   color: var(--greyscale-500);
 }
 
-.chatPrototype :global(.contract-address-row > span:last-child),
-.chatPrototype :global(.settings-contract-table strong) {
+.chatPrototype :global(.contract-address-row > span:last-child) {
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -747,36 +924,18 @@
 .chatPrototype :global(.settings-field-block) {
   min-width: 0;
   display: grid;
-  gap: 4px;
-}
-
-.chatPrototype :global(.settings-field-block p) {
-  margin: 0 0 2px 120px;
-  color: var(--greyscale-500);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.chatPrototype :global(.raw-settings-details) {
-  margin-top: 12px;
+  gap: 6px;
+  padding: 10px;
   border: 1px solid var(--greyscale-200);
   border-radius: 8px;
   background: #fff;
-  overflow: hidden;
 }
 
-.chatPrototype :global(.raw-settings-details summary) {
-  cursor: pointer;
-  padding: 10px;
-  color: var(--greyscale-700);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.chatPrototype :global(.raw-settings-details .rule-table) {
-  border: 0;
-  border-top: 1px solid var(--greyscale-200);
-  border-radius: 0;
+.chatPrototype :global(.settings-field-block p) {
+  margin: 0 0 0 120px;
+  color: var(--greyscale-500);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .chatPrototype :global(.choice-group) {
@@ -2287,7 +2446,8 @@
   .chatPrototype :global(.selected-chain-nft),
   .chatPrototype :global(.chain-nft-option),
   .chatPrototype :global(.activation-submit-row),
-  .chatPrototype :global(.settings-status-card),
+  .chatPrototype :global(.settings-metric-grid),
+  .chatPrototype :global(.settings-layout),
   .chatPrototype :global(.contract-address-row),
   .chatPrototype :global(.ban-list-controls),
   .chatPrototype :global(.field-row),
@@ -2320,7 +2480,8 @@
   .chatPrototype :global(.selected-chain-nft),
   .chatPrototype :global(.chain-nft-option),
   .chatPrototype :global(.activation-submit-row),
-  .chatPrototype :global(.settings-status-card),
+  .chatPrototype :global(.settings-metric-grid),
+  .chatPrototype :global(.settings-layout),
   .chatPrototype :global(.contract-address-row),
   .chatPrototype :global(.ban-list-controls),
   .chatPrototype :global(.field-row),
@@ -2348,6 +2509,33 @@
 
   .chatPrototype :global(.settings-field-block p) {
     margin-left: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .chatPrototype :global(.settings-workspace) {
+    padding: 12px;
+  }
+
+  .chatPrototype :global(.settings-metric-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chatPrototype :global(.settings-layout) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .chatPrototype :global(.settings-metric-grid),
+  .chatPrototype :global(.settings-switch-group) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1080px) {
+  .chatPrototype :global(.settings-metric-grid) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

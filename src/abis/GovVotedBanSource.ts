@@ -11,6 +11,11 @@ export const GovVotedBanSourceAbi = [
         "internalType": "address"
       },
       {
+        "name": "minSupportToOpposeRatio_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "banThresholdRatio_",
         "type": "uint256",
         "internalType": "uint256"
@@ -40,6 +45,19 @@ export const GovVotedBanSourceAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MIN_SUPPORT_TO_OPPOSE_RATIO",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -1078,6 +1096,11 @@ export const GovVotedBanSourceAbi = [
   {
     "type": "error",
     "name": "GovVotedBanSourceAddressHasNoCode",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MinSupportToOpposeRatioZero",
     "inputs": []
   },
   {

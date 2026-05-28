@@ -366,15 +366,29 @@ export function useGovVotedBanMechanism(enabled: boolean = true) {
     args: [],
     query: { enabled: isQueryEnabled },
   });
+  const minSupportToOpposeRatioRead = useUniversalReadContract({
+    address: getGovVotedBanSourceAddress(),
+    abi: GovVotedBanSourceAbi,
+    functionName: 'MIN_SUPPORT_TO_OPPOSE_RATIO',
+    args: [],
+    query: { enabled: isQueryEnabled },
+  });
 
   return {
     precision: isQueryEnabled && precisionRead.data !== undefined ? safeToBigInt(precisionRead.data) : BigInt(0),
     banThresholdRatio: isQueryEnabled && thresholdRatioRead.data !== undefined ? safeToBigInt(thresholdRatioRead.data) : BigInt(0),
-    isPending: isQueryEnabled ? Boolean(precisionRead.isPending || thresholdRatioRead.isPending) : false,
-    error: precisionRead.error || thresholdRatioRead.error,
+    minSupportToOpposeRatio:
+      isQueryEnabled && minSupportToOpposeRatioRead.data !== undefined
+        ? safeToBigInt(minSupportToOpposeRatioRead.data)
+        : BigInt(0),
+    isPending: isQueryEnabled
+      ? Boolean(precisionRead.isPending || thresholdRatioRead.isPending || minSupportToOpposeRatioRead.isPending)
+      : false,
+    error: precisionRead.error || thresholdRatioRead.error || minSupportToOpposeRatioRead.error,
     refetch: () => {
       precisionRead.refetch();
       thresholdRatioRead.refetch();
+      minSupportToOpposeRatioRead.refetch();
     },
   };
 }

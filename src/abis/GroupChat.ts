@@ -19,6 +19,16 @@ export const GroupChatAbi = [
         "name": "phaseBlocks_",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "maxContentLength_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxMentionedSenderIds_",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "nonpayable"
@@ -2025,6 +2035,11 @@ export const GroupChatAbi = [
   {
     "type": "error",
     "name": "InvalidQuotedMessageId",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MaxContentLengthZero",
     "inputs": []
   },
   {

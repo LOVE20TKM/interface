@@ -157,8 +157,8 @@ export function BanListPanel({
     ? govVotingPower.isPending || govBanMechanism.isPending
       ? '正在读取当前地址治理票权和禁言阈值。'
       : canVoteGovBan
-        ? `当前地址有 ${formatGovWeightShare(govVotingPower.voteWeight, govVotingPower.totalVoteWeight)} 票权，可参与治理禁言投票。${govBanListMechanismText(govVotingPower.totalVoteWeight, govBanMechanism.banThresholdRatio, govBanMechanism.precision)}`
-        : `当前地址没有票权，只能查看和查询治理禁言名单。${govBanListMechanismText(govVotingPower.totalVoteWeight, govBanMechanism.banThresholdRatio, govBanMechanism.precision)}`
+        ? `当前地址有 ${formatGovWeightShare(govVotingPower.voteWeight, govVotingPower.totalVoteWeight)} 票权，可参与治理禁言投票。${govBanListMechanismText(govVotingPower.totalVoteWeight, govBanMechanism.banThresholdRatio, govBanMechanism.precision, govBanMechanism.minSupportToOpposeRatio)}`
+        : `当前地址没有票权，只能查看和查询治理禁言名单。${govBanListMechanismText(govVotingPower.totalVoteWeight, govBanMechanism.banThresholdRatio, govBanMechanism.precision, govBanMechanism.minSupportToOpposeRatio)}`
     : '';
   const activeBanListVersion = activeGovBanSource ? govBanStateVersion.stateVersion : undefined;
   const canAddBanListTarget = activeAdminBanSource || activeGovBanSource;
