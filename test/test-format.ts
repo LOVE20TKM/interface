@@ -14,11 +14,14 @@ interface TestCase {
   description: string;
 }
 
+let failureCount = 0;
+
 // 简单的测试断言函数
 function assertEqual(actual: string, expected: string, testName: string) {
   if (actual === expected) {
     console.log(`✅ ${testName}: ${actual}`);
   } else {
+    failureCount++;
     console.log(`❌ ${testName}: 期望 "${expected}", 实际 "${actual}"`);
   }
 }
@@ -30,7 +33,7 @@ function runTest(testCase: TestCase) {
 
   console.log(`\n📋 ${name} (${description})`);
   console.log(`   输入: ${input.toString()} wei`);
-  console.log(`   参数: maxDigits=${maxDigits || 4}, roundingMode=${roundingMode || 'round'}`);
+  console.log(`   参数: maxDigits=${maxDigits ?? 4}, roundingMode=${roundingMode ?? 'floor'}`);
   console.log(`   结果: ${result}`);
 
   if (expected) {
@@ -73,8 +76,8 @@ const basicTests: TestCase[] = [
   {
     name: '极小数值(<0.001)',
     input: BigInt('123450000000000'), // 0.00012345 ETH
-    expected: '0.0{3}1235', // 四舍五入：0.000123456 -> 0.0{3}1235
-    description: '小于0.001使用折叠显示，默认四舍五入',
+    expected: '0.0{3}1234',
+    description: '小于0.001使用折叠显示，默认向下取整',
   },
 ];
 
@@ -150,6 +153,7 @@ const tinyNumberTests: TestCase[] = [
     name: '极小数-进位到前一位',
     input: BigInt('999950000000000'), // 0.00099995 ETH
     roundingMode: 'round',
+    expected: '0.0{2}1000',
     description: '0.00099995的四舍五入处理',
   },
   {
@@ -251,8 +255,8 @@ const edgeCaseTests: TestCase[] = [
   {
     name: '略小于0.001',
     input: BigInt('999999999999999'), // 0.000999999999999999 ETH
-    expected: '0.0{2}1000', // 四舍五入后进位
-    description: '略小于0.001应该使用折叠显示，四舍五入进位',
+    expected: '0.0{3}9999',
+    description: '略小于0.001默认向下取整，避免显示超过实际余额',
   },
 ];
 
@@ -302,9 +306,13 @@ for (let i = 0; i < 1000; i++) {
 console.timeEnd('性能测试-1000次调用');
 
 console.log('\n' + '='.repeat(60));
-console.log('🎉 测试完成！');
+if (failureCount > 0) {
+  console.log(`❌ 测试完成，失败 ${failureCount} 个`);
+} else {
+  console.log('🎉 测试完成！');
+}
 console.log('\n💡 使用说明:');
-console.log('  - formatTokenAmount(balance) // 默认四舍五入，4位小数');
+console.log('  - formatTokenAmount(balance) // 默认向下取整，4位小数');
 console.log('  - formatTokenAmount(balance, 2, "round") // 四舍五入，2位小数');
 console.log('  - formatTokenAmount(balance, 4, "floor") // 向下取整，4位小数');
 console.log('\n🔍 注意事项:');
@@ -313,3 +321,5 @@ console.log('  - 10-1000之间显示2位小数');
 console.log('  - 1-10之间显示4位小数');
 console.log('  - 0.001-1之间显示4位小数');
 console.log('  - 小于0.001使用折叠显示格式: 0.0{n}xxxx');
+
+process.exit(failureCount === 0 ? 0 : 1);
