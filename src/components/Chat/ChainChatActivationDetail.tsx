@@ -23,6 +23,7 @@ type RuleSlotOption = {
   chineseName: string;
   contractName: string;
   address: `0x${string}`;
+  summary: string;
   description: string;
   enabled: boolean;
 };
@@ -53,6 +54,7 @@ function getSelectedRuleSlotOption(value: RuleSlotValue, options: readonly RuleS
       chineseName: '自定义',
       contractName: 'CustomContract',
       address,
+      summary: '使用自定义合约',
       description: '使用你手动输入的合约地址作为该规则槽的来源。适合接入尚未内置到前端的规则合约；如果不需要规则，请保持 0 地址。',
       enabled: true,
     };
@@ -60,19 +62,31 @@ function getSelectedRuleSlotOption(value: RuleSlotValue, options: readonly RuleS
   return options.find((option) => option.key === value.selectedKey) || options[0];
 }
 
+function shortenAddress(address: string) {
+  if (address.length <= 18) return address;
+  return `${address.slice(0, 8)}...${address.slice(-6)}`;
+}
+
 async function copyRuleSlotText(text: string, label: string) {
   await copyWithToast(text, `已复制${label}`);
 }
 
+function RuleSummaryItem({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="rule-summary-item">
+      <span>{title}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
 function RuleSlotPicker({
-  label,
   title,
   value,
   options,
   disabled,
   onChange,
 }: {
-  label: string;
   title: string;
   value: RuleSlotValue;
   options: readonly RuleSlotOption[];
@@ -89,10 +103,10 @@ function RuleSlotPicker({
 
   return (
     <article className="rule-slot-card">
-      <div className="rule-slot-card-head">
-        <div>
-          <strong>{title}</strong>
-        </div>
+      <div className="rule-slot-title">
+        <strong>{title}</strong>
+      </div>
+      <div className="rule-slot-body">
         <select
           className="rule-slot-select"
           value={value.selectedKey}
@@ -110,40 +124,40 @@ function RuleSlotPicker({
           ))}
           <option value="custom">自定义</option>
         </select>
-      </div>
-      <p className="rule-slot-description">{selectedOption.description}</p>
-      {showsContractMeta && (
-        <div className="rule-slot-meta">
-          <span className="rule-slot-copy-label">
-            合约名
-            <button
-              type="button"
-              aria-label="复制合约名"
-              title="复制合约名"
-              onClick={() => copyRuleSlotText(selectedOption.contractName, '合约名')}
-            >
-              <Copy size={14} aria-hidden="true" />
-            </button>
-          </span>
-          <code>{selectedOption.contractName}</code>
-          <span className="rule-slot-copy-label">
-            合约地址
-            <button
-              type="button"
-              aria-label="复制合约地址"
-              title="复制合约地址"
-              onClick={() => copyRuleSlotText(selectedOption.address, '合约地址')}
-            >
-              <Copy size={14} aria-hidden="true" />
-            </button>
-          </span>
-          <code>{selectedOption.address}</code>
-        </div>
-      )}
-      {showsCustomAddress && (
-        <div className="rule-slot-meta rule-slot-custom-meta">
-          <span className="rule-slot-copy-label">
-            合约地址
+        <p className="rule-slot-description">{selectedOption.description}</p>
+        {showsContractMeta && (
+          <div className="rule-slot-meta">
+            <div className="rule-slot-value-row rule-slot-name-row">
+              <code>{selectedOption.contractName}</code>
+            </div>
+            <div className="rule-slot-value-row rule-slot-address-row">
+              <code title={selectedOption.address}>{shortenAddress(selectedOption.address)}</code>
+              <button
+                type="button"
+                aria-label="复制合约地址"
+                title="复制合约地址"
+                onClick={() => copyRuleSlotText(selectedOption.address, '合约地址')}
+              >
+                <Copy size={14} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        )}
+        {showsCustomAddress && (
+          <div className="rule-slot-meta rule-slot-custom-meta">
+            <div className="rule-slot-value-row rule-slot-address-row">
+              <input
+                aria-label={`${title}自定义合约地址`}
+                value={value.customAddress}
+                onChange={(event) =>
+                  onChange({
+                    ...value,
+                    customAddress: event.target.value as `0x${string}`,
+                  })
+                }
+                placeholder={ZERO_ADDRESS}
+                disabled={disabled}
+              />
             <button
               type="button"
               aria-label="复制合约地址"
@@ -152,22 +166,11 @@ function RuleSlotPicker({
             >
               <Copy size={14} aria-hidden="true" />
             </button>
-          </span>
-          <input
-            aria-label={`${title}自定义合约地址`}
-            value={value.customAddress}
-            onChange={(event) =>
-              onChange({
-                ...value,
-                customAddress: event.target.value as `0x${string}`,
-              })
-            }
-            placeholder={ZERO_ADDRESS}
-            disabled={disabled}
-          />
-          {customAddressError && <p className="rule-slot-error">{customAddressError}</p>}
-        </div>
-      )}
+            </div>
+            {customAddressError && <p className="rule-slot-error">{customAddressError}</p>}
+          </div>
+        )}
+      </div>
     </article>
   );
 }
@@ -187,22 +190,27 @@ export function ChainChatActivationDetail({
   onOpen: (groupId: bigint) => void;
   onConfirmed: () => void;
 }) {
-  const [scopeSource, setScopeSource] = useState<RuleSlotValue>({
+  const recommendedScopeSource: RuleSlotValue = {
     selectedKey: isGroupJoinScopeSourceEnabled ? 'group-join-scope-source' : 'zero',
     customAddress: ZERO_ADDRESS,
-  });
-  const [banSource, setBanSource] = useState<RuleSlotValue>({
+  };
+  const recommendedBanSource: RuleSlotValue = {
     selectedKey: GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS !== ZERO_ADDRESS ? 'admin-ban-source' : 'zero',
     customAddress: ZERO_ADDRESS,
-  });
-  const [beforePostPlugin, setBeforePostPlugin] = useState<RuleSlotValue>({
+  };
+  const recommendedBeforePostPlugin: RuleSlotValue = {
     selectedKey: 'zero',
     customAddress: ZERO_ADDRESS,
-  });
-  const [afterPostPlugin, setAfterPostPlugin] = useState<RuleSlotValue>({
+  };
+  const recommendedAfterPostPlugin: RuleSlotValue = {
     selectedKey: 'zero',
     customAddress: ZERO_ADDRESS,
-  });
+  };
+  const [scopeSource, setScopeSource] = useState<RuleSlotValue>(recommendedScopeSource);
+  const [banSource, setBanSource] = useState<RuleSlotValue>(recommendedBanSource);
+  const [beforePostPlugin, setBeforePostPlugin] = useState<RuleSlotValue>(recommendedBeforePostPlugin);
+  const [afterPostPlugin, setAfterPostPlugin] = useState<RuleSlotValue>(recommendedAfterPostPlugin);
+  const [configMode, setConfigMode] = useState<'recommended' | 'advanced'>('recommended');
   const activateTx = useActivateDirectGroupChat();
   const submittedGroupIdRef = useRef<bigint | undefined>();
   const { chatInfo: rawChatInfo, isPending: isChatInfoPending, error: chatInfoError } = useGroupChatInfo(groupId, !!groupId);
@@ -241,6 +249,7 @@ export function ChainChatActivationDetail({
       chineseName: '不设置',
       contractName: 'ZeroAddress',
       address: ZERO_ADDRESS,
+      summary: '不限制发言资格',
       description: '不启用发言资格规则。群聊激活后不会从这个槽读取额外资格合约，适合先开通基础群聊，再按需要补充规则。',
       enabled: true,
     },
@@ -249,6 +258,7 @@ export function ChainChatActivationDetail({
       chineseName: '管理员指定的群成员',
       contractName: 'GroupMemberScope',
       address: GROUP_CHAT_MEMBER_SCOPE_ADDRESS,
+      summary: '仅管理员指定成员可发言',
       description: '只允许管理员指定的群成员发言。这个规则按链群成员名单判断发言资格，适合由管理员维护固定发言名单的群聊。',
       enabled: isGroupMemberScopeEnabled,
     },
@@ -257,6 +267,7 @@ export function ChainChatActivationDetail({
       chineseName: '参与链群行动或管理员指定的群成员',
       contractName: 'GroupJoinScopeSource',
       address: GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS,
+      summary: '行动参与者 + 管理员添加的成员可发言',
       description: '通过此链群参与行动的地址或显式加入成员名单的 NFT，即为群成员，可发言。',
       enabled: isGroupJoinScopeSourceEnabled,
     },
@@ -267,6 +278,7 @@ export function ChainChatActivationDetail({
       chineseName: '不设置',
       contractName: 'ZeroAddress',
       address: ZERO_ADDRESS,
+      summary: '不启用禁言名单',
       description: '不启用禁言管理。群聊不会从这个槽读取禁言状态，适合不需要维护禁言名单的轻量群聊。',
       enabled: true,
     },
@@ -275,6 +287,7 @@ export function ChainChatActivationDetail({
       chineseName: '管理员维护的禁言名单',
       contractName: 'AdminBanSource',
       address: GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS,
+      summary: '管理员可设置禁言名单',
       description: '启用管理员维护的禁言名单。管理员或有权限的操作者可以维护禁言状态，群聊发言前会读取这里判断是否被禁止发言。',
       enabled: GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS !== ZERO_ADDRESS,
     },
@@ -285,14 +298,21 @@ export function ChainChatActivationDetail({
       chineseName: '不设置',
       contractName: 'ZeroAddress',
       address: ZERO_ADDRESS,
+      summary: '不调用发言插件',
       description: '不启用发言插件。消息发送前后不会调用额外合约，适合当前还不需要自定义扩展逻辑的群聊。',
       enabled: true,
     },
   ];
-  const scopeSourceAddress = getRuleSlotAddress(scopeSource, scopeOptions);
-  const banSourceAddress = getRuleSlotAddress(banSource, banOptions);
-  const beforePostPluginAddress = getRuleSlotAddress(beforePostPlugin, pluginOptions);
-  const afterPostPluginAddress = getRuleSlotAddress(afterPostPlugin, pluginOptions);
+  const activeScopeSource = configMode === 'recommended' ? recommendedScopeSource : scopeSource;
+  const activeBanSource = configMode === 'recommended' ? recommendedBanSource : banSource;
+  const activeBeforePostPlugin = configMode === 'recommended' ? recommendedBeforePostPlugin : beforePostPlugin;
+  const activeAfterPostPlugin = configMode === 'recommended' ? recommendedAfterPostPlugin : afterPostPlugin;
+  const selectedScopeOption = getSelectedRuleSlotOption(recommendedScopeSource, scopeOptions);
+  const selectedBanOption = getSelectedRuleSlotOption(recommendedBanSource, banOptions);
+  const scopeSourceAddress = getRuleSlotAddress(activeScopeSource, scopeOptions);
+  const banSourceAddress = getRuleSlotAddress(activeBanSource, banOptions);
+  const beforePostPluginAddress = getRuleSlotAddress(activeBeforePostPlugin, pluginOptions);
+  const afterPostPluginAddress = getRuleSlotAddress(activeAfterPostPlugin, pluginOptions);
   const ruleSlotAddressError =
     [scopeSourceAddress, banSourceAddress, beforePostPluginAddress, afterPostPluginAddress].every(isValidEthAddress)
       ? ''
@@ -339,73 +359,99 @@ export function ChainChatActivationDetail({
     <section className="activation-form chain-activation-detail">
       <div className="selected-chain-nft">
         <div className="selected-chain-nft-main">
-          <span className="chain-activation-kicker">激活对象</span>
           <strong>{groupName || '未命名链群'}</strong>
           <span>{groupId ? `NFT #${groupId.toString()}` : '未选择 NFT'}</span>
         </div>
       </div>
-      <div className="rule-slot-list">
-        <section className="rule-slot-group">
-          <div className="rule-slot-group-head">
-            <strong>基础规则</strong>
-            <span>决定谁可以发言，以及谁会被禁言。</span>
+      <section className="activation-config-tabs">
+        <div className="activation-tab-list" role="tablist" aria-label="激活配置模式">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={configMode === 'recommended'}
+            className="activation-tab inline-flex"
+            onClick={() => setConfigMode('recommended')}
+          >
+            推荐设置
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={configMode === 'advanced'}
+            className="activation-tab inline-flex"
+            onClick={() => setConfigMode('advanced')}
+          >
+            高级设置
+          </button>
+        </div>
+
+        {configMode === 'recommended' ? (
+          <div className="activation-tab-panel activation-recommendation" role="tabpanel">
+            <div className="rule-summary-grid">
+              <RuleSummaryItem title="谁能发言" value={selectedScopeOption.summary} />
+              <RuleSummaryItem title="禁言管理" value={selectedBanOption.summary} />
+            </div>
+            <p>默认配置覆盖常见群聊场景；只有需要接入自定义合约时，再切到高级设置。</p>
           </div>
-          <RuleSlotPicker
-            label="scopeSource"
-            title="发言资格"
-            value={scopeSource}
-            options={scopeOptions}
-            disabled={!!chatInfo?.activated}
-            onChange={setScopeSource}
-          />
-          <RuleSlotPicker
-            label="banSource"
-            title="禁言管理"
-            value={banSource}
-            options={banOptions}
-            disabled={!!chatInfo?.activated}
-            onChange={setBanSource}
-          />
-        </section>
-        <section className="rule-slot-group">
-          <div className="rule-slot-group-head">
-            <strong>扩展插件</strong>
-            <span>通常保持不设置；只有接入额外发言逻辑时才需要填写。</span>
+        ) : (
+          <div className="activation-tab-panel activation-advanced" role="tabpanel">
+            <div className="rule-slot-list">
+              <RuleSlotPicker
+                title="发言资格"
+                value={scopeSource}
+                options={scopeOptions}
+                disabled={!!chatInfo?.activated}
+                onChange={setScopeSource}
+              />
+              <RuleSlotPicker
+                title="禁言管理"
+                value={banSource}
+                options={banOptions}
+                disabled={!!chatInfo?.activated}
+                onChange={setBanSource}
+              />
+              <RuleSlotPicker
+                title="发言前插件"
+                value={beforePostPlugin}
+                options={pluginOptions}
+                disabled={!!chatInfo?.activated}
+                onChange={setBeforePostPlugin}
+              />
+              <RuleSlotPicker
+                title="发言后插件"
+                value={afterPostPlugin}
+                options={pluginOptions}
+                disabled={!!chatInfo?.activated}
+                onChange={setAfterPostPlugin}
+              />
+            </div>
           </div>
-          <RuleSlotPicker
-            label="beforePostPlugin"
-            title="发言前插件"
-            value={beforePostPlugin}
-            options={pluginOptions}
-            disabled={!!chatInfo?.activated}
-            onChange={setBeforePostPlugin}
-          />
-          <RuleSlotPicker
-            label="afterPostPlugin"
-            title="发言后插件"
-            value={afterPostPlugin}
-            options={pluginOptions}
-            disabled={!!chatInfo?.activated}
-            onChange={setAfterPostPlugin}
-          />
-        </section>
-      </div>
-      {isChatInfoPending ? (
-        <div className="notice-row">正在读取激活状态...</div>
-      ) : ruleSlotAddressError ? (
-        <div className="notice-row">{ruleSlotAddressError}</div>
-      ) : activationIssue ? (
-        <div className="notice-row">{activationIssue}</div>
-      ) : null}
-      <div className="activation-submit-row">
-        <button
-          className="sheet-button primary inline-flex"
-          type="button"
-          onClick={activateChainChat}
-          disabled={!!activationIssue || !!ruleSlotAddressError || isChatInfoPending || activateTx.isPending || activateTx.isConfirming}
-        >
-          {activateTx.isPending || activateTx.isConfirming ? '提交中' : '激活群聊'}
-        </button>
+        )}
+      </section>
+      <div className="chain-activation-actionbar">
+        {isChatInfoPending ? (
+          <div className="notice-row">正在读取激活状态...</div>
+        ) : ruleSlotAddressError ? (
+          <div className="notice-row">{ruleSlotAddressError}</div>
+        ) : activationIssue ? (
+          <div className="notice-row">{activationIssue}</div>
+        ) : null}
+        <div className="activation-submit-row">
+          <button
+            className="sheet-button primary inline-flex"
+            type="button"
+            onClick={activateChainChat}
+            disabled={
+              !!activationIssue ||
+              !!ruleSlotAddressError ||
+              isChatInfoPending ||
+              activateTx.isPending ||
+              activateTx.isConfirming
+            }
+          >
+            {activateTx.isPending || activateTx.isConfirming ? '提交中' : '激活'}
+          </button>
+        </div>
       </div>
     </section>
   );

@@ -91,6 +91,18 @@
   overflow: visible;
 }
 
+.chatWorkspace[data-entry="love20-chat-chain-activation"] .chatSurface {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.chatWorkspace[data-entry="love20-chat-chain-activation"] :global(.workspace-screen) {
+  padding-bottom: 16px;
+  overflow: visible;
+  scroll-padding-bottom: 16px;
+}
+
 .chatPrototype :global(.icon-button),
 .chatPrototype :global(.sheet-button),
 .chatPrototype :global(.send-button),
@@ -947,8 +959,143 @@
 
 .chatPrototype :global(.chain-activation-detail) {
   min-width: 0;
-  display: grid;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+}
+
+.chatPrototype :global(.activation-config-tabs) {
+  min-width: 0;
+  display: grid;
+  gap: 0;
+  border: 1px solid rgba(30, 58, 138, 0.16);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(25, 28, 31, 0.03);
+}
+
+.chatPrototype :global(.activation-tab-list) {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  border-bottom: 1px solid var(--greyscale-200);
+  background: #fff;
+  padding: 8px;
+}
+
+.chatPrototype :global(.activation-tab) {
+  min-width: 0;
+  width: 100%;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--greyscale-500);
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chatPrototype :global(.activation-tab[aria-selected="true"]) {
+  border-color: rgba(41, 38, 232, 0.28);
+  background: var(--secondary-100);
+  color: var(--secondary);
+  font-weight: 800;
+}
+
+.chatPrototype :global(.activation-tab:focus) {
+  outline: none;
+}
+
+.chatPrototype :global(.activation-tab:focus-visible) {
+  outline: 2px solid rgba(41, 38, 232, 0.28);
+  outline-offset: 2px;
+}
+
+.chatPrototype :global(.activation-tab-panel) {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.chatPrototype :global(.activation-recommendation) {
+  background: #f8fbff;
+}
+
+.chatPrototype :global(.activation-recommendation p) {
+  margin: 0;
+  color: var(--greyscale-500);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.chatPrototype :global(.rule-summary-grid) {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.chatPrototype :global(.rule-summary-item) {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  min-height: 64px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 7px;
+  background: #fff;
+  padding: 9px;
+}
+
+.chatPrototype :global(.rule-summary-item span) {
+  color: var(--greyscale-500);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.chatPrototype :global(.rule-summary-item strong) {
+  min-width: 0;
+  color: var(--greyscale-900);
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.chatPrototype :global(.activation-advanced) {
+  min-width: 0;
+  background: #fff;
+}
+
+.chatPrototype :global(.chain-activation-actionbar) {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+  padding: 10px 0 4px;
+  border-top: 1px solid var(--greyscale-200);
+  background: #fff;
+}
+
+.chatPrototype :global(.chain-activation-actionbar .notice-row) {
+  margin-top: 0;
+}
+
+.chatPrototype :global(.chain-activation-actionbar .activation-submit-row) {
+  margin-top: 0;
 }
 
 .chatPrototype :global(.rule-slot-control) {
@@ -991,7 +1138,9 @@
 .chatPrototype :global(.rule-slot-card) {
   min-width: 0;
   display: grid;
-  gap: 10px;
+  grid-template-columns: minmax(92px, 0.24fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
   border: 1px solid var(--greyscale-200);
   border-radius: 8px;
   background: #fff;
@@ -999,30 +1148,21 @@
   box-shadow: 0 1px 2px rgba(25, 28, 31, 0.03);
 }
 
-.chatPrototype :global(.rule-slot-card-head) {
+.chatPrototype :global(.rule-slot-title) {
   min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(96px, 0.28fr) minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
+  padding-top: 10px;
 }
 
-.chatPrototype :global(.rule-slot-card-head > div) {
+.chatPrototype :global(.rule-slot-body) {
   min-width: 0;
   display: grid;
-  gap: 2px;
+  gap: 8px;
 }
 
-.chatPrototype :global(.rule-slot-card-head strong) {
+.chatPrototype :global(.rule-slot-title strong) {
   color: var(--greyscale-900);
   font-size: 14px;
   font-weight: 700;
-  line-height: 1.25;
-}
-
-.chatPrototype :global(.rule-slot-card-head span) {
-  color: var(--greyscale-500);
-  font-size: 11px;
   line-height: 1.25;
 }
 
@@ -1049,24 +1189,20 @@
 .chatPrototype :global(.rule-slot-meta) {
   min-width: 0;
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 5px 8px;
-  align-items: center;
+  gap: 6px;
   padding-top: 2px;
 }
 
-.chatPrototype :global(.rule-slot-meta span) {
-  color: var(--greyscale-500);
-  font-size: 12px;
+.chatPrototype :global(.rule-slot-value-row) {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, max-content);
+  gap: 6px;
+  align-items: center;
 }
 
-.chatPrototype :global(.rule-slot-copy-label) {
-  justify-self: start;
-  width: max-content;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
+.chatPrototype :global(.rule-slot-address-row) {
+  grid-template-columns: minmax(0, max-content) 22px;
 }
 
 .chatPrototype :global(.rule-slot-meta code) {
@@ -1092,10 +1228,10 @@
   font-size: 13px;
 }
 
-.chatPrototype :global(.rule-slot-meta button) {
+.chatPrototype :global(.rule-slot-value-row button) {
   min-width: 0;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1106,13 +1242,12 @@
   padding: 0;
 }
 
-.chatPrototype :global(.rule-slot-meta button:hover) {
+.chatPrototype :global(.rule-slot-value-row button:hover) {
   background: var(--greyscale-100);
   color: var(--greyscale-900);
 }
 
 .chatPrototype :global(.rule-slot-custom-meta .rule-slot-error) {
-  grid-column: 2 / -1;
   margin: -2px 0 0;
   color: var(--danger, #b42318);
   font-size: 12px;
@@ -1133,9 +1268,13 @@
 }
 
 @media (max-width: 560px) {
-  .chatPrototype :global(.rule-slot-card-head),
-  .chatPrototype :global(.rule-slot-meta) {
+  .chatPrototype :global(.rule-summary-grid),
+  .chatPrototype :global(.rule-slot-card) {
     grid-template-columns: 1fr;
+  }
+
+  .chatPrototype :global(.rule-slot-title) {
+    padding-top: 0;
   }
 }
 
@@ -1312,15 +1451,10 @@
 
 .chatPrototype :global(.selected-chain-nft-main) {
   min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-
-.chatPrototype :global(.chain-activation-kicker) {
-  color: var(--greyscale-500);
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.2;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .chatPrototype :global(.selected-chain-nft-main strong) {
@@ -2568,6 +2702,11 @@
 
   .chatWorkspace {
     padding: 0;
+  }
+
+  .chatWorkspace[data-entry="love20-chat-chain-activation"] :global(.workspace-screen) {
+    padding-bottom: calc(16px + var(--global-bottom-nav-offset));
+    scroll-padding-bottom: calc(16px + var(--global-bottom-nav-offset));
   }
 
   .chatSurface {

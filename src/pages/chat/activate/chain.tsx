@@ -34,14 +34,14 @@ const ChainChatActivationPage: NextPage = () => {
 
   return (
     <>
-      <Header title="激活链群" backUrl={chainListUrl} replaceBack />
+      <Header title="激活链群群聊" backUrl={chainListUrl} replaceBack />
       <main className={styles.chatPrototype} data-detail="false">
         <div className={styles.chatWorkspace} data-entry="love20-chat-chain-activation">
           <section className={styles.chatSurface}>
-            <section className="workspace-screen" aria-label="链群激活详情">
+            <section className="workspace-screen" aria-label="链群群聊激活详情">
               <div className="activation-header">
                 <div className="screen-heading">
-                  <h1>链群激活详情</h1>
+                  <h1>激活链群群聊</h1>
                 </div>
               </div>
               <ChainChatActivationDetail
