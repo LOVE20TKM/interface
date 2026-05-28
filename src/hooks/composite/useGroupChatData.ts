@@ -237,37 +237,20 @@ export function useGroupChatInboxData(
         : [],
     [cachedManagerChatInfos, groupIds, isCacheReady],
   );
-  const chatInfoContracts = useMemo(
-    () =>
-      uncachedInfoGroupIds.map((groupId) => ({
-        address: GROUP_CHAT_CONTRACT_ADDRESS,
-        abi: GroupChatAbi,
-        functionName: 'chatInfo' as const,
-        args: [groupId],
-      })),
-    [uncachedInfoGroupIds],
-  );
   const {
-    data: chatInfoData,
+    chatInfos,
     isPending: rawIsPendingInfos,
     error: infoError,
     refetch: refetchInfos,
-  } = useUniversalReadContracts({
-    contracts: chatInfoContracts as any,
-    query: {
-      enabled: isGroupChatEnabled && isCacheReady && chatInfoContracts.length > 0,
-    },
-  });
-  const isPendingInfos = isCacheReady && chatInfoContracts.length > 0 ? rawIsPendingInfos : !isCacheReady;
+  } = useGroupChatInfos(uncachedInfoGroupIds, isGroupChatEnabled && isCacheReady && uncachedInfoGroupIds.length > 0);
+  const isPendingInfos = isCacheReady && uncachedInfoGroupIds.length > 0 ? rawIsPendingInfos : !isCacheReady;
   const parsedChatInfos = useMemo(() => {
     const liveInfosByGroup: Record<string, ParsedGroupChatInfo | undefined> = {};
     uncachedInfoGroupIds.forEach((groupId, index) => {
-      liveInfosByGroup[groupId.toString()] = parseGroupChatInfo(
-        resultAt(chatInfoData as readonly ReadContractResult[] | undefined, index),
-      );
+      liveInfosByGroup[groupId.toString()] = parseGroupChatInfo(chatInfos[index]);
     });
     return groupIds.map((groupId) => cachedManagerChatInfos[groupId.toString()] || liveInfosByGroup[groupId.toString()]);
-  }, [cachedManagerChatInfos, chatInfoData, groupIds, uncachedInfoGroupIds]);
+  }, [cachedManagerChatInfos, chatInfos, groupIds, uncachedInfoGroupIds]);
 
   useEffect(() => {
     const nextCachedInfos: Record<string, ParsedGroupChatInfo> = {};
