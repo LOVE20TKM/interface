@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { MessagesSquare } from 'lucide-react';
 
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import { useGroupChatSyncState } from '@/src/contexts/GroupChatSyncContext';
 import type { GroupChatListItem } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
+import { suppressNextRouteLoading } from '@/src/lib/routeLoading';
 import { ChatBadge } from './ChatBadge';
 import { LONG_PRESS_MOVE_TOLERANCE, LONG_PRESS_MS } from './chatConstants';
-import { buildChatRoomHref, safeBigIntFromString } from './chatUtils';
+import { buildChatRoomHref, buildChatRoomUrl, safeBigIntFromString } from './chatUtils';
 
 const CONVERSATION_MENU_WIDTH = 132;
 const CONVERSATION_MENU_HEIGHT = 44;
@@ -26,11 +29,18 @@ function ConversationItem({
   tokenSymbol?: string;
   onTogglePin: (groupId: bigint) => void;
 }) {
+  const router = useRouter();
   const typeClass = `conversation-type-${item.kind}`;
-  const rawUnreadCount = item.messagesCount > readCursor ? item.messagesCount - readCursor : BigInt(0);
-  const visibleUnreadCount = rawUnreadCount;
-  const hasUnreadMentionMe = item.latestMentionMeMessageId > readCursor;
-  const hasUnreadMentionAll = item.latestMentionAllMessageId > readCursor;
+  const syncState = useGroupChatSyncState(item.groupId);
+  const effectiveMessagesCount =
+    syncState.messagesCount && syncState.messagesCount > item.messagesCount
+      ? syncState.messagesCount
+      : item.messagesCount;
+  const rawUnreadCount = effectiveMessagesCount > readCursor ? effectiveMessagesCount - readCursor : BigInt(0);
+  const visibleUnreadCount =
+    syncState.unreadCount > rawUnreadCount ? syncState.unreadCount : rawUnreadCount;
+  const hasUnreadMentionMe = syncState.unreadMentionMeCount > BigInt(0) || item.latestMentionMeMessageId > readCursor;
+  const hasUnreadMentionAll = syncState.unreadMentionAllCount > BigInt(0) || item.latestMentionAllMessageId > readCursor;
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ left: CONVERSATION_MENU_GUTTER, top: CONVERSATION_MENU_GUTTER });
   const rowRef = useRef<HTMLDivElement | null>(null);
@@ -116,12 +126,16 @@ function ConversationItem({
         className={cn('conversation-row group-row', typeClass, pinned && 'pinned')}
         data-menu-open={menuOpen ? 'true' : 'false'}
         onClick={(event) => {
-          if (!suppressClickRef.current) return;
-          suppressClickRef.current = false;
+          if (suppressClickRef.current) {
+            suppressClickRef.current = false;
+            event.preventDefault();
+            return;
+          }
+          suppressNextRouteLoading(href);
           event.preventDefault();
+          router.push(buildChatRoomUrl(tokenSymbol, item.groupId));
         }}
       >
-        <div className="conversation-type-rail" aria-hidden="true" />
         <div className="conversation-main">
           <div className="conversation-title">
             <span>{item.title.replace(` ${item.typeLabel}`, '')}</span>

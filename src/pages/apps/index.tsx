@@ -17,12 +17,14 @@ import {
 
 import Header from "@/src/components/Header";
 import { TokenContext } from "@/src/contexts/TokenContext";
+import { useGroupChatUnreadSummary } from "@/src/contexts/GroupChatSyncContext";
 
 interface AppItem {
   name: string;
   href: string | ((symbol?: string) => string);
   icon: LucideIcon;
   requiresWallet?: boolean;
+  hasUnread?: boolean;
 }
 
 interface AppSection {
@@ -119,8 +121,14 @@ function AppIcon({
           <Lock className="h-3.5 w-3.5" />
         </span>
       )}
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-greyscale-100 text-secondary">
+      <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-greyscale-100 text-secondary">
         <Icon className="h-5 w-5" />
+        {item.hasUnread && (
+          <span
+            className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"
+            aria-label="有新消息"
+          />
+        )}
       </span>
       <div className="line-clamp-2 w-full text-sm font-semibold leading-tight text-greyscale-900">{item.name}</div>
     </Link>
@@ -130,7 +138,9 @@ function AppIcon({
 export default function AppsPage() {
   const { isConnected } = useAccount();
   const { token } = useContext(TokenContext) || {};
+  const { totalUnread } = useGroupChatUnreadSummary();
   const symbol = token?.symbol;
+  const hasUnreadChat = totalUnread > BigInt(0);
 
   return (
     <>
@@ -149,7 +159,12 @@ export default function AppsPage() {
                 <SectionHeader title={section.title} symbol={section.title === "代币" ? symbol : undefined} />
                 <div className="grid grid-cols-4 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(92px,1fr))]">
                   {section.items.map((app) => (
-                    <AppIcon key={app.name} item={app} symbol={symbol} showWalletHint={!isConnected} />
+                    <AppIcon
+                      key={app.name}
+                      item={{ ...app, hasUnread: app.name === "聊天" && hasUnreadChat }}
+                      symbol={symbol}
+                      showWalletHint={!isConnected}
+                    />
                   ))}
                 </div>
               </section>

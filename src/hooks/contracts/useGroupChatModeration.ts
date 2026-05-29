@@ -643,6 +643,34 @@ export function useAdminBanQuery(
   };
 }
 
+export function useAdminSenderBanQuery(
+  groupId: bigint | undefined,
+  senderId: bigint | undefined,
+  senderAddress: `0x${string}` | undefined,
+  enabled: boolean = true,
+) {
+  const isQueryEnabled =
+    isGroupBanListEnabled &&
+    enabled &&
+    isPositiveId(groupId) &&
+    isPositiveId(senderId) &&
+    !!senderAddress;
+  const { data, isPending, error, refetch } = useUniversalReadContract({
+    address: getGroupBanListAddress(),
+    abi: GroupBanListAbi,
+    functionName: 'isBanned',
+    args: [groupId || BigInt(0), senderId || BigInt(0), senderAddress || ZERO_ADDRESS],
+    query: { enabled: isQueryEnabled },
+  });
+
+  return {
+    banned: isQueryEnabled && data !== undefined ? Boolean(data) : undefined,
+    isPending: isQueryEnabled ? isPending : false,
+    error: isQueryEnabled ? error : undefined,
+    refetch,
+  };
+}
+
 export function useGovBanQuery(
   groupId: bigint | undefined,
   targetType: 'address' | 'nft',
@@ -671,6 +699,81 @@ export function useGovBanQuery(
     isPending: isQueryEnabled ? isPending : false,
     error: isQueryEnabled ? error : undefined,
     refetch,
+  };
+}
+
+export function useGovSenderBanQuery(
+  groupId: bigint | undefined,
+  senderId: bigint | undefined,
+  senderAddress: `0x${string}` | undefined,
+  enabled: boolean = true,
+) {
+  const isQueryEnabled =
+    isGovVotedBanSourceEnabled &&
+    enabled &&
+    isPositiveId(groupId) &&
+    isPositiveId(senderId) &&
+    !!senderAddress;
+  const { data, isPending, error, refetch } = useUniversalReadContract({
+    address: getGovVotedBanSourceAddress(),
+    abi: GovVotedBanSourceAbi,
+    functionName: 'isBanned',
+    args: [groupId || BigInt(0), senderId || BigInt(0), senderAddress || ZERO_ADDRESS],
+    query: { enabled: isQueryEnabled },
+  });
+
+  return {
+    banned: isQueryEnabled && data !== undefined ? Boolean(data) : undefined,
+    isPending: isQueryEnabled ? isPending : false,
+    error: isQueryEnabled ? error : undefined,
+    refetch,
+  };
+}
+
+export function useGovSenderVoteWeightsByVoter(
+  groupId: bigint | undefined,
+  senderId: bigint | undefined,
+  senderAddress: `0x${string}` | undefined,
+  voter: `0x${string}` | undefined,
+  enabled: boolean = true,
+) {
+  const isQueryEnabled =
+    isGovVotedBanSourceEnabled &&
+    enabled &&
+    isPositiveId(groupId) &&
+    isPositiveId(senderId) &&
+    !!senderAddress &&
+    !!voter;
+  const addressVote = useUniversalReadContract({
+    address: getGovVotedBanSourceAddress(),
+    abi: GovVotedBanSourceAbi,
+    functionName: 'voteWeightsBySenderAddressesByVoter',
+    args: [groupId || BigInt(0), senderAddress ? [senderAddress] : [], voter || ZERO_ADDRESS],
+    query: { enabled: isQueryEnabled },
+  });
+  const senderVote = useUniversalReadContract({
+    address: getGovVotedBanSourceAddress(),
+    abi: GovVotedBanSourceAbi,
+    functionName: 'voteWeightsBySenderIdsByVoter',
+    args: [groupId || BigInt(0), senderId ? [senderId] : [], voter || ZERO_ADDRESS],
+    query: { enabled: isQueryEnabled },
+  });
+  const addressSupportWeights = getResultArray(addressVote.data, 0, 'supportWeights');
+  const addressOpposeWeights = getResultArray(addressVote.data, 1, 'opposeWeights');
+  const senderSupportWeights = getResultArray(senderVote.data, 0, 'supportWeights');
+  const senderOpposeWeights = getResultArray(senderVote.data, 1, 'opposeWeights');
+
+  return {
+    addressSupportWeight: isQueryEnabled ? safeToBigInt(addressSupportWeights[0]) : BigInt(0),
+    addressOpposeWeight: isQueryEnabled ? safeToBigInt(addressOpposeWeights[0]) : BigInt(0),
+    senderSupportWeight: isQueryEnabled ? safeToBigInt(senderSupportWeights[0]) : BigInt(0),
+    senderOpposeWeight: isQueryEnabled ? safeToBigInt(senderOpposeWeights[0]) : BigInt(0),
+    isPending: isQueryEnabled ? Boolean(addressVote.isPending || senderVote.isPending) : false,
+    error: addressVote.error || senderVote.error,
+    refetch: () => {
+      addressVote.refetch();
+      senderVote.refetch();
+    },
   };
 }
 

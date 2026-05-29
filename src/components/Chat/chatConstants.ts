@@ -9,6 +9,9 @@ export const MESSAGE_TIME_DIVIDER_GAP_MS = 5 * 60 * 1000;
 export const LONG_PRESS_MS = 520;
 export const LONG_PRESS_MOVE_TOLERANCE = 10;
 export const PINNED_GROUPS_STORAGE_KEY = 'love20-chat:pinned-groups:v1';
+export const PINNED_GROUPS_CHANGED_EVENT = 'love20-chat:pinned-groups-changed';
+export const CACHED_GROUP_SETS_STORAGE_KEY = 'love20-chat:cached-group-sets:v1';
+export const CACHED_GROUP_SETS_CHANGED_EVENT = 'love20-chat:cached-group-sets-changed';
 export const MESSAGE_PREFERENCES_STORAGE_KEY = 'love20-chat:message-preferences:v3';
 export const READ_CURSORS_STORAGE_KEY = 'love20-chat:read-cursors:v1';
 

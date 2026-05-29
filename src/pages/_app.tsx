@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 
 import { config } from '@/src/wagmi';
 import { ErrorProvider, useError } from '@/src/contexts/ErrorContext';
+import { GroupChatSyncProvider } from '@/src/contexts/GroupChatSyncContext';
 import { TokenProvider } from '@/src/contexts/TokenContext';
 import { AppSidebar } from '@/src/components/Common/AppSidebar';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
@@ -178,7 +179,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       router.events.off('routeChangeComplete', stopNavLoading);
       router.events.off('routeChangeError', stopNavLoading);
     };
-  }, [router.asPath, router.events]);
+  }, [router.events]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -227,48 +228,52 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ClientWrapper>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </Head>
       <LoadingOverlay isLoading={navLoading} text="网络加载中..." />
       <WagmiProvider config={config}>
         <QueryClientProvider client={client}>
           <ErrorProvider>
             <GlobalErrorBridge />
-            <TokenProvider>
-              <SidebarProvider>
-                <AppSidebar />
-                <SidebarInset className={cn('min-w-0', isChatRoomPage && 'h-svh min-h-0 overflow-hidden')}>
-                  <div
-                    className={cn(
-                      'bg-background flex flex-col',
-                      isChatRoomPage ? 'h-svh min-h-0 overflow-hidden pb-0' : 'min-h-screen pb-16 md:pb-0',
-                    )}
-                  >
-                    <Toaster
-                      position="top-center"
-                      toastOptions={{
-                        style: {
-                          background: '#000000',
-                          color: '#FFFFFF',
-                        },
-                      }}
-                    />
-                    {!isChatRoomPage && (
-                      <div className="px-4 pt-4">
-                        <ErrorAlert />
-                      </div>
-                    )}
-                    {!isChatRoomPage && <GasBalanceNotifier />}
-                    {!isChatRoomPage && <ActionRewardNotifier />}
-                    <AppErrorBoundary key={router.asPath}>
-                      <Component {...pageProps} />
-                    </AppErrorBoundary>
-                    {!hideFooter && <Footer />}
-                    <BottomNavigation />
-                  </div>
-                </SidebarInset>
-              </SidebarProvider>
-            </TokenProvider>
+            <GroupChatSyncProvider>
+              <TokenProvider>
+                <SidebarProvider>
+                  <AppSidebar />
+                  <SidebarInset className={cn('min-w-0', isChatRoomPage && 'h-svh min-h-0 overflow-hidden')}>
+                    <div
+                      className={cn(
+                        'bg-background flex flex-col',
+                        isChatRoomPage
+                          ? 'h-svh min-h-0 overflow-hidden pb-0'
+                          : 'min-h-screen pb-[var(--bottom-navigation-height)] md:pb-0',
+                      )}
+                    >
+                      <Toaster
+                        position="top-center"
+                        toastOptions={{
+                          style: {
+                            background: '#000000',
+                            color: '#FFFFFF',
+                          },
+                        }}
+                      />
+                      {!isChatRoomPage && (
+                        <div className="px-4 pt-4">
+                          <ErrorAlert />
+                        </div>
+                      )}
+                      {!isChatRoomPage && <GasBalanceNotifier />}
+                      {!isChatRoomPage && <ActionRewardNotifier />}
+                      <AppErrorBoundary key={router.asPath}>
+                        <Component {...pageProps} />
+                      </AppErrorBoundary>
+                      {!hideFooter && <Footer />}
+                      <BottomNavigation />
+                    </div>
+                  </SidebarInset>
+                </SidebarProvider>
+              </TokenProvider>
+            </GroupChatSyncProvider>
           </ErrorProvider>
         </QueryClientProvider>
       </WagmiProvider>

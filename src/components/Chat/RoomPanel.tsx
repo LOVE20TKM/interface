@@ -3,6 +3,7 @@
 import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
+import { useGroupChatSyncState, useMarkGroupRead, useRegisterActiveChat } from '@/src/contexts/GroupChatSyncContext';
 import { useGroupChatVotingPower } from '@/src/hooks/contracts/useGroupChatManagers';
 import {
   usePostAsDefaultSender,
@@ -10,12 +11,8 @@ import {
 import {
   GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS,
   GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS,
-  useBanSenders,
-  useGovClearVoteBySender,
-  useGovVoteBySender,
   useGroupAdminOperatorPermission,
   useGroupMentionAllPermission,
-  useUnbanSenders,
 } from '@/src/hooks/contracts/useGroupChatModeration';
 import {
   useGroupChatManagedTitle,
@@ -28,8 +25,6 @@ import { ChatMessageList } from './ChatMessageList';
 import { ChatRoomToolbar } from './ChatRoomToolbar';
 import {
   DEFAULT_MESSAGE_WINDOW_SIZE,
-  LONG_PRESS_MOVE_TOLERANCE,
-  LONG_PRESS_MS,
   MAX_MENTIONED_SENDER_IDS,
   MESSAGE_PAGE_SIZE,
 } from './chatConstants';
@@ -40,7 +35,6 @@ import {
   sameAddress,
 } from './chatUtils';
 import { useChatComposerState } from './useChatComposerState';
-import { useConfirmedTransactionEffect } from './useConfirmedTransactionEffect';
 
 const useBrowserLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
@@ -55,6 +49,7 @@ export function RoomPanel({
   tokenSymbol,
   onPosted,
   onOpenPanel,
+  onOpenBanSettings,
   onTogglePin,
   onReadLatest,
 }: {
@@ -68,6 +63,7 @@ export function RoomPanel({
   tokenSymbol?: string;
   onPosted: () => void;
   onOpenPanel: (view: ChatWorkspaceView) => void;
+  onOpenBanSettings: (message: ParsedGroupChatMessage) => void;
   onTogglePin: (groupId: bigint) => void;
   onReadLatest?: (groupId: bigint, latestMessageId: bigint | undefined) => void;
 }) {
@@ -76,7 +72,6 @@ export function RoomPanel({
   const [mentionedSenderIds, setMentionedSenderIds] = useState<bigint[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeMenuMessageId, setActiveMenuMessageId] = useState<string | undefined>();
-  const [activeAvatarMessageId, setActiveAvatarMessageId] = useState<string | undefined>();
   const [messageWindowSize, setMessageWindowSize] = useState(DEFAULT_MESSAGE_WINDOW_SIZE);
   const messageListRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLElement | null>(null);
@@ -84,18 +79,15 @@ export function RoomPanel({
   const previousScrollHeightRef = useRef(0);
   const lastAutoScrollGroupIdRef = useRef<string | undefined>();
   const lastAutoScrollLatestMessageIdRef = useRef<string | undefined>();
+  const lastRefetchedSyncMessageIdRef = useRef<string | undefined>();
   const bottomResizeObserverRef = useRef<ResizeObserver | undefined>();
   const bottomResizeFrameRef = useRef<number | undefined>();
   const [composerHeight, setComposerHeight] = useState(0);
   const [messageListHeight, setMessageListHeight] = useState<number | undefined>();
   const [bottomNavHeight, setBottomNavHeight] = useState(0);
-  const avatarPressRef = useRef<{
-    pointerId: number;
-    x: number;
-    y: number;
-    timer: ReturnType<typeof setTimeout>;
-  } | null>(null);
-  const suppressAvatarClickRef = useRef(false);
+  useRegisterActiveChat(groupId);
+  const markGroupRead = useMarkGroupRead();
+  const syncState = useGroupChatSyncState(groupId);
   const publicRoom = useGroupChatRoomPublicData(groupId, messageWindowSize);
   const accountRoom = useGroupChatRoomAccountData(groupId, account, publicRoom.senderNames);
   const managedTitle = useGroupChatManagedTitle(
@@ -115,33 +107,20 @@ export function RoomPanel({
   const mentionAllPermission = useGroupMentionAllPermission(groupId, account);
   const messageAdminPermission = useGroupAdminOperatorPermission(groupId, account, activeAdminBanSource);
   const canManageMessageAdminBan = activeAdminBanSource && messageAdminPermission.canOperate;
-  const banSenderTx = useBanSenders();
-  const unbanSenderTx = useUnbanSenders();
-  const voteSenderTx = useGovVoteBySender();
-  const clearSenderVoteTx = useGovClearVoteBySender();
   const postedHandledRef = useRef(false);
-  const refetchRoomAfterModeration = useCallback(() => {
-    publicRoom.refetch();
-    accountRoom.refetch();
-    onPosted();
-  }, [accountRoom, onPosted, publicRoom]);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
-  useConfirmedTransactionEffect(banSenderTx, refetchRoomAfterModeration);
-  useConfirmedTransactionEffect(unbanSenderTx, refetchRoomAfterModeration);
-  useConfirmedTransactionEffect(voteSenderTx, refetchRoomAfterModeration);
-  useConfirmedTransactionEffect(clearSenderVoteTx, refetchRoomAfterModeration);
 
   useEffect(() => {
     setContent('');
     setQuotedMessage(undefined);
     setMentionedSenderIds([]);
     setActiveMenuMessageId(undefined);
-    setActiveAvatarMessageId(undefined);
     setMessageWindowSize(DEFAULT_MESSAGE_WINDOW_SIZE);
     restoreScrollAfterPrependRef.current = false;
     previousScrollHeightRef.current = 0;
     lastAutoScrollGroupIdRef.current = undefined;
     lastAutoScrollLatestMessageIdRef.current = undefined;
+    lastRefetchedSyncMessageIdRef.current = undefined;
   }, [groupId]);
 
   const stopBottomResizeObserver = useCallback(() => {
@@ -236,13 +215,6 @@ export function RoomPanel({
     }
   }, [accountRoom, isConfirmed, onPosted, publicRoom]);
 
-  const clearAvatarPress = useCallback(() => {
-    if (avatarPressRef.current) clearTimeout(avatarPressRef.current.timer);
-    avatarPressRef.current = null;
-  }, []);
-
-  useEffect(() => clearAvatarPress, [clearAvatarPress]);
-
   const composerState = useChatComposerState({
     groupId,
     account,
@@ -263,13 +235,25 @@ export function RoomPanel({
     });
     return map;
   }, [publicRoom.messages, publicRoom.quotedMessages]);
+  const effectiveMessagesCount =
+    syncState.messagesCount && (!publicRoom.messagesCount || syncState.messagesCount > publicRoom.messagesCount)
+      ? syncState.messagesCount
+      : publicRoom.messagesCount;
   const visibleMessages = useMemo(
     () => publicRoom.messages.filter((message) => showBannedMessages || !publicRoom.bannedMessageIds[message.messageId.toString()]),
     [publicRoom.bannedMessageIds, publicRoom.messages, showBannedMessages],
   );
   const latestVisibleMessageId = visibleMessages[visibleMessages.length - 1]?.messageId.toString();
   const hasMoreMessages =
-    publicRoom.messagesCount !== undefined && BigInt(publicRoom.messages.length) < publicRoom.messagesCount;
+    effectiveMessagesCount !== undefined && BigInt(publicRoom.messages.length) < effectiveMessagesCount;
+  const displayedRoom = useMemo(
+    () => ({
+      ...publicRoom,
+      messagesCount: effectiveMessagesCount,
+      messages: publicRoom.messages,
+    }),
+    [effectiveMessagesCount, publicRoom],
+  );
 
   const measureDetailLayout = useCallback(() => {
     const messageList = messageListRef.current;
@@ -319,8 +303,26 @@ export function RoomPanel({
 
   useEffect(() => {
     if (!groupId || publicRoom.isMessageFeedPending) return;
-    onReadLatest?.(groupId, publicRoom.messagesCount);
-  }, [groupId, onReadLatest, publicRoom.isMessageFeedPending, publicRoom.messagesCount]);
+    const latestLoadedMessageId = latestVisibleMessageId ? BigInt(latestVisibleMessageId) : publicRoom.messagesCount;
+    markGroupRead(groupId, latestLoadedMessageId);
+    onReadLatest?.(groupId, latestLoadedMessageId);
+  }, [groupId, latestVisibleMessageId, markGroupRead, onReadLatest, publicRoom.isMessageFeedPending, publicRoom.messagesCount]);
+
+  useEffect(() => {
+    if (
+      !groupId ||
+      publicRoom.isMessageFeedPending ||
+      (syncState.messagesCount === undefined && syncState.latestMessageId === undefined) ||
+      publicRoom.messagesCount === undefined ||
+      (syncState.messagesCount || syncState.latestMessageId || BigInt(0)) <= publicRoom.messagesCount
+    ) {
+      return;
+    }
+    const latestKey = (syncState.latestMessageId || syncState.messagesCount)?.toString();
+    if (latestKey && lastRefetchedSyncMessageIdRef.current === latestKey) return;
+    lastRefetchedSyncMessageIdRef.current = latestKey;
+    publicRoom.refetch();
+  }, [groupId, publicRoom, syncState.latestMessageId, syncState.messagesCount]);
 
   useBrowserLayoutEffect(() => {
     const messageList = messageListRef.current;
@@ -376,7 +378,7 @@ export function RoomPanel({
     previousScrollHeightRef.current = messageList?.scrollHeight || 0;
     restoreScrollAfterPrependRef.current = true;
     setMessageWindowSize((current) => {
-      const total = publicRoom.messagesCount ? Number(publicRoom.messagesCount) : current + MESSAGE_PAGE_SIZE;
+      const total = effectiveMessagesCount ? Number(effectiveMessagesCount) : current + MESSAGE_PAGE_SIZE;
       return Math.min(total, current + MESSAGE_PAGE_SIZE);
     });
   };
@@ -401,30 +403,6 @@ export function RoomPanel({
     setMentionedSenderIds((prev) => [...prev, senderId]);
   };
 
-  const startAvatarLongPress = (event: React.PointerEvent<HTMLButtonElement>, message: ParsedGroupChatMessage) => {
-    if (event.button !== 0) return;
-    clearAvatarPress();
-    avatarPressRef.current = {
-      pointerId: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
-      timer: setTimeout(() => {
-        avatarPressRef.current = null;
-        suppressAvatarClickRef.current = true;
-        addMention(message.senderId);
-      }, LONG_PRESS_MS),
-    };
-  };
-
-  const cancelMovedAvatarPress = (event: React.PointerEvent<HTMLButtonElement>) => {
-    const press = avatarPressRef.current;
-    if (!press || event.pointerId !== press.pointerId) return;
-    const moved =
-      Math.abs(event.clientX - press.x) > LONG_PRESS_MOVE_TOLERANCE ||
-      Math.abs(event.clientY - press.y) > LONG_PRESS_MOVE_TOLERANCE;
-    if (moved) clearAvatarPress();
-  };
-
   const copyMessage = async (message: ParsedGroupChatMessage) => {
     try {
       await navigator.clipboard.writeText(message.content);
@@ -440,70 +418,6 @@ export function RoomPanel({
       const copied = document.execCommand('copy');
       document.body.removeChild(textarea);
       copied ? toast.success('已复制消息') : toast.error('复制失败');
-    }
-  };
-
-  const banMessageSender = async (message: ParsedGroupChatMessage) => {
-    if (!groupId) return;
-    if (!canManageMessageAdminBan) {
-      toast.error('当前地址没有 AdminBanSource 管理权限。');
-      return;
-    }
-    try {
-      await banSenderTx.banBySenders(groupId, [message.senderId], [message.senderAddress]);
-      toast.success('已提交禁言 sender');
-      setActiveMenuMessageId(undefined);
-      setActiveAvatarMessageId(undefined);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const unbanMessageSender = async (message: ParsedGroupChatMessage) => {
-    if (!groupId) return;
-    if (!canManageMessageAdminBan) {
-      toast.error('当前地址没有 AdminBanSource 管理权限。');
-      return;
-    }
-    try {
-      await unbanSenderTx.unbanBySenders(groupId, [message.senderId], [message.senderAddress]);
-      toast.success('已提交解除 sender 禁言');
-      setActiveMenuMessageId(undefined);
-      setActiveAvatarMessageId(undefined);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const voteMessageSender = async (message: ParsedGroupChatMessage, support: boolean) => {
-    if (!groupId) return;
-    if (!canVoteMessageGovBan) {
-      toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
-      return;
-    }
-    try {
-      await voteSenderTx.voteBySender(groupId, message.senderId, message.senderAddress, support);
-      toast.success(support ? '已提交 sender 治理支持' : '已提交 sender 治理反对');
-      setActiveMenuMessageId(undefined);
-      setActiveAvatarMessageId(undefined);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const clearMessageSenderVote = async (message: ParsedGroupChatMessage) => {
-    if (!groupId) return;
-    if (!canVoteMessageGovBan) {
-      toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
-      return;
-    }
-    try {
-      await clearSenderVoteTx.clearVoteBySender(groupId, message.senderId, message.senderAddress);
-      toast.success('已提交 sender 治理撤票');
-      setActiveMenuMessageId(undefined);
-      setActiveAvatarMessageId(undefined);
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -583,7 +497,7 @@ export function RoomPanel({
       <ChatRoomToolbar
         groupId={groupId}
         title={displayGroupName}
-        messagesCount={publicRoom.messagesCount}
+        messagesCount={effectiveMessagesCount}
         menuOpen={menuOpen}
         isPinned={isPinned}
         onToggleMenu={() => setMenuOpen((value) => !value)}
@@ -594,13 +508,12 @@ export function RoomPanel({
 
       <ChatMessageList
         account={account}
-        room={publicRoom}
+        room={displayedRoom}
         groupId={groupId}
         messageListRef={messageListRef}
         hasMoreMessages={hasMoreMessages}
         visibleMessages={visibleMessages}
         messageById={messageById}
-        activeAvatarMessageId={activeAvatarMessageId}
         activeMenuMessageId={activeMenuMessageId}
         canUseMessageAdminBan={activeAdminBanSource}
         messageAdminCanOperate={canManageMessageAdminBan}
@@ -609,26 +522,18 @@ export function RoomPanel({
         showMessageTimes={showMessageTimes}
         onLoadEarlierMessages={loadEarlierMessages}
         onOpenMessageMenu={(messageId) => {
-          setActiveAvatarMessageId(undefined);
           setActiveMenuMessageId((value) => (value === messageId ? undefined : messageId));
         }}
-        onToggleAvatarMenu={(messageId) => {
-          if (suppressAvatarClickRef.current) {
-            suppressAvatarClickRef.current = false;
-            return;
-          }
+        onMentionSender={(message) => {
+          addMention(message.senderId);
           setActiveMenuMessageId(undefined);
-          setActiveAvatarMessageId((value) => (value === messageId ? undefined : messageId));
         }}
-        onAvatarPointerDown={startAvatarLongPress}
-        onAvatarPointerMove={cancelMovedAvatarPress}
-        onAvatarPointerUp={clearAvatarPress}
         onCopyMessage={copyMessage}
         onQuoteMessage={setQuotedMessage}
-        onBanMessageSender={banMessageSender}
-        onUnbanMessageSender={unbanMessageSender}
-        onVoteMessageSender={voteMessageSender}
-        onClearMessageSenderVote={clearMessageSenderVote}
+        onOpenBanSettings={(message) => {
+          setActiveMenuMessageId(undefined);
+          onOpenBanSettings(message);
+        }}
       />
 
       <ChatComposer

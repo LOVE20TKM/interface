@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { RoomPanel } from './RoomPanel';
 import styles from './ChatPage.module.css';
 import {
+  PINNED_GROUPS_CHANGED_EVENT,
   PINNED_GROUPS_STORAGE_KEY,
   READ_CURSORS_STORAGE_KEY,
 } from './chatConstants';
@@ -30,6 +31,7 @@ import {
   parseGroupId,
   safeBigIntFromString,
 } from './chatUtils';
+import type { ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
 
 export default function ChatRoomPage() {
   const router = useRouter();
@@ -74,6 +76,7 @@ export default function ChatRoomPage() {
       const next = prev.includes(key) ? prev.filter((item) => item !== key) : [key, ...prev];
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(PINNED_GROUPS_STORAGE_KEY, JSON.stringify(next));
+        window.dispatchEvent(new Event(PINNED_GROUPS_CHANGED_EVENT));
       }
       return next;
     });
@@ -103,6 +106,16 @@ export default function ChatRoomPage() {
     [groupId, router, tokenSymbol],
   );
 
+  const openBanSettingsForMessage = useCallback(
+    (message: ParsedGroupChatMessage) => {
+      router.push(buildChatPanelHref('ban-list', tokenSymbol, message.groupId, {
+        target: 'message',
+        messageId: message.messageId,
+      }));
+    },
+    [router, tokenSymbol],
+  );
+
   const backUrl = buildChatIndexHref(tokenSymbol);
 
   return (
@@ -126,6 +139,7 @@ export default function ChatRoomPage() {
                 tokenSymbol={tokenSymbol}
                 onPosted={refreshAll}
                 onOpenPanel={onOpenGroupPanel}
+                onOpenBanSettings={openBanSettingsForMessage}
                 onTogglePin={togglePinnedGroup}
                 onReadLatest={markGroupRead}
               />

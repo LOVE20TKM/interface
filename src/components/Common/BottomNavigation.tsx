@@ -1,42 +1,18 @@
 'use client';
-import { useContext, useMemo, useEffect, useState, type MouseEvent } from 'react';
+import { useContext, useMemo, type MouseEvent } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { TokenContext } from '@/src/contexts/TokenContext';
+import { useGroupChatUnreadSummary } from '@/src/contexts/GroupChatSyncContext';
 import { cn } from '@/lib/utils';
 import { MessageCircle, Users, Vote, User, Layers } from 'lucide-react';
-import { isTukeWallet } from '@/src/lib/tukeWalletUtils';
 import { normalizeRouteKey, suppressNextRouteLoading } from '@/src/lib/routeLoading';
 
 export function BottomNavigation() {
   const { token } = useContext(TokenContext) || {};
+  const { badgeType, badgeLabel } = useGroupChatUnreadSummary();
   const router = useRouter();
-
-  // 检测是否为iOS设备且在TUKE钱包中
-  const [needsExtraPadding, setNeedsExtraPadding] = useState(false);
-
-  useEffect(() => {
-    const checkEnvironment = () => {
-      if (typeof window === 'undefined') return;
-
-      // 检测iOS设备
-      const isIOS =
-        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-      // 检测TUKE钱包
-      const isTuke = isTukeWallet();
-
-      // 如果是iOS设备且在TUKE钱包中，需要额外的底部padding
-      setNeedsExtraPadding(isIOS && isTuke);
-
-      if (isIOS && isTuke) {
-        console.log('🍎 检测到iOS设备中的TUKE钱包，启用额外底部安全区域');
-      }
-    };
-
-    checkEnvironment();
-  }, []);
+  const hasUnreadChat = badgeType !== 'none';
 
   const navItems = useMemo(() => {
     if (!token) return [];
@@ -48,6 +24,8 @@ export function BottomNavigation() {
         icon: MessageCircle,
         isActive: router.pathname.startsWith('/chat'),
         isMain: false,
+        chatBadgeType: !router.pathname.startsWith('/chat') && hasUnreadChat ? badgeType : 'none',
+        chatBadgeLabel: badgeLabel,
       },
       {
         title: '应用',
@@ -55,6 +33,8 @@ export function BottomNavigation() {
         icon: Layers,
         isActive: router.pathname.startsWith('/apps'),
         isMain: false,
+        chatBadgeType: 'none',
+        chatBadgeLabel: '0',
       },
       {
         title: '社区行动',
@@ -62,6 +42,8 @@ export function BottomNavigation() {
         icon: Users,
         isActive: router.pathname.startsWith('/acting'),
         isMain: true,
+        chatBadgeType: 'none',
+        chatBadgeLabel: '0',
       },
       {
         title: '治理',
@@ -69,6 +51,8 @@ export function BottomNavigation() {
         icon: Vote,
         isActive: router.pathname.startsWith('/gov'),
         isMain: false,
+        chatBadgeType: 'none',
+        chatBadgeLabel: '0',
       },
       {
         title: '我的',
@@ -76,9 +60,11 @@ export function BottomNavigation() {
         icon: User,
         isActive: router.pathname.startsWith('/my'),
         isMain: false,
+        chatBadgeType: 'none',
+        chatBadgeLabel: '0',
       },
     ];
-  }, [token, router.pathname]);
+  }, [badgeLabel, badgeType, hasUnreadChat, token, router.pathname]);
 
   if (!token) return null;
 
@@ -102,13 +88,8 @@ export function BottomNavigation() {
   };
 
   return (
-    <nav
-      className={cn(
-        'fixed bottom-0 left-0 right-0 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700 shadow-lg z-50 md:hidden',
-        needsExtraPadding && 'pb-2', // iOS + TUKE钱包额外底部间距，再微调缩短一点
-      )}
-    >
-      <div className={cn('flex justify-around items-center py-2 px-4', needsExtraPadding ? 'pb-1' : 'pb-safe')}>
+    <nav className="mobile-bottom-navigation fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-gray-50 shadow-lg dark:border-gray-700 dark:bg-gray-900 md:hidden">
+      <div className="flex h-[var(--bottom-navigation-content-height)] items-center justify-around px-4 py-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -163,6 +144,21 @@ export function BottomNavigation() {
                     !item.isMain && 'mb-1',
                   )}
                 />
+                {item.chatBadgeType && item.chatBadgeType !== 'none' && (
+                  item.chatBadgeType === 'intro-dot' ? (
+                    <span
+                      className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-gray-50 bg-red-500 dark:border-gray-900"
+                      aria-label="有新消息"
+                    />
+                  ) : (
+                    <span
+                      className="absolute -right-2 -top-1 min-w-5 rounded-full border-2 border-gray-50 bg-red-500 px-1 text-center text-[10px] font-semibold leading-4 text-white dark:border-gray-900"
+                      aria-label="有新消息"
+                    >
+                      {item.chatBadgeLabel}
+                    </span>
+                  )
+                )}
               </div>
 
               {/* 标签文字 */}

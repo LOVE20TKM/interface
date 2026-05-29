@@ -47,7 +47,6 @@ export function ChatMessageList({
   hasMoreMessages,
   visibleMessages,
   messageById,
-  activeAvatarMessageId,
   activeMenuMessageId,
   canUseMessageAdminBan,
   messageAdminCanOperate,
@@ -56,16 +55,10 @@ export function ChatMessageList({
   showMessageTimes,
   onLoadEarlierMessages,
   onOpenMessageMenu,
-  onToggleAvatarMenu,
-  onAvatarPointerDown,
-  onAvatarPointerMove,
-  onAvatarPointerUp,
+  onMentionSender,
   onCopyMessage,
   onQuoteMessage,
-  onBanMessageSender,
-  onUnbanMessageSender,
-  onVoteMessageSender,
-  onClearMessageSenderVote,
+  onOpenBanSettings,
 }: {
   account: `0x${string}` | undefined;
   room: GroupChatRoomPublicData;
@@ -74,7 +67,6 @@ export function ChatMessageList({
   hasMoreMessages: boolean;
   visibleMessages: ParsedGroupChatMessage[];
   messageById: Record<string, ParsedGroupChatMessage>;
-  activeAvatarMessageId: string | undefined;
   activeMenuMessageId: string | undefined;
   canUseMessageAdminBan: boolean;
   messageAdminCanOperate: boolean;
@@ -83,16 +75,10 @@ export function ChatMessageList({
   showMessageTimes: boolean;
   onLoadEarlierMessages: () => void;
   onOpenMessageMenu: (messageId: string) => void;
-  onToggleAvatarMenu: (messageId: string) => void;
-  onAvatarPointerDown: (event: React.PointerEvent<HTMLButtonElement>, message: ParsedGroupChatMessage) => void;
-  onAvatarPointerMove: (event: React.PointerEvent<HTMLButtonElement>) => void;
-  onAvatarPointerUp: () => void;
+  onMentionSender: (message: ParsedGroupChatMessage) => void;
   onCopyMessage: (message: ParsedGroupChatMessage) => void;
   onQuoteMessage: (message: ParsedGroupChatMessage) => void;
-  onBanMessageSender: (message: ParsedGroupChatMessage) => void;
-  onUnbanMessageSender: (message: ParsedGroupChatMessage) => void;
-  onVoteMessageSender: (message: ParsedGroupChatMessage, support: boolean) => void;
-  onClearMessageSenderVote: (message: ParsedGroupChatMessage) => void;
+  onOpenBanSettings: (message: ParsedGroupChatMessage) => void;
 }) {
   return (
     <div className="message-list" ref={messageListRef}>
@@ -125,6 +111,8 @@ export function ChatMessageList({
             const showTimeDivider = shouldRenderMessageTimeDivider(message, visibleMessages[index - 1]);
             const messageKey = message.messageId.toString();
             const messageTime = showMessageTimes ? formatMessageTime(message.timestamp) : '';
+            const canOpenBanSettings =
+              !mine && ((canUseMessageAdminBan && messageAdminCanOperate) || (canUseMessageGovBan && canVoteMessageGovBan));
 
             return (
               <Fragment key={messageKey}>
@@ -132,23 +120,6 @@ export function ChatMessageList({
                   <div className="message-time-divider">{formatMessageDividerTime(timestamp)}</div>
                 )}
                 <article className={cn('message-row', mine && 'mine', banned && 'banned')} onClick={() => onOpenMessageMenu(messageKey)}>
-                  <button
-                    type="button"
-                    className="avatar"
-                    onPointerDown={(event) => onAvatarPointerDown(event, message)}
-                    onPointerMove={onAvatarPointerMove}
-                    onPointerUp={onAvatarPointerUp}
-                    onPointerCancel={onAvatarPointerUp}
-                    onContextMenu={(event) => event.preventDefault()}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onToggleAvatarMenu(messageKey);
-                    }}
-                    data-long-press-mention
-                    title="发送者菜单"
-                  >
-                    {senderName.slice(0, 1) || '人'}
-                  </button>
                   <div className="message-body">
                     <div className="message-meta">
                       {senderName}
@@ -163,28 +134,14 @@ export function ChatMessageList({
                       )}
                       {renderMessageContent(message, room.senderNames)}
                     </div>
-                    {activeAvatarMessageId === messageKey && !mine && (
-                      <div className="message-actions avatar-actions">
-                        {canUseMessageAdminBan && (
-                          banned ? (
-                            <button type="button" onClick={() => onUnbanMessageSender(message)} disabled={!messageAdminCanOperate}>解除sender</button>
-                          ) : (
-                            <button type="button" onClick={() => onBanMessageSender(message)} disabled={!messageAdminCanOperate}>禁言 sender</button>
-                          )
-                        )}
-                        {canUseMessageGovBan && (
-                          <>
-                            <button type="button" onClick={() => onVoteMessageSender(message, true)} disabled={!canVoteMessageGovBan}>治理支持</button>
-                            <button type="button" onClick={() => onVoteMessageSender(message, false)} disabled={!canVoteMessageGovBan}>治理反对</button>
-                            <button type="button" onClick={() => onClearMessageSenderVote(message)} disabled={!canVoteMessageGovBan}>治理撤票</button>
-                          </>
-                        )}
-                      </div>
-                    )}
                     {activeMenuMessageId === messageKey && (
                       <div className="message-actions" onClick={(event) => event.stopPropagation()}>
+                        <button type="button" title="提及" onClick={() => onMentionSender(message)}>提及</button>
                         <button type="button" title="引用" onClick={() => onQuoteMessage(message)}>引用</button>
                         <button type="button" title="复制" onClick={() => onCopyMessage(message)}>复制</button>
+                        {canOpenBanSettings && (
+                          <button type="button" onClick={() => onOpenBanSettings(message)}>禁言设置</button>
+                        )}
                       </div>
                     )}
                   </div>

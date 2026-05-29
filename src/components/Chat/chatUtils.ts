@@ -1,4 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
+import type { UrlObject } from 'url';
 
 import { formatNumber, formatTokenAmount } from '@/src/lib/format';
 import {
@@ -22,11 +23,21 @@ export function buildChatRoomHref(tokenSymbol: string | undefined, groupId: bigi
   const params = new URLSearchParams();
   if (tokenSymbol) params.set('symbol', tokenSymbol);
   params.set('groupId', groupId.toString());
-  return `/chat/room/?${params.toString()}`;
+  return `/chat/room?${params.toString()}`;
+}
+
+export function buildChatRoomUrl(tokenSymbol: string | undefined, groupId: bigint): UrlObject {
+  return {
+    pathname: '/chat/room',
+    query: {
+      ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
+      groupId: groupId.toString(),
+    },
+  };
 }
 
 export function buildChatIndexHref(tokenSymbol: string | undefined) {
-  return tokenSymbol ? `/chat/?symbol=${encodeURIComponent(tokenSymbol)}` : '/chat/';
+  return tokenSymbol ? `/chat?symbol=${encodeURIComponent(tokenSymbol)}` : '/chat';
 }
 
 export function buildChatActivationHref(tokenSymbol: string | undefined, activationType?: 'token' | 'action' | 'chain') {
@@ -34,7 +45,7 @@ export function buildChatActivationHref(tokenSymbol: string | undefined, activat
   if (tokenSymbol) params.set('symbol', tokenSymbol);
   if (activationType) params.set('activationType', activationType);
   const query = params.toString();
-  return query ? `/chat/activate/?${query}` : '/chat/activate/';
+  return query ? `/chat/activate?${query}` : '/chat/activate';
 }
 
 export function buildChatChainActivationHref(
@@ -46,18 +57,22 @@ export function buildChatChainActivationHref(
   if (tokenSymbol) params.set('symbol', tokenSymbol);
   params.set('groupId', groupId.toString());
   if (groupName) params.set('groupName', groupName);
-  return `/chat/activate/chain/?${params.toString()}`;
+  return `/chat/activate/chain?${params.toString()}`;
 }
 
 export function buildChatPanelHref(
   panel: 'members' | 'ban-list' | 'admins' | 'settings',
   tokenSymbol: string | undefined,
   groupId: bigint,
+  extras?: Record<string, string | bigint | undefined>,
 ) {
   const params = new URLSearchParams();
   if (tokenSymbol) params.set('symbol', tokenSymbol);
   params.set('groupId', groupId.toString());
-  return `/chat/${panel}/?${params.toString()}`;
+  Object.entries(extras || {}).forEach(([key, value]) => {
+    if (value !== undefined) params.set(key, value.toString());
+  });
+  return `/chat/${panel}?${params.toString()}`;
 }
 
 export function parseActionIdInput(value: string) {

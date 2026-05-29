@@ -149,6 +149,8 @@ export const useGroupChatInfo = (groupId: bigint | undefined, enabled: boolean =
     args: [groupId || BigInt(0)],
     query: {
       enabled: isQueryEnabled,
+      placeholderData: (previousData) => previousData,
+      refetchOnWindowFocus: false,
     },
   });
 
@@ -220,11 +222,37 @@ export const useGroupChatMessages = (
     args: [groupId || BigInt(0), offset, limit, reverse],
     query: {
       enabled: isQueryEnabled,
+      placeholderData: (previousData) => previousData,
+      refetchOnWindowFocus: false,
     },
   });
 
   return {
     messages: isQueryEnabled && Array.isArray(data) ? data : [],
+    isPending: isQueryEnabled ? isPending : false,
+    error: isQueryEnabled ? error : undefined,
+    refetch,
+  };
+};
+
+export const useGroupChatMessage = (
+  groupId: bigint | undefined,
+  messageId: bigint | undefined,
+  enabled: boolean = true,
+) => {
+  const isQueryEnabled = isGroupChatEnabled && enabled && isPositiveId(groupId) && isPositiveId(messageId);
+  const { data, isPending, error, refetch } = useUniversalReadContract({
+    address: getContractAddress(),
+    abi: GroupChatAbi,
+    functionName: 'message',
+    args: [groupId || BigInt(0), messageId || BigInt(0)],
+    query: {
+      enabled: isQueryEnabled,
+    },
+  });
+
+  return {
+    message: isQueryEnabled ? data : undefined,
     isPending: isQueryEnabled ? isPending : false,
     error: isQueryEnabled ? error : undefined,
     refetch,
