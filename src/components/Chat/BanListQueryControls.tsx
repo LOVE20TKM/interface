@@ -15,6 +15,8 @@ export function BanListQueryControls({
   nftLookupResult,
   canAddBanListTarget,
   canAdd,
+  isBusy,
+  addLabel,
   onQueryTypeChange,
   onQueryInputChange,
   onNftLookupModeChange,
@@ -29,6 +31,8 @@ export function BanListQueryControls({
   nftLookupResult: NftLookupResult;
   canAddBanListTarget: boolean;
   canAdd: boolean;
+  isBusy: boolean;
+  addLabel?: string;
   onQueryTypeChange: (queryType: BanListQueryType) => void;
   onQueryInputChange: (value: string) => void;
   onNftLookupModeChange: (mode: NftLookupMode) => void;
@@ -71,8 +75,8 @@ export function BanListQueryControls({
             查询消息ID
           </button>
         ) : canAddBanListTarget && (
-          <button className="sheet-button primary inline-flex" type="button" onClick={onAdd} disabled={!canAdd}>
-            加入禁言名单
+          <button className="sheet-button primary inline-flex" type="button" onClick={onAdd} disabled={!canAdd || isBusy}>
+            {addLabel || '加入禁言名单'}
           </button>
         )}
       </div>

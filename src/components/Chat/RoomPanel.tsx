@@ -303,10 +303,11 @@ export function RoomPanel({
 
   useEffect(() => {
     if (!groupId || publicRoom.isMessageFeedPending) return;
-    const latestLoadedMessageId = latestVisibleMessageId ? BigInt(latestVisibleMessageId) : publicRoom.messagesCount;
+    const latestLoadedMessageId =
+      publicRoom.messages[publicRoom.messages.length - 1]?.messageId || publicRoom.messagesCount;
     markGroupRead(groupId, latestLoadedMessageId);
     onReadLatest?.(groupId, latestLoadedMessageId);
-  }, [groupId, latestVisibleMessageId, markGroupRead, onReadLatest, publicRoom.isMessageFeedPending, publicRoom.messagesCount]);
+  }, [groupId, markGroupRead, onReadLatest, publicRoom.isMessageFeedPending, publicRoom.messages, publicRoom.messagesCount]);
 
   useEffect(() => {
     if (

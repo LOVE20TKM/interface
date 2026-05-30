@@ -24,6 +24,7 @@ import {
   CACHED_GROUP_SETS_STORAGE_KEY,
   PINNED_GROUPS_CHANGED_EVENT,
   PINNED_GROUPS_STORAGE_KEY,
+  READ_CURSORS_CHANGED_EVENT,
   READ_CURSORS_STORAGE_KEY,
 } from '@/src/components/Chat/chatConstants';
 
@@ -195,6 +196,7 @@ function writeCursor(groupId: bigint, latestMessageId: bigint | undefined) {
   const previous = safeToBigInt(cursors[key]);
   if (cursor <= previous) return;
   window.localStorage.setItem(READ_CURSORS_STORAGE_KEY, JSON.stringify({ ...cursors, [key]: cursor.toString() }));
+  window.dispatchEvent(new Event(READ_CURSORS_CHANGED_EVENT));
 }
 
 function readSeenMessageId(groupId: bigint | undefined) {

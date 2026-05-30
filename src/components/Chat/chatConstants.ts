@@ -14,6 +14,7 @@ export const CACHED_GROUP_SETS_STORAGE_KEY = 'love20-chat:cached-group-sets:v1';
 export const CACHED_GROUP_SETS_CHANGED_EVENT = 'love20-chat:cached-group-sets-changed';
 export const MESSAGE_PREFERENCES_STORAGE_KEY = 'love20-chat:message-preferences:v3';
 export const READ_CURSORS_STORAGE_KEY = 'love20-chat:read-cursors:v1';
+export const READ_CURSORS_CHANGED_EVENT = 'love20-chat:read-cursors-changed';
 
 export const CAN_POST_REASON_LABELS: Record<string, string> = {
   '0x00000000': '可以发言',

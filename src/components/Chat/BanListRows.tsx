@@ -30,6 +30,7 @@ export function AdminBanListRows({
   isPending,
   activeMenuKey,
   canEdit,
+  removeStatusLabel,
   senderNames,
   onToggleMenu,
   onRemoveAddress,
@@ -44,6 +45,7 @@ export function AdminBanListRows({
   isPending: boolean;
   activeMenuKey: string | undefined;
   canEdit: boolean;
+  removeStatusLabel?: string;
   senderNames: Record<string, string>;
   onToggleMenu: (key: string) => void;
   onRemoveAddress: (address: `0x${string}`) => void;
@@ -70,7 +72,7 @@ export function AdminBanListRows({
               <span className="pill pill-bad">已禁言</span>
               {activeMenuKey === key && (
                 <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
-                  <button type="button" onClick={() => onRemoveAddress(record.senderAddress)} disabled={!canEdit}>移出禁言名单</button>
+                  <button type="button" onClick={() => onRemoveAddress(record.senderAddress)} disabled={!canEdit || !!removeStatusLabel}>{removeStatusLabel || '移出禁言名单'}</button>
                 </div>
               )}
             </article>
@@ -86,7 +88,7 @@ export function AdminBanListRows({
             <span className="pill pill-bad">已禁言</span>
             {activeMenuKey === key && (
               <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
-                <button type="button" onClick={() => onRemoveSender(record.senderId)} disabled={!canEdit}>移出禁言名单</button>
+                <button type="button" onClick={() => onRemoveSender(record.senderId)} disabled={!canEdit || !!removeStatusLabel}>{removeStatusLabel || '移出禁言名单'}</button>
               </div>
             )}
           </article>
@@ -114,6 +116,8 @@ export function GovBanListRows({
   isPending,
   activeMenuKey,
   canVote,
+  voteStatusLabel,
+  clearStatusLabel,
   totalVoteWeight,
   senderNames,
   onToggleMenu,
@@ -133,6 +137,8 @@ export function GovBanListRows({
   isPending: boolean;
   activeMenuKey: string | undefined;
   canVote: boolean;
+  voteStatusLabel?: string;
+  clearStatusLabel?: string;
   totalVoteWeight: bigint;
   senderNames: Record<string, string>;
   onToggleMenu: (key: string) => void;
@@ -168,9 +174,9 @@ export function GovBanListRows({
               </span>
               {activeMenuKey === key && (
                 <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
-                  <button type="button" onClick={() => onVoteAddress(record.senderAddress, true)} disabled={!canVote}>支持</button>
-                  <button type="button" onClick={() => onVoteAddress(record.senderAddress, false)} disabled={!canVote}>反对</button>
-                  <button type="button" onClick={() => onClearAddressVote(record.senderAddress)} disabled={!canVote}>撤票</button>
+                  <button type="button" onClick={() => onVoteAddress(record.senderAddress, true)} disabled={!canVote || !!voteStatusLabel}>{voteStatusLabel || '支持'}</button>
+                  <button type="button" onClick={() => onVoteAddress(record.senderAddress, false)} disabled={!canVote || !!voteStatusLabel}>{voteStatusLabel || '反对'}</button>
+                  <button type="button" onClick={() => onClearAddressVote(record.senderAddress)} disabled={!canVote || !!clearStatusLabel}>{clearStatusLabel || '撤票'}</button>
                   <button type="button" onClick={() => onOpenAddressVoters(record)}>投票列表</button>
                 </div>
               )}
@@ -191,9 +197,9 @@ export function GovBanListRows({
             </span>
             {activeMenuKey === key && (
               <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
-                <button type="button" onClick={() => onVoteSender(record.senderId, true)} disabled={!canVote}>支持</button>
-                <button type="button" onClick={() => onVoteSender(record.senderId, false)} disabled={!canVote}>反对</button>
-                <button type="button" onClick={() => onClearSenderVote(record.senderId)} disabled={!canVote}>撤票</button>
+                <button type="button" onClick={() => onVoteSender(record.senderId, true)} disabled={!canVote || !!voteStatusLabel}>{voteStatusLabel || '支持'}</button>
+                <button type="button" onClick={() => onVoteSender(record.senderId, false)} disabled={!canVote || !!voteStatusLabel}>{voteStatusLabel || '反对'}</button>
+                <button type="button" onClick={() => onClearSenderVote(record.senderId)} disabled={!canVote || !!clearStatusLabel}>{clearStatusLabel || '撤票'}</button>
                 <button type="button" onClick={() => onOpenSenderVoters(record)}>投票列表</button>
               </div>
             )}

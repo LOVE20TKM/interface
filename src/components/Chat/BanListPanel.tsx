@@ -61,6 +61,17 @@ import {
 } from './useBanListPanelState';
 import { useConfirmedTransactionEffect } from './useConfirmedTransactionEffect';
 
+type TransactionState = {
+  isPending: boolean;
+  isConfirming: boolean;
+};
+
+function transactionLabel(transaction: TransactionState, pendingLabel = '等待钱包确认', confirmingLabel = '链上确认中') {
+  if (transaction.isConfirming) return confirmingLabel;
+  if (transaction.isPending) return pendingLabel;
+  return undefined;
+}
+
 export function BanListPanel({
   groupId,
   account,
@@ -110,9 +121,12 @@ export function BanListPanel({
   useEffect(() => {
     if (!initialMessageId) return;
     setQueryType('message');
+  }, [initialMessageId, setQueryType]);
+  useEffect(() => {
+    if (!initialMessageId || queryType !== 'message') return;
     setQueryInput(initialMessageId.toString());
     setActiveMessageId(initialMessageId);
-  }, [initialMessageId, setQueryInput, setQueryType]);
+  }, [initialMessageId, queryType, setQueryInput]);
   useEffect(() => {
     if (queryType !== 'message') {
       setActiveMessageId(undefined);
@@ -199,6 +213,28 @@ export function BanListPanel({
   const govBanStateVersion = useGovVotedBanStateVersion(groupId, activeGovBanSource);
   const canEditAdminBan = activeAdminBanSource && adminBanPermission.canOperate;
   const canVoteGovBan = activeGovBanSource && govVotingPower.voteWeight > BigInt(0);
+  const anyBanListTxPending = [
+    banAddressTx,
+    unbanAddressTx,
+    banSenderTx,
+    unbanSenderTx,
+    banMessageSenderTx,
+    unbanMessageSenderTx,
+    voteAddressTx,
+    voteSenderTx,
+    voteMessageSenderTx,
+    clearAddressTx,
+    clearSenderTx,
+    clearMessageSenderTx,
+    refreshAddressTx,
+    refreshSenderTx,
+  ].some((tx) => tx.isPending || tx.isConfirming);
+  const addAddressBanLabel = transactionLabel(banAddressTx, '等待钱包确认', '地址禁言确认中');
+  const addSenderBanLabel = transactionLabel(banSenderTx, '等待钱包确认', 'NFT禁言确认中');
+  const banMessageSenderLabel = transactionLabel(banMessageSenderTx, '等待钱包确认', '禁言确认中');
+  const unbanMessageSenderLabel = transactionLabel(unbanMessageSenderTx, '等待钱包确认', '解除确认中');
+  const voteMessageSenderLabel = transactionLabel(voteMessageSenderTx, '等待钱包确认', '投票确认中');
+  const clearMessageSenderLabel = transactionLabel(clearMessageSenderTx, '等待钱包确认', '撤票确认中');
   const adminBanPermissionText = adminBanPermission.operatorKind === 'owner-or-delegate'
     ? '当前链群NFT持有者、代理、群管理可维护禁言名单。'
     : adminBanPermission.operatorKind === 'admin'
@@ -774,6 +810,14 @@ export function BanListPanel({
           nftLookupResult={nftLookup.lookupResult}
           canAddBanListTarget={canAddBanListTarget}
           canAdd={activeAdminBanSource ? canEditAdminBan : canVoteGovBan}
+          isBusy={anyBanListTxPending}
+          addLabel={
+            queryType === 'message'
+              ? undefined
+              : activeAdminBanSource
+                ? queryType === 'address' ? addAddressBanLabel : addSenderBanLabel
+                : transactionLabel(queryType === 'address' ? voteAddressTx : voteSenderTx, '等待钱包确认', '投票确认中')
+          }
           onQueryTypeChange={(value) => {
             setQueryType(value);
             setQueryTarget(undefined);
@@ -850,16 +894,16 @@ export function BanListPanel({
                 <div className={cn('ban-list-action-row message-sender-actions', `count-${messageSenderActionCount}`)}>
                   {activeAdminBanSource && (
                     adminMessageSenderQuery.banned ? (
-                      <button className="sheet-button inline-flex" type="button" onClick={removeMessageSenderBan} disabled={!canEditAdminBan || adminMessageSenderQuery.isPending}>解除禁言</button>
+                      <button className="sheet-button inline-flex" type="button" onClick={removeMessageSenderBan} disabled={!canEditAdminBan || adminMessageSenderQuery.isPending || !!unbanMessageSenderLabel}>{unbanMessageSenderLabel || '解除禁言'}</button>
                     ) : (
-                      <button className="sheet-button inline-flex" type="button" onClick={addMessageSenderBan} disabled={!canEditAdminBan || adminMessageSenderQuery.isPending}>禁言发送者</button>
+                      <button className="sheet-button inline-flex" type="button" onClick={addMessageSenderBan} disabled={!canEditAdminBan || adminMessageSenderQuery.isPending || !!banMessageSenderLabel}>{banMessageSenderLabel || '禁言发送者'}</button>
                     )
                   )}
                   {activeGovBanSource && (
                     <>
-                      <button className="sheet-button inline-flex" type="button" onClick={() => voteMessageSender(true)} disabled={!canSupportMessageSenderBan}>支持禁言</button>
-                      <button className="sheet-button inline-flex" type="button" onClick={() => voteMessageSender(false)} disabled={!canOpposeMessageSenderBan}>反对禁言</button>
-                      <button className="sheet-button inline-flex" type="button" onClick={clearMessageSenderVote} disabled={!canClearMessageSenderVote}>撤回表态</button>
+                      <button className="sheet-button inline-flex" type="button" onClick={() => voteMessageSender(true)} disabled={!canSupportMessageSenderBan || !!voteMessageSenderLabel}>{voteMessageSenderLabel || '支持禁言'}</button>
+                      <button className="sheet-button inline-flex" type="button" onClick={() => voteMessageSender(false)} disabled={!canOpposeMessageSenderBan || !!voteMessageSenderLabel}>{voteMessageSenderLabel || '反对禁言'}</button>
+                      <button className="sheet-button inline-flex" type="button" onClick={clearMessageSenderVote} disabled={!canClearMessageSenderVote || !!clearMessageSenderLabel}>{clearMessageSenderLabel || '撤回表态'}</button>
                     </>
                   )}
                 </div>
@@ -886,6 +930,7 @@ export function BanListPanel({
             isPending={govVoters.isPending}
             query={voterQuery}
             queryResult={voterQueryResult}
+            refreshStatusLabel={transactionLabel(activeGovTarget.type === 'address' ? refreshAddressTx : refreshSenderTx, '等待钱包确认', '重算确认中')}
             onQueryChange={(value) => {
               setVoterQuery(value);
               setVoterQueryResult('');
@@ -908,6 +953,7 @@ export function BanListPanel({
             isPending={adminBan.isPending}
             activeMenuKey={activeBanListMenuKey}
             canEdit={canEditAdminBan}
+            removeStatusLabel={transactionLabel(queryType === 'address' ? unbanAddressTx : unbanSenderTx, '等待钱包确认', '移出确认中')}
             senderNames={senderNames}
             onToggleMenu={toggleBanListMenu}
             onRemoveAddress={removeAddressBan}
@@ -925,6 +971,8 @@ export function BanListPanel({
             isPending={govBan.isPending}
             activeMenuKey={activeBanListMenuKey}
             canVote={canVoteGovBan}
+            voteStatusLabel={transactionLabel(queryType === 'address' ? voteAddressTx : voteSenderTx, '等待钱包确认', '投票确认中')}
+            clearStatusLabel={transactionLabel(queryType === 'address' ? clearAddressTx : clearSenderTx, '等待钱包确认', '撤票确认中')}
             totalVoteWeight={govVotingPower.totalVoteWeight}
             senderNames={senderNames}
             onToggleMenu={toggleBanListMenu}

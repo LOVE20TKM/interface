@@ -13,6 +13,7 @@ import styles from './ChatPage.module.css';
 import {
   PINNED_GROUPS_CHANGED_EVENT,
   PINNED_GROUPS_STORAGE_KEY,
+  READ_CURSORS_CHANGED_EVENT,
   READ_CURSORS_STORAGE_KEY,
 } from './chatConstants';
 import {
@@ -61,6 +62,7 @@ export default function ChatRoomPage() {
       const next = { ...prev, [key]: cursor.toString() };
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(READ_CURSORS_STORAGE_KEY, JSON.stringify(next));
+        window.dispatchEvent(new Event(READ_CURSORS_CHANGED_EVENT));
       }
       return next;
     });

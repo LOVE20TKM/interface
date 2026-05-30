@@ -34,6 +34,7 @@ import styles from './ChatPage.module.css';
 import {
   PINNED_GROUPS_CHANGED_EVENT,
   PINNED_GROUPS_STORAGE_KEY,
+  READ_CURSORS_CHANGED_EVENT,
   READ_CURSORS_STORAGE_KEY,
 } from './chatConstants';
 import {
@@ -346,6 +347,20 @@ export default function ChatPage() {
     setReadCursors(readRecordStorage(READ_CURSORS_STORAGE_KEY));
     setMessagePreferences(readMessagePreferences());
   }, [cachedGroupSetsKey]);
+
+  useEffect(() => {
+    const refreshReadCursors = () => {
+      setReadCursors(readRecordStorage(READ_CURSORS_STORAGE_KEY));
+    };
+    window.addEventListener(READ_CURSORS_CHANGED_EVENT, refreshReadCursors);
+    window.addEventListener('storage', refreshReadCursors);
+    window.addEventListener('focus', refreshReadCursors);
+    return () => {
+      window.removeEventListener(READ_CURSORS_CHANGED_EVENT, refreshReadCursors);
+      window.removeEventListener('storage', refreshReadCursors);
+      window.removeEventListener('focus', refreshReadCursors);
+    };
+  }, []);
 
   useEffect(() => {
     if (myChainGroupIds.length > 0 || recommendedGroupIds.length > 0) {

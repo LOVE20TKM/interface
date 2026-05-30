@@ -19,6 +19,7 @@ export function GovVoterSheet({
   isPending,
   query,
   queryResult,
+  refreshStatusLabel,
   onQueryChange,
   onQuery,
   onClearQuery,
@@ -36,6 +37,7 @@ export function GovVoterSheet({
   isPending: boolean;
   query: string;
   queryResult: string;
+  refreshStatusLabel?: string;
   onQueryChange: (value: string) => void;
   onQuery: () => void;
   onClearQuery: () => void;
@@ -86,7 +88,9 @@ export function GovVoterSheet({
               {entry.supportWeight > BigInt(0) ? '支持' : '反对'}
             </span>
             <div className="row-actions">
-              <button type="button" onClick={() => onRefreshVoter(entry.voter)}>重算</button>
+              <button type="button" onClick={() => onRefreshVoter(entry.voter)} disabled={!!refreshStatusLabel}>
+                {refreshStatusLabel || '重算'}
+              </button>
             </div>
           </article>
         )) : <div className="empty-state">暂无投票</div>}
@@ -98,7 +102,9 @@ export function GovVoterSheet({
           </div>
         )}
         <div className="close-row">
-          <button className="sheet-button inline-flex" type="button" onClick={onRefreshQueriedVoter}>重算输入地址</button>
+          <button className="sheet-button inline-flex" type="button" onClick={onRefreshQueriedVoter} disabled={!!refreshStatusLabel}>
+            {refreshStatusLabel || '重算输入地址'}
+          </button>
         </div>
       </section>
       <div className="close-row">
