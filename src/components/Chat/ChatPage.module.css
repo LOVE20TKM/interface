@@ -1466,6 +1466,51 @@
   margin-top: 10px;
 }
 
+.chatPrototype :global(.ban-list-notice) {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 10px 12px;
+  line-height: 1.45;
+}
+
+.chatPrototype :global(.ban-list-notice-badge) {
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.chatPrototype :global(.ban-list-notice-copy) {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.chatPrototype :global(.ban-list-notice-copy strong) {
+  color: var(--greyscale-900);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.chatPrototype :global(.ban-list-notice-copy small) {
+  color: var(--greyscale-500);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .chatPrototype :global(.ban-list-query-tabs) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 0;
@@ -1608,6 +1653,47 @@
   font-size: 13px;
   line-height: 1.55;
   overflow-wrap: anywhere;
+}
+
+.chatPrototype :global(.ban-list-query-summary) {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.chatPrototype :global(.ban-list-query-summary .pill) {
+  color: inherit;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.chatPrototype :global(.ban-list-query-summary .pill-ok) {
+  color: var(--success);
+}
+
+.chatPrototype :global(.ban-list-query-summary .pill-bad) {
+  color: var(--danger);
+}
+
+.chatPrototype :global(.ban-list-query-summary .pill-neutral) {
+  color: var(--greyscale-500);
+}
+
+.chatPrototype :global(.ban-list-query-summary .pill-warn) {
+  color: var(--warning);
+}
+
+.chatPrototype :global(.ban-list-query-target) {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.chatPrototype :global(.ban-list-query-source),
+.chatPrototype :global(.ban-list-query-meta) {
+  color: var(--greyscale-500);
+  font-size: 12px;
 }
 
 .chatPrototype :global(.ban-list-query-result.tone-danger) {
@@ -1838,6 +1924,11 @@
   overflow-wrap: anywhere;
 }
 
+.chatPrototype :global(.message-sender-status-grid dd) {
+  display: inline-flex;
+  align-items: center;
+}
+
 .chatPrototype :global(.message-sender-actions) {
   grid-area: actions;
   position: static;
@@ -1914,6 +2005,16 @@
   color: var(--greyscale-500);
   font-size: 12px;
   overflow-wrap: anywhere;
+}
+
+.chatPrototype :global(.ban-list-vote-meta) {
+  display: grid;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.chatPrototype :global(.ban-list-vote-meta small + small) {
+  color: var(--greyscale-600);
 }
 
 .chatPrototype :global(.notice-row),

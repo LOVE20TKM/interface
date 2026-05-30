@@ -15,10 +15,22 @@ function govMyVoteText(record: GovVotedAddressRecord | GovVotedSenderRecord, tot
   return '我的投票：未投票';
 }
 
+function govTotalVoteText(record: GovVotedAddressRecord | GovVotedSenderRecord, totalVoteWeight: bigint) {
+  return `总计：支持 ${formatGovWeightShare(record.supportWeight, totalVoteWeight)} · 反对 ${formatGovWeightShare(record.opposeWeight, totalVoteWeight)} · ${formatGovCount(record.voterCount)} 人`;
+}
+
 function nftLabel(senderNames: Record<string, string>, senderId: bigint) {
   const fallback = `NFT #${senderId.toString()}`;
   const name = senderNames[senderId.toString()];
   return name && name !== `LOVE20 NFT #${senderId.toString()}` ? name : fallback;
+}
+
+function banStatusText(banned: boolean) {
+  return banned ? '已禁言' : '未禁言';
+}
+
+function banStatusPillClass(banned: boolean) {
+  return banned ? 'pill-bad' : 'pill-ok';
 }
 
 export function AdminBanListRows({
@@ -69,7 +81,7 @@ export function AdminBanListRows({
                 <strong>{record.senderAddress}</strong>
                 <small>操作者 NFT #{record.operatorId.toString()} · {abbreviateAddress(record.operatorAddress)}</small>
               </div>
-              <span className="pill pill-bad">已禁言</span>
+              <span className={cn('pill', banStatusPillClass(true))}>{banStatusText(true)}</span>
               {activeMenuKey === key && (
                 <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
                   <button type="button" onClick={() => onRemoveAddress(record.senderAddress)} disabled={!canEdit || !!removeStatusLabel}>{removeStatusLabel || '移出禁言名单'}</button>
@@ -85,7 +97,7 @@ export function AdminBanListRows({
               <strong>{nftLabel(senderNames, record.senderId)}</strong>
               <small>NFT #{record.senderId.toString()} · 操作者 NFT #{record.operatorId.toString()} · {abbreviateAddress(record.operatorAddress)}</small>
             </div>
-            <span className="pill pill-bad">已禁言</span>
+            <span className={cn('pill', banStatusPillClass(true))}>{banStatusText(true)}</span>
             {activeMenuKey === key && (
               <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
                 <button type="button" onClick={() => onRemoveSender(record.senderId)} disabled={!canEdit || !!removeStatusLabel}>{removeStatusLabel || '移出禁言名单'}</button>
@@ -165,12 +177,13 @@ export function GovBanListRows({
             <article className="list-row ban-list-row" key={record.senderAddress} onClick={() => onToggleMenu(key)}>
               <div>
                 <strong>{record.senderAddress}</strong>
-                <small>
-                  支持 {formatGovWeightShare(record.supportWeight, totalVoteWeight)} · 反对 {formatGovWeightShare(record.opposeWeight, totalVoteWeight)} · {formatGovCount(record.voterCount)} 人 · {govMyVoteText(record, totalVoteWeight)}
-                </small>
+                <span className="ban-list-vote-meta">
+                  <small>{govTotalVoteText(record, totalVoteWeight)}</small>
+                  <small>{govMyVoteText(record, totalVoteWeight)}</small>
+                </span>
               </div>
-              <span className={cn('pill', record.banned ? 'pill-bad' : 'pill-ok')}>
-                {record.banned ? '已禁言' : '未禁言'}
+              <span className={cn('pill', banStatusPillClass(record.banned))}>
+                {banStatusText(record.banned)}
               </span>
               {activeMenuKey === key && (
                 <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
@@ -188,12 +201,13 @@ export function GovBanListRows({
           <article className="list-row ban-list-row" key={record.senderId.toString()} onClick={() => onToggleMenu(key)}>
             <div>
               <strong>{nftLabel(senderNames, record.senderId)}</strong>
-              <small>
-                NFT #{record.senderId.toString()} · 支持 {formatGovWeightShare(record.supportWeight, totalVoteWeight)} · 反对 {formatGovWeightShare(record.opposeWeight, totalVoteWeight)} · {formatGovCount(record.voterCount)} 人 · {govMyVoteText(record, totalVoteWeight)}
-              </small>
+              <span className="ban-list-vote-meta">
+                <small>NFT #{record.senderId.toString()} · {govTotalVoteText(record, totalVoteWeight)}</small>
+                <small>{govMyVoteText(record, totalVoteWeight)}</small>
+              </span>
             </div>
-            <span className={cn('pill', record.banned ? 'pill-bad' : 'pill-ok')}>
-              {record.banned ? '已禁言' : '未禁言'}
+            <span className={cn('pill', banStatusPillClass(record.banned))}>
+              {banStatusText(record.banned)}
             </span>
             {activeMenuKey === key && (
               <div className="ban-list-menu" onClick={(event) => event.stopPropagation()}>
