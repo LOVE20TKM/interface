@@ -816,7 +816,7 @@ export function BanListPanel({
     (hasMessageSenderSupportVote || hasMessageSenderOpposeVote);
 
   return (
-    <section className="workspace-screen">
+    <section className="workspace-screen ban-list-screen">
       <section className="workspace-band">
         <GroupDetailHeader
           title="禁言名单"

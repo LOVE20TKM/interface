@@ -55,13 +55,14 @@ export function BanListQueryControls({
           lookupValue={nftLookupValue}
           onLookupValueChange={onNftLookupValueChange}
           lookupResult={nftLookupResult}
+          placeholder="请输入要查询的NFT"
         />
       ) : (
         <Input
           value={queryInput}
           onChange={(event) => onQueryInputChange(event.target.value)}
           inputMode={queryType === 'message' ? 'numeric' : 'text'}
-          placeholder={queryType === 'message' ? '输入消息 ID' : '输入地址 0x...'}
+          placeholder={queryType === 'message' ? '输入消息 ID' : '请输入要查询的地址'}
         />
       )}
       <div className="admin-action-row ban-list-action-row">

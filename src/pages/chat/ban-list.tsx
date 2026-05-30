@@ -35,7 +35,7 @@ const ChatBanListPage: NextPage = () => {
   return (
     <>
       <Header title="禁言名单" backUrl={backUrl} replaceBack />
-      <main className={styles.chatPrototype}>
+      <main className={styles.chatPrototype} data-detail="false">
         {groupId ? (
           <BanListPanel
             groupId={groupId}

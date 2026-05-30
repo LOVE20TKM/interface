@@ -12,6 +12,7 @@ interface NftOwnerLookupProps {
   lookupResult: NftLookupResult;
   disabled?: boolean;
   className?: string;
+  placeholder?: string;
 }
 
 const NftOwnerLookup: React.FC<NftOwnerLookupProps> = ({
@@ -22,6 +23,7 @@ const NftOwnerLookup: React.FC<NftOwnerLookupProps> = ({
   lookupResult,
   disabled = false,
   className,
+  placeholder,
 }) => {
   return (
     <div className={cn('space-y-3', className)}>
@@ -48,7 +50,7 @@ const NftOwnerLookup: React.FC<NftOwnerLookupProps> = ({
           aria-label={lookupMode === 'name' ? 'NFT名称' : 'NFT ID'}
           value={lookupValue}
           onChange={(event) => onLookupValueChange(event.target.value)}
-          placeholder={lookupMode === 'name' ? '请输入NFT名称' : '请输入NFT ID'}
+          placeholder={placeholder || (lookupMode === 'name' ? '请输入NFT名称' : '请输入NFT ID')}
           disabled={disabled}
           className={cn(
             'h-full rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0',

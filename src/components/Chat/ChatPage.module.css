@@ -145,6 +145,11 @@
   scroll-margin-bottom: var(--detail-input-bottom-safe);
 }
 
+.chatPrototype :global(.ban-list-screen) {
+  overflow: visible;
+  overscroll-behavior: auto;
+}
+
 .chatPrototype :global(.inbox-screen) {
   padding: 12px 16px;
   scroll-padding-bottom: 12px;
