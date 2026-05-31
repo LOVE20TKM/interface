@@ -1,21 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { Copy } from 'lucide-react';
 
+import { TokenContext } from '@/src/contexts/TokenContext';
 import { useGroupChatVotingPower } from '@/src/hooks/contracts/useGroupChatManagers';
 import {
   GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS,
   GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS,
   isGovVotedBanSourceEnabled,
   isGroupBanListEnabled,
-  useAdminSenderBanQuery,
   useAdminBanQuery,
   useBanSenderAddresses,
   useBanSenderIds,
   useBanSenders,
   useGovClearVoteBySender,
   useGovBanQuery,
-  useGovSenderBanQuery,
   useGovClearVoteBySenderAddress,
   useGovClearVoteBySenderId,
   useGovRefreshVoteBySenderAddress,
@@ -90,6 +90,8 @@ export function BanListPanel({
   initialMessageId?: bigint;
   onChanged: () => void;
 }) {
+  const router = useRouter();
+  const { token } = useContext(TokenContext) || {};
   const publicData = useGroupChatPublicData(groupId);
   const accountData = useGroupChatAccountData(groupId, account, publicData.senderNames);
   const [activeMessageId, setActiveMessageId] = useState<bigint | undefined>(initialMessageId);
@@ -165,11 +167,19 @@ export function BanListPanel({
     queryTarget?.type === 'nft' ? queryTarget.value : undefined,
     !!queryTarget && activeAdminBanSource,
   );
-  const adminMessageSenderQuery = useAdminSenderBanQuery(
+  const adminMessageAddressQuery = useAdminBanQuery(
     groupId,
-    messageTarget?.senderId,
+    'address',
     messageTarget?.senderAddress,
-    !!messageTarget && activeAdminBanSource,
+    undefined,
+    !!messageTarget?.senderAddress && activeAdminBanSource,
+  );
+  const adminMessageNftQuery = useAdminBanQuery(
+    groupId,
+    'nft',
+    undefined,
+    messageTarget?.senderId,
+    !!messageTarget?.senderId && activeAdminBanSource,
   );
   const govQuery = useGovBanQuery(
     groupId,
@@ -178,11 +188,19 @@ export function BanListPanel({
     queryTarget?.type === 'nft' ? queryTarget.value : undefined,
     !!queryTarget && activeGovBanSource,
   );
-  const govMessageSenderQuery = useGovSenderBanQuery(
+  const govMessageAddressQuery = useGovBanQuery(
     groupId,
-    messageTarget?.senderId,
+    'address',
     messageTarget?.senderAddress,
-    !!messageTarget && activeGovBanSource,
+    undefined,
+    !!messageTarget?.senderAddress && activeGovBanSource,
+  );
+  const govMessageNftQuery = useGovBanQuery(
+    groupId,
+    'nft',
+    undefined,
+    messageTarget?.senderId,
+    !!messageTarget?.senderId && activeGovBanSource,
   );
   const govMessageSenderMyVote = useGovSenderVoteWeightsByVoter(
     groupId,
@@ -190,6 +208,41 @@ export function BanListPanel({
     messageTarget?.senderAddress,
     account,
     !!messageTarget && activeGovBanSource,
+  );
+  const myGovVote = useGovSenderVoteWeightsByVoter(
+    groupId,
+    accountData.defaultSenderId,
+    account,
+    account,
+    !!accountData.defaultSenderId && !!account && activeGovBanSource,
+  );
+  const myAddressBan = useAdminBanQuery(
+    groupId,
+    'address',
+    account,
+    undefined,
+    !!account && activeAdminBanSource,
+  );
+  const myNftBan = useAdminBanQuery(
+    groupId,
+    'nft',
+    undefined,
+    accountData.defaultSenderId,
+    !!accountData.defaultSenderId && activeAdminBanSource,
+  );
+  const myGovAddressBan = useGovBanQuery(
+    groupId,
+    'address',
+    account,
+    undefined,
+    !!account && activeGovBanSource,
+  );
+  const myGovNftBan = useGovBanQuery(
+    groupId,
+    'nft',
+    undefined,
+    accountData.defaultSenderId,
+    !!accountData.defaultSenderId && activeGovBanSource,
   );
   const govVoters = useGovVotersByTarget(
     groupId,
@@ -242,6 +295,7 @@ export function BanListPanel({
   const unbanMessageSenderLabel = transactionLabel(unbanMessageSenderTx, '等待钱包确认', '解除确认中');
   const voteMessageSenderLabel = transactionLabel(voteMessageSenderTx, '等待钱包确认', '投票确认中');
   const clearMessageSenderLabel = transactionLabel(clearMessageSenderTx, '等待钱包确认', '撤票确认中');
+  const opposeMyBanLabel = transactionLabel(voteMessageSenderTx, '等待钱包确认', '反对确认中');
   const adminPermissionRuleText = '链群 NFT 持有者、代理或群管理可维护地址/NFT禁言名单。';
   const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
   const govBanRuleText = activeGovBanSource && !govVotingPower.isPending && !govBanMechanism.isPending
@@ -355,41 +409,19 @@ export function BanListPanel({
     return undefined;
   };
 
-  useEffect(() => {
+  const submitQuery = () => {
     if (queryType === 'message') {
-      setQueryTarget(undefined);
-      return;
-    }
-    if (queryType === 'address') {
-      const address = parseAddressInput(queryInput);
-      setQueryTarget(address ? { type: 'address', value: address } : undefined);
-      return;
-    }
-    if (nftLookup.lookupResult?.status === 'resolved') {
-      setQueryTarget({ type: 'nft', value: nftLookup.lookupResult.tokenId });
-      return;
-    }
-    setQueryTarget(undefined);
-  }, [nftLookup.lookupResult, queryInput, queryType, setQueryTarget]);
-
-  const querySelf = () => {
-    if (queryType === 'message') return;
-    if (queryType === 'address') {
-      if (!account) {
-        toast.error('请先连接钱包');
+      const trimmed = queryInput.trim();
+      if (!/^\d+$/.test(trimmed) || BigInt(trimmed) <= BigInt(0)) {
+        toast.error('请输入有效消息 ID');
         return;
       }
-      setQueryInput(account);
-      setQueryTarget({ type: 'address', value: account });
+      setActiveMessageId(BigInt(trimmed));
       return;
     }
-    if (!accountData.defaultSenderId) {
-      toast.error('当前钱包未设置默认 NFT');
-      return;
-    }
-    nftLookup.setLookupMode('id');
-    nftLookup.setLookupValue(accountData.defaultSenderId.toString());
-    setQueryTarget({ type: 'nft', value: accountData.defaultSenderId });
+    const target = resolveQueryTarget();
+    if (!target) return;
+    setQueryTarget(target);
   };
 
   const copyText = async (text: string, label: string) => {
@@ -413,6 +445,11 @@ export function BanListPanel({
   const copyMessageSenderAddress = () => {
     if (!messageTarget) return;
     copyText(messageTarget.senderAddress, '发送者地址');
+  };
+
+  const copyQueryAddress = () => {
+    if (queryTarget?.type !== 'address') return;
+    copyText(queryTarget.value, '查询地址');
   };
 
   const addAddressBan = async (address?: `0x${string}`) => {
@@ -443,12 +480,7 @@ export function BanListPanel({
 
   const addCurrentTarget = () => {
     if (queryType === 'message') {
-      const trimmed = queryInput.trim();
-      if (!/^\d+$/.test(trimmed) || BigInt(trimmed) <= BigInt(0)) {
-        toast.error('请输入有效消息 ID');
-        return;
-      }
-      setActiveMessageId(BigInt(trimmed));
+      submitQuery();
       return;
     }
     const target = resolveQueryTarget();
@@ -587,6 +619,28 @@ export function BanListPanel({
     }
   };
 
+  const opposeMyBan = async () => {
+    if (!account) {
+      toast.error('请先连接钱包');
+      return;
+    }
+    if (!canVoteGovBan) {
+      toast('需要先添加治理票，即将前往质押页面。');
+      await router.push(token?.symbol ? `/stake/stakelp/?symbol=${encodeURIComponent(token.symbol)}` : '/stake/stakelp/');
+      return;
+    }
+    if (!accountData.defaultSenderId) {
+      toast.error('当前钱包未设置默认 NFT');
+      return;
+    }
+    try {
+      await voteMessageSenderTx.voteBySender(groupId, accountData.defaultSenderId, account, false);
+      toast.success('已提交反对禁言我的 NFT 和地址');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const clearGovAddressVote = async (address: `0x${string}`) => {
     if (!canVoteGovBan) {
       toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
@@ -715,11 +769,6 @@ export function BanListPanel({
             : 'neutral'
         : 'neutral'
     : 'neutral';
-  const queryResultSourceText = activeAdminBanSource
-    ? 'AdminBanSource'
-    : activeGovBanSource
-      ? 'GovVotedBanSource'
-      : '未启用禁言源';
   const queryResultStatusText = queryTarget
     ? queryResultTone === 'loading'
       ? '读取中'
@@ -729,7 +778,7 @@ export function BanListPanel({
           ? '未禁言'
           : activeGovBanSource && !govQuery.status
             ? '无投票状态'
-          : '未知'
+          : '未启用'
     : '';
   const queryResultMetaText =
     queryTarget && activeGovBanSource
@@ -748,12 +797,25 @@ export function BanListPanel({
   const messageSenderName = messageTarget
     ? publicData.senderNames[messageTarget.senderId.toString()] || `NFT #${messageTarget.senderId.toString()}`
     : '';
-  const messageSenderBanStatusText = messageTarget
-    ? activeAdminBanSource
-      ? adminMessageSenderQuery.isPending ? '读取中' : adminMessageSenderQuery.banned ? '已禁言' : '未禁言'
-      : activeGovBanSource
-        ? govMessageSenderQuery.isPending ? '读取中' : govMessageSenderQuery.banned ? '已禁言' : '未禁言'
-        : '未知'
+  const banStateText = (isPending: boolean, banned: boolean | undefined) =>
+    !activeAdminBanSource && !activeGovBanSource ? '未启用' : isPending ? '读取中' : banned ? '已禁言' : '未禁言';
+  const messageSenderAddressBanPending = activeAdminBanSource
+    ? adminMessageAddressQuery.isPending
+    : govMessageAddressQuery.isPending;
+  const messageSenderNftBanPending = activeAdminBanSource
+    ? adminMessageNftQuery.isPending
+    : govMessageNftQuery.isPending;
+  const messageSenderAddressBanned = activeAdminBanSource
+    ? adminMessageAddressQuery.banned
+    : govMessageAddressQuery.status?.banned;
+  const messageSenderNftBanned = activeAdminBanSource
+    ? adminMessageNftQuery.banned
+    : govMessageNftQuery.status?.banned;
+  const messageSenderAddressStatusText = messageTarget
+    ? banStateText(messageSenderAddressBanPending, messageSenderAddressBanned)
+    : '';
+  const messageSenderNftStatusText = messageTarget
+    ? banStateText(messageSenderNftBanPending, messageSenderNftBanned)
     : '';
   const formatMessageSenderVoteText = (supportWeight: bigint, opposeWeight: bigint) => {
     if (supportWeight > BigInt(0)) return `支持禁言 ${formatGovWeightShare(supportWeight, govVotingPower.totalVoteWeight)}`;
@@ -761,22 +823,20 @@ export function BanListPanel({
     return '未表态';
   };
   const messageSenderTone = messageTarget
-    ? activeAdminBanSource
-      ? adminMessageSenderQuery.isPending
-        ? 'loading'
-        : adminMessageSenderQuery.banned
-          ? 'danger'
-          : 'ok'
-      : activeGovBanSource
-        ? govMessageSenderQuery.isPending
-          ? 'loading'
-          : govMessageSenderQuery.banned
-            ? 'danger'
-            : 'ok'
-      : 'neutral'
+    ? messageSenderAddressBanPending || messageSenderNftBanPending
+      ? 'loading'
+      : messageSenderAddressBanned || messageSenderNftBanned
+        ? 'danger'
+        : activeAdminBanSource || activeGovBanSource
+          ? 'ok'
+          : 'neutral'
     : 'neutral';
-  const messageSenderBanStatusPillClass =
-    banStatusPillClass(messageSenderTone);
+  const messageSenderAddressStatusPillClass =
+    banStatusPillClass(messageSenderAddressBanPending ? 'loading' : messageSenderAddressBanned ? 'danger' : activeAdminBanSource || activeGovBanSource ? 'ok' : 'neutral');
+  const messageSenderNftStatusPillClass =
+    banStatusPillClass(messageSenderNftBanPending ? 'loading' : messageSenderNftBanned ? 'danger' : activeAdminBanSource || activeGovBanSource ? 'ok' : 'neutral');
+  const messageSenderBanPending = messageSenderAddressBanPending || messageSenderNftBanPending;
+  const messageSenderBanned = messageSenderAddressBanned || messageSenderNftBanned;
   const messageSenderActionCount = activeGovBanSource ? 3 : activeAdminBanSource ? 1 : 0;
   const hasMessageSenderSupportVote =
     govMessageSenderMyVote.addressSupportWeight > BigInt(0) ||
@@ -800,7 +860,8 @@ export function BanListPanel({
       : govMessageSenderMyVote.senderOpposeWeight;
   const messageSenderVotePending =
     govVotingPower.isPending ||
-    govMessageSenderQuery.isPending ||
+    messageSenderAddressBanPending ||
+    messageSenderNftBanPending ||
     govMessageSenderMyVote.isPending;
   const canSupportMessageSenderBan =
     canVoteGovBan &&
@@ -814,6 +875,33 @@ export function BanListPanel({
     canVoteGovBan &&
     !messageSenderVotePending &&
     (hasMessageSenderSupportVote || hasMessageSenderOpposeVote);
+  const myAddressBanPending = activeAdminBanSource ? myAddressBan.isPending : myGovAddressBan.isPending;
+  const myNftBanPending = activeAdminBanSource ? myNftBan.isPending : myGovNftBan.isPending;
+  const myAddressBanned = activeAdminBanSource ? myAddressBan.banned : myGovAddressBan.status?.banned;
+  const myNftBanned = activeAdminBanSource ? myNftBan.banned : myGovNftBan.status?.banned;
+  const hasCompleteMyOpposeVote =
+    myGovVote.addressOpposeWeight > BigInt(0) &&
+    myGovVote.senderOpposeWeight > BigInt(0);
+  const minMyOpposeWeight =
+    myGovVote.addressOpposeWeight < myGovVote.senderOpposeWeight
+      ? myGovVote.addressOpposeWeight
+      : myGovVote.senderOpposeWeight;
+  const hasMyVoteWeightIncrease =
+    hasCompleteMyOpposeVote && govVotingPower.voteWeight > minMyOpposeWeight;
+  const opposeMyBanDisabled =
+    !account ||
+    !accountData.defaultSenderId ||
+    govVotingPower.isPending ||
+    myGovVote.isPending ||
+    !!opposeMyBanLabel ||
+    (canVoteGovBan && hasCompleteMyOpposeVote && !hasMyVoteWeightIncrease);
+  const opposeMyBanButtonText = opposeMyBanLabel
+    || (canVoteGovBan && hasCompleteMyOpposeVote
+      ? hasMyVoteWeightIncrease ? '治理票已增加，更新反对禁言' : '已反对禁言，治理票未增加'
+      : '反对禁言');
+  const defaultNftLabel = accountData.defaultSenderId
+    ? accountData.defaultSenderName || `NFT #${accountData.defaultSenderId.toString()}`
+    : '未设置默认 NFT';
 
   return (
     <section className="workspace-screen ban-list-screen">
@@ -830,6 +918,45 @@ export function BanListPanel({
                 : '只读'
           }
         />
+        <div className="my-ban-status-panel">
+          <div className="my-ban-status-head">
+            <div>
+              <strong>我的禁言情况</strong>
+              <small>默认查询当前钱包地址和默认 NFT</small>
+            </div>
+          </div>
+          <div className="my-ban-status-grid">
+            <div className="ban-status-object-row">
+              <code title={account}>{account ? abbreviateAddress(account) : '未连接钱包'}</code>
+              <span className={cn('pill', banStatusPillClass(myAddressBanPending ? 'loading' : myAddressBanned ? 'danger' : 'ok'))}>
+                {account ? banStateText(myAddressBanPending, myAddressBanned) : '未查询'}
+              </span>
+            </div>
+            <div className="ban-status-object-row">
+              <span className="my-ban-nft-label">
+                <strong>{defaultNftLabel}</strong>
+                {accountData.defaultSenderId && <small>NFT #{accountData.defaultSenderId.toString()}</small>}
+              </span>
+              <span className={cn('pill', banStatusPillClass(myNftBanPending ? 'loading' : myNftBanned ? 'danger' : 'ok'))}>
+                {accountData.defaultSenderId ? banStateText(myNftBanPending, myNftBanned) : '未查询'}
+              </span>
+            </div>
+          </div>
+          {activeGovBanSource && (
+            <button
+              className="sheet-button inline-flex my-ban-status-action"
+              type="button"
+              onClick={opposeMyBan}
+              aria-disabled={!canVoteGovBan}
+              disabled={opposeMyBanDisabled}
+            >
+              {opposeMyBanButtonText}
+            </button>
+          )}
+          {activeGovBanSource && !govVotingPower.isPending && !canVoteGovBan && (
+            <small className="my-ban-status-hint">当前无治理票权。点击“反对禁言”可前往添加治理票。</small>
+          )}
+        </div>
         <div className={cn('notice-row ban-list-notice', canEditAdminBan || canVoteGovBan ? 'permission-ok' : 'permission-warn')}>
           <span className="ban-list-notice-badge">{banListNoticeBadge}</span>
           <span className="ban-list-notice-copy">
@@ -860,6 +987,7 @@ export function BanListPanel({
           onQueryInputChange={(value) => {
             setQueryInput(value);
             setQueryTarget(undefined);
+            if (queryType === 'message') setActiveMessageId(undefined);
           }}
           onNftLookupModeChange={(mode) => {
             nftLookup.setLookupMode(mode);
@@ -869,7 +997,7 @@ export function BanListPanel({
             nftLookup.setLookupValue(value);
             setQueryTarget(undefined);
           }}
-          onQuerySelf={querySelf}
+          onQuery={submitQuery}
           onAdd={addCurrentTarget}
         />
         {queryType === 'message' && activeMessageId && (
@@ -879,30 +1007,32 @@ export function BanListPanel({
             ) : messageTarget ? (
               <>
                 <div className="message-sender-top">
-                  <div className="message-sender-summary">
-                    <div>
-                      <strong>按消息ID定位到发言者</strong>
+                  <strong className="message-sender-heading">按消息ID定位到发言者</strong>
+                  <div className="my-ban-status-grid message-sender-object-grid">
+                    <div className="ban-status-object-row">
+                      <span className="message-sender-address-block">
+                        <span className="ban-list-query-target message-sender-address-line">
+                          <code title={messageTarget.senderAddress}>{abbreviateAddress(messageTarget.senderAddress)}</code>
+                          <button type="button" onClick={copyMessageSenderAddress} aria-label="复制发送者地址" title="复制发送者地址">
+                            <Copy size={13} strokeWidth={2.2} />
+                          </button>
+                        </span>
+                        <small>地址</small>
+                      </span>
+                      <span className={cn('pill', messageSenderAddressStatusPillClass)}>
+                        {messageSenderAddressStatusText}
+                      </span>
                     </div>
-                    <div>
-                      <strong>#{messageTarget.senderId.toString()} {messageSenderName}</strong>
-                      <div className="message-sender-address-line">
-                        <code title={messageTarget.senderAddress}>{abbreviateAddress(messageTarget.senderAddress)}</code>
-                        <button type="button" onClick={copyMessageSenderAddress} aria-label="复制发送者地址" title="复制发送者地址">
-                          <Copy size={13} strokeWidth={2.2} />
-                        </button>
-                      </div>
+                    <div className="ban-status-object-row">
+                      <span className="my-ban-nft-label">
+                        <strong>{messageSenderName}</strong>
+                        <small>NFT #{messageTarget.senderId.toString()}</small>
+                      </span>
+                      <span className={cn('pill', messageSenderNftStatusPillClass)}>
+                        {messageSenderNftStatusText}
+                      </span>
                     </div>
                   </div>
-                  <dl className="message-sender-status-grid">
-                    <div>
-                      <dt>禁言状态</dt>
-                      <dd>
-                        <span className={cn('pill', messageSenderBanStatusPillClass)}>
-                          {messageSenderBanStatusText}
-                        </span>
-                      </dd>
-                    </div>
-                  </dl>
                 </div>
                 {activeGovBanSource && (
                   <dl className="message-sender-vote-grid">
@@ -932,10 +1062,10 @@ export function BanListPanel({
                 )}
                 <div className={cn('ban-list-action-row message-sender-actions', `count-${messageSenderActionCount}`)}>
                   {activeAdminBanSource && (
-                    adminMessageSenderQuery.banned ? (
-                      <button className="sheet-button inline-flex" type="button" onClick={removeMessageSenderBan} disabled={!canEditAdminBan || adminMessageSenderQuery.isPending || !!unbanMessageSenderLabel}>{unbanMessageSenderLabel || '解除禁言'}</button>
+                    messageSenderBanned ? (
+                      <button className="sheet-button inline-flex" type="button" onClick={removeMessageSenderBan} disabled={!canEditAdminBan || messageSenderBanPending || !!unbanMessageSenderLabel}>{unbanMessageSenderLabel || '解除禁言'}</button>
                     ) : (
-                      <button className="sheet-button inline-flex" type="button" onClick={addMessageSenderBan} disabled={!canEditAdminBan || adminMessageSenderQuery.isPending || !!banMessageSenderLabel}>{banMessageSenderLabel || '禁言发送者'}</button>
+                      <button className="sheet-button inline-flex" type="button" onClick={addMessageSenderBan} disabled={!canEditAdminBan || messageSenderBanPending || !!banMessageSenderLabel}>{banMessageSenderLabel || '禁言发送者'}</button>
                     )
                   )}
                   {activeGovBanSource && (
@@ -953,16 +1083,24 @@ export function BanListPanel({
           </div>
         )}
         {queryTarget && (
-          <div className={cn('query-result ban-list-query-result', `tone-${queryResultTone}`)}>
+          <div className={cn('query-result ban-list-query-result ban-list-standard-result', `tone-${queryResultTone}`)}>
             <strong>查询结果</strong>
-            <span className="ban-list-query-summary">
-              <span className="ban-list-query-target">{queryLabel}</span>
-              <span className="ban-list-query-source">{queryResultSourceText}</span>
+            <span className="ban-status-object-row ban-list-query-summary">
+              {queryTarget.type === 'address' ? (
+                <span className="ban-list-query-target message-sender-address-line">
+                  <code title={queryTarget.value}>{abbreviateAddress(queryTarget.value)}</code>
+                  <button type="button" onClick={copyQueryAddress} aria-label="复制查询地址" title="复制查询地址">
+                    <Copy size={13} strokeWidth={2.2} />
+                  </button>
+                </span>
+              ) : (
+                <span className="ban-list-query-target">{queryLabel}</span>
+              )}
               <span className={cn('pill', queryResultStatusPillClass)}>
                 {queryResultStatusText}
               </span>
-              {queryResultMetaText && <span className="ban-list-query-meta">{queryResultMetaText}</span>}
             </span>
+            {queryResultMetaText && <span className="ban-list-query-meta">{queryResultMetaText}</span>}
           </div>
         )}
         {activeGovTarget && (

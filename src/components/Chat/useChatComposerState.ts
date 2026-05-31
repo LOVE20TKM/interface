@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import type { GroupChatAccountData, GroupChatPublicData } from '@/src/hooks/composite/useGroupChatData';
 import { MAX_MENTIONED_SENDER_IDS } from './chatConstants';
 import { mentionSenderIdsValidationHint, parseComposerMentions } from './chatUtils';
+import { resolveSendAvailability } from './sendAvailability';
 
 export function useChatComposerState({
   groupId,
@@ -29,7 +30,6 @@ export function useChatComposerState({
       (activeSenderId === accountData.defaultSenderId ? accountData.defaultSenderName : '')
     : '';
   const activeCanPost = activeSenderId ? accountData.canPost : false;
-  const activeCanPostReasonCode = accountData.canPostReasonCode;
   const draftMentions = useMemo(
     () => parseComposerMentions(content, mentionedSenderIds, publicData.senderNames),
     [content, mentionedSenderIds, publicData.senderNames],
@@ -41,28 +41,28 @@ export function useChatComposerState({
   const mentionValidationBlocking =
     draftMentions.invalidSenderIds.length > 0 ||
     draftMentions.overLimitCount > 0;
-  const needsDefaultSenderSetup = !!account && !accountData.isDefaultSenderPending && !accountData.hasDefaultSender;
+  const sendAvailability = resolveSendAvailability({
+    account,
+    chatInfo: publicData.chatInfo,
+    accountData,
+  });
   const sendDisabled =
     !groupId ||
-    !account ||
-    !activeSenderId ||
-    !activeCanPost ||
+    !sendAvailability.canSend ||
     !content.trim() ||
     mentionedSenderIds.length > MAX_MENTIONED_SENDER_IDS ||
     mentionValidationBlocking ||
     isPending ||
-    isConfirming ||
-    !publicData.chatInfo?.postingAllowed;
+    isConfirming;
 
   return {
     activeSenderId,
     activeSenderName,
     activeCanPost,
-    activeCanPostReasonCode,
     draftMentions,
     mentionValidationHint,
     mentionValidationBlocking,
-    needsDefaultSenderSetup,
+    sendAvailability,
     maxMentionedSenderIds: MAX_MENTIONED_SENDER_IDS,
     sendDisabled,
   };

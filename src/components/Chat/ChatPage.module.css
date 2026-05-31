@@ -1471,6 +1471,133 @@
   margin-top: 10px;
 }
 
+.chatPrototype :global(.my-ban-status-panel) {
+  display: grid;
+  gap: 9px;
+  margin-top: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.chatPrototype :global(.my-ban-status-head),
+.chatPrototype :global(.my-ban-status-head > div) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chatPrototype :global(.my-ban-status-head) {
+  justify-content: space-between;
+}
+
+.chatPrototype :global(.my-ban-status-head strong) {
+  font-size: 13px;
+}
+
+.chatPrototype :global(.my-ban-status-action) {
+  width: 100%;
+  justify-content: center;
+}
+
+.chatPrototype :global(.my-ban-status-action[aria-disabled="true"]) {
+  border-style: dashed;
+  color: var(--greyscale-500);
+}
+
+.chatPrototype :global(.my-ban-status-head small),
+.chatPrototype :global(.my-ban-status-hint) {
+  color: var(--greyscale-500);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.chatPrototype :global(.my-ban-status-grid) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.chatPrototype :global(.ban-status-object-row) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 6px;
+  background: var(--greyscale-50);
+  font-size: 12px;
+}
+
+.chatPrototype :global(.my-ban-status-grid code) {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--greyscale-700);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatPrototype :global(.my-ban-nft-label) {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.chatPrototype :global(.my-ban-nft-label strong) {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--greyscale-700);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatPrototype :global(.my-ban-nft-label small) {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--greyscale-400);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatPrototype :global(.message-sender-object-grid .ban-status-object-row) {
+  align-items: start;
+}
+
+.chatPrototype :global(.message-sender-object-grid .pill) {
+  margin-top: 2px;
+}
+
+.chatPrototype :global(.message-sender-object-grid .my-ban-nft-label) {
+  justify-items: start;
+  text-align: left;
+}
+
+.chatPrototype :global(.message-sender-address-block) {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.chatPrototype :global(.message-sender-address-block > small) {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--greyscale-400);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .chatPrototype :global(.ban-list-notice) {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
@@ -1641,7 +1768,7 @@
   box-shadow: 0 8px 22px rgba(25, 28, 31, 0.08);
 }
 
-.chatPrototype :global(.ban-list-query-result strong) {
+.chatPrototype :global(.ban-list-query-result > strong) {
   min-height: 22px;
   display: inline-flex;
   align-items: center;
@@ -1652,7 +1779,7 @@
   white-space: nowrap;
 }
 
-.chatPrototype :global(.ban-list-query-result span) {
+.chatPrototype :global(.ban-list-query-summary span) {
   min-width: 0;
   color: var(--greyscale-900);
   font-size: 13px;
@@ -1661,11 +1788,8 @@
 }
 
 .chatPrototype :global(.ban-list-query-summary) {
-  display: flex;
-  min-width: 0;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 6px 8px;
+  gap: 8px;
 }
 
 .chatPrototype :global(.ban-list-query-summary .pill) {
@@ -1695,10 +1819,19 @@
   overflow-wrap: anywhere;
 }
 
-.chatPrototype :global(.ban-list-query-source),
+.chatPrototype :global(.ban-list-query-target.message-sender-address-line code) {
+  color: var(--greyscale-900);
+  font-size: 13px;
+}
+
 .chatPrototype :global(.ban-list-query-meta) {
+  grid-column: 2;
   color: var(--greyscale-500);
   font-size: 12px;
+}
+
+.chatPrototype :global(.ban-list-standard-result) {
+  grid-template-columns: max-content minmax(0, 1fr);
 }
 
 .chatPrototype :global(.ban-list-query-result.tone-danger) {
@@ -1707,7 +1840,7 @@
   background: #fff7f7;
 }
 
-.chatPrototype :global(.ban-list-query-result.tone-danger strong) {
+.chatPrototype :global(.ban-list-standard-result.tone-danger > strong) {
   background: #fee2e2;
   color: var(--danger);
 }
@@ -1718,7 +1851,7 @@
   background: #f7fff9;
 }
 
-.chatPrototype :global(.ban-list-query-result.tone-ok strong) {
+.chatPrototype :global(.ban-list-standard-result.tone-ok > strong) {
   background: rgba(21, 128, 61, 0.12);
   color: var(--success);
 }
@@ -1730,8 +1863,8 @@
   background: #f7fbff;
 }
 
-.chatPrototype :global(.ban-list-query-result.tone-loading strong),
-.chatPrototype :global(.ban-list-query-result.tone-neutral strong) {
+.chatPrototype :global(.ban-list-standard-result.tone-loading > strong),
+.chatPrototype :global(.ban-list-standard-result.tone-neutral > strong) {
   background: rgba(37, 99, 235, 0.1);
   color: var(--accent);
 }
@@ -1758,15 +1891,6 @@
   background: #fff;
 }
 
-.chatPrototype :global(.message-sender-result-head) {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.chatPrototype :global(.message-sender-result-head span),
 .chatPrototype :global(.message-sender-result-loading) {
   min-width: 0;
   color: var(--greyscale-500);
@@ -1777,62 +1901,18 @@
 .chatPrototype :global(.message-sender-top) {
   grid-area: top;
   min-width: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.chatPrototype :global(.message-sender-summary) {
-  min-width: 0;
-  flex: 1 1 auto;
   display: grid;
-  gap: 12px;
-  align-content: start;
-  padding: 2px 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  gap: 10px;
 }
 
-.chatPrototype :global(.message-sender-summary > div) {
-  min-width: 0;
-  display: grid;
-  gap: 7px;
-}
-
-.chatPrototype :global(.message-sender-summary span) {
-  color: var(--greyscale-400);
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.chatPrototype :global(.message-sender-summary strong) {
+.chatPrototype :global(.message-sender-heading) {
   min-width: 0;
   padding: 0;
   background: transparent !important;
-  color: var(--greyscale-900);
-  font-size: 20px;
-  font-weight: 750;
-  line-height: 1.3;
-  overflow-wrap: anywhere;
-}
-
-.chatPrototype :global(.message-sender-result .message-sender-summary strong) {
-  background: transparent !important;
-  color: var(--greyscale-900) !important;
-}
-
-.chatPrototype :global(.message-sender-summary > div:first-child strong) {
-  color: var(--greyscale-700);
+  color: var(--greyscale-700) !important;
   font-size: 13px;
   font-weight: 750;
-}
-
-.chatPrototype :global(.message-sender-result .message-sender-summary > div:first-child strong) {
-  color: var(--greyscale-700) !important;
+  line-height: 1.35;
 }
 
 .chatPrototype :global(.message-sender-address-line) {
@@ -1871,7 +1951,6 @@
   color: var(--greyscale-900);
 }
 
-.chatPrototype :global(.message-sender-status-grid),
 .chatPrototype :global(.message-sender-vote-grid) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1879,18 +1958,10 @@
   margin: 0;
 }
 
-.chatPrototype :global(.message-sender-status-grid) {
-  grid-template-columns: 1fr;
-  width: fit-content;
-  min-width: 132px;
-  flex: 0 0 auto;
-}
-
 .chatPrototype :global(.message-sender-vote-grid) {
   grid-area: votes;
 }
 
-.chatPrototype :global(.message-sender-status-grid > div),
 .chatPrototype :global(.message-sender-vote-grid > div) {
   min-width: 0;
   display: grid;
@@ -1901,16 +1972,6 @@
   background: rgba(255, 255, 255, 0.7);
 }
 
-.chatPrototype :global(.message-sender-status-grid > div) {
-  padding: 7px 10px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--greyscale-50);
-}
-
-.chatPrototype :global(.message-sender-status-grid dt),
 .chatPrototype :global(.message-sender-vote-grid dt) {
   color: var(--greyscale-400);
   font-size: 11px;
@@ -1918,7 +1979,6 @@
   line-height: 1.2;
 }
 
-.chatPrototype :global(.message-sender-status-grid dd),
 .chatPrototype :global(.message-sender-vote-grid dd) {
   min-width: 0;
   margin: 0;
@@ -1927,11 +1987,6 @@
   font-weight: 750;
   line-height: 1.35;
   overflow-wrap: anywhere;
-}
-
-.chatPrototype :global(.message-sender-status-grid dd) {
-  display: inline-flex;
-  align-items: center;
 }
 
 .chatPrototype :global(.message-sender-actions) {
@@ -2020,6 +2075,46 @@
 
 .chatPrototype :global(.ban-list-vote-meta small + small) {
   color: var(--greyscale-600);
+}
+
+.chatPrototype :global(.ban-list-address-line) {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.chatPrototype :global(.ban-list-address-line code) {
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatPrototype :global(.ban-list-address-line button) {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--greyscale-500);
+  padding: 0;
+}
+
+.chatPrototype :global(.ban-list-address-line button:hover) {
+  border-color: var(--greyscale-300);
+  background: #fff;
+  color: var(--greyscale-900);
 }
 
 .chatPrototype :global(.notice-row),
@@ -2573,9 +2668,13 @@
 }
 
 .chatPrototype :global(.cannot-post-inline) {
-  display: inline-flex;
+  min-width: 0;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .chatPrototype :global(.cannot-post strong) {
@@ -2852,6 +2951,7 @@
   .chatPrototype :global(.settings-metric-grid),
   .chatPrototype :global(.settings-layout),
   .chatPrototype :global(.contract-address-row),
+  .chatPrototype :global(.my-ban-status-grid),
   .chatPrototype :global(.ban-list-controls),
   .chatPrototype :global(.field-row),
   .chatPrototype :global(.activation-field-row),
@@ -2910,11 +3010,6 @@
     width: 100%;
   }
 
-  .chatPrototype :global(.message-sender-result-head) {
-    display: grid;
-    justify-content: stretch;
-  }
-
   .chatPrototype :global(.message-sender-result) {
     grid-template-columns: 1fr;
     grid-template-areas:
@@ -2928,16 +3023,6 @@
     gap: 10px;
   }
 
-  .chatPrototype :global(.message-sender-status-grid) {
-    width: 100%;
-  }
-
-  .chatPrototype :global(.message-sender-status-grid > div) {
-    width: 100%;
-    border-radius: 6px;
-  }
-
-  .chatPrototype :global(.message-sender-status-grid),
   .chatPrototype :global(.message-sender-vote-grid) {
     grid-template-columns: 1fr;
   }

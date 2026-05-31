@@ -21,7 +21,7 @@ export function BanListQueryControls({
   onQueryInputChange,
   onNftLookupModeChange,
   onNftLookupValueChange,
-  onQuerySelf,
+  onQuery,
   onAdd,
 }: {
   queryType: BanListQueryType;
@@ -37,7 +37,7 @@ export function BanListQueryControls({
   onQueryInputChange: (value: string) => void;
   onNftLookupModeChange: (mode: NftLookupMode) => void;
   onNftLookupValueChange: (value: string) => void;
-  onQuerySelf: () => void;
+  onQuery: () => void;
   onAdd: () => void;
 }) {
   return (
@@ -66,16 +66,10 @@ export function BanListQueryControls({
         />
       )}
       <div className="admin-action-row ban-list-action-row">
-        {queryType !== 'message' && (
-          <button className="sheet-button inline-flex" type="button" onClick={onQuerySelf}>
-            {queryType === 'address' ? '我的地址' : '我的 NFT'}
-          </button>
-        )}
-        {queryType === 'message' ? (
-          <button className="sheet-button primary inline-flex" type="button" onClick={onAdd}>
-            查询消息ID
-          </button>
-        ) : canAddBanListTarget && (
+        <button className="sheet-button primary inline-flex" type="button" onClick={onQuery}>
+          查询
+        </button>
+        {queryType !== 'message' && canAddBanListTarget && (
           <button className="sheet-button primary inline-flex" type="button" onClick={onAdd} disabled={!canAdd || isBusy}>
             {addLabel || '加入禁言名单'}
           </button>

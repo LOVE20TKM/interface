@@ -1,3 +1,6 @@
+import { Copy } from 'lucide-react';
+import toast from 'react-hot-toast';
+
 import { abbreviateAddress } from '@/src/lib/format';
 import { cn } from '@/lib/utils';
 import type {
@@ -31,6 +34,43 @@ function banStatusText(banned: boolean) {
 
 function banStatusPillClass(banned: boolean) {
   return banned ? 'pill-bad' : 'pill-ok';
+}
+
+async function copyAddress(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success('已复制地址');
+  } catch {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', 'true');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    copied ? toast.success('已复制地址') : toast.error('复制失败');
+  }
+}
+
+function AddressDisplay({ address }: { address: `0x${string}` }) {
+  return (
+    <span className="ban-list-address-line">
+      <code title={address}>{abbreviateAddress(address)}</code>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          copyAddress(address);
+        }}
+        aria-label="复制地址"
+        title="复制地址"
+      >
+        <Copy size={13} strokeWidth={2.2} />
+      </button>
+    </span>
+  );
 }
 
 export function AdminBanListRows({
@@ -78,7 +118,7 @@ export function AdminBanListRows({
           return (
             <article className="list-row ban-list-row" key={record.senderAddress} onClick={() => onToggleMenu(key)}>
               <div>
-                <strong>{record.senderAddress}</strong>
+                <strong><AddressDisplay address={record.senderAddress} /></strong>
                 <small>操作者 NFT #{record.operatorId.toString()} · {abbreviateAddress(record.operatorAddress)}</small>
               </div>
               <span className={cn('pill', banStatusPillClass(true))}>{banStatusText(true)}</span>
@@ -176,7 +216,7 @@ export function GovBanListRows({
           return (
             <article className="list-row ban-list-row" key={record.senderAddress} onClick={() => onToggleMenu(key)}>
               <div>
-                <strong>{record.senderAddress}</strong>
+                <strong><AddressDisplay address={record.senderAddress} /></strong>
                 <span className="ban-list-vote-meta">
                   <small>{govTotalVoteText(record, totalVoteWeight)}</small>
                   <small>{govMyVoteText(record, totalVoteWeight)}</small>

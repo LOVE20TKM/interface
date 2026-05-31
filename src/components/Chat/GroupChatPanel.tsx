@@ -30,7 +30,6 @@ import {
 } from './chatConstants';
 import type { ChatWorkspaceView } from './chatTypes';
 import {
-  formatCanPostReason,
   isManagerOwnedChat,
   sameAddress,
 } from './chatUtils';
@@ -423,7 +422,11 @@ export function GroupChatPanel({
       return;
     }
     if (!composerState.activeCanPost) {
-      toast.error(formatCanPostReason(composerState.activeCanPostReasonCode) || '当前 NFT 身份没有发言资格。');
+      toast.error(
+        composerState.sendAvailability.canSend
+          ? '当前 NFT 身份没有发言资格。'
+          : composerState.sendAvailability.message,
+      );
       return;
     }
     const finalMentionAll = composerState.draftMentions.mentionAll;
@@ -474,9 +477,6 @@ export function GroupChatPanel({
     title ||
     (!managerOwned && !managedTitle.isPending ? publicData.groupName : '') ||
     (groupId ? `群聊 #${groupId.toString()}` : '群聊');
-  const defaultNftHref = tokenSymbol
-    ? `/group/groupids/?symbol=${encodeURIComponent(tokenSymbol)}`
-    : '/group/groupids/';
 
   return (
     <section
@@ -531,16 +531,10 @@ export function GroupChatPanel({
 
       <ChatComposer
         ref={composerRef}
-        account={account}
-        postingAllowed={publicData.chatInfo?.postingAllowed}
         activeSenderId={composerState.activeSenderId}
         activeSenderName={composerState.activeSenderName}
         activeCanPost={composerState.activeCanPost}
-        activeCanPostReasonCode={composerState.activeCanPostReasonCode}
-        activeCanPostPending={accountData.isPending}
-        isDefaultSenderPending={accountData.isDefaultSenderPending}
-        needsDefaultSenderSetup={composerState.needsDefaultSenderSetup}
-        defaultNftHref={defaultNftHref}
+        sendAvailability={composerState.sendAvailability}
         content={content}
         quotedMessage={quotedMessage}
         mentionValidationHint={composerState.mentionValidationHint}

@@ -1,26 +1,18 @@
 'use client';
 
 import { forwardRef } from 'react';
-import Link from 'next/link';
 import { Loader2, Quote, Send, ShieldCheck, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import AlertBox from '@/src/components/Common/AlertBox';
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import type { ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
-import { formatCanPostReason, quotedMessageSummary } from './chatUtils';
+import { quotedMessageSummary } from './chatUtils';
+import type { SendAvailability } from './sendAvailability';
 
 export const ChatComposer = forwardRef<HTMLElement, {
-  account: `0x${string}` | undefined;
-  postingAllowed: boolean | undefined;
   activeSenderId: bigint | undefined;
   activeSenderName: string;
   activeCanPost: boolean;
-  activeCanPostReasonCode: unknown;
-  activeCanPostPending: boolean;
-  isDefaultSenderPending: boolean;
-  needsDefaultSenderSetup: boolean;
-  defaultNftHref: string;
+  sendAvailability: SendAvailability;
   content: string;
   quotedMessage: ParsedGroupChatMessage | undefined;
   mentionValidationHint: string;
@@ -32,16 +24,10 @@ export const ChatComposer = forwardRef<HTMLElement, {
   onSend: () => void;
   onClearQuote: () => void;
 }>(function ChatComposer({
-  account,
-  postingAllowed,
   activeSenderId,
   activeSenderName,
   activeCanPost,
-  activeCanPostReasonCode,
-  activeCanPostPending,
-  isDefaultSenderPending,
-  needsDefaultSenderSetup,
-  defaultNftHref,
+  sendAvailability,
   content,
   quotedMessage,
   mentionValidationHint,
@@ -53,8 +39,7 @@ export const ChatComposer = forwardRef<HTMLElement, {
   onSend,
   onClearQuote,
 }, ref) {
-  const postingExplicitlyDisabled = postingAllowed === false;
-  const composerLocked = !account || postingExplicitlyDisabled || isDefaultSenderPending || needsDefaultSenderSetup;
+  const composerLocked = !sendAvailability.canSend;
   const activeSenderLabel = activeSenderId
     ? formatSenderIdentity(activeSenderName, activeSenderId)
     : '';
@@ -63,28 +48,12 @@ export const ChatComposer = forwardRef<HTMLElement, {
 
   return (
     <footer ref={ref} className={composerLocked ? 'composer-banned' : 'composer'}>
-      {!account ? (
-        <div className="cannot-post">
-          <AlertBox type="info" message="连接钱包后可使用 NFT 身份发言。" />
-        </div>
-      ) : postingExplicitlyDisabled ? (
-        <div className="cannot-post">
-          <AlertBox type="warning" message="该群聊已暂停发言。" />
-        </div>
-      ) : isDefaultSenderPending ? (
+      {!sendAvailability.canSend ? (
         <div className="cannot-post">
           <span className="cannot-post-inline">
-            <LoadingIcon />
-            正在读取默认 NFT 身份...
+            {sendAvailability.source === 'loading' && <Loader2 className="h-4 w-4 shrink-0 animate-spin" />}
+            {sendAvailability.message}
           </span>
-        </div>
-      ) : needsDefaultSenderSetup ? (
-        <div className="cannot-post">
-          <strong>请先设置默认 LOVE20 NFT 后再发言。</strong>
-          <span>群聊发言会使用 GroupDefaults 里的默认 NFT 身份；治理群也需要先有默认 NFT。</span>
-          <Link href={defaultNftHref} className="composer-setup-link">
-            去设置默认NFT
-          </Link>
         </div>
       ) : (
         <div className="space-y-2">
@@ -95,19 +64,7 @@ export const ChatComposer = forwardRef<HTMLElement, {
                 {activeSenderId ? `使用 ${activeSenderLabel} 发言` : '默认 NFT 身份不可用'}
               </span>
             </div>
-            {!activeCanPost && (
-              <span className="composer-identity-status">
-                {activeCanPostPending
-                  ? '检查发言权限'
-                  : activeSenderId
-                    ? formatCanPostReason(
-                      typeof activeCanPostReasonCode === 'string' && activeCanPostReasonCode.startsWith('0x')
-                        ? (activeCanPostReasonCode as `0x${string}`)
-                        : undefined,
-                    ) || '不可发言'
-                    : '未选择身份'}
-              </span>
-            )}
+            {!activeCanPost && <span className="composer-identity-status">不可发言</span>}
           </div>
           {quotedMessage && (
             <div className="flex flex-wrap gap-2">
