@@ -36,8 +36,8 @@ import {
 } from '@/src/hooks/contracts/useGroupChatModeration';
 import { useGroupChatMessage } from '@/src/hooks/contracts/useGroupChat';
 import {
-  useGroupChatRoomAccountData,
-  useGroupChatRoomPublicData,
+  useGroupChatAccountData,
+  useGroupChatPublicData,
   useGroupNames,
   parseGroupChatMessage,
 } from '@/src/hooks/composite/useGroupChatData';
@@ -90,16 +90,16 @@ export function BanListPanel({
   initialMessageId?: bigint;
   onChanged: () => void;
 }) {
-  const room = useGroupChatRoomPublicData(groupId);
-  const accountRoom = useGroupChatRoomAccountData(groupId, account, room.senderNames);
+  const publicData = useGroupChatPublicData(groupId);
+  const accountData = useGroupChatAccountData(groupId, account, publicData.senderNames);
   const [activeMessageId, setActiveMessageId] = useState<bigint | undefined>(initialMessageId);
   const messageQuery = useGroupChatMessage(groupId, activeMessageId, !!activeMessageId);
   const messageTarget = useMemo(
     () => parseGroupChatMessage(messageQuery.message),
     [messageQuery.message],
   );
-  const activeAdminBanSource = sameAddress(room.chatInfo?.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS);
-  const activeGovBanSource = sameAddress(room.chatInfo?.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS);
+  const activeAdminBanSource = sameAddress(publicData.chatInfo?.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS);
+  const activeGovBanSource = sameAddress(publicData.chatInfo?.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS);
   const {
     queryType,
     setQueryType,
@@ -215,7 +215,7 @@ export function BanListPanel({
   const refreshAddressTx = useGovRefreshVoteBySenderAddress();
   const refreshSenderTx = useGovRefreshVoteBySenderId();
   const adminBanPermission = useGroupAdminOperatorPermission(groupId, account, activeAdminBanSource);
-  const govVotingPower = useGroupChatVotingPower(groupId, room.chatInfo?.owner, account, activeGovBanSource);
+  const govVotingPower = useGroupChatVotingPower(groupId, publicData.chatInfo?.owner, account, activeGovBanSource);
   const govBanMechanism = useGovVotedBanMechanism(activeGovBanSource);
   const govBanStateVersion = useGovVotedBanStateVersion(groupId, activeGovBanSource);
   const canEditAdminBan = activeAdminBanSource && adminBanPermission.canOperate;
@@ -243,7 +243,7 @@ export function BanListPanel({
   const voteMessageSenderLabel = transactionLabel(voteMessageSenderTx, '等待钱包确认', '投票确认中');
   const clearMessageSenderLabel = transactionLabel(clearMessageSenderTx, '等待钱包确认', '撤票确认中');
   const adminPermissionRuleText = '链群 NFT 持有者、代理或群管理可维护地址/NFT禁言名单。';
-  const detailSubtitle = useGroupDetailSubtitle(groupId, room);
+  const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
   const govBanRuleText = activeGovBanSource && !govVotingPower.isPending && !govBanMechanism.isPending
     ? govBanListMechanismText(govVotingPower.totalVoteWeight, govBanMechanism.banThresholdRatio, govBanMechanism.precision, govBanMechanism.minSupportToOpposeRatio)
     : '';
@@ -383,13 +383,13 @@ export function BanListPanel({
       setQueryTarget({ type: 'address', value: account });
       return;
     }
-    if (!accountRoom.defaultSenderId) {
+    if (!accountData.defaultSenderId) {
       toast.error('当前钱包未设置默认 NFT');
       return;
     }
     nftLookup.setLookupMode('id');
-    nftLookup.setLookupValue(accountRoom.defaultSenderId.toString());
-    setQueryTarget({ type: 'nft', value: accountRoom.defaultSenderId });
+    nftLookup.setLookupValue(accountData.defaultSenderId.toString());
+    setQueryTarget({ type: 'nft', value: accountData.defaultSenderId });
   };
 
   const copyText = async (text: string, label: string) => {
@@ -746,7 +746,7 @@ export function BanListPanel({
         : '';
   const queryResultStatusPillClass = banStatusPillClass(queryResultTone);
   const messageSenderName = messageTarget
-    ? room.senderNames[messageTarget.senderId.toString()] || `NFT #${messageTarget.senderId.toString()}`
+    ? publicData.senderNames[messageTarget.senderId.toString()] || `NFT #${messageTarget.senderId.toString()}`
     : '';
   const messageSenderBanStatusText = messageTarget
     ? activeAdminBanSource

@@ -28,7 +28,7 @@ import {
   READ_CURSORS_STORAGE_KEY,
 } from '@/src/components/Chat/chatConstants';
 
-export type GroupChatWatchSource = 'active-room' | 'inbox-visible' | 'pinned' | 'mentioned' | 'manual-follow';
+export type GroupChatWatchSource = 'active-chat' | 'inbox-visible' | 'pinned' | 'mentioned' | 'manual-follow';
 export type GroupChatSyncStatus = 'idle' | 'refreshing' | 'error' | 'disabled';
 export type GroupChatSyncFrequency = 'high' | 'medium' | 'low';
 export type GroupChatSyncScope = 'page' | 'background';
@@ -293,7 +293,7 @@ function writeStoredBaselines(storageKey: string, baselines: Record<string, Grou
   window.localStorage.setItem(storageKey, JSON.stringify(serialized));
 }
 
-function readContractQueryMatchesGroupChatRoom(value: unknown, groupId: bigint): boolean {
+function readContractQueryMatchesGroupChat(value: unknown, groupId: bigint): boolean {
   if (!value || typeof value !== 'object') return false;
   const item = value as Record<string, unknown>;
   const address = typeof item.address === 'string' ? item.address.toLowerCase() : '';
@@ -310,20 +310,20 @@ function readContractQueryMatchesGroupChatRoom(value: unknown, groupId: bigint):
 
   return Object.values(item).some((child) => {
     if (Array.isArray(child)) {
-      return child.some((entry) => readContractQueryMatchesGroupChatRoom(entry, groupId));
+      return child.some((entry) => readContractQueryMatchesGroupChat(entry, groupId));
     }
-    return readContractQueryMatchesGroupChatRoom(child, groupId);
+    return readContractQueryMatchesGroupChat(child, groupId);
   });
 }
 
-export function invalidateGroupChatRoomQueries(queryClient: QueryClient, groupId: bigint) {
+export function invalidateGroupChatQueries(queryClient: QueryClient, groupId: bigint) {
   queryClient.invalidateQueries({
     predicate: (query) => {
       const key = query.queryKey as QueryKey;
       return (
         Array.isArray(key) &&
         (key[0] === 'readContract' || key[0] === 'readContracts') &&
-        readContractQueryMatchesGroupChatRoom(key, groupId)
+        readContractQueryMatchesGroupChat(key, groupId)
       );
     },
   });
@@ -400,7 +400,7 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
     if (refreshTimersRef.current[key]) clearTimeout(refreshTimersRef.current[key]);
     refreshTimersRef.current[key] = setTimeout(() => {
       delete refreshTimersRef.current[key];
-      invalidateGroupChatRoomQueries(queryClient, groupId);
+      invalidateGroupChatQueries(queryClient, groupId);
     }, REFRESH_DEBOUNCE_MS);
   }, [queryClient]);
 
@@ -701,7 +701,7 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
     if (!groupId || groupId <= BigInt(0)) return () => {};
     setActiveGroupId(groupId);
     const unregister = registerGroups({
-      source: 'active-room',
+      source: 'active-chat',
       scope: 'page',
       frequency: 'high',
       groupIds: [groupId],

@@ -29,7 +29,7 @@ import { ManagerActivationForm } from './ManagerActivationForm';
 import {
   actionInfoTitle,
   buildChatActivationHref,
-  buildChatRoomHref,
+  buildGroupChatDetailHref,
   invalidateContractReads,
   parseActionIdInput,
 } from './chatUtils';
@@ -56,7 +56,7 @@ function useManagerActivationContext(activationType: ActivationType) {
 
   const openChat = useCallback(
     (groupId: bigint) => {
-      router.push(buildChatRoomHref(tokenSymbol, groupId));
+      router.push(buildGroupChatDetailHref(tokenSymbol, groupId));
     },
     [router, tokenSymbol],
   );

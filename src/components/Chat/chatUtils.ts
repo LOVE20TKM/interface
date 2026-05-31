@@ -19,16 +19,16 @@ export function parseGroupId(value: string | string[] | undefined) {
   return parsed > BigInt(0) ? parsed : undefined;
 }
 
-export function buildChatRoomHref(tokenSymbol: string | undefined, groupId: bigint) {
+export function buildGroupChatDetailHref(tokenSymbol: string | undefined, groupId: bigint) {
   const params = new URLSearchParams();
   if (tokenSymbol) params.set('symbol', tokenSymbol);
   params.set('groupId', groupId.toString());
-  return `/chat/room?${params.toString()}`;
+  return `/chat/group?${params.toString()}`;
 }
 
-export function buildChatRoomUrl(tokenSymbol: string | undefined, groupId: bigint): UrlObject {
+export function buildGroupChatDetailUrl(tokenSymbol: string | undefined, groupId: bigint): UrlObject {
   return {
-    pathname: '/chat/room',
+    pathname: '/chat/group',
     query: {
       ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
       groupId: groupId.toString(),
@@ -60,8 +60,8 @@ export function buildChatChainActivationHref(
   return `/chat/activate/chain?${params.toString()}`;
 }
 
-export function buildChatPanelHref(
-  panel: 'members' | 'ban-list' | 'admins' | 'settings',
+export function buildGroupChatPanelHref(
+  panel: 'members' | 'banlist' | 'admins' | 'settings',
   tokenSymbol: string | undefined,
   groupId: bigint,
   extras?: Record<string, string | bigint | undefined>,
@@ -72,7 +72,7 @@ export function buildChatPanelHref(
   Object.entries(extras || {}).forEach(([key, value]) => {
     if (value !== undefined) params.set(key, value.toString());
   });
-  return `/chat/${panel}?${params.toString()}`;
+  return `/chat/group/${panel}?${params.toString()}`;
 }
 
 export function parseActionIdInput(value: string) {

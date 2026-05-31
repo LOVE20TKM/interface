@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 
-import type { GroupChatRoomAccountData, GroupChatRoomPublicData } from '@/src/hooks/composite/useGroupChatData';
+import type { GroupChatAccountData, GroupChatPublicData } from '@/src/hooks/composite/useGroupChatData';
 import { MAX_MENTIONED_SENDER_IDS } from './chatConstants';
 import { mentionSenderIdsValidationHint, parseComposerMentions } from './chatUtils';
 
 export function useChatComposerState({
   groupId,
   account,
-  publicRoom,
-  accountRoom,
+  publicData,
+  accountData,
   content,
   mentionedSenderIds,
   isPending,
@@ -16,23 +16,23 @@ export function useChatComposerState({
 }: {
   groupId: bigint | undefined;
   account: `0x${string}` | undefined;
-  publicRoom: GroupChatRoomPublicData;
-  accountRoom: GroupChatRoomAccountData;
+  publicData: GroupChatPublicData;
+  accountData: GroupChatAccountData;
   content: string;
   mentionedSenderIds: bigint[];
   isPending: boolean;
   isConfirming: boolean;
 }) {
-  const activeSenderId = accountRoom.defaultSenderId;
+  const activeSenderId = accountData.defaultSenderId;
   const activeSenderName = activeSenderId
-    ? publicRoom.senderNames[activeSenderId.toString()] ||
-      (activeSenderId === accountRoom.defaultSenderId ? accountRoom.defaultSenderName : '')
+    ? publicData.senderNames[activeSenderId.toString()] ||
+      (activeSenderId === accountData.defaultSenderId ? accountData.defaultSenderName : '')
     : '';
-  const activeCanPost = activeSenderId ? accountRoom.canPost : false;
-  const activeCanPostReasonCode = accountRoom.canPostReasonCode;
+  const activeCanPost = activeSenderId ? accountData.canPost : false;
+  const activeCanPostReasonCode = accountData.canPostReasonCode;
   const draftMentions = useMemo(
-    () => parseComposerMentions(content, mentionedSenderIds, publicRoom.senderNames),
-    [content, mentionedSenderIds, publicRoom.senderNames],
+    () => parseComposerMentions(content, mentionedSenderIds, publicData.senderNames),
+    [content, mentionedSenderIds, publicData.senderNames],
   );
   const mentionValidationHint = useMemo(
     () => mentionSenderIdsValidationHint(draftMentions, MAX_MENTIONED_SENDER_IDS),
@@ -41,7 +41,7 @@ export function useChatComposerState({
   const mentionValidationBlocking =
     draftMentions.invalidSenderIds.length > 0 ||
     draftMentions.overLimitCount > 0;
-  const needsDefaultSenderSetup = !!account && !accountRoom.isDefaultSenderPending && !accountRoom.hasDefaultSender;
+  const needsDefaultSenderSetup = !!account && !accountData.isDefaultSenderPending && !accountData.hasDefaultSender;
   const sendDisabled =
     !groupId ||
     !account ||
@@ -52,7 +52,7 @@ export function useChatComposerState({
     mentionValidationBlocking ||
     isPending ||
     isConfirming ||
-    !publicRoom.chatInfo?.postingAllowed;
+    !publicData.chatInfo?.postingAllowed;
 
   return {
     activeSenderId,

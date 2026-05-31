@@ -127,8 +127,8 @@ function MyApp({ Component, pageProps }: AppProps) {
   const [mounted, setMounted] = useState(false);
   const [navLoading, setNavLoading] = useState(false);
   const navLoadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isChatRoomPage = router.pathname === '/chat/room';
-  const hideFooter = isChatRoomPage;
+  const isGroupChatDetailPage = router.pathname === '/chat/group';
+  const hideFooter = isGroupChatDetailPage;
 
   // iOS钱包环境页面恢复功能
   usePageRecovery();
@@ -239,11 +239,11 @@ function MyApp({ Component, pageProps }: AppProps) {
               <TokenProvider>
                 <SidebarProvider>
                   <AppSidebar />
-                  <SidebarInset className={cn('min-w-0', isChatRoomPage && 'h-svh min-h-0 overflow-hidden')}>
+                  <SidebarInset className={cn('min-w-0', isGroupChatDetailPage && 'h-svh min-h-0 overflow-hidden')}>
                     <div
                       className={cn(
                         'bg-background flex flex-col',
-                        isChatRoomPage
+                        isGroupChatDetailPage
                           ? 'h-svh min-h-0 overflow-hidden pb-0'
                           : 'min-h-screen pb-[var(--bottom-navigation-height)] md:pb-0',
                       )}
@@ -257,13 +257,13 @@ function MyApp({ Component, pageProps }: AppProps) {
                           },
                         }}
                       />
-                      {!isChatRoomPage && (
+                      {!isGroupChatDetailPage && (
                         <div className="px-4 pt-4">
                           <ErrorAlert />
                         </div>
                       )}
-                      {!isChatRoomPage && <GasBalanceNotifier />}
-                      {!isChatRoomPage && <ActionRewardNotifier />}
+                      {!isGroupChatDetailPage && <GasBalanceNotifier />}
+                      {!isGroupChatDetailPage && <ActionRewardNotifier />}
                       <AppErrorBoundary key={router.asPath}>
                         <Component {...pageProps} />
                       </AppErrorBoundary>

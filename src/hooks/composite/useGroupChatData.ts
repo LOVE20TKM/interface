@@ -39,8 +39,8 @@ import {
   type ClassifierKind,
   type GroupChatKind,
   type GroupChatListItem,
-  type GroupChatRoomAccountData,
-  type GroupChatRoomPublicData,
+  type GroupChatAccountData,
+  type GroupChatPublicData,
   type ParsedGroupChatInfo,
   type ParsedGroupChatMessage,
   type ReadContractResult,
@@ -51,8 +51,8 @@ export {
   parseGroupChatMessage,
   type GroupChatKind,
   type GroupChatListItem,
-  type GroupChatRoomAccountData,
-  type GroupChatRoomPublicData,
+  type GroupChatAccountData,
+  type GroupChatPublicData,
   type ParsedGroupChatInfo,
   type ParsedGroupChatMessage,
 } from './groupChatDataTypes';
@@ -675,10 +675,10 @@ export function useGroupChatInboxData(
   };
 }
 
-export function useGroupChatRoomPublicData(
+export function useGroupChatPublicData(
   groupId: bigint | undefined,
   limit: number = 100,
-): GroupChatRoomPublicData {
+): GroupChatPublicData {
   const { chatInfo: rawInfo, isPending: isPendingInfo, error: infoError, refetch: refetchInfo } = useGroupChatInfo(groupId);
   const chatInfo = useMemo(() => parseGroupChatInfo(rawInfo), [rawInfo]);
   const { messagesCount, isPending: isPendingCount, error: countError, refetch: refetchCount } =
@@ -827,11 +827,11 @@ export function useGroupChatRoomPublicData(
   };
 }
 
-export function useGroupChatRoomAccountData(
+export function useGroupChatAccountData(
   groupId: bigint | undefined,
   account: `0x${string}` | undefined,
   senderNames: Record<string, string> = {},
-): GroupChatRoomAccountData {
+): GroupChatAccountData {
   const { defaultGroup, defaultGroupId, defaultGroupName, hasDefaultGroup, isPending: isPendingDefaultGroup, refetch: refetchDefaultGroup } =
     useDefaultGroupOf(account, !!account);
   const { canPost, reasonCode, isPending: isPendingCanPost, error: canPostError, refetch: refetchCanPost } =

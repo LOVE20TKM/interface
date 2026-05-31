@@ -8,7 +8,7 @@ import Header from '@/src/components/Header';
 import { ChainChatActivationDetail } from '@/src/components/Chat/ChainChatActivationDetail';
 import styles from '@/src/components/Chat/ChatPage.module.css';
 import { TokenContext } from '@/src/contexts/TokenContext';
-import { buildChatActivationHref, buildChatRoomHref, invalidateContractReads, parseGroupId } from '@/src/components/Chat/chatUtils';
+import { buildChatActivationHref, buildGroupChatDetailHref, invalidateContractReads, parseGroupId } from '@/src/components/Chat/chatUtils';
 
 const ChainChatActivationPage: NextPage = () => {
   const router = useRouter();
@@ -23,7 +23,7 @@ const ChainChatActivationPage: NextPage = () => {
 
   const openChat = useCallback(
     (nextGroupId: bigint) => {
-      router.push(buildChatRoomHref(tokenSymbol, nextGroupId));
+      router.push(buildGroupChatDetailHref(tokenSymbol, nextGroupId));
     },
     [router, tokenSymbol],
   );

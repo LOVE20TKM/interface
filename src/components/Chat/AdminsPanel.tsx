@@ -8,8 +8,8 @@ import {
   useRemoveGroupAdmins,
 } from '@/src/hooks/contracts/useGroupChatModeration';
 import {
-  useGroupChatRoomAccountData,
-  useGroupChatRoomPublicData,
+  useGroupChatAccountData,
+  useGroupChatPublicData,
   useGroupNames,
 } from '@/src/hooks/composite/useGroupChatData';
 import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
@@ -29,8 +29,8 @@ export function AdminsPanel({
   account: `0x${string}` | undefined;
   onChanged: () => void;
 }) {
-  const room = useGroupChatRoomPublicData(groupId);
-  const accountRoom = useGroupChatRoomAccountData(groupId, account, room.senderNames);
+  const publicData = useGroupChatPublicData(groupId);
+  const accountData = useGroupChatAccountData(groupId, account, publicData.senderNames);
   const admins = useGroupAdminIds(groupId);
   const adminIds = useMemo(() => admins.adminRecords.map((admin) => admin.id), [admins.adminRecords]);
   const { groupNames: adminNames } = useGroupNames(adminIds);
@@ -38,18 +38,18 @@ export function AdminsPanel({
   const addTx = useAddGroupAdmins();
   const removeTx = useRemoveGroupAdmins();
   const editPermission = useGroupOwnerOrDelegatePermission(groupId, account);
-  const managerOwned = isManagerOwnedChat(room.chatInfo?.owner);
+  const managerOwned = isManagerOwnedChat(publicData.chatInfo?.owner);
   const ownerPermission = resolveOwnerManagedChatPermission({
     account,
-    owner: room.chatInfo?.owner,
+    owner: publicData.chatInfo?.owner,
     ownerOrDelegateId: editPermission.ownerOrDelegateId,
     isOwnerOrDelegatePending: editPermission.isPending,
     managerOwned,
-    hasChatInfo: !!room.chatInfo,
+    hasChatInfo: !!publicData.chatInfo,
   });
   const isPermissionLoading = ownerPermission.isPending;
   const canEditAdmins = ownerPermission.canEdit;
-  const detailSubtitle = useGroupDetailSubtitle(groupId, room);
+  const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
   const resolvedLookupId = nftLookup.lookupResult?.status === 'resolved' ? nftLookup.lookupResult.tokenId : undefined;
   const [queryResult, setQueryResult] = useState('');
 
@@ -74,13 +74,13 @@ export function AdminsPanel({
   }, [describeAdmin, nftLookup.lookupResult, resolvedLookupId]);
 
   const querySelf = () => {
-    if (!accountRoom.defaultSenderId) {
+    if (!accountData.defaultSenderId) {
       toast.error('当前钱包未设置默认 NFT');
       return;
     }
     nftLookup.setLookupMode('id');
-    nftLookup.setLookupValue(accountRoom.defaultSenderId.toString());
-    describeAdmin(accountRoom.defaultSenderId, accountRoom.defaultSenderName);
+    nftLookup.setLookupValue(accountData.defaultSenderId.toString());
+    describeAdmin(accountData.defaultSenderId, accountData.defaultSenderName);
   };
 
   const addAdmin = async () => {

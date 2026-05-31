@@ -263,27 +263,29 @@ async function checkWriteEncoding() {
 }
 
 function checkCriticalFrontendGuards() {
-  checkFileContains('src/components/Chat/ChatPage.tsx', /buildChatActivationHref\(token\?\.symbol\)/, 'chat activation routing must preserve the current token symbol');
-  checkFileContains('src/components/Chat/ChatPage.tsx', /TokenContext/, 'chat page must read token from TokenContext');
-  checkFileContains('src/components/Chat/ChatRoomPage.tsx', /parseGroupId\(router\.query\.groupId\)/, 'chat room route must read groupId from the URL');
-  checkFileContains('src/components/Chat/ChatRoomPage.tsx', /buildChatIndexHref\(tokenSymbol\)/, 'chat room back link must preserve the current token symbol');
+  checkFileContains('src/components/Chat/GroupChatHome.tsx', /buildChatActivationHref\(token\?\.symbol\)/, 'chat activation routing must preserve the current token symbol');
+  checkFileContains('src/components/Chat/GroupChatHome.tsx', /TokenContext/, 'chat page must read token from TokenContext');
+  checkFileContains('src/components/Chat/GroupChatDetailPage.tsx', /parseGroupId\(router\.query\.groupId\)/, 'chat detail route must read groupId from the URL');
+  checkFileContains('src/components/Chat/GroupChatDetailPage.tsx', /buildChatIndexHref\(tokenSymbol\)/, 'chat detail back link must preserve the current token symbol');
+  checkFileContains('src/components/Chat/chatUtils.ts', /return `\/chat\/group\?\$\{params\.toString\(\)\}`;/, 'group chat detail route must live under /chat/group');
+  checkFileContains('src/components/Chat/chatUtils.ts', /return `\/chat\/group\/\$\{panel\}\?\$\{params\.toString\(\)\}`;/, 'group chat panel routes must live under /chat/group');
   checkFileContains('src/components/Chat/chatUtils.ts', /if \(tokenSymbol\) params\.set\('symbol', tokenSymbol\);/, 'chat route builders must keep symbol-based token routing');
   checkFileContains('src/components/Common/BottomNavigation.tsx', /title: '聊天'[\s\S]*url: `\/chat\/\?symbol=\$\{token\.symbol\}`/, 'bottom navigation chat entry must preserve the current token symbol');
   checkFileContains('src/components/Header.tsx', /<WalletButton \/>/, 'global header must keep the shared wallet control');
 
   const settings = read('src/components/Chat/ChatSettingsPanel.tsx');
-  assert(/const managerOwned = isManagerOwnedChat\(room\.chatInfo\?\.owner\);/.test(settings), 'settings must detect manager-owned chats before exposing writes');
+  assert(/const managerOwned = isManagerOwnedChat\(publicData\.chatInfo\?\.owner\);/.test(settings), 'settings must detect manager-owned chats before exposing writes');
   assert(/resolveOwnerManagedChatPermission/.test(settings), 'settings must centralize owner/manager permission guards');
   assert(/const canEditRules = ownerPermission\.canEdit;/.test(settings), 'settings writes must be gated by owner/manager permission');
 
   const admins = read('src/components/Chat/AdminsPanel.tsx');
-  assert(/const managerOwned = isManagerOwnedChat\(room\.chatInfo\?\.owner\);/.test(admins), 'admins panel must detect manager-owned chats before exposing writes');
+  assert(/const managerOwned = isManagerOwnedChat\(publicData\.chatInfo\?\.owner\);/.test(admins), 'admins panel must detect manager-owned chats before exposing writes');
   assert(/resolveOwnerManagedChatPermission/.test(admins), 'admins panel must centralize owner/manager permission guards');
   assert(/const isPermissionLoading = ownerPermission\.isPending;/.test(admins), 'admins panel must not show a premature permission denial while ownership is loading');
   assert(/const canEditAdmins = ownerPermission\.canEdit;/.test(admins), 'admin writes must be gated by owner/manager permission');
 
   const members = read('src/components/Chat/MembersPanel.tsx');
-  assert(/managerMemberScopeDescription\(room\.chatInfo\?\.owner\)/.test(members), 'members page must branch first by manager owner');
+  assert(/managerMemberScopeDescription\(publicData\.chatInfo\?\.owner\)/.test(members), 'members page must branch first by manager owner');
   assert(/const hasMemberListScope = !managerScope && \(hasGroupMemberScope \|\| hasGroupJoinScope\)/.test(members), 'members page must only show GroupMember lists for known non-manager member scopes');
   assert(/useGroupMemberIds\(groupId, memberOffset, BigInt\(MEMBER_PAGE_SIZE\), hasMemberListScope\)/.test(members), 'members page must not read member lists for manager-owned or unknown-scope chats');
   assert(/ownerOrDelegateId/.test(read('src/hooks/contracts/useGroupChatModeration.ts')) && /memberPermission\.canOperate/.test(members), 'member management permission must accept owner/delegate as well as GroupAdmin admins');
@@ -303,20 +305,20 @@ function checkCriticalFrontendGuards() {
   assert(/引用 \{quotedMessageSummary\(quotedMessage, 18\)\}/.test(composer), 'composer quote chip must show a summarized quoted message');
 
   const composerState = read('src/components/Chat/useChatComposerState.ts');
-  assert(/const activeSenderId = accountRoom\.defaultSenderId;/.test(composerState), 'chat composer state must use GroupDefaults default NFT as the active sender');
+  assert(/const activeSenderId = accountData\.defaultSenderId;/.test(composerState), 'chat composer state must use GroupDefaults default NFT as the active sender');
   assert(!/parsePositiveBigIntInput|senderIdFromInput|isCustomSenderInputActive/.test(composerState), 'chat composer state must not keep a manual senderId path');
   assert(/needsDefaultSenderSetup/.test(composerState), 'chat composer state must expose the no-default-NFT setup state');
   assert(/mentionValidationHint/.test(composerState) && /mentionValidationBlocking/.test(composerState), 'composer state must expose mention validation state');
   assert(/draftMentions\.overLimitCount > 0/.test(composerState), 'send disabling must use parsed composer mentions, not only the selected mention array');
 
-  const roomPanel = read('src/components/Chat/RoomPanel.tsx');
-  assert(/title\?: string/.test(roomPanel), 'room panel must accept the manager-classified inbox title');
-  assert(/useGroupChatManagedTitle/.test(roomPanel), 'room panel must resolve manager titles when opened directly by groupId');
-  assert(/managedTitle\.title[\s\S]*title[\s\S]*publicRoom\.groupName/.test(roomPanel), 'room title must prefer managed title before non-manager NFT name fallback');
-  assert(/!managerOwned && !managedTitle\.isPending/.test(roomPanel), 'manager-owned detail title must not use meta/NFT title fallback while managed title is loading');
-  assert(/postAsDefaultSender\(/.test(roomPanel), 'normal chat sending must call postAsDefaultSender');
-  assert(!/usePostGroupChatMessage|postTx\.post/.test(roomPanel), 'normal chat sending must not call raw post with a manual senderId');
-  assert(/\/group\/groupids\/\?symbol=\$\{encodeURIComponent\(tokenSymbol\)\}/.test(roomPanel), 'default NFT setup link must preserve the current token symbol');
+  const groupChatPanel = read('src/components/Chat/GroupChatPanel.tsx');
+  assert(/title\?: string/.test(groupChatPanel), 'group chat panel must accept the manager-classified inbox title');
+  assert(/useGroupChatManagedTitle/.test(groupChatPanel), 'group chat panel must resolve manager titles when opened directly by groupId');
+  assert(/managedTitle\.title[\s\S]*title[\s\S]*publicData\.groupName/.test(groupChatPanel), 'group chat title must prefer managed title before non-manager NFT name fallback');
+  assert(/!managerOwned && !managedTitle\.isPending/.test(groupChatPanel), 'manager-owned detail title must not use meta/NFT title fallback while managed title is loading');
+  assert(/postAsDefaultSender\(/.test(groupChatPanel), 'normal chat sending must call postAsDefaultSender');
+  assert(!/usePostGroupChatMessage|postTx\.post/.test(groupChatPanel), 'normal chat sending must not call raw post with a manual senderId');
+  assert(/\/group\/groupids\/\?symbol=\$\{encodeURIComponent\(tokenSymbol\)\}/.test(groupChatPanel), 'default NFT setup link must preserve the current token symbol');
 
   const data = read('src/hooks/composite/useGroupChatData.ts');
   const types = read('src/hooks/composite/groupChatDataTypes.ts');
@@ -333,12 +335,15 @@ function checkCriticalFrontendGuards() {
   assert(/export function useGroupChatManagedTitle/.test(data), 'direct chat detail must expose managed title reads');
   assert(/const shouldReadActionInfo[\s\S]*classification\.kind === 'action'/.test(data), 'direct action chat detail title must read actionInfo only for action managers');
 
-  checkFileContains('src/hooks/composite/groupChatDataTypes.ts', /bannedMessageIds:\s*Record<string, boolean>/, 'room data must expose blacklisted message ids');
-  assert(/functionName:\s*'isBanned'/.test(data) && /const bannedMessageIds = useMemo/.test(data), 'room data must check visible messages against banSource');
+  checkFileContains('src/hooks/composite/groupChatDataTypes.ts', /bannedMessageIds:\s*Record<string, boolean>/, 'group chat data must expose blacklisted message ids');
+  assert(/functionName:\s*'isBanned'/.test(data) && /const bannedMessageIds = useMemo/.test(data), 'group chat data must check visible messages against banSource');
 
   const inboxPanel = read('src/components/Chat/InboxPanel.tsx');
   assert(!/latestMessage\?\.content/.test(inboxPanel), 'inbox rows must not preview potentially hidden blacklisted message content');
-  assert(/const visibleUnreadCount = rawUnreadCount;/.test(inboxPanel), 'inbox unread badges must stay cheap and avoid per-message blacklist reads');
+  assert(
+    /const visibleUnreadCount =[\s\S]*syncState\.unreadCount[\s\S]*rawUnreadCount/.test(inboxPanel),
+    'inbox unread badges must stay cheap and avoid per-message blacklist reads',
+  );
 
   const messageList = read('src/components/Chat/ChatMessageList.tsx');
   checkFileContains('src/components/Chat/ChatMessageList.tsx', /onQuoteMessage/, 'message actions must support quoting');
@@ -356,7 +361,7 @@ function checkCriticalFrontendGuards() {
   checkFileContains('src/hooks/contracts/useGroupChatModeration.ts', /functionName: 'voteWeightsBySenderIdsByVoter'/, 'governance blacklist NFT rows must read the current account vote state');
   checkFileContains('src/hooks/contracts/groupChatModerationTypes.ts', /mySupportWeight:\s*bigint/, 'governance blacklist records must expose current account support weight');
   checkFileContains('src/hooks/contracts/groupChatModerationTypes.ts', /myOpposeWeight:\s*bigint/, 'governance blacklist records must expose current account oppose weight');
-  checkFileContains('src/components/Chat/BanListRows.tsx', /record\.banned \? 'pill-bad' : 'pill-ok'/, 'governance blacklist rows must display contract banned status');
+  checkFileContains('src/components/Chat/BanListRows.tsx', /banStatusPillClass\(record\.banned\)/, 'governance blacklist rows must display contract banned status');
   checkFileContains('src/components/Chat/BanListRows.tsx', /我的投票：支持/, 'governance blacklist rows must show current account support votes');
   checkFileContains('src/components/Chat/BanListRows.tsx', /我的投票：反对/, 'governance blacklist rows must show current account oppose votes');
   checkFileContains('src/components/Chat/BanListRows.tsx', /我的投票：未投票/, 'governance blacklist rows must show current account no-vote state');
@@ -418,7 +423,7 @@ function checkTransactionLifecycleGuards() {
     'src/components/Chat/ChatSettingsPanel.tsx',
     'src/components/Chat/AdminsPanel.tsx',
     'src/components/Chat/MembersPanel.tsx',
-    'src/components/Chat/RoomPanel.tsx',
+    'src/components/Chat/GroupChatPanel.tsx',
     'src/components/Chat/BanListPanel.tsx',
   ].forEach((file) => {
     checkFileContains(file, /useConfirmedTransactionEffect/, 'writes must refetch after transaction confirmation');

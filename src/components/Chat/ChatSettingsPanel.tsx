@@ -30,8 +30,8 @@ import {
   GROUP_CHAT_TOKEN_MAIN_MANAGER_ADDRESS,
 } from '@/src/hooks/contracts/useGroupChatManagers';
 import {
-  useGroupChatRoomAccountData,
-  useGroupChatRoomPublicData,
+  useGroupChatAccountData,
+  useGroupChatPublicData,
 } from '@/src/hooks/composite/useGroupChatData';
 import NftOwnerLookup from '@/src/components/Extension/Base/Group/NftOwnerLookup';
 import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
@@ -319,8 +319,8 @@ export function ChatSettingsPanel({
   account: `0x${string}` | undefined;
   onChanged: () => void;
 }) {
-  const room = useGroupChatRoomPublicData(groupId);
-  const accountRoom = useGroupChatRoomAccountData(groupId, account, room.senderNames);
+  const publicData = useGroupChatPublicData(groupId);
+  const accountData = useGroupChatAccountData(groupId, account, publicData.senderNames);
   const [scopeSource, setScopeSource] = useState('');
   const [banSource, setBanSource] = useState('');
   const [beforePostPlugin, setBeforePostPlugin] = useState('');
@@ -335,34 +335,34 @@ export function ChatSettingsPanel({
   const delegateTx = useSetGroupDelegateId(groupDelegate.groupDelegateAddress);
   const delegateLookup = useNftOwnerLookup({ initialMode: 'id' });
   const editPermission = useGroupOwnerOrDelegatePermission(groupId, account);
-  const managerOwned = isManagerOwnedChat(room.chatInfo?.owner);
+  const managerOwned = isManagerOwnedChat(publicData.chatInfo?.owner);
   const ownerPermission = resolveOwnerManagedChatPermission({
     account,
-    owner: room.chatInfo?.owner,
+    owner: publicData.chatInfo?.owner,
     ownerOrDelegateId: editPermission.ownerOrDelegateId,
     isOwnerOrDelegatePending: editPermission.isPending,
     managerOwned,
-    hasChatInfo: !!room.chatInfo,
+    hasChatInfo: !!publicData.chatInfo,
   });
   const canEditRules = ownerPermission.canEdit;
-  const detailSubtitle = useGroupDetailSubtitle(groupId, room);
-  const ownerExplanation = explainOwnerContract(room.chatInfo?.owner);
-  const scopeExplanation = explainScopeContract(room.chatInfo?.scopeSource);
-  const banExplanation = explainBanContract(room.chatInfo?.banSource);
-  const beforePluginExplanation = explainPluginContract(room.chatInfo?.beforePostPlugin, 'before');
-  const afterPluginExplanation = explainPluginContract(room.chatInfo?.afterPostPlugin, 'after');
-  const canPostText = accountRoom.canPost
+  const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
+  const ownerExplanation = explainOwnerContract(publicData.chatInfo?.owner);
+  const scopeExplanation = explainScopeContract(publicData.chatInfo?.scopeSource);
+  const banExplanation = explainBanContract(publicData.chatInfo?.banSource);
+  const beforePluginExplanation = explainPluginContract(publicData.chatInfo?.beforePostPlugin, 'before');
+  const afterPluginExplanation = explainPluginContract(publicData.chatInfo?.afterPostPlugin, 'after');
+  const canPostText = accountData.canPost
     ? '可以发言'
-    : formatCanPostReason(accountRoom.canPostReasonCode) || '当前地址暂时不满足这个群聊的发言条件。';
-  const activationText = room.chatInfo ? (room.chatInfo.activated ? '已激活' : '未激活') : '读取中';
-  const postingText = room.chatInfo ? (room.chatInfo.postingAllowed ? '允许发言' : '暂停发言') : '读取中';
+    : formatCanPostReason(accountData.canPostReasonCode) || '当前地址暂时不满足这个群聊的发言条件。';
+  const activationText = publicData.chatInfo ? (publicData.chatInfo.activated ? '已激活' : '未激活') : '读取中';
+  const postingText = publicData.chatInfo ? (publicData.chatInfo.postingAllowed ? '允许发言' : '暂停发言') : '读取中';
   const delegateText = delegateState.isPending ? '读取中' : `NFT #${delegateState.delegateId?.toString() || '0'}`;
 
   const refetchSettings = useCallback(() => {
-    room.refetch();
+    publicData.refetch();
     delegateState.refetch();
     onChanged();
-  }, [delegateState, onChanged, room]);
+  }, [delegateState, onChanged, publicData]);
   useConfirmedTransactionEffect(postingTx, refetchSettings);
   useConfirmedTransactionEffect(scopeTx, refetchSettings);
   useConfirmedTransactionEffect(banTx, refetchSettings);
@@ -371,13 +371,13 @@ export function ChatSettingsPanel({
   useConfirmedTransactionEffect(delegateTx, refetchSettings);
 
   useEffect(() => {
-    if (room.chatInfo) {
-      setScopeSource(room.chatInfo.scopeSource);
-      setBanSource(room.chatInfo.banSource);
-      setBeforePostPlugin(room.chatInfo.beforePostPlugin);
-      setAfterPostPlugin(room.chatInfo.afterPostPlugin);
+    if (publicData.chatInfo) {
+      setScopeSource(publicData.chatInfo.scopeSource);
+      setBanSource(publicData.chatInfo.banSource);
+      setBeforePostPlugin(publicData.chatInfo.beforePostPlugin);
+      setAfterPostPlugin(publicData.chatInfo.afterPostPlugin);
     }
-  }, [room.chatInfo]);
+  }, [publicData.chatInfo]);
 
   useEffect(() => {
     if (delegateState.delegateId !== undefined && !delegateLookup.lookupValue) {
@@ -463,16 +463,16 @@ export function ChatSettingsPanel({
             </div>
             <div className="settings-metric-grid">
               <StatusMetric label="群 NFT" value={`#${groupId.toString()}`} />
-              <StatusMetric label="激活状态" value={activationText} tone={room.chatInfo?.activated ? 'good' : 'warn'} />
-              <StatusMetric label="发言开关" value={postingText} tone={room.chatInfo?.postingAllowed ? 'good' : 'warn'} />
+              <StatusMetric label="激活状态" value={activationText} tone={publicData.chatInfo?.activated ? 'good' : 'warn'} />
+              <StatusMetric label="发言开关" value={postingText} tone={publicData.chatInfo?.postingAllowed ? 'good' : 'warn'} />
               {!managerOwned && (
                 <StatusMetric
                   label="当前身份"
-                  value={accountRoom.defaultSenderId ? `NFT #${accountRoom.defaultSenderId.toString()}` : '未设置'}
-                  tone={accountRoom.defaultSenderId ? 'good' : 'warn'}
+                  value={accountData.defaultSenderId ? `NFT #${accountData.defaultSenderId.toString()}` : '未设置'}
+                  tone={accountData.defaultSenderId ? 'good' : 'warn'}
                 />
               )}
-              <StatusMetric label="我能否发言" value={room.chatInfo ? canPostText : '读取中'} tone={accountRoom.canPost ? 'good' : 'warn'} />
+              <StatusMetric label="我能否发言" value={publicData.chatInfo ? canPostText : '读取中'} tone={accountData.canPost ? 'good' : 'warn'} />
               {!managerOwned && <StatusMetric label="代理 NFT" value={delegateText} />}
             </div>
           </div>
@@ -488,11 +488,11 @@ export function ChatSettingsPanel({
             <aside className="settings-side-column">
               <SettingsPanelSection icon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />} title="规则概览">
                 <div className="contract-rule-grid">
-                  <ContractRuleCard eyebrow="谁管理这个群" address={room.chatInfo?.owner} explanation={ownerExplanation} />
-                  <ContractRuleCard eyebrow="谁能发言" address={room.chatInfo?.scopeSource} explanation={scopeExplanation} />
-                  <ContractRuleCard eyebrow="谁被禁言" address={room.chatInfo?.banSource} explanation={banExplanation} />
-                  <ContractRuleCard eyebrow="发言前" address={room.chatInfo?.beforePostPlugin} explanation={beforePluginExplanation} />
-                  <ContractRuleCard eyebrow="发送后" address={room.chatInfo?.afterPostPlugin} explanation={afterPluginExplanation} />
+                  <ContractRuleCard eyebrow="谁管理这个群" address={publicData.chatInfo?.owner} explanation={ownerExplanation} />
+                  <ContractRuleCard eyebrow="谁能发言" address={publicData.chatInfo?.scopeSource} explanation={scopeExplanation} />
+                  <ContractRuleCard eyebrow="谁被禁言" address={publicData.chatInfo?.banSource} explanation={banExplanation} />
+                  <ContractRuleCard eyebrow="发言前" address={publicData.chatInfo?.beforePostPlugin} explanation={beforePluginExplanation} />
+                  <ContractRuleCard eyebrow="发送后" address={publicData.chatInfo?.afterPostPlugin} explanation={afterPluginExplanation} />
                 </div>
               </SettingsPanelSection>
             </aside>
@@ -512,10 +512,10 @@ export function ChatSettingsPanel({
                     <span>控制整个群是否允许新消息写入。</span>
                   </div>
                   <div className="choice-group settings-switch-group">
-                    <button className={cn('picker-button inline-flex', room.chatInfo?.postingAllowed && 'active')} type="button" onClick={() => updatePostingAllowed(true)} disabled={!canEditRules}>
+                    <button className={cn('picker-button inline-flex', publicData.chatInfo?.postingAllowed && 'active')} type="button" onClick={() => updatePostingAllowed(true)} disabled={!canEditRules}>
                       允许发言
                     </button>
-                    <button className={cn('picker-button inline-flex', room.chatInfo && !room.chatInfo.postingAllowed && 'active')} type="button" onClick={() => updatePostingAllowed(false)} disabled={!canEditRules}>
+                    <button className={cn('picker-button inline-flex', publicData.chatInfo && !publicData.chatInfo.postingAllowed && 'active')} type="button" onClick={() => updatePostingAllowed(false)} disabled={!canEditRules}>
                       暂停发言
                     </button>
                   </div>
@@ -580,11 +580,11 @@ export function ChatSettingsPanel({
             <aside className="settings-side-column">
               <SettingsPanelSection icon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />} title="规则概览">
                 <div className="contract-rule-grid">
-                  <ContractRuleCard eyebrow="谁管理这个群" address={room.chatInfo?.owner} explanation={ownerExplanation} />
-                  <ContractRuleCard eyebrow="谁能发言" address={room.chatInfo?.scopeSource} explanation={scopeExplanation} />
-                  <ContractRuleCard eyebrow="谁被禁言" address={room.chatInfo?.banSource} explanation={banExplanation} />
-                  <ContractRuleCard eyebrow="发言前" address={room.chatInfo?.beforePostPlugin} explanation={beforePluginExplanation} />
-                  <ContractRuleCard eyebrow="发送后" address={room.chatInfo?.afterPostPlugin} explanation={afterPluginExplanation} />
+                  <ContractRuleCard eyebrow="谁管理这个群" address={publicData.chatInfo?.owner} explanation={ownerExplanation} />
+                  <ContractRuleCard eyebrow="谁能发言" address={publicData.chatInfo?.scopeSource} explanation={scopeExplanation} />
+                  <ContractRuleCard eyebrow="谁被禁言" address={publicData.chatInfo?.banSource} explanation={banExplanation} />
+                  <ContractRuleCard eyebrow="发言前" address={publicData.chatInfo?.beforePostPlugin} explanation={beforePluginExplanation} />
+                  <ContractRuleCard eyebrow="发送后" address={publicData.chatInfo?.afterPostPlugin} explanation={afterPluginExplanation} />
                 </div>
               </SettingsPanelSection>
             </aside>

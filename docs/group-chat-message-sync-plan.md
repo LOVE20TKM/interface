@@ -34,7 +34,7 @@ When a group is first seen, historical messages are not counted as unread. The i
 
 `mentionMeCount` is bound to the current wallet's default NFT sender identity. If no default sender identity exists, `mentionMeCount` is not queried; normal unread and `mentionAllCount` still apply.
 
-Entering a room and successfully refreshing the current group marks that group as read by updating all three baselines to the current on-chain counters.
+Entering a group chat detail page and successfully refreshing the current group marks that group as read by updating all three baselines to the current on-chain counters.
 
 ## Bottom Navigation Badge
 
@@ -70,7 +70,7 @@ The chat page maintains both:
 - Background low-frequency watches for cached pinned groups, my chain groups, and recommended groups.
 - Page-level medium-frequency watches for the chat page's current group set.
 
-The room page registers the current group as a page-level high-frequency watch. Background watches remain active.
+The group chat detail page registers the current group as a page-level high-frequency watch. Background watches remain active.
 
 Suggested registration API:
 
@@ -95,7 +95,7 @@ Rules:
 
 Refresh frequencies:
 
-- High: every 20 seconds, for the current room group.
+- High: every 20 seconds, for the current group chat.
 - Medium: every 1 minute, for chat page groups.
 - Low: every 3 minutes, for background cached groups.
 
@@ -117,13 +117,13 @@ Low and medium refreshes should query all three counters:
 - `messagesByMentionCount(groupId, defaultSenderId)`
 - `messagesByMentionAllCount(groupId)`
 
-The high-frequency room refresh may query only `messagesCount(groupId)` in the first implementation to reduce RPC load. The room's mentions are marked read when entering the room, and the main room requirement is detecting new message body updates. If strict consistency is later needed, the high-frequency path can query all three counters as well.
+The high-frequency group chat detail refresh may query only `messagesCount(groupId)` in the first implementation to reduce RPC load. The group's mentions are marked read when entering the group chat detail page, and the main group chat detail requirement is detecting new message body updates. If strict consistency is later needed, the high-frequency path can query all three counters as well.
 
 After a refresh:
 
 - First-seen groups initialize baselines instead of generating unread counts.
 - Existing groups update current counters and derived unread counts.
-- If the current room's `messagesCount` increased, the room message list is refreshed.
+- If the current group chat's `messagesCount` increased, the group chat message list is refreshed.
 
 ## Cache Design
 
@@ -214,13 +214,13 @@ This includes reductions, for example when leaving an action causes related grou
 - Register added groups, unregister removed groups, refresh added groups, and update cache.
 - When leaving the page, page-level medium-frequency watches are replaced or removed; background watches remain.
 
-### Room page
+### Group chat detail page
 
 - Register the current group as a page-level high-frequency watch.
 - Immediately refresh the current group.
 - After successful refresh, update all three baselines for the group and clear unread.
-- If high-frequency polling detects a `messagesCount` increase, refresh the room message list.
-- Leaving the room removes the high-frequency page watch; background watches remain.
+- If high-frequency polling detects a `messagesCount` increase, refresh the group chat message list.
+- Leaving the group chat detail page removes the high-frequency page watch; background watches remain.
 
 ## Code Migration Direction
 
@@ -246,6 +246,6 @@ The sync center should use explicit polling-sync naming, such as `src/contexts/G
 1. Refactor the context into a polling sync center with source registration, frequency aggregation, batched refresh, baselines, and badge summary.
 2. Connect the bottom navigation badge to `@me`, `@all`, normal unread, and intro-dot states.
 3. Connect the chat page cache-first flow, medium page watches, and full delayed-load diff.
-4. Connect the room page high-frequency watch, immediate refresh, read-baseline update, and message-list refresh trigger.
+4. Connect the group chat detail high-frequency watch, immediate refresh, read-baseline update, and message-list refresh trigger.
 5. Remove event-watch code and temporary probe scripts.
-6. Verify against real chain state: intro dot, low-frequency background badge, medium chat refresh, high room refresh, cache additions, cache removals, and action-exit recommendation removal.
+6. Verify against real chain state: intro dot, low-frequency background badge, medium chat refresh, high group chat detail refresh, cache additions, cache removals, and action-exit recommendation removal.

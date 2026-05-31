@@ -14,7 +14,7 @@ import { ActionChatPanel } from './ActionChatPanel';
 import { ActivationPanel } from './ActivationPanels';
 import { ChainChatPanel } from './ChainChatPanel';
 import styles from './ChatPage.module.css';
-import { buildChatActivationHref, buildChatIndexHref, buildChatRoomHref, invalidateContractReads } from './chatUtils';
+import { buildChatActivationHref, buildChatIndexHref, buildGroupChatDetailHref, invalidateContractReads } from './chatUtils';
 
 type ActivationType = 'token' | 'action' | 'chain';
 
@@ -39,7 +39,7 @@ export default function ChatActivationPage() {
 
   const openChat = useCallback(
     (groupId: bigint) => {
-      router.push(buildChatRoomHref(tokenSymbol, groupId));
+      router.push(buildGroupChatDetailHref(tokenSymbol, groupId));
     },
     [router, tokenSymbol],
   );

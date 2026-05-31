@@ -49,7 +49,7 @@ export interface GroupChatListItem {
   messagesCount: bigint;
 }
 
-export interface GroupChatRoomPublicData {
+export interface GroupChatPublicData {
   groupId: bigint | undefined;
   chatInfo?: ParsedGroupChatInfo;
   groupName: string;
@@ -64,7 +64,7 @@ export interface GroupChatRoomPublicData {
   refetch: () => void;
 }
 
-export interface GroupChatRoomAccountData {
+export interface GroupChatAccountData {
   defaultSenderId: bigint | undefined;
   defaultSenderName: string;
   hasDefaultSender: boolean;

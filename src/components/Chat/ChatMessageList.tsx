@@ -2,7 +2,7 @@
 
 import { Fragment } from 'react';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import type { GroupChatRoomPublicData, ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
+import type { GroupChatPublicData, ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
 import {
   formatMessageDividerTime,
@@ -41,7 +41,7 @@ function renderMessageContent(message: ParsedGroupChatMessage, senderNames: Reco
 
 export function ChatMessageList({
   account,
-  room,
+  data,
   groupId,
   messageListRef,
   hasMoreMessages,
@@ -61,7 +61,7 @@ export function ChatMessageList({
   onOpenBanSettings,
 }: {
   account: `0x${string}` | undefined;
-  room: GroupChatRoomPublicData;
+  data: GroupChatPublicData;
   groupId: bigint;
   messageListRef: React.RefObject<HTMLDivElement>;
   hasMoreMessages: boolean;
@@ -84,28 +84,28 @@ export function ChatMessageList({
     <div className="message-list" ref={messageListRef}>
       {hasMoreMessages && (
         <div className="load-earlier-row">
-          <button className="sheet-button inline-flex" type="button" onClick={onLoadEarlierMessages} disabled={room.isPending}>
-            {room.isPending ? '加载中' : '加载更早消息'}
+          <button className="sheet-button inline-flex" type="button" onClick={onLoadEarlierMessages} disabled={data.isPending}>
+            {data.isPending ? '加载中' : '加载更早消息'}
           </button>
           <span>
-            已显示 {room.messages.length.toString()} / {room.messagesCount?.toString()} 条
+            已显示 {data.messages.length.toString()} / {data.messagesCount?.toString()} 条
           </span>
         </div>
       )}
-      {room.isMessageFeedPending && room.messages.length === 0 ? (
+      {data.isMessageFeedPending && data.messages.length === 0 ? (
         <div className="py-10">
           <LoadingIcon />
         </div>
       ) : visibleMessages.length === 0 ? (
         <div className="rounded-md border border-dashed border-greyscale-300 bg-white p-5 text-center text-sm text-greyscale-500">
-          {room.messages.length === 0 ? '还没有链上消息' : '禁言消息已按本机偏好隐藏'}
+          {data.messages.length === 0 ? '还没有链上消息' : '禁言消息已按本机偏好隐藏'}
         </div>
       ) : (
         <div className="space-y-3">
           {visibleMessages.map((message, index) => {
             const mine = sameAddress(message.senderAddress, account);
-            const banned = room.bannedMessageIds[message.messageId.toString()] === true;
-            const senderName = room.senderNames[message.senderId.toString()] || `NFT #${message.senderId.toString()}`;
+            const banned = data.bannedMessageIds[message.messageId.toString()] === true;
+            const senderName = data.senderNames[message.senderId.toString()] || `NFT #${message.senderId.toString()}`;
             const quoted = message.quotedMessageId > BigInt(0) ? messageById[message.quotedMessageId.toString()] : undefined;
             const timestamp = messageTimestampMs(message);
             const showTimeDivider = shouldRenderMessageTimeDivider(message, visibleMessages[index - 1]);
@@ -132,7 +132,7 @@ export function ChatMessageList({
                           {quoted ? quotedMessageSummary(quoted) : '引用消息未在当前分页中'}
                         </div>
                       )}
-                      {renderMessageContent(message, room.senderNames)}
+                      {renderMessageContent(message, data.senderNames)}
                     </div>
                     {activeMenuMessageId === messageKey && (
                       <div className="message-actions" onClick={(event) => event.stopPropagation()}>

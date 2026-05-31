@@ -13,8 +13,8 @@ import {
   useRemoveGroupMembers,
 } from '@/src/hooks/contracts/useGroupChatModeration';
 import {
-  useGroupChatRoomAccountData,
-  useGroupChatRoomPublicData,
+  useGroupChatAccountData,
+  useGroupChatPublicData,
   useGroupNames,
 } from '@/src/hooks/composite/useGroupChatData';
 import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
@@ -46,15 +46,15 @@ export function MembersPanel({
   const [pendingRemoveId, setPendingRemoveId] = useState<bigint | undefined>();
   const [page, setPage] = useState(1);
   const memberOffset = BigInt((Math.max(1, page) - 1) * MEMBER_PAGE_SIZE);
-  const room = useGroupChatRoomPublicData(groupId);
-  const accountRoom = useGroupChatRoomAccountData(groupId, account, room.senderNames);
+  const publicData = useGroupChatPublicData(groupId);
+  const accountData = useGroupChatAccountData(groupId, account, publicData.senderNames);
   const nftLookup = useNftOwnerLookup({ initialMode: 'name' });
   const addTx = useAddGroupMembers();
   const removeTx = useRemoveGroupMembers();
-  const managerScope = managerMemberScopeDescription(room.chatInfo?.owner);
-  const hasGroupMemberScope = sameAddress(room.chatInfo?.scopeSource, GROUP_CHAT_MEMBER_SCOPE_ADDRESS);
-  const hasGroupJoinScope = sameAddress(room.chatInfo?.scopeSource, GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS);
-  const hasOpenScope = sameAddress(room.chatInfo?.scopeSource, ZERO_ADDRESS);
+  const managerScope = managerMemberScopeDescription(publicData.chatInfo?.owner);
+  const hasGroupMemberScope = sameAddress(publicData.chatInfo?.scopeSource, GROUP_CHAT_MEMBER_SCOPE_ADDRESS);
+  const hasGroupJoinScope = sameAddress(publicData.chatInfo?.scopeSource, GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS);
+  const hasOpenScope = sameAddress(publicData.chatInfo?.scopeSource, ZERO_ADDRESS);
   const hasMemberListScope = !managerScope && (hasGroupMemberScope || hasGroupJoinScope);
   const memberPermission = useGroupAdminOperatorPermission(groupId, account, hasMemberListScope);
   const members = useGroupMemberIds(groupId, memberOffset, BigInt(MEMBER_PAGE_SIZE), hasMemberListScope);
@@ -62,19 +62,19 @@ export function MembersPanel({
   const memberStatus = useGroupMemberIdStatus(groupId, queryMemberTarget?.id, hasMemberListScope && !!queryMemberTarget);
   const defaultSenderMemberStatus = useGroupMemberIdStatus(
     groupId,
-    accountRoom.defaultSenderId,
-    hasMemberListScope && !!accountRoom.defaultSenderId,
+    accountData.defaultSenderId,
+    hasMemberListScope && !!accountData.defaultSenderId,
   );
   const joinParticipation = useGroupJoinParticipationCount(groupId, account, hasGroupJoinScope && !!account);
-  const isPermissionLoading = hasMemberListScope && (room.isPending || !room.chatInfo || memberPermission.isPending);
+  const isPermissionLoading = hasMemberListScope && (publicData.isPending || !publicData.chatInfo || memberPermission.isPending);
   const canEditMembers = hasMemberListScope && memberPermission.canOperate;
   const memberPermissionText = canEditMembers
     ? '当前链群 NFT 持有者、代理、群管理可维护成员名单。'
     : isPermissionLoading
       ? '正在读取成员管理权限。'
       : '当前地址不是链群 NFT 持有者、代理或群管理；本页只能查看和查询成员名单。';
-  const detailSubtitle = useGroupDetailSubtitle(groupId, room);
-  const scopeDescription = !room.chatInfo
+  const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
+  const scopeDescription = !publicData.chatInfo
     ? '正在读取群成员规则。'
     : managerScope
       ? managerScope.text
@@ -86,19 +86,19 @@ export function MembersPanel({
             ? '当前群聊未设置 scopeSource：已激活群默认开放发言，任何有效 LOVE20 NFT 持有人都可发言。'
             : '当前群聊使用自定义 scopeSource：发言成员范围由该合约实时判断，前端无法安全枚举成员列表。';
   const sourceRules = [
-    { label: 'owner', value: room.chatInfo?.owner, note: '当前群聊 NFT owner' },
+    { label: 'owner', value: publicData.chatInfo?.owner, note: '当前群聊 NFT owner' },
     {
       label: 'scopeSource',
-      value: room.chatInfo?.scopeSource,
+      value: publicData.chatInfo?.scopeSource,
       note: hasOpenScope
         ? '未挂载，默认开放发言'
         : hasMemberListScope
           ? '成员资格源包含 GroupMember 成员名单'
           : '成员资格由该合约规则决定',
     },
-    { label: 'banSource', value: room.chatInfo?.banSource, note: '发言禁用规则源' },
-    { label: 'beforePostPlugin', value: room.chatInfo?.beforePostPlugin, note: '发言前插件' },
-    { label: 'afterPostPlugin', value: room.chatInfo?.afterPostPlugin, note: '发言后插件' },
+    { label: 'banSource', value: publicData.chatInfo?.banSource, note: '发言禁用规则源' },
+    { label: 'beforePostPlugin', value: publicData.chatInfo?.beforePostPlugin, note: '发言前插件' },
+    { label: 'afterPostPlugin', value: publicData.chatInfo?.afterPostPlugin, note: '发言后插件' },
   ];
   const refetchMembers = useCallback(() => {
     members.refetch();
@@ -134,7 +134,7 @@ export function MembersPanel({
 
   useEffect(() => {
     if (!isQueryingSelf || !hasGroupJoinScope) return;
-    if (!room.chatInfo) {
+    if (!publicData.chatInfo) {
       setQueryResult('正在查询当前钱包成员资格');
       return;
     }
@@ -149,14 +149,14 @@ export function MembersPanel({
         : joinParticipation.error
           ? '当前地址的链群行动参与状态读取失败。'
           : '当前地址未通过此链群参与行动。';
-    const defaultNftText = accountRoom.defaultSenderId
+    const defaultNftText = accountData.defaultSenderId
       ? defaultSenderMemberStatus.isPending
-        ? `正在读取默认 NFT #${accountRoom.defaultSenderId.toString()} 是否在成员名单。`
+        ? `正在读取默认 NFT #${accountData.defaultSenderId.toString()} 是否在成员名单。`
         : defaultSenderMemberStatus.error
-          ? `默认 NFT #${accountRoom.defaultSenderId.toString()} 的成员名单状态读取失败。`
+          ? `默认 NFT #${accountData.defaultSenderId.toString()} 的成员名单状态读取失败。`
           : defaultSenderMemberStatus.isMember
-            ? `默认 NFT #${accountRoom.defaultSenderId.toString()} 已在成员名单，可发言。`
-            : `默认 NFT #${accountRoom.defaultSenderId.toString()} 未加入成员名单。`
+            ? `默认 NFT #${accountData.defaultSenderId.toString()} 已在成员名单，可发言。`
+            : `默认 NFT #${accountData.defaultSenderId.toString()} 未加入成员名单。`
       : '当前钱包未设置默认 NFT。';
     setQueryResult(`${actionJoinText} ${defaultNftText}`);
   }, [
@@ -170,8 +170,8 @@ export function MembersPanel({
     joinParticipation.error,
     joinParticipation.hasJoinedByGroupAction,
     joinParticipation.isPending,
-    room.chatInfo,
-    accountRoom.defaultSenderId,
+    publicData.chatInfo,
+    accountData.defaultSenderId,
     selfQueryNonce,
   ]);
 
@@ -195,22 +195,22 @@ export function MembersPanel({
       setSelfQueryNonce((value) => value + 1);
       joinParticipation.refetch();
       defaultSenderMemberStatus.refetch();
-      if (accountRoom.defaultSenderId) {
+      if (accountData.defaultSenderId) {
         nftLookup.setLookupMode('id');
-        nftLookup.setLookupValue(accountRoom.defaultSenderId.toString());
-        setQueryMemberTarget({ id: accountRoom.defaultSenderId, label: accountRoom.defaultSenderName });
+        nftLookup.setLookupValue(accountData.defaultSenderId.toString());
+        setQueryMemberTarget({ id: accountData.defaultSenderId, label: accountData.defaultSenderName });
       } else {
         setQueryMemberTarget(undefined);
       }
       return;
     }
-    if (!accountRoom.defaultSenderId) {
+    if (!accountData.defaultSenderId) {
       toast.error('当前钱包未设置默认 NFT');
       return;
     }
     nftLookup.setLookupMode('id');
-    nftLookup.setLookupValue(accountRoom.defaultSenderId.toString());
-    describeMember(accountRoom.defaultSenderId, accountRoom.defaultSenderName, hasGroupJoinScope);
+    nftLookup.setLookupValue(accountData.defaultSenderId.toString());
+    describeMember(accountData.defaultSenderId, accountData.defaultSenderName, hasGroupJoinScope);
   };
 
   const addMember = async () => {
@@ -270,7 +270,7 @@ export function MembersPanel({
             {memberPermissionText}
           </div>
         )}
-        {managerScope || !room.chatInfo ? null : !hasMemberListScope ? (
+        {managerScope || !publicData.chatInfo ? null : !hasMemberListScope ? (
           <div className="rule-table mt-3">
             {sourceRules.map((rule) => (
               <div key={rule.label}>

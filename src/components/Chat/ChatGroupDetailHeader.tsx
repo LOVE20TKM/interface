@@ -1,17 +1,17 @@
 import {
   useGroupChatManagedTitle,
-  type GroupChatRoomPublicData,
+  type GroupChatPublicData,
 } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
 import { isManagerOwnedChat } from './chatUtils';
 
-export function useGroupDetailSubtitle(groupId: bigint, room: GroupChatRoomPublicData) {
+export function useGroupDetailSubtitle(groupId: bigint, data: GroupChatPublicData) {
   const managedTitle = useGroupChatManagedTitle(groupId);
-  const managerOwned = isManagerOwnedChat(room.chatInfo?.owner);
+  const managerOwned = isManagerOwnedChat(data.chatInfo?.owner);
 
   return (
     managedTitle.title ||
-    (!managerOwned && !managedTitle.isPending ? room.groupName : '') ||
+    (!managerOwned && !managedTitle.isPending ? data.groupName : '') ||
     `群聊 #${groupId.toString()}`
   );
 }

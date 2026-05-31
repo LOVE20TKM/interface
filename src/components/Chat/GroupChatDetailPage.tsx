@@ -8,7 +8,7 @@ import { useAccount } from 'wagmi';
 import Header from '@/src/components/Header';
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { cn } from '@/lib/utils';
-import { RoomPanel } from './RoomPanel';
+import { GroupChatPanel } from './GroupChatPanel';
 import styles from './ChatPage.module.css';
 import {
   PINNED_GROUPS_CHANGED_EVENT,
@@ -26,15 +26,15 @@ import {
 import type { ChatWorkspaceView } from './chatTypes';
 import {
   buildChatIndexHref,
-  buildChatPanelHref,
-  buildChatRoomHref,
+  buildGroupChatDetailHref,
+  buildGroupChatPanelHref,
   invalidateContractReads,
   parseGroupId,
   safeBigIntFromString,
 } from './chatUtils';
 import type { ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
 
-export default function ChatRoomPage() {
+export default function GroupChatDetailPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { address: account } = useAccount();
@@ -88,29 +88,29 @@ export default function ChatRoomPage() {
     (nextView: ChatWorkspaceView) => {
       if (!groupId) return;
       if (nextView === 'members') {
-        router.push(buildChatPanelHref('members', tokenSymbol, groupId));
+        router.push(buildGroupChatPanelHref('members', tokenSymbol, groupId));
         return;
       }
       if (nextView === 'banList') {
-        router.push(buildChatPanelHref('ban-list', tokenSymbol, groupId));
+        router.push(buildGroupChatPanelHref('banlist', tokenSymbol, groupId));
         return;
       }
       if (nextView === 'admins') {
-        router.push(buildChatPanelHref('admins', tokenSymbol, groupId));
+        router.push(buildGroupChatPanelHref('admins', tokenSymbol, groupId));
         return;
       }
       if (nextView === 'settings') {
-        router.push(buildChatPanelHref('settings', tokenSymbol, groupId));
+        router.push(buildGroupChatPanelHref('settings', tokenSymbol, groupId));
         return;
       }
-      router.push(buildChatRoomHref(tokenSymbol, groupId), undefined, { shallow: true });
+      router.push(buildGroupChatDetailHref(tokenSymbol, groupId), undefined, { shallow: true });
     },
     [groupId, router, tokenSymbol],
   );
 
   const openBanSettingsForMessage = useCallback(
     (message: ParsedGroupChatMessage) => {
-      router.push(buildChatPanelHref('ban-list', tokenSymbol, message.groupId, {
+      router.push(buildGroupChatPanelHref('banlist', tokenSymbol, message.groupId, {
         target: 'message',
         messageId: message.messageId,
       }));
@@ -121,17 +121,17 @@ export default function ChatRoomPage() {
   const backUrl = buildChatIndexHref(tokenSymbol);
 
   return (
-    <div className={styles.chatRoomPage}>
-      <Header title="聊天" backUrl={backUrl} replaceBack />
+    <div className={styles.groupChatDetailPage}>
+      <Header title="群聊" backUrl={backUrl} replaceBack />
       <main className={styles.chatPrototype} data-detail="true">
-        <div className={styles.chatWorkspace} data-entry="love20-chat-room">
+        <div className={styles.chatWorkspace} data-entry="love20-group-chat-detail">
           <section className={styles.chatSurface}>
             {!router.isReady ? (
               <section className={cn('workspace-screen', 'inbox-screen')} aria-label="聊天工作区">
                 <div className="empty-state">页面初始化中...</div>
               </section>
             ) : groupId ? (
-              <RoomPanel
+              <GroupChatPanel
                 groupId={groupId}
                 account={accountAddress}
                 isPinned={pinnedGroupIds.includes(groupId.toString())}

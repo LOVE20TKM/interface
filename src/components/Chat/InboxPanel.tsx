@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { suppressNextRouteLoading } from '@/src/lib/routeLoading';
 import { ChatBadge } from './ChatBadge';
 import { LONG_PRESS_MOVE_TOLERANCE, LONG_PRESS_MS } from './chatConstants';
-import { buildChatRoomHref, buildChatRoomUrl, safeBigIntFromString } from './chatUtils';
+import { buildGroupChatDetailHref, buildGroupChatDetailUrl, safeBigIntFromString } from './chatUtils';
 
 const CONVERSATION_MENU_WIDTH = 132;
 const CONVERSATION_MENU_HEIGHT = 44;
@@ -44,7 +44,7 @@ function ConversationItem({
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ left: CONVERSATION_MENU_GUTTER, top: CONVERSATION_MENU_GUTTER });
   const rowRef = useRef<HTMLDivElement | null>(null);
-  const href = buildChatRoomHref(tokenSymbol, item.groupId);
+  const href = buildGroupChatDetailHref(tokenSymbol, item.groupId);
   const pressRef = useRef<{
     pointerId: number;
     x: number;
@@ -133,7 +133,7 @@ function ConversationItem({
           }
           suppressNextRouteLoading(href);
           event.preventDefault();
-          router.push(buildChatRoomUrl(tokenSymbol, item.groupId));
+          router.push(buildGroupChatDetailUrl(tokenSymbol, item.groupId));
         }}
       >
         <div className="conversation-main">

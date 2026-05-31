@@ -3,7 +3,7 @@ import { MoreHorizontal } from 'lucide-react';
 
 import type { ChatWorkspaceView } from './chatTypes';
 
-export function ChatRoomToolbar({
+export function GroupChatToolbar({
   groupId,
   title,
   messagesCount,
