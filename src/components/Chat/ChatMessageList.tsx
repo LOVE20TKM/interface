@@ -86,6 +86,8 @@ export function ChatMessageList({
   const showListSyncIndicator =
     data.isMessageListFetching && data.messages.length > 0 && !isLoadingEarlierMessages;
   const loadEarlierDisabled = isLoadingEarlierMessages || data.isMessageFeedFetching;
+  const showInitialLoadingState = data.isMessageFeedFetching && data.messages.length === 0;
+  const showLoadEarlierRow = hasMoreMessages && !showInitialLoadingState;
 
   return (
     <div
@@ -93,7 +95,7 @@ export function ChatMessageList({
       ref={messageListRef}
       aria-busy={data.isMessageListFetching || isLoadingEarlierMessages}
     >
-      {hasMoreMessages && (
+      {showLoadEarlierRow && (
         <div className="load-earlier-row">
           <button
             className="sheet-button inline-flex"
@@ -123,7 +125,7 @@ export function ChatMessageList({
           </div>
         </div>
       )}
-      {data.isMessageFeedFetching && data.messages.length === 0 ? (
+      {showInitialLoadingState ? (
         <div className="message-initial-loading" role="status" aria-live="polite">
           <LoadingIcon />
           <span>正在读取链上消息...</span>
