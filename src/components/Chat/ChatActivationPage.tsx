@@ -60,7 +60,7 @@ export default function ChatActivationPage() {
   return (
     <>
       <Header title="激活群聊" backUrl={backUrl} replaceBack />
-      <main className={styles.chatPrototype} data-detail="false">
+      <main className={styles.chatPrototype} data-detail="false" data-entry="love20-chat-activation">
         <div className={styles.chatWorkspace} data-entry="love20-chat-activation">
           <section className={styles.chatSurface}>
             <section className="workspace-screen" aria-label="激活群聊">

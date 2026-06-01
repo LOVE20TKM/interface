@@ -195,7 +195,7 @@ Owned chain groups:
 - Included in chat page medium-frequency watch when visible.
 - Displayed with reason "我持有的链群".
 
-Recommended groups display the strongest recommendation reason as a compact pill after the group id. Chain groups discovered through action participation use "我参与过的链群". Followed groups are filtered out of recommendations so the same group does not appear twice.
+Recommended groups display the strongest recommendation reason as a compact pill after the group id. Chain groups discovered through action participation use "我参与行动关联的链群". Followed groups are filtered out of recommendations so the same group does not appear twice.
 
 When delayed loading produces a new group set, it must be fully diffed against the cached set:
 

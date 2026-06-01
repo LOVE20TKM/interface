@@ -69,7 +69,7 @@ export function ChainGroupNftPicker({
         }
       },
       {
-        root,
+        root: null,
         rootMargin: '0px 0px 96px',
         threshold: 0.01,
       },

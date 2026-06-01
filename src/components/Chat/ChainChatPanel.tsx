@@ -26,7 +26,7 @@ export function ChainChatPanel({
   );
 
   return (
-    <section className="activation-list">
+    <section className="activation-list chain-activation-list">
       <ChainGroupNftPicker
         account={account}
         onActivate={openActivationDetail}

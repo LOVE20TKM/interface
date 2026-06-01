@@ -61,6 +61,21 @@
   overflow: visible;
 }
 
+.chatPrototype[data-entry="love20-chat"] {
+  flex: 0 0 auto;
+}
+
+.chatPrototype[data-entry="love20-chat-activation"] {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chatPrototype[data-entry="love20-chat-activation"] + :global(footer) {
+  margin-top: auto;
+}
+
 .chatWorkspace {
   min-height: 0;
   display: flex;
@@ -94,13 +109,27 @@
   overflow: visible;
 }
 
+.chatWorkspace[data-entry="love20-chat-activation"] .chatSurface,
 .chatWorkspace[data-entry="love20-chat-chain-activation"] .chatSurface {
   height: auto;
   min-height: 0;
   overflow: visible;
 }
 
+.chatWorkspace[data-entry="love20-chat-activation"],
+.chatWorkspace[data-entry="love20-chat-chain-activation"] {
+  flex: 1 1 auto;
+}
+
+.chatWorkspace[data-entry="love20-chat-activation"] .chatSurface,
+.chatWorkspace[data-entry="love20-chat-chain-activation"] .chatSurface {
+  flex: 1 1 auto;
+}
+
+.chatWorkspace[data-entry="love20-chat-activation"] :global(.workspace-screen),
 .chatWorkspace[data-entry="love20-chat-chain-activation"] :global(.workspace-screen) {
+  display: flex;
+  flex-direction: column;
   padding-bottom: 16px;
   overflow: visible;
   scroll-padding-bottom: 16px;
@@ -578,6 +607,13 @@
 .chatPrototype :global(.activation-list) {
   display: grid;
   gap: 8px;
+}
+
+.chatPrototype :global(.chain-activation-list) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .chatPrototype :global(.action-id-finder) {
@@ -1359,8 +1395,11 @@
 }
 
 .chatPrototype :global(.chain-nft-picker) {
+  flex: 1 1 auto;
   min-width: 0;
-  display: grid;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -1397,14 +1436,16 @@
 }
 
 .chatPrototype :global(.chain-nft-list) {
+  flex: 1 1 auto;
   min-width: 0;
-  max-height: min(360px, 44dvh);
+  min-height: 0;
+  max-height: none;
   display: grid;
+  align-content: start;
   gap: 7px;
-  overflow: auto;
-  overscroll-behavior: contain;
+  overflow: visible;
+  overscroll-behavior: auto;
   padding: 2px 2px 8px;
-  scrollbar-width: thin;
 }
 
 .chatPrototype :global(.chain-nft-option) {

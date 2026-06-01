@@ -765,7 +765,7 @@ export function GroupChatHome() {
   return (
     <>
       <Header title="群聊" showBackButton={false} />
-      <main className={styles.chatPrototype} data-detail="false">
+      <main className={styles.chatPrototype} data-detail="false" data-entry="love20-chat">
         <div className={styles.chatWorkspace} data-entry="love20-chat">
           <section className={styles.chatSurface}>
             <section className={cn('workspace-screen', 'inbox-screen')} aria-label="聊天工作区">

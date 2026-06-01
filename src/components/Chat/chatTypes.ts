@@ -19,7 +19,7 @@ export const GROUP_CHAT_RECOMMENDATION_REASON_LABELS: Record<GroupChatRecommenda
   governor: '我是治理者',
   'joined-action': '我参与的行动',
   'voted-action': '我投票过',
-  'joined-chain-group': '我参与过的链群',
+  'joined-chain-group': '我参与行动关联的链群',
 };
 
 export const GROUP_CHAT_RECOMMENDATION_REASON_RANK: Record<GroupChatRecommendationReason, number> = {
