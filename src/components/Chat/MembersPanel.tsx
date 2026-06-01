@@ -23,12 +23,14 @@ import { ChatNftLookupActions } from './ChatNftLookupActions';
 import { GroupDetailHeader, useGroupDetailSubtitle } from './ChatGroupDetailHeader';
 import { MEMBER_PAGE_SIZE } from './chatConstants';
 import {
+  formatCanPostReason,
   managerMemberScopeDescription,
   sameAddress,
 } from './chatUtils';
 import { useConfirmedTransactionEffect } from './useConfirmedTransactionEffect';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+const BAN_REJECTED_REASON = '0xa9cc8792';
 
 const formatMemberIdentity = (id: bigint, label?: string) => `发言身份 #${id.toString()}${label ? ` · ${label}` : ''}`;
 
@@ -70,6 +72,11 @@ export function MembersPanel({
   const joinParticipation = useGroupJoinParticipationCount(groupId, account, hasGroupJoinScope && !!account);
   const isPermissionLoading = hasMemberListScope && !!account && memberPermission.isPending;
   const canEditMembers = hasMemberListScope && memberPermission.canOperate;
+  const memberPermissionNoticeClass = canEditMembers
+    ? 'permission-ok'
+    : !account || isPermissionLoading
+      ? ''
+      : 'permission-warn';
   const memberPermissionText = canEditMembers
     ? '有权限：你可以维护本群成员名单。'
     : !account
@@ -78,17 +85,120 @@ export function MembersPanel({
       ? '正在读取成员管理权限。'
       : '当前钱包没有成员管理权限；本页只能查看和查询成员名单。';
   const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
+  const isPostingStatusPending = Boolean(
+    account &&
+    (
+      accountData.isPending ||
+      (hasGroupMemberScope && defaultSenderMemberStatus.isPending) ||
+      (hasGroupJoinScope && (joinParticipation.isPending || defaultSenderMemberStatus.isPending))
+    ),
+  );
+  const canPostReasonCode = accountData.canPostReasonCode?.toLowerCase();
+  const postingNoticeClass = !publicData.chatInfo || managerScope || !account || isPostingStatusPending
+    ? ''
+    : accountData.canPost
+      ? 'permission-ok'
+      : canPostReasonCode === BAN_REJECTED_REASON
+        ? 'permission-danger'
+        : 'permission-warn';
+  const memberScopeDescription = (() => {
+    if (!account) {
+      return '连接钱包后可查看你能否在此群发言。此群只允许成员名单内的默认发言身份发言。';
+    }
+    if (isPostingStatusPending) {
+      return '正在检查你能否在此群发言。原因：此群只允许成员名单内的默认发言身份发言。';
+    }
+    if (!accountData.defaultSenderId) {
+      return '你暂时不能在此群发言。原因：当前钱包未设置默认发言身份。';
+    }
+    if (accountData.canPost) {
+      return '你可以在此群发言。原因：当前默认发言身份已加入本群成员名单。';
+    }
+    if (defaultSenderMemberStatus.isMember === false) {
+      return '你暂时不能在此群发言。原因：当前默认发言身份未加入本群成员名单。';
+    }
+    const reason = formatCanPostReason(accountData.canPostReasonCode) || '当前默认发言身份不满足此群发言条件';
+    return `你暂时不能在此群发言。原因：${reason}。`;
+  })();
+  const joinScopeDescription = (() => {
+    if (!account) {
+      return '连接钱包后可查看你能否在此群发言。此群允许行动参与者，或成员名单内的默认发言身份发言。';
+    }
+    if (isPostingStatusPending) {
+      return '正在检查你能否在此群发言。原因：此群允许行动参与者，或成员名单内的默认发言身份发言。';
+    }
+    if (!accountData.defaultSenderId) {
+      return '你暂时不能在此群发言。原因：当前钱包未设置默认发言身份。';
+    }
+    if (accountData.canPost) {
+      if (joinParticipation.hasJoinedByGroupAction) {
+        return '你可以在此群发言。原因：当前钱包已通过此链群参与行动。';
+      }
+      if (defaultSenderMemberStatus.isMember) {
+        return '你可以在此群发言。原因：当前默认发言身份已加入本群成员名单。';
+      }
+      return '你可以在此群发言。原因：当前钱包满足此群发言条件。';
+    }
+    if (joinParticipation.hasJoinedByGroupAction === false && defaultSenderMemberStatus.isMember === false) {
+      return '你暂时不能在此群发言。原因：当前钱包未参与此链群行动，默认发言身份也未加入成员名单。';
+    }
+    const reason = formatCanPostReason(accountData.canPostReasonCode) || '当前默认发言身份不满足此群发言条件';
+    return `你暂时不能在此群发言。原因：${reason}。`;
+  })();
+  const openScopeDescription = (() => {
+    if (!account) {
+      return '连接钱包后可查看你能否在此群发言。此群开放发言，默认发言身份有效且未被禁言时即可发送消息。';
+    }
+    if (isPostingStatusPending) {
+      return '正在检查你能否在此群发言。原因：此群开放发言，默认发言身份有效且未被禁言时即可发送消息。';
+    }
+    if (!accountData.defaultSenderId) {
+      return '你暂时不能在此群发言。原因：当前钱包未设置默认发言身份。';
+    }
+    if (accountData.canPost) {
+      return '你可以在此群发言。原因：当前默认发言身份可用，且未被禁言。';
+    }
+    const reason = formatCanPostReason(accountData.canPostReasonCode) || '当前默认发言身份不满足此群发言条件';
+    return `你暂时不能在此群发言。原因：${reason}。`;
+  })();
+  const customScopeDescription = (() => {
+    if (!account) {
+      return '连接钱包后可查看你能否在此群发言。此群使用自定义发言规则，成员范围由链上规则实时判断。';
+    }
+    if (isPostingStatusPending) {
+      return '正在检查你能否在此群发言。原因：此群使用自定义发言规则，成员范围由链上规则实时判断。';
+    }
+    if (!accountData.defaultSenderId) {
+      return '你暂时不能在此群发言。原因：当前钱包未设置默认发言身份。';
+    }
+    if (accountData.canPost) {
+      return '你可以在此群发言。原因：当前默认发言身份满足此群自定义发言规则。';
+    }
+    const reason = formatCanPostReason(accountData.canPostReasonCode) || '当前默认发言身份不满足此群自定义发言规则';
+    return `你暂时不能在此群发言。原因：${reason}。`;
+  })();
   const scopeDescription = !publicData.chatInfo
     ? '正在读取群成员规则。'
     : managerScope
       ? managerScope.text
       : hasGroupMemberScope
-        ? '这个群只允许名单内的身份发言；发消息时会检查你当前的默认发言身份是否在本群成员名单中。'
+        ? memberScopeDescription
         : hasGroupJoinScope
-          ? '参与过此链群行动的地址，或被管理员加入名单的 NFT 身份，可以在这里发言。'
+          ? joinScopeDescription
           : hasOpenScope
-            ? '这个群已开放发言：群聊激活、发言开关开启且默认身份有效时即可发送消息。'
-            : '这个群使用自定义发言规则，成员范围由链上规则实时判断；这里无法列出完整名单。';
+            ? openScopeDescription
+            : customScopeDescription;
+  const headerMeta = !publicData.chatInfo
+    ? '读取中'
+    : managerScope
+      ? managerScope.label
+      : hasGroupMemberScope
+        ? '成员名单'
+        : hasGroupJoinScope
+          ? '名单 + 行动参与'
+          : hasOpenScope
+            ? '开放发言'
+            : '自定义规则';
   const sourceRules = [
     { label: 'owner', value: publicData.chatInfo?.owner, note: '当前群聊 NFT owner' },
     {
@@ -265,19 +375,13 @@ export function MembersPanel({
           title="群成员"
           groupId={groupId}
           subtitle={detailSubtitle}
-          meta={
-            managerScope
-              ? managerScope.label
-              : hasMemberListScope
-                ? canEditMembers ? '可管理' : '只读'
-                : '只读'
-          }
+          meta={headerMeta}
         />
-        <div className={cn('notice-row', canEditMembers ? 'permission-ok' : managerScope ? '' : 'permission-warn')}>
+        <div className={cn('notice-row', postingNoticeClass)}>
           {scopeDescription}
         </div>
         {hasMemberListScope && (
-          <div className={cn('notice-row', canEditMembers ? 'permission-ok' : 'permission-warn')}>
+          <div className={cn('notice-row', memberPermissionNoticeClass)}>
             {memberPermissionText}
           </div>
         )}

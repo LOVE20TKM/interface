@@ -27,13 +27,22 @@ export function GroupDetailHeader({
   subtitle?: string;
   meta?: string;
 }) {
+  const warnMeta = meta === '只读' || meta === '不可管理名单';
+  const neutralMeta =
+    meta === '读取中' ||
+    meta === '无成员名单' ||
+    meta === '成员名单' ||
+    meta === '名单 + 行动参与' ||
+    meta === '开放发言' ||
+    meta === '自定义规则';
+
   return (
     <div className="screen-heading group-detail-heading">
       <div className="group-detail-title">
         <h1>{title}</h1>
         <span>{subtitle || `群聊 #${groupId.toString()}`}</span>
       </div>
-      {meta && <span className={cn('pill', meta === '只读' ? 'pill-warn' : 'pill-ok')}>{meta}</span>}
+      {meta && <span className={cn('pill', warnMeta ? 'pill-warn' : neutralMeta ? 'pill-neutral' : 'pill-ok')}>{meta}</span>}
     </div>
   );
 }

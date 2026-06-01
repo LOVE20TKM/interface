@@ -2251,6 +2251,12 @@
   color: var(--warning);
 }
 
+.chatPrototype :global(.permission-danger) {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: var(--danger);
+}
+
 .chatPrototype :global(.permission-row.permission-ok),
 .chatPrototype :global(.permission-ok) {
   border-color: #bbf7d0;
