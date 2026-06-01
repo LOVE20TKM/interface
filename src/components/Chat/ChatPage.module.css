@@ -2346,6 +2346,7 @@
 }
 
 .chatPrototype :global(.message-list) {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   padding: 12px 16px;
@@ -2354,6 +2355,44 @@
   overscroll-behavior: contain;
   scroll-padding-top: 92px;
   background: #fff;
+}
+
+.chatPrototype :global(.message-sync-indicator-wrap) {
+  position: sticky;
+  top: 8px;
+  z-index: 7;
+  height: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.chatPrototype :global(.message-sync-indicator) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  border: 1px solid rgba(204, 212, 219, 0.9);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--greyscale-500);
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(25, 28, 31, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.chatPrototype :global(.message-initial-loading) {
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  color: var(--greyscale-500);
+  font-size: 12px;
 }
 
 .chatPrototype :global(.group-chat-shell) {

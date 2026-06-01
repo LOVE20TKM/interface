@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment } from 'react';
+import { Loader2 } from 'lucide-react';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import type { GroupChatPublicData, ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
@@ -45,6 +46,7 @@ export function ChatMessageList({
   groupId,
   messageListRef,
   hasMoreMessages,
+  isLoadingEarlierMessages,
   visibleMessages,
   messageById,
   activeMenuMessageId,
@@ -65,6 +67,7 @@ export function ChatMessageList({
   groupId: bigint;
   messageListRef: React.RefObject<HTMLDivElement>;
   hasMoreMessages: boolean;
+  isLoadingEarlierMessages: boolean;
   visibleMessages: ParsedGroupChatMessage[];
   messageById: Record<string, ParsedGroupChatMessage>;
   activeMenuMessageId: string | undefined;
@@ -80,21 +83,50 @@ export function ChatMessageList({
   onQuoteMessage: (message: ParsedGroupChatMessage) => void;
   onOpenBanSettings: (message: ParsedGroupChatMessage) => void;
 }) {
+  const showListSyncIndicator =
+    data.isMessageListFetching && data.messages.length > 0 && !isLoadingEarlierMessages;
+  const loadEarlierDisabled = isLoadingEarlierMessages || data.isMessageFeedFetching;
+
   return (
-    <div className="message-list" ref={messageListRef}>
+    <div
+      className="message-list"
+      ref={messageListRef}
+      aria-busy={data.isMessageListFetching || isLoadingEarlierMessages}
+    >
       {hasMoreMessages && (
         <div className="load-earlier-row">
-          <button className="sheet-button inline-flex" type="button" onClick={onLoadEarlierMessages} disabled={data.isPending}>
-            {data.isPending ? '加载中' : '加载更早消息'}
+          <button
+            className="sheet-button inline-flex"
+            type="button"
+            onClick={onLoadEarlierMessages}
+            disabled={loadEarlierDisabled}
+          >
+            {isLoadingEarlierMessages ? (
+              <>
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                加载更早消息中
+              </>
+            ) : (
+              '加载更早消息'
+            )}
           </button>
           <span>
             已显示 {data.messages.length.toString()} / {data.messagesCount?.toString()} 条
           </span>
         </div>
       )}
-      {data.isMessageFeedPending && data.messages.length === 0 ? (
-        <div className="py-10">
+      {showListSyncIndicator && (
+        <div className="message-sync-indicator-wrap" role="status" aria-live="polite">
+          <div className="message-sync-indicator">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            <span>正在更新消息列表...</span>
+          </div>
+        </div>
+      )}
+      {data.isMessageFeedFetching && data.messages.length === 0 ? (
+        <div className="message-initial-loading" role="status" aria-live="polite">
           <LoadingIcon />
+          <span>正在读取链上消息...</span>
         </div>
       ) : visibleMessages.length === 0 ? (
         <div className="rounded-md border border-dashed border-greyscale-300 bg-white p-5 text-center text-sm text-greyscale-500">

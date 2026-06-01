@@ -172,7 +172,7 @@ export function useGroupNames(groupIds: readonly (bigint | undefined)[], enabled
   );
 
   const isQueryEnabled = !!GROUP_ADDRESS && enabled && uniqueIds.length > 0;
-  const { data, isPending, error, refetch } = useUniversalReadContracts({
+  const { data, isPending, isFetching, error, refetch } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
       enabled: isQueryEnabled,
@@ -191,6 +191,7 @@ export function useGroupNames(groupIds: readonly (bigint | undefined)[], enabled
   return {
     groupNames,
     isPending: isQueryEnabled ? isPending : false,
+    isFetching: isQueryEnabled ? isFetching : false,
     error: isQueryEnabled ? error : undefined,
     refetch,
   };
@@ -681,8 +682,13 @@ export function useGroupChatPublicData(
 ): GroupChatPublicData {
   const { chatInfo: rawInfo, isPending: isPendingInfo, error: infoError, refetch: refetchInfo } = useGroupChatInfo(groupId);
   const chatInfo = useMemo(() => parseGroupChatInfo(rawInfo), [rawInfo]);
-  const { messagesCount, isPending: isPendingCount, error: countError, refetch: refetchCount } =
-    useGroupChatMessagesCount(groupId);
+  const {
+    messagesCount,
+    isPending: isPendingCount,
+    isFetching: isFetchingCount,
+    error: countError,
+    refetch: refetchCount,
+  } = useGroupChatMessagesCount(groupId);
   const limitBigInt = BigInt(limit);
   const offset = messagesCount && messagesCount > limitBigInt ? messagesCount - limitBigInt : BigInt(0);
   const readLimit =
@@ -690,12 +696,16 @@ export function useGroupChatPublicData(
   const {
     messages: rawMessages,
     isPending: isPendingMessages,
+    isFetching: isFetchingMessages,
     error: messagesError,
     refetch: refetchMessages,
   } = useGroupChatMessages(groupId, offset, readLimit, false, readLimit > BigInt(0));
   const messages = useMemo(
-    () => rawMessages.map((message) => parseGroupChatMessage(message)).filter((message): message is ParsedGroupChatMessage => !!message),
-    [rawMessages],
+    () =>
+      rawMessages
+        .map((message) => parseGroupChatMessage(message))
+        .filter((message): message is ParsedGroupChatMessage => !!message && (!groupId || message.groupId === groupId)),
+    [groupId, rawMessages],
   );
   const loadedMessageIds = useMemo(() => new Set(messages.map((message) => message.messageId.toString())), [messages]);
   const quotedMessageIds = useMemo(
@@ -719,11 +729,15 @@ export function useGroupChatPublicData(
         : [],
     [groupId, quotedMessageIds],
   );
-  const { data: quotedMessageData, isPending: isPendingQuotedMessages, refetch: refetchQuotedMessages } =
-    useUniversalReadContracts({
-      contracts: quotedMessageContracts as any,
-      query: { enabled: isGroupChatEnabled && quotedMessageContracts.length > 0 },
-    });
+  const {
+    data: quotedMessageData,
+    isPending: isPendingQuotedMessages,
+    isFetching: isFetchingQuotedMessages,
+    refetch: refetchQuotedMessages,
+  } = useUniversalReadContracts({
+    contracts: quotedMessageContracts as any,
+    query: { enabled: isGroupChatEnabled && quotedMessageContracts.length > 0 },
+  });
   const quotedMessages = useMemo(() => {
     const map: Record<string, ParsedGroupChatMessage> = {};
     messages.forEach((message) => {
@@ -733,10 +747,10 @@ export function useGroupChatPublicData(
       const parsed = parseGroupChatMessage(
         resultAt(quotedMessageData as readonly ReadContractResult[] | undefined, index),
       );
-      if (parsed) map[messageId.toString()] = parsed;
+      if (parsed && (!groupId || parsed.groupId === groupId)) map[messageId.toString()] = parsed;
     });
     return map;
-  }, [messages, quotedMessageData, quotedMessageIds]);
+  }, [groupId, messages, quotedMessageData, quotedMessageIds]);
   const messageSenders = useMemo(() => {
     const seen = new Set<string>();
     return messages.filter((message) => {
@@ -764,11 +778,15 @@ export function useGroupChatPublicData(
         : [],
     [chatInfo?.banSource, groupId, messageSenders, shouldReadMessageBans],
   );
-  const { data: messageBanData, isPending: isPendingMessageBans, refetch: refetchMessageBans } =
-    useUniversalReadContracts({
-      contracts: banContracts,
-      query: { enabled: shouldReadMessageBans && banContracts.length > 0 },
-    });
+  const {
+    data: messageBanData,
+    isPending: isPendingMessageBans,
+    isFetching: isFetchingMessageBans,
+    refetch: refetchMessageBans,
+  } = useUniversalReadContracts({
+    contracts: banContracts,
+    query: { enabled: shouldReadMessageBans && banContracts.length > 0 },
+  });
   const bannedSenderMap = useMemo(() => {
     const map: Record<string, boolean> = {};
     messageSenders.forEach((sender, index) => {
@@ -786,6 +804,7 @@ export function useGroupChatPublicData(
     return map;
   }, [bannedSenderMap, messages]);
   const isMessageFeedPending = isPendingCount || (readLimit > BigInt(0) && isPendingMessages);
+  const isMessageFeedFetching = isFetchingCount || (readLimit > BigInt(0) && isFetchingMessages);
 
   const senderIds = useMemo(
     () =>
@@ -796,7 +815,17 @@ export function useGroupChatPublicData(
       ]),
     [groupId, messages, quotedMessages],
   );
-  const { groupNames, isPending: isPendingNames, refetch: refetchNames } = useGroupNames(senderIds);
+  const {
+    groupNames,
+    isPending: isPendingNames,
+    isFetching: isFetchingNames,
+    refetch: refetchNames,
+  } = useGroupNames(senderIds);
+  const isMessageListFetching =
+    isMessageFeedFetching ||
+    isFetchingQuotedMessages ||
+    isFetchingNames ||
+    isFetchingMessageBans;
 
   return {
     groupId,
@@ -808,6 +837,8 @@ export function useGroupChatPublicData(
     bannedMessageIds,
     senderNames: groupNames,
     isMessageFeedPending,
+    isMessageFeedFetching,
+    isMessageListFetching,
     isPending:
       isPendingInfo ||
       isPendingCount ||

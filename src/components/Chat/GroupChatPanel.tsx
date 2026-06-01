@@ -73,10 +73,12 @@ export function GroupChatPanel({
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeMenuMessageId, setActiveMenuMessageId] = useState<string | undefined>();
   const [messageWindowSize, setMessageWindowSize] = useState(DEFAULT_MESSAGE_WINDOW_SIZE);
+  const [isLoadingEarlierMessages, setIsLoadingEarlierMessages] = useState(false);
   const messageListRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLElement | null>(null);
   const restoreScrollAfterPrependRef = useRef(false);
   const previousScrollHeightRef = useRef(0);
+  const loadEarlierTargetSizeRef = useRef<number | undefined>();
   const lastAutoScrollGroupIdRef = useRef<string | undefined>();
   const lastAutoScrollLatestMessageIdRef = useRef<string | undefined>();
   const lastRefetchedSyncMessageIdRef = useRef<string | undefined>();
@@ -116,8 +118,10 @@ export function GroupChatPanel({
     setMentionedSenderIds([]);
     setActiveMenuMessageId(undefined);
     setMessageWindowSize(DEFAULT_MESSAGE_WINDOW_SIZE);
+    setIsLoadingEarlierMessages(false);
     restoreScrollAfterPrependRef.current = false;
     previousScrollHeightRef.current = 0;
+    loadEarlierTargetSizeRef.current = undefined;
     lastAutoScrollGroupIdRef.current = undefined;
     lastAutoScrollLatestMessageIdRef.current = undefined;
     lastRefetchedSyncMessageIdRef.current = undefined;
@@ -303,17 +307,17 @@ export function GroupChatPanel({
   }, [groupId, measureDetailLayout]);
 
   useEffect(() => {
-    if (!groupId || publicData.isMessageFeedPending) return;
+    if (!groupId || publicData.isMessageFeedFetching) return;
     const latestLoadedMessageId =
       publicData.messages[publicData.messages.length - 1]?.messageId || publicData.messagesCount;
     markGroupRead(groupId, latestLoadedMessageId);
     onReadLatest?.(groupId, latestLoadedMessageId);
-  }, [groupId, markGroupRead, onReadLatest, publicData.isMessageFeedPending, publicData.messages, publicData.messagesCount]);
+  }, [groupId, markGroupRead, onReadLatest, publicData.isMessageFeedFetching, publicData.messages, publicData.messagesCount]);
 
   useEffect(() => {
     if (
       !groupId ||
-      publicData.isMessageFeedPending ||
+      publicData.isMessageFeedFetching ||
       (syncState.messagesCount === undefined && syncState.latestMessageId === undefined) ||
       publicData.messagesCount === undefined ||
       (syncState.messagesCount || syncState.latestMessageId || BigInt(0)) <= publicData.messagesCount
@@ -326,11 +330,19 @@ export function GroupChatPanel({
     publicData.refetch();
   }, [groupId, publicData, syncState.latestMessageId, syncState.messagesCount]);
 
+  useEffect(() => {
+    if (!isLoadingEarlierMessages || publicData.isMessageFeedFetching) return;
+    const targetSize = loadEarlierTargetSizeRef.current;
+    if (targetSize !== undefined && messageWindowSize < targetSize) return;
+    loadEarlierTargetSizeRef.current = undefined;
+    setIsLoadingEarlierMessages(false);
+  }, [isLoadingEarlierMessages, messageWindowSize, publicData.isMessageFeedFetching]);
+
   useBrowserLayoutEffect(() => {
     const messageList = messageListRef.current;
     if (!messageList) return;
     if (restoreScrollAfterPrependRef.current) {
-      if (publicData.isMessageFeedPending) return;
+      if (publicData.isMessageFeedFetching) return;
       stopBottomResizeObserver();
       const previousScrollHeight = previousScrollHeightRef.current;
       restoreScrollAfterPrependRef.current = false;
@@ -343,7 +355,7 @@ export function GroupChatPanel({
       lastAutoScrollLatestMessageIdRef.current = latestVisibleMessageId;
       return;
     }
-    if (publicData.isMessageFeedPending) return;
+    if (publicData.isMessageFeedFetching) return;
 
     const groupKey = groupId?.toString();
     const groupChanged = lastAutoScrollGroupIdRef.current !== groupKey;
@@ -359,7 +371,7 @@ export function GroupChatPanel({
     groupId,
     keepMessageListAtBottomWhileLayoutSettles,
     latestVisibleMessageId,
-    publicData.isMessageFeedPending,
+    publicData.isMessageFeedFetching,
     stopBottomResizeObserver,
   ]);
 
@@ -375,14 +387,16 @@ export function GroupChatPanel({
   }, [accountData.isPending, composerHeight, publicData.isPending, scrollMessageListToBottom]);
 
   const loadEarlierMessages = () => {
-    if (!hasMoreMessages || publicData.isPending || accountData.isPending) return;
+    if (!hasMoreMessages || publicData.isMessageFeedFetching || accountData.isPending) return;
+    const total = effectiveMessagesCount ? Number(effectiveMessagesCount) : messageWindowSize + MESSAGE_PAGE_SIZE;
+    const nextWindowSize = Math.min(total, messageWindowSize + MESSAGE_PAGE_SIZE);
+    if (nextWindowSize <= messageWindowSize) return;
     const messageList = messageListRef.current;
     previousScrollHeightRef.current = messageList?.scrollHeight || 0;
     restoreScrollAfterPrependRef.current = true;
-    setMessageWindowSize((current) => {
-      const total = effectiveMessagesCount ? Number(effectiveMessagesCount) : current + MESSAGE_PAGE_SIZE;
-      return Math.min(total, current + MESSAGE_PAGE_SIZE);
-    });
+    loadEarlierTargetSizeRef.current = nextWindowSize;
+    setIsLoadingEarlierMessages(true);
+    setMessageWindowSize(nextWindowSize);
   };
 
   const addMention = (senderId: bigint) => {
@@ -515,6 +529,7 @@ export function GroupChatPanel({
         groupId={groupId}
         messageListRef={messageListRef}
         hasMoreMessages={hasMoreMessages}
+        isLoadingEarlierMessages={isLoadingEarlierMessages}
         visibleMessages={visibleMessages}
         messageById={messageById}
         activeMenuMessageId={activeMenuMessageId}

@@ -59,6 +59,8 @@ export interface GroupChatPublicData {
   bannedMessageIds: Record<string, boolean>;
   senderNames: Record<string, string>;
   isMessageFeedPending: boolean;
+  isMessageFeedFetching: boolean;
+  isMessageListFetching: boolean;
   isPending: boolean;
   error?: unknown;
   refetch: () => void;

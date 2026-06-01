@@ -190,7 +190,7 @@ export const useGroupChatInfos = (groupIds: readonly bigint[], enabled: boolean 
 
 export const useGroupChatMessagesCount = (groupId: bigint | undefined, enabled: boolean = true) => {
   const isQueryEnabled = isGroupChatEnabled && enabled && isPositiveId(groupId);
-  const { data, isPending, error, refetch } = useUniversalReadContract({
+  const { data, isPending, isFetching, error, refetch } = useUniversalReadContract({
     address: getContractAddress(),
     abi: GroupChatAbi,
     functionName: 'messagesCount',
@@ -203,6 +203,7 @@ export const useGroupChatMessagesCount = (groupId: bigint | undefined, enabled: 
   return {
     messagesCount: isQueryEnabled && data !== undefined ? safeToBigInt(data) : undefined,
     isPending: isQueryEnabled ? isPending : false,
+    isFetching: isQueryEnabled ? isFetching : false,
     error: isQueryEnabled ? error : undefined,
     refetch,
   };
@@ -216,7 +217,7 @@ export const useGroupChatMessages = (
   enabled: boolean = true,
 ) => {
   const isQueryEnabled = isGroupChatEnabled && enabled && isPositiveId(groupId) && limit > BigInt(0);
-  const { data, isPending, error, refetch } = useUniversalReadContract({
+  const { data, isPending, isFetching, error, refetch } = useUniversalReadContract({
     address: getContractAddress(),
     abi: GroupChatAbi,
     functionName: 'messages',
@@ -235,6 +236,7 @@ export const useGroupChatMessages = (
   return {
     messages,
     isPending: isQueryEnabled ? isPending : false,
+    isFetching: isQueryEnabled ? isFetching : false,
     error: isQueryEnabled ? error : undefined,
     refetch,
   };
