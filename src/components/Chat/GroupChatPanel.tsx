@@ -84,7 +84,7 @@ export function GroupChatPanel({
   const bottomResizeFrameRef = useRef<number | undefined>();
   const [composerHeight, setComposerHeight] = useState(0);
   const [messageListHeight, setMessageListHeight] = useState<number | undefined>();
-  const [bottomNavHeight, setBottomNavHeight] = useState(0);
+  const [bottomNavHeight, setBottomNavHeight] = useState<number | undefined>();
   useRegisterActiveChat(groupId);
   const markGroupRead = useMarkGroupRead();
   const syncState = useGroupChatSyncState(groupId);
@@ -121,6 +121,9 @@ export function GroupChatPanel({
     lastAutoScrollGroupIdRef.current = undefined;
     lastAutoScrollLatestMessageIdRef.current = undefined;
     lastRefetchedSyncMessageIdRef.current = undefined;
+    setComposerHeight(0);
+    setMessageListHeight(undefined);
+    setBottomNavHeight(undefined);
   }, [groupId]);
 
   const stopBottomResizeObserver = useCallback(() => {
@@ -260,7 +263,7 @@ export function GroupChatPanel({
       bottomNavRect.height > 0 &&
       window.getComputedStyle(bottomNav).display !== 'none';
     const bottomBoundary = bottomNavVisible ? bottomNavRect.top : window.innerHeight;
-    const nextBottomNavHeight = bottomNavVisible ? Math.max(0, window.innerHeight - bottomBoundary) : 0;
+    const nextBottomNavHeight = bottomNavVisible ? Math.max(0, window.innerHeight - bottomBoundary) : undefined;
     const nextMessageListHeight = Math.max(
       120,
       Math.floor(bottomBoundary - nextComposerHeight - messageList.getBoundingClientRect().top),
@@ -273,6 +276,11 @@ export function GroupChatPanel({
 
   useBrowserLayoutEffect(() => {
     measureDetailLayout();
+    let frame2: number | undefined;
+    const frame1 = requestAnimationFrame(() => {
+      measureDetailLayout();
+      frame2 = requestAnimationFrame(measureDetailLayout);
+    });
 
     const resizeObserver = typeof ResizeObserver === 'undefined'
       ? undefined
@@ -285,6 +293,8 @@ export function GroupChatPanel({
     window.visualViewport?.addEventListener('scroll', measureDetailLayout);
 
     return () => {
+      cancelAnimationFrame(frame1);
+      if (frame2 !== undefined) cancelAnimationFrame(frame2);
       resizeObserver?.disconnect();
       window.removeEventListener('resize', measureDetailLayout);
       window.visualViewport?.removeEventListener('resize', measureDetailLayout);
@@ -483,7 +493,7 @@ export function GroupChatPanel({
       className="group-chat-shell flex min-h-0 flex-1 flex-col bg-white"
       style={{
         '--detail-composer-height': `${composerHeight || 128}px`,
-        '--detail-bottom-nav-height': `${bottomNavHeight}px`,
+        ...(bottomNavHeight !== undefined ? { '--detail-bottom-nav-height': `${bottomNavHeight}px` } : {}),
         ...(messageListHeight ? { '--detail-message-list-height': `${messageListHeight}px` } : {}),
       } as CSSProperties}
     >

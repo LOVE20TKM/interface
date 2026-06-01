@@ -30,6 +30,7 @@ const GROUP_DELEGATE_ABI = [
 
 const getContractAddress = () => (CONTRACT_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
 const isPositiveId = (value: bigint | undefined) => value !== undefined && value > BigInt(0);
+const EMPTY_MESSAGES: unknown[] = [];
 
 export const isGroupChatEnabled = !!CONTRACT_ADDRESS;
 export const GROUP_CHAT_CONTRACT_ADDRESS = getContractAddress();
@@ -226,9 +227,13 @@ export const useGroupChatMessages = (
       refetchOnWindowFocus: false,
     },
   });
+  const messages = useMemo(
+    () => (isQueryEnabled && Array.isArray(data) ? data : EMPTY_MESSAGES),
+    [data, isQueryEnabled],
+  );
 
   return {
-    messages: isQueryEnabled && Array.isArray(data) ? data : [],
+    messages,
     isPending: isQueryEnabled ? isPending : false,
     error: isQueryEnabled ? error : undefined,
     refetch,

@@ -713,16 +713,15 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
   }, [registerGroups]);
 
   const markGroupRead = useCallback((groupId: bigint, latestMessageId: bigint | undefined) => {
-    writeCursor(groupId, latestMessageId);
+    const cursor = latestMessageId && latestMessageId > BigInt(0) ? latestMessageId : undefined;
+    if (cursor === undefined) return;
+
+    writeCursor(groupId, cursor);
     const key = groupId.toString();
     const current = statesRef.current[key];
     const previousBaseline = baselinesRef.current[key];
-    const cursor = latestMessageId && latestMessageId > BigInt(0) ? latestMessageId : undefined;
-    const nextMessagesBaseline = cursor === undefined
-      ? previousBaseline?.messagesCount || BigInt(0)
-      : maxBigInt(previousBaseline?.messagesCount || BigInt(0), cursor);
+    const nextMessagesBaseline = maxBigInt(previousBaseline?.messagesCount || BigInt(0), cursor);
     const canMarkMentionRead =
-      cursor !== undefined &&
       current?.messagesCount !== undefined &&
       current.messagesCount <= cursor;
     const nextBaseline: GroupChatCountSnapshot = {
@@ -733,6 +732,15 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
     };
 
     setBaselinesByGroup((previous) => {
+      const existing = previous[key];
+      if (
+        existing?.messagesCount === nextBaseline.messagesCount &&
+        existing?.mentionMeCount === nextBaseline.mentionMeCount &&
+        existing?.mentionAllCount === nextBaseline.mentionAllCount
+      ) {
+        return previous;
+      }
+
       const next = { ...previous, [key]: nextBaseline };
       writeStoredBaselines(storageKey, next);
       return next;
@@ -740,31 +748,40 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
 
     setStatesByGroup((previous) => {
       const previousState = previous[key];
-      const unreadCount = cursor === undefined ? previousState?.unreadCount || BigInt(0) : BigInt(0);
+      const unreadCount = BigInt(0);
       const unreadMentionMeCount = canMarkMentionRead ? BigInt(0) : previousState?.unreadMentionMeCount || BigInt(0);
       const unreadMentionAllCount = canMarkMentionRead ? BigInt(0) : previousState?.unreadMentionAllCount || BigInt(0);
 
-      return {
-        ...previous,
-        [key]: {
-          ...(previousState || EMPTY_STATE),
-          groupId,
-          latestMessageId: cursor === undefined
-            ? previousState?.latestMessageId
-            : nextBaseline.messagesCount > BigInt(0)
-              ? nextBaseline.messagesCount
-              : undefined,
-          messagesCount: cursor === undefined ? previousState?.messagesCount : nextBaseline.messagesCount,
-          mentionMeCount: nextBaseline.mentionMeCount ?? previousState?.mentionMeCount,
-          mentionAllCount: nextBaseline.mentionAllCount ?? previousState?.mentionAllCount,
-          lastSeenMessageId: cursor === undefined ? previousState?.lastSeenMessageId : nextBaseline.messagesCount,
-          unreadCount,
-          unreadMentionMeCount,
-          unreadMentionAllCount,
-          hasNewMessage: unreadCount > BigInt(0) || unreadMentionMeCount > BigInt(0) || unreadMentionAllCount > BigInt(0),
-          lastCheckedAt: Date.now(),
-        },
+      const nextState: GroupChatSyncState = {
+        ...(previousState || EMPTY_STATE),
+        groupId,
+        latestMessageId: nextBaseline.messagesCount > BigInt(0) ? nextBaseline.messagesCount : undefined,
+        messagesCount: nextBaseline.messagesCount,
+        mentionMeCount: nextBaseline.mentionMeCount ?? previousState?.mentionMeCount,
+        mentionAllCount: nextBaseline.mentionAllCount ?? previousState?.mentionAllCount,
+        lastSeenMessageId: nextBaseline.messagesCount,
+        unreadCount,
+        unreadMentionMeCount,
+        unreadMentionAllCount,
+        hasNewMessage: unreadCount > BigInt(0) || unreadMentionMeCount > BigInt(0) || unreadMentionAllCount > BigInt(0),
+        lastCheckedAt: Date.now(),
       };
+
+      if (
+        previousState?.latestMessageId === nextState.latestMessageId &&
+        previousState?.messagesCount === nextState.messagesCount &&
+        previousState?.mentionMeCount === nextState.mentionMeCount &&
+        previousState?.mentionAllCount === nextState.mentionAllCount &&
+        previousState?.lastSeenMessageId === nextState.lastSeenMessageId &&
+        previousState?.unreadCount === nextState.unreadCount &&
+        previousState?.unreadMentionMeCount === nextState.unreadMentionMeCount &&
+        previousState?.unreadMentionAllCount === nextState.unreadMentionAllCount &&
+        previousState?.hasNewMessage === nextState.hasNewMessage
+      ) {
+        return previous;
+      }
+
+      return { ...previous, [key]: nextState };
     });
   }, [storageKey]);
 

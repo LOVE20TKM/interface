@@ -11,6 +11,12 @@ Sentry.init({
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
   tracesSampleRate: 1,
 
+  // Optional local escape hatch for Node versions that surface noisy transitive
+  // OpenTelemetry warnings. Keep disabled by default so dev and prod tracing
+  // behavior stay aligned.
+  skipOpenTelemetrySetup: process.env.SENTRY_SKIP_OPENTELEMETRY_SETUP === 'true',
+
+
   // Enable logs to be sent to Sentry
   // 仅在非生产环境打印日志，减少生产控制台噪音
   enableLogs: process.env.NODE_ENV !== 'production',

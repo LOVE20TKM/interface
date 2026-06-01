@@ -40,6 +40,7 @@ export const ChatComposer = forwardRef<HTMLElement, {
   onClearQuote,
 }, ref) {
   const composerLocked = !sendAvailability.canSend;
+  const cannotSendMessage = sendAvailability.canSend ? '' : sendAvailability.message || '当前无法发言。';
   const activeSenderLabel = activeSenderId
     ? formatSenderIdentity(activeSenderName, activeSenderId)
     : '';
@@ -50,10 +51,10 @@ export const ChatComposer = forwardRef<HTMLElement, {
     <footer ref={ref} className={composerLocked ? 'composer-banned' : 'composer'}>
       {!sendAvailability.canSend ? (
         <div className="cannot-post">
-          <span className="cannot-post-inline">
+          <div className="cannot-post-inline">
             {sendAvailability.source === 'loading' && <Loader2 className="h-4 w-4 shrink-0 animate-spin" />}
-            {sendAvailability.message}
-          </span>
+            <span>{cannotSendMessage}</span>
+          </div>
         </div>
       ) : (
         <div className="space-y-2">
