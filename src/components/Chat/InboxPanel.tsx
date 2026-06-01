@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { MessagesSquare } from 'lucide-react';
+import { MessagesSquare, MoreHorizontal } from 'lucide-react';
 
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import { useGroupChatSyncState } from '@/src/contexts/GroupChatSyncContext';
@@ -10,6 +10,12 @@ import { cn } from '@/lib/utils';
 import { suppressNextRouteLoading } from '@/src/lib/routeLoading';
 import { ChatBadge } from './ChatBadge';
 import { LONG_PRESS_MOVE_TOLERANCE, LONG_PRESS_MS } from './chatConstants';
+import {
+  GROUP_CHAT_RECOMMENDATION_REASON_LABELS,
+  GROUP_CHAT_RECOMMENDATION_REASON_RANK,
+  type GroupChatRecommendationReason,
+  type GroupChatRecommendationSignal,
+} from './chatTypes';
 import { buildGroupChatDetailHref, buildGroupChatDetailUrl, safeBigIntFromString } from './chatUtils';
 
 const CONVERSATION_MENU_WIDTH = 132;
@@ -18,16 +24,18 @@ const CONVERSATION_MENU_GUTTER = 8;
 
 function ConversationItem({
   item,
-  pinned,
+  followed,
+  recommendationReason,
   readCursor,
   tokenSymbol,
-  onTogglePin,
+  onToggleFollow,
 }: {
   item: GroupChatListItem;
-  pinned: boolean;
+  followed: boolean;
+  recommendationReason?: GroupChatRecommendationReason;
   readCursor: bigint;
   tokenSymbol?: string;
-  onTogglePin: (groupId: bigint) => void;
+  onToggleFollow: (groupId: bigint) => void;
 }) {
   const router = useRouter();
   const typeClass = `conversation-type-${item.kind}`;
@@ -123,7 +131,7 @@ function ConversationItem({
       <Link
         href={href}
         prefetch={false}
-        className={cn('conversation-row group-row', typeClass, pinned && 'pinned')}
+        className={cn('conversation-row group-row', typeClass, followed && 'pinned')}
         data-menu-open={menuOpen ? 'true' : 'false'}
         onClick={(event) => {
           if (suppressClickRef.current) {
@@ -145,6 +153,11 @@ function ConversationItem({
             <span className="conversation-meta-text">
               G#{item.groupId.toString()}
             </span>
+            {recommendationReason && (
+              <span className="conversation-badge recommendation-reason">
+                {GROUP_CHAT_RECOMMENDATION_REASON_LABELS[recommendationReason]}
+              </span>
+            )}
             {(hasUnreadMentionMe || hasUnreadMentionAll || visibleUnreadCount > BigInt(0)) && (
               <span className="conversation-reminders">
                 {hasUnreadMentionMe && <span className="conversation-badge mention-me">@我</span>}
@@ -157,6 +170,20 @@ function ConversationItem({
           </div>
         </div>
       </Link>
+      {!followed && (
+        <button
+          type="button"
+          className="conversation-follow-button"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onToggleFollow(item.groupId);
+          }}
+        >
+          添加
+        </button>
+      )}
       {menuOpen && (
         <div
           className="conversation-menu"
@@ -172,11 +199,11 @@ function ConversationItem({
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
-              onTogglePin(item.groupId);
+              onToggleFollow(item.groupId);
               setMenuOpen(false);
             }}
           >
-            {pinned ? '取消置顶' : '置顶'}
+            {followed ? '移出' : '添加'}
           </button>
         </div>
       )}
@@ -203,62 +230,111 @@ function EmptyInbox({
   );
 }
 
+function InboxHeaderMenu({
+  onOpenAddGroup,
+  onOpenActivate,
+  onOpenPreferences,
+}: {
+  onOpenAddGroup: () => void;
+  onOpenActivate: () => void;
+  onOpenPreferences: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnPointerDown = (event: PointerEvent) => {
+      if (menuRef.current?.contains(event.target as Node)) return;
+      setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeOnPointerDown);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnPointerDown);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [open]);
+
+  const runMenuAction = (action: () => void) => {
+    setOpen(false);
+    action();
+  };
+
+  return (
+    <div className="inbox-menu-root" ref={menuRef}>
+      <button
+        className="inbox-menu-button"
+        type="button"
+        title="我的群聊菜单"
+        aria-label="打开我的群聊菜单"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="inbox-menu" role="menu">
+          <button type="button" role="menuitem" onClick={() => runMenuAction(onOpenAddGroup)}>
+            添加群聊
+          </button>
+          <button type="button" role="menuitem" onClick={() => runMenuAction(onOpenPreferences)}>
+            我的偏好
+          </button>
+          <button type="button" role="menuitem" onClick={() => runMenuAction(onOpenActivate)}>
+            激活群聊
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function InboxPanel({
-  items,
+  followedItems,
+  recommendedItems,
   isPending,
   isConnected,
   tokenSymbol,
-  pinnedGroupIds,
-  myChainGroupIds,
-  recommendedGroupIds,
+  recommendationSignals,
   readCursors,
-  preferencesOpen,
-  showBannedMessages,
-  showMessageTimes,
+  onOpenAddGroup,
   onOpenActivate,
-  onTogglePin,
-  onTogglePreferences,
-  onSetShowBannedMessages,
-  onSetShowMessageTimes,
+  onOpenPreferences,
+  onToggleFollow,
 }: {
-  items: GroupChatListItem[];
+  followedItems: GroupChatListItem[];
+  recommendedItems: GroupChatListItem[];
   isPending: boolean;
   isConnected: boolean;
   tokenSymbol?: string;
-  pinnedGroupIds: string[];
-  myChainGroupIds: bigint[];
-  recommendedGroupIds: bigint[];
+  recommendationSignals: GroupChatRecommendationSignal[];
   readCursors: Record<string, string>;
-  preferencesOpen: boolean;
-  showBannedMessages: boolean;
-  showMessageTimes: boolean;
+  onOpenAddGroup: () => void;
   onOpenActivate: () => void;
-  onTogglePin: (groupId: bigint) => void;
-  onTogglePreferences: () => void;
-  onSetShowBannedMessages: (value: boolean) => void;
-  onSetShowMessageTimes: (value: boolean) => void;
+  onOpenPreferences: () => void;
+  onToggleFollow: (groupId: bigint) => void;
 }) {
-  const pinnedSet = useMemo(() => new Set(pinnedGroupIds), [pinnedGroupIds]);
-  const myChainSet = useMemo(() => new Set(myChainGroupIds.map((groupId) => groupId.toString())), [myChainGroupIds]);
-  const recommendedSet = useMemo(
-    () => new Set(recommendedGroupIds.map((groupId) => groupId.toString())),
-    [recommendedGroupIds],
-  );
-  const activatedItems = useMemo(
-    () => items.filter((item) => item.info?.activated === true),
-    [items],
-  );
-  const pinnedItems = activatedItems.filter((item) => pinnedSet.has(item.groupId.toString()));
-  const myChainItems = activatedItems.filter(
-    (item) => !pinnedSet.has(item.groupId.toString()) && myChainSet.has(item.groupId.toString()),
-  );
-  const recommendedItems = activatedItems.filter(
-    (item) =>
-      !pinnedSet.has(item.groupId.toString()) &&
-      !myChainSet.has(item.groupId.toString()) &&
-      recommendedSet.has(item.groupId.toString()),
-  );
-  const hasVisibleItems = pinnedItems.length > 0 || myChainItems.length > 0 || recommendedItems.length > 0;
+  const recommendationReasonByGroup = useMemo(() => {
+    const map: Record<string, GroupChatRecommendationReason> = {};
+    recommendationSignals.forEach((signal) => {
+      const key = signal.groupId.toString();
+      const current = map[key];
+      if (
+        !current ||
+        GROUP_CHAT_RECOMMENDATION_REASON_RANK[signal.reason] > GROUP_CHAT_RECOMMENDATION_REASON_RANK[current]
+      ) {
+        map[key] = signal.reason;
+      }
+    });
+    return map;
+  }, [recommendationSignals]);
+  const hasVisibleItems = followedItems.length > 0 || recommendedItems.length > 0;
 
   return (
     <>
@@ -266,110 +342,53 @@ export function InboxPanel({
         <div className="py-10">
           <LoadingIcon />
         </div>
-      ) : !hasVisibleItems ? (
-        <EmptyInbox isConnected={isConnected} tokenSymbol={tokenSymbol} />
       ) : (
         <section className="conversation-list">
           <div className="conversation-section">
-            <div className="conversation-section-label">
-              <strong>置顶</strong>
-              <span>{pinnedItems.length} 个</span>
+            <div className="conversation-section-label conversation-section-heading">
+              <div className="conversation-section-title">
+                <strong>我的群聊</strong>
+                <span>{followedItems.length} 个</span>
+              </div>
+              <InboxHeaderMenu
+                onOpenAddGroup={onOpenAddGroup}
+                onOpenActivate={onOpenActivate}
+                onOpenPreferences={onOpenPreferences}
+              />
             </div>
-            {pinnedItems.length ? pinnedItems.map((item) => (
+            {followedItems.length ? followedItems.map((item) => (
               <ConversationItem
                 key={item.groupId.toString()}
                 item={item}
-                pinned
+                followed
+                recommendationReason={recommendationReasonByGroup[item.groupId.toString()]}
                 readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
                 tokenSymbol={tokenSymbol}
-                onTogglePin={onTogglePin}
+                onToggleFollow={onToggleFollow}
               />
-            )) : <div className="empty-state compact">暂无置顶群聊</div>}
+            )) : <div className="empty-state compact">暂无我的群聊</div>}
           </div>
-          <div className="conversation-section">
-            <div className="conversation-section-label">
-              <strong>我的链群</strong>
-              <span>{myChainItems.length} 个</span>
+          {hasVisibleItems ? (
+            <div className="conversation-section">
+              <div className="conversation-section-label">
+                <strong>推荐群聊</strong>
+                <span>{recommendedItems.length} 个</span>
+              </div>
+              {recommendedItems.length ? recommendedItems.map((item) => (
+                <ConversationItem
+                  key={item.groupId.toString()}
+                  item={item}
+                  followed={false}
+                  recommendationReason={recommendationReasonByGroup[item.groupId.toString()]}
+                  readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
+                  tokenSymbol={tokenSymbol}
+                  onToggleFollow={onToggleFollow}
+                />
+              )) : <div className="empty-state compact">暂无更多推荐群聊</div>}
             </div>
-            {myChainItems.length ? myChainItems.map((item) => (
-              <ConversationItem
-                key={item.groupId.toString()}
-                item={item}
-                pinned={false}
-                readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                tokenSymbol={tokenSymbol}
-                onTogglePin={onTogglePin}
-              />
-            )) : <div className="empty-state compact">暂无已激活链群</div>}
-          </div>
-          <div className="conversation-section">
-            <div className="conversation-section-label">
-              <strong>推荐群聊</strong>
-              <span>{recommendedItems.length} 个</span>
-            </div>
-            {recommendedItems.length ? recommendedItems.map((item) => (
-              <ConversationItem
-                key={item.groupId.toString()}
-                item={item}
-                pinned={false}
-                readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                tokenSymbol={tokenSymbol}
-                onTogglePin={onTogglePin}
-              />
-            )) : <div className="empty-state compact">暂无更多推荐群聊</div>}
-          </div>
-        </section>
-      )}
-      <div className="inbox-action-row">
-        <button className="sheet-button inline-flex inbox-preference-button" type="button" onClick={onTogglePreferences}>
-          我的偏好
-        </button>
-        <button className="sheet-button primary inline-flex inbox-activate-button" type="button" onClick={onOpenActivate}>群聊激活</button>
-      </div>
-      {preferencesOpen && (
-        <section className="workspace-band message-preference-panel">
-          <div className="card-topline">
-            <strong>我的阅读偏好</strong>
-            <span>全部群聊</span>
-          </div>
-          <div className="field-row activation-choice-row">
-            <label>显示每条消息时间</label>
-            <div className="choice-group">
-              <button
-                className={cn('picker-button inline-flex', showMessageTimes && 'active')}
-                type="button"
-                onClick={() => onSetShowMessageTimes(true)}
-              >
-                开启
-              </button>
-              <button
-                className={cn('picker-button inline-flex', !showMessageTimes && 'active')}
-                type="button"
-                onClick={() => onSetShowMessageTimes(false)}
-              >
-                关闭
-              </button>
-            </div>
-          </div>
-          <div className="field-row activation-choice-row">
-            <label>显示禁言消息</label>
-            <div className="choice-group">
-              <button
-                className={cn('picker-button inline-flex', showBannedMessages && 'active')}
-                type="button"
-                onClick={() => onSetShowBannedMessages(true)}
-              >
-                开启
-              </button>
-              <button
-                className={cn('picker-button inline-flex', !showBannedMessages && 'active')}
-                type="button"
-                onClick={() => onSetShowBannedMessages(false)}
-              >
-                关闭
-              </button>
-            </div>
-          </div>
+          ) : (
+            <EmptyInbox isConnected={isConnected} tokenSymbol={tokenSymbol} />
+          )}
         </section>
       )}
       <div className="inbox-bottom-spacer" aria-hidden="true" />

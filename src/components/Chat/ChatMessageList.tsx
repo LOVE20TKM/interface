@@ -86,7 +86,7 @@ export function ChatMessageList({
   const showListSyncIndicator =
     data.isMessageListFetching && data.messages.length > 0 && !isLoadingEarlierMessages;
   const loadEarlierDisabled = isLoadingEarlierMessages || data.isMessageFeedFetching;
-  const showInitialLoadingState = data.isMessageFeedFetching && data.messages.length === 0;
+  const showInitialLoadingState = data.isMessageFeedPending && data.messages.length === 0;
   const showLoadEarlierRow = hasMoreMessages && !showInitialLoadingState;
 
   return (

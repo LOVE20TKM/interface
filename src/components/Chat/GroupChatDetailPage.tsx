@@ -11,17 +11,16 @@ import { cn } from '@/lib/utils';
 import { GroupChatPanel } from './GroupChatPanel';
 import styles from './ChatPage.module.css';
 import {
-  PINNED_GROUPS_CHANGED_EVENT,
-  PINNED_GROUPS_STORAGE_KEY,
   READ_CURSORS_CHANGED_EVENT,
   READ_CURSORS_STORAGE_KEY,
 } from './chatConstants';
 import {
   DEFAULT_MESSAGE_PREFERENCES,
   type MessagePreferences,
-  readJsonArrayStorage,
+  readFollowedGroupIds,
   readMessagePreferences,
   readRecordStorage,
+  writeFollowedGroupIds,
 } from './chatStorage';
 import type { ChatWorkspaceView } from './chatTypes';
 import {
@@ -41,17 +40,17 @@ export default function GroupChatDetailPage() {
   const { token } = useContext(TokenContext) || {};
   const groupId = router.isReady ? parseGroupId(router.query.groupId) : undefined;
   const tokenSymbol = Array.isArray(router.query.symbol) ? router.query.symbol[0] : router.query.symbol || token?.symbol;
-  const [pinnedGroupIds, setPinnedGroupIds] = useState<string[]>([]);
+  const [followedGroupIds, setFollowedGroupIds] = useState<string[]>([]);
   const [readCursors, setReadCursors] = useState<Record<string, string>>({});
   const [messagePreferences, setMessagePreferences] = useState<MessagePreferences>(DEFAULT_MESSAGE_PREFERENCES);
   const accountAddress = account as `0x${string}` | undefined;
   const tokenAddress = token?.address as `0x${string}` | undefined;
 
   useEffect(() => {
-    setPinnedGroupIds(readJsonArrayStorage(PINNED_GROUPS_STORAGE_KEY));
+    setFollowedGroupIds(readFollowedGroupIds(accountAddress));
     setReadCursors(readRecordStorage(READ_CURSORS_STORAGE_KEY));
     setMessagePreferences(readMessagePreferences());
-  }, []);
+  }, [accountAddress]);
 
   const markGroupRead = useCallback((nextGroupId: bigint, latestMessageId: bigint | undefined) => {
     const key = nextGroupId.toString();
@@ -72,17 +71,15 @@ export default function GroupChatDetailPage() {
     invalidateContractReads(queryClient);
   }, [queryClient]);
 
-  const togglePinnedGroup = useCallback((nextGroupId: bigint) => {
+  const toggleFollowedGroup = useCallback((nextGroupId: bigint) => {
+    if (!accountAddress) return;
     const key = nextGroupId.toString();
-    setPinnedGroupIds((prev) => {
+    setFollowedGroupIds((prev) => {
       const next = prev.includes(key) ? prev.filter((item) => item !== key) : [key, ...prev];
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(PINNED_GROUPS_STORAGE_KEY, JSON.stringify(next));
-        window.dispatchEvent(new Event(PINNED_GROUPS_CHANGED_EVENT));
-      }
+      writeFollowedGroupIds(accountAddress, next);
       return next;
     });
-  }, []);
+  }, [accountAddress]);
 
   const onOpenGroupPanel = useCallback(
     (nextView: ChatWorkspaceView) => {
@@ -134,7 +131,7 @@ export default function GroupChatDetailPage() {
               <GroupChatPanel
                 groupId={groupId}
                 account={accountAddress}
-                isPinned={pinnedGroupIds.includes(groupId.toString())}
+                isFollowed={followedGroupIds.includes(groupId.toString())}
                 showBannedMessages={messagePreferences.showBannedMessages}
                 showMessageTimes={messagePreferences.showMessageTimes}
                 tokenAddress={tokenAddress}
@@ -142,7 +139,7 @@ export default function GroupChatDetailPage() {
                 onPosted={refreshAll}
                 onOpenPanel={onOpenGroupPanel}
                 onOpenBanSettings={openBanSettingsForMessage}
-                onTogglePin={togglePinnedGroup}
+                onToggleFollow={toggleFollowedGroup}
                 onReadLatest={markGroupRead}
               />
             ) : (

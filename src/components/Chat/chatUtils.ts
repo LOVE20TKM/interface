@@ -40,6 +40,13 @@ export function buildChatIndexHref(tokenSymbol: string | undefined) {
   return tokenSymbol ? `/chat?symbol=${encodeURIComponent(tokenSymbol)}` : '/chat';
 }
 
+export function buildChatPreferencesHref(tokenSymbol: string | undefined) {
+  const params = new URLSearchParams();
+  if (tokenSymbol) params.set('symbol', tokenSymbol);
+  const query = params.toString();
+  return query ? `/chat/preferences?${query}` : '/chat/preferences';
+}
+
 export function buildChatActivationHref(tokenSymbol: string | undefined, activationType?: 'token' | 'action' | 'chain') {
   const params = new URLSearchParams();
   if (tokenSymbol) params.set('symbol', tokenSymbol);

@@ -20,7 +20,7 @@ import {
   useTokenGovChatGroupIdOfToken,
   useTokenMainChatGroupIdOfToken,
 } from '@/src/hooks/contracts/useGroupChatManagers';
-import { useGroupChatInboxData } from '@/src/hooks/composite/useGroupChatData';
+import { useGroupChatInboxData, type GroupChatListItem } from '@/src/hooks/composite/useGroupChatData';
 import { useIsGovernor } from '@/src/hooks/composite/useIsGovernor';
 import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
 import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite/useMyJoinedExtensionActions';
@@ -29,28 +29,32 @@ import { useRegisterGroupChatGroups, useRegisterWatchedGroups } from '@/src/cont
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { cn } from '@/lib/utils';
+import { ChatBadge } from './ChatBadge';
 import { InboxPanel } from './InboxPanel';
 import styles from './ChatPage.module.css';
 import {
-  PINNED_GROUPS_CHANGED_EVENT,
-  PINNED_GROUPS_STORAGE_KEY,
   READ_CURSORS_CHANGED_EVENT,
   READ_CURSORS_STORAGE_KEY,
 } from './chatConstants';
 import {
-  DEFAULT_MESSAGE_PREFERENCES,
-  type MessagePreferences,
+  cachedGroupSetsKey as buildCachedGroupSetsKey,
   readCachedGroupSets,
-  readJsonArrayStorage,
-  readMessagePreferences,
+  readFollowedGroupIds,
+  readOwnedChainGroupIds,
   readRecordStorage,
+  writeFollowedGroupIds,
+  writeOwnedChainGroupIds,
   writeCachedGroupSets,
-  writeMessagePreferences,
 } from './chatStorage';
 import {
   buildChatActivationHref,
+  buildChatPreferencesHref,
   safeBigIntFromString,
 } from './chatUtils';
+import {
+  GROUP_CHAT_RECOMMENDATION_REASON_RANK,
+  type GroupChatRecommendationSignal,
+} from './chatTypes';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}` | undefined;
@@ -75,6 +79,63 @@ function groupIdsToStrings(groupIds: readonly bigint[]) {
   return groupIds.map((groupId) => groupId.toString());
 }
 
+function parseManualGroupIdInput(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed || !/^\d+$/.test(trimmed)) return undefined;
+  const parsed = BigInt(trimmed);
+  return parsed > BigInt(0) ? parsed : undefined;
+}
+
+function bestRecommendationSignals(signals: readonly (GroupChatRecommendationSignal | undefined)[]) {
+  const byGroup = new Map<string, GroupChatRecommendationSignal>();
+  signals.forEach((signal) => {
+    if (!signal || signal.groupId <= BigInt(0)) return;
+    const key = signal.groupId.toString();
+    const current = byGroup.get(key);
+    if (
+      !current ||
+      GROUP_CHAT_RECOMMENDATION_REASON_RANK[signal.reason] >
+        GROUP_CHAT_RECOMMENDATION_REASON_RANK[current.reason]
+    ) {
+      byGroup.set(key, signal);
+    }
+  });
+  return Array.from(byGroup.values());
+}
+
+function mergeStableInboxItems<T extends { groupId: bigint }>(
+  currentItems: readonly T[],
+  previousItems: readonly T[],
+  stableGroupIds: readonly bigint[],
+  canReusePreviousItem: (item: T) => boolean,
+) {
+  const currentByGroup = new Map(currentItems.map((item) => [item.groupId.toString(), item]));
+  const previousByGroup = new Map(
+    previousItems
+      .filter((item) => canReusePreviousItem(item))
+      .map((item) => [item.groupId.toString(), item]),
+  );
+  const merged: T[] = [];
+
+  stableGroupIds.forEach((groupId) => {
+    const key = groupId.toString();
+    const currentItem = currentByGroup.get(key);
+    const previousItem = previousByGroup.get(key);
+    const item = currentItem && canReusePreviousItem(currentItem)
+      ? currentItem
+      : previousItem || currentItem;
+    if (item) merged.push(item);
+  });
+
+  currentItems.forEach((item) => {
+    if (!stableGroupIds.some((groupId) => groupId === item.groupId)) {
+      merged.push(item);
+    }
+  });
+
+  return merged;
+}
+
 function sameStringArray(left: readonly string[], right: readonly string[]) {
   if (left.length !== right.length) return false;
   return left.every((value, index) => value === right[index]);
@@ -82,30 +143,159 @@ function sameStringArray(left: readonly string[], right: readonly string[]) {
 
 const useClientLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
+function AddGroupDialog({
+  open,
+  inputValue,
+  lookupGroupId,
+  lookupItem,
+  isConnected,
+  isInputSettling,
+  isInputInvalid,
+  isChecking,
+  isAlreadyFollowed,
+  hasLookupError,
+  canConfirm,
+  onInputChange,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  inputValue: string;
+  lookupGroupId: bigint | undefined;
+  lookupItem: GroupChatListItem | undefined;
+  isConnected: boolean;
+  isInputSettling: boolean;
+  isInputInvalid: boolean;
+  isChecking: boolean;
+  isAlreadyFollowed: boolean;
+  hasLookupError: boolean;
+  canConfirm: boolean;
+  onInputChange: (value: string) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [onClose, open]);
+
+  if (!open) return null;
+
+  const trimmedInput = inputValue.trim();
+  const isActivated = !isInputSettling && lookupItem?.info?.activated === true;
+  const isInactive = !isInputSettling && !!lookupGroupId && lookupItem?.info?.activated === false;
+  const statusTone =
+    isActivated && !isAlreadyFollowed
+      ? 'ok'
+      : isInactive || isInputInvalid || hasLookupError
+        ? 'bad'
+        : 'neutral';
+  const statusText = !trimmedInput
+    ? '输入群聊 ID 后自动检查激活状态和群聊名称。'
+    : isInputInvalid
+      ? '请输入大于 0 的数字群聊 ID。'
+      : isInputSettling || isChecking
+        ? '正在检查群聊状态...'
+        : hasLookupError
+          ? '检查失败，请稍后重试。'
+          : isInactive
+            ? '这个群聊还没有激活，不能添加。'
+            : isAlreadyFollowed
+              ? '这个群聊已经在我的群聊里。'
+              : isActivated
+                ? '检查通过，确认后会加入我的群聊。'
+                : '没有读到这个群聊，请确认 ID 是否正确。';
+
+  return (
+    <div
+      className="chat-modal-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section className="chat-modal add-group-dialog" role="dialog" aria-modal="true" aria-labelledby="add-group-dialog-title">
+        <div className="chat-modal-head">
+          <div>
+            <strong id="add-group-dialog-title">添加群聊</strong>
+            <span>检查后确认</span>
+          </div>
+          <button className="chat-modal-close" type="button" onClick={onClose} aria-label="关闭添加群聊">
+            x
+          </button>
+        </div>
+        <div className="manual-group-form">
+          <label className="manual-group-label" htmlFor="manual-group-id-input">
+            群聊 ID
+          </label>
+          <input
+            id="manual-group-id-input"
+            className="manual-group-input"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={inputValue}
+            onChange={(event) => onInputChange(event.target.value)}
+            placeholder="例如 123"
+            autoFocus
+          />
+          <div className="manual-group-status" data-tone={statusTone}>
+            {statusText}
+          </div>
+          {isActivated && lookupItem && (
+            <div className="manual-group-result">
+              <div>
+                <span>G#{lookupItem.groupId.toString()}</span>
+                <ChatBadge>{lookupItem.typeLabel}</ChatBadge>
+              </div>
+              <strong>{lookupItem.title}</strong>
+            </div>
+          )}
+          {!isConnected && (
+            <div className="manual-group-status" data-tone="bad">
+              连接钱包后才能加入我的群聊。
+            </div>
+          )}
+        </div>
+        <div className="chat-modal-actions">
+          <button className="sheet-button inline-flex" type="button" onClick={onClose}>
+            取消
+          </button>
+          <button className="sheet-button primary inline-flex" type="button" onClick={onConfirm} disabled={!canConfirm}>
+            确认添加
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function GroupChatHome() {
   const router = useRouter();
   const { address: account, isConnected } = useAccount();
   const { token } = useContext(TokenContext) || {};
   const accountAddress = account as `0x${string}` | undefined;
   const tokenAddress = token?.address as `0x${string}` | undefined;
-  const cachedGroupSetsKey = useMemo(() => {
-    const chainId = process.env.NEXT_PUBLIC_CHAIN_ID || process.env.NEXT_PUBLIC_CHAIN || 'unknown-chain';
-    return [
-      chainId,
-      accountAddress?.toLowerCase() || 'anonymous',
-      tokenAddress?.toLowerCase() || 'no-token',
-    ].join(':');
-  }, [accountAddress, tokenAddress]);
-  const [pinnedGroupIds, setPinnedGroupIds] = useState<string[]>([]);
-  const [cachedMyChainGroupIds, setCachedMyChainGroupIds] = useState<string[]>([]);
+  const cachedGroupSetsKey = useMemo(
+    () => buildCachedGroupSetsKey(accountAddress, tokenAddress),
+    [accountAddress, tokenAddress],
+  );
+  const [followedGroupIds, setFollowedGroupIds] = useState<string[]>([]);
+  const [hasLoadedFollowedGroupIds, setHasLoadedFollowedGroupIds] = useState(false);
+  const [cachedOwnedChainGroupIds, setCachedOwnedChainGroupIds] = useState<string[]>([]);
   const [cachedRecommendedGroupIds, setCachedRecommendedGroupIds] = useState<string[]>([]);
   const [readCursors, setReadCursors] = useState<Record<string, string>>({});
-  const [preferencesOpen, setPreferencesOpen] = useState(false);
-  const [messagePreferences, setMessagePreferences] = useState<MessagePreferences>(DEFAULT_MESSAGE_PREFERENCES);
-  const showBannedMessages = messagePreferences.showBannedMessages;
-  const showMessageTimes = messagePreferences.showMessageTimes;
+  const [addGroupDialogOpen, setAddGroupDialogOpen] = useState(false);
+  const [manualGroupIdInput, setManualGroupIdInput] = useState('');
+  const [manualGroupIdQuery, setManualGroupIdQuery] = useState('');
   const { myGroups, isPending: isMyGroupsPending } = useMyGroups(accountAddress);
-  const myChainGroupIds = useMemo(() => myGroups.map((group) => group.tokenId), [myGroups]);
+  const ownedChainGroupIds = useMemo(() => myGroups.map((group) => group.tokenId), [myGroups]);
   const { isGovernor } = useIsGovernor(accountAddress);
   const { groupId: tokenMainGroupId, isPending: isTokenMainGroupIdPending } = useTokenMainChatGroupIdOfToken(tokenAddress, !!tokenAddress);
   const { groupId: tokenGovGroupId, isPending: isTokenGovGroupIdPending } = useTokenGovChatGroupIdOfToken(tokenAddress, !!tokenAddress && isGovernor);
@@ -223,13 +413,13 @@ export function GroupChatHome() {
       ),
     [groupJoinActivationStatusMap, groupJoinCandidateGroupIds],
   );
-  const pinnedPriorityGroupIds = useMemo(
-    () => uniqueGroupIds(pinnedGroupIds.map((groupId) => safeBigIntFromString(groupId))),
-    [pinnedGroupIds],
+  const followedPriorityGroupIds = useMemo(
+    () => uniqueGroupIds(followedGroupIds.map((groupId) => safeBigIntFromString(groupId))),
+    [followedGroupIds],
   );
-  const cachedMyChainPriorityGroupIds = useMemo(
-    () => uniqueGroupIds(cachedMyChainGroupIds.map((groupId) => safeBigIntFromString(groupId))),
-    [cachedMyChainGroupIds],
+  const cachedOwnedChainPriorityGroupIds = useMemo(
+    () => uniqueGroupIds(cachedOwnedChainGroupIds.map((groupId) => safeBigIntFromString(groupId))),
+    [cachedOwnedChainGroupIds],
   );
   const cachedRecommendedPriorityGroupIds = useMemo(
     () => uniqueGroupIds(cachedRecommendedGroupIds.map((groupId) => safeBigIntFromString(groupId))),
@@ -237,30 +427,44 @@ export function GroupChatHome() {
   );
   const lastDisplayGroupSetsRef = useRef<{
     key: string;
-    myChainGroupIds: bigint[];
     recommendedGroupIds: bigint[];
   }>({
     key: cachedGroupSetsKey,
-    myChainGroupIds: [],
     recommendedGroupIds: [],
   });
-  const displayedMyChainGroupIds = useMemo(
+  const lastRecommendationSignalsRef = useRef<{
+    key: string;
+    signals: GroupChatRecommendationSignal[];
+  }>({
+    key: cachedGroupSetsKey,
+    signals: [],
+  });
+  const displayedFollowedGroupIds = useMemo(
     () => {
-      if (myChainGroupIds.length > 0) return myChainGroupIds;
-      if (cachedMyChainPriorityGroupIds.length > 0) return cachedMyChainPriorityGroupIds;
-      const lastResolved = lastDisplayGroupSetsRef.current;
-      return lastResolved.key === cachedGroupSetsKey ? lastResolved.myChainGroupIds : [];
+      if (hasLoadedFollowedGroupIds) return followedPriorityGroupIds;
+      return [];
     },
-    [cachedGroupSetsKey, cachedMyChainPriorityGroupIds, myChainGroupIds],
+    [followedPriorityGroupIds, hasLoadedFollowedGroupIds],
   );
-  const recommendedGroupIds = useMemo(
+  const displayedOwnedChainGroupIds = useMemo(
+    () => {
+      if (!isMyGroupsPending) return ownedChainGroupIds;
+      return cachedOwnedChainPriorityGroupIds;
+    },
+    [cachedOwnedChainPriorityGroupIds, isMyGroupsPending, ownedChainGroupIds],
+  );
+  const ownedChainRecommendationSignals = useMemo(
+    () => displayedOwnedChainGroupIds.map((groupId) => ({ groupId, reason: 'owned-chain-group' as const })),
+    [displayedOwnedChainGroupIds],
+  );
+  const liveTokenRecommendationSignals = useMemo(
     () =>
-      uniqueGroupIds([
-        tokenMainGroupId,
-        ...actionMainGroupIds,
-        isGovernor ? tokenGovGroupId : undefined,
-        ...actionGovGroupIds,
-        ...groupJoinRecommendedGroupIds,
+      bestRecommendationSignals([
+        tokenMainGroupId ? { groupId: tokenMainGroupId, reason: 'current-token-main' as const } : undefined,
+        ...actionMainGroupIds.map((groupId) => ({ groupId, reason: 'joined-action' as const })),
+        isGovernor && tokenGovGroupId ? { groupId: tokenGovGroupId, reason: 'governor' as const } : undefined,
+        ...actionGovGroupIds.map((groupId) => ({ groupId, reason: 'voted-action' as const })),
+        ...groupJoinRecommendedGroupIds.map((groupId) => ({ groupId, reason: 'joined-chain-group' as const })),
       ]),
     [
       actionGovGroupIds,
@@ -278,34 +482,67 @@ export function GroupChatHome() {
     isActionGovGroupIdsPending ||
     isGroupJoinGroupIdsPending ||
     isGroupJoinActivationStatusPending;
+  const tokenRecommendationSignals = useMemo(() => {
+    const lastResolved = lastRecommendationSignalsRef.current;
+    if (isRecommendedGroupIdsPending && lastResolved.key === cachedGroupSetsKey) {
+      return bestRecommendationSignals([...liveTokenRecommendationSignals, ...lastResolved.signals]);
+    }
+    return liveTokenRecommendationSignals;
+  }, [cachedGroupSetsKey, isRecommendedGroupIdsPending, liveTokenRecommendationSignals]);
+  const recommendationSignals = useMemo(
+    () => bestRecommendationSignals([...ownedChainRecommendationSignals, ...tokenRecommendationSignals]),
+    [ownedChainRecommendationSignals, tokenRecommendationSignals],
+  );
+  const tokenRecommendedGroupIds = useMemo(
+    () => uniqueGroupIds(tokenRecommendationSignals.map((signal) => signal.groupId)),
+    [tokenRecommendationSignals],
+  );
+  const liveTokenRecommendedGroupIds = useMemo(
+    () => uniqueGroupIds(liveTokenRecommendationSignals.map((signal) => signal.groupId)),
+    [liveTokenRecommendationSignals],
+  );
   const displayedRecommendedGroupIds = useMemo(
     () => {
-      if (recommendedGroupIds.length > 0) return recommendedGroupIds;
+      if (tokenRecommendedGroupIds.length > 0) return tokenRecommendedGroupIds;
+      if (!isRecommendedGroupIdsPending) return [];
       if (cachedRecommendedPriorityGroupIds.length > 0) return cachedRecommendedPriorityGroupIds;
       const lastResolved = lastDisplayGroupSetsRef.current;
       return lastResolved.key === cachedGroupSetsKey ? lastResolved.recommendedGroupIds : [];
     },
-    [cachedGroupSetsKey, cachedRecommendedPriorityGroupIds, recommendedGroupIds],
+    [cachedGroupSetsKey, cachedRecommendedPriorityGroupIds, isRecommendedGroupIdsPending, tokenRecommendedGroupIds],
+  );
+  const displayedRecommendationGroupIds = useMemo(
+    () => uniqueGroupIds([...displayedOwnedChainGroupIds, ...displayedRecommendedGroupIds]),
+    [displayedOwnedChainGroupIds, displayedRecommendedGroupIds],
+  );
+  useEffect(() => {
+    if (!addGroupDialogOpen) return;
+    const timer = window.setTimeout(() => {
+      setManualGroupIdQuery(manualGroupIdInput.trim());
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [addGroupDialogOpen, manualGroupIdInput]);
+  const manualLookupGroupId = useMemo(
+    () => parseManualGroupIdInput(manualGroupIdQuery),
+    [manualGroupIdQuery],
+  );
+  const manualLookupGroupIds = useMemo(
+    () => (manualLookupGroupId ? [manualLookupGroupId] : []),
+    [manualLookupGroupId],
   );
   const inboxPriorityGroupIds = useMemo(
     () =>
       uniqueGroupIds([
-        ...pinnedPriorityGroupIds,
-        ...cachedMyChainPriorityGroupIds,
-        ...cachedRecommendedPriorityGroupIds,
-        ...myChainGroupIds,
-        ...displayedMyChainGroupIds,
-        ...recommendedGroupIds,
-        ...displayedRecommendedGroupIds,
+        ...followedPriorityGroupIds,
+        ...displayedFollowedGroupIds,
+        ...displayedRecommendationGroupIds,
+        ...manualLookupGroupIds,
       ]),
     [
-      cachedMyChainPriorityGroupIds,
-      cachedRecommendedPriorityGroupIds,
-      displayedMyChainGroupIds,
-      displayedRecommendedGroupIds,
-      myChainGroupIds,
-      pinnedPriorityGroupIds,
-      recommendedGroupIds,
+      followedPriorityGroupIds,
+      displayedFollowedGroupIds,
+      displayedRecommendationGroupIds,
+      manualLookupGroupIds,
     ],
   );
   const inbox = useGroupChatInboxData(token, accountAddress, 50, inboxPriorityGroupIds);
@@ -317,19 +554,82 @@ export function GroupChatHome() {
     () => inbox.items.some((item) => item.info?.activated === true),
     [inbox.items],
   );
+  const hasUnreadyStableInboxItems = useMemo(() => {
+    const itemsByGroup = new Map(inbox.items.map((item) => [item.groupId.toString(), item]));
+    return inboxPriorityGroupIds.some((groupId) => {
+      const item = itemsByGroup.get(groupId.toString());
+      return !item || item.info === undefined;
+    });
+  }, [inbox.items, inboxPriorityGroupIds]);
   const displayedInboxItems = useMemo(() => {
-    if (hasActivatedInboxItems || !inbox.isPending) return inbox.items;
     const lastResolved = lastResolvedInboxItemsRef.current;
-    return lastResolved.key === cachedGroupSetsKey ? lastResolved.items : [];
-  }, [cachedGroupSetsKey, hasActivatedInboxItems, inbox.isPending, inbox.items]);
-  useEffect(() => {
-    if (!hasActivatedInboxItems && inbox.isPending) return;
+    const hasSameCacheKey = lastResolved.key === cachedGroupSetsKey;
+    if ((inbox.isPending || hasUnreadyStableInboxItems) && hasSameCacheKey) {
+      return mergeStableInboxItems(
+        inbox.items,
+        lastResolved.items,
+        inboxPriorityGroupIds,
+        (item) => item.info?.activated === true,
+      );
+    }
+    if (hasActivatedInboxItems || !inbox.isPending) return inbox.items;
+    return hasSameCacheKey ? lastResolved.items : [];
+  }, [cachedGroupSetsKey, hasActivatedInboxItems, hasUnreadyStableInboxItems, inbox.isPending, inbox.items, inboxPriorityGroupIds]);
+  const displayedFollowedItems = useMemo(() => {
+    const followedSet = new Set(displayedFollowedGroupIds.map((groupId) => groupId.toString()));
+    return displayedInboxItems.filter((item) => item.info?.activated === true && followedSet.has(item.groupId.toString()));
+  }, [displayedFollowedGroupIds, displayedInboxItems]);
+  const displayedRecommendedItems = useMemo(() => {
+    const followedSet = new Set(displayedFollowedGroupIds.map((groupId) => groupId.toString()));
+    const recommendedSet = new Set(displayedRecommendationGroupIds.map((groupId) => groupId.toString()));
+    return displayedInboxItems.filter((item) => {
+      const key = item.groupId.toString();
+      return item.info?.activated === true && !followedSet.has(key) && recommendedSet.has(key);
+    });
+  }, [displayedFollowedGroupIds, displayedInboxItems, displayedRecommendationGroupIds]);
+  const manualLookupItem = useMemo(
+    () =>
+      manualLookupGroupId
+        ? inbox.items.find((item) => item.groupId === manualLookupGroupId)
+        : undefined,
+    [inbox.items, manualLookupGroupId],
+  );
+  const manualLookupAlreadyFollowed = useMemo(
+    () => !!manualLookupGroupId && followedGroupIds.includes(manualLookupGroupId.toString()),
+    [followedGroupIds, manualLookupGroupId],
+  );
+  const manualInputSettling = addGroupDialogOpen && manualGroupIdInput.trim() !== manualGroupIdQuery;
+  const manualInputInvalid = manualGroupIdQuery.length > 0 && !manualLookupGroupId;
+  const manualLookupChecking =
+    !!manualLookupGroupId &&
+    (manualInputSettling || ((!manualLookupItem || manualLookupItem.info === undefined) && inbox.isPending));
+  const manualLookupHasError =
+    !!manualLookupGroupId &&
+    !manualInputSettling &&
+    !manualLookupChecking &&
+    (!manualLookupItem || manualLookupItem.info === undefined) &&
+    !!inbox.error;
+  const canConfirmManualAdd =
+    !!accountAddress &&
+    manualLookupItem?.info?.activated === true &&
+    !manualLookupAlreadyFollowed &&
+    !manualLookupChecking &&
+    !manualLookupHasError;
+  useClientLayoutEffect(() => {
+    const stableItems = displayedInboxItems.filter((item) => item.info?.activated === true);
+    if (stableItems.length === 0 && (inbox.isPending || hasUnreadyStableInboxItems)) return;
     lastResolvedInboxItemsRef.current = {
       key: cachedGroupSetsKey,
-      items: inbox.items,
+      items: stableItems,
     };
-  }, [cachedGroupSetsKey, hasActivatedInboxItems, inbox.isPending, inbox.items]);
-  const visibleInboxGroupIds = useMemo(() => displayedInboxItems.map((item) => item.groupId), [displayedInboxItems]);
+  }, [cachedGroupSetsKey, displayedInboxItems, hasUnreadyStableInboxItems, inbox.isPending]);
+  const visibleInboxGroupIds = useMemo(
+    () => uniqueGroupIds([
+      ...displayedFollowedItems.map((item) => item.groupId),
+      ...displayedRecommendedItems.map((item) => item.groupId),
+    ]),
+    [displayedFollowedItems, displayedRecommendedItems],
+  );
   useRegisterGroupChatGroups({
     groupIds: inboxPriorityGroupIds,
     source: 'chat-cached-groups',
@@ -339,14 +639,14 @@ export function GroupChatHome() {
   useRegisterWatchedGroups(visibleInboxGroupIds, 'inbox-visible');
 
   useClientLayoutEffect(() => {
-    const nextPinnedGroupIds = readJsonArrayStorage(PINNED_GROUPS_STORAGE_KEY);
+    const nextFollowedGroupIds = readFollowedGroupIds(accountAddress);
     const cachedGroupSets = readCachedGroupSets(cachedGroupSetsKey);
-    setPinnedGroupIds(nextPinnedGroupIds);
-    setCachedMyChainGroupIds(cachedGroupSets?.myChainGroupIds || []);
+    setFollowedGroupIds(nextFollowedGroupIds);
+    setHasLoadedFollowedGroupIds(true);
+    setCachedOwnedChainGroupIds(readOwnedChainGroupIds(accountAddress));
     setCachedRecommendedGroupIds(cachedGroupSets?.recommendedGroupIds || []);
     setReadCursors(readRecordStorage(READ_CURSORS_STORAGE_KEY));
-    setMessagePreferences(readMessagePreferences());
-  }, [cachedGroupSetsKey]);
+  }, [accountAddress, cachedGroupSetsKey]);
 
   useEffect(() => {
     const refreshReadCursors = () => {
@@ -363,78 +663,104 @@ export function GroupChatHome() {
   }, []);
 
   useEffect(() => {
-    if (myChainGroupIds.length > 0 || recommendedGroupIds.length > 0) {
-      lastDisplayGroupSetsRef.current = {
-        key: cachedGroupSetsKey,
-        myChainGroupIds: myChainGroupIds.length > 0
-          ? myChainGroupIds
-          : lastDisplayGroupSetsRef.current.myChainGroupIds,
-        recommendedGroupIds: recommendedGroupIds.length > 0
-          ? recommendedGroupIds
-          : lastDisplayGroupSetsRef.current.recommendedGroupIds,
-      };
-    }
-  }, [cachedGroupSetsKey, myChainGroupIds, recommendedGroupIds]);
+    if (isRecommendedGroupIdsPending) return;
+    lastRecommendationSignalsRef.current = {
+      key: cachedGroupSetsKey,
+      signals: liveTokenRecommendationSignals,
+    };
+  }, [cachedGroupSetsKey, isRecommendedGroupIdsPending, liveTokenRecommendationSignals]);
 
   useEffect(() => {
-    if (isMyGroupsPending || isRecommendedGroupIdsPending) return;
+    if (isRecommendedGroupIdsPending) return;
+    lastDisplayGroupSetsRef.current = {
+      key: cachedGroupSetsKey,
+      recommendedGroupIds: liveTokenRecommendedGroupIds,
+    };
+  }, [cachedGroupSetsKey, isRecommendedGroupIdsPending, liveTokenRecommendedGroupIds]);
 
-    const nextMyChainGroupIds = groupIdsToStrings(myChainGroupIds);
-    const nextRecommendedGroupIds = groupIdsToStrings(recommendedGroupIds);
-    const changed =
-      !sameStringArray(cachedMyChainGroupIds, nextMyChainGroupIds) ||
-      !sameStringArray(cachedRecommendedGroupIds, nextRecommendedGroupIds);
+  useEffect(() => {
+    if (isMyGroupsPending) return;
+
+    const nextOwnedChainGroupIds = groupIdsToStrings(ownedChainGroupIds);
+    if (sameStringArray(cachedOwnedChainGroupIds, nextOwnedChainGroupIds)) return;
+
+    setCachedOwnedChainGroupIds(nextOwnedChainGroupIds);
+    writeOwnedChainGroupIds(accountAddress, nextOwnedChainGroupIds);
+  }, [
+    accountAddress,
+    cachedOwnedChainGroupIds,
+    isMyGroupsPending,
+    ownedChainGroupIds,
+  ]);
+
+  useEffect(() => {
+    if (isRecommendedGroupIdsPending) return;
+
+    const nextRecommendedGroupIds = groupIdsToStrings(liveTokenRecommendedGroupIds);
+    const changed = !sameStringArray(cachedRecommendedGroupIds, nextRecommendedGroupIds);
     if (!changed) return;
 
-    setCachedMyChainGroupIds(nextMyChainGroupIds);
     setCachedRecommendedGroupIds(nextRecommendedGroupIds);
     writeCachedGroupSets(cachedGroupSetsKey, {
-      pinnedGroupIds,
-      myChainGroupIds: nextMyChainGroupIds,
       recommendedGroupIds: nextRecommendedGroupIds,
     });
   }, [
     cachedGroupSetsKey,
-    cachedMyChainGroupIds,
     cachedRecommendedGroupIds,
-    isMyGroupsPending,
     isRecommendedGroupIdsPending,
-    myChainGroupIds,
-    pinnedGroupIds,
-    recommendedGroupIds,
+    liveTokenRecommendedGroupIds,
   ]);
 
   const onOpenActivate = useCallback(() => {
     router.push(buildChatActivationHref(token?.symbol));
   }, [router, token?.symbol]);
 
-  const togglePinnedGroup = useCallback((groupId: bigint) => {
+  const onOpenPreferences = useCallback(() => {
+    router.push(buildChatPreferencesHref(token?.symbol));
+  }, [router, token?.symbol]);
+
+  const openAddGroupDialog = useCallback(() => {
+    setManualGroupIdInput('');
+    setManualGroupIdQuery('');
+    setAddGroupDialogOpen(true);
+  }, []);
+
+  const closeAddGroupDialog = useCallback(() => {
+    setAddGroupDialogOpen(false);
+    setManualGroupIdInput('');
+    setManualGroupIdQuery('');
+  }, []);
+
+  const addFollowedGroup = useCallback((groupId: bigint) => {
+    if (!accountAddress) return;
     const key = groupId.toString();
-    setPinnedGroupIds((prev) => {
-      const next = prev.includes(key) ? prev.filter((item) => item !== key) : [key, ...prev];
+    setFollowedGroupIds((prev) => {
+      if (prev.includes(key)) return prev;
+      const next = [key, ...prev];
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(PINNED_GROUPS_STORAGE_KEY, JSON.stringify(next));
-        writeCachedGroupSets(cachedGroupSetsKey, {
-          pinnedGroupIds: next,
-          myChainGroupIds: cachedMyChainGroupIds,
-          recommendedGroupIds: cachedRecommendedGroupIds,
-        });
-        window.dispatchEvent(new Event(PINNED_GROUPS_CHANGED_EVENT));
+        writeFollowedGroupIds(accountAddress, next);
       }
       return next;
     });
-  }, [cachedGroupSetsKey, cachedMyChainGroupIds, cachedRecommendedGroupIds]);
+  }, [accountAddress]);
 
-  const updateMessagePreference = useCallback(<Key extends keyof MessagePreferences,>(
-    key: Key,
-    value: MessagePreferences[Key],
-  ) => {
-    setMessagePreferences((prev) => {
-      const next = { ...prev, [key]: value };
-      writeMessagePreferences(next);
+  const toggleFollowedGroup = useCallback((groupId: bigint) => {
+    if (!accountAddress) return;
+    const key = groupId.toString();
+    setFollowedGroupIds((prev) => {
+      const next = prev.includes(key) ? prev.filter((item) => item !== key) : [key, ...prev];
+      if (typeof window !== 'undefined') {
+        writeFollowedGroupIds(accountAddress, next);
+      }
       return next;
     });
-  }, []);
+  }, [accountAddress]);
+
+  const confirmManualAdd = useCallback(() => {
+    if (!manualLookupGroupId || !canConfirmManualAdd) return;
+    addFollowedGroup(manualLookupGroupId);
+    closeAddGroupDialog();
+  }, [addFollowedGroup, canConfirmManualAdd, closeAddGroupDialog, manualLookupGroupId]);
 
   return (
     <>
@@ -449,22 +775,33 @@ export function GroupChatHome() {
                 </div>
               )}
               <InboxPanel
-                items={displayedInboxItems}
+                followedItems={displayedFollowedItems}
+                recommendedItems={displayedRecommendedItems}
                 isPending={inbox.isPending}
                 isConnected={isConnected}
                 tokenSymbol={token?.symbol}
-                pinnedGroupIds={pinnedGroupIds}
-                myChainGroupIds={displayedMyChainGroupIds}
-                recommendedGroupIds={displayedRecommendedGroupIds}
+                recommendationSignals={recommendationSignals}
                 readCursors={readCursors}
-                preferencesOpen={preferencesOpen}
-                showBannedMessages={showBannedMessages}
-                showMessageTimes={showMessageTimes}
+                onOpenAddGroup={openAddGroupDialog}
                 onOpenActivate={onOpenActivate}
-                onTogglePin={togglePinnedGroup}
-                onTogglePreferences={() => setPreferencesOpen((value) => !value)}
-                onSetShowBannedMessages={(value) => updateMessagePreference('showBannedMessages', value)}
-                onSetShowMessageTimes={(value) => updateMessagePreference('showMessageTimes', value)}
+                onOpenPreferences={onOpenPreferences}
+                onToggleFollow={toggleFollowedGroup}
+              />
+              <AddGroupDialog
+                open={addGroupDialogOpen}
+                inputValue={manualGroupIdInput}
+                lookupGroupId={manualLookupGroupId}
+                lookupItem={manualLookupItem}
+                isConnected={isConnected}
+                isInputSettling={manualInputSettling}
+                isInputInvalid={manualInputInvalid}
+                isChecking={manualLookupChecking}
+                isAlreadyFollowed={manualLookupAlreadyFollowed}
+                hasLookupError={manualLookupHasError}
+                canConfirm={canConfirmManualAdd}
+                onInputChange={setManualGroupIdInput}
+                onClose={closeAddGroupDialog}
+                onConfirm={confirmManualAdd}
               />
             </section>
           </section>

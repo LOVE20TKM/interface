@@ -42,7 +42,7 @@ export function GroupChatPanel({
   groupId,
   account,
   title,
-  isPinned,
+  isFollowed,
   showBannedMessages,
   showMessageTimes,
   tokenAddress,
@@ -50,13 +50,13 @@ export function GroupChatPanel({
   onPosted,
   onOpenPanel,
   onOpenBanSettings,
-  onTogglePin,
+  onToggleFollow,
   onReadLatest,
 }: {
   groupId: bigint | undefined;
   account: `0x${string}` | undefined;
   title?: string;
-  isPinned: boolean;
+  isFollowed: boolean;
   showBannedMessages: boolean;
   showMessageTimes: boolean;
   tokenAddress?: `0x${string}`;
@@ -64,7 +64,7 @@ export function GroupChatPanel({
   onPosted: () => void;
   onOpenPanel: (view: ChatWorkspaceView) => void;
   onOpenBanSettings: (message: ParsedGroupChatMessage) => void;
-  onTogglePin: (groupId: bigint) => void;
+  onToggleFollow: (groupId: bigint) => void;
   onReadLatest?: (groupId: bigint, latestMessageId: bigint | undefined) => void;
 }) {
   const [content, setContent] = useState('');
@@ -516,10 +516,10 @@ export function GroupChatPanel({
         title={displayGroupName}
         messagesCount={effectiveMessagesCount}
         menuOpen={menuOpen}
-        isPinned={isPinned}
+        isFollowed={isFollowed}
         onToggleMenu={() => setMenuOpen((value) => !value)}
         onCloseMenu={closeMenu}
-        onTogglePin={onTogglePin}
+        onToggleFollow={onToggleFollow}
         onOpenPanel={onOpenPanel}
       />
 

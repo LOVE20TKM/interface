@@ -14,6 +14,7 @@ import { parseGroupChatInfo } from '@/src/hooks/composite/groupChatDataTypes';
 import { isValidEthAddress } from '@/src/lib/addressUtils';
 import { copyWithToast } from '@/src/lib/clipboardUtils';
 import { ZERO_ADDRESS } from './chatConstants';
+import { followGroupId } from './chatStorage';
 import { useConfirmedTransactionEffect } from './useConfirmedTransactionEffect';
 
 type RuleSlotKey = 'zero' | 'custom' | string;
@@ -239,6 +240,7 @@ export function ChainChatActivationDetail({
     toast.success('链群已激活');
     onConfirmed();
     if (submittedGroupIdRef.current) {
+      followGroupId(account, submittedGroupIdRef.current);
       onOpen(submittedGroupIdRef.current);
     }
   });

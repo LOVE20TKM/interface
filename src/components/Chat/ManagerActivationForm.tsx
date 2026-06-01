@@ -5,6 +5,7 @@ import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/us
 import { useCalculateMintCost, useLove20Token } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { formatTokenAmount } from '@/src/lib/format';
 import { FIRST_TOKEN_SYMBOL, ZERO_ADDRESS } from './chatConstants';
+import { followGroupId } from './chatStorage';
 import { useConfirmedTransactionEffect } from './useConfirmedTransactionEffect';
 
 const APPROVAL_BUFFER_NUMERATOR = BigInt(1001);
@@ -154,8 +155,9 @@ export function ManagerActivationForm({
       return;
     }
     openedConfirmedGroupRef.current = true;
+    followGroupId(account, existingGroupId);
     onOpen(existingGroupId);
-  }, [activationHash, existingGroupId, onOpen]);
+  }, [account, activationHash, existingGroupId, onOpen]);
 
   const approved = isMintCostKnown && (!requiresApproval || (!!allowance && allowance >= approveAmount));
   const hasEnoughBalance = isMintCostKnown && (!requiresApproval || (!!balance && balance >= mintCost));

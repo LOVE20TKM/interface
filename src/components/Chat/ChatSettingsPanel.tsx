@@ -128,9 +128,9 @@ function explainScopeContract(address?: `0x${string}`): ContractExplanation {
   }
   if (sameAddress(address, GROUP_CHAT_MEMBER_SCOPE_ADDRESS)) {
     return {
-      label: 'GroupMemberScope',
+      label: '成员名单规则',
       title: '成员名单发言',
-      description: '普通发言者需要使用 GroupMember 成员名单里的 NFT ID 发言。',
+      description: '只有加入本群成员名单的默认发言身份可以发言。',
       status: '成员制',
     };
   }

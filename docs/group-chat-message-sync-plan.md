@@ -67,8 +67,8 @@ There are two registration scopes:
 
 The chat page maintains both:
 
-- Background low-frequency watches for cached pinned groups, my chain groups, and recommended groups.
-- Page-level medium-frequency watches for the chat page's current group set.
+- Background low-frequency watches for followed groups and recommended groups.
+- Page-level medium-frequency watches for the chat page's current visible group set.
 
 The group chat detail page registers the current group as a page-level high-frequency watch. Background watches remain active.
 
@@ -127,21 +127,30 @@ After a refresh:
 
 ## Cache Design
 
-Local cache keys should be isolated by:
+Followed group and owned chain group keys are isolated by:
 
 - `chainId`
 - `groupChatContract`
 - `walletAddress`
-- `defaultSenderId`
 
-`defaultSenderId` is included because `@me` depends on the default NFT identity.
+Token recommendation cache keys additionally include `tokenAddress`, because token/action recommendations are current-token contextual. Count baseline keys also include `defaultSenderId`, because `@me` depends on the default NFT identity.
 
-Group caches:
+Followed groups:
+
+```ts
+type GroupChatFollowedGroups = string[];
+```
+
+Owned chain groups:
+
+```ts
+type GroupChatOwnedChainGroups = string[];
+```
+
+Token recommendation cache:
 
 ```ts
 type GroupChatCachedGroups = {
-  pinnedGroupIds: string[];
-  myChainGroupIds: string[];
   recommendedGroupIds: string[];
   initializedAt: number;
   updatedAt: number;
@@ -163,16 +172,12 @@ If all three group caches are missing, the bottom navigation shows the intro red
 
 ## Group Sources
 
-Pinned groups:
+Followed groups:
 
-- User-pinned groups.
+- User-followed groups.
+- Newly activated groups are followed automatically after activation confirmation.
 - Background low-frequency watch.
-- Included in chat page medium-frequency watch.
-
-My chain groups:
-
-- Chain groups for my NFTs that have activated group chat.
-- This source is reserved for stable identity or ownership relationships.
+- Included in chat page medium-frequency watch when visible.
 
 Recommended groups:
 
@@ -183,7 +188,14 @@ Recommended groups:
 - Activated chain groups returned by `GroupJoin.gGroupIdsByTokenAddressByAccount(currentToken, account)`.
 - Other already-activated groups produced by existing recommendation logic.
 
-The "my chain groups" source should stay limited to ownership or stable identity relationships, such as my owned NFT groups with activated group chat. Chain groups that appear because I joined a chain-group action belong to recommendations, not to my chain groups. This keeps the mental model clear: ownership is stable; participation-based relevance is contextual and can disappear after leaving an action.
+Owned chain groups:
+
+- Activated chain groups for my owned NFTs.
+- Wallet-level background low-frequency watch.
+- Included in chat page medium-frequency watch when visible.
+- Displayed with reason "我持有的链群".
+
+Recommended groups display the strongest recommendation reason as a compact pill after the group id. Chain groups discovered through action participation use "我参与过的链群". Followed groups are filtered out of recommendations so the same group does not appear twice.
 
 When delayed loading produces a new group set, it must be fully diffed against the cached set:
 
@@ -191,13 +203,13 @@ When delayed loading produces a new group set, it must be fully diffed against t
 - Removed groups are unregistered from that source and removed from cache.
 - Existing groups keep state and baseline.
 
-This includes reductions, for example when leaving an action causes related groups to stop being recommended. If the same group remains through another source such as pinned, it stays watched with the highest remaining frequency.
+This includes reductions, for example when leaving an action causes related groups to stop being recommended. If the same group remains followed, it stays watched with the highest remaining frequency.
 
 ## Page Flows
 
 ### First app open outside chat
 
-- Read the three group caches.
+- Read followed groups, owned chain groups, and token recommendation caches.
 - If all are missing, show the bottom-nav intro red dot.
 - If any cache exists, register cached groups as background low-frequency watches.
 - Trigger one immediate batch refresh for cached groups.
@@ -205,11 +217,11 @@ This includes reductions, for example when leaving an action causes related grou
 
 ### Chat page
 
-- Read cached pinned, my-chain, and recommended groups.
+- Read followed groups, cached owned chain groups, and cached token recommendations.
 - Register background low-frequency watches.
 - Register page-level medium-frequency watches.
 - Immediately refresh cached groups.
-- Delayed-load my-chain and recommended groups.
+- Delayed-load recommendation sources.
 - Diff delayed-loaded groups against cache.
 - Register added groups, unregister removed groups, refresh added groups, and update cache.
 - When leaving the page, page-level medium-frequency watches are replaced or removed; background watches remain.

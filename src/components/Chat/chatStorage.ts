@@ -1,12 +1,18 @@
 import {
   CACHED_GROUP_SETS_CHANGED_EVENT,
   CACHED_GROUP_SETS_STORAGE_KEY,
+  FOLLOWED_GROUPS_CHANGED_EVENT,
+  FOLLOWED_GROUPS_STORAGE_KEY,
   MESSAGE_PREFERENCES_STORAGE_KEY,
+  OWNED_CHAIN_GROUPS_CHANGED_EVENT,
+  OWNED_CHAIN_GROUPS_STORAGE_KEY,
 } from './chatConstants';
+import { GROUP_CHAT_CONTRACT_ADDRESS } from '@/src/hooks/contracts/useGroupChat';
+
+type AccountAddress = `0x${string}` | undefined;
+type TokenAddress = `0x${string}` | undefined;
 
 export type CachedGroupSets = {
-  pinnedGroupIds: string[];
-  myChainGroupIds: string[];
   recommendedGroupIds: string[];
   initializedAt: number;
   updatedAt: number;
@@ -32,6 +38,58 @@ export function readJsonArrayStorage(key: string): string[] {
   }
 }
 
+export function groupChatStorageScope(account: AccountAddress) {
+  const chainId = process.env.NEXT_PUBLIC_CHAIN_ID || process.env.NEXT_PUBLIC_CHAIN || 'unknown-chain';
+  const accountKey = account?.toLowerCase() || 'anonymous';
+  return `${chainId}:${GROUP_CHAT_CONTRACT_ADDRESS.toLowerCase()}:${accountKey}`;
+}
+
+export function followedGroupsStorageKey(account: AccountAddress) {
+  return `${FOLLOWED_GROUPS_STORAGE_KEY}:${groupChatStorageScope(account)}`;
+}
+
+export function ownedChainGroupsStorageKey(account: AccountAddress) {
+  return `${OWNED_CHAIN_GROUPS_STORAGE_KEY}:${groupChatStorageScope(account)}`;
+}
+
+export function cachedGroupSetsScopePrefix(account: AccountAddress) {
+  return `${groupChatStorageScope(account)}:`;
+}
+
+export function cachedGroupSetsKey(account: AccountAddress, tokenAddress: TokenAddress) {
+  return `${cachedGroupSetsScopePrefix(account)}${tokenAddress?.toLowerCase() || 'no-token'}`;
+}
+
+export function readFollowedGroupIds(account: AccountAddress) {
+  if (!account) return [];
+  return readJsonArrayStorage(followedGroupsStorageKey(account));
+}
+
+export function writeFollowedGroupIds(account: AccountAddress, groupIds: readonly string[]) {
+  if (typeof window === 'undefined' || !account) return;
+  window.localStorage.setItem(followedGroupsStorageKey(account), JSON.stringify(groupIds));
+  window.dispatchEvent(new Event(FOLLOWED_GROUPS_CHANGED_EVENT));
+}
+
+export function followGroupId(account: AccountAddress, groupId: bigint | undefined) {
+  if (typeof window === 'undefined' || !account || !groupId || groupId <= BigInt(0)) return;
+  const key = groupId.toString();
+  const current = readFollowedGroupIds(account);
+  if (current.includes(key)) return;
+  writeFollowedGroupIds(account, [key, ...current]);
+}
+
+export function readOwnedChainGroupIds(account: AccountAddress) {
+  if (!account) return [];
+  return readJsonArrayStorage(ownedChainGroupsStorageKey(account));
+}
+
+export function writeOwnedChainGroupIds(account: AccountAddress, groupIds: readonly string[]) {
+  if (typeof window === 'undefined' || !account) return;
+  window.localStorage.setItem(ownedChainGroupsStorageKey(account), JSON.stringify(groupIds));
+  window.dispatchEvent(new Event(OWNED_CHAIN_GROUPS_CHANGED_EVENT));
+}
+
 export function readRecordStorage(key: string): Record<string, string> {
   if (typeof window === 'undefined') return {};
   try {
@@ -52,8 +110,6 @@ export function readCachedGroupSets(cacheKey: string): CachedGroupSets | undefin
     const item = raw?.[cacheKey];
     if (!item || typeof item !== 'object' || Array.isArray(item)) return undefined;
     return {
-      pinnedGroupIds: Array.isArray(item.pinnedGroupIds) ? item.pinnedGroupIds.map((value: unknown) => String(value)) : [],
-      myChainGroupIds: Array.isArray(item.myChainGroupIds) ? item.myChainGroupIds.map((value: unknown) => String(value)) : [],
       recommendedGroupIds: Array.isArray(item.recommendedGroupIds)
         ? item.recommendedGroupIds.map((value: unknown) => String(value))
         : [],

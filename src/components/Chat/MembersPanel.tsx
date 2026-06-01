@@ -30,6 +30,8 @@ import { useConfirmedTransactionEffect } from './useConfirmedTransactionEffect';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
+const formatMemberIdentity = (id: bigint, label?: string) => `发言身份 #${id.toString()}${label ? ` · ${label}` : ''}`;
+
 export function MembersPanel({
   groupId,
   account,
@@ -66,25 +68,27 @@ export function MembersPanel({
     hasMemberListScope && !!accountData.defaultSenderId,
   );
   const joinParticipation = useGroupJoinParticipationCount(groupId, account, hasGroupJoinScope && !!account);
-  const isPermissionLoading = hasMemberListScope && (publicData.isPending || !publicData.chatInfo || memberPermission.isPending);
+  const isPermissionLoading = hasMemberListScope && !!account && memberPermission.isPending;
   const canEditMembers = hasMemberListScope && memberPermission.canOperate;
   const memberPermissionText = canEditMembers
-    ? '当前链群 NFT 持有者、代理、群管理可维护成员名单。'
+    ? '有权限：你可以维护本群成员名单。'
+    : !account
+      ? '连接钱包后可查看成员管理权限；当前只能查看成员名单。'
     : isPermissionLoading
       ? '正在读取成员管理权限。'
-      : '当前地址不是链群 NFT 持有者、代理或群管理；本页只能查看和查询成员名单。';
+      : '当前钱包没有成员管理权限；本页只能查看和查询成员名单。';
   const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
   const scopeDescription = !publicData.chatInfo
     ? '正在读取群成员规则。'
     : managerScope
       ? managerScope.text
       : hasGroupMemberScope
-        ? '当前群聊使用 GroupMemberScope：普通发言者需要使用 GroupMember 成员名单里的 NFT ID 发言。'
+        ? '这个群只允许名单内的身份发言；发消息时会检查你当前的默认发言身份是否在本群成员名单中。'
         : hasGroupJoinScope
-          ? '通过此链群参与行动的地址或显式加入成员名单的 NFT，即为群成员，可发言。'
+          ? '参与过此链群行动的地址，或被管理员加入名单的 NFT 身份，可以在这里发言。'
           : hasOpenScope
-            ? '当前群聊未设置 scopeSource：已激活群默认开放发言，任何有效 LOVE20 NFT 持有人都可发言。'
-            : '当前群聊使用自定义 scopeSource：发言成员范围由该合约实时判断，前端无法安全枚举成员列表。';
+            ? '这个群已开放发言：群聊激活、发言开关开启且默认身份有效时即可发送消息。'
+            : '这个群使用自定义发言规则，成员范围由链上规则实时判断；这里无法列出完整名单。';
   const sourceRules = [
     { label: 'owner', value: publicData.chatInfo?.owner, note: '当前群聊 NFT owner' },
     {
@@ -93,7 +97,7 @@ export function MembersPanel({
       note: hasOpenScope
         ? '未挂载，默认开放发言'
         : hasMemberListScope
-          ? '成员资格源包含 GroupMember 成员名单'
+          ? '发言范围包含本群成员名单'
           : '成员资格由该合约规则决定',
     },
     { label: 'banSource', value: publicData.chatInfo?.banSource, note: '发言禁用规则源' },
@@ -121,16 +125,22 @@ export function MembersPanel({
   useEffect(() => {
     if (!queryMemberTarget || isQueryingSelf) return;
     if (memberStatus.isPending) {
-      setQueryResult(`正在查询 NFT #${queryMemberTarget.id.toString()} 成员资格`);
+      setQueryResult(`正在查询 ${formatMemberIdentity(queryMemberTarget.id, queryMemberTarget.label)} 是否可发言`);
       return;
     }
     if (memberStatus.isMember === undefined) return;
+    const identity = formatMemberIdentity(queryMemberTarget.id, queryMemberTarget.label);
+    const memberText = hasGroupJoinScope
+      ? memberStatus.isMember
+        ? '已加入管理员名单，可发言'
+        : '未在管理员添加的成员名单中'
+      : memberStatus.isMember
+        ? '可以发言，已加入本群成员名单'
+        : '暂不能发言，未加入本群成员名单';
     setQueryResult(
-      `NFT #${queryMemberTarget.id.toString()}${queryMemberTarget.label ? ` · ${queryMemberTarget.label}` : ''} · ${
-        memberStatus.isMember ? '已在 GroupMemberScope 成员名单' : '不在 GroupMemberScope 成员名单'
-      }`,
+      `${identity} · ${memberText}`,
     );
-  }, [isQueryingSelf, memberStatus.isMember, memberStatus.isPending, queryMemberTarget]);
+  }, [hasGroupJoinScope, isQueryingSelf, memberStatus.isMember, memberStatus.isPending, queryMemberTarget]);
 
   useEffect(() => {
     if (!isQueryingSelf || !hasGroupJoinScope) return;
@@ -151,13 +161,13 @@ export function MembersPanel({
           : '当前地址未通过此链群参与行动。';
     const defaultNftText = accountData.defaultSenderId
       ? defaultSenderMemberStatus.isPending
-        ? `正在读取默认 NFT #${accountData.defaultSenderId.toString()} 是否在成员名单。`
+        ? `正在检查 ${formatMemberIdentity(accountData.defaultSenderId, accountData.defaultSenderName)} 是否已加入本群成员名单。`
         : defaultSenderMemberStatus.error
-          ? `默认 NFT #${accountData.defaultSenderId.toString()} 的成员名单状态读取失败。`
+          ? `${formatMemberIdentity(accountData.defaultSenderId, accountData.defaultSenderName)} 的名单状态读取失败。`
           : defaultSenderMemberStatus.isMember
-            ? `默认 NFT #${accountData.defaultSenderId.toString()} 已在成员名单，可发言。`
-            : `默认 NFT #${accountData.defaultSenderId.toString()} 未加入成员名单。`
-      : '当前钱包未设置默认 NFT。';
+            ? `${formatMemberIdentity(accountData.defaultSenderId, accountData.defaultSenderName)} 已加入本群成员名单，可发言。`
+            : `${formatMemberIdentity(accountData.defaultSenderId, accountData.defaultSenderName)} 未加入本群成员名单。`
+      : '当前钱包未设置默认发言身份。';
     setQueryResult(`${actionJoinText} ${defaultNftText}`);
   }, [
     account,
@@ -172,6 +182,7 @@ export function MembersPanel({
     joinParticipation.isPending,
     publicData.chatInfo,
     accountData.defaultSenderId,
+    accountData.defaultSenderName,
     selfQueryNonce,
   ]);
 
@@ -205,7 +216,7 @@ export function MembersPanel({
       return;
     }
     if (!accountData.defaultSenderId) {
-      toast.error('当前钱包未设置默认 NFT');
+      toast.error('当前钱包未设置默认发言身份');
       return;
     }
     nftLookup.setLookupMode('id');

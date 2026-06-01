@@ -8,20 +8,20 @@ export function GroupChatToolbar({
   title,
   messagesCount,
   menuOpen,
-  isPinned,
+  isFollowed,
   onToggleMenu,
   onCloseMenu,
-  onTogglePin,
+  onToggleFollow,
   onOpenPanel,
 }: {
   groupId: bigint;
   title: string;
   messagesCount: bigint | undefined;
   menuOpen: boolean;
-  isPinned: boolean;
+  isFollowed: boolean;
   onToggleMenu: () => void;
   onCloseMenu: () => void;
-  onTogglePin: (groupId: bigint) => void;
+  onToggleFollow: (groupId: bigint) => void;
   onOpenPanel: (view: ChatWorkspaceView) => void;
 }) {
   const toolbarRef = useRef<HTMLDivElement | null>(null);
@@ -50,9 +50,9 @@ export function GroupChatToolbar({
     onOpenPanel(view);
   };
 
-  const togglePin = () => {
+  const toggleFollow = () => {
     onCloseMenu();
-    onTogglePin(groupId);
+    onToggleFollow(groupId);
   };
 
   return (
@@ -69,7 +69,7 @@ export function GroupChatToolbar({
       </button>
       {menuOpen && (
         <div className="chat-menu">
-          <button type="button" onClick={togglePin}>{isPinned ? '取消置顶' : '置顶'}</button>
+          <button type="button" onClick={toggleFollow}>{isFollowed ? '移出' : '添加'}</button>
           <button type="button" onClick={() => openPanel('members')}>群成员</button>
           <button type="button" onClick={() => openPanel('banList')}>禁言名单</button>
           <button type="button" onClick={() => openPanel('admins')}>管理员</button>

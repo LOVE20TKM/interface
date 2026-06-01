@@ -22,13 +22,18 @@ import { readContractsInBatchesWithRetry } from '@/src/lib/readContractsInBatche
 import {
   CACHED_GROUP_SETS_CHANGED_EVENT,
   CACHED_GROUP_SETS_STORAGE_KEY,
-  PINNED_GROUPS_CHANGED_EVENT,
-  PINNED_GROUPS_STORAGE_KEY,
+  FOLLOWED_GROUPS_CHANGED_EVENT,
+  OWNED_CHAIN_GROUPS_CHANGED_EVENT,
   READ_CURSORS_CHANGED_EVENT,
   READ_CURSORS_STORAGE_KEY,
 } from '@/src/components/Chat/chatConstants';
+import {
+  cachedGroupSetsScopePrefix,
+  readFollowedGroupIds,
+  readOwnedChainGroupIds,
+} from '@/src/components/Chat/chatStorage';
 
-export type GroupChatWatchSource = 'active-chat' | 'inbox-visible' | 'pinned' | 'mentioned' | 'manual-follow';
+export type GroupChatWatchSource = 'active-chat' | 'inbox-visible' | 'followed' | 'mentioned' | 'manual-follow';
 export type GroupChatSyncStatus = 'idle' | 'refreshing' | 'error' | 'disabled';
 export type GroupChatSyncFrequency = 'high' | 'medium' | 'low';
 export type GroupChatSyncScope = 'page' | 'background';
@@ -73,6 +78,7 @@ type GroupChatRegisterOptions = {
   scope: GroupChatSyncScope;
   frequency: GroupChatSyncFrequency;
   groupIds: readonly bigint[];
+  refreshOnRegister?: boolean;
 };
 
 type GroupChatSyncContextValue = {
@@ -149,6 +155,13 @@ function sameGroupIds(left: readonly bigint[], right: readonly bigint[]) {
   return left.every((groupId, index) => groupId === right[index]);
 }
 
+function sortGroupIds(groupIds: readonly bigint[]) {
+  return [...groupIds].sort((left, right) => {
+    if (left === right) return 0;
+    return left < right ? -1 : 1;
+  });
+}
+
 function groupKey(groupId: bigint | undefined) {
   return groupId && groupId > BigInt(0) ? groupId.toString() : undefined;
 }
@@ -204,21 +217,13 @@ function readSeenMessageId(groupId: bigint | undefined) {
   return key ? safeToBigInt(readCursorMap()[key]) : BigInt(0);
 }
 
-function readPinnedGroupIds() {
+function readCachedBackgroundGroupIds(account: `0x${string}` | undefined) {
   if (typeof window === 'undefined') return [];
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(PINNED_GROUPS_STORAGE_KEY) || '[]');
-    return Array.isArray(parsed)
-      ? uniquePositiveGroupIds(parsed.map((item) => safeToBigInt(item)))
-      : [];
-  } catch {
-    return [];
-  }
-}
-
-function readCachedBackgroundGroupIds() {
-  if (typeof window === 'undefined') return [];
-  const groupIds: bigint[] = [...readPinnedGroupIds()];
+  const groupIds: bigint[] = [
+    ...readFollowedGroupIds(account).map((groupId) => safeToBigInt(groupId)),
+    ...readOwnedChainGroupIds(account).map((groupId) => safeToBigInt(groupId)),
+  ];
+  const cacheScopePrefix = cachedGroupSetsScopePrefix(account);
 
   try {
     const parsed = JSON.parse(window.localStorage.getItem(CACHED_GROUP_SETS_STORAGE_KEY) || '{}');
@@ -226,10 +231,11 @@ function readCachedBackgroundGroupIds() {
       return uniquePositiveGroupIds(groupIds);
     }
 
-    Object.values(parsed).forEach((item) => {
+    Object.entries(parsed).forEach(([cacheKey, item]) => {
+      if (!cacheKey.startsWith(cacheScopePrefix)) return;
       if (!item || typeof item !== 'object' || Array.isArray(item)) return;
       const record = item as Record<string, unknown>;
-      [record.pinnedGroupIds, record.myChainGroupIds, record.recommendedGroupIds].forEach((rawGroupIds) => {
+      [record.recommendedGroupIds].forEach((rawGroupIds) => {
         if (!Array.isArray(rawGroupIds)) return;
         groupIds.push(...rawGroupIds.map((groupId) => safeToBigInt(groupId)));
       });
@@ -241,15 +247,17 @@ function readCachedBackgroundGroupIds() {
   return uniquePositiveGroupIds(groupIds);
 }
 
-function hasCachedGroupIds() {
+function hasCachedGroupIds(account: `0x${string}` | undefined) {
   if (typeof window === 'undefined') return true;
+  const cacheScopePrefix = cachedGroupSetsScopePrefix(account);
   try {
     const parsed = JSON.parse(window.localStorage.getItem(CACHED_GROUP_SETS_STORAGE_KEY) || '{}');
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
-    return Object.values(parsed).some((item) => {
+    return Object.entries(parsed).some(([cacheKey, item]) => {
+      if (!cacheKey.startsWith(cacheScopePrefix)) return false;
       if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
       const record = item as Record<string, unknown>;
-      return [record.pinnedGroupIds, record.myChainGroupIds, record.recommendedGroupIds].some((groupIds) => {
+      return [record.recommendedGroupIds].some((groupIds) => {
         return Array.isArray(groupIds) && uniquePositiveGroupIds(groupIds.map((groupId) => safeToBigInt(groupId))).length > 0;
       });
     });
@@ -258,9 +266,11 @@ function hasCachedGroupIds() {
   }
 }
 
-function hasAnyCachedGroupSet() {
+function hasAnyCachedGroupSet(account: `0x${string}` | undefined) {
   if (typeof window === 'undefined') return true;
-  return readPinnedGroupIds().length > 0 || hasCachedGroupIds();
+  return readFollowedGroupIds(account).length > 0 ||
+    readOwnedChainGroupIds(account).length > 0 ||
+    hasCachedGroupIds(account);
 }
 
 function scopedStorageKey(base: string, account: `0x${string}` | undefined, defaultSenderId: bigint | undefined) {
@@ -373,8 +383,8 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setBaselinesByGroup(readStoredBaselines(storageKey));
-    setHasCachedGroups(hasAnyCachedGroupSet());
-  }, [storageKey]);
+    setHasCachedGroups(hasAnyCachedGroupSet(accountAddress));
+  }, [accountAddress, storageKey]);
 
   const watchedGroups = useMemo(() => {
     const map: Record<string, { groupId: bigint; frequency: GroupChatSyncFrequency }> = {};
@@ -586,8 +596,14 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
   }, [runRefresh, watchedGroups]);
 
   const registerGroups = useCallback((options: GroupChatRegisterOptions) => {
-    const groupIds = uniquePositiveGroupIds(options.groupIds);
+    const groupIds = sortGroupIds(uniquePositiveGroupIds(options.groupIds));
     const registrationKey = `${options.scope}:${options.source}`;
+    const current = registrationsRef.current[registrationKey];
+    const registrationChanged =
+      !current ||
+      current.scope !== options.scope ||
+      current.frequency !== options.frequency ||
+      !sameGroupIds(current.groupIds, groupIds);
 
     setRegistrations((previous) => {
       if (groupIds.length === 0) {
@@ -614,7 +630,7 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
       };
     });
 
-    if (groupIds.length > 0) {
+    if (groupIds.length > 0 && registrationChanged && options.refreshOnRegister !== false) {
       runRefresh(groupIds);
     }
 
@@ -630,26 +646,29 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const syncCachedBackgroundGroups = () => {
-      setHasCachedGroups(hasAnyCachedGroupSet());
-      const cachedGroupIds = readCachedBackgroundGroupIds();
+      setHasCachedGroups(hasAnyCachedGroupSet(accountAddress));
+      const cachedGroupIds = readCachedBackgroundGroupIds(accountAddress);
       registerGroups({
         source: 'cached-background',
         scope: 'background',
         frequency: 'low',
         groupIds: cachedGroupIds,
+        refreshOnRegister: false,
       });
     };
 
     syncCachedBackgroundGroups();
     window.addEventListener('storage', syncCachedBackgroundGroups);
-    window.addEventListener(PINNED_GROUPS_CHANGED_EVENT, syncCachedBackgroundGroups);
+    window.addEventListener(FOLLOWED_GROUPS_CHANGED_EVENT, syncCachedBackgroundGroups);
+    window.addEventListener(OWNED_CHAIN_GROUPS_CHANGED_EVENT, syncCachedBackgroundGroups);
     window.addEventListener(CACHED_GROUP_SETS_CHANGED_EVENT, syncCachedBackgroundGroups);
     return () => {
       window.removeEventListener('storage', syncCachedBackgroundGroups);
-      window.removeEventListener(PINNED_GROUPS_CHANGED_EVENT, syncCachedBackgroundGroups);
+      window.removeEventListener(FOLLOWED_GROUPS_CHANGED_EVENT, syncCachedBackgroundGroups);
+      window.removeEventListener(OWNED_CHAIN_GROUPS_CHANGED_EVENT, syncCachedBackgroundGroups);
       window.removeEventListener(CACHED_GROUP_SETS_CHANGED_EVENT, syncCachedBackgroundGroups);
     };
-  }, [registerGroups]);
+  }, [accountAddress, registerGroups]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
