@@ -109,7 +109,7 @@ export function AdminBanListRows({
   return (
     <div className="tab-content-block">
       <div className="card-topline ban-list-list-head">
-        <h2>{queryType === 'address' ? '地址列表' : 'NFT列表'}</h2>
+        <h2>{queryType === 'address' ? '禁言地址列表' : '禁言NFT列表'}</h2>
         <span>{total?.toString() || '0'} 条</span>
       </div>
       {rows.length ? rows.map((record) => {
@@ -207,7 +207,7 @@ export function GovBanListRows({
   return (
     <div className="tab-content-block">
       <div className="card-topline ban-list-list-head">
-        <h2>{queryType === 'address' ? '地址列表' : 'NFT列表'}</h2>
+        <h2>{queryType === 'address' ? '禁言地址列表' : '禁言NFT列表'}</h2>
         <span>{total?.toString() || '0'} 条</span>
       </div>
       {rows.length ? rows.map((record) => {

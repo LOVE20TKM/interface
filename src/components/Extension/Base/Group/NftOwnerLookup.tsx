@@ -13,6 +13,7 @@ interface NftOwnerLookupProps {
   disabled?: boolean;
   className?: string;
   placeholder?: string;
+  resultVariant?: 'full' | 'compact';
 }
 
 const NftOwnerLookup: React.FC<NftOwnerLookupProps> = ({
@@ -24,6 +25,7 @@ const NftOwnerLookup: React.FC<NftOwnerLookupProps> = ({
   disabled = false,
   className,
   placeholder,
+  resultVariant = 'full',
 }) => {
   return (
     <div className={cn('space-y-3', className)}>
@@ -67,7 +69,14 @@ const NftOwnerLookup: React.FC<NftOwnerLookupProps> = ({
 
       {lookupResult?.status === 'error' && <div className="text-xs text-red-500">{lookupResult.message}</div>}
 
-      {lookupResult?.status === 'resolved' && (
+      {lookupResult?.status === 'resolved' && resultVariant === 'compact' && (
+        <div className="nft-lookup-compact-result text-xs text-gray-500">
+          <span className="font-mono">#{lookupResult.tokenId.toString()}</span>{' '}
+          <span>{lookupResult.groupName}</span>
+        </div>
+      )}
+
+      {lookupResult?.status === 'resolved' && resultVariant === 'full' && (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2 text-sm">
           <div className="flex items-center justify-between gap-3">
             <span className="text-gray-500">NFT ID</span>

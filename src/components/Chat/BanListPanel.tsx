@@ -501,11 +501,6 @@ export function BanListPanel({
     copyText(messageTarget.senderAddress, '发送者地址');
   };
 
-  const copyQueryAddress = () => {
-    if (queryTarget?.type !== 'address') return;
-    copyText(queryTarget.value, '查询地址');
-  };
-
   const addAddressBan = async (address?: `0x${string}`) => {
     const target = address || parseAddressInput(queryInput);
     if (!target) {
@@ -554,6 +549,31 @@ export function BanListPanel({
       } else {
         addSenderBan(target.value);
       }
+      return;
+    }
+    toast.error('当前群聊未启用可写禁言源');
+  };
+
+  const removeCurrentTarget = () => {
+    if (!queryTarget) return;
+    if (activeAdminBanSource) {
+      if (!canEditAdminBan) {
+        toast.error('当前地址没有 AdminBanSource 管理权限。');
+        return;
+      }
+      if (queryTarget.type === 'address') {
+        removeAddressBan(queryTarget.value);
+      } else {
+        removeSenderBan(queryTarget.value);
+      }
+      return;
+    }
+    if (activeGovBanSource) {
+      if (!canVoteGovBan) {
+        toast.error('当前地址没有治理票权，只能查看和查询治理禁言名单。');
+        return;
+      }
+      voteCurrentTarget(false, queryTarget);
       return;
     }
     toast.error('当前群聊未启用可写禁言源');
@@ -801,11 +821,6 @@ export function BanListPanel({
     refreshVoter(voter);
   };
 
-  const queryLabel = queryTarget
-    ? queryTarget.type === 'address'
-      ? queryTarget.value
-      : `NFT #${queryTarget.value.toString()}`
-    : '';
   const queryResultTone = queryTarget
     ? activeAdminBanSource
       ? adminQuery.isPending
@@ -823,16 +838,20 @@ export function BanListPanel({
             : 'neutral'
         : 'neutral'
     : 'neutral';
-  const queryResultStatusText = queryTarget
+  const queryResultListName = queryTarget?.type === 'address' ? '禁言地址列表' : '禁言NFT列表';
+  const queryResultSubjectName = queryTarget?.type === 'address' ? '地址' : 'NFT';
+  const queryResultInBanList = queryResultTone === 'danger';
+  const queryResultHasAction = canAddBanListTarget && (queryResultTone === 'danger' || queryResultTone === 'ok');
+  const queryResultSentence = queryTarget
     ? queryResultTone === 'loading'
-      ? '读取中'
+      ? `正在查询${queryResultSubjectName}是否在${queryResultListName}中`
       : queryResultTone === 'danger'
-        ? '已禁言'
+        ? `${queryResultSubjectName}已在${queryResultListName}中`
         : queryResultTone === 'ok'
-          ? '未禁言'
+          ? `${queryResultSubjectName}不在${queryResultListName}中`
           : activeGovBanSource && !govQuery.status
-            ? '无投票状态'
-          : '未启用'
+            ? `${queryResultSubjectName}暂无禁言投票记录`
+            : `当前群聊未启用${queryResultListName}`
     : '';
   const queryResultMetaText =
     queryTarget && activeGovBanSource
@@ -847,7 +866,6 @@ export function BanListPanel({
       : !activeAdminBanSource && !activeGovBanSource
         ? '当前群聊未启用禁言源'
         : '';
-  const queryResultStatusPillClass = banStatusPillClass(queryResultTone);
   const messageSenderName = messageTarget
     ? publicData.senderNames[messageTarget.senderId.toString()] || `NFT #${messageTarget.senderId.toString()}`
     : '';
@@ -957,11 +975,14 @@ export function BanListPanel({
     ? accountData.defaultSenderName || `NFT #${accountData.defaultSenderId.toString()}`
     : '未设置默认 NFT';
   const myBanSummary = (() => {
-    if (!activeAdminBanSource && !activeGovBanSource) {
-      return { text: '未启用禁言源', tone: 'neutral' as const };
-    }
     if (!account) {
       return { text: '连接钱包后查看我的禁言状态', tone: 'neutral' as const };
+    }
+    if (publicData.isPending && !publicData.chatInfo) {
+      return { text: '正在读取禁言源', tone: 'loading' as const };
+    }
+    if (!activeAdminBanSource && !activeGovBanSource) {
+      return { text: '未启用禁言源', tone: 'neutral' as const };
     }
     if (myAddressBanPending || (accountData.defaultSenderId && myNftBanPending)) {
       return { text: '正在检查禁言状态', tone: 'loading' as const };
@@ -1085,16 +1106,6 @@ export function BanListPanel({
             nftLookupMode={nftLookup.lookupMode}
             nftLookupValue={nftLookup.lookupValue}
             nftLookupResult={nftLookup.lookupResult}
-            canAddBanListTarget={canAddBanListTarget}
-            canAdd={activeAdminBanSource ? canEditAdminBan : canVoteGovBan}
-            isBusy={anyBanListTxPending}
-            addLabel={
-              queryType === 'message'
-                ? undefined
-                : activeAdminBanSource
-                  ? queryType === 'address' ? addAddressBanLabel : addSenderBanLabel
-                  : transactionLabel(queryType === 'address' ? voteAddressTx : voteSenderTx, '等待钱包确认', '投票确认中')
-            }
             onQueryTypeChange={(value) => {
               setQueryType(value);
               setQueryTarget(undefined);
@@ -1113,7 +1124,6 @@ export function BanListPanel({
               setQueryTarget(undefined);
             }}
             onQuery={submitQuery}
-            onAdd={addCurrentTarget}
           />
         </div>
         {queryType === 'message' && activeMessageId && (
@@ -1200,23 +1210,30 @@ export function BanListPanel({
         )}
         {queryTarget && (
           <div className={cn('query-result ban-list-query-result ban-list-standard-result', `tone-${queryResultTone}`)}>
-            <strong>查询结果</strong>
-            <span className="ban-status-object-row ban-list-query-summary">
-              {queryTarget.type === 'address' ? (
-                <span className="ban-list-query-target message-sender-address-line">
-                  <code title={queryTarget.value}>{abbreviateAddress(queryTarget.value)}</code>
-                  <button type="button" onClick={copyQueryAddress} aria-label="复制查询地址" title="复制查询地址">
-                    <Copy size={13} strokeWidth={2.2} />
-                  </button>
-                </span>
-              ) : (
-                <span className="ban-list-query-target">{queryLabel}</span>
-              )}
-              <span className={cn('pill', queryResultStatusPillClass)}>
-                {queryResultStatusText}
-              </span>
+            <span className="ban-list-query-summary">
+              <span className="ban-list-query-sentence">{queryResultSentence}</span>
             </span>
             {queryResultMetaText && <span className="ban-list-query-meta">{queryResultMetaText}</span>}
+            {queryResultHasAction && (
+              <div className="ban-list-result-actions">
+                <button
+                  className="sheet-button inline-flex"
+                  type="button"
+                  onClick={queryResultInBanList ? removeCurrentTarget : addCurrentTarget}
+                  disabled={!(activeAdminBanSource ? canEditAdminBan : canVoteGovBan) || anyBanListTxPending}
+                >
+                  {queryResultInBanList
+                    ? activeAdminBanSource
+                      ? transactionLabel(queryTarget.type === 'address' ? unbanAddressTx : unbanSenderTx, '等待钱包确认', '移除确认中') || '移除'
+                      : transactionLabel(queryTarget.type === 'address' ? voteAddressTx : voteSenderTx, '等待钱包确认', '投票确认中') || '反对禁言'
+                    : activeAdminBanSource
+                      ? queryTarget.type === 'address'
+                        ? addAddressBanLabel || '加入禁言列表'
+                        : addSenderBanLabel || '加入禁言列表'
+                      : transactionLabel(queryTarget.type === 'address' ? voteAddressTx : voteSenderTx, '等待钱包确认', '投票确认中') || '支持禁言'}
+                </button>
+              </div>
+            )}
           </div>
         )}
         {activeGovTarget && (

@@ -13,71 +13,64 @@ export function BanListQueryControls({
   nftLookupMode,
   nftLookupValue,
   nftLookupResult,
-  canAddBanListTarget,
-  canAdd,
-  isBusy,
-  addLabel,
   onQueryTypeChange,
   onQueryInputChange,
   onNftLookupModeChange,
   onNftLookupValueChange,
   onQuery,
-  onAdd,
 }: {
   queryType: BanListQueryType;
   queryInput: string;
   nftLookupMode: NftLookupMode;
   nftLookupValue: string;
   nftLookupResult: NftLookupResult;
-  canAddBanListTarget: boolean;
-  canAdd: boolean;
-  isBusy: boolean;
-  addLabel?: string;
   onQueryTypeChange: (queryType: BanListQueryType) => void;
   onQueryInputChange: (value: string) => void;
   onNftLookupModeChange: (mode: NftLookupMode) => void;
   onNftLookupValueChange: (value: string) => void;
   onQuery: () => void;
-  onAdd: () => void;
 }) {
+  const placeholder = queryType === 'message' ? '输入消息 ID' : '请输入要查询的地址';
+
   return (
     <div className="admin-id-controls ban-list-query-controls">
       <div className="ban-list-query-head">
         <strong>查询或处理发言者</strong>
-        <small>用地址、NFT 或消息 ID 定位对象；消息 ID 会先反查发送者。</small>
       </div>
-      <div className="filter-tabs ban-list-query-tabs">
-        <button className={cn('filter-tab inline-flex', queryType === 'address' && 'active')} type="button" onClick={() => onQueryTypeChange('address')}>地址</button>
-        <button className={cn('filter-tab inline-flex', queryType === 'nft' && 'active')} type="button" onClick={() => onQueryTypeChange('nft')}>NFT</button>
-        <button className={cn('filter-tab inline-flex', queryType === 'message' && 'active')} type="button" onClick={() => onQueryTypeChange('message')}>消息 ID</button>
-      </div>
-      {queryType === 'nft' ? (
-        <NftOwnerLookup
-          className="ban-list-nft-lookup"
-          lookupMode={nftLookupMode}
-          onLookupModeChange={onNftLookupModeChange}
-          lookupValue={nftLookupValue}
-          onLookupValueChange={onNftLookupValueChange}
-          lookupResult={nftLookupResult}
-          placeholder="请输入要查询的NFT"
-        />
-      ) : (
-        <Input
-          value={queryInput}
-          onChange={(event) => onQueryInputChange(event.target.value)}
-          inputMode={queryType === 'message' ? 'numeric' : 'text'}
-          placeholder={queryType === 'message' ? '输入消息 ID' : '请输入要查询的地址'}
-        />
-      )}
-      <div className="admin-action-row ban-list-action-row">
-        <button className="sheet-button primary inline-flex" type="button" onClick={onQuery}>
-          查询
-        </button>
-        {queryType !== 'message' && canAddBanListTarget && (
-          <button className="sheet-button primary inline-flex" type="button" onClick={onAdd} disabled={!canAdd || isBusy}>
-            {addLabel || '加入禁言名单'}
+      <div className="ban-list-query-form">
+        <div className="ban-list-query-mode">
+          <div className="filter-tabs ban-list-query-tabs" role="tablist" aria-label="禁言名单查询类型">
+            <button className={cn('filter-tab inline-flex', queryType === 'address' && 'active')} type="button" role="tab" aria-selected={queryType === 'address'} onClick={() => onQueryTypeChange('address')}>地址</button>
+            <button className={cn('filter-tab inline-flex', queryType === 'nft' && 'active')} type="button" role="tab" aria-selected={queryType === 'nft'} onClick={() => onQueryTypeChange('nft')}>NFT</button>
+            <button className={cn('filter-tab inline-flex', queryType === 'message' && 'active')} type="button" role="tab" aria-selected={queryType === 'message'} onClick={() => onQueryTypeChange('message')}>消息 ID</button>
+          </div>
+        </div>
+        <div className="ban-list-query-field">
+          {queryType === 'nft' ? (
+            <NftOwnerLookup
+              className="ban-list-nft-lookup"
+              lookupMode={nftLookupMode}
+              onLookupModeChange={onNftLookupModeChange}
+              lookupValue={nftLookupValue}
+              onLookupValueChange={onNftLookupValueChange}
+              lookupResult={nftLookupResult}
+              placeholder="请输入要查询的 NFT"
+              resultVariant="compact"
+            />
+          ) : (
+            <Input
+              value={queryInput}
+              onChange={(event) => onQueryInputChange(event.target.value)}
+              inputMode={queryType === 'message' ? 'numeric' : 'text'}
+              placeholder={placeholder}
+            />
+          )}
+        </div>
+        <div className="ban-list-query-submit">
+          <button className="sheet-button primary inline-flex" type="button" onClick={onQuery}>
+            查询
           </button>
-        )}
+        </div>
       </div>
     </div>
   );

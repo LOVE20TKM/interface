@@ -1615,25 +1615,55 @@
 }
 
 .chatPrototype :global(.ban-list-query-controls) {
+  display: grid;
+  gap: 10px;
   margin-top: 0;
+  padding: 12px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(25, 28, 31, 0.03);
 }
 
 .chatPrototype :global(.ban-list-query-head) {
-  display: grid;
-  gap: 4px;
+  display: block;
+  min-width: 0;
 }
 
 .chatPrototype :global(.ban-list-query-head strong) {
   color: var(--greyscale-900);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 780;
   line-height: 1.25;
 }
 
-.chatPrototype :global(.ban-list-query-head small) {
-  color: var(--greyscale-500);
-  font-size: 12px;
-  line-height: 1.45;
+.chatPrototype :global(.ban-list-query-form) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(104px, auto);
+  align-items: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.chatPrototype :global(.ban-list-query-form > *) {
+  min-width: 0;
+}
+
+.chatPrototype :global(.ban-list-query-mode),
+.chatPrototype :global(.ban-list-query-field),
+.chatPrototype :global(.ban-list-query-submit) {
+  display: grid;
+  min-width: 0;
+}
+
+.chatPrototype :global(.ban-list-query-mode) {
+  grid-column: 1 / -1;
+}
+
+.chatPrototype :global(.ban-list-query-submit .sheet-button) {
+  width: 100%;
+  min-width: 104px;
+  height: 40px;
 }
 
 .chatPrototype :global(.my-ban-status-panel) {
@@ -1846,6 +1876,7 @@
   font-weight: 600;
   line-height: 1;
   text-align: center;
+  white-space: nowrap;
 }
 
 .chatPrototype :global(.ban-list-query-tabs .filter-tab.active) {
@@ -1855,9 +1886,13 @@
   box-shadow: 0 1px 2px rgba(25, 28, 31, 0.05);
 }
 
-.chatPrototype :global(.ban-list-query-controls > input) {
+.chatPrototype :global(.ban-list-query-field > input) {
   width: 100%;
   height: 40px;
+  min-width: 0;
+  border-color: var(--greyscale-200);
+  background: var(--greyscale-50);
+  font-size: 13px;
 }
 
 .chatPrototype :global(.ban-list-controls) {
@@ -1879,7 +1914,26 @@
 
 .chatPrototype :global(.ban-list-nft-lookup) {
   display: grid;
-  gap: 8px;
+  gap: 7px;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.chatPrototype :global(.ban-list-nft-lookup > div:first-child) {
+  min-width: 0;
+  height: 40px;
+  border-color: var(--greyscale-200);
+  background: var(--greyscale-50);
+}
+
+.chatPrototype :global(.ban-list-nft-lookup button) {
+  font-size: 12px;
+}
+
+.chatPrototype :global(.ban-list-nft-lookup input) {
+  min-width: 0;
+  background: transparent;
+  font-size: 13px;
 }
 
 .chatPrototype :global(.ban-list-nft-lookup > :not([hidden]) ~ :not([hidden])) {
@@ -1887,8 +1941,27 @@
   margin-bottom: 0;
 }
 
-.chatPrototype :global(.ban-list-nft-lookup > div:first-child) {
+.chatPrototype :global(.ban-list-nft-lookup > div:first-child > button) {
+  width: 104px;
+  background: #fff;
+}
+
+.chatPrototype :global(.ban-list-nft-lookup > div:not(:first-child)) {
   min-width: 0;
+  font-size: 12px;
+}
+
+.chatPrototype :global(.ban-list-nft-lookup .nft-lookup-compact-result) {
+  min-width: 0;
+  padding: 0 2px;
+  color: var(--greyscale-500);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.chatPrototype :global(.ban-list-nft-lookup .nft-lookup-compact-result .font-mono) {
+  color: var(--greyscale-700);
+  font-weight: 700;
 }
 
 .chatPrototype :global(.ban-list-query-row) {
@@ -1903,6 +1976,7 @@
   display: grid;
   gap: 8px;
   margin-top: 0;
+  padding-top: 2px;
 }
 
 .chatPrototype :global(.ban-list-action-row.count-1) {
@@ -1932,28 +2006,16 @@
 
 .chatPrototype :global(.ban-list-query-result) {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  align-items: start;
-  gap: 8px 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
   margin-top: 12px;
-  padding: 11px 12px;
-  border-width: 1px;
-  border-left-width: 4px;
+  padding: 10px;
+  border: 1px solid var(--greyscale-200);
   border-radius: 8px;
   background: #fff;
   color: var(--greyscale-900);
-  box-shadow: 0 8px 22px rgba(25, 28, 31, 0.08);
-}
-
-.chatPrototype :global(.ban-list-query-result > strong) {
-  min-height: 22px;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 5px;
-  padding: 0 7px;
-  font-size: 12px;
-  line-height: 1;
-  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(25, 28, 31, 0.03);
 }
 
 .chatPrototype :global(.ban-list-query-summary span) {
@@ -1965,8 +2027,16 @@
 }
 
 .chatPrototype :global(.ban-list-query-summary) {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
   align-items: center;
   gap: 8px;
+  width: 100%;
+}
+
+.chatPrototype :global(.ban-list-query-sentence) {
+  font-weight: 700;
 }
 
 .chatPrototype :global(.ban-list-query-summary .pill) {
@@ -1992,6 +2062,8 @@
 }
 
 .chatPrototype :global(.ban-list-query-target) {
+  color: var(--greyscale-500);
+  font-size: 12px;
   font-weight: 700;
   overflow-wrap: anywhere;
 }
@@ -2002,48 +2074,43 @@
 }
 
 .chatPrototype :global(.ban-list-query-meta) {
-  grid-column: 2;
+  grid-column: 1 / -1;
+  grid-row: 2;
   color: var(--greyscale-500);
   font-size: 12px;
 }
 
+.chatPrototype :global(.ban-list-result-actions) {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.chatPrototype :global(.ban-list-result-actions .sheet-button) {
+  min-width: 118px;
+  height: 32px;
+  border-color: var(--accent-border) !important;
+  background: var(--accent-soft) !important;
+  color: var(--primary-action) !important;
+}
+
 .chatPrototype :global(.ban-list-standard-result) {
-  grid-template-columns: max-content minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .chatPrototype :global(.ban-list-query-result.tone-danger) {
-  border-color: rgba(220, 38, 38, 0.32);
-  border-left-color: var(--danger);
-  background: #fff7f7;
-}
-
-.chatPrototype :global(.ban-list-standard-result.tone-danger > strong) {
-  background: #fee2e2;
-  color: var(--danger);
+  border-color: rgba(220, 38, 38, 0.24);
 }
 
 .chatPrototype :global(.ban-list-query-result.tone-ok) {
   border-color: rgba(21, 128, 61, 0.28);
-  border-left-color: var(--success);
-  background: #f7fff9;
-}
-
-.chatPrototype :global(.ban-list-standard-result.tone-ok > strong) {
-  background: rgba(21, 128, 61, 0.12);
-  color: var(--success);
 }
 
 .chatPrototype :global(.ban-list-query-result.tone-loading),
 .chatPrototype :global(.ban-list-query-result.tone-neutral) {
   border-color: rgba(37, 99, 235, 0.28);
-  border-left-color: var(--accent);
-  background: #f7fbff;
-}
-
-.chatPrototype :global(.ban-list-standard-result.tone-loading > strong),
-.chatPrototype :global(.ban-list-standard-result.tone-neutral > strong) {
-  background: rgba(37, 99, 235, 0.1);
-  color: var(--accent);
 }
 
 .chatPrototype :global(.message-sender-result) {
@@ -3361,11 +3428,44 @@
   .chatPrototype :global(.settings-metric-grid),
   .chatPrototype :global(.settings-layout),
   .chatPrototype :global(.contract-address-row),
+  .chatPrototype :global(.ban-list-query-form),
   .chatPrototype :global(.ban-list-controls),
   .chatPrototype :global(.field-row),
   .chatPrototype :global(.activation-field-row),
   .chatPrototype :global(.activation-choice-row) {
     grid-template-columns: 1fr;
+  }
+
+  .chatPrototype :global(.ban-list-query-head) {
+    display: block;
+  }
+
+  .chatPrototype :global(.ban-list-query-tabs) {
+    width: 100%;
+  }
+
+  .chatPrototype :global(.ban-list-query-result),
+  .chatPrototype :global(.ban-list-standard-result) {
+    grid-template-columns: 1fr;
+  }
+
+  .chatPrototype :global(.ban-list-query-meta),
+  .chatPrototype :global(.ban-list-result-actions) {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  .chatPrototype :global(.ban-list-query-summary) {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  .chatPrototype :global(.ban-list-result-actions) {
+    justify-content: stretch;
+  }
+
+  .chatPrototype :global(.ban-list-result-actions .sheet-button) {
+    width: 100%;
   }
 
   .chatPrototype :global(.activation-card-actions),
