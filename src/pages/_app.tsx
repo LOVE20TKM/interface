@@ -138,11 +138,23 @@ function MyApp({ Component, pageProps }: AppProps) {
     initVConsole();
 
     // 初始化客户端安全措施
+    let cleanupClientSecurity: (() => void) | undefined;
+    let cancelled = false;
     if (typeof window !== 'undefined') {
       import('@/src/lib/clientSecurity').then(({ initializeClientSecurity }) => {
-        initializeClientSecurity();
+        const cleanup = initializeClientSecurity();
+        if (cancelled) {
+          cleanup();
+          return;
+        }
+        cleanupClientSecurity = cleanup;
       });
     }
+
+    return () => {
+      cancelled = true;
+      cleanupClientSecurity?.();
+    };
   }, []);
 
   // 路由切换时显示全局加载遮罩

@@ -42,10 +42,14 @@ export function BanListQueryControls({
 }) {
   return (
     <div className="admin-id-controls ban-list-query-controls">
+      <div className="ban-list-query-head">
+        <strong>查询或处理发言者</strong>
+        <small>用地址、NFT 或消息 ID 定位对象；消息 ID 会先反查发送者。</small>
+      </div>
       <div className="filter-tabs ban-list-query-tabs">
-        <button className={cn('filter-tab inline-flex', queryType === 'address' && 'active')} type="button" onClick={() => onQueryTypeChange('address')}>按地址</button>
-        <button className={cn('filter-tab inline-flex', queryType === 'nft' && 'active')} type="button" onClick={() => onQueryTypeChange('nft')}>按NFT</button>
-        <button className={cn('filter-tab inline-flex', queryType === 'message' && 'active')} type="button" onClick={() => onQueryTypeChange('message')}>按消息ID</button>
+        <button className={cn('filter-tab inline-flex', queryType === 'address' && 'active')} type="button" onClick={() => onQueryTypeChange('address')}>地址</button>
+        <button className={cn('filter-tab inline-flex', queryType === 'nft' && 'active')} type="button" onClick={() => onQueryTypeChange('nft')}>NFT</button>
+        <button className={cn('filter-tab inline-flex', queryType === 'message' && 'active')} type="button" onClick={() => onQueryTypeChange('message')}>消息 ID</button>
       </div>
       {queryType === 'nft' ? (
         <NftOwnerLookup

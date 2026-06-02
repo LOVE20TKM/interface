@@ -162,6 +162,23 @@ function sortGroupIds(groupIds: readonly bigint[]) {
   });
 }
 
+function filterCountsByGroupKeys(
+  countsByGroup: Record<string, GroupChatCountSnapshot>,
+  groupKeys: Set<string>,
+) {
+  return Object.fromEntries(
+    Object.entries(countsByGroup).filter(([key]) => groupKeys.has(key)),
+  );
+}
+
+function watchedGroupKeysFromRegistrations(registrations: Record<string, SourceRegistration>) {
+  const watchedKeys = new Set<string>();
+  Object.values(registrations).forEach((registration) => {
+    registration.groupIds.forEach((groupId) => watchedKeys.add(groupId.toString()));
+  });
+  return watchedKeys;
+}
+
 function groupKey(groupId: bigint | undefined) {
   return groupId && groupId > BigInt(0) ? groupId.toString() : undefined;
 }
@@ -360,14 +377,37 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
   const refreshRunningRef = useRef(false);
   const queuedRefreshGroupIdsRef = useRef<Set<string>>(new Set());
   const lastFinishedByGroupRef = useRef<Record<string, number>>({});
+  const watchedGroupKeysRef = useRef<Set<string>>(new Set());
   const storageKey = useMemo(
     () => scopedStorageKey(COUNT_BASELINES_STORAGE_KEY, accountAddress, defaultGroupId),
     [accountAddress, defaultGroupId],
   );
 
-  useEffect(() => {
-    registrationsRef.current = registrations;
-  }, [registrations]);
+  const pruneUnwatchedRefreshState = useCallback((watchedKeys: Set<string>) => {
+    Object.keys(lastFinishedByGroupRef.current).forEach((key) => {
+      if (!watchedKeys.has(key)) {
+        delete lastFinishedByGroupRef.current[key];
+      }
+    });
+
+    Object.entries(refreshTimersRef.current).forEach(([key, timer]) => {
+      if (!watchedKeys.has(key)) {
+        clearTimeout(timer);
+        delete refreshTimersRef.current[key];
+      }
+    });
+
+    queuedRefreshGroupIdsRef.current.forEach((key) => {
+      if (!watchedKeys.has(key)) {
+        queuedRefreshGroupIdsRef.current.delete(key);
+      }
+    });
+  }, []);
+
+  const applyWatchedGroupKeys = useCallback((watchedKeys: Set<string>) => {
+    watchedGroupKeysRef.current = watchedKeys;
+    pruneUnwatchedRefreshState(watchedKeys);
+  }, [pruneUnwatchedRefreshState]);
 
   useEffect(() => {
     statesRef.current = statesByGroup;
@@ -405,22 +445,43 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
     [watchedGroups],
   );
 
+  useEffect(() => {
+    const watchedKeys = watchedGroupKeysFromRegistrations(registrationsRef.current);
+    setStatesByGroup((previousStates) => {
+      let changed = false;
+      const nextStates: Record<string, GroupChatSyncState> = {};
+      Object.entries(previousStates).forEach(([key, state]) => {
+        if (watchedKeys.has(key)) {
+          nextStates[key] = state;
+        } else {
+          changed = true;
+        }
+      });
+      return changed ? nextStates : previousStates;
+    });
+  }, [registrations]);
+
   const scheduleGroupRefresh = useCallback((groupId: bigint) => {
     const key = groupId.toString();
+    if (!watchedGroupKeysRef.current.has(key)) return;
     if (refreshTimersRef.current[key]) clearTimeout(refreshTimersRef.current[key]);
     refreshTimersRef.current[key] = setTimeout(() => {
       delete refreshTimersRef.current[key];
+      if (!watchedGroupKeysRef.current.has(key)) return;
       invalidateGroupChatQueries(queryClient, groupId);
     }, REFRESH_DEBOUNCE_MS);
   }, [queryClient]);
 
   const updateStatesFromCounts = useCallback((countsByGroup: Record<string, GroupChatCountSnapshot>) => {
+    const watchedCountsByGroup = filterCountsByGroupKeys(countsByGroup, watchedGroupKeysRef.current);
+    if (Object.keys(watchedCountsByGroup).length === 0) return;
+
     const now = Date.now();
     setBaselinesByGroup((previousBaselines) => {
       const nextBaselines = { ...previousBaselines };
       let baselinesChanged = false;
 
-      Object.entries(countsByGroup).forEach(([key, counts]) => {
+      Object.entries(watchedCountsByGroup).forEach(([key, counts]) => {
         if (nextBaselines[key]) return;
         nextBaselines[key] = counts;
         baselinesChanged = true;
@@ -436,7 +497,7 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
       const baselineRef = baselinesRef.current;
       const nextStates = { ...previousStates };
 
-      Object.entries(countsByGroup).forEach(([key, counts]) => {
+      Object.entries(watchedCountsByGroup).forEach(([key, counts]) => {
         const baseline = baselineRef[key] || counts;
         const baselineMentionMeCount = baseline.mentionMeCount ?? counts.mentionMeCount ?? BigInt(0);
         const baselineMentionAllCount = baseline.mentionAllCount ?? counts.mentionAllCount ?? BigInt(0);
@@ -471,7 +532,8 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
 
   const runRefresh = useCallback(async (rawGroupIds: readonly bigint[]) => {
     if (!isGroupChatEnabled || rawGroupIds.length === 0) return;
-    const groupIds = uniquePositiveGroupIds(rawGroupIds);
+    const groupIds = uniquePositiveGroupIds(rawGroupIds)
+      .filter((groupId) => watchedGroupKeysRef.current.has(groupId.toString()));
     if (groupIds.length === 0) return;
 
     if (refreshRunningRef.current) {
@@ -529,10 +591,12 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
       const { results } = await readContractsInBatchesWithRetry(entries, { batchSize: 30 });
       const nextCountsByGroup: Record<string, GroupChatCountSnapshot> = {};
       const previousStates = statesRef.current;
+      const watchedKeys = watchedGroupKeysRef.current;
       const now = Date.now();
 
       groupIds.forEach((groupId, index) => {
         const key = groupId.toString();
+        if (!watchedKeys.has(key)) return;
         const previous = previousStates[key];
         nextCountsByGroup[key] = {
           messagesCount: previous?.messagesCount || BigInt(0),
@@ -560,9 +624,10 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
       updateStatesFromCounts(nextCountsByGroup);
       const finishedAt = Date.now();
       groupIds.forEach((groupId) => {
-        lastFinishedByGroupRef.current[groupId.toString()] = finishedAt;
+        const key = groupId.toString();
+        if (!watchedKeys.has(key)) return;
+        lastFinishedByGroupRef.current[key] = finishedAt;
         if (activeGroupIdRef.current === groupId) {
-          const key = groupId.toString();
           const previousCount = previousStates[key]?.messagesCount || BigInt(0);
           if (nextCountsByGroup[key]?.messagesCount > previousCount) {
             scheduleGroupRefresh(groupId);
@@ -575,7 +640,9 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
       setStatus('error');
     } finally {
       refreshRunningRef.current = false;
-      const queuedGroupIds = Array.from(queuedRefreshGroupIdsRef.current).map((key) => BigInt(key));
+      const queuedGroupIds = Array.from(queuedRefreshGroupIdsRef.current)
+        .filter((key) => watchedGroupKeysRef.current.has(key))
+        .map((key) => BigInt(key));
       queuedRefreshGroupIdsRef.current.clear();
       if (queuedGroupIds.length > 0) {
         runRefresh(queuedGroupIds);
@@ -604,6 +671,19 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
       current.scope !== options.scope ||
       current.frequency !== options.frequency ||
       !sameGroupIds(current.groupIds, groupIds);
+
+    const nextRegistrationsForRef = { ...registrationsRef.current };
+    if (groupIds.length === 0) {
+      delete nextRegistrationsForRef[registrationKey];
+    } else {
+      nextRegistrationsForRef[registrationKey] = {
+        scope: options.scope,
+        frequency: options.frequency,
+        groupIds,
+      };
+    }
+    registrationsRef.current = nextRegistrationsForRef;
+    applyWatchedGroupKeys(watchedGroupKeysFromRegistrations(nextRegistrationsForRef));
 
     setRegistrations((previous) => {
       if (groupIds.length === 0) {
@@ -635,6 +715,11 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
     }
 
     return () => {
+      const nextRegistrations = { ...registrationsRef.current };
+      delete nextRegistrations[registrationKey];
+      registrationsRef.current = nextRegistrations;
+      applyWatchedGroupKeys(watchedGroupKeysFromRegistrations(nextRegistrations));
+
       setRegistrations((previous) => {
         if (!previous[registrationKey]) return previous;
         const next = { ...previous };
@@ -642,7 +727,7 @@ export function GroupChatSyncProvider({ children }: { children: ReactNode }) {
         return next;
       });
     };
-  }, [runRefresh]);
+  }, [applyWatchedGroupKeys, runRefresh]);
 
   useEffect(() => {
     const syncCachedBackgroundGroups = () => {

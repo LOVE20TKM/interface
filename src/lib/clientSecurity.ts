@@ -2,15 +2,53 @@
  * 客户端安全初始化 - 用于静态导出环境
  */
 
+type ClientSecurityState = {
+  cleanup?: () => void;
+};
+
+const CLIENT_SECURITY_STATE_KEY = '__love20ClientSecurity';
+const noopCleanup = () => {};
+
+function getClientSecurityState(): ClientSecurityState {
+  const windowWithState = window as typeof window & {
+    [CLIENT_SECURITY_STATE_KEY]?: ClientSecurityState;
+  };
+  windowWithState[CLIENT_SECURITY_STATE_KEY] ||= {};
+  return windowWithState[CLIENT_SECURITY_STATE_KEY];
+}
+
+function addWindowListener<K extends keyof WindowEventMap>(
+  cleanupFns: Array<() => void>,
+  type: K,
+  listener: (event: WindowEventMap[K]) => void,
+) {
+  window.addEventListener(type, listener);
+  cleanupFns.push(() => window.removeEventListener(type, listener));
+}
+
+function addDocumentListener<K extends keyof DocumentEventMap>(
+  cleanupFns: Array<() => void>,
+  type: K,
+  listener: (event: DocumentEventMap[K]) => void,
+) {
+  document.addEventListener(type, listener);
+  cleanupFns.push(() => document.removeEventListener(type, listener));
+}
+
 /**
  * 初始化客户端安全措施
  */
 export function initializeClientSecurity() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') return noopCleanup;
+
+  const state = getClientSecurityState();
+  if (state.cleanup) return state.cleanup;
+
+  const cleanupFns: Array<() => void> = [];
 
   // 1. 监听CSP违规（如果浏览器支持）
   if ('SecurityPolicyViolationEvent' in window) {
-    window.addEventListener('securitypolicyviolation', (e) => {
+    addWindowListener(cleanupFns, 'securitypolicyviolation', (e) => {
       // 过滤掉已知的合法违规（如开发环境的热重载等）
       const isKnownLegitimateViolation =
         // 开发环境的热重载和 webpack
@@ -40,13 +78,20 @@ export function initializeClientSecurity() {
   addSecurityMetaTags();
 
   // 3. 防止常见的客户端攻击
-  preventCommonAttacks();
+  preventCommonAttacks(cleanupFns);
 
   // 4. 初始化安全事件监听
-  setupSecurityEventListeners();
+  setupSecurityEventListeners(cleanupFns);
 
   // 5. Web3 特定的安全配置
-  setupWeb3Security();
+  setupWeb3Security(cleanupFns);
+
+  const cleanup = () => {
+    cleanupFns.splice(0).forEach((cleanupFn) => cleanupFn());
+    state.cleanup = undefined;
+  };
+  state.cleanup = cleanup;
+  return cleanup;
 }
 
 /**
@@ -110,7 +155,7 @@ function preventClickjacking() {
 /**
  * 防止常见的客户端攻击
  */
-function preventCommonAttacks() {
+function preventCommonAttacks(cleanupFns: Array<() => void>) {
   // 防止控制台注入攻击的警告
   if (process.env.NODE_ENV === 'production') {
     console.log(
@@ -124,7 +169,7 @@ function preventCommonAttacks() {
   // document.addEventListener('contextmenu', (e) => e.preventDefault());
 
   // 禁用某些快捷键（可选）
-  document.addEventListener('keydown', (e) => {
+  addDocumentListener(cleanupFns, 'keydown', (e) => {
     // 禁用F12, Ctrl+Shift+I, Ctrl+U 等开发者工具快捷键（生产环境）
     if (process.env.NODE_ENV === 'production') {
       if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u')) {
@@ -138,20 +183,27 @@ function preventCommonAttacks() {
 /**
  * Web3 特定的安全配置
  */
-function setupWeb3Security() {
+function setupWeb3Security(cleanupFns: Array<() => void>) {
   // 监听钱包连接事件
   if (typeof window.ethereum !== 'undefined') {
     console.log('🔒 检测到 Web3 钱包，初始化安全监听');
 
     // 监听账户变化
     if (window.ethereum.on) {
-      window.ethereum.on('accountsChanged', (accounts: string[]) => {
+      const handleAccountsChanged = (accounts: string[]) => {
         console.log('🔒 钱包账户已变更:', accounts.length > 0 ? '已连接' : '已断开');
-      });
+      };
 
       // 监听网络变化
-      window.ethereum.on('chainChanged', (chainId: string) => {
+      const handleChainChanged = (chainId: string) => {
         console.log('🔒 区块链网络已变更:', chainId);
+      };
+
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', handleChainChanged);
+      cleanupFns.push(() => {
+        window.ethereum?.removeListener?.('accountsChanged', handleAccountsChanged);
+        window.ethereum?.removeListener?.('chainChanged', handleChainChanged);
       });
     }
   }
@@ -170,9 +222,9 @@ function setupWeb3Security() {
 /**
  * 设置安全事件监听器
  */
-function setupSecurityEventListeners() {
+function setupSecurityEventListeners(cleanupFns: Array<() => void>) {
   // 监听页面可见性变化
-  document.addEventListener('visibilitychange', () => {
+  addDocumentListener(cleanupFns, 'visibilitychange', () => {
     if (document.hidden) {
       // 页面隐藏时的安全措施
       console.log('🔒 页面已隐藏，执行安全清理');
@@ -180,13 +232,13 @@ function setupSecurityEventListeners() {
   });
 
   // 监听页面卸载
-  window.addEventListener('beforeunload', () => {
+  addWindowListener(cleanupFns, 'beforeunload', () => {
     // 页面卸载时的安全措施
     console.log('🔒 页面即将卸载，执行安全清理');
   });
 
   // 监听错误事件
-  window.addEventListener('error', (e) => {
+  addWindowListener(cleanupFns, 'error', (e) => {
     // 记录安全相关的错误
     if (e.message && e.message.includes('Content Security Policy')) {
       console.warn('🔒 CSP相关错误:', e.message);

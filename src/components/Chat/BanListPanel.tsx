@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
-import { Copy } from 'lucide-react';
+import { ChevronDown, Copy } from 'lucide-react';
 
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useGroupChatVotingPower } from '@/src/hooks/contracts/useGroupChatManagers';
@@ -79,6 +79,48 @@ function banStatusPillClass(tone: 'danger' | 'ok' | 'loading' | 'neutral') {
   return 'pill-warn';
 }
 
+function adminBanPermissionReason(permission: {
+  canOperate: boolean;
+  operatorKind?: string;
+  ownerOrDelegateId: bigint;
+  adminId: bigint;
+}, groupId: bigint) {
+  if (!permission.canOperate) {
+    return `当前钱包没有维护身份。需要持有本群 NFT #${groupId.toString()}，或成为代理/管理员 NFT 持有者。`;
+  }
+  if (permission.operatorKind === 'owner-or-delegate') {
+    if (permission.ownerOrDelegateId === groupId) {
+      return `持有本群 NFT #${groupId.toString()}。`;
+    }
+    return `持有代理 NFT #${permission.ownerOrDelegateId.toString()}，它已被本群 NFT #${groupId.toString()} 设为代理。`;
+  }
+  if (permission.operatorKind === 'admin') {
+    return `当前钱包持有管理员 NFT #${permission.adminId.toString()}，它在本群管理员名单中且仍然有效。`;
+  }
+  return '当前钱包有本群管理权限。';
+}
+
+function govBanPermissionReason({
+  canVote,
+  voteWeight,
+  totalVoteWeight,
+  ruleText,
+}: {
+  canVote: boolean;
+  voteWeight: bigint;
+  totalVoteWeight: bigint;
+  ruleText: string;
+}) {
+  const ruleSuffix = ruleText ? `禁言生效规则：${ruleText}` : '';
+  if (!canVote) {
+    return '当前钱包没有有效治理票，所以只能查看和查询；质押 LP 获取有效治理票后可参与投票。';
+  }
+  return [
+    `当前钱包有 ${formatGovWeightShare(voteWeight, totalVoteWeight)} 有效治理票，可参与禁言投票。`,
+    ruleSuffix,
+  ].filter(Boolean).join(' ');
+}
+
 export function BanListPanel({
   groupId,
   account,
@@ -95,6 +137,8 @@ export function BanListPanel({
   const publicData = useGroupChatPublicData(groupId);
   const accountData = useGroupChatAccountData(groupId, account, publicData.senderNames);
   const [activeMessageId, setActiveMessageId] = useState<bigint | undefined>(initialMessageId);
+  const [myBanExpanded, setMyBanExpanded] = useState(false);
+  const [permissionExpanded, setPermissionExpanded] = useState(false);
   const messageQuery = useGroupChatMessage(groupId, activeMessageId, !!activeMessageId);
   const messageTarget = useMemo(
     () => parseGroupChatMessage(messageQuery.message),
@@ -296,35 +340,45 @@ export function BanListPanel({
   const voteMessageSenderLabel = transactionLabel(voteMessageSenderTx, '等待钱包确认', '投票确认中');
   const clearMessageSenderLabel = transactionLabel(clearMessageSenderTx, '等待钱包确认', '撤票确认中');
   const opposeMyBanLabel = transactionLabel(voteMessageSenderTx, '等待钱包确认', '反对确认中');
-  const adminPermissionRuleText = '链群 NFT 持有者、代理或群管理可维护地址/NFT禁言名单。';
+  const adminPermissionRuleText = '持有本群 NFT、被设为代理，或持有本群有效管理员 NFT 的钱包可以维护禁言名单。';
   const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
   const govBanRuleText = activeGovBanSource && !govVotingPower.isPending && !govBanMechanism.isPending
     ? govBanListMechanismText(govVotingPower.totalVoteWeight, govBanMechanism.banThresholdRatio, govBanMechanism.precision, govBanMechanism.minSupportToOpposeRatio)
     : '';
-  const banListNoticeBadge = activeAdminBanSource
-    ? canEditAdminBan ? '可维护' : adminBanPermission.isPending ? '读取中' : '只读'
-    : activeGovBanSource
-      ? govVotingPower.isPending || govBanMechanism.isPending ? '读取中' : canVoteGovBan ? '可投票' : '只读'
-      : '未启用';
-  const banListNoticeTitle = activeAdminBanSource
-    ? adminBanPermission.isPending
-      ? '正在读取 AdminBanSource 管理权限'
-      : canEditAdminBan
-        ? '当前地址可维护禁言名单'
-        : '当前地址只能查看和查询禁言名单'
-    : activeGovBanSource
-      ? govVotingPower.isPending || govBanMechanism.isPending
-        ? '正在读取治理票权和禁言阈值'
-        : canVoteGovBan
-          ? `当前地址有 ${formatGovWeightShare(govVotingPower.voteWeight, govVotingPower.totalVoteWeight)} 票权，可参与治理禁言投票`
-          : '当前地址没有票权，只能查看和查询治理禁言名单'
-      : '当前群聊未启用禁言源';
-  const banListNoticeDetail = activeAdminBanSource
-    ? adminPermissionRuleText
-    : activeGovBanSource
-      ? govBanRuleText
-      : '本页只展示底层来源状态。';
-  const activeBanListVersion = activeGovBanSource ? govBanStateVersion.stateVersion : undefined;
+  const permissionStatusDetail = !account
+    ? '连接钱包后才能判断当前地址是否可维护禁言名单或参与治理禁言。'
+    : activeAdminBanSource
+      ? adminBanPermission.isPending
+        ? adminPermissionRuleText
+        : adminBanPermissionReason(adminBanPermission, groupId)
+      : activeGovBanSource
+        ? govVotingPower.isPending || govBanMechanism.isPending
+          ? '持有有效治理票的地址可参与治理禁言投票。'
+          : govBanPermissionReason({
+            canVote: canVoteGovBan,
+            voteWeight: govVotingPower.voteWeight,
+            totalVoteWeight: govVotingPower.totalVoteWeight,
+            ruleText: govBanRuleText,
+          })
+        : '这个群当前没有启用可维护或可投票的禁言源。';
+  const permissionSummary = (() => {
+    if (!account) {
+      return { text: '未知', tone: 'neutral' as const };
+    }
+    if (activeAdminBanSource) {
+      if (adminBanPermission.isPending) return { text: '读取中', tone: 'loading' as const };
+      return canEditAdminBan
+        ? { text: '可维护禁言名单', tone: 'ok' as const }
+        : { text: '只读', tone: 'neutral' as const };
+    }
+    if (activeGovBanSource) {
+      if (govVotingPower.isPending || govBanMechanism.isPending) return { text: '读取中', tone: 'loading' as const };
+      return canVoteGovBan
+        ? { text: '可投票', tone: 'ok' as const }
+        : { text: '只读', tone: 'neutral' as const };
+    }
+    return { text: '未启用', tone: 'neutral' as const };
+  })();
   const canAddBanListTarget = activeAdminBanSource || activeGovBanSource;
   const refetchAdminBan = useCallback(() => {
     adminBan.refetch();
@@ -902,6 +956,36 @@ export function BanListPanel({
   const defaultNftLabel = accountData.defaultSenderId
     ? accountData.defaultSenderName || `NFT #${accountData.defaultSenderId.toString()}`
     : '未设置默认 NFT';
+  const myBanSummary = (() => {
+    if (!activeAdminBanSource && !activeGovBanSource) {
+      return { text: '未启用禁言源', tone: 'neutral' as const };
+    }
+    if (!account) {
+      return { text: '连接钱包后查看我的禁言状态', tone: 'neutral' as const };
+    }
+    if (myAddressBanPending || (accountData.defaultSenderId && myNftBanPending)) {
+      return { text: '正在检查禁言状态', tone: 'loading' as const };
+    }
+    if (myAddressBanned || myNftBanned) {
+      return { text: '已命中禁言规则', tone: 'danger' as const };
+    }
+    if (!accountData.defaultSenderId) {
+      return { text: '已检查地址，未设置默认 NFT', tone: 'neutral' as const };
+    }
+    return { text: '未被禁言', tone: 'ok' as const };
+  })();
+
+  useEffect(() => {
+    if (myBanSummary.tone === 'danger') {
+      setMyBanExpanded(true);
+    }
+  }, [myBanSummary.tone]);
+
+  useEffect(() => {
+    if (permissionSummary.tone === 'ok') {
+      setPermissionExpanded(true);
+    }
+  }, [permissionSummary.tone]);
 
   return (
     <section className="workspace-screen ban-list-screen">
@@ -910,96 +994,128 @@ export function BanListPanel({
           title="禁言名单"
           groupId={groupId}
           subtitle={detailSubtitle}
-          meta={
-            activeAdminBanSource
-              ? canEditAdminBan ? '可管理' : '只读'
-              : activeGovBanSource
-                ? activeBanListVersion !== undefined ? `v${activeBanListVersion.toString()}` : '读取中'
-                : '只读'
-          }
         />
         <div className="my-ban-status-panel">
-          <div className="my-ban-status-head">
+          <button
+            className="my-ban-status-summary"
+            type="button"
+            aria-expanded={myBanExpanded}
+            onClick={() => setMyBanExpanded((expanded) => !expanded)}
+          >
             <div>
-              <strong>我的禁言情况</strong>
-              <small>默认查询当前钱包地址和默认 NFT</small>
+              <strong>我的禁言状态</strong>
             </div>
-          </div>
-          <div className="my-ban-status-grid">
-            <div className="ban-status-object-row">
-              <code title={account}>{account ? abbreviateAddress(account) : '未连接钱包'}</code>
-              <span className={cn('pill', banStatusPillClass(myAddressBanPending ? 'loading' : myAddressBanned ? 'danger' : 'ok'))}>
-                {account ? banStateText(myAddressBanPending, myAddressBanned) : '未查询'}
-              </span>
+            <span className="my-ban-status-summary-meta">
+              <span className={cn('pill', banStatusPillClass(myBanSummary.tone))}>{myBanSummary.text}</span>
+              <ChevronDown
+                className={cn('my-ban-status-chevron', myBanExpanded && 'expanded')}
+                size={16}
+                strokeWidth={2.2}
+                aria-hidden="true"
+              />
+            </span>
+          </button>
+          {myBanExpanded && (
+            <div className="my-ban-status-details">
+              <div className="my-ban-status-grid">
+                <div className="ban-status-object-row">
+                  <code title={account}>{account ? abbreviateAddress(account) : '未连接钱包'}</code>
+                  <span className={cn('pill', banStatusPillClass(myAddressBanPending ? 'loading' : myAddressBanned ? 'danger' : 'ok'))}>
+                    {account ? banStateText(myAddressBanPending, myAddressBanned) : '未查询'}
+                  </span>
+                </div>
+                <div className="ban-status-object-row">
+                  <span className="my-ban-nft-label">
+                    <strong>{defaultNftLabel}</strong>
+                    {accountData.defaultSenderId && <small>NFT #{accountData.defaultSenderId.toString()}</small>}
+                  </span>
+                  <span className={cn('pill', banStatusPillClass(myNftBanPending ? 'loading' : myNftBanned ? 'danger' : 'ok'))}>
+                    {accountData.defaultSenderId ? banStateText(myNftBanPending, myNftBanned) : '未查询'}
+                  </span>
+                </div>
+              </div>
+              <small className="my-ban-status-hint">地址或默认 NFT 任一被禁言，都会命中禁言规则；完整发言资格还取决于发言范围和群聊状态。</small>
+              {activeGovBanSource && (
+                <button
+                  className="sheet-button inline-flex my-ban-status-action"
+                  type="button"
+                  onClick={opposeMyBan}
+                  aria-disabled={!canVoteGovBan}
+                  disabled={opposeMyBanDisabled}
+                >
+                  {opposeMyBanButtonText}
+                </button>
+              )}
+              {activeGovBanSource && !govVotingPower.isPending && !canVoteGovBan && (
+                <small className="my-ban-status-hint">当前无治理票权。点击“反对禁言”可前往添加治理票。</small>
+              )}
             </div>
-            <div className="ban-status-object-row">
-              <span className="my-ban-nft-label">
-                <strong>{defaultNftLabel}</strong>
-                {accountData.defaultSenderId && <small>NFT #{accountData.defaultSenderId.toString()}</small>}
-              </span>
-              <span className={cn('pill', banStatusPillClass(myNftBanPending ? 'loading' : myNftBanned ? 'danger' : 'ok'))}>
-                {accountData.defaultSenderId ? banStateText(myNftBanPending, myNftBanned) : '未查询'}
-              </span>
-            </div>
-          </div>
-          {activeGovBanSource && (
-            <button
-              className="sheet-button inline-flex my-ban-status-action"
-              type="button"
-              onClick={opposeMyBan}
-              aria-disabled={!canVoteGovBan}
-              disabled={opposeMyBanDisabled}
-            >
-              {opposeMyBanButtonText}
-            </button>
-          )}
-          {activeGovBanSource && !govVotingPower.isPending && !canVoteGovBan && (
-            <small className="my-ban-status-hint">当前无治理票权。点击“反对禁言”可前往添加治理票。</small>
           )}
         </div>
-        <div className={cn('notice-row ban-list-notice', canEditAdminBan || canVoteGovBan ? 'permission-ok' : 'permission-warn')}>
-          <span className="ban-list-notice-badge">{banListNoticeBadge}</span>
-          <span className="ban-list-notice-copy">
-            <strong>{banListNoticeTitle}</strong>
-            {banListNoticeDetail && <small>{banListNoticeDetail}</small>}
-          </span>
+        <div className="my-ban-status-panel permission-status-panel">
+          <button
+            className="my-ban-status-summary"
+            type="button"
+            aria-expanded={permissionExpanded}
+            onClick={() => setPermissionExpanded((expanded) => !expanded)}
+          >
+            <div>
+              <strong>我的权限状态</strong>
+            </div>
+            <span className="my-ban-status-summary-meta">
+              <span className={cn('pill', banStatusPillClass(permissionSummary.tone))}>{permissionSummary.text}</span>
+              <ChevronDown
+                className={cn('my-ban-status-chevron', permissionExpanded && 'expanded')}
+                size={16}
+                strokeWidth={2.2}
+                aria-hidden="true"
+              />
+            </span>
+          </button>
+          {permissionExpanded && (
+            <span className="permission-status-detail">
+              {permissionStatusDetail && <small>{permissionStatusDetail}</small>}
+            </span>
+          )}
         </div>
-        <BanListQueryControls
-          queryType={queryType}
-          queryInput={queryInput}
-          nftLookupMode={nftLookup.lookupMode}
-          nftLookupValue={nftLookup.lookupValue}
-          nftLookupResult={nftLookup.lookupResult}
-          canAddBanListTarget={canAddBanListTarget}
-          canAdd={activeAdminBanSource ? canEditAdminBan : canVoteGovBan}
-          isBusy={anyBanListTxPending}
-          addLabel={
-            queryType === 'message'
-              ? undefined
-              : activeAdminBanSource
-                ? queryType === 'address' ? addAddressBanLabel : addSenderBanLabel
-                : transactionLabel(queryType === 'address' ? voteAddressTx : voteSenderTx, '等待钱包确认', '投票确认中')
-          }
-          onQueryTypeChange={(value) => {
-            setQueryType(value);
-            setQueryTarget(undefined);
-          }}
-          onQueryInputChange={(value) => {
-            setQueryInput(value);
-            setQueryTarget(undefined);
-            if (queryType === 'message') setActiveMessageId(undefined);
-          }}
-          onNftLookupModeChange={(mode) => {
-            nftLookup.setLookupMode(mode);
-            setQueryTarget(undefined);
-          }}
-          onNftLookupValueChange={(value) => {
-            nftLookup.setLookupValue(value);
-            setQueryTarget(undefined);
-          }}
-          onQuery={submitQuery}
-          onAdd={addCurrentTarget}
-        />
+        <div className="ban-list-work-section">
+          <BanListQueryControls
+            queryType={queryType}
+            queryInput={queryInput}
+            nftLookupMode={nftLookup.lookupMode}
+            nftLookupValue={nftLookup.lookupValue}
+            nftLookupResult={nftLookup.lookupResult}
+            canAddBanListTarget={canAddBanListTarget}
+            canAdd={activeAdminBanSource ? canEditAdminBan : canVoteGovBan}
+            isBusy={anyBanListTxPending}
+            addLabel={
+              queryType === 'message'
+                ? undefined
+                : activeAdminBanSource
+                  ? queryType === 'address' ? addAddressBanLabel : addSenderBanLabel
+                  : transactionLabel(queryType === 'address' ? voteAddressTx : voteSenderTx, '等待钱包确认', '投票确认中')
+            }
+            onQueryTypeChange={(value) => {
+              setQueryType(value);
+              setQueryTarget(undefined);
+            }}
+            onQueryInputChange={(value) => {
+              setQueryInput(value);
+              setQueryTarget(undefined);
+              if (queryType === 'message') setActiveMessageId(undefined);
+            }}
+            onNftLookupModeChange={(mode) => {
+              nftLookup.setLookupMode(mode);
+              setQueryTarget(undefined);
+            }}
+            onNftLookupValueChange={(value) => {
+              nftLookup.setLookupValue(value);
+              setQueryTarget(undefined);
+            }}
+            onQuery={submitQuery}
+            onAdd={addCurrentTarget}
+          />
+        </div>
         {queryType === 'message' && activeMessageId && (
           <div className={cn('query-result ban-list-query-result message-sender-result', `tone-${messageSenderTone}`)}>
             {messageQuery.isPending ? (

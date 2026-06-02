@@ -47,6 +47,7 @@ const VoteRecordsPage: React.FC = () => {
   const [hasMoreRounds, setHasMoreRounds] = useState(true);
   const [allRoundsData, setAllRoundsData] = useState<RoundVotingData[]>([]);
   const [scrollFailureCount, setScrollFailureCount] = useState(0);
+  const loadMoreDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 引入参考元素，用于无限滚动加载
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -193,10 +194,23 @@ const VoteRecordsPage: React.FC = () => {
     }
 
     // 短暂防抖后解除限制
-    setTimeout(() => {
+    if (loadMoreDebounceTimerRef.current) {
+      clearTimeout(loadMoreDebounceTimerRef.current);
+    }
+    loadMoreDebounceTimerRef.current = setTimeout(() => {
       setIsLoadingMore(false);
+      loadMoreDebounceTimerRef.current = null;
     }, 1000);
   }, [isLoadingHistory, isLoadingMore, startRound]);
+
+  useEffect(() => {
+    return () => {
+      if (loadMoreDebounceTimerRef.current) {
+        clearTimeout(loadMoreDebounceTimerRef.current);
+        loadMoreDebounceTimerRef.current = null;
+      }
+    };
+  }, []);
 
   // 使用 IntersectionObserver + 传统滚动事件的双重检测机制
   useEffect(() => {
@@ -210,6 +224,8 @@ const VoteRecordsPage: React.FC = () => {
 
     let intersectionObserver: IntersectionObserver | null = null;
     let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+    let initialCheckTimer: ReturnType<typeof setTimeout> | null = null;
+    let initialLoadTimer: ReturnType<typeof setTimeout> | null = null;
 
     // 传统滚动事件检测函数（作为备用方案）
     const checkScrollPosition = () => {
@@ -256,12 +272,12 @@ const VoteRecordsPage: React.FC = () => {
     const initialCheck = () => {
       const rect = target.getBoundingClientRect();
       if (rect.bottom <= window.innerHeight + 80 && hasMoreRounds && !isLoadingHistory) {
-        setTimeout(() => loadMoreRounds(), 500); // 延迟500ms触发
+        initialLoadTimer = setTimeout(() => loadMoreRounds(), 500); // 延迟500ms触发
       }
     };
 
     // 延迟执行初始检查，确保DOM已经渲染完成
-    setTimeout(initialCheck, 1000);
+    initialCheckTimer = setTimeout(initialCheck, 1000);
 
     // 移动端兼容性检测：如果3秒后仍未触发任何加载且有更多内容，则启用更激进的检测
     const fallbackCheck = setTimeout(() => {
@@ -279,6 +295,8 @@ const VoteRecordsPage: React.FC = () => {
 
     return () => {
       clearTimeout(fallbackCheck);
+      if (initialCheckTimer) clearTimeout(initialCheckTimer);
+      if (initialLoadTimer) clearTimeout(initialLoadTimer);
       if (intersectionObserver) {
         intersectionObserver.unobserve(target);
         intersectionObserver.disconnect();
