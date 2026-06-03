@@ -1,11 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Info, PlugZap, Power, ShieldCheck, SlidersHorizontal, UserCog } from 'lucide-react';
+import { ChevronDown, Info, PlugZap, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { Input } from '@/components/ui/input';
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import {
   useGroupChatGroupDelegateAddress,
   useGroupDelegateId,
@@ -23,12 +22,6 @@ import {
   GROUP_CHAT_MEMBER_SCOPE_ADDRESS,
   useGroupOwnerOrDelegatePermission,
 } from '@/src/hooks/contracts/useGroupChatModeration';
-import {
-  GROUP_CHAT_TOKEN_ACTION_GOV_MANAGER_ADDRESS,
-  GROUP_CHAT_TOKEN_ACTION_MAIN_MANAGER_ADDRESS,
-  GROUP_CHAT_TOKEN_GOV_MANAGER_ADDRESS,
-  GROUP_CHAT_TOKEN_MAIN_MANAGER_ADDRESS,
-} from '@/src/hooks/contracts/useGroupChatManagers';
 import {
   useGroupChatPublicData,
 } from '@/src/hooks/composite/useGroupChatData';
@@ -56,56 +49,6 @@ type ContractExplanation = {
 
 function isZeroAddress(address?: `0x${string}`) {
   return !address || sameAddress(address, ZERO_ADDRESS);
-}
-
-function explainOwnerContract(owner?: `0x${string}`): ContractExplanation {
-  if (!owner) {
-    return {
-      label: 'owner',
-      title: '正在读取管理方式',
-      description: '读取完成后会显示这个群由个人 NFT 持有人管理，还是由系统 Manager 合约自动管理。',
-      status: '读取中',
-    };
-  }
-  const managerScope = managerMemberScopeDescription(owner);
-  if (sameAddress(owner, GROUP_CHAT_TOKEN_MAIN_MANAGER_ADDRESS)) {
-    return {
-      label: 'TokenMainManager',
-      title: '代币主群管理器',
-      description: managerScope?.text || '这个群由代币主群管理器自动创建和持有，发言范围跟代币社区身份相关。',
-      status: '系统管理',
-    };
-  }
-  if (sameAddress(owner, GROUP_CHAT_TOKEN_GOV_MANAGER_ADDRESS)) {
-    return {
-      label: 'TokenGovManager',
-      title: '代币治理群管理器',
-      description: managerScope?.text || '这个群由代币治理群管理器自动创建和持有，发言范围跟治理票权相关。',
-      status: '系统管理',
-    };
-  }
-  if (sameAddress(owner, GROUP_CHAT_TOKEN_ACTION_MAIN_MANAGER_ADDRESS)) {
-    return {
-      label: 'TokenActionMainManager',
-      title: '行动主群管理器',
-      description: managerScope?.text || '这个群由行动主群管理器自动创建和持有，发言范围跟行动参与关系相关。',
-      status: '系统管理',
-    };
-  }
-  if (sameAddress(owner, GROUP_CHAT_TOKEN_ACTION_GOV_MANAGER_ADDRESS)) {
-    return {
-      label: 'TokenActionGovManager',
-      title: '行动治理群管理器',
-      description: managerScope?.text || '这个群由行动治理群管理器自动创建和持有，发言范围跟行动投票关系相关。',
-      status: '系统管理',
-    };
-  }
-  return {
-    label: 'owner',
-    title: 'NFT 持有人管理',
-    description: '这个群由当前群聊 NFT owner 管理；owner 或设置的 delegate NFT 可以修改发言规则。',
-    status: '可配置',
-  };
 }
 
 function explainScopeContract(address?: `0x${string}`): ContractExplanation {
@@ -145,7 +88,7 @@ function explainScopeContract(address?: `0x${string}`): ContractExplanation {
   if (managerScope) {
     return {
       label: managerScope.label,
-      title: '管理器发言范围',
+      title: `${managerScope.summary}可发言`,
       description: managerScope.text,
       status: '系统规则',
     };
@@ -241,34 +184,18 @@ function explainPluginContract(address: `0x${string}` | undefined, timing: 'befo
   };
 }
 
-function ContractAddressValue({ address }: { address?: `0x${string}` }) {
-  if (!address) return <span>读取中</span>;
-  if (isZeroAddress(address)) return <span>未设置</span>;
-  return <AddressWithCopyButton address={address} showCopyButton colorClassName="text-greyscale-700" />;
-}
-
-function ContractRuleCard({
-  eyebrow,
-  address,
+function ContractRuleSummary({
+  label,
   explanation,
 }: {
-  eyebrow: string;
-  address?: `0x${string}`;
+  label: string;
   explanation: ContractExplanation;
 }) {
   return (
-    <article className="contract-rule-card">
-      <div className="card-topline">
-        <span>{eyebrow}</span>
-        {explanation.status && <span className="tag">{explanation.status}</span>}
-      </div>
+    <div className="contract-rule-summary">
+      <span>{label}</span>
       <strong>{explanation.title}</strong>
-      <p>{explanation.description}</p>
-      <div className="contract-address-row">
-        <span>{explanation.label}</span>
-        <ContractAddressValue address={address} />
-      </div>
-    </article>
+    </div>
   );
 }
 
@@ -332,6 +259,7 @@ export function ChatSettingsPanel({
   const [beforePostPlugin, setBeforePostPlugin] = useState('');
   const [afterPostPlugin, setAfterPostPlugin] = useState('');
   const [permissionExpanded, setPermissionExpanded] = useState(false);
+  const [delegateExpanded, setDelegateExpanded] = useState(false);
   const postingTx = useSetGroupChatPostingAllowed();
   const scopeTx = useSetGroupChatScopeSource();
   const banTx = useSetGroupChatBanSource();
@@ -353,15 +281,13 @@ export function ChatSettingsPanel({
   });
   const canEditRules = ownerPermission.canEdit;
   const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
-  const ownerExplanation = explainOwnerContract(publicData.chatInfo?.owner);
   const scopeExplanation = explainScopeContract(publicData.chatInfo?.scopeSource);
   const banExplanation = explainBanContract(publicData.chatInfo?.banSource);
   const beforePluginExplanation = explainPluginContract(publicData.chatInfo?.beforePostPlugin, 'before');
   const afterPluginExplanation = explainPluginContract(publicData.chatInfo?.afterPostPlugin, 'after');
   const activationText = publicData.chatInfo ? (publicData.chatInfo.activated ? '已激活' : '未激活') : '读取中';
-  const postingText = publicData.chatInfo ? (publicData.chatInfo.postingAllowed ? '允许发言' : '暂停发言') : '读取中';
   const delegateText = formatDelegateIdText(groupDelegate.isPending || delegateState.isPending, delegateState.delegateId);
-  const adminsHref = buildGroupChatPanelHref('admins', tokenSymbol, groupId);
+  const adminsHref = buildGroupChatPanelHref('admins', tokenSymbol, groupId, { from: 'settings' });
   const permissionSummary = (() => {
     if (managerOwned) return { text: '自动管理', tone: 'neutral' as const };
     if (ownerPermission.isPending) return { text: '读取中', tone: 'loading' as const };
@@ -380,6 +306,7 @@ export function ChatSettingsPanel({
             ? '你持有本群 NFT，可以修改设置。'
             : `你持有代理 NFT #${editPermission.ownerOrDelegateId.toString()}，可以修改设置。`
           : '你没有修改权限。需要持有本群 NFT 或代理 NFT。';
+  const canShowEditableControls = !managerOwned;
 
   const refetchSettings = useCallback(() => {
     publicData.refetch();
@@ -493,58 +420,48 @@ export function ChatSettingsPanel({
           )}
         />
 
-        <section className="settings-overview">
+        <section className="settings-overview" aria-label="群设置摘要">
           <div className="settings-overview-main">
-            <div className="settings-overview-title">
-              <span className="settings-section-icon"><SlidersHorizontal className="h-4 w-4" aria-hidden="true" /></span>
-              <div>
-                <h2>运行状态</h2>
-              </div>
-            </div>
             <div className="settings-metric-grid">
               <StatusMetric label="激活状态" value={activationText} tone={publicData.chatInfo?.activated ? 'good' : 'warn'} />
-              <StatusMetric label="发言开关" value={postingText} tone={publicData.chatInfo?.postingAllowed ? 'good' : 'warn'} />
             </div>
           </div>
         </section>
 
-        {managerOwned ? (
-          <div className="settings-main-column">
-            <SettingsPanelSection icon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />} title="规则概览">
-              <div className="contract-rule-grid">
-                <ContractRuleCard eyebrow="谁管理这个群" address={publicData.chatInfo?.owner} explanation={ownerExplanation} />
-                <ContractRuleCard eyebrow="谁能发言" address={publicData.chatInfo?.scopeSource} explanation={scopeExplanation} />
-                <ContractRuleCard eyebrow="谁被禁言" address={publicData.chatInfo?.banSource} explanation={banExplanation} />
-                <ContractRuleCard eyebrow="发言前" address={publicData.chatInfo?.beforePostPlugin} explanation={beforePluginExplanation} />
-                <ContractRuleCard eyebrow="发送后" address={publicData.chatInfo?.afterPostPlugin} explanation={afterPluginExplanation} />
-              </div>
-            </SettingsPanelSection>
-          </div>
-        ) : (
-          <div className="settings-layout">
-            <div className="settings-main-column">
-              <SettingsPanelSection icon={<Power className="h-4 w-4" aria-hidden="true" />} title="常用操作">
-                <div className="settings-control-card">
-                  <div>
-                    <strong>发言总开关</strong>
-                    <span>控制整个群是否允许新消息写入。</span>
-                  </div>
-                  <div className="choice-group settings-switch-group">
-                    <button className={cn('picker-button inline-flex', publicData.chatInfo?.postingAllowed && 'active')} type="button" onClick={() => updatePostingAllowed(true)} disabled={!canEditRules}>
-                      允许发言
-                    </button>
-                    <button className={cn('picker-button inline-flex', publicData.chatInfo && !publicData.chatInfo.postingAllowed && 'active')} type="button" onClick={() => updatePostingAllowed(false)} disabled={!canEditRules}>
-                      暂停发言
-                    </button>
-                  </div>
+        <div className="settings-main-column">
+          {canShowEditableControls && (
+            <section className="settings-panel-section settings-actions-panel" aria-label="群操作">
+              <div className="settings-control-row">
+                <div className="settings-control-copy">
+                  <strong>发言开关</strong>
                 </div>
-                <div className="delegate-panel settings-control-card">
-                  <div className="card-topline">
-                    <strong>代理 NFT</strong>
-                  </div>
-                  <div className="query-result">
-                    当前 {delegateText}；输入 0 表示不设置代理。
-                  </div>
+                <div className="choice-group settings-switch-group">
+                  <button className={cn('picker-button inline-flex', publicData.chatInfo?.postingAllowed && 'active')} type="button" onClick={() => updatePostingAllowed(true)} disabled={!canEditRules}>
+                    允许
+                  </button>
+                  <button className={cn('picker-button inline-flex', publicData.chatInfo && !publicData.chatInfo.postingAllowed && 'active')} type="button" onClick={() => updatePostingAllowed(false)} disabled={!canEditRules}>
+                    暂停
+                  </button>
+                </div>
+              </div>
+
+              <div className="settings-control-row delegate-control-row">
+                <div className="settings-control-copy">
+                  <strong>代理 NFT</strong>
+                  <span>当前 {delegateText}</span>
+                </div>
+                <div className="delegate-settings-area">
+                  <button
+                    className="sheet-button inline-flex"
+                    type="button"
+                    onClick={() => setDelegateExpanded((expanded) => !expanded)}
+                    disabled={!canEditRules}
+                    aria-expanded={delegateExpanded}
+                  >
+                    {delegateExpanded ? '收起' : '设置'}
+                  </button>
+                </div>
+                {delegateExpanded && (
                   <div className="query-row delegate-query-row">
                     <NftOwnerLookup
                       lookupMode={delegateLookup.lookupMode}
@@ -553,70 +470,81 @@ export function ChatSettingsPanel({
                       onLookupValueChange={delegateLookup.setLookupValue}
                       lookupResult={delegateLookup.lookupValue.trim() === '0' ? null : delegateLookup.lookupResult}
                       disabled={!canEditRules}
+                      className="settings-delegate-lookup"
+                      resultVariant="compact"
                     />
                     <button className="sheet-button primary inline-flex" type="button" onClick={updateDelegateId} disabled={!canEditRules}>确认</button>
                   </div>
-                </div>
-                <div className="settings-control-card">
-                  <div>
-                    <strong>管理员名单</strong>
-                    <span>维护可协助管理成员和禁言的管理员 NFT。</span>
-                  </div>
-                  <a className="sheet-button inline-flex" href={adminsHref}>
-                    <UserCog className="h-4 w-4" aria-hidden="true" />
-                    打开
-                  </a>
-                </div>
-              </SettingsPanelSection>
-              <SettingsPanelSection icon={<PlugZap className="h-4 w-4" aria-hidden="true" />} title="规则合约">
-                <div className="settings-field-block">
-                  <div className="field-row">
-                    <label htmlFor="chat-scope-source">发言范围</label>
-                    <Input id="chat-scope-source" value={scopeSource} onChange={(event) => setScopeSource(event.target.value)} readOnly={!canEditRules} />
-                    <button className="sheet-button inline-flex" type="button" onClick={() => updateRuleAddress(scopeSource, '发言范围合约', scopeTx.setScopeSource)} disabled={!canEditRules}>更新</button>
-                  </div>
-                  <p>{scopeExplanation.description}</p>
-                </div>
-                <div className="settings-field-block">
-                  <div className="field-row">
-                    <label htmlFor="chat-ban-source">禁言规则</label>
-                    <Input id="chat-ban-source" value={banSource} onChange={(event) => setBanSource(event.target.value)} readOnly={!canEditRules} />
-                    <button className="sheet-button inline-flex" type="button" onClick={() => updateRuleAddress(banSource, '禁言规则合约', banTx.setBanSource)} disabled={!canEditRules}>更新</button>
-                  </div>
-                  <p>{banExplanation.description}</p>
-                </div>
-                <div className="settings-field-block">
-                  <div className="field-row">
-                    <label htmlFor="chat-before-plugin">发言前插件</label>
-                    <Input id="chat-before-plugin" value={beforePostPlugin} onChange={(event) => setBeforePostPlugin(event.target.value)} readOnly={!canEditRules} />
-                    <button className="sheet-button inline-flex" type="button" onClick={() => updateRuleAddress(beforePostPlugin, '发言前插件', beforePluginTx.setBeforePostPlugin)} disabled={!canEditRules}>更新</button>
-                  </div>
-                  <p>{beforePluginExplanation.description}</p>
-                </div>
-                <div className="settings-field-block">
-                  <div className="field-row">
-                    <label htmlFor="chat-after-plugin">发送后插件</label>
-                    <Input id="chat-after-plugin" value={afterPostPlugin} onChange={(event) => setAfterPostPlugin(event.target.value)} readOnly={!canEditRules} />
-                    <button className="sheet-button inline-flex" type="button" onClick={() => updateRuleAddress(afterPostPlugin, '发送后插件', afterPluginTx.setAfterPostPlugin)} disabled={!canEditRules}>更新</button>
-                  </div>
-                  <p>{afterPluginExplanation.description}</p>
-                </div>
-              </SettingsPanelSection>
-            </div>
+                )}
+              </div>
 
-            <aside className="settings-side-column">
-              <SettingsPanelSection icon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />} title="规则概览">
-                <div className="contract-rule-grid">
-                  <ContractRuleCard eyebrow="谁管理这个群" address={publicData.chatInfo?.owner} explanation={ownerExplanation} />
-                  <ContractRuleCard eyebrow="谁能发言" address={publicData.chatInfo?.scopeSource} explanation={scopeExplanation} />
-                  <ContractRuleCard eyebrow="谁被禁言" address={publicData.chatInfo?.banSource} explanation={banExplanation} />
-                  <ContractRuleCard eyebrow="发言前" address={publicData.chatInfo?.beforePostPlugin} explanation={beforePluginExplanation} />
-                  <ContractRuleCard eyebrow="发送后" address={publicData.chatInfo?.afterPostPlugin} explanation={afterPluginExplanation} />
+              <div className="settings-control-row">
+                <div className="settings-control-copy">
+                  <strong>管理员名单</strong>
                 </div>
-              </SettingsPanelSection>
-            </aside>
-          </div>
-        )}
+                <a className="sheet-button inline-flex" href={adminsHref}>
+                  设置
+                </a>
+              </div>
+            </section>
+          )}
+
+          <SettingsPanelSection icon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />} title="当前规则">
+            <div className="contract-rule-summary-grid">
+              <ContractRuleSummary label="发言" explanation={scopeExplanation} />
+              <ContractRuleSummary label="禁言" explanation={banExplanation} />
+              <ContractRuleSummary label="发言前" explanation={beforePluginExplanation} />
+              <ContractRuleSummary label="发送后" explanation={afterPluginExplanation} />
+            </div>
+          </SettingsPanelSection>
+
+          <details className="settings-advanced">
+            <summary>
+              <span className="settings-section-icon"><PlugZap className="h-4 w-4" aria-hidden="true" /></span>
+              <strong>高级设置</strong>
+              <ChevronDown className="settings-advanced-chevron h-4 w-4" aria-hidden="true" />
+            </summary>
+            <div className="settings-advanced-body">
+              {managerOwned && (
+                <div className="settings-readonly-note">
+                  {permissionStatusDetail}
+                </div>
+              )}
+              <div className="settings-field-block">
+                <div className="field-row">
+                  <label htmlFor="chat-scope-source">发言范围</label>
+                  <Input id="chat-scope-source" value={scopeSource} onChange={(event) => setScopeSource(event.target.value)} readOnly={!canEditRules} />
+                  <button className="sheet-button inline-flex" type="button" onClick={() => updateRuleAddress(scopeSource, '发言范围合约', scopeTx.setScopeSource)} disabled={!canEditRules}>更新</button>
+                </div>
+                <p>{scopeExplanation.description}</p>
+              </div>
+              <div className="settings-field-block">
+                <div className="field-row">
+                  <label htmlFor="chat-ban-source">禁言规则</label>
+                  <Input id="chat-ban-source" value={banSource} onChange={(event) => setBanSource(event.target.value)} readOnly={!canEditRules} />
+                  <button className="sheet-button inline-flex" type="button" onClick={() => updateRuleAddress(banSource, '禁言规则合约', banTx.setBanSource)} disabled={!canEditRules}>更新</button>
+                </div>
+                <p>{banExplanation.description}</p>
+              </div>
+              <div className="settings-field-block">
+                <div className="field-row">
+                  <label htmlFor="chat-before-plugin">发言前插件</label>
+                  <Input id="chat-before-plugin" value={beforePostPlugin} onChange={(event) => setBeforePostPlugin(event.target.value)} readOnly={!canEditRules} />
+                  <button className="sheet-button inline-flex" type="button" onClick={() => updateRuleAddress(beforePostPlugin, '发言前插件', beforePluginTx.setBeforePostPlugin)} disabled={!canEditRules}>更新</button>
+                </div>
+                <p>{beforePluginExplanation.description}</p>
+              </div>
+              <div className="settings-field-block">
+                <div className="field-row">
+                  <label htmlFor="chat-after-plugin">发送后插件</label>
+                  <Input id="chat-after-plugin" value={afterPostPlugin} onChange={(event) => setAfterPostPlugin(event.target.value)} readOnly={!canEditRules} />
+                  <button className="sheet-button inline-flex" type="button" onClick={() => updateRuleAddress(afterPostPlugin, '发送后插件', afterPluginTx.setAfterPostPlugin)} disabled={!canEditRules}>更新</button>
+                </div>
+                <p>{afterPluginExplanation.description}</p>
+              </div>
+            </div>
+          </details>
+        </div>
 
       </section>
     </section>

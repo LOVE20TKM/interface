@@ -789,6 +789,8 @@
 
 .chatPrototype :global(.delegate-query-row) {
   grid-template-columns: minmax(0, 1fr) 70px;
+  align-items: start;
+  margin-top: 0;
 }
 
 .chatPrototype :global(.status-card) {
@@ -818,8 +820,8 @@
 
 .chatPrototype :global(.settings-workspace) {
   display: grid;
-  gap: 12px;
-  max-width: 1120px;
+  gap: 10px;
+  max-width: 760px;
   margin: 0 auto;
   padding: 14px;
 }
@@ -833,10 +835,8 @@
 
 .chatPrototype :global(.settings-overview-main) {
   display: grid;
-  gap: 12px;
-  padding: 12px;
-  background:
-    linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 0.96));
+  padding: 10px;
+  background: #fff;
 }
 
 .chatPrototype :global(.settings-overview-title) {
@@ -877,20 +877,20 @@
 
 .chatPrototype :global(.settings-metric-grid) {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: 1fr;
+  gap: 6px;
 }
 
 .chatPrototype :global(.settings-metric) {
   min-width: 0;
   display: grid;
-  gap: 4px;
-  min-height: 62px;
+  gap: 3px;
+  min-height: 52px;
   align-content: center;
   border: 1px solid var(--greyscale-200);
-  border-radius: 8px;
+  border-radius: 6px;
   background: #fff;
-  padding: 9px 10px;
+  padding: 8px 9px;
 }
 
 .chatPrototype :global(.settings-metric span) {
@@ -936,18 +936,22 @@
 .chatPrototype :global(.settings-side-column) {
   min-width: 0;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .chatPrototype :global(.settings-panel-section) {
   min-width: 0;
   display: grid;
-  gap: 10px;
+  gap: 8px;
   border: 1px solid var(--greyscale-200);
   border-radius: 8px;
   background: #fff;
-  padding: 12px;
+  padding: 10px;
   box-shadow: 0 1px 2px rgba(25, 28, 31, 0.03);
+}
+
+.chatPrototype :global(.settings-actions-panel) {
+  padding: 0 10px;
 }
 
 .chatPrototype :global(.settings-section-heading) {
@@ -965,6 +969,75 @@
   border-radius: 8px;
   background: var(--greyscale-50);
   padding: 10px;
+}
+
+.chatPrototype :global(.settings-control-row) {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 10px;
+  align-items: center;
+  border-top: 1px solid var(--greyscale-200);
+  min-height: 56px;
+  padding: 8px 0;
+}
+
+.chatPrototype :global(.settings-control-row:first-of-type) {
+  border-top: 0;
+}
+
+.chatPrototype :global(.settings-control-copy) {
+  min-width: 0;
+  display: grid;
+}
+
+.chatPrototype :global(.settings-control-copy strong) {
+  color: var(--greyscale-900);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.chatPrototype :global(.settings-control-copy span) {
+  color: var(--greyscale-500);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.chatPrototype :global(.delegate-control-row) {
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) 80px;
+}
+
+.chatPrototype :global(.settings-control-row > .sheet-button) {
+  justify-self: end;
+  width: 80px;
+}
+
+.chatPrototype :global(.settings-delegate-lookup) {
+  min-width: 0;
+}
+
+.chatPrototype :global(.settings-delegate-lookup > :not([hidden]) ~ :not([hidden])) {
+  margin-top: 4px;
+}
+
+.chatPrototype :global(.delegate-settings-area) {
+  min-width: 0;
+  justify-self: end;
+}
+
+.chatPrototype :global(.delegate-settings-area > .sheet-button) {
+  width: 80px;
+}
+
+.chatPrototype :global(.delegate-control-row > .delegate-query-row) {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.chatPrototype :global(.delegate-query-row > .sheet-button) {
+  height: 40px;
 }
 
 .chatPrototype :global(.settings-control-card > div:first-child) {
@@ -985,9 +1058,11 @@
   line-height: 1.45;
 }
 
-.chatPrototype :global(.settings-switch-group) {
+.chatPrototype :global(.choice-group.settings-switch-group) {
+  justify-self: end;
+  width: fit-content;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(58px, 1fr));
 }
 
 .chatPrototype :global(.settings-switch-group .picker-button) {
@@ -999,54 +1074,97 @@
   line-height: 1.5;
 }
 
-.chatPrototype :global(.contract-rule-grid) {
-  display: grid;
-  gap: 8px;
-}
-
-.chatPrototype :global(.contract-rule-card) {
+.chatPrototype :global(.contract-rule-summary-grid) {
   min-width: 0;
   display: grid;
-  gap: 7px;
-  border: 1px solid var(--greyscale-200);
-  border-radius: 8px;
-  background: #fff;
-  padding: 10px;
-  box-shadow: 0 1px 2px rgba(25, 28, 31, 0.03);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
 }
 
-.chatPrototype :global(.contract-rule-card > strong) {
-  color: var(--greyscale-900);
-  font-size: 14px;
+.chatPrototype :global(.contract-rule-summary) {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 34px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 6px;
+  background: var(--greyscale-50);
+  padding: 7px 9px;
+}
+
+.chatPrototype :global(.contract-rule-summary span) {
+  color: var(--greyscale-500);
+  font-size: 12px;
   line-height: 1.25;
 }
 
-.chatPrototype :global(.contract-rule-card p) {
-  margin: 0;
-  color: var(--greyscale-500);
-  font-size: 12px;
-  line-height: 1.45;
+.chatPrototype :global(.contract-rule-summary strong) {
+  min-width: 0;
+  color: var(--greyscale-900);
+  font-size: 13px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
-.chatPrototype :global(.contract-address-row) {
+.chatPrototype :global(.settings-advanced) {
+  min-width: 0;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 8px;
+  background: #fff;
+  padding: 0;
+  box-shadow: 0 1px 2px rgba(25, 28, 31, 0.03);
+}
+
+.chatPrototype :global(.settings-advanced summary) {
+  min-width: 0;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  list-style: none;
+  padding: 10px;
+}
+
+.chatPrototype :global(.settings-advanced summary::-webkit-details-marker) {
+  display: none;
+}
+
+.chatPrototype :global(.settings-advanced-chevron) {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--greyscale-500);
+  transition: transform 0.16s ease;
+}
+
+.chatPrototype :global(.settings-advanced[open] .settings-advanced-chevron) {
+  transform: rotate(180deg);
+}
+
+.chatPrototype :global(.settings-advanced summary strong) {
+  color: var(--greyscale-900);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.chatPrototype :global(.settings-advanced-body) {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(96px, 0.42fr) minmax(0, 1fr);
   gap: 8px;
-  align-items: center;
   border-top: 1px solid var(--greyscale-200);
-  padding-top: 7px;
+  padding: 10px;
+}
+
+.chatPrototype :global(.settings-readonly-note) {
+  border: 1px solid var(--greyscale-200);
+  border-radius: 6px;
+  background: var(--greyscale-50);
+  padding: 9px;
   color: var(--greyscale-700);
   font-size: 12px;
-}
-
-.chatPrototype :global(.contract-address-row > span:first-child) {
-  color: var(--greyscale-500);
-}
-
-.chatPrototype :global(.contract-address-row > span:last-child) {
-  min-width: 0;
-  overflow-wrap: anywhere;
+  line-height: 1.45;
 }
 
 .chatPrototype :global(.settings-field-block) {
@@ -3405,7 +3523,6 @@
   .chatPrototype :global(.activation-submit-row),
   .chatPrototype :global(.settings-metric-grid),
   .chatPrototype :global(.settings-layout),
-  .chatPrototype :global(.contract-address-row),
   .chatPrototype :global(.my-ban-status-grid),
   .chatPrototype :global(.ban-list-controls),
   .chatPrototype :global(.field-row),
@@ -3440,7 +3557,6 @@
   .chatPrototype :global(.activation-submit-row),
   .chatPrototype :global(.settings-metric-grid),
   .chatPrototype :global(.settings-layout),
-  .chatPrototype :global(.contract-address-row),
   .chatPrototype :global(.ban-list-query-form),
   .chatPrototype :global(.ban-list-controls),
   .chatPrototype :global(.field-row),
@@ -3518,15 +3634,15 @@
   .chatPrototype :global(.settings-field-block p) {
     margin-left: 0;
   }
+
+  .chatPrototype :global(.contract-rule-summary-grid) {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 760px) {
   .chatPrototype :global(.settings-workspace) {
     padding: 12px;
-  }
-
-  .chatPrototype :global(.settings-metric-grid) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .chatPrototype :global(.settings-layout) {
@@ -3535,15 +3651,8 @@
 }
 
 @media (max-width: 480px) {
-  .chatPrototype :global(.settings-metric-grid),
-  .chatPrototype :global(.settings-switch-group) {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (min-width: 761px) and (max-width: 1080px) {
   .chatPrototype :global(.settings-metric-grid) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { Info } from 'lucide-react';
 
 import {
   useAddGroupAdmins,
@@ -52,6 +53,26 @@ export function AdminsPanel({
   const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
   const resolvedLookupId = nftLookup.lookupResult?.status === 'resolved' ? nftLookup.lookupResult.tokenId : undefined;
   const [queryResult, setQueryResult] = useState('');
+  const [permissionExpanded, setPermissionExpanded] = useState(false);
+  const permissionStatusDetail = managerOwned
+    ? '这个群由系统自动管理；激活后这里没有可修改的管理员名单。'
+    : !account
+      ? '连接钱包后才能判断当前地址是否可以维护管理员名单。'
+      : isPermissionLoading
+        ? '管理员名单只允许群主或有效代理身份修改，正在读取当前钱包身份。'
+        : canEditAdmins
+          ? ownerPermission.accountIsOwner
+            ? `当前钱包持有本群身份 #${groupId.toString()}，可以维护管理员名单。`
+            : `当前钱包持有代理身份 #${editPermission.ownerOrDelegateId?.toString() || ''}，可以维护管理员名单。`
+          : '管理员名单只允许群主或有效代理身份修改；本页只能查看和查询。';
+  const permissionSummary = (() => {
+    if (managerOwned) return { text: '自动管理', tone: 'neutral' as const };
+    if (!account) return { text: '未知', tone: 'neutral' as const };
+    if (isPermissionLoading) return { text: '读取中', tone: 'loading' as const };
+    return canEditAdmins
+      ? { text: '可管理名单', tone: 'ok' as const }
+      : { text: '只读', tone: 'neutral' as const };
+  })();
 
   const refetchAdmins = useCallback(() => {
     admins.refetch();
@@ -63,8 +84,8 @@ export function AdminsPanel({
   const describeAdmin = useCallback((id: bigint, label?: string) => {
     const record = admins.adminRecords.find((item) => item.id.toString() === id.toString());
     const suffix = record
-      ? record.isEffective ? '已在 GroupAdmin 管理员名单且当前有效' : '已在 GroupAdmin 管理员名单但当前失效'
-      : '不在 GroupAdmin 管理员名单';
+      ? record.isEffective ? '已在管理员名单且当前有效' : '已在管理员名单但当前失效'
+      : '不在管理员名单';
     setQueryResult(`NFT #${id.toString()}${label ? ` · ${label}` : ''} · ${suffix}`);
   }, [admins.adminRecords]);
 
@@ -111,18 +132,27 @@ export function AdminsPanel({
         <GroupDetailHeader
           title="管理员"
           groupId={groupId}
-          subtitle={detailSubtitle}
-          meta={isPermissionLoading ? '读取中' : managerOwned ? 'Manager 持有 NFT' : canEditAdmins ? '可管理' : '只读'}
+          subtitle={`G#${groupId.toString()} ${detailSubtitle}`}
+          actions={(
+            <div className="permission-status-inline">
+              <span className={cn('pill', permissionSummary.tone === 'ok' ? 'pill-ok' : 'pill-neutral')}>{permissionSummary.text}</span>
+              <button
+                className="permission-status-info-button"
+                type="button"
+                aria-label="查看权限原因"
+                aria-expanded={permissionExpanded}
+                onClick={() => setPermissionExpanded((expanded) => !expanded)}
+              >
+                <Info size={14} strokeWidth={2.2} aria-hidden="true" />
+              </button>
+              {permissionExpanded && (
+                <span className="permission-status-popover" role="status">
+                  {permissionStatusDetail}
+                </span>
+              )}
+            </div>
+          )}
         />
-        <div className={cn('notice-row', canEditAdmins ? 'permission-ok' : 'permission-warn')}>
-          {isPermissionLoading
-            ? '正在读取群聊 owner/delegate 与 Manager 状态。'
-            : managerOwned
-              ? '去中心化群聊由 Manager 持有群聊 NFT；激活后这里没有可修改的管理员名单。'
-              : canEditAdmins
-                ? '有权限：当前身份是 owner/delegate，可维护 GroupAdmin 管理员 NFT。'
-                : '无权限：管理员名单只允许当前 owner 或有效 delegate 修改；本页只能查看和查询。'}
-        </div>
         <ChatNftLookupActions
           lookupMode={nftLookup.lookupMode}
           onLookupModeChange={(mode) => {

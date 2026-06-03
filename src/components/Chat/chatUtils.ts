@@ -119,25 +119,29 @@ export function managerMemberScopeDescription(owner?: `0x${string}`) {
   if (sameAddress(owner, GROUP_CHAT_TOKEN_MAIN_MANAGER_ADDRESS)) {
     return {
       label: 'TokenMainManager',
-      text: '由 TokenMainManager 限定发言成员：持有该代币余额、拥有该代币治理票权，或参与过该代币行动的地址可用自己的默认 NFT 发言。',
+      summary: '持币/治理/行动',
+      text: '持有该代币余额、拥有该代币治理票权，或参与过该代币行动的地址可用自己的默认 NFT 发言。',
     };
   }
   if (sameAddress(owner, GROUP_CHAT_TOKEN_GOV_MANAGER_ADDRESS)) {
     return {
       label: 'TokenGovManager',
-      text: '由 TokenGovManager 限定发言成员：拥有该代币治理票权的地址可用自己的默认 NFT 发言。',
+      summary: '治理票',
+      text: '拥有该代币治理票权的地址可用自己的默认 NFT 发言。',
     };
   }
   if (sameAddress(owner, GROUP_CHAT_TOKEN_ACTION_MAIN_MANAGER_ADDRESS)) {
     return {
       label: 'TokenActionMainManager',
-      text: '由 TokenActionMainManager 限定发言成员：近期投过该行动票，或参与过该行动的地址可用自己的默认 NFT 发言。',
+      summary: '行动参与/投票',
+      text: '参与过该行动，或近期投过该行动票的地址可用自己的默认 NFT 发言。',
     };
   }
   if (sameAddress(owner, GROUP_CHAT_TOKEN_ACTION_GOV_MANAGER_ADDRESS)) {
     return {
       label: 'TokenActionGovManager',
-      text: '由 TokenActionGovManager 限定发言成员：近期投过该行动票的地址可用自己的默认 NFT 发言。',
+      summary: '行动投票',
+      text: '近期投过该行动票的地址可用自己的默认 NFT 发言。',
     };
   }
   return undefined;

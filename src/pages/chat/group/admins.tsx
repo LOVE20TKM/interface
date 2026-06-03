@@ -8,7 +8,7 @@ import Header from '@/src/components/Header';
 import { AdminsPanel } from '@/src/components/Chat/AdminsPanel';
 import styles from '@/src/components/Chat/ChatPage.module.css';
 import { TokenContext } from '@/src/contexts/TokenContext';
-import { buildChatIndexHref, buildGroupChatDetailHref, invalidateContractReads, parseGroupId } from '@/src/components/Chat/chatUtils';
+import { buildChatIndexHref, buildGroupChatDetailHref, buildGroupChatPanelHref, invalidateContractReads, parseGroupId } from '@/src/components/Chat/chatUtils';
 
 const GroupChatAdminsPage: NextPage = () => {
   const router = useRouter();
@@ -17,7 +17,12 @@ const GroupChatAdminsPage: NextPage = () => {
   const { token } = useContext(TokenContext) || {};
   const groupId = parseGroupId(router.query.groupId);
   const tokenSymbol = Array.isArray(router.query.symbol) ? router.query.symbol[0] : router.query.symbol || token?.symbol;
-  const backUrl = groupId ? buildGroupChatDetailHref(tokenSymbol, groupId) : buildChatIndexHref(tokenSymbol);
+  const source = Array.isArray(router.query.from) ? router.query.from[0] : router.query.from;
+  const backUrl = groupId
+    ? source === 'settings'
+      ? buildGroupChatPanelHref('settings', tokenSymbol, groupId)
+      : buildGroupChatDetailHref(tokenSymbol, groupId)
+    : buildChatIndexHref(tokenSymbol);
 
   const refreshAll = useCallback(() => {
     invalidateContractReads(queryClient);
