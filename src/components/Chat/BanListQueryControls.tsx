@@ -34,9 +34,6 @@ export function BanListQueryControls({
 
   return (
     <div className="admin-id-controls ban-list-query-controls">
-      <div className="ban-list-query-head">
-        <strong>查询或处理发言者</strong>
-      </div>
       <div className="ban-list-query-form">
         <div className="ban-list-query-mode">
           <div className="filter-tabs ban-list-query-tabs" role="tablist" aria-label="禁言名单查询类型">

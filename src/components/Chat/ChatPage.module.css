@@ -207,7 +207,7 @@
   line-height: 1.2;
 }
 
-.chatPrototype :global(.screen-heading span),
+.chatPrototype :global(.screen-heading > span),
 .chatPrototype :global(.card-topline span) {
   color: var(--greyscale-500);
   font-size: 12px;
@@ -1616,13 +1616,13 @@
 
 .chatPrototype :global(.ban-list-query-controls) {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   margin-top: 0;
-  padding: 12px;
-  border: 1px solid var(--greyscale-200);
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(25, 28, 31, 0.03);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .chatPrototype :global(.ban-list-query-head) {
@@ -1666,81 +1666,65 @@
   height: 40px;
 }
 
-.chatPrototype :global(.my-ban-status-panel) {
-  display: grid;
-  gap: 9px;
-  margin-top: 10px;
-  padding: 11px 12px;
-  border: 1px solid var(--greyscale-200);
-  border-radius: 8px;
-  background: #fff;
-}
-
-.chatPrototype :global(.permission-status-panel) {
-  margin-top: 8px;
-}
-
-.chatPrototype :global(.permission-status-detail) {
+.chatPrototype :global(.permission-status-inline) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
   min-width: 0;
-  display: grid;
-  gap: 4px;
-  padding-top: 1px;
 }
 
-.chatPrototype :global(.permission-status-detail small) {
-  color: var(--greyscale-500);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
+.chatPrototype :global(.permission-status-inline .pill) {
+  min-height: 20px;
+  padding: 1px 7px;
+  font-size: 11px;
 }
 
-.chatPrototype :global(.ban-list-work-section) {
-  margin-top: 18px;
-}
-
-.chatPrototype :global(.my-ban-status-summary) {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
+.chatPrototype :global(.permission-status-info-button) {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
   padding: 0;
-  border: 0;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 999px;
   appearance: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
+  background: #fff;
+  color: var(--greyscale-500);
   cursor: pointer;
 }
 
-.chatPrototype :global(.my-ban-status-summary > div) {
-  min-width: 0;
-  display: grid;
-  gap: 3px;
+.chatPrototype :global(.permission-status-info-button:hover) {
+  border-color: var(--greyscale-300);
+  color: var(--greyscale-700);
 }
 
-.chatPrototype :global(.my-ban-status-summary-meta) {
-  flex: 0 0 auto;
-  max-width: 100%;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+.chatPrototype :global(.permission-status-popover) {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  display: block;
+  width: min(320px, calc(100vw - 48px));
+  padding: 10px 11px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(25, 28, 31, 0.12);
+  color: var(--greyscale-600);
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 1.45;
+  text-align: left;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
-.chatPrototype :global(.my-ban-status-chevron) {
-  flex: 0 0 auto;
-  color: var(--greyscale-400);
-  transition: transform 160ms ease;
-}
-
-.chatPrototype :global(.my-ban-status-chevron.expanded) {
-  transform: rotate(180deg);
-}
-
-.chatPrototype :global(.my-ban-status-summary strong) {
-  font-size: 13px;
+.chatPrototype :global(.ban-list-work-section) {
+  margin-top: 16px;
 }
 
 .chatPrototype :global(.my-ban-status-details) {
@@ -2460,19 +2444,36 @@
 .chatPrototype :global(.group-detail-heading) {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
+  align-items: start;
+  gap: 10px;
 }
 
 .chatPrototype :global(.group-detail-title) {
   min-width: 0;
 }
 
-.chatPrototype :global(.group-detail-title h1),
-.chatPrototype :global(.group-detail-title span) {
+.chatPrototype :global(.group-detail-actions) {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.chatPrototype :global(.group-detail-title > h1),
+.chatPrototype :global(.group-detail-title > span) {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.chatPrototype :global(.group-detail-title > span) {
+  margin-top: 2px;
+  color: var(--greyscale-400);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
 }
 
 .chatPrototype :global(.tab-content-block) {

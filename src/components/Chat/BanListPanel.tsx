@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
-import { ChevronDown, Copy } from 'lucide-react';
+import { Copy, Info } from 'lucide-react';
 
 import { TokenContext } from '@/src/contexts/TokenContext';
 import { useGroupChatVotingPower } from '@/src/hooks/contracts/useGroupChatManagers';
@@ -999,46 +999,33 @@ export function BanListPanel({
     return { text: '未被禁言', tone: 'ok' as const };
   })();
 
-  useEffect(() => {
-    if (permissionSummary.tone === 'ok') {
-      setPermissionExpanded(true);
-    }
-  }, [permissionSummary.tone]);
-
   return (
     <section className="workspace-screen ban-list-screen">
       <section className="workspace-band">
         <GroupDetailHeader
           title="禁言名单"
           groupId={groupId}
-          subtitle={detailSubtitle}
-        />
-        <div className="my-ban-status-panel permission-status-panel">
-          <button
-            className="my-ban-status-summary"
-            type="button"
-            aria-expanded={permissionExpanded}
-            onClick={() => setPermissionExpanded((expanded) => !expanded)}
-          >
-            <div>
-              <strong>我的权限状态</strong>
-            </div>
-            <span className="my-ban-status-summary-meta">
+          subtitle={`G#${groupId.toString()} ${detailSubtitle}`}
+          actions={(
+            <div className="permission-status-inline">
               <span className={cn('pill', banStatusPillClass(permissionSummary.tone))}>{permissionSummary.text}</span>
-              <ChevronDown
-                className={cn('my-ban-status-chevron', permissionExpanded && 'expanded')}
-                size={16}
-                strokeWidth={2.2}
-                aria-hidden="true"
-              />
-            </span>
-          </button>
-          {permissionExpanded && (
-            <span className="permission-status-detail">
-              {permissionStatusDetail && <small>{permissionStatusDetail}</small>}
-            </span>
+              <button
+                className="permission-status-info-button"
+                type="button"
+                aria-label="查看权限原因"
+                aria-expanded={permissionExpanded}
+                onClick={() => setPermissionExpanded((expanded) => !expanded)}
+              >
+                <Info size={14} strokeWidth={2.2} aria-hidden="true" />
+              </button>
+              {permissionExpanded && (
+                <span className="permission-status-popover" role="status">
+                  {permissionStatusDetail || permissionSummary.text}
+                </span>
+              )}
+            </div>
           )}
-        </div>
+        />
         <div className="ban-list-work-section">
           <BanListQueryControls
             queryType={queryType}

@@ -2,6 +2,7 @@ import {
   useGroupChatManagedTitle,
   type GroupChatPublicData,
 } from '@/src/hooks/composite/useGroupChatData';
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { isManagerOwnedChat } from './chatUtils';
 
@@ -21,11 +22,13 @@ export function GroupDetailHeader({
   groupId,
   subtitle,
   meta,
+  actions,
 }: {
   title: string;
   groupId: bigint;
   subtitle?: string;
   meta?: string;
+  actions?: ReactNode;
 }) {
   const warnMeta = meta === '只读' || meta === '不可管理名单';
   const neutralMeta =
@@ -42,7 +45,12 @@ export function GroupDetailHeader({
         <h1>{title}</h1>
         <span>{subtitle || `群聊 #${groupId.toString()}`}</span>
       </div>
-      {meta && <span className={cn('pill', warnMeta ? 'pill-warn' : neutralMeta ? 'pill-neutral' : 'pill-ok')}>{meta}</span>}
+      {(meta || actions) && (
+        <div className="group-detail-actions">
+          {actions}
+          {meta && <span className={cn('pill', warnMeta ? 'pill-warn' : neutralMeta ? 'pill-neutral' : 'pill-ok')}>{meta}</span>}
+        </div>
+      )}
     </div>
   );
 }
