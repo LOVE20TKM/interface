@@ -17,10 +17,8 @@ import {
 import {
   DEFAULT_MESSAGE_PREFERENCES,
   type MessagePreferences,
-  readFollowedGroupIds,
   readMessagePreferences,
   readRecordStorage,
-  writeFollowedGroupIds,
 } from './chatStorage';
 import type { ChatWorkspaceView } from './chatTypes';
 import {
@@ -40,17 +38,15 @@ export default function GroupChatDetailPage() {
   const { token } = useContext(TokenContext) || {};
   const groupId = router.isReady ? parseGroupId(router.query.groupId) : undefined;
   const tokenSymbol = Array.isArray(router.query.symbol) ? router.query.symbol[0] : router.query.symbol || token?.symbol;
-  const [followedGroupIds, setFollowedGroupIds] = useState<string[]>([]);
   const [readCursors, setReadCursors] = useState<Record<string, string>>({});
   const [messagePreferences, setMessagePreferences] = useState<MessagePreferences>(DEFAULT_MESSAGE_PREFERENCES);
   const accountAddress = account as `0x${string}` | undefined;
   const tokenAddress = token?.address as `0x${string}` | undefined;
 
   useEffect(() => {
-    setFollowedGroupIds(readFollowedGroupIds(accountAddress));
     setReadCursors(readRecordStorage(READ_CURSORS_STORAGE_KEY));
     setMessagePreferences(readMessagePreferences());
-  }, [accountAddress]);
+  }, []);
 
   const markGroupRead = useCallback((nextGroupId: bigint, latestMessageId: bigint | undefined) => {
     const key = nextGroupId.toString();
@@ -70,16 +66,6 @@ export default function GroupChatDetailPage() {
   const refreshAll = useCallback(() => {
     invalidateContractReads(queryClient);
   }, [queryClient]);
-
-  const toggleFollowedGroup = useCallback((nextGroupId: bigint) => {
-    if (!accountAddress) return;
-    const key = nextGroupId.toString();
-    setFollowedGroupIds((prev) => {
-      const next = prev.includes(key) ? prev.filter((item) => item !== key) : [key, ...prev];
-      writeFollowedGroupIds(accountAddress, next);
-      return next;
-    });
-  }, [accountAddress]);
 
   const onOpenGroupPanel = useCallback(
     (nextView: ChatWorkspaceView) => {
@@ -131,7 +117,6 @@ export default function GroupChatDetailPage() {
               <GroupChatPanel
                 groupId={groupId}
                 account={accountAddress}
-                isFollowed={followedGroupIds.includes(groupId.toString())}
                 showBannedMessages={messagePreferences.showBannedMessages}
                 showMessageTimes={messagePreferences.showMessageTimes}
                 tokenAddress={tokenAddress}
@@ -139,7 +124,6 @@ export default function GroupChatDetailPage() {
                 onPosted={refreshAll}
                 onOpenPanel={onOpenGroupPanel}
                 onOpenBanSettings={openBanSettingsForMessage}
-                onToggleFollow={toggleFollowedGroup}
                 onReadLatest={markGroupRead}
               />
             ) : (

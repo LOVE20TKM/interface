@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { PlugZap, Power, ShieldCheck, SlidersHorizontal } from 'lucide-react';
+import { Info, PlugZap, Power, ShieldCheck, SlidersHorizontal, UserCog } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,6 @@ import {
   GROUP_CHAT_TOKEN_MAIN_MANAGER_ADDRESS,
 } from '@/src/hooks/contracts/useGroupChatManagers';
 import {
-  useGroupChatAccountData,
   useGroupChatPublicData,
 } from '@/src/hooks/composite/useGroupChatData';
 import NftOwnerLookup from '@/src/components/Extension/Base/Group/NftOwnerLookup';
@@ -40,7 +39,7 @@ import { cn } from '@/lib/utils';
 import { GroupDetailHeader, useGroupDetailSubtitle } from './ChatGroupDetailHeader';
 import { ZERO_ADDRESS } from './chatConstants';
 import {
-  formatCanPostReason,
+  buildGroupChatPanelHref,
   isManagerOwnedChat,
   managerMemberScopeDescription,
   parseAddressInput,
@@ -290,6 +289,12 @@ function StatusMetric({
   );
 }
 
+function formatDelegateIdText(isPending: boolean, delegateId: bigint | undefined) {
+  if (isPending) return '读取中';
+  if (delegateId === undefined || delegateId === BigInt(0)) return '未设置';
+  return `NFT #${delegateId.toString()}`;
+}
+
 function SettingsPanelSection({
   icon,
   title,
@@ -313,18 +318,20 @@ function SettingsPanelSection({
 export function ChatSettingsPanel({
   groupId,
   account,
+  tokenSymbol,
   onChanged,
 }: {
   groupId: bigint;
   account: `0x${string}` | undefined;
+  tokenSymbol?: string;
   onChanged: () => void;
 }) {
   const publicData = useGroupChatPublicData(groupId);
-  const accountData = useGroupChatAccountData(groupId, account, publicData.senderNames);
   const [scopeSource, setScopeSource] = useState('');
   const [banSource, setBanSource] = useState('');
   const [beforePostPlugin, setBeforePostPlugin] = useState('');
   const [afterPostPlugin, setAfterPostPlugin] = useState('');
+  const [permissionExpanded, setPermissionExpanded] = useState(false);
   const postingTx = useSetGroupChatPostingAllowed();
   const scopeTx = useSetGroupChatScopeSource();
   const banTx = useSetGroupChatBanSource();
@@ -351,12 +358,28 @@ export function ChatSettingsPanel({
   const banExplanation = explainBanContract(publicData.chatInfo?.banSource);
   const beforePluginExplanation = explainPluginContract(publicData.chatInfo?.beforePostPlugin, 'before');
   const afterPluginExplanation = explainPluginContract(publicData.chatInfo?.afterPostPlugin, 'after');
-  const canPostText = accountData.canPost
-    ? '可以发言'
-    : formatCanPostReason(accountData.canPostReasonCode) || '当前地址暂时不满足这个群聊的发言条件。';
   const activationText = publicData.chatInfo ? (publicData.chatInfo.activated ? '已激活' : '未激活') : '读取中';
   const postingText = publicData.chatInfo ? (publicData.chatInfo.postingAllowed ? '允许发言' : '暂停发言') : '读取中';
-  const delegateText = delegateState.isPending ? '读取中' : `NFT #${delegateState.delegateId?.toString() || '0'}`;
+  const delegateText = formatDelegateIdText(groupDelegate.isPending || delegateState.isPending, delegateState.delegateId);
+  const adminsHref = buildGroupChatPanelHref('admins', tokenSymbol, groupId);
+  const permissionSummary = (() => {
+    if (managerOwned) return { text: '自动管理', tone: 'neutral' as const };
+    if (ownerPermission.isPending) return { text: '读取中', tone: 'loading' as const };
+    return canEditRules
+      ? { text: '可管理', tone: 'ok' as const }
+      : { text: '只读', tone: 'neutral' as const };
+  })();
+  const permissionStatusDetail = managerOwned
+    ? '这个群由系统自动管理，当前不能手动修改设置。'
+    : !account
+      ? '连接钱包后才能判断你是否能修改设置。'
+      : ownerPermission.isPending
+        ? '持有本群 NFT 或代理 NFT 的钱包可以修改设置。'
+        : canEditRules
+          ? ownerPermission.accountIsOwner
+            ? '你持有本群 NFT，可以修改设置。'
+            : `你持有代理 NFT #${editPermission.ownerOrDelegateId.toString()}，可以修改设置。`
+          : '你没有修改权限。需要持有本群 NFT 或代理 NFT。';
 
   const refetchSettings = useCallback(() => {
     publicData.refetch();
@@ -380,7 +403,7 @@ export function ChatSettingsPanel({
   }, [publicData.chatInfo]);
 
   useEffect(() => {
-    if (delegateState.delegateId !== undefined && !delegateLookup.lookupValue) {
+    if (delegateState.delegateId !== undefined && delegateState.delegateId > BigInt(0) && !delegateLookup.lookupValue) {
       delegateLookup.setLookupMode('id');
       delegateLookup.setLookupValue(delegateState.delegateId.toString());
     }
@@ -448,8 +471,26 @@ export function ChatSettingsPanel({
         <GroupDetailHeader
           title="群设置"
           groupId={groupId}
-          subtitle={detailSubtitle}
-          meta={managerOwned ? 'Manager 持有 NFT' : canEditRules ? '可管理' : '只读'}
+          subtitle={`G#${groupId.toString()} ${detailSubtitle}`}
+          actions={(
+            <div className="permission-status-inline">
+              <span className={cn('pill', permissionSummary.tone === 'ok' ? 'pill-ok' : 'pill-neutral')}>{permissionSummary.text}</span>
+              <button
+                className="permission-status-info-button"
+                type="button"
+                aria-label="查看权限原因"
+                aria-expanded={permissionExpanded}
+                onClick={() => setPermissionExpanded((expanded) => !expanded)}
+              >
+                <Info size={14} strokeWidth={2.2} aria-hidden="true" />
+              </button>
+              {permissionExpanded && (
+                <span className="permission-status-popover" role="status">
+                  {permissionStatusDetail}
+                </span>
+              )}
+            </div>
+          )}
         />
 
         <section className="settings-overview">
@@ -458,53 +499,30 @@ export function ChatSettingsPanel({
               <span className="settings-section-icon"><SlidersHorizontal className="h-4 w-4" aria-hidden="true" /></span>
               <div>
                 <h2>运行状态</h2>
-                <p>{detailSubtitle}</p>
               </div>
             </div>
             <div className="settings-metric-grid">
-              <StatusMetric label="群 NFT" value={`#${groupId.toString()}`} />
               <StatusMetric label="激活状态" value={activationText} tone={publicData.chatInfo?.activated ? 'good' : 'warn'} />
               <StatusMetric label="发言开关" value={postingText} tone={publicData.chatInfo?.postingAllowed ? 'good' : 'warn'} />
-              {!managerOwned && (
-                <StatusMetric
-                  label="当前身份"
-                  value={accountData.defaultSenderId ? `NFT #${accountData.defaultSenderId.toString()}` : '未设置'}
-                  tone={accountData.defaultSenderId ? 'good' : 'warn'}
-                />
-              )}
-              <StatusMetric label="我能否发言" value={publicData.chatInfo ? canPostText : '读取中'} tone={accountData.canPost ? 'good' : 'warn'} />
-              {!managerOwned && <StatusMetric label="代理 NFT" value={delegateText} />}
             </div>
           </div>
         </section>
 
         {managerOwned ? (
-          <div className="settings-layout">
-            <div className="settings-main-column">
-              <div className="notice-row permission-row permission-warn settings-permission-banner">
-                去中心化群聊由 Manager 持有群聊 NFT，激活后无人有权再修改群设置。
+          <div className="settings-main-column">
+            <SettingsPanelSection icon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />} title="规则概览">
+              <div className="contract-rule-grid">
+                <ContractRuleCard eyebrow="谁管理这个群" address={publicData.chatInfo?.owner} explanation={ownerExplanation} />
+                <ContractRuleCard eyebrow="谁能发言" address={publicData.chatInfo?.scopeSource} explanation={scopeExplanation} />
+                <ContractRuleCard eyebrow="谁被禁言" address={publicData.chatInfo?.banSource} explanation={banExplanation} />
+                <ContractRuleCard eyebrow="发言前" address={publicData.chatInfo?.beforePostPlugin} explanation={beforePluginExplanation} />
+                <ContractRuleCard eyebrow="发送后" address={publicData.chatInfo?.afterPostPlugin} explanation={afterPluginExplanation} />
               </div>
-            </div>
-            <aside className="settings-side-column">
-              <SettingsPanelSection icon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />} title="规则概览">
-                <div className="contract-rule-grid">
-                  <ContractRuleCard eyebrow="谁管理这个群" address={publicData.chatInfo?.owner} explanation={ownerExplanation} />
-                  <ContractRuleCard eyebrow="谁能发言" address={publicData.chatInfo?.scopeSource} explanation={scopeExplanation} />
-                  <ContractRuleCard eyebrow="谁被禁言" address={publicData.chatInfo?.banSource} explanation={banExplanation} />
-                  <ContractRuleCard eyebrow="发言前" address={publicData.chatInfo?.beforePostPlugin} explanation={beforePluginExplanation} />
-                  <ContractRuleCard eyebrow="发送后" address={publicData.chatInfo?.afterPostPlugin} explanation={afterPluginExplanation} />
-                </div>
-              </SettingsPanelSection>
-            </aside>
+            </SettingsPanelSection>
           </div>
         ) : (
           <div className="settings-layout">
             <div className="settings-main-column">
-              <div className={cn('notice-row permission-row settings-permission-banner', canEditRules ? 'permission-ok' : 'permission-warn')}>
-                {canEditRules
-                  ? '有权限：当前身份是 owner/delegate，可修改发言开关、规则合约和代理 NFT。'
-                  : '无权限：群设置只允许当前 owner 或有效 delegate 修改；本页只读。'}
-              </div>
               <SettingsPanelSection icon={<Power className="h-4 w-4" aria-hidden="true" />} title="常用操作">
                 <div className="settings-control-card">
                   <div>
@@ -523,7 +541,6 @@ export function ChatSettingsPanel({
                 <div className="delegate-panel settings-control-card">
                   <div className="card-topline">
                     <strong>代理 NFT</strong>
-                    <span>delegateId</span>
                   </div>
                   <div className="query-result">
                     当前 {delegateText}；输入 0 表示不设置代理。
@@ -539,6 +556,16 @@ export function ChatSettingsPanel({
                     />
                     <button className="sheet-button primary inline-flex" type="button" onClick={updateDelegateId} disabled={!canEditRules}>确认</button>
                   </div>
+                </div>
+                <div className="settings-control-card">
+                  <div>
+                    <strong>管理员名单</strong>
+                    <span>维护可协助管理成员和禁言的管理员 NFT。</span>
+                  </div>
+                  <a className="sheet-button inline-flex" href={adminsHref}>
+                    <UserCog className="h-4 w-4" aria-hidden="true" />
+                    打开
+                  </a>
                 </div>
               </SettingsPanelSection>
               <SettingsPanelSection icon={<PlugZap className="h-4 w-4" aria-hidden="true" />} title="规则合约">

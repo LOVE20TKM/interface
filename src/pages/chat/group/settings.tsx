@@ -31,6 +31,7 @@ const GroupChatSettingsPage: NextPage = () => {
           <ChatSettingsPanel
             groupId={groupId}
             account={account as `0x${string}` | undefined}
+            tokenSymbol={tokenSymbol}
             onChanged={refreshAll}
           />
         ) : (

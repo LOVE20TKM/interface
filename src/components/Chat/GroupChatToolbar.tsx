@@ -8,20 +8,16 @@ export function GroupChatToolbar({
   title,
   messagesCount,
   menuOpen,
-  isFollowed,
   onToggleMenu,
   onCloseMenu,
-  onToggleFollow,
   onOpenPanel,
 }: {
   groupId: bigint;
   title: string;
   messagesCount: bigint | undefined;
   menuOpen: boolean;
-  isFollowed: boolean;
   onToggleMenu: () => void;
   onCloseMenu: () => void;
-  onToggleFollow: (groupId: bigint) => void;
   onOpenPanel: (view: ChatWorkspaceView) => void;
 }) {
   const toolbarRef = useRef<HTMLDivElement | null>(null);
@@ -50,11 +46,6 @@ export function GroupChatToolbar({
     onOpenPanel(view);
   };
 
-  const toggleFollow = () => {
-    onCloseMenu();
-    onToggleFollow(groupId);
-  };
-
   return (
     <div className="chat-tools" ref={toolbarRef}>
       <div className="chat-tools-copy">
@@ -69,10 +60,8 @@ export function GroupChatToolbar({
       </button>
       {menuOpen && (
         <div className="chat-menu">
-          <button type="button" onClick={toggleFollow}>{isFollowed ? '移出' : '添加'}</button>
           <button type="button" onClick={() => openPanel('members')}>群成员</button>
           <button type="button" onClick={() => openPanel('banList')}>禁言名单</button>
-          <button type="button" onClick={() => openPanel('admins')}>管理员</button>
           <button type="button" onClick={() => openPanel('settings')}>群设置</button>
         </div>
       )}
