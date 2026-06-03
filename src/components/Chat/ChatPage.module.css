@@ -1851,7 +1851,7 @@
 }
 
 .chatPrototype :global(.ban-list-query-tabs) {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-top: 0;
   gap: 4px;
   padding: 3px;
@@ -2157,6 +2157,18 @@
   font-size: 13px;
   font-weight: 750;
   line-height: 1.35;
+}
+
+.chatPrototype :global(.my-ban-query-head) {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chatPrototype :global(.my-ban-query-head .pill) {
+  flex: 0 0 auto;
 }
 
 .chatPrototype :global(.message-sender-address-line) {

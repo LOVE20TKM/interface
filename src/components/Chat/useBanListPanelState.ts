@@ -3,14 +3,14 @@ import { useEffect, useState } from 'react';
 import { BAN_LIST_PAGE_SIZE } from './chatConstants';
 import type { GovBanListTarget } from './GovVoterSheet';
 
-export type BanListQueryType = 'message' | 'address' | 'nft';
+export type BanListQueryType = 'mine' | 'message' | 'address' | 'nft';
 
 export type BanListTarget =
   | { type: 'address'; value: `0x${string}` }
   | { type: 'nft'; value: bigint };
 
 export function useBanListPanelState() {
-  const [queryType, setQueryType] = useState<BanListQueryType>('nft');
+  const [queryType, setQueryType] = useState<BanListQueryType>('mine');
   const [queryInput, setQueryInput] = useState('');
   const [queryTarget, setQueryTarget] = useState<BanListTarget | undefined>();
   const [activeGovTarget, setActiveGovTarget] = useState<GovBanListTarget | undefined>();
