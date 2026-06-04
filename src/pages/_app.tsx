@@ -129,6 +129,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   const navLoadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isGroupChatDetailPage = router.pathname === '/chat/group';
   const hideFooter = isGroupChatDetailPage;
+  const hideBottomNavigation = isGroupChatDetailPage;
 
   // iOS钱包环境页面恢复功能
   usePageRecovery();
@@ -280,7 +281,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                         <Component {...pageProps} />
                       </AppErrorBoundary>
                       {!hideFooter && <Footer />}
-                      <BottomNavigation />
+                      {!hideBottomNavigation && <BottomNavigation />}
                     </div>
                   </SidebarInset>
                 </SidebarProvider>

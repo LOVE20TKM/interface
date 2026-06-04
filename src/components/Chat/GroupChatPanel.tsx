@@ -82,7 +82,6 @@ export function GroupChatPanel({
   const bottomResizeFrameRef = useRef<number | undefined>();
   const [composerHeight, setComposerHeight] = useState(0);
   const [messageListHeight, setMessageListHeight] = useState<number | undefined>();
-  const [bottomNavHeight, setBottomNavHeight] = useState<number | undefined>();
   useRegisterActiveChat(groupId);
   const markGroupRead = useMarkGroupRead();
   const syncState = useGroupChatSyncState(groupId);
@@ -123,7 +122,6 @@ export function GroupChatPanel({
     lastRefetchedSyncMessageIdRef.current = undefined;
     setComposerHeight(0);
     setMessageListHeight(undefined);
-    setBottomNavHeight(undefined);
   }, [groupId]);
 
   const stopBottomResizeObserver = useCallback(() => {
@@ -285,23 +283,14 @@ export function GroupChatPanel({
     const composer = composerRef.current;
     if (!messageList || !composer) return;
 
-    const nextComposerHeight = Math.ceil(composer.getBoundingClientRect().height);
-    const bottomNav = document.querySelector('nav.fixed.bottom-0') as HTMLElement | null;
-    const bottomNavRect = bottomNav?.getBoundingClientRect();
-    const bottomNavVisible =
-      !!bottomNav &&
-      !!bottomNavRect &&
-      bottomNavRect.height > 0 &&
-      window.getComputedStyle(bottomNav).display !== 'none';
-    const bottomBoundary = bottomNavVisible ? bottomNavRect.top : window.innerHeight;
-    const nextBottomNavHeight = bottomNavVisible ? Math.max(0, window.innerHeight - bottomBoundary) : undefined;
+    const composerRect = composer.getBoundingClientRect();
+    const nextComposerHeight = Math.ceil(composerRect.height);
     const nextMessageListHeight = Math.max(
       120,
-      Math.floor(bottomBoundary - nextComposerHeight - messageList.getBoundingClientRect().top),
+      Math.floor(composerRect.top - messageList.getBoundingClientRect().top),
     );
 
     setComposerHeight((current) => (current === nextComposerHeight ? current : nextComposerHeight));
-    setBottomNavHeight((current) => (current === nextBottomNavHeight ? current : nextBottomNavHeight));
     setMessageListHeight((current) => (current === nextMessageListHeight ? current : nextMessageListHeight));
   }, []);
 
@@ -538,7 +527,6 @@ export function GroupChatPanel({
       className="group-chat-shell flex min-h-0 flex-1 flex-col bg-white"
       style={{
         '--detail-composer-height': `${composerHeight || 128}px`,
-        ...(bottomNavHeight !== undefined ? { '--detail-bottom-nav-height': `${bottomNavHeight}px` } : {}),
         ...(messageListHeight ? { '--detail-message-list-height': `${messageListHeight}px` } : {}),
       } as CSSProperties}
     >

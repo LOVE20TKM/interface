@@ -3779,7 +3779,7 @@
   }
 
   .chatPrototype[data-detail="true"] {
-    height: calc(100dvh - var(--chat-mobile-chrome-offset) - var(--global-bottom-nav-offset));
+    height: calc(100dvh - var(--chat-mobile-chrome-offset));
     min-height: 0;
     overflow: hidden;
   }
@@ -3793,7 +3793,7 @@
   .chatPrototype[data-detail="true"] :global(.composer-banned) {
     position: fixed;
     right: 0;
-    bottom: var(--detail-bottom-nav-height, var(--global-bottom-nav-offset));
+    bottom: 0;
     left: 0;
     z-index: 45;
     width: 100%;
