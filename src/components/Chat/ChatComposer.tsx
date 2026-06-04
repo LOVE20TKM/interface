@@ -1,6 +1,7 @@
 'use client';
 
 import { forwardRef } from 'react';
+import Link from 'next/link';
 import { Loader2, Quote, Send, ShieldCheck, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import type { ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
@@ -41,6 +42,7 @@ export const ChatComposer = forwardRef<HTMLElement, {
 }, ref) {
   const composerLocked = !sendAvailability.canSend;
   const cannotSendMessage = sendAvailability.canSend ? '' : sendAvailability.message || '当前无法发言。';
+  const showDefaultNftSetupLink = !sendAvailability.canSend && sendAvailability.source === 'defaultNft';
   const activeSenderLabel = activeSenderId
     ? formatSenderIdentity(activeSenderName, activeSenderId)
     : '';
@@ -54,6 +56,11 @@ export const ChatComposer = forwardRef<HTMLElement, {
           <div className="cannot-post-inline">
             {sendAvailability.source === 'loading' && <Loader2 className="h-4 w-4 shrink-0 animate-spin" />}
             <span>{cannotSendMessage}</span>
+            {showDefaultNftSetupLink && (
+              <Link href="/group/groupids/" className="composer-setup-link">
+                去设置
+              </Link>
+            )}
           </div>
         </div>
       ) : (
