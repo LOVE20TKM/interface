@@ -768,6 +768,9 @@ export function GroupChatHome() {
       <main className={styles.chatPrototype} data-detail="false" data-entry="love20-chat">
         <div className={styles.chatWorkspace} data-entry="love20-chat">
           <section className={styles.chatSurface}>
+            <div className={styles.chatTestBanner} role="status">
+              群聊协议内测进行中
+            </div>
             <section className={cn('workspace-screen', 'inbox-screen')} aria-label="聊天工作区">
               {!isGroupChatEnabled && (
                 <div className="mb-3">
