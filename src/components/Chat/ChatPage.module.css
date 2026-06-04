@@ -72,6 +72,7 @@
   flex-direction: column;
 }
 
+.chatPrototype[data-entry="love20-chat"] + :global(footer),
 .chatPrototype[data-entry="love20-chat-activation"] + :global(footer) {
   margin-top: auto;
 }
