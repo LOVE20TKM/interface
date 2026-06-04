@@ -70,6 +70,56 @@ export default function MyGroups() {
 
   const isUpdatingDefault =
     isPendingSetDefault || isConfirmingSetDefault || isPendingClearDefault || isConfirmingClearDefault;
+
+  const renderGroupActions = (groupId: bigint) => {
+    const isCurrentDefault = hasDefaultGroup && defaultGroupId === groupId;
+    const isRowPending = pendingDefaultAction?.tokenId === groupId.toString();
+
+    return (
+      <div className="flex flex-nowrap items-center justify-end gap-1.5">
+        {canManageDefaultGroup &&
+          (isCurrentDefault ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 w-[88px] px-2 text-sm leading-none text-secondary border-secondary"
+              onClick={() => handleClearDefault(groupId)}
+              disabled={isUpdatingDefault}
+            >
+              {isRowPending && pendingDefaultAction?.type === "clear" ? "处理中..." : "取消默认"}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 w-[88px] px-2 text-sm leading-none text-secondary border-secondary"
+              onClick={() => handleSetDefault(groupId)}
+              disabled={isUpdatingDefault}
+            >
+              {isRowPending && pendingDefaultAction?.type === "set" ? "处理中..." : "设为默认"}
+            </Button>
+          ))}
+
+        {isCurrentDefault ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 w-[56px] px-2 text-sm leading-none text-secondary border-secondary opacity-50 cursor-not-allowed hover:bg-background hover:text-secondary"
+            aria-disabled="true"
+            title="当前地址已设置此NFT为默认关联NFT"
+            onClick={() => toast.error("当前地址已设置此NFT为默认关联NFT")}
+          >
+            转让
+          </Button>
+        ) : (
+          <Button variant="outline" size="sm" className="h-9 w-[56px] px-2 text-sm leading-none text-secondary border-secondary" asChild>
+            <Link href={`/group/transfer?tokenId=${groupId.toString()}`}>转让</Link>
+          </Button>
+        )}
+      </div>
+    );
+  };
+
   const sortedGroups = useMemo(() => {
     if (!hasDefaultGroup) {
       return myGroups;
@@ -252,25 +302,24 @@ export default function MyGroups() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="table w-full">
+          <table className="table w-full table-fixed">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="px-2 text-left">ID</th>
+                <th className="w-[64px] px-2 text-left">ID</th>
                 <th className="px-2 text-left">名称</th>
-                <th className="pr-6 text-right w-auto">操作</th>
+                <th className="w-[160px] px-1 text-right">操作</th>
               </tr>
             </thead>
             <tbody>
               {sortedGroups.map((group) => {
                 const isCurrentDefault = hasDefaultGroup && defaultGroupId === group.tokenId;
-                const isRowPending = pendingDefaultAction?.tokenId === group.tokenId.toString();
 
                 return (
                   <tr
                     key={group.tokenId.toString()}
                     className={`border-b border-gray-100 hover:bg-gray-50 ${isCurrentDefault ? "bg-secondary/5" : ""}`}
                   >
-                    <td className="px-2 font-mono text-secondary">{group.tokenId.toString()}</td>
+                    <td className="w-[64px] px-2 font-mono text-secondary">{group.tokenId.toString()}</td>
                     <td className="px-2">
                       <div className="flex flex-col gap-1">
                         <span className={`font-medium break-all ${isCurrentDefault ? "text-secondary" : ""}`}>
@@ -283,49 +332,7 @@ export default function MyGroups() {
                         )}
                       </div>
                     </td>
-                    <td className="px-2 w-auto">
-                      <div className="flex flex-wrap items-center justify-end gap-2">
-                        {canManageDefaultGroup &&
-                          (isCurrentDefault ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-secondary border-secondary"
-                              onClick={() => handleClearDefault(group.tokenId)}
-                              disabled={isUpdatingDefault}
-                            >
-                              {isRowPending && pendingDefaultAction?.type === "clear" ? "处理中..." : "取消默认"}
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-secondary border-secondary"
-                              onClick={() => handleSetDefault(group.tokenId)}
-                              disabled={isUpdatingDefault}
-                            >
-                              {isRowPending && pendingDefaultAction?.type === "set" ? "处理中..." : "设为默认"}
-                            </Button>
-                          ))}
-
-                        {isCurrentDefault ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-secondary border-secondary opacity-50 cursor-not-allowed hover:bg-background hover:text-secondary"
-                            aria-disabled="true"
-                            title="当前地址已设置此NFT为默认关联NFT"
-                            onClick={() => toast.error("当前地址已设置此NFT为默认关联NFT")}
-                          >
-                            转让
-                          </Button>
-                        ) : (
-                          <Button variant="outline" size="sm" className="text-secondary border-secondary" asChild>
-                            <Link href={`/group/transfer?tokenId=${group.tokenId.toString()}`}>转让</Link>
-                          </Button>
-                        )}
-                      </div>
-                    </td>
+                    <td className="w-[160px] px-1">{renderGroupActions(group.tokenId)}</td>
                   </tr>
                 );
               })}
