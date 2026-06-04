@@ -289,14 +289,14 @@ export function ChatSettingsPanel({
   const delegateText = formatDelegateIdText(groupDelegate.isPending || delegateState.isPending, delegateState.delegateId);
   const adminsHref = buildGroupChatPanelHref('admins', tokenSymbol, groupId, { from: 'settings' });
   const permissionSummary = (() => {
-    if (managerOwned) return { text: '自动管理', tone: 'neutral' as const };
+    if (managerOwned) return { text: '去中心化合约管理', tone: 'neutral' as const };
     if (ownerPermission.isPending) return { text: '读取中', tone: 'loading' as const };
     return canEditRules
       ? { text: '可管理', tone: 'ok' as const }
       : { text: '只读', tone: 'neutral' as const };
   })();
   const permissionStatusDetail = managerOwned
-    ? '这个群由系统自动管理，当前不能手动修改设置。'
+    ? '这个群由去中心化合约管理，任何人无法修改设置。'
     : !account
       ? '连接钱包后才能判断你是否能修改设置。'
       : ownerPermission.isPending

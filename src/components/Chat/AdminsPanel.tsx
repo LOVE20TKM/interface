@@ -55,7 +55,7 @@ export function AdminsPanel({
   const [queryResult, setQueryResult] = useState('');
   const [permissionExpanded, setPermissionExpanded] = useState(false);
   const permissionStatusDetail = managerOwned
-    ? '这个群由系统自动管理；激活后这里没有可修改的管理员名单。'
+    ? '这个群由去中心化合约管理；激活后这里没有可修改的管理员名单。'
     : !account
       ? '连接钱包后才能判断当前地址是否可以维护管理员名单。'
       : isPermissionLoading
@@ -66,7 +66,7 @@ export function AdminsPanel({
             : `当前钱包持有代理身份 #${editPermission.ownerOrDelegateId?.toString() || ''}，可以维护管理员名单。`
           : '管理员名单只允许群主或有效代理身份修改；本页只能查看和查询。';
   const permissionSummary = (() => {
-    if (managerOwned) return { text: '自动管理', tone: 'neutral' as const };
+    if (managerOwned) return { text: '去中心化合约管理', tone: 'neutral' as const };
     if (!account) return { text: '未知', tone: 'neutral' as const };
     if (isPermissionLoading) return { text: '读取中', tone: 'loading' as const };
     return canEditAdmins
