@@ -150,6 +150,37 @@ export function GroupChatPanel({
     });
   }, []);
 
+  const keepActiveMessageMenuVisible = useCallback((messageId: string | undefined) => {
+    if (!messageId) return;
+    const messageList = messageListRef.current;
+    if (!messageList) return;
+
+    const scrollIntoView = () => {
+      const actions = messageList.querySelector(
+        `[data-message-actions-id="${messageId}"]`,
+      ) as HTMLElement | null;
+      if (!actions) return;
+
+      const listRect = messageList.getBoundingClientRect();
+      const actionsRect = actions.getBoundingClientRect();
+      const bottomPadding = 12;
+      const topPadding = 8;
+      const hiddenBelow = actionsRect.bottom - (listRect.bottom - bottomPadding);
+      const hiddenAbove = listRect.top + topPadding - actionsRect.top;
+
+      if (hiddenBelow > 0) {
+        messageList.scrollTop += hiddenBelow;
+      } else if (hiddenAbove > 0) {
+        messageList.scrollTop -= hiddenAbove;
+      }
+    };
+
+    requestAnimationFrame(() => {
+      scrollIntoView();
+      requestAnimationFrame(scrollIntoView);
+    });
+  }, []);
+
   const keepMessageListAtBottomWhileLayoutSettles = useCallback(() => {
     stopBottomResizeObserver();
     scrollMessageListToBottom();
@@ -382,6 +413,10 @@ export function GroupChatPanel({
     }
   }, [accountData.isPending, composerHeight, publicData.isPending, scrollMessageListToBottom]);
 
+  useBrowserLayoutEffect(() => {
+    keepActiveMessageMenuVisible(activeMenuMessageId);
+  }, [activeMenuMessageId, keepActiveMessageMenuVisible, messageListHeight]);
+
   const loadEarlierMessages = () => {
     if (!hasMoreMessages || publicData.isMessageFeedFetching || accountData.isPending) return;
     const total = effectiveMessagesCount ? Number(effectiveMessagesCount) : messageWindowSize + MESSAGE_PAGE_SIZE;
@@ -534,7 +569,11 @@ export function GroupChatPanel({
         showMessageTimes={showMessageTimes}
         onLoadEarlierMessages={loadEarlierMessages}
         onOpenMessageMenu={(messageId) => {
-          setActiveMenuMessageId((value) => (value === messageId ? undefined : messageId));
+          setActiveMenuMessageId((value) => {
+            const nextMessageId = value === messageId ? undefined : messageId;
+            keepActiveMessageMenuVisible(nextMessageId);
+            return nextMessageId;
+          });
         }}
         onMentionSender={(message) => {
           addMention(message.senderId);

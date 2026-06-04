@@ -283,11 +283,30 @@ function tupleValue(value, key, index) {
   return value?.[key] ?? value?.[index];
 }
 
+function makeLocalTimestamp(date = new Date()) {
+  const pad = (value) => String(value).padStart(2, '0');
+  const offsetMinutes = -date.getTimezoneOffset();
+  const offsetSign = offsetMinutes >= 0 ? '+' : '-';
+  const absOffsetMinutes = Math.abs(offsetMinutes);
+  const offsetHours = Math.floor(absOffsetMinutes / 60);
+  const offsetRemainderMinutes = absOffsetMinutes % 60;
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+    'T',
+    pad(date.getHours()),
+    pad(date.getMinutes()),
+    pad(date.getSeconds()),
+    offsetSign,
+    pad(offsetHours),
+    pad(offsetRemainderMinutes),
+  ].join('');
+}
+
 function makeTestGroupName() {
   const scriptName = path.basename(__filename, path.extname(__filename));
-  const timestamp = new Date().toISOString()
-    .replace(/[-:]/g, '')
-    .replace(/\.\d{3}Z$/, 'Z');
+  const timestamp = makeLocalTimestamp();
   const prefix = process.env.PUBLIC_TEST_GROUP_NAME_PREFIX || scriptName;
   return `${prefix}-${timestamp}-${crypto.randomBytes(3).toString('hex')}`;
 }
@@ -841,9 +860,21 @@ async function findLastMessageByContent({ env, tools, groupId, content }) {
 
 async function sendMessageFromComposer(page, content) {
   const composer = page.getByLabel('消息内容');
+  const sendButton = page.getByRole('button', { name: /^发送$/ });
   await composer.fill(content);
-  await page.getByRole('button', { name: /^发送$/ }).click();
-  await page.getByText(content, { exact: true }).waitFor({ state: 'visible', timeout: 180000 });
+  await sendButton.waitFor({ state: 'visible', timeout: 30000 });
+  await sendButton.waitFor({ state: 'attached', timeout: 30000 });
+  await page.waitForFunction(
+    (button) => button instanceof HTMLButtonElement && !button.disabled,
+    await sendButton.elementHandle(),
+    { timeout: 180000 },
+  );
+  await sendButton.click();
+  await page.waitForFunction(
+    (textarea) => textarea instanceof HTMLTextAreaElement && textarea.value.trim() === '',
+    await composer.elementHandle(),
+    { timeout: 180000 },
+  );
 }
 
 async function waitForChainMessage({ env, tools, groupId, content, timeoutMs = 180000 }) {
@@ -858,7 +889,10 @@ async function waitForChainMessage({ env, tools, groupId, content, timeoutMs = 1
 }
 
 async function openMessageMenu(page, content) {
-  await page.getByText(content, { exact: true }).last().click();
+  const messageRow = page.locator('article.message-row', { hasText: content }).last();
+  await messageRow.waitFor({ state: 'visible', timeout: 30000 });
+  await messageRow.click();
+  return messageRow;
 }
 
 function tupleArray(value, key, index) {
@@ -1084,13 +1118,13 @@ async function main() {
       assert(tupleValue(mentionAllMessage.message, 'mentionAll', 9) === true, '链上 @全部 消息 mentionAll 应为 true');
       assert(tupleArray(mentionAllMessage.message, 'mentionedSenderIds', 8).length === 0, '链上 @全部 消息不应携带 mentionedSenderIds');
 
-      await openMessageMenu(page, targetMessage.content);
-      await page.getByRole('button', { name: '提及' }).click();
+      let targetMessageRow = await openMessageMenu(page, targetMessage.content);
+      await targetMessageRow.getByRole('button', { name: '提及' }).click();
       const composer = page.getByLabel('消息内容');
       const mentionDraft = await waitForMentionDraft(composer);
 
-      await openMessageMenu(page, targetMessage.content);
-      await page.getByRole('button', { name: '引用' }).click();
+      targetMessageRow = await openMessageMenu(page, targetMessage.content);
+      await targetMessageRow.getByRole('button', { name: '引用' }).click();
       await page.getByText(`引用 ${targetMessage.content.slice(0, 17)}…`).waitFor({ state: 'visible', timeout: 30000 });
 
       const finalReplyContent = `${mentionDraft}${replyContent}`;

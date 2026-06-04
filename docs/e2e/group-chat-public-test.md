@@ -43,8 +43,8 @@ addresses.
 
 The script creates a fresh chain group each run, so it does not depend on
 historical public_test chat state. By default, the minted chain-group NFT name
-includes the script name, UTC timestamp, and a random suffix, for example
-`groupChatPublicTest-20260604T123456Z-a1b2c3`.
+includes the script name, local-time timestamp with timezone offset, and a
+random suffix, for example `groupChatPublicTest-20260604T203456+0800-a1b2c3`.
 
 ## What It Verifies
 

@@ -1,7 +1,6 @@
 // src/lib/universalTransaction.ts
 import { useState, useEffect } from 'react';
-import { useWaitForTransactionReceipt } from 'wagmi';
-import { simulateContract, writeContract } from '@wagmi/core';
+import { simulateContract, waitForTransactionReceipt, writeContract } from '@wagmi/core';
 import { config } from '@/src/wagmi';
 import { isTukeWallet, sendTransactionForTuke, waitForTukeTransaction } from './tukeWalletUtils';
 import { checkWalletNetworkStatus } from '@/src/lib/web3';
@@ -16,12 +15,18 @@ import {
   SimulationFailedError,
 } from '@/src/lib/revertDecoder';
 
-const SIMULATED_GAS_BUFFER_NUMERATOR = BigInt(13);
-const SIMULATED_GAS_BUFFER_DENOMINATOR = BigInt(10);
+const SIMULATED_GAS_BUFFER_NUMERATOR = BigInt(2);
+const SIMULATED_GAS_BUFFER_DENOMINATOR = BigInt(1);
 
 const addGasBuffer = (gas: bigint) =>
   (gas * SIMULATED_GAS_BUFFER_NUMERATOR + SIMULATED_GAS_BUFFER_DENOMINATOR - BigInt(1)) /
   SIMULATED_GAS_BUFFER_DENOMINATOR;
+
+export const waitForCompatibleTransactionReceipt = async (hash: `0x${string}`) => {
+  return waitForTransactionReceipt(config, {
+    hash,
+  });
+};
 
 /**
  * 统一交易发送函数
@@ -148,25 +153,18 @@ export function useUniversalTransaction(
   const [hash, setHash] = useState<`0x${string}` | undefined>();
   const [isConfirming, setIsConfirming] = useState(false);
   const [isManuallyConfirmed, setIsManuallyConfirmed] = useState(false);
+  const [confirmError, setConfirmError] = useState<Error | null>(null);
 
   const isTuke = isTukeWallet();
   const { handleError } = useContractError();
   const { setError: setGlobalError } = useError();
-
-  // 对于非TUKE钱包，使用标准的useWaitForTransactionReceipt
-  const {
-    isLoading: wagmiIsConfirming,
-    isSuccess: wagmiIsConfirmed,
-    error: confirmError,
-  } = useWaitForTransactionReceipt({
-    hash: !isTuke && hash ? hash : undefined, // 只有非TUKE钱包才使用
-  });
 
   // 统一的交易执行函数
   const execute = async (args: any[] = [], value?: bigint) => {
     setGlobalError(null);
     setIsPending(true);
     setError(null);
+    setConfirmError(null);
     setIsManuallyConfirmed(false);
     setIsConfirming(false);
     setHash(undefined);
@@ -216,9 +214,38 @@ export function useUniversalTransaction(
     }
   };
 
-  // 统一的确认状态（TUKE手动确认 + 标准wagmi确认）
-  const finalIsConfirming = isTuke ? isConfirming : wagmiIsConfirming;
-  const finalIsConfirmed = isTuke ? isManuallyConfirmed : wagmiIsConfirmed;
+  useEffect(() => {
+    if (isTuke || !hash) return;
+
+    let cancelled = false;
+    setIsConfirming(true);
+    setConfirmError(null);
+    setIsManuallyConfirmed(false);
+
+    waitForCompatibleTransactionReceipt(hash)
+      .then((receipt) => {
+        if (cancelled) return;
+        console.log('交易确认成功:', receipt);
+        setIsManuallyConfirmed(true);
+      })
+      .catch((confirmErr) => {
+        if (cancelled) return;
+        console.error('交易确认失败:', confirmErr);
+        setConfirmError(confirmErr as Error);
+        setIsManuallyConfirmed(false);
+      })
+      .finally(() => {
+        if (!cancelled) setIsConfirming(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hash, isTuke]);
+
+  // 统一的确认状态（TUKE手动确认 + 标准钱包兼容确认）
+  const finalIsConfirming = isConfirming;
+  const finalIsConfirmed = isManuallyConfirmed;
   const finalConfirmError = isTuke ? null : confirmError;
 
   // 合并错误

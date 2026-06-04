@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import type { GroupChatPublicData, ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
@@ -83,11 +83,23 @@ export function ChatMessageList({
   onQuoteMessage: (message: ParsedGroupChatMessage) => void;
   onOpenBanSettings: (message: ParsedGroupChatMessage) => void;
 }) {
+  const [expandedQuoteKeys, setExpandedQuoteKeys] = useState<Set<string>>(() => new Set());
   const showListSyncIndicator =
     data.isMessageListFetching && data.messages.length > 0 && !isLoadingEarlierMessages;
   const loadEarlierDisabled = isLoadingEarlierMessages || data.isMessageFeedFetching;
   const showInitialLoadingState = data.isMessageFeedPending && data.messages.length === 0;
   const showLoadEarlierRow = hasMoreMessages && !showInitialLoadingState;
+  const toggleExpandedQuote = (quoteKey: string) => {
+    setExpandedQuoteKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(quoteKey)) {
+        next.delete(quoteKey);
+      } else {
+        next.add(quoteKey);
+      }
+      return next;
+    });
+  };
 
   return (
     <div
@@ -144,7 +156,9 @@ export function ChatMessageList({
             const timestamp = messageTimestampMs(message);
             const showTimeDivider = shouldRenderMessageTimeDivider(message, visibleMessages[index - 1]);
             const messageKey = message.messageId.toString();
+            const quoteKey = `${groupId.toString()}:${messageKey}`;
             const messageTime = showMessageTimes ? formatMessageTime(message.timestamp) : '';
+            const quoteExpanded = expandedQuoteKeys.has(quoteKey);
             const canOpenBanSettings =
               !mine && ((canUseMessageAdminBan && messageAdminCanOperate) || (canUseMessageGovBan && canVoteMessageGovBan));
 
@@ -160,16 +174,33 @@ export function ChatMessageList({
                       {messageTime && <span className="message-meta-time">{messageTime}</span>}
                       {banned && <span className="message-ban-badge">禁言</span>}
                     </div>
-                    <div className={cn('message-bubble', mine && 'mine')}>
+                    <div className={cn('message-bubble', mine && 'mine', message.quotedMessageId > BigInt(0) && 'with-quote')}>
                       {message.quotedMessageId > BigInt(0) && (
-                        <div className="quote-preview">
-                          {quoted ? quotedMessageSummary(quoted) : '引用消息未在当前分页中'}
-                        </div>
+                        quoted ? (
+                          <button
+                            className={cn('quote-preview', quoteExpanded && 'expanded')}
+                            type="button"
+                            aria-expanded={quoteExpanded}
+                            title={quoteExpanded ? '收起引用消息' : '展开引用消息'}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              toggleExpandedQuote(quoteKey);
+                            }}
+                          >
+                            {quoteExpanded ? renderMessageContent(quoted, data.senderNames) : quotedMessageSummary(quoted, 72)}
+                          </button>
+                        ) : (
+                          <div className="quote-preview unavailable">引用消息未在当前分页中</div>
+                        )
                       )}
                       {renderMessageContent(message, data.senderNames)}
                     </div>
                     {activeMenuMessageId === messageKey && (
-                      <div className="message-actions" onClick={(event) => event.stopPropagation()}>
+                      <div
+                        className="message-actions"
+                        data-message-actions-id={messageKey}
+                        onClick={(event) => event.stopPropagation()}
+                      >
                         <button type="button" title="提及" onClick={() => onMentionSender(message)}>提及</button>
                         <button type="button" title="引用" onClick={() => onQuoteMessage(message)}>引用</button>
                         <button type="button" title="复制" onClick={() => onCopyMessage(message)}>复制</button>
