@@ -90,5 +90,5 @@ export const config = createConfig({
             },
           }),
         },
-  ssr: false, // 静态导出模式下禁用 SSR
+  ssr: true, // 静态导出仍可用；让 wagmi 在 effect 中 hydrate，避免渲染阶段更新订阅组件
 });

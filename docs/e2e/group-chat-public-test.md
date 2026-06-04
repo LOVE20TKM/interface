@@ -16,8 +16,8 @@ yarn e2e:group-chat:public-test
 
 The script opens a temporary local credential page on `127.0.0.1` and asks for:
 
-- Foundry keystore name, for example `dev1`
-- Keystore password
+- Shared keystore password for the default `dev1`, `dev2`, `dev3`, `dev4`
+  Foundry wallets
 
 The password is posted only to the current local Node process. It is kept in
 process memory only, not written to a file, passed through argv, or printed.
@@ -25,35 +25,68 @@ process memory only, not written to a file, passed through argv, or printed.
 Optional environment variables:
 
 ```bash
-PUBLIC_TEST_GROUP_ID=123 yarn e2e:group-chat:public-test
 HEADLESS=0 yarn e2e:group-chat:public-test
 ```
 
-For local debugging only, the prompt can be bypassed:
+The default four-wallet coverage can be overridden with comma-separated Foundry
+keystore names. The script will require every wallet to have a default LOVE20
+NFT and public_test native token balance. The primary wallet also needs enough
+first-token balance to mint a fresh chain-group NFT.
 
 ```bash
-PUBLIC_TEST_KEYSTORE=dev1 PUBLIC_TEST_KEYSTORE_PASSWORD='...' yarn e2e:group-chat:public-test
+PUBLIC_TEST_KEYSTORES=dev1,dev2,dev3,dev4 PUBLIC_TEST_KEYSTORE_PASSWORD='dev' yarn e2e:group-chat:public-test
 ```
 
-If `PUBLIC_TEST_GROUP_ID` is not set, the script reads the wallet's default
-LOVE20 NFT and scans recent public_test chat groups for one where that identity
-can post.
+`PUBLIC_TEST_KEYSTORES` must contain at least four different wallets so the
+owner, mention target, admin, and delegate paths are verified with separate
+addresses.
+
+The script creates a fresh chain group each run, so it does not depend on
+historical public_test chat state. By default, the minted chain-group NFT name
+includes the script name, UTC timestamp, and a random suffix, for example
+`groupChatPublicTest-20260604T123456Z-a1b2c3`.
 
 ## What It Verifies
 
 1. Loads `.env.public_test`.
-2. Unlocks the selected Foundry keystore locally.
-3. Starts a Next dev server with public_test env and `/interface-test` basePath.
-4. Opens `/interface-test/chat/group`.
-5. Connects the injected wallet through wagmi's injected connector.
-6. Sends `GroupChat.postAsDefaultSender(...)` from the UI.
-7. Waits for the frontend to show the message.
-8. Reads the real `GroupChat` contract and asserts the message is on-chain.
+2. Unlocks the selected Foundry keystores locally.
+3. Uses the primary wallet to mint a fresh chain-group NFT.
+4. Activates that chain group as a chat with member-list posting scope and
+   admin-managed ban source.
+5. Adds all selected default NFTs to the member list.
+6. Adds a non-primary default NFT to the admin list.
+7. Sets a non-primary default NFT as the group delegate, then asserts
+   `delegateIdOf` and `ownerOrDelegateIdOf`.
+8. Bans and unbans one member NFT as the owner, asserting `canPost` changes
+   accordingly.
+9. Bans and unbans one member NFT as the delegate, asserting delegate
+   moderation authority.
+10. Starts a Next dev server with public_test env and `/interface-test` basePath.
+11. Opens `/interface-test/chat/group`.
+12. Connects the injected wallet through wagmi's injected connector.
+13. Sends `GroupChat.postAsDefaultSender(...)` from the UI for each non-primary
+   wallet and verifies each wallet's chain `senderAddress` and default NFT
+   `senderId`.
+14. Uses the configured admin wallet to send `@全部` and asserts
+    `mentionAll=true`.
+15. Uses the configured delegate wallet to send `@全部` and asserts
+    `mentionAll=true`.
+16. Uses the primary owner wallet to send `@全部` and asserts
+    `mentionAll=true`.
+17. Uses the primary wallet to click another wallet's message menu and add a
+    mention plus quote from the UI.
+18. Sends one quoted reply from the primary wallet and asserts the real
+    `GroupChat` contract recorded the expected other-wallet
+    `mentionedSenderIds`, `mentionAll=false`, and `quotedMessageId`.
 
 ## Requirements
 
-- The selected account has public_test native token balance.
-- The selected account has a default LOVE20 NFT.
-- The selected account can post in either `PUBLIC_TEST_GROUP_ID` or one of the
-  most recent public_test chat groups.
+- Every selected account has public_test native token balance.
+- Every selected account has a default LOVE20 NFT.
+- The primary selected account has enough first-token balance to mint one
+  chain-group NFT.
+- `.env.public_test` configures GroupChat, GroupAdmin, GroupMember, GroupBanList,
+  GroupMemberScope, AdminBanSource, GroupDefaults, Group, and first-token
+  addresses. The GroupDelegate address is read from `GroupChat`.
+- At least four different selected wallet addresses are required.
 - Playwright browsers are installed for the local environment.
