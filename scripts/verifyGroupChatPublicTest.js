@@ -477,6 +477,82 @@ function parseCastUint(output, label) {
   return BigInt(match[0]);
 }
 
+function readMessageSender(rpc, groupChat, groupId, messageId) {
+  const message = run('cast', [
+    'call',
+    '--rpc-url',
+    rpc,
+    groupChat,
+    'message(uint256,uint256)((uint256,uint256,address,uint256,uint256,string,uint256,uint256,uint256[],bool,uint256))',
+    groupId,
+    messageId,
+  ]);
+  assert(message.includes(`(${groupId},`), `public-test GroupChat must return decoded message #${messageId} tuple`);
+  assert(/\".+\"/.test(message), `public-test GroupChat message #${messageId} tuple must include message content`);
+
+  const messageMatch = message.match(/^\((\d+),\s*(\d+),\s*(0x[0-9a-fA-F]{40}),/);
+  assert(messageMatch, `public-test GroupChat message #${messageId} must expose senderId and senderAddress`);
+  return {
+    senderId: messageMatch[2],
+    senderAddress: messageMatch[3],
+  };
+}
+
+function findPostableDefaultSender(env, groupChat, groupId, messagesCount) {
+  const rpc = env.NEXT_PUBLIC_THINKIUM_RPC_URL;
+  const checkedAddresses = new Set();
+  const maxMessagesToScan = 200n;
+  const minMessageId = messagesCount > maxMessagesToScan ? messagesCount - maxMessagesToScan + 1n : 1n;
+
+  for (let messageId = messagesCount; messageId >= minMessageId; messageId -= 1n) {
+    const historicalSender = readMessageSender(rpc, groupChat, groupId, messageId.toString());
+    const addressKey = historicalSender.senderAddress.toLowerCase();
+    if (checkedAddresses.has(addressKey)) {
+      continue;
+    }
+    checkedAddresses.add(addressKey);
+
+    const defaultSenderId = parseCastUint(
+      run('cast', [
+        'call',
+        '--rpc-url',
+        rpc,
+        env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_DEFAULTS,
+        'defaultGroupIdOf(address)(uint256)',
+        historicalSender.senderAddress,
+      ]),
+      'defaultGroupIdOf',
+    );
+    if (defaultSenderId === 0n) {
+      continue;
+    }
+
+    const canPost = run('cast', [
+      'call',
+      '--rpc-url',
+      rpc,
+      groupChat,
+      'canPost(uint256,uint256,address)(bool,bytes4)',
+      groupId,
+      defaultSenderId.toString(),
+      historicalSender.senderAddress,
+    ]);
+    if (/^true\s+0x00000000$/m.test(canPost)) {
+      return {
+        senderId: defaultSenderId.toString(),
+        senderAddress: historicalSender.senderAddress,
+        sourceMessageId: messageId.toString(),
+        historicalSenderId: historicalSender.senderId,
+      };
+    }
+  }
+
+  assert(
+    false,
+    `public-test GroupChat must have a recent message sender whose current default NFT can post; checked ${checkedAddresses.size} address(es)`,
+  );
+}
+
 function checkRpc(env) {
   const cast = run('which', ['cast']);
   assert(cast, 'cast is required for --rpc checks');
@@ -594,43 +670,17 @@ function checkRpc(env) {
     return;
   }
 
-  const firstMessage = run('cast', [
-    'call',
-    '--rpc-url',
-    rpc,
-    groupChat,
-    'message(uint256,uint256)((uint256,uint256,address,uint256,uint256,string,uint256,uint256,uint256[],bool,uint256))',
-    mainGroupId.toString(),
-    '1',
-  ]);
-  assert(firstMessage.includes(`(${mainGroupId.toString()},`), 'public-test GroupChat must return decoded message tuples');
-  assert(/\".+\"/.test(firstMessage), 'public-test GroupChat message tuple must include message content');
-
-  const messageMatch = firstMessage.match(/^\((\d+),\s*(\d+),\s*(0x[0-9a-fA-F]{40}),/);
-  assert(messageMatch, 'public-test GroupChat first message must expose senderId and senderAddress');
-  const knownSenderId = messageMatch[2];
-  const knownSenderAddress = messageMatch[3];
-  const canPost = run('cast', [
-    'call',
-    '--rpc-url',
-    rpc,
-    groupChat,
-    'canPost(uint256,uint256,address)(bool,bytes4)',
-    mainGroupId.toString(),
-    knownSenderId,
-    knownSenderAddress,
-  ]);
-  assert(/^true\s+0x00000000$/m.test(canPost), 'public-test GroupChat canPost must accept the known message sender');
-
+  readMessageSender(rpc, groupChat, mainGroupId.toString(), '1');
+  const dryRunSender = findPostableDefaultSender(env, groupChat, mainGroupId.toString(), messagesCount);
   const defaultSenderId = run('cast', [
     'call',
     '--rpc-url',
     rpc,
     env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_DEFAULTS,
     'defaultGroupIdOf(address)(uint256)',
-    knownSenderAddress,
+    dryRunSender.senderAddress,
   ]);
-  assert(defaultSenderId === knownSenderId, 'public-test known sender must keep the same default NFT identity used by postAsDefaultSender');
+  assert(defaultSenderId === dryRunSender.senderId, 'public-test dry-run sender must use the same default NFT identity as the chat composer');
 
   expectEmptyRpcCall(
     [
@@ -638,11 +688,11 @@ function checkRpc(env) {
       '--rpc-url',
       rpc,
       '--from',
-      knownSenderAddress,
+      dryRunSender.senderAddress,
       groupChat,
       'post(uint256,uint256,string,uint256[],bool,uint256)',
       mainGroupId.toString(),
-      knownSenderId,
+      dryRunSender.senderId,
       'verify dry run',
       '[]',
       'false',
@@ -656,7 +706,7 @@ function checkRpc(env) {
       '--rpc-url',
       rpc,
       '--from',
-      knownSenderAddress,
+      dryRunSender.senderAddress,
       groupChat,
       'postAsDefaultSender(uint256,string,uint256[],bool,uint256)',
       mainGroupId.toString(),
@@ -715,7 +765,7 @@ function checkRpc(env) {
       '--rpc-url',
       rpc,
       '--from',
-      knownSenderAddress,
+      dryRunSender.senderAddress,
       govBan,
       'voteBySenderAddress(uint256,address,bool)',
       mainGroupId.toString(),
@@ -730,18 +780,18 @@ function checkRpc(env) {
       '--rpc-url',
       rpc,
       '--from',
-      knownSenderAddress,
+      dryRunSender.senderAddress,
       govBan,
       'voteBySenderId(uint256,uint256,bool)',
       mainGroupId.toString(),
-      knownSenderId,
+      dryRunSender.senderId,
       'true',
     ],
     'public-test GovVotedBanSource.voteBySenderId',
   );
 
   console.log(
-    `rpc: groupIdsCount=${groupIdsCount}, latest=${latestIds}, tokenMain=${mainGroupId}, tokenGov=${govGroupId}, mainMessages=${messagesCount}, dryRunSender=${knownSenderId}`,
+    `rpc: groupIdsCount=${groupIdsCount}, latest=${latestIds}, tokenMain=${mainGroupId}, tokenGov=${govGroupId}, mainMessages=${messagesCount}, dryRunSender=${dryRunSender.senderId}, dryRunSourceMessage=${dryRunSender.sourceMessageId}`,
   );
 }
 

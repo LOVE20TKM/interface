@@ -17,15 +17,15 @@ import { formatTokenAmount } from '@/src/lib/format';
 const NATIVE_TOKEN_SYMBOL = process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL || 'TKM';
 
 // Gas 余额阈值
-const GOVERNOR_GAS_THRESHOLD = BigInt(10e18); // 治理者阈值：10 个原生代币
-const NORMAL_GAS_THRESHOLD = BigInt(1e18); // 普通用户阈值：1 个原生代币
+const GOVERNOR_GAS_THRESHOLD = BigInt('200000000000000000000'); // 治理者阈值：200 个原生代币
+const NORMAL_GAS_THRESHOLD = BigInt('20000000000000000000'); // 普通用户阈值：20 个原生代币
 
 /**
  * 全局 Gas 余额提示器
  * - 监控当前连接账户的原生代币余额
  * - 根据用户身份动态调整报警阈值：
- *   - 治理者（有效治理票 > 1）：余额 < 10 个原生代币时报警
- *   - 普通用户：余额 < 2 个原生代币时报警
+ *   - 治理者（有效治理票 > 1）：余额 < 200 个原生代币时报警
+ *   - 普通用户：余额 < 20 个原生代币时报警
  * - 提示会持续显示，直到余额充足
  */
 const GasBalanceNotifier: React.FC = () => {
@@ -88,7 +88,8 @@ const GasBalanceNotifier: React.FC = () => {
           <span>
             ⚠️ 当前 <span className="font-semibold">{NATIVE_TOKEN_SYMBOL}</span> 余额
             <span className="font-semibold ml-1">{formattedBalance}</span>
-            &nbsp;过低，为避免交易失败，请及时充值！
+            &nbsp;低于 <span className="font-semibold">{formattedThreshold}</span>
+            ，为避免交易失败，请及时充值！
           </span>
         }
       />
