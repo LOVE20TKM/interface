@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState } from 'react';
+import { Fragment } from 'react';
 import { Loader2 } from 'lucide-react';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import type { GroupChatPublicData, ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
@@ -83,23 +83,11 @@ export function ChatMessageList({
   onQuoteMessage: (message: ParsedGroupChatMessage) => void;
   onOpenBanSettings: (message: ParsedGroupChatMessage) => void;
 }) {
-  const [expandedQuoteKeys, setExpandedQuoteKeys] = useState<Set<string>>(() => new Set());
   const showListSyncIndicator =
     data.isMessageListFetching && data.messages.length > 0 && !isLoadingEarlierMessages;
   const loadEarlierDisabled = isLoadingEarlierMessages || data.isMessageFeedFetching;
   const showInitialLoadingState = data.isMessageFeedPending && data.messages.length === 0;
   const showLoadEarlierRow = hasMoreMessages && !showInitialLoadingState;
-  const toggleExpandedQuote = (quoteKey: string) => {
-    setExpandedQuoteKeys((prev) => {
-      const next = new Set(prev);
-      if (next.has(quoteKey)) {
-        next.delete(quoteKey);
-      } else {
-        next.add(quoteKey);
-      }
-      return next;
-    });
-  };
 
   return (
     <div
@@ -156,9 +144,8 @@ export function ChatMessageList({
             const timestamp = messageTimestampMs(message);
             const showTimeDivider = shouldRenderMessageTimeDivider(message, visibleMessages[index - 1]);
             const messageKey = message.messageId.toString();
-            const quoteKey = `${groupId.toString()}:${messageKey}`;
             const messageTime = showMessageTimes ? formatMessageTime(message.timestamp) : '';
-            const quoteExpanded = expandedQuoteKeys.has(quoteKey);
+            const quotePreview = quoted ? quotedMessageSummary(quoted, 72) : '引用消息未在当前分页中';
             const canOpenBanSettings =
               !mine && ((canUseMessageAdminBan && messageAdminCanOperate) || (canUseMessageGovBan && canVoteMessageGovBan));
 
@@ -176,22 +163,7 @@ export function ChatMessageList({
                     </div>
                     <div className={cn('message-bubble', mine && 'mine', message.quotedMessageId > BigInt(0) && 'with-quote')}>
                       {message.quotedMessageId > BigInt(0) && (
-                        quoted ? (
-                          <button
-                            className={cn('quote-preview', quoteExpanded && 'expanded')}
-                            type="button"
-                            aria-expanded={quoteExpanded}
-                            title={quoteExpanded ? '收起引用消息' : '展开引用消息'}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              toggleExpandedQuote(quoteKey);
-                            }}
-                          >
-                            {quoteExpanded ? renderMessageContent(quoted, data.senderNames) : quotedMessageSummary(quoted, 72)}
-                          </button>
-                        ) : (
-                          <div className="quote-preview unavailable">引用消息未在当前分页中</div>
-                        )
+                        <div className={cn('quote-preview', !quoted && 'unavailable')}>{quotePreview}</div>
                       )}
                       {renderMessageContent(message, data.senderNames)}
                     </div>

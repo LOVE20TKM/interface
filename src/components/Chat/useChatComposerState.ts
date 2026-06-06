@@ -46,6 +46,7 @@ export function useChatComposerState({
     chatInfo: publicData.chatInfo,
     accountData,
   });
+  const needsDefaultSenderSetup = !sendAvailability.canSend && sendAvailability.source === 'defaultNft';
   const sendDisabled =
     !groupId ||
     !sendAvailability.canSend ||
@@ -63,6 +64,7 @@ export function useChatComposerState({
     mentionValidationHint,
     mentionValidationBlocking,
     sendAvailability,
+    needsDefaultSenderSetup,
     maxMentionedSenderIds: MAX_MENTIONED_SENDER_IDS,
     sendDisabled,
   };

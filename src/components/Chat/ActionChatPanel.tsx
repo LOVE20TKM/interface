@@ -53,12 +53,11 @@ export function ActionChatPanel({
             ? '/chat/activate/token-action-main-manager'
             : '/chat/activate/token-action-gov-manager',
         query: {
-          ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
           actionId: selection.actionId.toString(),
         },
       });
     },
-    [router, tokenSymbol],
+    [router],
   );
 
   if (!tokenAddress) return null;

@@ -41,8 +41,8 @@ function firstQueryValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function buildActivationListUrl(tokenSymbol: string | undefined, activationType: ActivationType) {
-  return buildChatActivationHref(tokenSymbol, activationType);
+function buildActivationListUrl(activationType: ActivationType) {
+  return buildChatActivationHref(activationType);
 }
 
 function useManagerActivationContext(activationType: ActivationType) {
@@ -50,15 +50,14 @@ function useManagerActivationContext(activationType: ActivationType) {
   const queryClient = useQueryClient();
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
-  const symbolQuery = firstQueryValue(router.query.symbol);
-  const tokenSymbol = token?.symbol || symbolQuery;
-  const backUrl = buildActivationListUrl(tokenSymbol, activationType);
+  const tokenSymbol = token?.symbol;
+  const backUrl = buildActivationListUrl(activationType);
 
   const openChat = useCallback(
     (groupId: bigint) => {
-      router.push(buildGroupChatDetailHref(tokenSymbol, groupId));
+      router.push(buildGroupChatDetailHref(groupId));
     },
-    [router, tokenSymbol],
+    [router],
   );
 
   const refreshReads = useCallback(() => {

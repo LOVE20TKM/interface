@@ -37,7 +37,7 @@ export default function GroupChatDetailPage() {
   const { address: account } = useAccount();
   const { token } = useContext(TokenContext) || {};
   const groupId = router.isReady ? parseGroupId(router.query.groupId) : undefined;
-  const tokenSymbol = Array.isArray(router.query.symbol) ? router.query.symbol[0] : router.query.symbol || token?.symbol;
+  const tokenSymbol = token?.symbol;
   const [readCursors, setReadCursors] = useState<Record<string, string>>({});
   const [messagePreferences, setMessagePreferences] = useState<MessagePreferences>(DEFAULT_MESSAGE_PREFERENCES);
   const accountAddress = account as `0x${string}` | undefined;
@@ -71,37 +71,37 @@ export default function GroupChatDetailPage() {
     (nextView: ChatWorkspaceView) => {
       if (!groupId) return;
       if (nextView === 'members') {
-        router.push(buildGroupChatPanelHref('members', tokenSymbol, groupId));
+        router.push(buildGroupChatPanelHref('members', groupId));
         return;
       }
       if (nextView === 'banList') {
-        router.push(buildGroupChatPanelHref('banlist', tokenSymbol, groupId));
+        router.push(buildGroupChatPanelHref('banlist', groupId));
         return;
       }
       if (nextView === 'admins') {
-        router.push(buildGroupChatPanelHref('admins', tokenSymbol, groupId));
+        router.push(buildGroupChatPanelHref('admins', groupId));
         return;
       }
       if (nextView === 'settings') {
-        router.push(buildGroupChatPanelHref('settings', tokenSymbol, groupId));
+        router.push(buildGroupChatPanelHref('settings', groupId));
         return;
       }
-      router.push(buildGroupChatDetailHref(tokenSymbol, groupId), undefined, { shallow: true });
+      router.push(buildGroupChatDetailHref(groupId), undefined, { shallow: true });
     },
-    [groupId, router, tokenSymbol],
+    [groupId, router],
   );
 
   const openBanSettingsForMessage = useCallback(
     (message: ParsedGroupChatMessage) => {
-      router.push(buildGroupChatPanelHref('banlist', tokenSymbol, message.groupId, {
+      router.push(buildGroupChatPanelHref('banlist', message.groupId, {
         target: 'message',
         messageId: message.messageId,
       }));
     },
-    [router, tokenSymbol],
+    [router],
   );
 
-  const backUrl = buildChatIndexHref(tokenSymbol);
+  const backUrl = buildChatIndexHref();
 
   return (
     <div className={styles.groupChatDetailPage}>

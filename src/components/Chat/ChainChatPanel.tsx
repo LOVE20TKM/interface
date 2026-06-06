@@ -7,12 +7,10 @@ import { buildChatChainActivationHref } from './chatUtils';
 
 export function ChainChatPanel({
   account,
-  tokenSymbol,
   onOpen,
 }: {
   isConnected: boolean;
   account: `0x${string}` | undefined;
-  tokenSymbol?: string;
   onOpen: (groupId: bigint) => void;
   onConfirmed: () => void;
 }) {
@@ -20,9 +18,9 @@ export function ChainChatPanel({
 
   const openActivationDetail = useCallback(
     (group: GroupNFT) => {
-      router.push(buildChatChainActivationHref(tokenSymbol, group.tokenId, group.groupName));
+      router.push(buildChatChainActivationHref(group.tokenId, group.groupName));
     },
-    [router, tokenSymbol],
+    [router],
   );
 
   return (

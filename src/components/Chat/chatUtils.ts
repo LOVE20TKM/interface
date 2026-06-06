@@ -19,49 +19,41 @@ export function parseGroupId(value: string | string[] | undefined) {
   return parsed > BigInt(0) ? parsed : undefined;
 }
 
-export function buildGroupChatDetailHref(tokenSymbol: string | undefined, groupId: bigint) {
+export function buildGroupChatDetailHref(groupId: bigint) {
   const params = new URLSearchParams();
-  if (tokenSymbol) params.set('symbol', tokenSymbol);
   params.set('groupId', groupId.toString());
   return `/chat/group?${params.toString()}`;
 }
 
-export function buildGroupChatDetailUrl(tokenSymbol: string | undefined, groupId: bigint): UrlObject {
+export function buildGroupChatDetailUrl(groupId: bigint): UrlObject {
   return {
     pathname: '/chat/group',
     query: {
-      ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
       groupId: groupId.toString(),
     },
   };
 }
 
-export function buildChatIndexHref(tokenSymbol: string | undefined) {
-  return tokenSymbol ? `/chat?symbol=${encodeURIComponent(tokenSymbol)}` : '/chat';
+export function buildChatIndexHref() {
+  return '/chat';
 }
 
-export function buildChatPreferencesHref(tokenSymbol: string | undefined) {
-  const params = new URLSearchParams();
-  if (tokenSymbol) params.set('symbol', tokenSymbol);
-  const query = params.toString();
-  return query ? `/chat/preferences?${query}` : '/chat/preferences';
+export function buildChatPreferencesHref() {
+  return '/chat/preferences';
 }
 
-export function buildChatActivationHref(tokenSymbol: string | undefined, activationType?: 'token' | 'action' | 'chain') {
+export function buildChatActivationHref(activationType?: 'token' | 'action' | 'chain') {
   const params = new URLSearchParams();
-  if (tokenSymbol) params.set('symbol', tokenSymbol);
   if (activationType) params.set('activationType', activationType);
   const query = params.toString();
   return query ? `/chat/activate?${query}` : '/chat/activate';
 }
 
 export function buildChatChainActivationHref(
-  tokenSymbol: string | undefined,
   groupId: bigint,
   groupName: string | undefined,
 ) {
   const params = new URLSearchParams();
-  if (tokenSymbol) params.set('symbol', tokenSymbol);
   params.set('groupId', groupId.toString());
   if (groupName) params.set('groupName', groupName);
   return `/chat/activate/chain?${params.toString()}`;
@@ -69,12 +61,10 @@ export function buildChatChainActivationHref(
 
 export function buildGroupChatPanelHref(
   panel: 'members' | 'banlist' | 'admins' | 'settings',
-  tokenSymbol: string | undefined,
   groupId: bigint,
   extras?: Record<string, string | bigint | undefined>,
 ) {
   const params = new URLSearchParams();
-  if (tokenSymbol) params.set('symbol', tokenSymbol);
   params.set('groupId', groupId.toString());
   Object.entries(extras || {}).forEach(([key, value]) => {
     if (value !== undefined) params.set(key, value.toString());
@@ -120,7 +110,7 @@ export function managerMemberScopeDescription(owner?: `0x${string}`) {
     return {
       label: 'TokenMainManager',
       summary: '持币/治理/行动',
-      text: '持有该代币余额、拥有该代币治理票权，或参与过该代币行动的地址可用自己的默认 NFT 发言。',
+      text: '持有该代币余额、拥有该代币治理票权，或参与该代币社区行动的地址可用自己的默认 NFT 发言。',
     };
   }
   if (sameAddress(owner, GROUP_CHAT_TOKEN_GOV_MANAGER_ADDRESS)) {
@@ -134,7 +124,7 @@ export function managerMemberScopeDescription(owner?: `0x${string}`) {
     return {
       label: 'TokenActionMainManager',
       summary: '行动参与/投票',
-      text: '参与过该行动，或近期投过该行动票的地址可用自己的默认 NFT 发言。',
+      text: '当前仍有该行动参与份额，或近期投过该行动票的地址可用自己的默认 NFT 发言。',
     };
   }
   if (sameAddress(owner, GROUP_CHAT_TOKEN_ACTION_GOV_MANAGER_ADDRESS)) {

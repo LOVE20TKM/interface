@@ -1,4 +1,4 @@
-import { useCallback, useContext } from 'react';
+import { useCallback } from 'react';
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,25 +7,21 @@ import { useAccount } from 'wagmi';
 import Header from '@/src/components/Header';
 import { ChainChatActivationDetail } from '@/src/components/Chat/ChainChatActivationDetail';
 import styles from '@/src/components/Chat/ChatPage.module.css';
-import { TokenContext } from '@/src/contexts/TokenContext';
 import { buildChatActivationHref, buildGroupChatDetailHref, invalidateContractReads, parseGroupId } from '@/src/components/Chat/chatUtils';
 
 const ChainChatActivationPage: NextPage = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { address: account, isConnected } = useAccount();
-  const { token } = useContext(TokenContext) || {};
   const groupId = parseGroupId(router.query.groupId);
   const groupNameQuery = Array.isArray(router.query.groupName) ? router.query.groupName[0] : router.query.groupName;
-  const symbolQuery = Array.isArray(router.query.symbol) ? router.query.symbol[0] : router.query.symbol;
-  const tokenSymbol = token?.symbol || symbolQuery;
-  const chainListUrl = buildChatActivationHref(tokenSymbol, 'chain');
+  const chainListUrl = buildChatActivationHref('chain');
 
   const openChat = useCallback(
     (nextGroupId: bigint) => {
-      router.push(buildGroupChatDetailHref(tokenSymbol, nextGroupId));
+      router.push(buildGroupChatDetailHref(nextGroupId));
     },
-    [router, tokenSymbol],
+    [router],
   );
 
   const refreshReads = useCallback(() => {

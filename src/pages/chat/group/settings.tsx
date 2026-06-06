@@ -1,4 +1,4 @@
-import { useCallback, useContext } from 'react';
+import { useCallback } from 'react';
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,17 +7,14 @@ import { useAccount } from 'wagmi';
 import Header from '@/src/components/Header';
 import { ChatSettingsPanel } from '@/src/components/Chat/ChatSettingsPanel';
 import styles from '@/src/components/Chat/ChatPage.module.css';
-import { TokenContext } from '@/src/contexts/TokenContext';
 import { buildChatIndexHref, buildGroupChatDetailHref, invalidateContractReads, parseGroupId } from '@/src/components/Chat/chatUtils';
 
 const GroupChatSettingsPage: NextPage = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { address: account } = useAccount();
-  const { token } = useContext(TokenContext) || {};
   const groupId = parseGroupId(router.query.groupId);
-  const tokenSymbol = Array.isArray(router.query.symbol) ? router.query.symbol[0] : router.query.symbol || token?.symbol;
-  const backUrl = groupId ? buildGroupChatDetailHref(tokenSymbol, groupId) : buildChatIndexHref(tokenSymbol);
+  const backUrl = groupId ? buildGroupChatDetailHref(groupId) : buildChatIndexHref();
 
   const refreshAll = useCallback(() => {
     invalidateContractReads(queryClient);
@@ -31,7 +28,6 @@ const GroupChatSettingsPage: NextPage = () => {
           <ChatSettingsPanel
             groupId={groupId}
             account={account as `0x${string}` | undefined}
-            tokenSymbol={tokenSymbol}
             onChanged={refreshAll}
           />
         ) : (

@@ -20,7 +20,7 @@ export function BottomNavigation() {
     return [
       {
         title: '聊天',
-        url: `/chat/?symbol=${token.symbol}`,
+        url: '/chat/',
         icon: MessageCircle,
         isActive: router.pathname.startsWith('/chat'),
         isMain: false,

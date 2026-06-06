@@ -59,7 +59,7 @@ const scopeDescriptors: ScopeDescriptor[] = [
   {
     key: 'token-main-manager',
     matches: (chatInfo) => sameAddress(chatInfo.owner, GROUP_CHAT_TOKEN_MAIN_MANAGER_ADDRESS),
-    scopeRejectedMessage: () => '持有该代币、拥有治理票或参与过该代币行动后可发言。',
+    scopeRejectedMessage: () => '持有该代币、拥有治理票，或参与该代币社区行动时可发言。',
   },
   {
     key: 'token-gov-manager',
@@ -69,7 +69,7 @@ const scopeDescriptors: ScopeDescriptor[] = [
   {
     key: 'token-action-main-manager',
     matches: (chatInfo) => sameAddress(chatInfo.owner, GROUP_CHAT_TOKEN_ACTION_MAIN_MANAGER_ADDRESS),
-    scopeRejectedMessage: () => '近期投过该行动票，或参与过该行动后可发言。',
+    scopeRejectedMessage: () => '近期投过该行动票，或当前仍有该行动参与份额时可发言。',
   },
   {
     key: 'token-action-gov-manager',

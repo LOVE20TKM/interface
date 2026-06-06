@@ -712,12 +712,12 @@ export function GroupChatHome() {
   ]);
 
   const onOpenActivate = useCallback(() => {
-    router.push(buildChatActivationHref(token?.symbol));
-  }, [router, token?.symbol]);
+    router.push(buildChatActivationHref());
+  }, [router]);
 
   const onOpenPreferences = useCallback(() => {
-    router.push(buildChatPreferencesHref(token?.symbol));
-  }, [router, token?.symbol]);
+    router.push(buildChatPreferencesHref());
+  }, [router]);
 
   const openAddGroupDialog = useCallback(() => {
     setManualGroupIdInput('');

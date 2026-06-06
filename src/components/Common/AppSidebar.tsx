@@ -123,7 +123,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           items: [
             {
               title: '聊天',
-              url: `/chat/?symbol=${token.symbol}`,
+              url: '/chat/',
               isActive: isActiveUrl(`${basePath}/chat/`),
               icon: MessageCircle,
             },

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Info, Loader2, Trash2 } from 'lucide-react';
 
 import {
   GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS,
@@ -34,6 +34,11 @@ const BAN_REJECTED_REASON = '0xa9cc8792';
 
 const formatMemberIdentity = (id: bigint, label?: string) => `发言身份 #${id.toString()}${label ? ` · ${label}` : ''}`;
 
+function memberPermissionPillClass(tone: 'ok' | 'loading' | 'neutral') {
+  if (tone === 'ok') return 'pill-ok';
+  return 'pill-neutral';
+}
+
 export function MembersPanel({
   groupId,
   account,
@@ -48,6 +53,7 @@ export function MembersPanel({
   const [isQueryingSelf, setIsQueryingSelf] = useState(false);
   const [selfQueryNonce, setSelfQueryNonce] = useState(0);
   const [pendingRemoveId, setPendingRemoveId] = useState<bigint | undefined>();
+  const [permissionExpanded, setPermissionExpanded] = useState(false);
   const [page, setPage] = useState(1);
   const memberOffset = BigInt((Math.max(1, page) - 1) * MEMBER_PAGE_SIZE);
   const publicData = useGroupChatPublicData(groupId);
@@ -72,11 +78,6 @@ export function MembersPanel({
   const joinParticipation = useGroupJoinParticipationCount(groupId, account, hasGroupJoinScope && !!account);
   const isPermissionLoading = hasMemberListScope && !!account && memberPermission.isPending;
   const canEditMembers = hasMemberListScope && memberPermission.canOperate;
-  const memberPermissionNoticeClass = canEditMembers
-    ? 'permission-ok'
-    : !account || isPermissionLoading
-      ? ''
-      : 'permission-warn';
   const memberPermissionText = canEditMembers
     ? '有权限：你可以维护本群成员名单。'
     : !account
@@ -84,6 +85,23 @@ export function MembersPanel({
     : isPermissionLoading
       ? '正在读取成员管理权限。'
       : '当前钱包没有成员管理权限；本页只能查看和查询成员名单。';
+  const permissionStatusDetail = !publicData.chatInfo
+    ? '正在读取群成员规则。'
+    : managerScope
+      ? managerScope.text
+      : hasMemberListScope
+        ? memberPermissionText
+        : '这个群当前没有启用可维护的成员名单；发言资格由当前发言范围规则决定。';
+  const permissionSummary = (() => {
+    if (!publicData.chatInfo) return { text: '读取中', tone: 'loading' as const };
+    if (managerScope) return { text: '去中心化合约管理', tone: 'neutral' as const };
+    if (!hasMemberListScope) return { text: '未启用', tone: 'neutral' as const };
+    if (!account) return { text: '未知', tone: 'neutral' as const };
+    if (isPermissionLoading) return { text: '读取中', tone: 'loading' as const };
+    return canEditMembers
+      ? { text: '可维护成员名单', tone: 'ok' as const }
+      : { text: '只读', tone: 'neutral' as const };
+  })();
   const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
   const isPostingStatusPending = Boolean(
     account &&
@@ -137,7 +155,7 @@ export function MembersPanel({
       if (defaultSenderMemberStatus.isMember) {
         return '你可以在此群发言。原因：当前默认发言身份已加入本群成员名单。';
       }
-      return '你可以在此群发言。原因：当前钱包满足此群发言条件。';
+      return '你可以在此群发言。原因：已参与链群行动，或默认发言身份在成员名单中。';
     }
     if (joinParticipation.hasJoinedByGroupAction === false && defaultSenderMemberStatus.isMember === false) {
       return '你暂时不能在此群发言。原因：当前钱包未参与此链群行动，默认发言身份也未加入成员名单。';
@@ -188,17 +206,6 @@ export function MembersPanel({
           : hasOpenScope
             ? openScopeDescription
             : customScopeDescription;
-  const headerMeta = !publicData.chatInfo
-    ? '读取中'
-    : managerScope
-      ? managerScope.label
-      : hasGroupMemberScope
-        ? '成员名单'
-        : hasGroupJoinScope
-          ? '名单 + 行动参与'
-          : hasOpenScope
-            ? '开放发言'
-            : '自定义规则';
   const sourceRules = [
     { label: 'owner', value: publicData.chatInfo?.owner, note: '当前群聊 NFT owner' },
     {
@@ -375,16 +382,29 @@ export function MembersPanel({
           title="群成员"
           groupId={groupId}
           subtitle={detailSubtitle}
-          meta={headerMeta}
+          actions={(
+            <div className="permission-status-inline">
+              <span className={cn('pill', memberPermissionPillClass(permissionSummary.tone))}>{permissionSummary.text}</span>
+              <button
+                className="permission-status-info-button"
+                type="button"
+                aria-label="查看权限原因"
+                aria-expanded={permissionExpanded}
+                onClick={() => setPermissionExpanded((expanded) => !expanded)}
+              >
+                <Info size={14} strokeWidth={2.2} aria-hidden="true" />
+              </button>
+              {permissionExpanded && (
+                <span className="permission-status-popover" role="status">
+                  {permissionStatusDetail || permissionSummary.text}
+                </span>
+              )}
+            </div>
+          )}
         />
         <div className={cn('notice-row', postingNoticeClass)}>
           {scopeDescription}
         </div>
-        {hasMemberListScope && (
-          <div className={cn('notice-row', memberPermissionNoticeClass)}>
-            {memberPermissionText}
-          </div>
-        )}
         {managerScope || !publicData.chatInfo ? null : !hasMemberListScope ? (
           <div className="rule-table mt-3">
             {sourceRules.map((rule) => (

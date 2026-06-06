@@ -28,7 +28,7 @@
   --greyscale-500: #5f6972;
   --greyscale-700: #34404c;
   --greyscale-900: #191c1f;
-  --global-bottom-nav-offset: calc(72px + env(safe-area-inset-bottom));
+  --global-bottom-nav-offset: var(--bottom-navigation-height, calc(64px + env(safe-area-inset-bottom)));
   --detail-input-bottom-safe: calc(128px + env(safe-area-inset-bottom));
   flex: 1 1 auto;
   min-height: 0;
@@ -3761,6 +3761,11 @@
   .chatPrototype :global(.inbox-screen) {
     padding-bottom: calc(16px + var(--global-bottom-nav-offset));
     scroll-padding-bottom: calc(16px + var(--global-bottom-nav-offset));
+  }
+
+  .chatPrototype[data-entry="love20-chat-members"] :global(.workspace-screen) {
+    padding-bottom: 16px;
+    scroll-padding-bottom: 16px;
   }
 
   .chatWorkspace[data-entry="love20-chat"] :global(.inbox-screen) {

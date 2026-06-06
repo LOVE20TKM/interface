@@ -76,7 +76,7 @@ const appSections: AppSection[] = [
       },
       {
         name: "聊天",
-        href: (symbol?: string) => (symbol ? `/chat/?symbol=${symbol}` : "/chat/"),
+        href: "/chat/",
         icon: MessageCircle,
         requiresWallet: true,
       },

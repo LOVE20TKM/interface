@@ -245,12 +245,10 @@ function SettingsPanelSection({
 export function ChatSettingsPanel({
   groupId,
   account,
-  tokenSymbol,
   onChanged,
 }: {
   groupId: bigint;
   account: `0x${string}` | undefined;
-  tokenSymbol?: string;
   onChanged: () => void;
 }) {
   const publicData = useGroupChatPublicData(groupId);
@@ -287,7 +285,7 @@ export function ChatSettingsPanel({
   const afterPluginExplanation = explainPluginContract(publicData.chatInfo?.afterPostPlugin, 'after');
   const activationText = publicData.chatInfo ? (publicData.chatInfo.activated ? '已激活' : '未激活') : '读取中';
   const delegateText = formatDelegateIdText(groupDelegate.isPending || delegateState.isPending, delegateState.delegateId);
-  const adminsHref = buildGroupChatPanelHref('admins', tokenSymbol, groupId, { from: 'settings' });
+  const adminsHref = buildGroupChatPanelHref('admins', groupId, { from: 'settings' });
   const permissionSummary = (() => {
     if (managerOwned) return { text: '去中心化合约管理', tone: 'neutral' as const };
     if (ownerPermission.isPending) return { text: '读取中', tone: 'loading' as const };

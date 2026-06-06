@@ -52,7 +52,7 @@ function ConversationItem({
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ left: CONVERSATION_MENU_GUTTER, top: CONVERSATION_MENU_GUTTER });
   const rowRef = useRef<HTMLDivElement | null>(null);
-  const href = buildGroupChatDetailHref(tokenSymbol, item.groupId);
+  const href = buildGroupChatDetailHref(item.groupId);
   const pressRef = useRef<{
     pointerId: number;
     x: number;
@@ -141,7 +141,7 @@ function ConversationItem({
           }
           suppressNextRouteLoading(href);
           event.preventDefault();
-          router.push(buildGroupChatDetailUrl(tokenSymbol, item.groupId));
+          router.push(buildGroupChatDetailUrl(item.groupId));
         }}
       >
         <div className="conversation-main">

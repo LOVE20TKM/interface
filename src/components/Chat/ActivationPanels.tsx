@@ -27,12 +27,9 @@ export function ActivationPanel({
     (kind: 'main' | 'gov') => {
       router.push({
         pathname: kind === 'main' ? '/chat/activate/token-main-manager' : '/chat/activate/token-gov-manager',
-        query: {
-          ...(tokenSymbol ? { symbol: tokenSymbol } : {}),
-        },
       });
     },
-    [router, tokenSymbol],
+    [router],
   );
 
   if (!tokenAddress) return null;

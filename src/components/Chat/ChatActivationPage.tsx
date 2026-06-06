@@ -18,12 +18,8 @@ import { buildChatActivationHref, buildChatIndexHref, buildGroupChatDetailHref, 
 
 type ActivationType = 'token' | 'action' | 'chain';
 
-function firstQueryValue(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
-
 function parseActivationType(value: string | string[] | undefined): ActivationType {
-  const firstValue = firstQueryValue(value);
+  const firstValue = Array.isArray(value) ? value[0] : value;
   return firstValue === 'action' || firstValue === 'chain' ? firstValue : 'token';
 }
 
@@ -32,30 +28,29 @@ export default function ChatActivationPage() {
   const queryClient = useQueryClient();
   const { address: account, isConnected } = useAccount();
   const { token } = useContext(TokenContext) || {};
-  const symbolQuery = firstQueryValue(router.query.symbol);
-  const tokenSymbol = token?.symbol || symbolQuery;
+  const tokenSymbol = token?.symbol;
   const activationType = parseActivationType(router.query.activationType);
   const accountAddress = account as `0x${string}` | undefined;
 
   const openChat = useCallback(
     (groupId: bigint) => {
-      router.push(buildGroupChatDetailHref(tokenSymbol, groupId));
+      router.push(buildGroupChatDetailHref(groupId));
     },
-    [router, tokenSymbol],
+    [router],
   );
 
   const setActivationType = useCallback(
     (nextType: ActivationType) => {
-      router.replace(buildChatActivationHref(tokenSymbol, nextType));
+      router.replace(buildChatActivationHref(nextType));
     },
-    [router, tokenSymbol],
+    [router],
   );
 
   const refreshReads = useCallback(() => {
     invalidateContractReads(queryClient);
   }, [queryClient]);
 
-  const backUrl = buildChatIndexHref(tokenSymbol);
+  const backUrl = buildChatIndexHref();
 
   return (
     <>
@@ -121,7 +116,6 @@ export default function ChatActivationPage() {
                 <ChainChatPanel
                   isConnected={isConnected}
                   account={accountAddress}
-                  tokenSymbol={tokenSymbol}
                   onOpen={openChat}
                   onConfirmed={refreshReads}
                 />

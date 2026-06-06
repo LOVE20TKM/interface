@@ -1,10 +1,8 @@
 'use client';
 
-import { useCallback, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useCallback, useEffect, useState } from 'react';
 
 import Header from '@/src/components/Header';
-import { TokenContext } from '@/src/contexts/TokenContext';
 import { cn } from '@/lib/utils';
 import styles from './ChatPage.module.css';
 import {
@@ -15,14 +13,7 @@ import {
 } from './chatStorage';
 import { buildChatIndexHref } from './chatUtils';
 
-function firstQueryValue(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
-
 export default function ChatPreferencesPage() {
-  const router = useRouter();
-  const { token } = useContext(TokenContext) || {};
-  const tokenSymbol = token?.symbol || firstQueryValue(router.query.symbol);
   const [preferences, setPreferences] = useState<MessagePreferences>(DEFAULT_MESSAGE_PREFERENCES);
 
   useEffect(() => {
@@ -42,7 +33,7 @@ export default function ChatPreferencesPage() {
 
   return (
     <>
-      <Header title="我的偏好" backUrl={buildChatIndexHref(tokenSymbol)} replaceBack />
+      <Header title="我的偏好" backUrl={buildChatIndexHref()} replaceBack />
       <main className={styles.chatPrototype} data-detail="false">
         <div className={styles.chatWorkspace} data-entry="love20-chat-preferences">
           <section className={styles.chatSurface}>

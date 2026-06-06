@@ -41,8 +41,12 @@ export const ChatComposer = forwardRef<HTMLElement, {
   onClearQuote,
 }, ref) {
   const composerLocked = !sendAvailability.canSend;
-  const cannotSendMessage = sendAvailability.canSend ? '' : sendAvailability.message || '当前无法发言。';
   const showDefaultNftSetupLink = !sendAvailability.canSend && sendAvailability.source === 'defaultNft';
+  const cannotSendMessage = showDefaultNftSetupLink
+    ? '请先设置默认 LOVE20 NFT 后再发言。'
+    : sendAvailability.canSend
+      ? ''
+      : sendAvailability.message || '当前无法发言。';
   const activeSenderLabel = activeSenderId
     ? formatSenderIdentity(activeSenderName, activeSenderId)
     : '';

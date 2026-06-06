@@ -263,14 +263,16 @@ async function checkWriteEncoding() {
 }
 
 function checkCriticalFrontendGuards() {
-  checkFileContains('src/components/Chat/GroupChatHome.tsx', /buildChatActivationHref\(token\?\.symbol\)/, 'chat activation routing must preserve the current token symbol');
+  checkFileContains('src/components/Chat/GroupChatHome.tsx', /buildChatActivationHref\(\)/, 'chat activation routing must not put token symbols in the URL');
   checkFileContains('src/components/Chat/GroupChatHome.tsx', /TokenContext/, 'chat page must read token from TokenContext');
   checkFileContains('src/components/Chat/GroupChatDetailPage.tsx', /parseGroupId\(router\.query\.groupId\)/, 'chat detail route must read groupId from the URL');
-  checkFileContains('src/components/Chat/GroupChatDetailPage.tsx', /buildChatIndexHref\(tokenSymbol\)/, 'chat detail back link must preserve the current token symbol');
+  checkFileContains('src/components/Chat/GroupChatDetailPage.tsx', /buildChatIndexHref\(\)/, 'chat detail back link must return to the TokenContext-backed chat entry');
   checkFileContains('src/components/Chat/chatUtils.ts', /return `\/chat\/group\?\$\{params\.toString\(\)\}`;/, 'group chat detail route must live under /chat/group');
   checkFileContains('src/components/Chat/chatUtils.ts', /return `\/chat\/group\/\$\{panel\}\?\$\{params\.toString\(\)\}`;/, 'group chat panel routes must live under /chat/group');
-  checkFileContains('src/components/Chat/chatUtils.ts', /if \(tokenSymbol\) params\.set\('symbol', tokenSymbol\);/, 'chat route builders must keep symbol-based token routing');
-  checkFileContains('src/components/Common/BottomNavigation.tsx', /title: '聊天'[\s\S]*url: `\/chat\/\?symbol=\$\{token\.symbol\}`/, 'bottom navigation chat entry must preserve the current token symbol');
+  assert(!/params\.set\('symbol'/.test(read('src/components/Chat/chatUtils.ts')), 'chat route builders must not persist token symbols in chat URLs');
+  checkFileContains('src/components/Common/BottomNavigation.tsx', /title: '聊天'[\s\S]*url: '\/chat\/'/, 'bottom navigation chat entry must use the TokenContext-backed chat page');
+  checkFileContains('src/components/Common/AppSidebar.tsx', /title: '聊天'[\s\S]*url: '\/chat\/'/, 'sidebar chat entry must use the TokenContext-backed chat page');
+  checkFileContains('src/pages/apps/index.tsx', /name: "聊天"[\s\S]*href: "\/chat\/"/, 'apps chat entry must use the TokenContext-backed chat page');
   checkFileContains('src/components/Header.tsx', /<WalletButton \/>/, 'global header must keep the shared wallet control');
 
   const settings = read('src/components/Chat/ChatSettingsPanel.tsx');
@@ -295,13 +297,13 @@ function checkCriticalFrontendGuards() {
   assert(/managerMemberScopeDescription/.test(utils), 'manager member scope descriptions must be centralized');
   assert(/TokenMainManager[\s\S]*持有该代币余额/.test(utils), 'TokenMainManager member scope text must describe token holder/action/gov eligibility');
   assert(/TokenGovManager[\s\S]*治理票权/.test(utils), 'TokenGovManager member scope text must describe governance eligibility');
-  assert(/TokenActionMainManager[\s\S]*参与过该行动/.test(utils), 'TokenActionMainManager member scope text must describe action eligibility');
+  assert(/TokenActionMainManager[\s\S]*当前仍有该行动参与份额/.test(utils), 'TokenActionMainManager member scope text must describe current action participation eligibility');
   assert(/TokenActionGovManager[\s\S]*投过该行动票/.test(utils), 'TokenActionGovManager member scope text must describe action governance eligibility');
 
   const composer = read('src/components/Chat/ChatComposer.tsx');
   assert(!/senderIdInput|onSenderIdInputChange|aria-label="发言 NFT ID"/.test(composer), 'chat composer must not expose manual senderId input for normal posting');
   assert(/请先设置默认 LOVE20 NFT 后再发言/.test(composer), 'chat composer must guide users to set a default LOVE20 NFT');
-  assert(/href=\{defaultNftHref\}/.test(composer), 'chat composer must link to the default NFT setup path');
+  assert(/href="\/group\/groupids\/"/.test(composer), 'chat composer must link to the default NFT setup path without chat URL token state');
   assert(/引用 \{quotedMessageSummary\(quotedMessage, 18\)\}/.test(composer), 'composer quote chip must show a summarized quoted message');
 
   const composerState = read('src/components/Chat/useChatComposerState.ts');
@@ -318,7 +320,7 @@ function checkCriticalFrontendGuards() {
   assert(/!managerOwned && !managedTitle\.isPending/.test(groupChatPanel), 'manager-owned detail title must not use meta/NFT title fallback while managed title is loading');
   assert(/postAsDefaultSender\(/.test(groupChatPanel), 'normal chat sending must call postAsDefaultSender');
   assert(!/usePostGroupChatMessage|postTx\.post/.test(groupChatPanel), 'normal chat sending must not call raw post with a manual senderId');
-  assert(/\/group\/groupids\/\?symbol=\$\{encodeURIComponent\(tokenSymbol\)\}/.test(groupChatPanel), 'default NFT setup link must preserve the current token symbol');
+  assert(!/\/group\/groupids\/\?symbol=/.test(groupChatPanel), 'default NFT setup must not inherit chat URL token state');
 
   const data = read('src/hooks/composite/useGroupChatData.ts');
   const types = read('src/hooks/composite/groupChatDataTypes.ts');
@@ -350,7 +352,7 @@ function checkCriticalFrontendGuards() {
   checkFileContains('src/components/Chat/ChatMessageList.tsx', /onCopyMessage/, 'message actions must support copying');
   checkFileContains('src/components/Chat/chatUtils.ts', /export function quotedMessageSummary/, 'quoted message summary must be centralized');
   checkFileContains('src/components/Chat/chatUtils.ts', /replace\(\/\\s\+\/g, ' '\)\.trim\(\)/, 'quoted message summary must normalize whitespace');
-  checkFileContains('src/components/Chat/ChatMessageList.tsx', /quoted \? quotedMessageSummary\(quoted\) : '引用消息未在当前分页中'/, 'message quote previews must show only summarized quoted content');
+  checkFileContains('src/components/Chat/ChatMessageList.tsx', /quoted \? quotedMessageSummary\(quoted, 72\) : '引用消息未在当前分页中'/, 'message quote previews must show only summarized quoted content');
   assert(!/#\{message\.quotedMessageId\.toString\(\)\}/.test(messageList), 'message quote previews must not prefix the quoted message id');
   assert(!/引用 #\{quotedMessage\.messageId\.toString\(\)\}/.test(composer), 'composer quote chips must not prefix the quoted message id');
   assert(/renderMessageContent/.test(messageList) && /messageMentionTokens/.test(messageList), 'message mentions must be rendered inline from message content');
@@ -370,7 +372,7 @@ function checkCriticalFrontendGuards() {
   checkFileContains('src/components/Chat/GovVoterSheet.tsx', /onRefreshQueriedVoter/, 'governance voter sheet must support voter revalidation');
 
   const css = read('src/components/Chat/ChatPage.module.css');
-  assert(/--global-bottom-nav-offset:\s*calc\(72px \+ env\(safe-area-inset-bottom\)\)/.test(css), 'chat CSS must reserve the existing global bottom nav height and safe area');
+  assert(/--global-bottom-nav-offset:\s*var\(--bottom-navigation-height,\s*calc\(64px \+ env\(safe-area-inset-bottom\)\)\)/.test(css), 'chat CSS must reserve the global bottom nav height and safe area');
   assert(/--detail-input-bottom-safe:\s*calc\(128px \+ env\(safe-area-inset-bottom\)\)/.test(css), 'chat CSS must define detail input safe area');
   assert(/@media \(max-width:\s*899px\)[\s\S]*--detail-input-bottom-safe:\s*calc\(176px \+ env\(safe-area-inset-bottom\)\)/.test(css), 'mobile chat CSS must expand input safe area');
   assert(/height:\s*calc\(100dvh - var\(--chat-mobile-chrome-offset\) - var\(--global-bottom-nav-offset\)\)/.test(css), 'mobile chat surface must fill the visible area above the global bottom nav');
