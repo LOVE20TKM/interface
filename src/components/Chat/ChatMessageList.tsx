@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment } from 'react';
-import { Loader2 } from 'lucide-react';
+import { ArrowUp, Loader2 } from 'lucide-react';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import type { GroupChatPublicData, ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
@@ -105,14 +105,17 @@ export function ChatMessageList({
           >
             {isLoadingEarlierMessages ? (
               <>
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                 加载更早消息中
               </>
             ) : (
-              '加载更早消息'
+              <>
+                <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
+                加载更早消息
+              </>
             )}
           </button>
-          <span>
+          <span className="load-earlier-count">
             已显示 {data.messages.length.toString()} / {data.messagesCount?.toString()} 条
           </span>
         </div>

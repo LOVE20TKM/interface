@@ -2799,13 +2799,28 @@
 }
 
 .chatPrototype :global(.load-earlier-row) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin: 2px 0 14px;
   color: var(--greyscale-500);
   font-size: 13px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.chatPrototype :global(.load-earlier-row .sheet-button) {
+  gap: 6px;
+  min-width: 140px;
+  min-height: 34px;
+  padding: 0 14px;
+}
+
+.chatPrototype :global(.load-earlier-count) {
+  color: var(--greyscale-500);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .chatPrototype :global(.chat-tools) {
