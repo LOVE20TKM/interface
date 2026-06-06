@@ -25,6 +25,13 @@ export function buildGroupChatDetailHref(groupId: bigint) {
   return `/chat/group?${params.toString()}`;
 }
 
+export function buildGroupChatMessageDetailHref(groupId: bigint, messageId: bigint) {
+  const params = new URLSearchParams();
+  params.set('groupId', groupId.toString());
+  params.set('messageId', messageId.toString());
+  return `/chat/group/message?${params.toString()}`;
+}
+
 export function buildGroupChatDetailUrl(groupId: bigint): UrlObject {
   return {
     pathname: '/chat/group',

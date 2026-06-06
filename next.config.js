@@ -84,6 +84,7 @@ const nextConfig = {
       '/chat/group/admins': { page: '/chat/group/admins' },
       '/chat/group/banlist': { page: '/chat/group/banlist' },
       '/chat/group/members': { page: '/chat/group/members' },
+      '/chat/group/message': { page: '/chat/group/message' },
       '/chat/group/settings': { page: '/chat/group/settings' },
       '/dex': { page: '/dex' },
       '/dex/deposit': { page: '/dex/deposit' },

@@ -209,6 +209,25 @@ export const useGroupChatMessagesCount = (groupId: bigint | undefined, enabled: 
   };
 };
 
+export const useGroupChatCurrentRound = (enabled: boolean = true) => {
+  const isQueryEnabled = isGroupChatEnabled && enabled;
+  const { data, isPending, error, refetch } = useUniversalReadContract({
+    address: getContractAddress(),
+    abi: GroupChatAbi,
+    functionName: 'currentRound',
+    query: {
+      enabled: isQueryEnabled,
+    },
+  });
+
+  return {
+    currentRound: isQueryEnabled && data !== undefined ? safeToBigInt(data) : undefined,
+    isPending: isQueryEnabled ? isPending : false,
+    error: isQueryEnabled ? error : undefined,
+    refetch,
+  };
+};
+
 export const useGroupChatMessages = (
   groupId: bigint | undefined,
   offset: bigint,

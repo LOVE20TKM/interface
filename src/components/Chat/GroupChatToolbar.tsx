@@ -7,6 +7,8 @@ export function GroupChatToolbar({
   groupId,
   title,
   messagesCount,
+  currentRound,
+  isCurrentRoundPending,
   menuOpen,
   onToggleMenu,
   onCloseMenu,
@@ -15,6 +17,8 @@ export function GroupChatToolbar({
   groupId: bigint;
   title: string;
   messagesCount: bigint | undefined;
+  currentRound: bigint | undefined;
+  isCurrentRoundPending: boolean;
   menuOpen: boolean;
   onToggleMenu: () => void;
   onCloseMenu: () => void;
@@ -53,6 +57,11 @@ export function GroupChatToolbar({
         <span className="chat-tools-meta">
           G#{groupId.toString()}
           {messagesCount !== undefined ? ` · ${messagesCount.toString()} 条消息` : ''}
+          {currentRound !== undefined
+            ? ` · 当前行动轮次 ${currentRound.toString()}`
+            : isCurrentRoundPending
+              ? ' · 当前行动轮次读取中'
+              : ''}
         </span>
       </div>
       <button type="button" className="chat-menu-button inline-flex" onClick={onToggleMenu} title="群聊菜单">

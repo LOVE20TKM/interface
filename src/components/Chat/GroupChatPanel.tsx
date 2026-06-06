@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { useGroupChatSyncState, useMarkGroupRead, useRegisterActiveChat } from '@/src/contexts/GroupChatSyncContext';
 import { useGroupChatVotingPower } from '@/src/hooks/contracts/useGroupChatManagers';
 import {
+  useGroupChatCurrentRound,
   usePostAsDefaultSender,
 } from '@/src/hooks/contracts/useGroupChat';
 import {
@@ -49,6 +50,7 @@ export function GroupChatPanel({
   onPosted,
   onOpenPanel,
   onOpenBanSettings,
+  onOpenMessageDetail,
   onReadLatest,
 }: {
   groupId: bigint | undefined;
@@ -61,6 +63,7 @@ export function GroupChatPanel({
   onPosted: () => void;
   onOpenPanel: (view: ChatWorkspaceView) => void;
   onOpenBanSettings: (message: ParsedGroupChatMessage) => void;
+  onOpenMessageDetail: (message: ParsedGroupChatMessage) => void;
   onReadLatest?: (groupId: bigint, latestMessageId: bigint | undefined) => void;
 }) {
   const [content, setContent] = useState('');
@@ -87,6 +90,7 @@ export function GroupChatPanel({
   const syncState = useGroupChatSyncState(groupId);
   const publicData = useGroupChatPublicData(groupId, messageWindowSize);
   const accountData = useGroupChatAccountData(groupId, account, publicData.senderNames);
+  const { currentRound, isPending: isCurrentRoundPending } = useGroupChatCurrentRound();
   const managedTitle = useGroupChatManagedTitle(
     groupId,
     tokenAddress && tokenSymbol ? { address: tokenAddress, symbol: tokenSymbol } : undefined,
@@ -534,6 +538,8 @@ export function GroupChatPanel({
         groupId={groupId}
         title={displayGroupName}
         messagesCount={effectiveMessagesCount}
+        currentRound={currentRound}
+        isCurrentRoundPending={isCurrentRoundPending}
         menuOpen={menuOpen}
         onToggleMenu={() => setMenuOpen((value) => !value)}
         onCloseMenu={closeMenu}
@@ -569,6 +575,10 @@ export function GroupChatPanel({
         }}
         onCopyMessage={copyMessage}
         onQuoteMessage={setQuotedMessage}
+        onOpenMessageDetail={(message) => {
+          setActiveMenuMessageId(undefined);
+          onOpenMessageDetail(message);
+        }}
         onOpenBanSettings={(message) => {
           setActiveMenuMessageId(undefined);
           onOpenBanSettings(message);

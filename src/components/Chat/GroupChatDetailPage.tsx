@@ -24,6 +24,7 @@ import type { ChatWorkspaceView } from './chatTypes';
 import {
   buildChatIndexHref,
   buildGroupChatDetailHref,
+  buildGroupChatMessageDetailHref,
   buildGroupChatPanelHref,
   invalidateContractReads,
   parseGroupId,
@@ -101,6 +102,13 @@ export default function GroupChatDetailPage() {
     [router],
   );
 
+  const openMessageDetail = useCallback(
+    (message: ParsedGroupChatMessage) => {
+      router.push(buildGroupChatMessageDetailHref(message.groupId, message.messageId));
+    },
+    [router],
+  );
+
   const backUrl = buildChatIndexHref();
 
   return (
@@ -124,6 +132,7 @@ export default function GroupChatDetailPage() {
                 onPosted={refreshAll}
                 onOpenPanel={onOpenGroupPanel}
                 onOpenBanSettings={openBanSettingsForMessage}
+                onOpenMessageDetail={openMessageDetail}
                 onReadLatest={markGroupRead}
               />
             ) : (

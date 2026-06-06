@@ -185,6 +185,11 @@
   scroll-padding-bottom: var(--detail-input-bottom-safe);
 }
 
+.chatPrototype[data-detail="false"] :global(.workspace-screen) {
+  overflow: visible;
+  overscroll-behavior: auto;
+}
+
 .chatPrototype :global(.workspace-screen input),
 .chatPrototype :global(.workspace-screen textarea),
 .chatPrototype :global(.workspace-screen select) {
@@ -2573,6 +2578,63 @@
   font-weight: 500;
 }
 
+.chatPrototype :global(.message-detail-screen) {
+  padding-bottom: 16px;
+  scroll-padding-bottom: 16px;
+}
+
+.chatPrototype :global(.message-detail-card) {
+  display: grid;
+  gap: 12px;
+}
+
+.chatPrototype :global(.message-detail-loading) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--greyscale-500);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.chatPrototype :global(.message-detail-fields code) {
+  color: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.chatPrototype :global(.message-detail-inline-content) {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.chatPrototype :global(.message-detail-token-list) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chatPrototype :global(.message-detail-token) {
+  min-width: 0;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 6px;
+  background: var(--greyscale-50);
+  padding: 5px 7px;
+  color: var(--greyscale-900);
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.chatPrototype :global(.message-detail-token small) {
+  margin-top: 0;
+  font-size: 11px;
+}
+
 .chatPrototype :global(.group-detail-heading) {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -2916,6 +2978,35 @@
   font-size: 12px;
   font-weight: 500;
   line-height: 1.4;
+}
+
+.chatPrototype :global(.message-round-divider) {
+  display: grid;
+  grid-template-columns: minmax(24px, 1fr) auto minmax(24px, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 2px 0 14px;
+  color: var(--greyscale-500);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.chatPrototype :global(.message-round-divider span) {
+  height: 1px;
+  background: var(--greyscale-200);
+}
+
+.chatPrototype :global(.message-round-divider strong) {
+  min-width: 0;
+  padding: 3px 9px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--greyscale-600);
+  font: inherit;
+  white-space: nowrap;
 }
 
 .chatPrototype :global(.message-row) {
@@ -3781,6 +3872,11 @@
   .chatPrototype[data-entry="love20-chat-members"] :global(.workspace-screen) {
     padding-bottom: 16px;
     scroll-padding-bottom: 16px;
+  }
+
+  .chatPrototype[data-entry="love20-chat-message-detail"] :global(.message-detail-screen) {
+    padding-bottom: calc(16px + var(--global-bottom-nav-offset));
+    scroll-padding-bottom: calc(16px + var(--global-bottom-nav-offset));
   }
 
   .chatWorkspace[data-entry="love20-chat"] :global(.inbox-screen) {

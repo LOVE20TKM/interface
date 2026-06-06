@@ -60,6 +60,7 @@ export function ChatMessageList({
   onMentionSender,
   onCopyMessage,
   onQuoteMessage,
+  onOpenMessageDetail,
   onOpenBanSettings,
 }: {
   account: `0x${string}` | undefined;
@@ -81,6 +82,7 @@ export function ChatMessageList({
   onMentionSender: (message: ParsedGroupChatMessage) => void;
   onCopyMessage: (message: ParsedGroupChatMessage) => void;
   onQuoteMessage: (message: ParsedGroupChatMessage) => void;
+  onOpenMessageDetail: (message: ParsedGroupChatMessage) => void;
   onOpenBanSettings: (message: ParsedGroupChatMessage) => void;
 }) {
   const showListSyncIndicator =
@@ -145,7 +147,10 @@ export function ChatMessageList({
             const senderName = data.senderNames[message.senderId.toString()] || `NFT #${message.senderId.toString()}`;
             const quoted = message.quotedMessageId > BigInt(0) ? messageById[message.quotedMessageId.toString()] : undefined;
             const timestamp = messageTimestampMs(message);
-            const showTimeDivider = shouldRenderMessageTimeDivider(message, visibleMessages[index - 1]);
+            const previousMessage = visibleMessages[index - 1];
+            const showTimeDivider = shouldRenderMessageTimeDivider(message, previousMessage);
+            const showRoundDivider =
+              !previousMessage || previousMessage.round !== message.round;
             const messageKey = message.messageId.toString();
             const messageTime = showMessageTimes ? formatMessageTime(message.timestamp) : '';
             const quotePreview = quoted ? quotedMessageSummary(quoted, 72) : '引用消息未在当前分页中';
@@ -154,6 +159,13 @@ export function ChatMessageList({
 
             return (
               <Fragment key={messageKey}>
+                {showRoundDivider && (
+                  <div className="message-round-divider">
+                    <span />
+                    <strong>行动轮次 {message.round.toString()}</strong>
+                    <span />
+                  </div>
+                )}
                 {showTimeDivider && timestamp !== undefined && (
                   <div className="message-time-divider">{formatMessageDividerTime(timestamp)}</div>
                 )}
@@ -179,6 +191,7 @@ export function ChatMessageList({
                         <button type="button" title="提及" onClick={() => onMentionSender(message)}>提及</button>
                         <button type="button" title="引用" onClick={() => onQuoteMessage(message)}>引用</button>
                         <button type="button" title="复制" onClick={() => onCopyMessage(message)}>复制</button>
+                        <button type="button" title="详情" onClick={() => onOpenMessageDetail(message)}>详情</button>
                         {canOpenBanSettings && (
                           <button type="button" onClick={() => onOpenBanSettings(message)}>禁言设置</button>
                         )}
