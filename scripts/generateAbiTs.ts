@@ -36,6 +36,9 @@ const extensionsGroupAbiDirPath = resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_EXTENSI
 const groupChatAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_GROUP_CHAT_ABI_PATH
   ? resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_GROUP_CHAT_ABI_PATH')
   : undefined;
+const batchTransferAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_BATCH_TRANSFER_ABI_PATH
+  ? resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_BATCH_TRANSFER_ABI_PATH')
+  : undefined;
 
 // 指定要转换的文件名列表
 const coreFilesToConvert = [
@@ -90,6 +93,8 @@ const groupChatFilesToConvert = [
   'TokenActionGovManager',
 ];
 
+const batchTransferFilesToConvert = ['BatchTransfer'];
+
 // 用于生成 TypeScript 文件的函数
 const generateTsFiles = (abiDirPath: string, filesToConvert: string[]) => {
   filesToConvert.forEach((fileName) => {
@@ -140,4 +145,9 @@ generateTsFiles(groupAbiDirPath, groupFilesToConvert);
 // 处理群聊 ABI 文件
 if (groupChatAbiDirPath) {
   generateTsFiles(groupChatAbiDirPath, groupChatFilesToConvert);
+}
+
+// 处理批量转账 ABI 文件
+if (batchTransferAbiDirPath) {
+  generateTsFiles(batchTransferAbiDirPath, batchTransferFilesToConvert);
 }

@@ -11,6 +11,7 @@ import {
   Lock,
   LucideIcon,
   MessageCircle,
+  Send,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import {
 import Header from "@/src/components/Header";
 import { TokenContext } from "@/src/contexts/TokenContext";
 import { useGroupChatUnreadSummary } from "@/src/contexts/GroupChatSyncContext";
+import { isBatchTransferEnabled } from "@/src/hooks/contracts/useBatchTransfer";
 
 interface AppItem {
   name: string;
@@ -57,6 +59,16 @@ const appSections: AppSection[] = [
         icon: ArrowLeftRight,
         requiresWallet: true,
       },
+      ...(isBatchTransferEnabled
+        ? [
+            {
+              name: "批量转账",
+              href: "/apps/batch-transfer",
+              icon: Send,
+              requiresWallet: true,
+            },
+          ]
+        : []),
     ],
   },
   {

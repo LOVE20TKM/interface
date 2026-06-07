@@ -178,7 +178,8 @@ function generateErrorSelectors() {
   console.log('='.repeat(80));
 
   // 收集所有错误
-  const errorMap = new Map<string, ErrorInfo>();
+  const selectorErrorMap = new Map<string, ErrorInfo>();
+  const nameErrorMap = new Map<string, ErrorInfo>();
   const abiFiles = getAllAbiFiles();
 
   for (const { name: contractName, path: filePath } of abiFiles) {
@@ -193,14 +194,28 @@ function generateErrorSelectors() {
         const selector = calculateSelector(signature);
         const errorName = item.name;
 
-        if (errorMap.has(errorName)) {
-          // 同名错误，添加合约来源
-          const existing = errorMap.get(errorName)!;
+        if (selectorErrorMap.has(signature)) {
+          // 同签名错误，添加合约来源
+          const existing = selectorErrorMap.get(signature)!;
           if (!existing.contracts.includes(contractName)) {
             existing.contracts.push(contractName);
           }
         } else {
-          errorMap.set(errorName, {
+          selectorErrorMap.set(signature, {
+            name: errorName,
+            selector,
+            signature,
+            contracts: [contractName],
+          });
+        }
+
+        if (nameErrorMap.has(errorName)) {
+          const existing = nameErrorMap.get(errorName)!;
+          if (!existing.contracts.includes(contractName)) {
+            existing.contracts.push(contractName);
+          }
+        } else {
+          nameErrorMap.set(errorName, {
             name: errorName,
             selector,
             signature,
@@ -211,7 +226,9 @@ function generateErrorSelectors() {
     }
   }
 
-  console.log(`✅ 从 ${abiFiles.length} 个 ABI 文件中提取了 ${errorMap.size} 个错误\n`);
+  console.log(
+    `✅ 从 ${abiFiles.length} 个 ABI 文件中提取了 ${selectorErrorMap.size} 个错误签名、${nameErrorMap.size} 个错误名称\n`,
+  );
 
   // 读取现有中文消息
   const existingMessages = loadExistingErrorMessages();
@@ -219,7 +236,7 @@ function generateErrorSelectors() {
 
   // 找出缺失翻译的错误
   const missingTranslations: string[] = [];
-  for (const [errorName] of errorMap) {
+  for (const [errorName] of nameErrorMap) {
     if (!existingMessages[errorName]) {
       missingTranslations.push(errorName);
     }
@@ -228,11 +245,11 @@ function generateErrorSelectors() {
   // 生成 errorMessages.ts（如果不存在）
   const errorMessagesPath = path.join(__dirname, '../src/errors/errorMessages.ts');
   if (!fs.existsSync(errorMessagesPath)) {
-    generateErrorMessagesFile(errorMap, existingMessages, errorMessagesPath);
+    generateErrorMessagesFile(nameErrorMap, existingMessages, errorMessagesPath);
   }
 
   // 生成 unifiedErrorMap.ts
-  generateUnifiedErrorMapFile(errorMap, existingMessages);
+  generateUnifiedErrorMapFile(selectorErrorMap, nameErrorMap, existingMessages);
 
   // 打印缺失翻译的错误
   if (missingTranslations.length > 0) {
@@ -304,7 +321,11 @@ function formatMessageString(message: string): string {
 /**
  * 生成 unifiedErrorMap.ts 文件
  */
-function generateUnifiedErrorMapFile(errorMap: Map<string, ErrorInfo>, messages: Record<string, string>) {
+function generateUnifiedErrorMapFile(
+  selectorErrorMap: Map<string, ErrorInfo>,
+  nameErrorMap: Map<string, ErrorInfo>,
+  messages: Record<string, string>,
+) {
   const outputPath = path.join(__dirname, '../src/errors/unifiedErrorMap.ts');
 
   const lines: string[] = [
@@ -326,7 +347,9 @@ function generateUnifiedErrorMapFile(errorMap: Map<string, ErrorInfo>, messages:
   ];
 
   // 按选择器排序
-  const sortedBySelector = Array.from(errorMap.values()).sort((a, b) => a.selector.localeCompare(b.selector));
+  const sortedBySelector = Array.from(selectorErrorMap.values()).sort(
+    (a, b) => a.selector.localeCompare(b.selector) || a.signature.localeCompare(b.signature),
+  );
 
   for (const error of sortedBySelector) {
     const message = messages[error.name] || error.name;
@@ -340,7 +363,7 @@ function generateUnifiedErrorMapFile(errorMap: Map<string, ErrorInfo>, messages:
   lines.push('export const ErrorsByName: Record<string, ErrorDef> = {');
 
   // 按错误名称排序
-  const sortedByName = Array.from(errorMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  const sortedByName = Array.from(nameErrorMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
   for (const error of sortedByName) {
     const message = messages[error.name] || error.name;
