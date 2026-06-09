@@ -1,6 +1,7 @@
 // src/lib/universalTransaction.ts
 import { useState, useEffect } from 'react';
-import { simulateContract, waitForTransactionReceipt, writeContract } from '@wagmi/core';
+import { estimateGas, simulateContract, waitForTransactionReceipt, writeContract } from '@wagmi/core';
+import { encodeFunctionData } from 'viem';
 import { config } from '@/src/wagmi';
 import { isTukeWallet, sendTransactionForTuke, waitForTukeTransaction } from './tukeWalletUtils';
 import { checkWalletNetworkStatus } from '@/src/lib/web3';
@@ -21,6 +22,26 @@ const SIMULATED_GAS_BUFFER_DENOMINATOR = BigInt(1);
 const addGasBuffer = (gas: bigint) =>
   (gas * SIMULATED_GAS_BUFFER_NUMERATOR + SIMULATED_GAS_BUFFER_DENOMINATOR - BigInt(1)) /
   SIMULATED_GAS_BUFFER_DENOMINATOR;
+
+const estimateBufferedContractGas = async (
+  abi: readonly any[],
+  address: `0x${string}`,
+  functionName: string,
+  args: any[] = [],
+  value?: bigint,
+) => {
+  const data = encodeFunctionData({
+    abi,
+    functionName,
+    args,
+  });
+  const gas = await estimateGas(config, {
+    to: address,
+    data,
+    value,
+  });
+  return addGasBuffer(gas);
+};
 
 export const waitForCompatibleTransactionReceipt = async (hash: `0x${string}`) => {
   return waitForTransactionReceipt(config, {
@@ -115,7 +136,9 @@ export const sendUniversalTransaction = async (
 
     console.log('步骤2: (标准模式)执行真实交易...');
     if (simulatedRequest) {
-      const gasWithBuffer = simulatedRequest.gas ? addGasBuffer(simulatedRequest.gas) : undefined;
+      const gasWithBuffer = simulatedRequest.gas
+        ? addGasBuffer(simulatedRequest.gas)
+        : await estimateBufferedContractGas(abi, address, functionName, args, value);
       console.log('复用模拟请求发送交易，避免钱包侧错误重估 gas', {
         gas: simulatedRequest.gas?.toString(),
         gasWithBuffer: gasWithBuffer?.toString(),
@@ -123,6 +146,7 @@ export const sendUniversalTransaction = async (
       return await writeContract(config, {
         ...simulatedRequest,
         gas: gasWithBuffer,
+        __mode: 'prepared',
       });
     }
 

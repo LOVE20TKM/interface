@@ -972,7 +972,7 @@ export function BanListPanel({
     (canVoteGovBan && hasCompleteMyOpposeVote && !hasMyVoteWeightIncrease);
   const opposeMyBanButtonText = opposeMyBanLabel
     || (canVoteGovBan && hasCompleteMyOpposeVote
-      ? hasMyVoteWeightIncrease ? '治理票已增加，更新反对禁言' : '已反对禁言，治理票未增加'
+      ? hasMyVoteWeightIncrease ? '治理票已增加，更新反对禁言' : '已反对禁言'
       : '反对禁言');
   const defaultNftLabel = accountData.defaultSenderId
     ? accountData.defaultSenderName || `NFT #${accountData.defaultSenderId.toString()}`
