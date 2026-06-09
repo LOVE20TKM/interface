@@ -612,12 +612,6 @@
     "selector": "0x162b5d41"
   },
   {
-    "contract": "BatchTransfer",
-    "functionName": "MAX_BALANCE_ACCOUNTS",
-    "signature": "MAX_BALANCE_ACCOUNTS()",
-    "selector": "0x1639048a"
-  },
-  {
     "contract": "GroupJoin",
     "functionName": "trialJoin",
     "signature": "trialJoin(address,uint256,address,string[])",
@@ -2068,12 +2062,6 @@
     "functionName": "allPairsLength",
     "signature": "allPairsLength()",
     "selector": "0x574f2ba3"
-  },
-  {
-    "contract": "BatchTransfer",
-    "functionName": "MAX_TRANSFER_RECIPIENTS",
-    "signature": "MAX_TRANSFER_RECIPIENTS()",
-    "selector": "0x57d35ad9"
   },
   {
     "contract": "TokenActionGovManager",

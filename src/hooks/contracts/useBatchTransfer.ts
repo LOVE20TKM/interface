@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { isAddress, zeroAddress } from 'viem';
 
 import { BatchTransferAbi } from '@/src/abis/BatchTransfer';
-import { safeToBigInt } from '@/src/lib/clientUtils';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
@@ -15,41 +14,6 @@ export const BATCH_TRANSFER_CONTRACT_ADDRESS =
     : zeroAddress;
 
 export const isBatchTransferEnabled = BATCH_TRANSFER_CONTRACT_ADDRESS !== zeroAddress;
-
-export function useBatchTransferLimits() {
-  const query = {
-    enabled: isBatchTransferEnabled,
-  };
-
-  const {
-    data: maxTransferRecipients,
-    isPending: isPendingMaxTransferRecipients,
-    error: maxTransferRecipientsError,
-  } = useUniversalReadContract({
-    address: BATCH_TRANSFER_CONTRACT_ADDRESS,
-    abi: BatchTransferAbi,
-    functionName: 'MAX_TRANSFER_RECIPIENTS',
-    query,
-  });
-
-  const {
-    data: maxBalanceAccounts,
-    isPending: isPendingMaxBalanceAccounts,
-    error: maxBalanceAccountsError,
-  } = useUniversalReadContract({
-    address: BATCH_TRANSFER_CONTRACT_ADDRESS,
-    abi: BatchTransferAbi,
-    functionName: 'MAX_BALANCE_ACCOUNTS',
-    query,
-  });
-
-  return {
-    maxTransferRecipients: maxTransferRecipients !== undefined ? safeToBigInt(maxTransferRecipients) : undefined,
-    maxBalanceAccounts: maxBalanceAccounts !== undefined ? safeToBigInt(maxBalanceAccounts) : undefined,
-    isPending: isPendingMaxTransferRecipients || isPendingMaxBalanceAccounts,
-    error: maxTransferRecipientsError || maxBalanceAccountsError,
-  };
-}
 
 export function useNativeBatchBalances(accounts: readonly `0x${string}`[], enabled: boolean) {
   const { data, isPending, error, refetch } = useUniversalReadContract({

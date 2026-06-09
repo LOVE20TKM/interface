@@ -4,32 +4,6 @@ import { Abi } from 'abitype';
 export const BatchTransferAbi = [
   {
     "type": "function",
-    "name": "MAX_BALANCE_ACCOUNTS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "MAX_TRANSFER_RECIPIENTS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "NATIVE_TRANSFER_GAS_LIMIT",
     "inputs": [],
     "outputs": [
@@ -211,22 +185,6 @@ export const BatchTransferAbi = [
   },
   {
     "type": "error",
-    "name": "BatchTooLarge",
-    "inputs": [
-      {
-        "name": "size",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxSize",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
     "name": "ERC20AllowanceQueryFailed",
     "inputs": [
       {
@@ -243,6 +201,11 @@ export const BatchTransferAbi = [
         "name": "spender",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
       }
     ]
   },
@@ -259,6 +222,11 @@ export const BatchTransferAbi = [
         "name": "account",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
       }
     ]
   },
@@ -321,6 +289,37 @@ export const BatchTransferAbi = [
   },
   {
     "type": "error",
+    "name": "ERC20InvalidReturn",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "recipient",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "returnData",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "ERC20TransferFailed",
     "inputs": [
       {
@@ -342,6 +341,11 @@ export const BatchTransferAbi = [
         "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "reason",
+        "type": "bytes",
+        "internalType": "bytes"
       }
     ]
   },
@@ -379,6 +383,11 @@ export const BatchTransferAbi = [
         "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "reason",
+        "type": "bytes",
+        "internalType": "bytes"
       }
     ]
   },

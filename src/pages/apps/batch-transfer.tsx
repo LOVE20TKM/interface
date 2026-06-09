@@ -27,7 +27,6 @@ import {
   BATCH_TRANSFER_CONTRACT_ADDRESS,
   isBatchTransferEnabled,
   useBatchTransferERC20,
-  useBatchTransferLimits,
   useBatchTransferNative,
 } from '@/src/hooks/contracts/useBatchTransfer';
 import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
@@ -322,7 +321,6 @@ const buildDefaultTokens = (
 const parseRecipientRows = (
   input: string,
   decimals: number,
-  maxTransferRecipients?: bigint,
   senderAddress?: `0x${string}`,
 ) => {
   const addressCounts = new Map<string, number>();
@@ -393,12 +391,7 @@ const parseRecipientRows = (
     };
   });
 
-  const batchErrors: string[] = [];
-  if (maxTransferRecipients !== undefined && BigInt(dedupedRows.length) > maxTransferRecipients) {
-    batchErrors.push(`收款人数超过上限 ${maxTransferRecipients.toString()}`);
-  }
-
-  return { rows: dedupedRows, batchErrors };
+  return { rows: dedupedRows, batchErrors: [] as string[] };
 };
 
 const makeAuditKey = (mode: TransferMode, tokenAddress: string, rows: ParsedRecipient[]) => {
@@ -448,7 +441,6 @@ export default function BatchTransferPage() {
   const [isAssetProtectionEnabled, setIsAssetProtectionEnabled] = useState(true);
   const [lastProcessedTxHash, setLastProcessedTxHash] = useState<`0x${string}` | null>(null);
 
-  const { maxTransferRecipients, maxBalanceAccounts } = useBatchTransferLimits();
   const defaultTokens = useMemo(
     () =>
       buildDefaultTokens(token, {
@@ -553,8 +545,8 @@ export default function BatchTransferPage() {
   }, [customTokenAddress, defaultTokens, selectedToken.symbol]);
 
   const { rows: parsedRows, batchErrors } = useMemo(
-    () => parseRecipientRows(recipientsInput, selectedTokenDecimals, maxTransferRecipients, account),
-    [account, maxTransferRecipients, recipientsInput, selectedTokenDecimals],
+    () => parseRecipientRows(recipientsInput, selectedTokenDecimals, account),
+    [account, recipientsInput, selectedTokenDecimals],
   );
 
   const protectedRecipientMap = useMemo(() => {
@@ -671,9 +663,6 @@ export default function BatchTransferPage() {
     if (!isPendingBalance && accountBalance === undefined) errors.push('钱包余额读取失败');
     if (accountBalance !== undefined && !hasEnoughBalance) errors.push('钱包余额不足');
     if (mode === 'erc20' && isPendingAllowance) errors.push('授权额度读取中');
-    if (maxBalanceAccounts !== undefined && BigInt(validRows.length) > maxBalanceAccounts) {
-      errors.push(`余额查询人数超过上限 ${maxBalanceAccounts.toString()}`);
-    }
     return errors;
   }, [
     account,
@@ -687,7 +676,6 @@ export default function BatchTransferPage() {
     isOnTargetChain,
     isPendingAllowance,
     isPendingBalance,
-    maxBalanceAccounts,
     mode,
     parsedRows.length,
     selectedTokenAddress,
@@ -1096,10 +1084,7 @@ export default function BatchTransferPage() {
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="rounded-md bg-greyscale-50 p-3">
                       <div className="text-greyscale-500">收款人数</div>
-                      <div className="mt-1 font-semibold">
-                        {validRows.length}
-                        {maxTransferRecipients ? ` / ${maxTransferRecipients.toString()}` : ''}
-                      </div>
+                      <div className="mt-1 font-semibold">{validRows.length}</div>
                     </div>
                     <div className="rounded-md bg-greyscale-50 p-3">
                       <div className="text-greyscale-500">总转账数量</div>
