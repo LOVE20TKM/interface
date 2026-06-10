@@ -66,6 +66,32 @@ export interface GroupChatPublicData {
   refetch: () => void;
 }
 
+export interface GroupChatMentionData {
+  groupId: bigint | undefined;
+  mentionedSenderId?: bigint;
+  messagesCount: bigint | undefined;
+  messages: ParsedGroupChatMessage[];
+  senderNames: Record<string, string>;
+  isPending: boolean;
+  isFetching: boolean;
+  error?: unknown;
+  refetch: () => void;
+}
+
+export type GroupChatMentionAllData = GroupChatMentionData;
+
+export interface GroupChatSenderData {
+  groupId: bigint | undefined;
+  senderId: bigint | undefined;
+  messagesCount: bigint | undefined;
+  messages: ParsedGroupChatMessage[];
+  senderNames: Record<string, string>;
+  isPending: boolean;
+  isFetching: boolean;
+  error?: unknown;
+  refetch: () => void;
+}
+
 export interface GroupChatAccountData {
   defaultSenderId: bigint | undefined;
   defaultSenderName: string;

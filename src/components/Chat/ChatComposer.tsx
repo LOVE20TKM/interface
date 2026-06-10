@@ -2,7 +2,7 @@
 
 import { forwardRef } from 'react';
 import Link from 'next/link';
-import { Loader2, Quote, Send, ShieldCheck, X } from 'lucide-react';
+import { AtSign, Loader2, Quote, Send, ShieldCheck, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import type { ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
@@ -18,10 +18,13 @@ export const ChatComposer = forwardRef<HTMLElement, {
   quotedMessage: ParsedGroupChatMessage | undefined;
   mentionValidationHint: string;
   mentionValidationBlocking: boolean;
+  mentionAllActive: boolean;
+  mentionAllDisabled: boolean;
   sendDisabled: boolean;
   isPending: boolean;
   isConfirming: boolean;
   onContentChange: (value: string) => void;
+  onToggleMentionAll: () => void;
   onSend: () => void;
   onClearQuote: () => void;
 }>(function ChatComposer({
@@ -33,10 +36,13 @@ export const ChatComposer = forwardRef<HTMLElement, {
   quotedMessage,
   mentionValidationHint,
   mentionValidationBlocking,
+  mentionAllActive,
+  mentionAllDisabled,
   sendDisabled,
   isPending,
   isConfirming,
   onContentChange,
+  onToggleMentionAll,
   onSend,
   onClearQuote,
 }, ref) {
@@ -76,6 +82,18 @@ export const ChatComposer = forwardRef<HTMLElement, {
                 {activeSenderId ? `使用 ${activeSenderLabel} 发言` : '默认 NFT 身份不可用'}
               </span>
             </div>
+            <button
+              type="button"
+              className={cn('composer-tool-button inline-flex', mentionAllActive && 'active')}
+              onClick={onToggleMentionAll}
+              disabled={mentionAllDisabled && !mentionAllActive}
+              aria-pressed={mentionAllActive}
+              aria-label={mentionAllActive ? '取消 @全部' : '添加 @全部'}
+              title={mentionAllDisabled && !mentionAllActive ? '只有群 owner、delegate 或管理员 NFT 可用' : mentionAllActive ? '取消 @全部' : '添加 @全部'}
+            >
+              <AtSign className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>全部</span>
+            </button>
             {!activeCanPost && <span className="composer-identity-status">不可发言</span>}
           </div>
           {quotedMessage && (

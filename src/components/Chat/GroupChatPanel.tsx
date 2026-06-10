@@ -1,6 +1,7 @@
 'use client';
 
 import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 import { useGroupChatSyncState, useMarkGroupRead, useRegisterActiveChat } from '@/src/contexts/GroupChatSyncContext';
@@ -18,6 +19,7 @@ import {
 import {
   useGroupChatManagedTitle,
   useGroupChatAccountData,
+  useGroupChatMentionAllData,
   useGroupChatPublicData,
   type ParsedGroupChatMessage,
 } from '@/src/hooks/composite/useGroupChatData';
@@ -26,13 +28,25 @@ import { ChatMessageList } from './ChatMessageList';
 import { GroupChatToolbar } from './GroupChatToolbar';
 import {
   DEFAULT_MESSAGE_WINDOW_SIZE,
+  MENTION_ALL_READ_CURSORS_CHANGED_EVENT,
   MAX_MENTIONED_SENDER_IDS,
   MESSAGE_PAGE_SIZE,
 } from './chatConstants';
+import {
+  readMentionAllReadCursors,
+  writeMentionAllReadCursor,
+} from './chatStorage';
 import type { ChatWorkspaceView } from './chatTypes';
 import {
+  addMentionAllToken,
+  buildGroupChatMentionAllHref,
+  formatMessageTime,
+  hasMentionAllToken,
   isManagerOwnedChat,
+  quotedMessageSummary,
+  removeMentionAllTokens,
   sameAddress,
+  safeBigIntFromString,
 } from './chatUtils';
 import { useChatComposerState } from './useChatComposerState';
 import { useConfirmedTransactionEffect } from './useConfirmedTransactionEffect';
@@ -85,6 +99,7 @@ export function GroupChatPanel({
   const bottomResizeFrameRef = useRef<number | undefined>();
   const [composerHeight, setComposerHeight] = useState(0);
   const [messageListHeight, setMessageListHeight] = useState<number | undefined>();
+  const [mentionAllReadCursors, setMentionAllReadCursors] = useState<Record<string, string>>({});
   useRegisterActiveChat(groupId);
   const markGroupRead = useMarkGroupRead();
   const syncState = useGroupChatSyncState(groupId);
@@ -271,6 +286,12 @@ export function GroupChatPanel({
     [publicData.bannedMessageIds, publicData.messages, showBannedMessages],
   );
   const latestVisibleMessageId = visibleMessages[visibleMessages.length - 1]?.messageId.toString();
+  const latestMentionAll = useGroupChatMentionAllData(groupId, BigInt(0), BigInt(1), true);
+  const latestMentionAllMessage = latestMentionAll.messages[0];
+  const latestMentionAllMessageId = latestMentionAllMessage?.messageId;
+  const mentionAllReadCursor = safeBigIntFromString(groupId ? mentionAllReadCursors[groupId.toString()] : undefined);
+  const mentionAllUnread =
+    latestMentionAllMessageId !== undefined && latestMentionAllMessageId > mentionAllReadCursor;
   const hasMoreMessages =
     effectiveMessagesCount !== undefined && BigInt(publicData.messages.length) < effectiveMessagesCount;
   const displayedData = useMemo(
@@ -333,6 +354,25 @@ export function GroupChatPanel({
     markGroupRead(groupId, latestLoadedMessageId);
     onReadLatest?.(groupId, latestLoadedMessageId);
   }, [groupId, markGroupRead, onReadLatest, publicData.isMessageFeedFetching, publicData.messages, publicData.messagesCount]);
+
+  useEffect(() => {
+    const refreshMentionAllReadCursors = () => {
+      setMentionAllReadCursors(readMentionAllReadCursors(account));
+    };
+    refreshMentionAllReadCursors();
+    window.addEventListener(MENTION_ALL_READ_CURSORS_CHANGED_EVENT, refreshMentionAllReadCursors);
+    window.addEventListener('storage', refreshMentionAllReadCursors);
+    window.addEventListener('focus', refreshMentionAllReadCursors);
+    return () => {
+      window.removeEventListener(MENTION_ALL_READ_CURSORS_CHANGED_EVENT, refreshMentionAllReadCursors);
+      window.removeEventListener('storage', refreshMentionAllReadCursors);
+      window.removeEventListener('focus', refreshMentionAllReadCursors);
+    };
+  }, [account]);
+
+  const markLatestMentionAllRead = useCallback(() => {
+    writeMentionAllReadCursor(account, groupId, latestMentionAllMessageId);
+  }, [account, groupId, latestMentionAllMessageId]);
 
   useEffect(() => {
     if (
@@ -443,6 +483,14 @@ export function GroupChatPanel({
     setMentionedSenderIds((prev) => [...prev, senderId]);
   };
 
+  const toggleMentionAll = () => {
+    setContent((prev) =>
+      hasMentionAllToken(prev)
+        ? removeMentionAllTokens(prev)
+        : addMentionAllToken(prev),
+    );
+  };
+
   const copyMessage = async (message: ParsedGroupChatMessage) => {
     try {
       await navigator.clipboard.writeText(message.content);
@@ -546,8 +594,16 @@ export function GroupChatPanel({
         onOpenPanel={onOpenPanel}
       />
 
+      <MentionAllSummary
+        message={latestMentionAllMessage}
+        href={buildGroupChatMentionAllHref(groupId)}
+        unread={mentionAllUnread}
+        onOpen={markLatestMentionAllRead}
+      />
+
       <ChatMessageList
         account={account}
+        currentSenderId={composerState.activeSenderId}
         data={displayedData}
         groupId={groupId}
         messageListRef={messageListRef}
@@ -595,13 +651,61 @@ export function GroupChatPanel({
         quotedMessage={quotedMessage}
         mentionValidationHint={composerState.mentionValidationHint}
         mentionValidationBlocking={composerState.mentionValidationBlocking}
+        mentionAllActive={composerState.draftMentions.mentionAll}
+        mentionAllDisabled={mentionAllPermission.isPending || !mentionAllPermission.canMentionAll}
         sendDisabled={composerState.sendDisabled}
         isPending={isPending}
         isConfirming={isConfirming}
         onContentChange={setContent}
+        onToggleMentionAll={toggleMentionAll}
         onSend={onSend}
         onClearQuote={() => setQuotedMessage(undefined)}
       />
     </section>
+  );
+}
+
+function MentionAllSummary({
+  message,
+  href,
+  unread,
+  onOpen,
+}: {
+  message: ParsedGroupChatMessage | undefined;
+  href: string;
+  unread: boolean;
+  onOpen: () => void;
+}) {
+  const content = message
+    ? quotedMessageSummary({ content: removeMentionAllTokens(message.content).trim() || message.content }, 72)
+    : '';
+  const timeLabel = formatMessageTime(message?.timestamp);
+
+  if (!message) return null;
+
+  const body = (
+    <>
+      <div className="mention-all-summary-main">
+        <div className="mention-all-summary-meta">
+          <span className="mention-all-summary-label">全员通知</span>
+          {timeLabel && <span>{timeLabel}</span>}
+        </div>
+        <div className="mention-all-summary-content">
+          <strong>{content}</strong>
+        </div>
+      </div>
+      {unread && <span className="mention-all-summary-unread">未读</span>}
+    </>
+  );
+
+  return (
+    <Link
+      className={`mention-all-summary${unread ? ' mention-all-summary-is-unread' : ''}`}
+      href={href}
+      aria-label={unread ? '查看未读全员通知' : '查看全部全员通知'}
+      onClick={onOpen}
+    >
+      {body}
+    </Link>
   );
 }

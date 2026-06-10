@@ -261,6 +261,182 @@ export const useGroupChatMessages = (
   };
 };
 
+export const useGroupChatMessagesByMentionAllCount = (groupId: bigint | undefined, enabled: boolean = true) => {
+  const isQueryEnabled = isGroupChatEnabled && enabled && isPositiveId(groupId);
+  const { data, isPending, isFetching, error, refetch } = useUniversalReadContract({
+    address: getContractAddress(),
+    abi: GroupChatAbi,
+    functionName: 'messagesByMentionAllCount',
+    args: [groupId || BigInt(0)],
+    query: {
+      enabled: isQueryEnabled,
+    },
+  });
+
+  return {
+    messagesCount: isQueryEnabled && data !== undefined ? safeToBigInt(data) : undefined,
+    isPending: isQueryEnabled ? isPending : false,
+    isFetching: isQueryEnabled ? isFetching : false,
+    error: isQueryEnabled ? error : undefined,
+    refetch,
+  };
+};
+
+export const useGroupChatMessagesByMentionAll = (
+  groupId: bigint | undefined,
+  offset: bigint,
+  limit: bigint,
+  reverse: boolean = false,
+  enabled: boolean = true,
+) => {
+  const isQueryEnabled = isGroupChatEnabled && enabled && isPositiveId(groupId) && limit > BigInt(0);
+  const { data, isPending, isFetching, error, refetch } = useUniversalReadContract({
+    address: getContractAddress(),
+    abi: GroupChatAbi,
+    functionName: 'messagesByMentionAll',
+    args: [groupId || BigInt(0), offset, limit, reverse],
+    query: {
+      enabled: isQueryEnabled,
+      placeholderData: (previousData) => previousData,
+      refetchOnWindowFocus: false,
+    },
+  });
+  const messages = useMemo(
+    () => (isQueryEnabled && Array.isArray(data) ? data : EMPTY_MESSAGES),
+    [data, isQueryEnabled],
+  );
+
+  return {
+    messages,
+    isPending: isQueryEnabled ? isPending : false,
+    isFetching: isQueryEnabled ? isFetching : false,
+    error: isQueryEnabled ? error : undefined,
+    refetch,
+  };
+};
+
+export const useGroupChatMessagesByMentionCount = (
+  groupId: bigint | undefined,
+  mentionedSenderId: bigint | undefined,
+  enabled: boolean = true,
+) => {
+  const isQueryEnabled =
+    isGroupChatEnabled && enabled && isPositiveId(groupId) && isPositiveId(mentionedSenderId);
+  const { data, isPending, isFetching, error, refetch } = useUniversalReadContract({
+    address: getContractAddress(),
+    abi: GroupChatAbi,
+    functionName: 'messagesByMentionCount',
+    args: [groupId || BigInt(0), mentionedSenderId || BigInt(0)],
+    query: {
+      enabled: isQueryEnabled,
+    },
+  });
+
+  return {
+    messagesCount: isQueryEnabled && data !== undefined ? safeToBigInt(data) : undefined,
+    isPending: isQueryEnabled ? isPending : false,
+    isFetching: isQueryEnabled ? isFetching : false,
+    error: isQueryEnabled ? error : undefined,
+    refetch,
+  };
+};
+
+export const useGroupChatMessagesByMention = (
+  groupId: bigint | undefined,
+  mentionedSenderId: bigint | undefined,
+  offset: bigint,
+  limit: bigint,
+  reverse: boolean = false,
+  enabled: boolean = true,
+) => {
+  const isQueryEnabled =
+    isGroupChatEnabled && enabled && isPositiveId(groupId) && isPositiveId(mentionedSenderId) && limit > BigInt(0);
+  const { data, isPending, isFetching, error, refetch } = useUniversalReadContract({
+    address: getContractAddress(),
+    abi: GroupChatAbi,
+    functionName: 'messagesByMention',
+    args: [groupId || BigInt(0), mentionedSenderId || BigInt(0), offset, limit, reverse],
+    query: {
+      enabled: isQueryEnabled,
+      placeholderData: (previousData) => previousData,
+      refetchOnWindowFocus: false,
+    },
+  });
+  const messages = useMemo(
+    () => (isQueryEnabled && Array.isArray(data) ? data : EMPTY_MESSAGES),
+    [data, isQueryEnabled],
+  );
+
+  return {
+    messages,
+    isPending: isQueryEnabled ? isPending : false,
+    isFetching: isQueryEnabled ? isFetching : false,
+    error: isQueryEnabled ? error : undefined,
+    refetch,
+  };
+};
+
+export const useGroupChatMessagesBySenderCount = (
+  groupId: bigint | undefined,
+  senderId: bigint | undefined,
+  enabled: boolean = true,
+) => {
+  const isQueryEnabled =
+    isGroupChatEnabled && enabled && isPositiveId(groupId) && isPositiveId(senderId);
+  const { data, isPending, isFetching, error, refetch } = useUniversalReadContract({
+    address: getContractAddress(),
+    abi: GroupChatAbi,
+    functionName: 'messagesBySenderCount',
+    args: [groupId || BigInt(0), senderId || BigInt(0)],
+    query: {
+      enabled: isQueryEnabled,
+    },
+  });
+
+  return {
+    messagesCount: isQueryEnabled && data !== undefined ? safeToBigInt(data) : undefined,
+    isPending: isQueryEnabled ? isPending : false,
+    isFetching: isQueryEnabled ? isFetching : false,
+    error: isQueryEnabled ? error : undefined,
+    refetch,
+  };
+};
+
+export const useGroupChatMessagesBySender = (
+  groupId: bigint | undefined,
+  senderId: bigint | undefined,
+  offset: bigint,
+  limit: bigint,
+  reverse: boolean = false,
+  enabled: boolean = true,
+) => {
+  const isQueryEnabled =
+    isGroupChatEnabled && enabled && isPositiveId(groupId) && isPositiveId(senderId) && limit > BigInt(0);
+  const { data, isPending, isFetching, error, refetch } = useUniversalReadContract({
+    address: getContractAddress(),
+    abi: GroupChatAbi,
+    functionName: 'messagesBySender',
+    args: [groupId || BigInt(0), senderId || BigInt(0), offset, limit, reverse],
+    query: {
+      enabled: isQueryEnabled,
+      placeholderData: (previousData) => previousData,
+      refetchOnWindowFocus: false,
+    },
+  });
+  const messages = useMemo(
+    () => (isQueryEnabled && Array.isArray(data) ? data : EMPTY_MESSAGES),
+    [data, isQueryEnabled],
+  );
+
+  return {
+    messages,
+    isPending: isQueryEnabled ? isPending : false,
+    isFetching: isQueryEnabled ? isFetching : false,
+    error: isQueryEnabled ? error : undefined,
+    refetch,
+  };
+};
+
 export const useGroupChatMessage = (
   groupId: bigint | undefined,
   messageId: bigint | undefined,

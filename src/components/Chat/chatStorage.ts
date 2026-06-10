@@ -3,6 +3,8 @@ import {
   CACHED_GROUP_SETS_STORAGE_KEY,
   FOLLOWED_GROUPS_CHANGED_EVENT,
   FOLLOWED_GROUPS_STORAGE_KEY,
+  MENTION_ALL_READ_CURSORS_CHANGED_EVENT,
+  MENTION_ALL_READ_CURSORS_STORAGE_KEY,
   MESSAGE_PREFERENCES_STORAGE_KEY,
   OWNED_CHAIN_GROUPS_CHANGED_EVENT,
   OWNED_CHAIN_GROUPS_STORAGE_KEY,
@@ -101,6 +103,36 @@ export function readRecordStorage(key: string): Record<string, string> {
   } catch {
     return {};
   }
+}
+
+function safeStorageBigInt(value: string | undefined) {
+  if (!value || !/^\d+$/.test(value)) return BigInt(0);
+  return BigInt(value);
+}
+
+export function mentionAllReadCursorsStorageKey(account: AccountAddress) {
+  return `${MENTION_ALL_READ_CURSORS_STORAGE_KEY}:${groupChatStorageScope(account)}`;
+}
+
+export function readMentionAllReadCursors(account: AccountAddress) {
+  return readRecordStorage(mentionAllReadCursorsStorageKey(account));
+}
+
+export function writeMentionAllReadCursor(
+  account: AccountAddress,
+  groupId: bigint | undefined,
+  latestMessageId: bigint | undefined,
+) {
+  if (typeof window === 'undefined' || !groupId || groupId <= BigInt(0)) return;
+  const key = groupId.toString();
+  const cursor = latestMessageId && latestMessageId > BigInt(0) ? latestMessageId : BigInt(0);
+  const cursors = readMentionAllReadCursors(account);
+  if (cursor <= safeStorageBigInt(cursors[key])) return;
+  window.localStorage.setItem(
+    mentionAllReadCursorsStorageKey(account),
+    JSON.stringify({ ...cursors, [key]: cursor.toString() }),
+  );
+  window.dispatchEvent(new Event(MENTION_ALL_READ_CURSORS_CHANGED_EVENT));
 }
 
 export function readCachedGroupSets(cacheKey: string): CachedGroupSets | undefined {

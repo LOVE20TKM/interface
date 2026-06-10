@@ -13,6 +13,14 @@ import { normalizeAddressInput } from '@/src/lib/addressUtils';
 import { CAN_POST_REASON_LABELS, MAX_MENTIONED_SENDER_IDS, MESSAGE_TIME_DIVIDER_GAP_MS } from './chatConstants';
 
 export function parseGroupId(value: string | string[] | undefined) {
+  return parsePositiveId(value);
+}
+
+export function parseSenderId(value: string | string[] | undefined) {
+  return parsePositiveId(value);
+}
+
+function parsePositiveId(value: string | string[] | undefined) {
   const raw = Array.isArray(value) ? value[0] : value;
   if (!raw || !/^\d+$/.test(raw)) return undefined;
   const parsed = BigInt(raw);
@@ -30,6 +38,25 @@ export function buildGroupChatMessageDetailHref(groupId: bigint, messageId: bigi
   params.set('groupId', groupId.toString());
   params.set('messageId', messageId.toString());
   return `/chat/group/message?${params.toString()}`;
+}
+
+export function buildGroupChatMentionAllHref(groupId: bigint) {
+  const params = new URLSearchParams();
+  params.set('groupId', groupId.toString());
+  return `/chat/group/mentions/all?${params.toString()}`;
+}
+
+export function buildGroupChatMentionMeHref(groupId: bigint) {
+  const params = new URLSearchParams();
+  params.set('groupId', groupId.toString());
+  return `/chat/group/mentions/me?${params.toString()}`;
+}
+
+export function buildGroupChatSenderHref(groupId: bigint, senderId: bigint) {
+  const params = new URLSearchParams();
+  params.set('groupId', groupId.toString());
+  params.set('senderId', senderId.toString());
+  return `/chat/group/sender?${params.toString()}`;
 }
 
 export function buildGroupChatDetailUrl(groupId: bigint): UrlObject {
@@ -205,6 +232,26 @@ function countMentionTokenOccurrences(content: string, token: string) {
   return Array.from(content.matchAll(new RegExp(`${escapeRegExp(token)}${tokenBoundary}`, 'gu'))).length;
 }
 
+const MENTION_ALL_TOKEN_PATTERN = /(^|[\s,，。.!?！？;；:：、([{（【])(@(?:all|全部|全体))(?=$|\s|[,.!?;:，。！？；：、)）\]】])/giu;
+
+export function hasMentionAllToken(content: string) {
+  MENTION_ALL_TOKEN_PATTERN.lastIndex = 0;
+  return MENTION_ALL_TOKEN_PATTERN.test(content);
+}
+
+export function addMentionAllToken(content: string) {
+  if (hasMentionAllToken(content)) return content;
+  const trimmedEnd = /\s$/.test(content) || content.length === 0 ? content : `${content} `;
+  return `${trimmedEnd}@全部 `;
+}
+
+export function removeMentionAllTokens(content: string) {
+  return content
+    .replace(MENTION_ALL_TOKEN_PATTERN, (match, prefix) => prefix)
+    .replace(/[ \t]{2,}/g, ' ')
+    .trimStart();
+}
+
 export function parseComposerMentions(
   content: string,
   selectedSenderIds: bigint[],
@@ -250,7 +297,7 @@ export function parseComposerMentions(
 
   return {
     mentionedSenderIds,
-    mentionAll: content.includes('@全部'),
+    mentionAll: hasMentionAllToken(content),
     duplicateCount,
     invalidSenderIds: mentionedSenderIds.filter((senderId) => senderId <= BigInt(0)),
     overLimitCount: Math.max(0, mentionedSenderIds.length - MAX_MENTIONED_SENDER_IDS),
@@ -283,6 +330,15 @@ export function formatMessageTime(timestamp: bigint | undefined) {
   const time = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   if (sameDay) return time;
   return `${date.getMonth() + 1}/${date.getDate()} ${time}`;
+}
+
+export function formatMessageFullTime(timestamp: bigint | undefined) {
+  if (!timestamp || timestamp <= BigInt(0)) return '';
+  const date = new Date(Number(timestamp) * 1000);
+  if (!Number.isFinite(date.getTime())) return '';
+  const dateLabel = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+  const timeLabel = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  return `${dateLabel} ${timeLabel}`;
 }
 
 export function messageTimestampMs(message: ParsedGroupChatMessage | undefined) {

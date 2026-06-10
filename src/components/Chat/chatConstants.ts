@@ -3,6 +3,7 @@ export const FIRST_TOKEN_SYMBOL = process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL || 
 export const MAX_MENTIONED_SENDER_IDS = 32;
 export const BAN_LIST_PAGE_SIZE = 5;
 export const MEMBER_PAGE_SIZE = 20;
+export const MENTION_ALL_PAGE_SIZE = 20;
 export const DEFAULT_MESSAGE_WINDOW_SIZE = 100;
 export const MESSAGE_PAGE_SIZE = 100;
 export const MESSAGE_TIME_DIVIDER_GAP_MS = 5 * 60 * 1000;
@@ -17,6 +18,8 @@ export const CACHED_GROUP_SETS_CHANGED_EVENT = 'love20-chat:cached-group-sets-ch
 export const MESSAGE_PREFERENCES_STORAGE_KEY = 'love20-chat:message-preferences:v3';
 export const READ_CURSORS_STORAGE_KEY = 'love20-chat:read-cursors:v1';
 export const READ_CURSORS_CHANGED_EVENT = 'love20-chat:read-cursors-changed';
+export const MENTION_ALL_READ_CURSORS_STORAGE_KEY = 'love20-chat:mention-all-read-cursors:v1';
+export const MENTION_ALL_READ_CURSORS_CHANGED_EVENT = 'love20-chat:mention-all-read-cursors-changed';
 
 export const CAN_POST_REASON_LABELS: Record<string, string> = {
   '0x00000000': '可以发言',

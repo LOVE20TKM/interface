@@ -132,7 +132,23 @@ const FREQUENCY_RANK: Record<GroupChatSyncFrequency, number> = {
 };
 const SYNC_TICK_MS = 5 * 1000;
 const REFRESH_DEBOUNCE_MS = 600;
-const ROOM_QUERY_FUNCTIONS = new Set(['chatInfo', 'message', 'messages', 'messagesCount']);
+const ROOM_QUERY_FUNCTIONS = new Set([
+  'chatInfo',
+  'message',
+  'messageIdsByMention',
+  'messageIdsByMentionAll',
+  'messageIdsBySender',
+  'messages',
+  'messagesByMention',
+  'messagesByMentionAll',
+  'messagesByMentionAllCount',
+  'messagesByMentionCount',
+  'messagesByRound',
+  'messagesByRoundCount',
+  'messagesBySender',
+  'messagesBySenderCount',
+  'messagesCount',
+]);
 const COUNT_BASELINES_STORAGE_KEY = 'love20-chat:count-baselines:v1';
 
 function uniquePositiveGroupIds(groupIds: readonly (bigint | undefined)[]) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment } from 'react';
+import Link from 'next/link';
 import { ArrowUp, Loader2 } from 'lucide-react';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import type { GroupChatPublicData, ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
@@ -8,6 +9,9 @@ import { cn } from '@/lib/utils';
 import {
   formatMessageDividerTime,
   formatMessageTime,
+  buildGroupChatMentionAllHref,
+  buildGroupChatMentionMeHref,
+  buildGroupChatSenderHref,
   messageTimestampMs,
   quotedMessageSummary,
   sameAddress,
@@ -20,7 +24,11 @@ function escapeRegExp(value: string) {
 
 function messageMentionTokens(message: ParsedGroupChatMessage, senderNames: Record<string, string>) {
   const tokens = new Set<string>();
-  if (message.mentionAll) tokens.add('@全部');
+  if (message.mentionAll) {
+    tokens.add('@全部');
+    tokens.add('@全体');
+    tokens.add('@all');
+  }
   message.mentionedSenderIds.forEach((senderId) => {
     const key = senderId.toString();
     const name = senderNames[key];
@@ -42,6 +50,7 @@ function renderMessageContent(message: ParsedGroupChatMessage, senderNames: Reco
 
 export function ChatMessageList({
   account,
+  currentSenderId,
   data,
   groupId,
   messageListRef,
@@ -64,6 +73,7 @@ export function ChatMessageList({
   onOpenBanSettings,
 }: {
   account: `0x${string}` | undefined;
+  currentSenderId: bigint | undefined;
   data: GroupChatPublicData;
   groupId: bigint;
   messageListRef: React.RefObject<HTMLDivElement>;
@@ -154,6 +164,8 @@ export function ChatMessageList({
             const messageKey = message.messageId.toString();
             const messageTime = showMessageTimes ? formatMessageTime(message.timestamp) : '';
             const quotePreview = quoted ? quotedMessageSummary(quoted, 72) : '引用消息未在当前分页中';
+            const mentionsMe = currentSenderId !== undefined &&
+              message.mentionedSenderIds.some((senderId) => senderId === currentSenderId);
             const canOpenBanSettings =
               !mine && ((canUseMessageAdminBan && messageAdminCanOperate) || (canUseMessageGovBan && canVoteMessageGovBan));
 
@@ -176,12 +188,42 @@ export function ChatMessageList({
                       {messageTime && <span className="message-meta-time">{messageTime}</span>}
                       {banned && <span className="message-ban-badge">禁言</span>}
                     </div>
-                    <div className={cn('message-bubble', mine && 'mine', message.quotedMessageId > BigInt(0) && 'with-quote')}>
+                    <div
+                      className={cn(
+                        'message-bubble',
+                        mine && 'mine',
+                        mentionsMe && !message.mentionAll && 'mention-me',
+                        message.mentionAll && 'mention-all',
+                        message.quotedMessageId > BigInt(0) && 'with-quote',
+                      )}
+                    >
                       {message.quotedMessageId > BigInt(0) && (
                         <div className={cn('quote-preview', !quoted && 'unavailable')}>{quotePreview}</div>
                       )}
                       {renderMessageContent(message, data.senderNames)}
                     </div>
+                    {(message.mentionAll || mentionsMe) && (
+                      <div className="message-mention-notes">
+                        {message.mentionAll && (
+                          <Link
+                            className="message-mention-note mention-all"
+                            href={buildGroupChatMentionAllHref(groupId)}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            @全部
+                          </Link>
+                        )}
+                        {mentionsMe && (
+                          <Link
+                            className="message-mention-note mention-me"
+                            href={buildGroupChatMentionMeHref(groupId)}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            @我
+                          </Link>
+                        )}
+                      </div>
+                    )}
                     {activeMenuMessageId === messageKey && (
                       <div
                         className="message-actions"
@@ -189,6 +231,7 @@ export function ChatMessageList({
                         onClick={(event) => event.stopPropagation()}
                       >
                         <button type="button" title="提及" onClick={() => onMentionSender(message)}>提及</button>
+                        <Link href={buildGroupChatSenderHref(groupId, message.senderId)} title="只看Ta">只看Ta</Link>
                         <button type="button" title="引用" onClick={() => onQuoteMessage(message)}>引用</button>
                         <button type="button" title="复制" onClick={() => onCopyMessage(message)}>复制</button>
                         <button type="button" title="详情" onClick={() => onOpenMessageDetail(message)}>详情</button>

@@ -18,6 +18,12 @@ import {
   useGroupChatInfo,
   useGroupChatInfos,
   useGroupChatMessages,
+  useGroupChatMessagesByMention,
+  useGroupChatMessagesByMentionAll,
+  useGroupChatMessagesByMentionAllCount,
+  useGroupChatMessagesByMentionCount,
+  useGroupChatMessagesBySender,
+  useGroupChatMessagesBySenderCount,
   useGroupChatMessagesCount,
 } from '@/src/hooks/contracts/useGroupChat';
 import { useDefaultGroupOf } from '@/src/hooks/extension/base/contracts/useGroupDefaults';
@@ -40,6 +46,9 @@ import {
   type GroupChatKind,
   type GroupChatListItem,
   type GroupChatAccountData,
+  type GroupChatMentionAllData,
+  type GroupChatMentionData,
+  type GroupChatSenderData,
   type GroupChatPublicData,
   type ParsedGroupChatInfo,
   type ParsedGroupChatMessage,
@@ -52,6 +61,9 @@ export {
   type GroupChatKind,
   type GroupChatListItem,
   type GroupChatAccountData,
+  type GroupChatMentionAllData,
+  type GroupChatMentionData,
+  type GroupChatSenderData,
   type GroupChatPublicData,
   type ParsedGroupChatInfo,
   type ParsedGroupChatMessage,
@@ -853,6 +865,214 @@ export function useGroupChatPublicData(
       refetchMessages();
       refetchQuotedMessages();
       refetchMessageBans();
+      refetchNames();
+    },
+  };
+}
+
+export function useGroupChatMentionAllData(
+  groupId: bigint | undefined,
+  offset: bigint = BigInt(0),
+  limit: bigint = BigInt(20),
+  reverse: boolean = true,
+): GroupChatMentionAllData {
+  const {
+    messagesCount,
+    isPending: isPendingCount,
+    isFetching: isFetchingCount,
+    error: countError,
+    refetch: refetchCount,
+  } = useGroupChatMessagesByMentionAllCount(groupId);
+  const readLimit =
+    messagesCount === undefined || offset >= messagesCount
+      ? BigInt(0)
+      : messagesCount - offset < limit
+        ? messagesCount - offset
+        : limit;
+  const {
+    messages: rawMessages,
+    isPending: isPendingMessages,
+    isFetching: isFetchingMessages,
+    error: messagesError,
+    refetch: refetchMessages,
+  } = useGroupChatMessagesByMentionAll(groupId, offset, readLimit, reverse, readLimit > BigInt(0));
+  const messages = useMemo(
+    () =>
+      rawMessages
+        .map((message) => parseGroupChatMessage(message))
+        .filter((message): message is ParsedGroupChatMessage => !!message && (!groupId || message.groupId === groupId)),
+    [groupId, rawMessages],
+  );
+  const senderIds = useMemo(
+    () =>
+      uniqueBigInts([
+        groupId,
+        ...messages.flatMap((message) => [message.senderId, ...message.mentionedSenderIds]),
+      ]),
+    [groupId, messages],
+  );
+  const {
+    groupNames,
+    isPending: isPendingNames,
+    isFetching: isFetchingNames,
+    refetch: refetchNames,
+  } = useGroupNames(senderIds, senderIds.length > 0);
+
+  return {
+    groupId,
+    messagesCount,
+    messages,
+    senderNames: groupNames,
+    isPending: isPendingCount || isPendingMessages || isPendingNames,
+    isFetching: isFetchingCount || isFetchingMessages || isFetchingNames,
+    error: countError || messagesError,
+    refetch: () => {
+      refetchCount();
+      refetchMessages();
+      refetchNames();
+    },
+  };
+}
+
+export function useGroupChatMentionData(
+  groupId: bigint | undefined,
+  mentionedSenderId: bigint | undefined,
+  offset: bigint = BigInt(0),
+  limit: bigint = BigInt(20),
+  reverse: boolean = true,
+): GroupChatMentionData {
+  const {
+    messagesCount,
+    isPending: isPendingCount,
+    isFetching: isFetchingCount,
+    error: countError,
+    refetch: refetchCount,
+  } = useGroupChatMessagesByMentionCount(groupId, mentionedSenderId);
+  const readLimit =
+    messagesCount === undefined || offset >= messagesCount
+      ? BigInt(0)
+      : messagesCount - offset < limit
+        ? messagesCount - offset
+        : limit;
+  const {
+    messages: rawMessages,
+    isPending: isPendingMessages,
+    isFetching: isFetchingMessages,
+    error: messagesError,
+    refetch: refetchMessages,
+  } = useGroupChatMessagesByMention(groupId, mentionedSenderId, offset, readLimit, reverse, readLimit > BigInt(0));
+  const messages = useMemo(
+    () =>
+      rawMessages
+        .map((message) => parseGroupChatMessage(message))
+        .filter(
+          (message): message is ParsedGroupChatMessage =>
+            !!message &&
+            (!groupId || message.groupId === groupId) &&
+            (!mentionedSenderId || message.mentionedSenderIds.some((senderId) => senderId === mentionedSenderId)),
+        ),
+    [groupId, mentionedSenderId, rawMessages],
+  );
+  const senderIds = useMemo(
+    () =>
+      uniqueBigInts([
+        groupId,
+        mentionedSenderId,
+        ...messages.flatMap((message) => [message.senderId, ...message.mentionedSenderIds]),
+      ]),
+    [groupId, mentionedSenderId, messages],
+  );
+  const {
+    groupNames,
+    isPending: isPendingNames,
+    isFetching: isFetchingNames,
+    refetch: refetchNames,
+  } = useGroupNames(senderIds, senderIds.length > 0);
+
+  return {
+    groupId,
+    mentionedSenderId,
+    messagesCount,
+    messages,
+    senderNames: groupNames,
+    isPending: isPendingCount || isPendingMessages || isPendingNames,
+    isFetching: isFetchingCount || isFetchingMessages || isFetchingNames,
+    error: countError || messagesError,
+    refetch: () => {
+      refetchCount();
+      refetchMessages();
+      refetchNames();
+    },
+  };
+}
+
+export function useGroupChatSenderData(
+  groupId: bigint | undefined,
+  senderId: bigint | undefined,
+  offset: bigint = BigInt(0),
+  limit: bigint = BigInt(20),
+  reverse: boolean = true,
+): GroupChatSenderData {
+  const {
+    messagesCount,
+    isPending: isPendingCount,
+    isFetching: isFetchingCount,
+    error: countError,
+    refetch: refetchCount,
+  } = useGroupChatMessagesBySenderCount(groupId, senderId);
+  const readLimit =
+    messagesCount === undefined || offset >= messagesCount
+      ? BigInt(0)
+      : messagesCount - offset < limit
+        ? messagesCount - offset
+        : limit;
+  const {
+    messages: rawMessages,
+    isPending: isPendingMessages,
+    isFetching: isFetchingMessages,
+    error: messagesError,
+    refetch: refetchMessages,
+  } = useGroupChatMessagesBySender(groupId, senderId, offset, readLimit, reverse, readLimit > BigInt(0));
+  const messages = useMemo(
+    () =>
+      rawMessages
+        .map((message) => parseGroupChatMessage(message))
+        .filter(
+          (message): message is ParsedGroupChatMessage =>
+            !!message &&
+            (!groupId || message.groupId === groupId) &&
+            (!senderId || message.senderId === senderId),
+        ),
+    [groupId, rawMessages, senderId],
+  );
+  const senderIds = useMemo(
+    () =>
+      uniqueBigInts([
+        groupId,
+        senderId,
+        ...messages.flatMap((message) => [message.senderId, ...message.mentionedSenderIds]),
+      ]),
+    [groupId, messages, senderId],
+  );
+  const {
+    groupNames,
+    isPending: isPendingNames,
+    isFetching: isFetchingNames,
+    refetch: refetchNames,
+  } = useGroupNames(senderIds, senderIds.length > 0);
+
+  return {
+    groupId,
+    senderId,
+    messagesCount,
+    messages,
+    senderNames: groupNames,
+    isPending: isPendingCount || isPendingMessages || isPendingNames,
+    isFetching: isFetchingCount || isFetchingMessages || isFetchingNames,
+    error: countError || messagesError,
+    refetch: () => {
+      refetchCount();
+      refetchMessages();
       refetchNames();
     },
   };
