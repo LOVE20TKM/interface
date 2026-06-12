@@ -832,9 +832,9 @@
 }
 
 .chatPrototype :global(.settings-screen) {
-  height: calc(100dvh - 72px);
   padding-top: 12px;
-  overflow-y: auto;
+  padding-bottom: 12px;
+  scroll-padding-bottom: 12px;
 }
 
 .chatPrototype :global(.settings-workspace) {

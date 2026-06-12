@@ -23,7 +23,7 @@ const GroupChatSettingsPage: NextPage = () => {
   return (
     <>
       <Header title="群设置" backUrl={backUrl} replaceBack />
-      <main className={styles.chatPrototype} data-detail="false">
+      <main className={styles.chatPrototype} data-detail="false" data-entry="love20-chat-settings">
         {groupId ? (
           <ChatSettingsPanel
             groupId={groupId}
