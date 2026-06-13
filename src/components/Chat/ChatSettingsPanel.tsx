@@ -20,6 +20,10 @@ import {
   GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS,
   GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS,
   GROUP_CHAT_MEMBER_SCOPE_ADDRESS,
+  isAdminBanSourceEnabled,
+  isGovVotedBanSourceEnabled,
+  isGroupJoinScopeSourceEnabled,
+  isGroupMemberScopeEnabled,
   useGroupOwnerOrDelegatePermission,
 } from '@/src/hooks/contracts/useGroupChatModeration';
 import {
@@ -68,7 +72,7 @@ function explainScopeContract(address?: `0x${string}`): ContractExplanation {
       status: '开放',
     };
   }
-  if (sameAddress(address, GROUP_CHAT_MEMBER_SCOPE_ADDRESS)) {
+  if (isGroupMemberScopeEnabled && sameAddress(address, GROUP_CHAT_MEMBER_SCOPE_ADDRESS)) {
     return {
       label: '成员名单规则',
       title: '成员名单发言',
@@ -76,7 +80,7 @@ function explainScopeContract(address?: `0x${string}`): ContractExplanation {
       status: '成员制',
     };
   }
-  if (sameAddress(address, GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS)) {
+  if (isGroupJoinScopeSourceEnabled && sameAddress(address, GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS)) {
     return {
       label: 'GroupJoinScopeSource',
       title: '成员名单或加入关系',
@@ -118,7 +122,7 @@ function explainBanContract(address?: `0x${string}`): ContractExplanation {
       status: '未启用',
     };
   }
-  if (sameAddress(address, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS)) {
+  if (isAdminBanSourceEnabled && sameAddress(address, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS)) {
     return {
       label: 'AdminBanSource',
       title: '管理员禁言名单',
@@ -126,7 +130,7 @@ function explainBanContract(address?: `0x${string}`): ContractExplanation {
       status: '管理员维护',
     };
   }
-  if (sameAddress(address, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS)) {
+  if (isGovVotedBanSourceEnabled && sameAddress(address, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS)) {
     return {
       label: 'GovVotedBanSource',
       title: '治理投票禁言',

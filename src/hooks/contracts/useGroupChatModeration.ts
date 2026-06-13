@@ -58,22 +58,30 @@ const GROUP_JOIN_SCOPE_SOURCE_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS
   | `0x${string}`
   | undefined;
 
-const getGroupAdminAddress = () => (GROUP_ADMIN_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
-const getGroupMemberAddress = () => (GROUP_MEMBER_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
-const getGroupBanListAddress = () => (GROUP_BAN_LIST_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
-const getGroupJoinAddress = () => (GROUP_JOIN_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
-const getAdminBanSourceAddress = () => (ADMIN_BAN_SOURCE_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
-const getGovVotedBanSourceAddress = () => (GOV_VOTED_BAN_SOURCE_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
-const getGroupMemberScopeAddress = () => (GROUP_MEMBER_SCOPE_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
-const getGroupJoinScopeSourceAddress = () => (GROUP_JOIN_SCOPE_SOURCE_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
+const isConfiguredContractAddress = (address: `0x${string}` | undefined) =>
+  typeof address === 'string' &&
+  /^0x[0-9a-fA-F]{40}$/.test(address) &&
+  address.toLowerCase() !== ZERO_ADDRESS;
+const configuredOrZero = (address: `0x${string}` | undefined) =>
+  (isConfiguredContractAddress(address) ? address : ZERO_ADDRESS) as `0x${string}`;
 
-export const isGroupAdminEnabled = !!GROUP_ADMIN_ADDRESS;
-export const isGroupMemberEnabled = !!GROUP_MEMBER_ADDRESS;
-export const isGroupBanListEnabled = !!GROUP_BAN_LIST_ADDRESS;
-export const isGroupJoinEnabled = !!GROUP_JOIN_ADDRESS;
-export const isGovVotedBanSourceEnabled = !!GOV_VOTED_BAN_SOURCE_ADDRESS;
-export const isGroupMemberScopeEnabled = !!GROUP_MEMBER_SCOPE_ADDRESS;
-export const isGroupJoinScopeSourceEnabled = !!GROUP_JOIN_SCOPE_SOURCE_ADDRESS;
+const getGroupAdminAddress = () => configuredOrZero(GROUP_ADMIN_ADDRESS);
+const getGroupMemberAddress = () => configuredOrZero(GROUP_MEMBER_ADDRESS);
+const getGroupBanListAddress = () => configuredOrZero(GROUP_BAN_LIST_ADDRESS);
+const getGroupJoinAddress = () => configuredOrZero(GROUP_JOIN_ADDRESS);
+const getAdminBanSourceAddress = () => configuredOrZero(ADMIN_BAN_SOURCE_ADDRESS);
+const getGovVotedBanSourceAddress = () => configuredOrZero(GOV_VOTED_BAN_SOURCE_ADDRESS);
+const getGroupMemberScopeAddress = () => configuredOrZero(GROUP_MEMBER_SCOPE_ADDRESS);
+const getGroupJoinScopeSourceAddress = () => configuredOrZero(GROUP_JOIN_SCOPE_SOURCE_ADDRESS);
+
+export const isGroupAdminEnabled = isConfiguredContractAddress(GROUP_ADMIN_ADDRESS);
+export const isGroupMemberEnabled = isConfiguredContractAddress(GROUP_MEMBER_ADDRESS);
+export const isGroupBanListEnabled = isConfiguredContractAddress(GROUP_BAN_LIST_ADDRESS);
+export const isGroupJoinEnabled = isConfiguredContractAddress(GROUP_JOIN_ADDRESS);
+export const isAdminBanSourceEnabled = isConfiguredContractAddress(ADMIN_BAN_SOURCE_ADDRESS);
+export const isGovVotedBanSourceEnabled = isConfiguredContractAddress(GOV_VOTED_BAN_SOURCE_ADDRESS);
+export const isGroupMemberScopeEnabled = isConfiguredContractAddress(GROUP_MEMBER_SCOPE_ADDRESS);
+export const isGroupJoinScopeSourceEnabled = isConfiguredContractAddress(GROUP_JOIN_SCOPE_SOURCE_ADDRESS);
 export const GROUP_CHAT_ADMIN_ADDRESS = getGroupAdminAddress();
 export const GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS = getAdminBanSourceAddress();
 export const GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS = getGovVotedBanSourceAddress();

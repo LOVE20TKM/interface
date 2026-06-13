@@ -13,6 +13,8 @@ import {
 import {
   GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS,
   GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS,
+  isAdminBanSourceEnabled,
+  isGovVotedBanSourceEnabled,
   useGroupAdminOperatorPermission,
   useGroupMentionAllPermission,
 } from '@/src/hooks/contracts/useGroupChatModeration';
@@ -110,8 +112,10 @@ export function GroupChatPanel({
     groupId,
     tokenAddress && tokenSymbol ? { address: tokenAddress, symbol: tokenSymbol } : undefined,
   );
-  const activeGovBanSource = sameAddress(publicData.chatInfo?.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS);
-  const activeAdminBanSource = sameAddress(publicData.chatInfo?.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS);
+  const activeGovBanSource =
+    isGovVotedBanSourceEnabled && sameAddress(publicData.chatInfo?.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS);
+  const activeAdminBanSource =
+    isAdminBanSourceEnabled && sameAddress(publicData.chatInfo?.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS);
   const messageGovVotingPower = useGroupChatVotingPower(
     groupId,
     publicData.chatInfo?.owner,

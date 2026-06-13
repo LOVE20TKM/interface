@@ -8,6 +8,7 @@ import { useGroupChatVotingPower } from '@/src/hooks/contracts/useGroupChatManag
 import {
   GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS,
   GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS,
+  isAdminBanSourceEnabled,
   isGovVotedBanSourceEnabled,
   isGroupBanListEnabled,
   useAdminBanQuery,
@@ -48,7 +49,7 @@ import { BanListQueryControls } from './BanListQueryControls';
 import { AdminBanListRows, GovBanListRows } from './BanListRows';
 import { GroupDetailHeader, useGroupDetailSubtitle } from './ChatGroupDetailHeader';
 import { GovVoterSheet } from './GovVoterSheet';
-import { BAN_LIST_PAGE_SIZE } from './chatConstants';
+import { BAN_LIST_PAGE_SIZE, ZERO_ADDRESS } from './chatConstants';
 import {
   formatGovWeightShare,
   govBanListMechanismText,
@@ -143,8 +144,12 @@ export function BanListPanel({
     () => parseGroupChatMessage(messageQuery.message),
     [messageQuery.message],
   );
-  const activeAdminBanSource = sameAddress(publicData.chatInfo?.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS);
-  const activeGovBanSource = sameAddress(publicData.chatInfo?.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS);
+  const activeAdminBanSource =
+    isAdminBanSourceEnabled && sameAddress(publicData.chatInfo?.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS);
+  const activeGovBanSource =
+    isGovVotedBanSourceEnabled && sameAddress(publicData.chatInfo?.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS);
+  const hasActiveBanSource = activeAdminBanSource || activeGovBanSource;
+  const hasNoBanSource = sameAddress(publicData.chatInfo?.banSource, ZERO_ADDRESS);
   const {
     queryType,
     setQueryType,
@@ -345,9 +350,13 @@ export function BanListPanel({
   const govBanRuleText = activeGovBanSource && !govVotingPower.isPending && !govBanMechanism.isPending
     ? govBanListMechanismText(govVotingPower.totalVoteWeight, govBanMechanism.banThresholdRatio, govBanMechanism.precision, govBanMechanism.minSupportToOpposeRatio)
     : '';
-  const permissionStatusDetail = !account
-    ? '连接钱包后才能判断当前地址是否可维护禁言名单或参与治理禁言。'
-    : activeAdminBanSource
+  const permissionStatusDetail = !publicData.chatInfo
+    ? '正在读取禁言源。'
+    : !hasActiveBanSource
+      ? '这个群当前没有启用可维护或可投票的禁言源。'
+      : !account
+        ? '连接钱包后才能判断当前地址是否可维护禁言名单或参与治理禁言。'
+        : activeAdminBanSource
       ? adminBanPermission.isPending
         ? adminPermissionRuleText
         : adminBanPermissionReason(adminBanPermission, groupId)
@@ -362,6 +371,12 @@ export function BanListPanel({
           })
         : '这个群当前没有启用可维护或可投票的禁言源。';
   const permissionSummary = (() => {
+    if (publicData.isPending && !publicData.chatInfo) {
+      return { text: '读取中', tone: 'loading' as const };
+    }
+    if (!hasActiveBanSource) {
+      return { text: '未启用', tone: 'neutral' as const };
+    }
     if (!account) {
       return { text: '未知', tone: 'neutral' as const };
     }
@@ -978,14 +993,14 @@ export function BanListPanel({
     ? accountData.defaultSenderName || `NFT #${accountData.defaultSenderId.toString()}`
     : '未设置默认 NFT';
   const myBanSummary = (() => {
-    if (!account) {
-      return { text: '连接钱包后查看我的禁言状态', tone: 'neutral' as const };
-    }
     if (publicData.isPending && !publicData.chatInfo) {
       return { text: '正在读取禁言源', tone: 'loading' as const };
     }
-    if (!activeAdminBanSource && !activeGovBanSource) {
+    if (!hasActiveBanSource) {
       return { text: '未启用禁言源', tone: 'neutral' as const };
+    }
+    if (!account) {
+      return { text: '连接钱包后查看我的禁言状态', tone: 'neutral' as const };
     }
     if (myAddressBanPending || (accountData.defaultSenderId && myNftBanPending)) {
       return { text: '正在检查禁言状态', tone: 'loading' as const };
@@ -998,6 +1013,11 @@ export function BanListPanel({
     }
     return { text: '未被禁言', tone: 'ok' as const };
   })();
+  const myAddressTone = !hasActiveBanSource ? 'neutral' : myAddressBanPending ? 'loading' : myAddressBanned ? 'danger' : 'ok';
+  const myNftTone = !hasActiveBanSource ? 'neutral' : myNftBanPending ? 'loading' : myNftBanned ? 'danger' : 'ok';
+  const myBanStatusHint = hasActiveBanSource
+    ? '地址或默认 NFT 任一被禁言，都会命中禁言规则；完整发言资格还取决于发言范围和群聊状态。'
+    : '当前群聊未挂载禁言源；完整发言资格仍取决于发言范围和群聊状态。';
 
   return (
     <section className="workspace-screen ban-list-screen">
@@ -1026,34 +1046,38 @@ export function BanListPanel({
             </div>
           )}
         />
-        <div className="ban-list-work-section">
-          <BanListQueryControls
-            queryType={queryType}
-            queryInput={queryInput}
-            nftLookupMode={nftLookup.lookupMode}
-            nftLookupValue={nftLookup.lookupValue}
-            nftLookupResult={nftLookup.lookupResult}
-            onQueryTypeChange={(value) => {
-              setQueryType(value);
-              setQueryTarget(undefined);
-            }}
-            onQueryInputChange={(value) => {
-              setQueryInput(value);
-              setQueryTarget(undefined);
-              if (queryType === 'message') setActiveMessageId(undefined);
-            }}
-            onNftLookupModeChange={(mode) => {
-              nftLookup.setLookupMode(mode);
-              setQueryTarget(undefined);
-            }}
-            onNftLookupValueChange={(value) => {
-              nftLookup.setLookupValue(value);
-              setQueryTarget(undefined);
-            }}
-            onQuery={submitQuery}
-          />
-        </div>
-        {queryType === 'mine' && (
+        {hasNoBanSource ? (
+          <div className="empty-state">本群未启用禁言源；当前没有禁言名单可查询。</div>
+        ) : (
+          <>
+            <div className="ban-list-work-section">
+              <BanListQueryControls
+                queryType={queryType}
+                queryInput={queryInput}
+                nftLookupMode={nftLookup.lookupMode}
+                nftLookupValue={nftLookup.lookupValue}
+                nftLookupResult={nftLookup.lookupResult}
+                onQueryTypeChange={(value) => {
+                  setQueryType(value);
+                  setQueryTarget(undefined);
+                }}
+                onQueryInputChange={(value) => {
+                  setQueryInput(value);
+                  setQueryTarget(undefined);
+                  if (queryType === 'message') setActiveMessageId(undefined);
+                }}
+                onNftLookupModeChange={(mode) => {
+                  nftLookup.setLookupMode(mode);
+                  setQueryTarget(undefined);
+                }}
+                onNftLookupValueChange={(value) => {
+                  nftLookup.setLookupValue(value);
+                  setQueryTarget(undefined);
+                }}
+                onQuery={submitQuery}
+              />
+            </div>
+            {queryType === 'mine' && (
           <div className={cn('query-result ban-list-query-result message-sender-result my-ban-query-result', `tone-${myBanSummary.tone}`)}>
             <div className="my-ban-query-head">
               <strong className="message-sender-heading">我的禁言状态</strong>
@@ -1062,7 +1086,7 @@ export function BanListPanel({
             <div className="my-ban-status-grid">
               <div className="ban-status-object-row">
                 <code title={account}>{account ? abbreviateAddress(account) : '未连接钱包'}</code>
-                <span className={cn('pill', banStatusPillClass(myAddressBanPending ? 'loading' : myAddressBanned ? 'danger' : 'ok'))}>
+                <span className={cn('pill', banStatusPillClass(myAddressTone))}>
                   {account ? banStateText(myAddressBanPending, myAddressBanned) : '未查询'}
                 </span>
               </div>
@@ -1071,12 +1095,12 @@ export function BanListPanel({
                   <strong>{defaultNftLabel}</strong>
                   {accountData.defaultSenderId && <small>NFT #{accountData.defaultSenderId.toString()}</small>}
                 </span>
-                <span className={cn('pill', banStatusPillClass(myNftBanPending ? 'loading' : myNftBanned ? 'danger' : 'ok'))}>
+                <span className={cn('pill', banStatusPillClass(myNftTone))}>
                   {accountData.defaultSenderId ? banStateText(myNftBanPending, myNftBanned) : '未查询'}
                 </span>
               </div>
             </div>
-            <small className="my-ban-status-hint">地址或默认 NFT 任一被禁言，都会命中禁言规则；完整发言资格还取决于发言范围和群聊状态。</small>
+            <small className="my-ban-status-hint">{myBanStatusHint}</small>
             {activeGovBanSource && (
               <button
                 className="sheet-button inline-flex my-ban-status-action"
@@ -1092,8 +1116,8 @@ export function BanListPanel({
               <small className="my-ban-status-hint">当前无治理票权。点击“反对禁言”可前往添加治理票。</small>
             )}
           </div>
-        )}
-        {queryType === 'message' && activeMessageId && (
+            )}
+            {queryType === 'message' && activeMessageId && (
           <div className={cn('query-result ban-list-query-result message-sender-result', `tone-${messageSenderTone}`)}>
             {messageQuery.isPending ? (
               <div className="message-sender-result-loading">正在读取消息 #{activeMessageId.toString()}</div>
@@ -1174,8 +1198,8 @@ export function BanListPanel({
               <div className="message-sender-result-loading">没有读到消息 #{activeMessageId.toString()}，请确认消息仍存在。</div>
             )}
           </div>
-        )}
-        {queryTarget && (
+            )}
+            {queryTarget && (
           <div className={cn('query-result ban-list-query-result ban-list-standard-result', `tone-${queryResultTone}`)}>
             <span className="ban-list-query-summary">
               <span className="ban-list-query-sentence">{queryResultSentence}</span>
@@ -1202,8 +1226,8 @@ export function BanListPanel({
               </div>
             )}
           </div>
-        )}
-        {activeGovTarget && (
+            )}
+            {activeGovTarget && (
           <GovVoterSheet
             target={activeGovTarget}
             voters={govVoters.voters}
@@ -1226,8 +1250,8 @@ export function BanListPanel({
             onPageChange={setVoterPage}
             onClose={() => setActiveGovTarget(undefined)}
           />
-        )}
-        {activeAdminBanSource && listMode && (
+            )}
+            {activeAdminBanSource && listMode && (
           <AdminBanListRows
             queryType={listMode}
             rows={visibleAdminRows}
@@ -1244,8 +1268,8 @@ export function BanListPanel({
             onRemoveSender={removeSenderBan}
             onPageChange={setAdminPage}
           />
-        )}
-        {activeGovBanSource && listMode && (
+            )}
+            {activeGovBanSource && listMode && (
           <GovBanListRows
             queryType={listMode}
             rows={visibleGovRows}
@@ -1268,6 +1292,8 @@ export function BanListPanel({
             onOpenSenderVoters={openGovSenderVoters}
             onPageChange={setGovPage}
           />
+            )}
+          </>
         )}
       </section>
     </section>

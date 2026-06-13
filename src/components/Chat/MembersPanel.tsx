@@ -5,6 +5,8 @@ import { Info, Loader2, Trash2 } from 'lucide-react';
 import {
   GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS,
   GROUP_CHAT_MEMBER_SCOPE_ADDRESS,
+  isGroupJoinScopeSourceEnabled,
+  isGroupMemberScopeEnabled,
   useAddGroupMembers,
   useGroupAdminOperatorPermission,
   useGroupJoinParticipationCount,
@@ -62,9 +64,12 @@ export function MembersPanel({
   const addTx = useAddGroupMembers();
   const removeTx = useRemoveGroupMembers();
   const managerScope = managerMemberScopeDescription(publicData.chatInfo?.owner);
-  const hasGroupMemberScope = sameAddress(publicData.chatInfo?.scopeSource, GROUP_CHAT_MEMBER_SCOPE_ADDRESS);
-  const hasGroupJoinScope = sameAddress(publicData.chatInfo?.scopeSource, GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS);
+  const hasGroupMemberScope =
+    isGroupMemberScopeEnabled && sameAddress(publicData.chatInfo?.scopeSource, GROUP_CHAT_MEMBER_SCOPE_ADDRESS);
+  const hasGroupJoinScope =
+    isGroupJoinScopeSourceEnabled && sameAddress(publicData.chatInfo?.scopeSource, GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS);
   const hasOpenScope = sameAddress(publicData.chatInfo?.scopeSource, ZERO_ADDRESS);
+  const hasNoBanSource = sameAddress(publicData.chatInfo?.banSource, ZERO_ADDRESS);
   const hasMemberListScope = !managerScope && (hasGroupMemberScope || hasGroupJoinScope);
   const memberPermission = useGroupAdminOperatorPermission(groupId, account, hasMemberListScope);
   const members = useGroupMemberIds(groupId, memberOffset, BigInt(MEMBER_PAGE_SIZE), hasMemberListScope);
@@ -217,7 +222,11 @@ export function MembersPanel({
           ? '发言范围包含本群成员名单'
           : '成员资格由该合约规则决定',
     },
-    { label: 'banSource', value: publicData.chatInfo?.banSource, note: '发言禁用规则源' },
+    {
+      label: 'banSource',
+      value: publicData.chatInfo?.banSource,
+      note: hasNoBanSource ? '未挂载禁言源' : '发言禁用规则源',
+    },
     { label: 'beforePostPlugin', value: publicData.chatInfo?.beforePostPlugin, note: '发言前插件' },
     { label: 'afterPostPlugin', value: publicData.chatInfo?.afterPostPlugin, note: '发言后插件' },
   ];
@@ -406,17 +415,26 @@ export function MembersPanel({
           {scopeDescription}
         </div>
         {managerScope || !publicData.chatInfo ? null : !hasMemberListScope ? (
-          <div className="rule-table mt-3">
-            {sourceRules.map((rule) => (
-              <div key={rule.label}>
-                <span>{rule.label}</span>
-                <strong>
-                  {rule.value || '读取中'}
-                  <small>{rule.note}</small>
-                </strong>
+          <>
+            <div className="empty-state">
+              {hasOpenScope
+                ? '本群未启用成员名单；当前为开放发言。'
+                : '本群未启用可维护的成员名单。'}
+            </div>
+            {!hasOpenScope && (
+              <div className="rule-table mt-3">
+                {sourceRules.map((rule) => (
+                  <div key={rule.label}>
+                    <span>{rule.label}</span>
+                    <strong>
+                      {rule.value || '读取中'}
+                      <small>{rule.note}</small>
+                    </strong>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          </>
         ) : (
           <>
             <ChatNftLookupActions

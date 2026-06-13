@@ -7,6 +7,7 @@ import {
   GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS,
   GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS,
   GROUP_CHAT_MEMBER_SCOPE_ADDRESS,
+  isAdminBanSourceEnabled,
   isGroupJoinScopeSourceEnabled,
   isGroupMemberScopeEnabled,
 } from '@/src/hooks/contracts/useGroupChatModeration';
@@ -196,7 +197,7 @@ export function ChainChatActivationDetail({
     customAddress: ZERO_ADDRESS,
   };
   const recommendedBanSource: RuleSlotValue = {
-    selectedKey: GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS !== ZERO_ADDRESS ? 'admin-ban-source' : 'zero',
+    selectedKey: isAdminBanSourceEnabled ? 'admin-ban-source' : 'zero',
     customAddress: ZERO_ADDRESS,
   };
   const recommendedBeforePostPlugin: RuleSlotValue = {
@@ -291,7 +292,7 @@ export function ChainChatActivationDetail({
       address: GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS,
       summary: '管理员可设置禁言名单',
       description: '启用管理员维护的禁言名单。管理员或有权限的操作者可以维护禁言状态，群聊发言前会读取这里判断是否被禁止发言。',
-      enabled: GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS !== ZERO_ADDRESS,
+      enabled: isAdminBanSourceEnabled,
     },
   ];
   const pluginOptions: RuleSlotOption[] = [

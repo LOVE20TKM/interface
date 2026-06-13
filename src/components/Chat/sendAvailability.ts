@@ -9,6 +9,10 @@ import {
   GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS,
   GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS,
   GROUP_CHAT_MEMBER_SCOPE_ADDRESS,
+  isAdminBanSourceEnabled,
+  isGovVotedBanSourceEnabled,
+  isGroupJoinScopeSourceEnabled,
+  isGroupMemberScopeEnabled,
 } from '@/src/hooks/contracts/useGroupChatModeration';
 import type { GroupChatAccountData, ParsedGroupChatInfo } from '@/src/hooks/composite/useGroupChatData';
 import { ZERO_ADDRESS } from './chatConstants';
@@ -78,12 +82,14 @@ const scopeDescriptors: ScopeDescriptor[] = [
   },
   {
     key: 'group-member-scope',
-    matches: (chatInfo) => sameAddress(chatInfo.scopeSource, GROUP_CHAT_MEMBER_SCOPE_ADDRESS),
+    matches: (chatInfo) =>
+      isGroupMemberScopeEnabled && sameAddress(chatInfo.scopeSource, GROUP_CHAT_MEMBER_SCOPE_ADDRESS),
     scopeRejectedMessage: (context) => `${formatDefaultSender(context.accountData)}不在该群成员名单中。`,
   },
   {
     key: 'group-join-scope-source',
-    matches: (chatInfo) => sameAddress(chatInfo.scopeSource, GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS),
+    matches: (chatInfo) =>
+      isGroupJoinScopeSourceEnabled && sameAddress(chatInfo.scopeSource, GROUP_CHAT_JOIN_SCOPE_SOURCE_ADDRESS),
     scopeRejectedMessage: (context) => `当前地址未通过此链群参与行动，${formatDefaultSender(context.accountData)}也不在成员名单中。`,
   },
   {
@@ -96,12 +102,14 @@ const scopeDescriptors: ScopeDescriptor[] = [
 const banDescriptors: BanDescriptor[] = [
   {
     key: 'admin-ban-source',
-    matches: (chatInfo) => sameAddress(chatInfo.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS),
+    matches: (chatInfo) =>
+      isAdminBanSourceEnabled && sameAddress(chatInfo.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS),
     banRejectedMessage: '当前地址或默认 NFT 已被管理员禁言。',
   },
   {
     key: 'gov-voted-ban-source',
-    matches: (chatInfo) => sameAddress(chatInfo.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS),
+    matches: (chatInfo) =>
+      isGovVotedBanSourceEnabled && sameAddress(chatInfo.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS),
     banRejectedMessage: '当前地址或默认 NFT 已被治理禁言。',
   },
 ];
