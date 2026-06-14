@@ -4,14 +4,13 @@ import { useContext } from "react";
 import { useAccount } from "wagmi";
 import Link from "next/link";
 import {
-  ArrowLeftRight,
   Coins,
   Droplets,
-  HandCoins,
-  Lock,
   LucideIcon,
+  ListChecks,
   MessageCircle,
-  Send,
+  Repeat2,
+  SendHorizontal,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -25,7 +24,6 @@ interface AppItem {
   name: string;
   href: string | ((symbol?: string) => string);
   icon: LucideIcon;
-  requiresWallet?: boolean;
   hasUnread?: boolean;
 }
 
@@ -46,7 +44,7 @@ const appSections: AppSection[] = [
       {
         name: "代币兑换",
         href: (symbol?: string) => (symbol ? `/dex/?symbol=${symbol}&tab=swap` : "/dex/?tab=swap"),
-        icon: HandCoins,
+        icon: Repeat2,
       },
       {
         name: "流动性池",
@@ -56,16 +54,14 @@ const appSections: AppSection[] = [
       {
         name: "代币转账",
         href: (symbol?: string) => (symbol ? `/token/transfer/?symbol=${symbol}` : "/token/transfer/"),
-        icon: ArrowLeftRight,
-        requiresWallet: true,
+        icon: SendHorizontal,
       },
       ...(isBatchTransferEnabled
         ? [
             {
               name: "批量转账",
               href: "/apps/batch-transfer",
-              icon: Send,
-              requiresWallet: true,
+              icon: ListChecks,
             },
           ]
         : []),
@@ -78,19 +74,16 @@ const appSections: AppSection[] = [
         name: "LOVE20 NFT",
         href: "/group/groupids/",
         icon: Users,
-        requiresWallet: true,
       },
       {
         name: "链群管理",
         href: (symbol?: string) => (symbol ? `/extension/my_groups?symbol=${symbol}` : "/extension/my_groups"),
         icon: ShieldCheck,
-        requiresWallet: true,
       },
       {
         name: "聊天",
         href: "/chat/",
         icon: MessageCircle,
-        requiresWallet: true,
       },
     ],
   },
@@ -112,15 +105,7 @@ function SectionHeader({ title, symbol }: { title: string; symbol?: string }) {
   );
 }
 
-function AppIcon({
-  item,
-  symbol,
-  showWalletHint = false,
-}: {
-  item: AppItem;
-  symbol?: string;
-  showWalletHint?: boolean;
-}) {
+function AppIcon({ item, symbol }: { item: AppItem; symbol?: string }) {
   const Icon = item.icon;
 
   return (
@@ -128,11 +113,6 @@ function AppIcon({
       href={resolveHref(item.href, symbol)}
       className="group relative flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-lg bg-white px-2 py-3 text-center transition-all hover:bg-secondary/5"
     >
-      {showWalletHint && item.requiresWallet && (
-        <span className="absolute right-2 top-2 text-greyscale-400" title="需要钱包" aria-label="需要钱包">
-          <Lock className="h-3.5 w-3.5" />
-        </span>
-      )}
       <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-greyscale-100 text-secondary">
         <Icon className="h-5 w-5" />
         {item.hasUnread && (
@@ -175,7 +155,6 @@ export default function AppsPage() {
                       key={app.name}
                       item={{ ...app, hasUnread: app.name === "聊天" && hasUnreadChat }}
                       symbol={symbol}
-                      showWalletHint={!isConnected}
                     />
                   ))}
                 </div>
