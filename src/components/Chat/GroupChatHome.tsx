@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/router';
-import { useAccount } from 'wagmi';
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useRouter } from "next/router";
+import { useAccount } from "wagmi";
 
-import { GroupJoinAbi } from '@/src/abis/GroupJoin';
-import { TokenActionGovManagerAbi } from '@/src/abis/TokenActionGovManager';
-import { TokenActionMainManagerAbi } from '@/src/abis/TokenActionMainManager';
-import AlertBox from '@/src/components/Common/AlertBox';
-import Header from '@/src/components/Header';
-import { isGroupChatEnabled, useGroupChatActivationStatusMap } from '@/src/hooks/contracts/useGroupChat';
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useJoinedActions, useAccountVotingHistory } from '@/src/hooks/contracts/useLOVE20RoundViewer';
+import { GroupJoinAbi } from "@/src/abis/GroupJoin";
+import { TokenActionGovManagerAbi } from "@/src/abis/TokenActionGovManager";
+import { TokenActionMainManagerAbi } from "@/src/abis/TokenActionMainManager";
+import AlertBox from "@/src/components/Common/AlertBox";
+import Header from "@/src/components/Header";
+import { isGroupChatEnabled, useGroupChatActivationStatusMap } from "@/src/hooks/contracts/useGroupChat";
+import { useCurrentRound } from "@/src/hooks/contracts/useLOVE20Vote";
+import { useJoinedActions, useAccountVotingHistory } from "@/src/hooks/contracts/useLOVE20RoundViewer";
 import {
   GROUP_CHAT_TOKEN_ACTION_GOV_MANAGER_ADDRESS,
   GROUP_CHAT_TOKEN_ACTION_MAIN_MANAGER_ADDRESS,
@@ -19,23 +19,21 @@ import {
   isTokenActionMainChatManagerEnabled,
   useTokenGovChatGroupIdOfToken,
   useTokenMainChatGroupIdOfToken,
-} from '@/src/hooks/contracts/useGroupChatManagers';
-import { useGroupChatInboxData, type GroupChatListItem } from '@/src/hooks/composite/useGroupChatData';
-import { useIsGovernor } from '@/src/hooks/composite/useIsGovernor';
-import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
-import { useMyJoinedExtensionActions } from '@/src/hooks/extension/base/composite/useMyJoinedExtensionActions';
-import { TokenContext } from '@/src/contexts/TokenContext';
-import { useRegisterGroupChatGroups, useRegisterWatchedGroups } from '@/src/contexts/GroupChatSyncContext';
-import { safeToBigInt } from '@/src/lib/clientUtils';
-import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
-import { cn } from '@/lib/utils';
-import { ChatBadge } from './ChatBadge';
-import { InboxPanel } from './InboxPanel';
-import styles from './ChatPage.module.css';
-import {
-  READ_CURSORS_CHANGED_EVENT,
-  READ_CURSORS_STORAGE_KEY,
-} from './chatConstants';
+} from "@/src/hooks/contracts/useGroupChatManagers";
+import { useGroupChatInboxData, type GroupChatListItem } from "@/src/hooks/composite/useGroupChatData";
+import { useIsGovernor } from "@/src/hooks/composite/useIsGovernor";
+import { useMyGroups } from "@/src/hooks/extension/base/composite/useMyGroups";
+import { useMyJoinedExtensionActions } from "@/src/hooks/extension/base/composite/useMyJoinedExtensionActions";
+import { TokenContext } from "@/src/contexts/TokenContext";
+import { useRegisterGroupChatGroups, useRegisterWatchedGroups } from "@/src/contexts/GroupChatSyncContext";
+import { safeToBigInt } from "@/src/lib/clientUtils";
+import { NavigationUtils } from "@/src/lib/navigationUtils";
+import { useUniversalReadContracts } from "@/src/lib/universalReadContract";
+import { cn } from "@/lib/utils";
+import { ChatBadge } from "./ChatBadge";
+import { InboxPanel } from "./InboxPanel";
+import styles from "./ChatPage.module.css";
+import { READ_CURSORS_CHANGED_EVENT, READ_CURSORS_STORAGE_KEY } from "./chatConstants";
 import {
   cachedGroupSetsKey as buildCachedGroupSetsKey,
   readCachedGroupSets,
@@ -45,19 +43,13 @@ import {
   writeFollowedGroupIds,
   writeOwnedChainGroupIds,
   writeCachedGroupSets,
-} from './chatStorage';
-import {
-  buildChatActivationHref,
-  buildChatPreferencesHref,
-  safeBigIntFromString,
-} from './chatUtils';
-import {
-  GROUP_CHAT_RECOMMENDATION_REASON_RANK,
-  type GroupChatRecommendationSignal,
-} from './chatTypes';
+} from "./chatStorage";
+import { buildChatActivationHref, buildChatPreferencesHref, safeBigIntFromString } from "./chatUtils";
+import { GROUP_CHAT_RECOMMENDATION_REASON_RANK, type GroupChatRecommendationSignal } from "./chatTypes";
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as const;
 const GROUP_JOIN_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}` | undefined;
+const GROUP_CHAT_REPOSITORY_URL = "https://github.com/LOVE20TKM/group-chat";
 
 function uniqueGroupIds(values: readonly (bigint | undefined)[]) {
   const seen = new Set<string>();
@@ -72,7 +64,7 @@ function uniqueGroupIds(values: readonly (bigint | undefined)[]) {
 
 function resultAt(data: readonly { status?: string; result?: unknown }[] | undefined, index: number) {
   const item = data?.[index];
-  return item?.status === 'success' ? item.result : undefined;
+  return item?.status === "success" ? item.result : undefined;
 }
 
 function groupIdsToStrings(groupIds: readonly bigint[]) {
@@ -94,8 +86,7 @@ function bestRecommendationSignals(signals: readonly (GroupChatRecommendationSig
     const current = byGroup.get(key);
     if (
       !current ||
-      GROUP_CHAT_RECOMMENDATION_REASON_RANK[signal.reason] >
-        GROUP_CHAT_RECOMMENDATION_REASON_RANK[current.reason]
+      GROUP_CHAT_RECOMMENDATION_REASON_RANK[signal.reason] > GROUP_CHAT_RECOMMENDATION_REASON_RANK[current.reason]
     ) {
       byGroup.set(key, signal);
     }
@@ -111,9 +102,7 @@ function mergeStableInboxItems<T extends { groupId: bigint }>(
 ) {
   const currentByGroup = new Map(currentItems.map((item) => [item.groupId.toString(), item]));
   const previousByGroup = new Map(
-    previousItems
-      .filter((item) => canReusePreviousItem(item))
-      .map((item) => [item.groupId.toString(), item]),
+    previousItems.filter((item) => canReusePreviousItem(item)).map((item) => [item.groupId.toString(), item]),
   );
   const merged: T[] = [];
 
@@ -121,9 +110,7 @@ function mergeStableInboxItems<T extends { groupId: bigint }>(
     const key = groupId.toString();
     const currentItem = currentByGroup.get(key);
     const previousItem = previousByGroup.get(key);
-    const item = currentItem && canReusePreviousItem(currentItem)
-      ? currentItem
-      : previousItem || currentItem;
+    const item = currentItem && canReusePreviousItem(currentItem) ? currentItem : previousItem || currentItem;
     if (item) merged.push(item);
   });
 
@@ -141,7 +128,7 @@ function sameStringArray(left: readonly string[], right: readonly string[]) {
   return left.every((value, index) => value === right[index]);
 }
 
-const useClientLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+const useClientLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 function AddGroupDialog({
   open,
@@ -178,11 +165,11 @@ function AddGroupDialog({
     if (!open) return;
 
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === "Escape") onClose();
     };
 
-    document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
   }, [onClose, open]);
 
   if (!open) return null;
@@ -191,26 +178,22 @@ function AddGroupDialog({
   const isActivated = !isInputSettling && lookupItem?.info?.activated === true;
   const isInactive = !isInputSettling && !!lookupGroupId && lookupItem?.info?.activated === false;
   const statusTone =
-    isActivated && !isAlreadyFollowed
-      ? 'ok'
-      : isInactive || isInputInvalid || hasLookupError
-        ? 'bad'
-        : 'neutral';
+    isActivated && !isAlreadyFollowed ? "ok" : isInactive || isInputInvalid || hasLookupError ? "bad" : "neutral";
   const statusText = !trimmedInput
-    ? '输入群聊 ID 后自动检查激活状态和群聊名称。'
+    ? "输入群聊 ID 后自动检查激活状态和群聊名称。"
     : isInputInvalid
-      ? '请输入大于 0 的数字群聊 ID。'
+      ? "请输入大于 0 的数字群聊 ID。"
       : isInputSettling || isChecking
-        ? '正在检查群聊状态...'
+        ? "正在检查群聊状态..."
         : hasLookupError
-          ? '检查失败，请稍后重试。'
+          ? "检查失败，请稍后重试。"
           : isInactive
-            ? '这个群聊还没有激活，不能添加。'
+            ? "这个群聊还没有激活，不能添加。"
             : isAlreadyFollowed
-              ? '这个群聊已经在我的群聊里。'
+              ? "这个群聊已经在我的群聊里。"
               : isActivated
-                ? '检查通过，确认后会加入我的群聊。'
-                : '没有读到这个群聊，请确认 ID 是否正确。';
+                ? "检查通过，确认后会加入我的群聊。"
+                : "没有读到这个群聊，请确认 ID 是否正确。";
 
   return (
     <div
@@ -220,7 +203,12 @@ function AddGroupDialog({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <section className="chat-modal add-group-dialog" role="dialog" aria-modal="true" aria-labelledby="add-group-dialog-title">
+      <section
+        className="chat-modal add-group-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-group-dialog-title"
+      >
         <div className="chat-modal-head">
           <div>
             <strong id="add-group-dialog-title">添加群聊</strong>
@@ -292,13 +280,19 @@ export function GroupChatHome() {
   const [cachedRecommendedGroupIds, setCachedRecommendedGroupIds] = useState<string[]>([]);
   const [readCursors, setReadCursors] = useState<Record<string, string>>({});
   const [addGroupDialogOpen, setAddGroupDialogOpen] = useState(false);
-  const [manualGroupIdInput, setManualGroupIdInput] = useState('');
-  const [manualGroupIdQuery, setManualGroupIdQuery] = useState('');
+  const [manualGroupIdInput, setManualGroupIdInput] = useState("");
+  const [manualGroupIdQuery, setManualGroupIdQuery] = useState("");
   const { myGroups, isPending: isMyGroupsPending } = useMyGroups(accountAddress);
   const ownedChainGroupIds = useMemo(() => myGroups.map((group) => group.tokenId), [myGroups]);
   const { isGovernor } = useIsGovernor(accountAddress);
-  const { groupId: tokenMainGroupId, isPending: isTokenMainGroupIdPending } = useTokenMainChatGroupIdOfToken(tokenAddress, !!tokenAddress);
-  const { groupId: tokenGovGroupId, isPending: isTokenGovGroupIdPending } = useTokenGovChatGroupIdOfToken(tokenAddress, !!tokenAddress && isGovernor);
+  const { groupId: tokenMainGroupId, isPending: isTokenMainGroupIdPending } = useTokenMainChatGroupIdOfToken(
+    tokenAddress,
+    !!tokenAddress,
+  );
+  const { groupId: tokenGovGroupId, isPending: isTokenGovGroupIdPending } = useTokenGovChatGroupIdOfToken(
+    tokenAddress,
+    !!tokenAddress && isGovernor,
+  );
   const { currentRound } = useCurrentRound();
   const { joinedActions } = useJoinedActions(tokenAddress as `0x${string}`, accountAddress as `0x${string}`);
   const { joinedExtensionActions } = useMyJoinedExtensionActions({
@@ -307,10 +301,7 @@ export function GroupChatHome() {
     currentRound,
   });
   const joinedActionIds = useMemo(
-    () =>
-      uniqueGroupIds(
-        [...joinedActions, ...joinedExtensionActions].map((item) => item.action?.head?.id),
-      ),
+    () => uniqueGroupIds([...joinedActions, ...joinedExtensionActions].map((item) => item.action?.head?.id)),
     [joinedActions, joinedExtensionActions],
   );
   const recentVoteRange = useMemo(() => {
@@ -338,7 +329,7 @@ export function GroupChatHome() {
       joinedActionIds.map((actionId) => ({
         address: GROUP_CHAT_TOKEN_ACTION_MAIN_MANAGER_ADDRESS,
         abi: TokenActionMainManagerAbi,
-        functionName: 'groupIdOfAction' as const,
+        functionName: "groupIdOfAction" as const,
         args: [tokenAddress || ZERO_ADDRESS, actionId],
       })),
     [joinedActionIds, tokenAddress],
@@ -358,7 +349,7 @@ export function GroupChatHome() {
       recentVotedActionIds.map((actionId) => ({
         address: GROUP_CHAT_TOKEN_ACTION_GOV_MANAGER_ADDRESS,
         abi: TokenActionGovManagerAbi,
-        functionName: 'groupIdOfAction' as const,
+        functionName: "groupIdOfAction" as const,
         args: [tokenAddress || ZERO_ADDRESS, actionId],
       })),
     [recentVotedActionIds, tokenAddress],
@@ -370,47 +361,40 @@ export function GroupChatHome() {
     },
   });
   const actionGovGroupIds = useMemo(
-    () => uniqueGroupIds(recentVotedActionIds.map((_, index) => safeToBigInt(resultAt(actionGovGroupData as any, index)))),
+    () =>
+      uniqueGroupIds(recentVotedActionIds.map((_, index) => safeToBigInt(resultAt(actionGovGroupData as any, index)))),
     [actionGovGroupData, recentVotedActionIds],
   );
   const groupJoinGroupIdsContracts = useMemo(
-    () => [{
-      address: GROUP_JOIN_ADDRESS || ZERO_ADDRESS,
-      abi: GroupJoinAbi,
-      functionName: 'gGroupIdsByTokenAddressByAccount' as const,
-      args: [tokenAddress || ZERO_ADDRESS, accountAddress || ZERO_ADDRESS],
-    }],
+    () => [
+      {
+        address: GROUP_JOIN_ADDRESS || ZERO_ADDRESS,
+        abi: GroupJoinAbi,
+        functionName: "gGroupIdsByTokenAddressByAccount" as const,
+        args: [tokenAddress || ZERO_ADDRESS, accountAddress || ZERO_ADDRESS],
+      },
+    ],
     [accountAddress, tokenAddress],
   );
   const { data: groupJoinGroupIdsData, isPending: isGroupJoinGroupIdsPending } = useUniversalReadContracts({
     contracts: groupJoinGroupIdsContracts as any,
     query: {
-      enabled:
-        !!GROUP_JOIN_ADDRESS &&
-        !!tokenAddress &&
-        !!accountAddress &&
-        isGroupChatEnabled,
+      enabled: !!GROUP_JOIN_ADDRESS && !!tokenAddress && !!accountAddress && isGroupChatEnabled,
     },
   });
   const groupJoinCandidateGroupIds = useMemo(
     () =>
-      uniqueGroupIds(Array.isArray(resultAt(groupJoinGroupIdsData as any, 0))
-        ? (resultAt(groupJoinGroupIdsData as any, 0) as unknown[]).map((item) => safeToBigInt(item))
-        : []),
+      uniqueGroupIds(
+        Array.isArray(resultAt(groupJoinGroupIdsData as any, 0))
+          ? (resultAt(groupJoinGroupIdsData as any, 0) as unknown[]).map((item) => safeToBigInt(item))
+          : [],
+      ),
     [groupJoinGroupIdsData],
   );
-  const {
-    activationStatusMap: groupJoinActivationStatusMap,
-    isPending: isGroupJoinActivationStatusPending,
-  } = useGroupChatActivationStatusMap(
-    groupJoinCandidateGroupIds,
-    groupJoinCandidateGroupIds.length > 0,
-  );
+  const { activationStatusMap: groupJoinActivationStatusMap, isPending: isGroupJoinActivationStatusPending } =
+    useGroupChatActivationStatusMap(groupJoinCandidateGroupIds, groupJoinCandidateGroupIds.length > 0);
   const groupJoinRecommendedGroupIds = useMemo(
-    () =>
-      groupJoinCandidateGroupIds.filter(
-        (groupId) => groupJoinActivationStatusMap.get(groupId.toString()) === true,
-      ),
+    () => groupJoinCandidateGroupIds.filter((groupId) => groupJoinActivationStatusMap.get(groupId.toString()) === true),
     [groupJoinActivationStatusMap, groupJoinCandidateGroupIds],
   );
   const followedPriorityGroupIds = useMemo(
@@ -439,32 +423,26 @@ export function GroupChatHome() {
     key: cachedGroupSetsKey,
     signals: [],
   });
-  const displayedFollowedGroupIds = useMemo(
-    () => {
-      if (hasLoadedFollowedGroupIds) return followedPriorityGroupIds;
-      return [];
-    },
-    [followedPriorityGroupIds, hasLoadedFollowedGroupIds],
-  );
-  const displayedOwnedChainGroupIds = useMemo(
-    () => {
-      if (!isMyGroupsPending) return ownedChainGroupIds;
-      return cachedOwnedChainPriorityGroupIds;
-    },
-    [cachedOwnedChainPriorityGroupIds, isMyGroupsPending, ownedChainGroupIds],
-  );
+  const displayedFollowedGroupIds = useMemo(() => {
+    if (hasLoadedFollowedGroupIds) return followedPriorityGroupIds;
+    return [];
+  }, [followedPriorityGroupIds, hasLoadedFollowedGroupIds]);
+  const displayedOwnedChainGroupIds = useMemo(() => {
+    if (!isMyGroupsPending) return ownedChainGroupIds;
+    return cachedOwnedChainPriorityGroupIds;
+  }, [cachedOwnedChainPriorityGroupIds, isMyGroupsPending, ownedChainGroupIds]);
   const ownedChainRecommendationSignals = useMemo(
-    () => displayedOwnedChainGroupIds.map((groupId) => ({ groupId, reason: 'owned-chain-group' as const })),
+    () => displayedOwnedChainGroupIds.map((groupId) => ({ groupId, reason: "owned-chain-group" as const })),
     [displayedOwnedChainGroupIds],
   );
   const liveTokenRecommendationSignals = useMemo(
     () =>
       bestRecommendationSignals([
-        tokenMainGroupId ? { groupId: tokenMainGroupId, reason: 'current-token-main' as const } : undefined,
-        ...actionMainGroupIds.map((groupId) => ({ groupId, reason: 'joined-action' as const })),
-        isGovernor && tokenGovGroupId ? { groupId: tokenGovGroupId, reason: 'governor' as const } : undefined,
-        ...actionGovGroupIds.map((groupId) => ({ groupId, reason: 'voted-action' as const })),
-        ...groupJoinRecommendedGroupIds.map((groupId) => ({ groupId, reason: 'joined-chain-group' as const })),
+        tokenMainGroupId ? { groupId: tokenMainGroupId, reason: "current-token-main" as const } : undefined,
+        ...actionMainGroupIds.map((groupId) => ({ groupId, reason: "joined-action" as const })),
+        isGovernor && tokenGovGroupId ? { groupId: tokenGovGroupId, reason: "governor" as const } : undefined,
+        ...actionGovGroupIds.map((groupId) => ({ groupId, reason: "voted-action" as const })),
+        ...groupJoinRecommendedGroupIds.map((groupId) => ({ groupId, reason: "joined-chain-group" as const })),
       ]),
     [
       actionGovGroupIds,
@@ -501,16 +479,13 @@ export function GroupChatHome() {
     () => uniqueGroupIds(liveTokenRecommendationSignals.map((signal) => signal.groupId)),
     [liveTokenRecommendationSignals],
   );
-  const displayedRecommendedGroupIds = useMemo(
-    () => {
-      if (tokenRecommendedGroupIds.length > 0) return tokenRecommendedGroupIds;
-      if (!isRecommendedGroupIdsPending) return [];
-      if (cachedRecommendedPriorityGroupIds.length > 0) return cachedRecommendedPriorityGroupIds;
-      const lastResolved = lastDisplayGroupSetsRef.current;
-      return lastResolved.key === cachedGroupSetsKey ? lastResolved.recommendedGroupIds : [];
-    },
-    [cachedGroupSetsKey, cachedRecommendedPriorityGroupIds, isRecommendedGroupIdsPending, tokenRecommendedGroupIds],
-  );
+  const displayedRecommendedGroupIds = useMemo(() => {
+    if (tokenRecommendedGroupIds.length > 0) return tokenRecommendedGroupIds;
+    if (!isRecommendedGroupIdsPending) return [];
+    if (cachedRecommendedPriorityGroupIds.length > 0) return cachedRecommendedPriorityGroupIds;
+    const lastResolved = lastDisplayGroupSetsRef.current;
+    return lastResolved.key === cachedGroupSetsKey ? lastResolved.recommendedGroupIds : [];
+  }, [cachedGroupSetsKey, cachedRecommendedPriorityGroupIds, isRecommendedGroupIdsPending, tokenRecommendedGroupIds]);
   const displayedRecommendationGroupIds = useMemo(
     () => uniqueGroupIds([...displayedOwnedChainGroupIds, ...displayedRecommendedGroupIds]),
     [displayedOwnedChainGroupIds, displayedRecommendedGroupIds],
@@ -522,14 +497,8 @@ export function GroupChatHome() {
     }, 350);
     return () => window.clearTimeout(timer);
   }, [addGroupDialogOpen, manualGroupIdInput]);
-  const manualLookupGroupId = useMemo(
-    () => parseManualGroupIdInput(manualGroupIdQuery),
-    [manualGroupIdQuery],
-  );
-  const manualLookupGroupIds = useMemo(
-    () => (manualLookupGroupId ? [manualLookupGroupId] : []),
-    [manualLookupGroupId],
-  );
+  const manualLookupGroupId = useMemo(() => parseManualGroupIdInput(manualGroupIdQuery), [manualGroupIdQuery]);
+  const manualLookupGroupIds = useMemo(() => (manualLookupGroupId ? [manualLookupGroupId] : []), [manualLookupGroupId]);
   const inboxPriorityGroupIds = useMemo(
     () =>
       uniqueGroupIds([
@@ -538,12 +507,7 @@ export function GroupChatHome() {
         ...displayedRecommendationGroupIds,
         ...manualLookupGroupIds,
       ]),
-    [
-      followedPriorityGroupIds,
-      displayedFollowedGroupIds,
-      displayedRecommendationGroupIds,
-      manualLookupGroupIds,
-    ],
+    [followedPriorityGroupIds, displayedFollowedGroupIds, displayedRecommendationGroupIds, manualLookupGroupIds],
   );
   const inbox = useGroupChatInboxData(token, accountAddress, 50, inboxPriorityGroupIds);
   const lastResolvedInboxItemsRef = useRef<{ key: string; items: typeof inbox.items }>({
@@ -574,10 +538,19 @@ export function GroupChatHome() {
     }
     if (hasActivatedInboxItems || !inbox.isPending) return inbox.items;
     return hasSameCacheKey ? lastResolved.items : [];
-  }, [cachedGroupSetsKey, hasActivatedInboxItems, hasUnreadyStableInboxItems, inbox.isPending, inbox.items, inboxPriorityGroupIds]);
+  }, [
+    cachedGroupSetsKey,
+    hasActivatedInboxItems,
+    hasUnreadyStableInboxItems,
+    inbox.isPending,
+    inbox.items,
+    inboxPriorityGroupIds,
+  ]);
   const displayedFollowedItems = useMemo(() => {
     const followedSet = new Set(displayedFollowedGroupIds.map((groupId) => groupId.toString()));
-    return displayedInboxItems.filter((item) => item.info?.activated === true && followedSet.has(item.groupId.toString()));
+    return displayedInboxItems.filter(
+      (item) => item.info?.activated === true && followedSet.has(item.groupId.toString()),
+    );
   }, [displayedFollowedGroupIds, displayedInboxItems]);
   const displayedRecommendedItems = useMemo(() => {
     const followedSet = new Set(displayedFollowedGroupIds.map((groupId) => groupId.toString()));
@@ -588,10 +561,7 @@ export function GroupChatHome() {
     });
   }, [displayedFollowedGroupIds, displayedInboxItems, displayedRecommendationGroupIds]);
   const manualLookupItem = useMemo(
-    () =>
-      manualLookupGroupId
-        ? inbox.items.find((item) => item.groupId === manualLookupGroupId)
-        : undefined,
+    () => (manualLookupGroupId ? inbox.items.find((item) => item.groupId === manualLookupGroupId) : undefined),
     [inbox.items, manualLookupGroupId],
   );
   const manualLookupAlreadyFollowed = useMemo(
@@ -624,19 +594,20 @@ export function GroupChatHome() {
     };
   }, [cachedGroupSetsKey, displayedInboxItems, hasUnreadyStableInboxItems, inbox.isPending]);
   const visibleInboxGroupIds = useMemo(
-    () => uniqueGroupIds([
-      ...displayedFollowedItems.map((item) => item.groupId),
-      ...displayedRecommendedItems.map((item) => item.groupId),
-    ]),
+    () =>
+      uniqueGroupIds([
+        ...displayedFollowedItems.map((item) => item.groupId),
+        ...displayedRecommendedItems.map((item) => item.groupId),
+      ]),
     [displayedFollowedItems, displayedRecommendedItems],
   );
   useRegisterGroupChatGroups({
     groupIds: inboxPriorityGroupIds,
-    source: 'chat-cached-groups',
-    scope: 'background',
-    frequency: 'low',
+    source: "chat-cached-groups",
+    scope: "background",
+    frequency: "low",
   });
-  useRegisterWatchedGroups(visibleInboxGroupIds, 'inbox-visible');
+  useRegisterWatchedGroups(visibleInboxGroupIds, "inbox-visible");
 
   useClientLayoutEffect(() => {
     const nextFollowedGroupIds = readFollowedGroupIds(accountAddress);
@@ -653,12 +624,12 @@ export function GroupChatHome() {
       setReadCursors(readRecordStorage(READ_CURSORS_STORAGE_KEY));
     };
     window.addEventListener(READ_CURSORS_CHANGED_EVENT, refreshReadCursors);
-    window.addEventListener('storage', refreshReadCursors);
-    window.addEventListener('focus', refreshReadCursors);
+    window.addEventListener("storage", refreshReadCursors);
+    window.addEventListener("focus", refreshReadCursors);
     return () => {
       window.removeEventListener(READ_CURSORS_CHANGED_EVENT, refreshReadCursors);
-      window.removeEventListener('storage', refreshReadCursors);
-      window.removeEventListener('focus', refreshReadCursors);
+      window.removeEventListener("storage", refreshReadCursors);
+      window.removeEventListener("focus", refreshReadCursors);
     };
   }, []);
 
@@ -686,12 +657,7 @@ export function GroupChatHome() {
 
     setCachedOwnedChainGroupIds(nextOwnedChainGroupIds);
     writeOwnedChainGroupIds(accountAddress, nextOwnedChainGroupIds);
-  }, [
-    accountAddress,
-    cachedOwnedChainGroupIds,
-    isMyGroupsPending,
-    ownedChainGroupIds,
-  ]);
+  }, [accountAddress, cachedOwnedChainGroupIds, isMyGroupsPending, ownedChainGroupIds]);
 
   useEffect(() => {
     if (isRecommendedGroupIdsPending) return;
@@ -704,12 +670,7 @@ export function GroupChatHome() {
     writeCachedGroupSets(cachedGroupSetsKey, {
       recommendedGroupIds: nextRecommendedGroupIds,
     });
-  }, [
-    cachedGroupSetsKey,
-    cachedRecommendedGroupIds,
-    isRecommendedGroupIdsPending,
-    liveTokenRecommendedGroupIds,
-  ]);
+  }, [cachedGroupSetsKey, cachedRecommendedGroupIds, isRecommendedGroupIdsPending, liveTokenRecommendedGroupIds]);
 
   const onOpenActivate = useCallback(() => {
     router.push(buildChatActivationHref());
@@ -719,42 +680,53 @@ export function GroupChatHome() {
     router.push(buildChatPreferencesHref());
   }, [router]);
 
+  const onOpenProtocolDocs = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    NavigationUtils.handleExternalLink(GROUP_CHAT_REPOSITORY_URL);
+  }, []);
+
   const openAddGroupDialog = useCallback(() => {
-    setManualGroupIdInput('');
-    setManualGroupIdQuery('');
+    setManualGroupIdInput("");
+    setManualGroupIdQuery("");
     setAddGroupDialogOpen(true);
   }, []);
 
   const closeAddGroupDialog = useCallback(() => {
     setAddGroupDialogOpen(false);
-    setManualGroupIdInput('');
-    setManualGroupIdQuery('');
+    setManualGroupIdInput("");
+    setManualGroupIdQuery("");
   }, []);
 
-  const addFollowedGroup = useCallback((groupId: bigint) => {
-    if (!accountAddress) return;
-    const key = groupId.toString();
-    setFollowedGroupIds((prev) => {
-      if (prev.includes(key)) return prev;
-      const next = [key, ...prev];
-      if (typeof window !== 'undefined') {
-        writeFollowedGroupIds(accountAddress, next);
-      }
-      return next;
-    });
-  }, [accountAddress]);
+  const addFollowedGroup = useCallback(
+    (groupId: bigint) => {
+      if (!accountAddress) return;
+      const key = groupId.toString();
+      setFollowedGroupIds((prev) => {
+        if (prev.includes(key)) return prev;
+        const next = [key, ...prev];
+        if (typeof window !== "undefined") {
+          writeFollowedGroupIds(accountAddress, next);
+        }
+        return next;
+      });
+    },
+    [accountAddress],
+  );
 
-  const toggleFollowedGroup = useCallback((groupId: bigint) => {
-    if (!accountAddress) return;
-    const key = groupId.toString();
-    setFollowedGroupIds((prev) => {
-      const next = prev.includes(key) ? prev.filter((item) => item !== key) : [key, ...prev];
-      if (typeof window !== 'undefined') {
-        writeFollowedGroupIds(accountAddress, next);
-      }
-      return next;
-    });
-  }, [accountAddress]);
+  const toggleFollowedGroup = useCallback(
+    (groupId: bigint) => {
+      if (!accountAddress) return;
+      const key = groupId.toString();
+      setFollowedGroupIds((prev) => {
+        const next = prev.includes(key) ? prev.filter((item) => item !== key) : [key, ...prev];
+        if (typeof window !== "undefined") {
+          writeFollowedGroupIds(accountAddress, next);
+        }
+        return next;
+      });
+    },
+    [accountAddress],
+  );
 
   const confirmManualAdd = useCallback(() => {
     if (!manualLookupGroupId || !canConfirmManualAdd) return;
@@ -768,10 +740,17 @@ export function GroupChatHome() {
       <main className={styles.chatPrototype} data-detail="false" data-entry="love20-chat">
         <div className={styles.chatWorkspace} data-entry="love20-chat">
           <section className={styles.chatSurface}>
-            <div className={styles.chatTestBanner} role="status">
-              群聊协议内测进行中
+            <div className={styles.chatTestBanner} role="note">
+              <div className={styles.chatTestBannerCopy}>
+                <strong className={styles.chatTestBannerTitle}>群聊协议首轮测试进行中</strong>
+                <span className={styles.chatTestBannerText}>- 消息与发言规则由链上去中心化群聊协议管理。</span>
+                <span className={styles.chatTestBannerText}>- 获取最新信息，请关注GITHUB开源代码库。</span>
+              </div>
+              <a className={styles.chatTestBannerLink} href={GROUP_CHAT_REPOSITORY_URL} onClick={onOpenProtocolDocs}>
+                查看开源代码库
+              </a>
             </div>
-            <section className={cn('workspace-screen', 'inbox-screen')} aria-label="聊天工作区">
+            <section className={cn("workspace-screen", "inbox-screen")} aria-label="聊天工作区">
               {!isGroupChatEnabled && (
                 <div className="mb-3">
                   <AlertBox type="warning" message="当前环境未配置 GroupChat 合约地址。" />

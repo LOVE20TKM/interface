@@ -109,14 +109,53 @@
 .chatTestBanner {
   margin: 12px 16px 0;
   padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
   border: 1px solid #facc15;
   border-radius: 8px;
   background: #fef3c7;
   color: #713f12;
-  font-size: 15px;
-  font-weight: 800;
   line-height: 1.35;
-  text-align: center;
+  text-align: left;
+}
+
+.chatTestBannerCopy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chatTestBannerTitle {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.chatTestBannerText {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.chatTestBannerLink {
+  flex: 0 0 auto;
+  border: 1px solid rgba(113, 63, 18, 0.25);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.55);
+  color: #713f12;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.chatTestBannerLink:hover {
+  border-color: rgba(113, 63, 18, 0.45);
+  background: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
 }
 
 .chatWorkspace[data-entry="love20-chat"] :global(.workspace-screen) {
@@ -2089,10 +2128,6 @@
   grid-template-columns: minmax(0, 1fr) minmax(64px, max-content) 64px;
 }
 
-.chatPrototype :global(.gov-voter-panel) {
-  margin: 0 10px 10px;
-}
-
 .chatPrototype :global(.ban-list-action-row) {
   display: grid;
   gap: 8px;
@@ -2838,6 +2873,169 @@
   font-weight: 500;
 }
 
+.chatPrototype :global(.ban-voters-screen) {
+  padding-bottom: 16px;
+  scroll-padding-bottom: 16px;
+}
+
+.chatPrototype :global(.ban-voters-layout) {
+  display: grid;
+  gap: 10px;
+}
+
+.chatPrototype :global(.ban-voters-summary),
+.chatPrototype :global(.ban-voters-query-card),
+.chatPrototype :global(.ban-voters-list-card) {
+  display: grid;
+  gap: 10px;
+}
+
+.chatPrototype :global(.ban-voters-summary-head h2),
+.chatPrototype :global(.ban-voters-section-head h2) {
+  margin: 0;
+  color: var(--greyscale-900);
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.chatPrototype :global(.ban-voters-summary-head > .ban-voters-status-pill) {
+  min-height: 22px;
+  padding: 2px 7px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chatPrototype :global(.ban-voters-summary-head > .ban-voters-status-pill.pill-bad) {
+  background: #fee2e2;
+  color: var(--danger);
+}
+
+.chatPrototype :global(.ban-voters-summary-head > .ban-voters-status-pill.pill-ok) {
+  background: #dcfce7;
+  color: var(--success);
+}
+
+.chatPrototype :global(.ban-voters-summary-head > .ban-voters-status-pill.pill-neutral) {
+  background: var(--greyscale-100);
+  color: var(--greyscale-500);
+}
+
+.chatPrototype :global(.ban-voters-target-value) {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 6px;
+  background: var(--greyscale-50);
+  color: var(--greyscale-900);
+  font-size: 15px;
+  font-weight: 760;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.chatPrototype :global(.ban-voters-target-value .ban-list-address-line) {
+  width: 100%;
+}
+
+.chatPrototype :global(.ban-voters-metrics) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.chatPrototype :global(.ban-voters-metrics > div) {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  padding: 9px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.chatPrototype :global(.ban-voters-metrics span) {
+  color: var(--greyscale-500);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chatPrototype :global(.ban-voters-metrics strong) {
+  min-width: 0;
+  color: var(--greyscale-900);
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.chatPrototype :global(.ban-voters-query-row) {
+  grid-template-columns: minmax(0, 1fr) minmax(74px, max-content) minmax(74px, max-content) minmax(96px, max-content);
+  align-items: stretch;
+  margin-top: 0;
+}
+
+.chatPrototype :global(.ban-voters-query-row input),
+.chatPrototype :global(.ban-voters-query-row .sheet-button) {
+  height: 40px;
+}
+
+.chatPrototype :global(.ban-voters-query-row .sheet-button) {
+  gap: 6px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.chatPrototype :global(.ban-voters-query-result) {
+  margin-top: 0;
+}
+
+.chatPrototype :global(.ban-voters-list) {
+  display: grid;
+  gap: 8px;
+}
+
+.chatPrototype :global(.ban-voters-row) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 32px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.chatPrototype :global(.ban-voters-row-main) {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.chatPrototype :global(.ban-voters-row-main strong) {
+  min-width: 0;
+}
+
+.chatPrototype :global(.ban-voter-refresh-button) {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  justify-self: end;
+  padding: 0;
+  border-color: var(--greyscale-200);
+  color: var(--greyscale-600);
+}
+
+.chatPrototype :global(.ban-voter-refresh-button:hover:not(:disabled)) {
+  border-color: var(--greyscale-300);
+  color: var(--greyscale-900);
+}
+
+.chatPrototype :global(.ban-voter-refresh-button:disabled) {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
 .chatPrototype :global(.row-actions) {
   grid-column: 1 / -1;
   display: grid;
@@ -2854,34 +3052,6 @@
   padding: 0 8px;
   font-size: 13px;
   font-weight: 500;
-}
-
-.chatPrototype :global(.status-sheet) {
-  position: fixed;
-  right: 50%;
-  bottom: 0;
-  z-index: 50;
-  width: min(100%, 520px);
-  max-height: 78vh;
-  overflow: auto;
-  transform: translateX(50%);
-  border: 1px solid var(--greyscale-200);
-  border-bottom: 0;
-  border-radius: 16px 16px 0 0;
-  background: #fff;
-  box-shadow: 0 -8px 30px rgba(25, 28, 31, 0.12);
-}
-
-.chatPrototype :global(.sheet-handle) {
-  width: 36px;
-  height: 4px;
-  margin: 10px auto;
-  border-radius: 999px;
-  background: #d1d5db;
-}
-
-.chatPrototype :global(.close-row) {
-  padding: 0 10px 12px;
 }
 
 .chatPrototype :global(.empty-state.compact) {
@@ -4029,6 +4199,19 @@
   }
 
   .chatPrototype :global(.ban-list-result-actions .sheet-button) {
+    width: 100%;
+  }
+
+  .chatPrototype :global(.ban-voters-metrics),
+  .chatPrototype :global(.ban-voters-query-row) {
+    grid-template-columns: 1fr;
+  }
+
+  .chatPrototype :global(.ban-voters-row > .pill) {
+    justify-self: end;
+  }
+
+  .chatPrototype :global(.ban-voters-query-row .sheet-button) {
     width: 100%;
   }
 

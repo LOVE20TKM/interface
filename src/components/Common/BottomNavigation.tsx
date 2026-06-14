@@ -147,9 +147,14 @@ export function BottomNavigation() {
                 {item.chatBadgeType && item.chatBadgeType !== 'none' && (
                   item.chatBadgeType === 'intro-dot' ? (
                     <span
-                      className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-gray-50 bg-red-500 dark:border-gray-900"
-                      aria-label="有新消息"
-                    />
+                      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-50 bg-red-500 shadow-md shadow-red-500/40 dark:border-gray-900"
+                      aria-label="聊天入口提示"
+                    >
+                      <span
+                        className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-70"
+                        aria-hidden="true"
+                      />
+                    </span>
                   ) : (
                     <span
                       className="absolute -right-2 -top-1 min-w-5 rounded-full border-2 border-gray-50 bg-red-500 px-1 text-center text-[10px] font-semibold leading-4 text-white dark:border-gray-900"

@@ -19,13 +19,10 @@ import {
   useGovBanQuery,
   useGovClearVoteBySenderAddress,
   useGovClearVoteBySenderId,
-  useGovRefreshVoteBySenderAddress,
-  useGovRefreshVoteBySenderId,
   useGovVoteBySenderAddress,
   useGovVoteBySenderId,
   useGovVoteBySender,
   useGovSenderVoteWeightsByVoter,
-  useGovVotersByTarget,
   useGovVotedBanLists,
   useGovVotedBanMechanism,
   useGovVotedBanStateVersion,
@@ -48,9 +45,9 @@ import { cn } from '@/lib/utils';
 import { BanListQueryControls } from './BanListQueryControls';
 import { AdminBanListRows, GovBanListRows } from './BanListRows';
 import { GroupDetailHeader, useGroupDetailSubtitle } from './ChatGroupDetailHeader';
-import { GovVoterSheet } from './GovVoterSheet';
 import { BAN_LIST_PAGE_SIZE, ZERO_ADDRESS } from './chatConstants';
 import {
+  buildGroupChatBanVotersHref,
   formatGovWeightShare,
   govBanListMechanismText,
   parseAddressInput,
@@ -157,14 +154,6 @@ export function BanListPanel({
     setQueryInput,
     queryTarget,
     setQueryTarget,
-    activeGovTarget,
-    setActiveGovTarget,
-    voterPage,
-    setVoterPage,
-    voterQuery,
-    setVoterQuery,
-    voterQueryResult,
-    setVoterQueryResult,
     adminPage,
     setAdminPage,
     govPage,
@@ -173,7 +162,6 @@ export function BanListPanel({
     setActiveBanListMenuKey,
     adminOffset,
     govOffset,
-    voterOffset,
   } = useBanListPanelState();
   useEffect(() => {
     if (!initialMessageId) return;
@@ -293,15 +281,6 @@ export function BanListPanel({
     accountData.defaultSenderId,
     !!accountData.defaultSenderId && activeGovBanSource,
   );
-  const govVoters = useGovVotersByTarget(
-    groupId,
-    activeGovTarget?.type || 'address',
-    activeGovTarget?.type === 'address' ? activeGovTarget.value : undefined,
-    activeGovTarget?.type === 'nft' ? activeGovTarget.value : undefined,
-    voterOffset,
-    BigInt(BAN_LIST_PAGE_SIZE),
-    !!activeGovTarget,
-  );
   const banAddressTx = useBanSenderAddresses();
   const unbanAddressTx = useUnbanSenderAddresses();
   const banSenderTx = useBanSenderIds();
@@ -314,8 +293,6 @@ export function BanListPanel({
   const clearAddressTx = useGovClearVoteBySenderAddress();
   const clearSenderTx = useGovClearVoteBySenderId();
   const clearMessageSenderTx = useGovClearVoteBySender();
-  const refreshAddressTx = useGovRefreshVoteBySenderAddress();
-  const refreshSenderTx = useGovRefreshVoteBySenderId();
   const adminBanPermission = useGroupAdminOperatorPermission(groupId, account, activeAdminBanSource);
   const govVotingPower = useGroupChatVotingPower(groupId, publicData.chatInfo?.owner, account, activeGovBanSource);
   const govBanMechanism = useGovVotedBanMechanism(activeGovBanSource);
@@ -335,8 +312,6 @@ export function BanListPanel({
     clearAddressTx,
     clearSenderTx,
     clearMessageSenderTx,
-    refreshAddressTx,
-    refreshSenderTx,
   ].some((tx) => tx.isPending || tx.isConfirming);
   const addAddressBanLabel = transactionLabel(banAddressTx, '等待钱包确认', '地址禁言确认中');
   const addSenderBanLabel = transactionLabel(banSenderTx, '等待钱包确认', 'NFT禁言确认中');
@@ -404,12 +379,6 @@ export function BanListPanel({
     govBanStateVersion.refetch();
     onChanged();
   }, [govBan, govBanStateVersion, onChanged]);
-  const refetchGovVotersAndBan = useCallback(() => {
-    govVoters.refetch();
-    govBan.refetch();
-    govBanStateVersion.refetch();
-    onChanged();
-  }, [govBan, govBanStateVersion, govVoters, onChanged]);
   useConfirmedTransactionEffect(banAddressTx, refetchAdminBan);
   useConfirmedTransactionEffect(unbanAddressTx, refetchAdminBan);
   useConfirmedTransactionEffect(banSenderTx, refetchAdminBan);
@@ -422,8 +391,6 @@ export function BanListPanel({
   useConfirmedTransactionEffect(clearAddressTx, refetchGovBan);
   useConfirmedTransactionEffect(clearSenderTx, refetchGovBan);
   useConfirmedTransactionEffect(clearMessageSenderTx, refetchGovBan);
-  useConfirmedTransactionEffect(refreshAddressTx, refetchGovVotersAndBan);
-  useConfirmedTransactionEffect(refreshSenderTx, refetchGovVotersAndBan);
 
   const adminRows = listMode === 'address' ? adminBan.addressRecords : listMode === 'nft' ? adminBan.senderRecords : [];
   const govRows = listMode === 'address' ? govBan.addressRecords : listMode === 'nft' ? govBan.senderRecords : [];
@@ -431,7 +398,6 @@ export function BanListPanel({
   const govTotal = listMode === 'address' ? govBan.addressCount : listMode === 'nft' ? govBan.senderCount : undefined;
   const adminTotalPages = Math.max(1, Math.ceil(Number(adminTotal || BigInt(0)) / BAN_LIST_PAGE_SIZE));
   const govTotalPages = Math.max(1, Math.ceil(Number(govTotal || BigInt(0)) / BAN_LIST_PAGE_SIZE));
-  const voterTotalPages = Math.max(1, Math.ceil(Number(govVoters.count || BigInt(0)) / BAN_LIST_PAGE_SIZE));
   const visibleAdminRows = adminRows;
   const visibleGovRows = govRows;
   const senderNameIds = useMemo(() => {
@@ -775,68 +741,20 @@ export function BanListPanel({
     }
   };
 
-  const queryVoter = () => {
-    const voter = parseAddressInput(voterQuery);
-    if (!voter) {
-      toast.error('请输入有效投票地址');
-      return;
-    }
-    const found = govVoters.voters.find((item) => sameAddress(item.voter, voter));
-    setVoterPage(1);
-    setVoterQueryResult(
-      `${voter}：${found ? `支持 ${formatGovWeightShare(found.supportWeight, govVotingPower.totalVoteWeight)} / 反对 ${formatGovWeightShare(found.opposeWeight, govVotingPower.totalVoteWeight)}` : '当前页未找到；如不在当前页可直接重算'}`,
-    );
-  };
-
-  const clearVoterQuery = () => {
-    setVoterQuery('');
-    setVoterQueryResult('');
-    setVoterPage(1);
-  };
-
   const openGovAddressVoters = (record: (typeof govBan.addressRecords)[number]) => {
     setActiveBanListMenuKey(undefined);
-    setActiveGovTarget({
+    router.push(buildGroupChatBanVotersHref(groupId, {
       type: 'address',
       value: record.senderAddress,
-      supportWeight: record.supportWeight,
-      opposeWeight: record.opposeWeight,
-      voterCount: record.voterCount,
-    });
+    }));
   };
 
   const openGovSenderVoters = (record: (typeof govBan.senderRecords)[number]) => {
     setActiveBanListMenuKey(undefined);
-    setActiveGovTarget({
+    router.push(buildGroupChatBanVotersHref(groupId, {
       type: 'nft',
       value: record.senderId,
-      supportWeight: record.supportWeight,
-      opposeWeight: record.opposeWeight,
-      voterCount: record.voterCount,
-    });
-  };
-
-  const refreshVoter = async (voter: `0x${string}`) => {
-    if (!activeGovTarget) return;
-    try {
-      if (activeGovTarget.type === 'address') {
-        await refreshAddressTx.refreshVoteBySenderAddress(groupId, activeGovTarget.value, voter);
-      } else {
-        await refreshSenderTx.refreshVoteBySenderId(groupId, activeGovTarget.value, voter);
-      }
-      toast.success('已提交投票权重重算');
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const refreshQueriedVoter = () => {
-    const voter = parseAddressInput(voterQuery);
-    if (!voter) {
-      toast.error('请输入有效投票地址');
-      return;
-    }
-    refreshVoter(voter);
+    }));
   };
 
   const queryResultTone = queryTarget
@@ -1226,30 +1144,6 @@ export function BanListPanel({
               </div>
             )}
           </div>
-            )}
-            {activeGovTarget && (
-          <GovVoterSheet
-            target={activeGovTarget}
-            voters={govVoters.voters}
-            count={govVoters.count}
-            totalVoteWeight={govVotingPower.totalVoteWeight}
-            page={voterPage}
-            totalPages={voterTotalPages}
-            isPending={govVoters.isPending}
-            query={voterQuery}
-            queryResult={voterQueryResult}
-            refreshStatusLabel={transactionLabel(activeGovTarget.type === 'address' ? refreshAddressTx : refreshSenderTx, '等待钱包确认', '重算确认中')}
-            onQueryChange={(value) => {
-              setVoterQuery(value);
-              setVoterQueryResult('');
-            }}
-            onQuery={queryVoter}
-            onClearQuery={clearVoterQuery}
-            onRefreshVoter={refreshVoter}
-            onRefreshQueriedVoter={refreshQueriedVoter}
-            onPageChange={setVoterPage}
-            onClose={() => setActiveGovTarget(undefined)}
-          />
             )}
             {activeAdminBanSource && listMode && (
           <AdminBanListRows

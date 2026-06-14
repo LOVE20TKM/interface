@@ -59,6 +59,21 @@ export function buildGroupChatSenderHref(groupId: bigint, senderId: bigint) {
   return `/chat/group/sender?${params.toString()}`;
 }
 
+export function buildGroupChatBanVotersHref(
+  groupId: bigint,
+  target: { type: 'address'; value: `0x${string}` } | { type: 'nft'; value: bigint },
+) {
+  const params = new URLSearchParams();
+  params.set('groupId', groupId.toString());
+  params.set('target', target.type);
+  if (target.type === 'address') {
+    params.set('address', target.value);
+  } else {
+    params.set('senderId', target.value.toString());
+  }
+  return `/chat/group/ban-voters?${params.toString()}`;
+}
+
 export function buildGroupChatDetailUrl(groupId: bigint): UrlObject {
   return {
     pathname: '/chat/group',

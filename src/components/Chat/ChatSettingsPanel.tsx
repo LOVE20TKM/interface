@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, Info, PlugZap, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -28,6 +28,7 @@ import {
 } from '@/src/hooks/contracts/useGroupChatModeration';
 import {
   useGroupChatPublicData,
+  useGroupNames,
 } from '@/src/hooks/composite/useGroupChatData';
 import NftOwnerLookup from '@/src/components/Extension/Base/Group/NftOwnerLookup';
 import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
@@ -220,10 +221,18 @@ function StatusMetric({
   );
 }
 
-function formatDelegateIdText(isPending: boolean, delegateId: bigint | undefined) {
-  if (isPending) return '读取中';
+function formatDelegateText(
+  isDelegatePending: boolean,
+  delegateId: bigint | undefined,
+  isNamePending: boolean,
+  delegateName?: string,
+) {
+  if (isDelegatePending) return '读取中';
   if (delegateId === undefined || delegateId === BigInt(0)) return '未设置';
-  return `NFT #${delegateId.toString()}`;
+  const idText = `NFT #${delegateId.toString()}`;
+  if (isNamePending) return `${idText} · 名称读取中`;
+  const nameText = delegateName?.trim();
+  return nameText ? `${idText} · ${nameText}` : idText;
 }
 
 function SettingsPanelSection({
@@ -269,6 +278,15 @@ export function ChatSettingsPanel({
   const afterPluginTx = useSetGroupChatAfterPostPlugin();
   const groupDelegate = useGroupChatGroupDelegateAddress();
   const delegateState = useGroupDelegateId(groupDelegate.groupDelegateAddress, groupId);
+  const delegateLookupSeedRef = useRef<string | undefined>();
+  const currentDelegateId = delegateState.delegateId && delegateState.delegateId > BigInt(0)
+    ? delegateState.delegateId
+    : undefined;
+  const {
+    groupNames: currentDelegateNames,
+    isPending: isPendingCurrentDelegateName,
+    refetch: refetchCurrentDelegateName,
+  } = useGroupNames([currentDelegateId], !!currentDelegateId);
   const delegateTx = useSetGroupDelegateId(groupDelegate.groupDelegateAddress);
   const delegateLookup = useNftOwnerLookup({ initialMode: 'id' });
   const editPermission = useGroupOwnerOrDelegatePermission(groupId, account);
@@ -288,7 +306,13 @@ export function ChatSettingsPanel({
   const beforePluginExplanation = explainPluginContract(publicData.chatInfo?.beforePostPlugin, 'before');
   const afterPluginExplanation = explainPluginContract(publicData.chatInfo?.afterPostPlugin, 'after');
   const activationText = publicData.chatInfo ? (publicData.chatInfo.activated ? '已激活' : '未激活') : '读取中';
-  const delegateText = formatDelegateIdText(groupDelegate.isPending || delegateState.isPending, delegateState.delegateId);
+  const currentDelegateName = currentDelegateId ? currentDelegateNames[currentDelegateId.toString()] : undefined;
+  const delegateText = formatDelegateText(
+    groupDelegate.isPending || delegateState.isPending,
+    delegateState.delegateId,
+    !!currentDelegateId && isPendingCurrentDelegateName,
+    currentDelegateName,
+  );
   const adminsHref = buildGroupChatPanelHref('admins', groupId, { from: 'settings' });
   const permissionSummary = (() => {
     if (managerOwned) return { text: '去中心化合约管理', tone: 'neutral' as const };
@@ -313,8 +337,9 @@ export function ChatSettingsPanel({
   const refetchSettings = useCallback(() => {
     publicData.refetch();
     delegateState.refetch();
+    refetchCurrentDelegateName();
     onChanged();
-  }, [delegateState, onChanged, publicData]);
+  }, [delegateState, onChanged, publicData, refetchCurrentDelegateName]);
   useConfirmedTransactionEffect(postingTx, refetchSettings);
   useConfirmedTransactionEffect(scopeTx, refetchSettings);
   useConfirmedTransactionEffect(banTx, refetchSettings);
@@ -332,11 +357,22 @@ export function ChatSettingsPanel({
   }, [publicData.chatInfo]);
 
   useEffect(() => {
-    if (delegateState.delegateId !== undefined && delegateState.delegateId > BigInt(0) && !delegateLookup.lookupValue) {
-      delegateLookup.setLookupMode('id');
-      delegateLookup.setLookupValue(delegateState.delegateId.toString());
+    if (!delegateExpanded) {
+      delegateLookupSeedRef.current = undefined;
+      return;
     }
-  }, [delegateLookup, delegateState.delegateId]);
+    if (delegateState.delegateId === undefined) return;
+
+    const delegateIdInput = delegateState.delegateId > BigInt(0)
+      ? delegateState.delegateId.toString()
+      : '';
+    const seedKey = `${groupId.toString()}:${delegateIdInput}`;
+    if (delegateLookupSeedRef.current === seedKey) return;
+
+    delegateLookup.setLookupMode('id');
+    delegateLookup.setLookupValue(delegateIdInput);
+    delegateLookupSeedRef.current = seedKey;
+  }, [delegateExpanded, delegateLookup.setLookupMode, delegateLookup.setLookupValue, delegateState.delegateId, groupId]);
 
   const updatePostingAllowed = async (value: boolean) => {
     try {

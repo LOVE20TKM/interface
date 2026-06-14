@@ -139,6 +139,7 @@ const buildKnownContractTargets = (): ProtectedTargetInfo[] => {
     { label: 'Uniswap V2 Router', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER },
     { label: 'LOVE20 NFT', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP },
     { label: 'Group Defaults', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_DEFAULTS },
+    { label: 'Group Delegate', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_DELEGATE },
     { label: 'Group Chat', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT },
     { label: 'Group Chat Admin', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_ADMIN },
     { label: 'Group Chat Ban List', address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_BAN_LIST },

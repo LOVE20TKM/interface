@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Info } from 'lucide-react';
+import { Info, Loader2, Trash2 } from 'lucide-react';
 
 import {
   useAddGroupAdmins,
@@ -53,6 +53,7 @@ export function AdminsPanel({
   const detailSubtitle = useGroupDetailSubtitle(groupId, publicData);
   const resolvedLookupId = nftLookup.lookupResult?.status === 'resolved' ? nftLookup.lookupResult.tokenId : undefined;
   const [queryResult, setQueryResult] = useState('');
+  const [pendingRemoveId, setPendingRemoveId] = useState<bigint | undefined>();
   const [permissionExpanded, setPermissionExpanded] = useState(false);
   const permissionStatusDetail = managerOwned
     ? '这个群由去中心化合约管理；激活后这里没有可修改的管理员名单。'
@@ -94,6 +95,17 @@ export function AdminsPanel({
     describeAdmin(resolvedLookupId, nftLookup.lookupResult.groupName);
   }, [describeAdmin, nftLookup.lookupResult, resolvedLookupId]);
 
+  useEffect(() => {
+    if (!pendingRemoveId) return;
+    if (removeTx.isConfirmed || removeTx.writeError) {
+      setPendingRemoveId(undefined);
+    }
+  }, [pendingRemoveId, removeTx.isConfirmed, removeTx.writeError]);
+
+  const isAddingAdmin = addTx.isPending || addTx.isConfirming;
+  const addAdminLabel = addTx.isConfirming ? '确认中' : addTx.isPending ? '提交中' : '加入名单';
+  const isRemovingAdmin = removeTx.isPending || removeTx.isConfirming;
+
   const querySelf = () => {
     if (!accountData.defaultSenderId) {
       toast.error('当前钱包未设置默认 NFT');
@@ -105,6 +117,11 @@ export function AdminsPanel({
   };
 
   const addAdmin = async () => {
+    if (!canEditAdmins) {
+      toast.error('当前地址没有管理员名单维护权限');
+      return;
+    }
+    if (isAddingAdmin) return;
     if (!resolvedLookupId) {
       toast.error('请先输入并解析有效 NFT');
       return;
@@ -118,10 +135,17 @@ export function AdminsPanel({
   };
 
   const removeAdmin = async (id: bigint) => {
+    if (!canEditAdmins) {
+      toast.error('当前地址没有管理员名单维护权限');
+      return;
+    }
+    if (isRemovingAdmin) return;
+    setPendingRemoveId(id);
     try {
       await removeTx.removeAdmins(groupId, [id]);
       toast.success('已提交移除管理员');
     } catch (error) {
+      setPendingRemoveId(undefined);
       console.error(error);
     }
   };
@@ -167,8 +191,8 @@ export function AdminsPanel({
           lookupResult={nftLookup.lookupResult}
           onQuerySelf={querySelf}
           onAdd={addAdmin}
-          addLabel="加入名单"
-          canAdd={canEditAdmins}
+          addLabel={addAdminLabel}
+          canAdd={canEditAdmins && !isAddingAdmin}
         />
         {queryResult && <div className="query-result">{queryResult}</div>}
         <div className="admin-nft-list">
@@ -184,7 +208,19 @@ export function AdminsPanel({
               <span className={cn('pill', admin.isEffective ? 'pill-good' : 'pill-neutral')}>
                 {admin.isEffective ? '有效' : '失效'}
               </span>
-              <button type="button" onClick={() => removeAdmin(admin.id)} disabled={!canEditAdmins} aria-label="移除">x</button>
+              <button
+                type="button"
+                onClick={() => removeAdmin(admin.id)}
+                disabled={!canEditAdmins || isRemovingAdmin}
+                aria-label={pendingRemoveId === admin.id && isRemovingAdmin ? '正在移除管理员' : '移除管理员'}
+                title={pendingRemoveId === admin.id && isRemovingAdmin ? (removeTx.isConfirming ? '确认移除中' : '提交移除中') : '移除管理员'}
+              >
+                {pendingRemoveId === admin.id && isRemovingAdmin ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                )}
+              </button>
             </article>
           )) : <div className="empty-state">暂无记录</div>}
         </div>

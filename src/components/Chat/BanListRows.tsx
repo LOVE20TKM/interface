@@ -54,7 +54,7 @@ async function copyAddress(text: string) {
   }
 }
 
-function AddressDisplay({ address }: { address: `0x${string}` }) {
+export function AddressDisplay({ address }: { address: `0x${string}` }) {
   return (
     <span className="ban-list-address-line">
       <code title={address}>{abbreviateAddress(address)}</code>

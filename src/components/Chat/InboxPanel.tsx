@@ -1,22 +1,22 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { MessagesSquare, MoreHorizontal } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { MessagesSquare, MoreHorizontal } from "lucide-react";
 
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import { useGroupChatSyncState } from '@/src/contexts/GroupChatSyncContext';
-import type { GroupChatListItem } from '@/src/hooks/composite/useGroupChatData';
-import { cn } from '@/lib/utils';
-import { suppressNextRouteLoading } from '@/src/lib/routeLoading';
-import { ChatBadge } from './ChatBadge';
-import { LONG_PRESS_MOVE_TOLERANCE, LONG_PRESS_MS } from './chatConstants';
+import LoadingIcon from "@/src/components/Common/LoadingIcon";
+import { useGroupChatSyncState } from "@/src/contexts/GroupChatSyncContext";
+import type { GroupChatListItem } from "@/src/hooks/composite/useGroupChatData";
+import { cn } from "@/lib/utils";
+import { suppressNextRouteLoading } from "@/src/lib/routeLoading";
+import { ChatBadge } from "./ChatBadge";
+import { LONG_PRESS_MOVE_TOLERANCE, LONG_PRESS_MS } from "./chatConstants";
 import {
   GROUP_CHAT_RECOMMENDATION_REASON_LABELS,
   GROUP_CHAT_RECOMMENDATION_REASON_RANK,
   type GroupChatRecommendationReason,
   type GroupChatRecommendationSignal,
-} from './chatTypes';
-import { buildGroupChatDetailHref, buildGroupChatDetailUrl, safeBigIntFromString } from './chatUtils';
+} from "./chatTypes";
+import { buildGroupChatDetailHref, buildGroupChatDetailUrl, safeBigIntFromString } from "./chatUtils";
 
 const CONVERSATION_MENU_WIDTH = 132;
 const CONVERSATION_MENU_HEIGHT = 44;
@@ -45,10 +45,10 @@ function ConversationItem({
       ? syncState.messagesCount
       : item.messagesCount;
   const rawUnreadCount = effectiveMessagesCount > readCursor ? effectiveMessagesCount - readCursor : BigInt(0);
-  const visibleUnreadCount =
-    syncState.unreadCount > rawUnreadCount ? syncState.unreadCount : rawUnreadCount;
+  const visibleUnreadCount = syncState.unreadCount > rawUnreadCount ? syncState.unreadCount : rawUnreadCount;
   const hasUnreadMentionMe = syncState.unreadMentionMeCount > BigInt(0) || item.latestMentionMeMessageId > readCursor;
-  const hasUnreadMentionAll = syncState.unreadMentionAllCount > BigInt(0) || item.latestMentionAllMessageId > readCursor;
+  const hasUnreadMentionAll =
+    syncState.unreadMentionAllCount > BigInt(0) || item.latestMentionAllMessageId > readCursor;
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ left: CONVERSATION_MENU_GUTTER, top: CONVERSATION_MENU_GUTTER });
   const rowRef = useRef<HTMLDivElement | null>(null);
@@ -76,12 +76,12 @@ function ConversationItem({
       setMenuOpen(false);
     };
 
-    document.addEventListener('pointerdown', closeOnPointerDown);
-    return () => document.removeEventListener('pointerdown', closeOnPointerDown);
+    document.addEventListener("pointerdown", closeOnPointerDown);
+    return () => document.removeEventListener("pointerdown", closeOnPointerDown);
   }, [menuOpen]);
 
   const startLongPress = (event: React.PointerEvent<HTMLElement>) => {
-    if (event.button !== 0 || (event.target as HTMLElement).closest('.conversation-menu')) {
+    if (event.button !== 0 || (event.target as HTMLElement).closest(".conversation-menu")) {
       return;
     }
     const { clientX, clientY, pointerId } = event;
@@ -93,11 +93,23 @@ function ConversationItem({
       timer: setTimeout(() => {
         const rect = rowRef.current?.getBoundingClientRect();
         if (rect) {
-          const maxLeft = Math.max(CONVERSATION_MENU_GUTTER, rect.width - CONVERSATION_MENU_WIDTH - CONVERSATION_MENU_GUTTER);
-          const maxTop = Math.max(CONVERSATION_MENU_GUTTER, rect.height - CONVERSATION_MENU_HEIGHT - CONVERSATION_MENU_GUTTER);
+          const maxLeft = Math.max(
+            CONVERSATION_MENU_GUTTER,
+            rect.width - CONVERSATION_MENU_WIDTH - CONVERSATION_MENU_GUTTER,
+          );
+          const maxTop = Math.max(
+            CONVERSATION_MENU_GUTTER,
+            rect.height - CONVERSATION_MENU_HEIGHT - CONVERSATION_MENU_GUTTER,
+          );
           setMenuPosition({
-            left: Math.min(Math.max(clientX - rect.left - CONVERSATION_MENU_WIDTH / 2, CONVERSATION_MENU_GUTTER), maxLeft),
-            top: Math.min(Math.max(clientY - rect.top - CONVERSATION_MENU_HEIGHT / 2, CONVERSATION_MENU_GUTTER), maxTop),
+            left: Math.min(
+              Math.max(clientX - rect.left - CONVERSATION_MENU_WIDTH / 2, CONVERSATION_MENU_GUTTER),
+              maxLeft,
+            ),
+            top: Math.min(
+              Math.max(clientY - rect.top - CONVERSATION_MENU_HEIGHT / 2, CONVERSATION_MENU_GUTTER),
+              maxTop,
+            ),
           });
         }
         pressRef.current = null;
@@ -125,14 +137,14 @@ function ConversationItem({
       onPointerCancel={clearPress}
       onContextMenu={(event) => event.preventDefault()}
       className="conversation-row-wrap"
-      data-menu-open={menuOpen ? 'true' : 'false'}
+      data-menu-open={menuOpen ? "true" : "false"}
       data-long-press-conversation
     >
       <Link
         href={href}
         prefetch={false}
-        className={cn('conversation-row group-row', typeClass, followed && 'pinned')}
-        data-menu-open={menuOpen ? 'true' : 'false'}
+        className={cn("conversation-row group-row", typeClass, followed && "pinned")}
+        data-menu-open={menuOpen ? "true" : "false"}
         onClick={(event) => {
           if (suppressClickRef.current) {
             suppressClickRef.current = false;
@@ -146,13 +158,11 @@ function ConversationItem({
       >
         <div className="conversation-main">
           <div className="conversation-title">
-            <span>{item.title.replace(` ${item.typeLabel}`, '')}</span>
+            <span>{item.title.replace(` ${item.typeLabel}`, "")}</span>
             <ChatBadge>{item.typeLabel}</ChatBadge>
           </div>
           <div className="conversation-kicker">
-            <span className="conversation-meta-text">
-              G#{item.groupId.toString()}
-            </span>
+            <span className="conversation-meta-text">G#{item.groupId.toString()}</span>
             {recommendationReason && (
               <span className="conversation-badge recommendation-reason">
                 {GROUP_CHAT_RECOMMENDATION_REASON_LABELS[recommendationReason]}
@@ -203,7 +213,7 @@ function ConversationItem({
               setMenuOpen(false);
             }}
           >
-            {followed ? '移出' : '添加'}
+            {followed ? "移出" : "添加"}
           </button>
         </div>
       )}
@@ -211,19 +221,13 @@ function ConversationItem({
   );
 }
 
-function EmptyInbox({
-  isConnected,
-  tokenSymbol,
-}: {
-  isConnected: boolean;
-  tokenSymbol?: string;
-}) {
+function EmptyInbox({ isConnected, tokenSymbol }: { isConnected: boolean; tokenSymbol?: string }) {
   return (
     <div className="empty-state text-center">
       <MessagesSquare className="mx-auto mb-2 h-5 w-5 text-secondary" />
       <strong className="block text-greyscale-900">暂无已激活群聊</strong>
       <p className="mt-2 leading-6">
-        public-test 当前没有链上群聊记录。可以从当前代币{tokenSymbol ? ` ${tokenSymbol} ` : ' '}开始创建主群或治理群。
+        当前没有链上群聊记录。可以从当前代币{tokenSymbol ? ` ${tokenSymbol} ` : " "}开始创建主群或治理群。
       </p>
       {!isConnected && <p className="mt-3 text-secondary">连接钱包后可创建群聊。</p>}
     </div>
@@ -250,14 +254,14 @@ function InboxHeaderMenu({
       setOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === "Escape") setOpen(false);
     };
 
-    document.addEventListener('pointerdown', closeOnPointerDown);
-    document.addEventListener('keydown', closeOnEscape);
+    document.addEventListener("pointerdown", closeOnPointerDown);
+    document.addEventListener("keydown", closeOnEscape);
     return () => {
-      document.removeEventListener('pointerdown', closeOnPointerDown);
-      document.removeEventListener('keydown', closeOnEscape);
+      document.removeEventListener("pointerdown", closeOnPointerDown);
+      document.removeEventListener("keydown", closeOnEscape);
     };
   }, [open]);
 
@@ -356,17 +360,23 @@ export function InboxPanel({
                 onOpenPreferences={onOpenPreferences}
               />
             </div>
-            {followedItems.length ? followedItems.map((item) => (
-              <ConversationItem
-                key={item.groupId.toString()}
-                item={item}
-                followed
-                recommendationReason={recommendationReasonByGroup[item.groupId.toString()]}
-                readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                tokenSymbol={tokenSymbol}
-                onToggleFollow={onToggleFollow}
-              />
-            )) : <div className="empty-state compact">暂无我的群聊</div>}
+            {followedItems.length ? (
+              followedItems.map((item) => (
+                <ConversationItem
+                  key={item.groupId.toString()}
+                  item={item}
+                  followed
+                  recommendationReason={recommendationReasonByGroup[item.groupId.toString()]}
+                  readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
+                  tokenSymbol={tokenSymbol}
+                  onToggleFollow={onToggleFollow}
+                />
+              ))
+            ) : (
+              <div className="empty-state compact">
+                暂无已关注群聊，可在下方推荐群聊点击添加，或点击右上角菜单添加群聊
+              </div>
+            )}
           </div>
           {hasVisibleItems ? (
             <div className="conversation-section">
@@ -374,17 +384,21 @@ export function InboxPanel({
                 <strong>推荐群聊</strong>
                 <span>{recommendedItems.length} 个</span>
               </div>
-              {recommendedItems.length ? recommendedItems.map((item) => (
-                <ConversationItem
-                  key={item.groupId.toString()}
-                  item={item}
-                  followed={false}
-                  recommendationReason={recommendationReasonByGroup[item.groupId.toString()]}
-                  readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
-                  tokenSymbol={tokenSymbol}
-                  onToggleFollow={onToggleFollow}
-                />
-              )) : <div className="empty-state compact">暂无更多推荐群聊</div>}
+              {recommendedItems.length ? (
+                recommendedItems.map((item) => (
+                  <ConversationItem
+                    key={item.groupId.toString()}
+                    item={item}
+                    followed={false}
+                    recommendationReason={recommendationReasonByGroup[item.groupId.toString()]}
+                    readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
+                    tokenSymbol={tokenSymbol}
+                    onToggleFollow={onToggleFollow}
+                  />
+                ))
+              ) : (
+                <div className="empty-state compact">暂无更多推荐群聊</div>
+              )}
             </div>
           ) : (
             <EmptyInbox isConnected={isConnected} tokenSymbol={tokenSymbol} />

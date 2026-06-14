@@ -115,8 +115,14 @@ function AddressItem({
   return (
     <div className="rounded-lg">
       <div className="flex items-center justify-between gap-2">
-        <div className={nameClassName}>{name}</div>
-        <AddressWithCopyButton address={address as `0x${string}`} />
+        <div className={`${nameClassName} min-w-0 break-words`}>{name}</div>
+        {address ? (
+          <span className="shrink-0">
+            <AddressWithCopyButton address={address as `0x${string}`} />
+          </span>
+        ) : (
+          <span className="shrink-0 text-xs text-muted-foreground">未配置</span>
+        )}
       </div>
     </div>
   );
@@ -275,6 +281,8 @@ const TokenPage = () => {
 
   // 常量合约地址（来自环境变量）
   const constantsAddresses = {
+    RootParentToken: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN,
+    FirstToken: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_FIRST_TOKEN,
     TokenFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_TOKEN_FACTORY,
     Launch: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_LAUNCH,
     Stake: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE,
@@ -292,6 +300,19 @@ const TokenPage = () => {
     Hub: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB,
     Group: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP,
     GroupDefaults: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_DEFAULTS,
+    GroupDelegate: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_DELEGATE,
+    GroupChat: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT,
+    GroupAdmin: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_ADMIN,
+    GroupBanList: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_BAN_LIST,
+    AdminBanSource: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_ADMIN_BAN_SOURCE,
+    GovVotedBanSource: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_GOV_VOTED_BAN_SOURCE,
+    GroupMember: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_MEMBER,
+    GroupMemberScope: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_MEMBER_SCOPE,
+    GroupJoinScopeSource: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_JOIN_SCOPE_SOURCE,
+    TokenMainManager: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_TOKEN_MAIN_MANAGER,
+    TokenGovManager: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_TOKEN_GOV_MANAGER,
+    TokenActionMainManager: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_TOKEN_ACTION_MAIN_MANAGER,
+    TokenActionGovManager: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_GROUP_CHAT_TOKEN_ACTION_GOV_MANAGER,
     ExtensionCenter: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_CENTER,
     ExtensionGroupManager: groupManagerContractAddress,
     ExtensionGroupJoin: groupJoinContractAddress,
@@ -301,6 +322,7 @@ const TokenPage = () => {
     ExtensionGroupServiceFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_SERVICE_FACTORY,
     ExtensionLpFactory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY,
     ExtensionLpFactoryV2: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_LP_FACTORY_V2,
+    BatchTransfer: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_BATCH_TRANSFER,
   } as const;
 
   // 当前代币相关地址
@@ -697,6 +719,22 @@ const TokenPage = () => {
 
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
+                      <CardTitle className="text-lg">LOVE20 系统代币地址：</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-3 px-4 pt-2 pb-4">
+                      <AddressItem
+                        name={`${process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL || 'RootParentToken'}(根父币)`}
+                        address={constantsAddresses.RootParentToken}
+                      />
+                      <AddressItem
+                        name={`${process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL || 'FirstToken'}(首个代币)`}
+                        address={constantsAddresses.FirstToken}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="px-4 pt-4 pb-2">
                       <CardTitle className="text-lg">UniswapV2 合约地址：</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
@@ -720,6 +758,15 @@ const TokenPage = () => {
 
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
+                      <CardTitle className="text-lg">LOVE20 应用合约地址：</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-3 px-4 pt-2 pb-4">
+                      <AddressItem name="BatchTransfer" address={constantsAddresses.BatchTransfer} />
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="px-4 pt-4 pb-2">
                       <CardTitle className="flex items-center justify-between text-lg">
                         <span>LOVE20 生态合约地址：</span>
                       </CardTitle>
@@ -727,6 +774,7 @@ const TokenPage = () => {
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
                       <AddressItem name="Group" address={constantsAddresses.Group} />
                       <AddressItem name="GroupDefaults" address={constantsAddresses.GroupDefaults} />
+                      <AddressItem name="GroupDelegate" address={constantsAddresses.GroupDelegate} />
                       <AddressItem name="ExtensionCenter" address={constantsAddresses.ExtensionCenter} />
                       {constantsAddresses.ExtensionLpFactoryV2 ? (
                         <>
@@ -749,6 +797,34 @@ const TokenPage = () => {
                         name="ExtensionGroupServiceFactory"
                         nameClassName="text-sm"
                         address={constantsAddresses.ExtensionGroupServiceFactory}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="px-4 pt-4 pb-2">
+                      <CardTitle className="text-lg">GroupChat 合约地址：</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-3 px-4 pt-2 pb-4">
+                      <AddressItem name="GroupChat" address={constantsAddresses.GroupChat} />
+                      <AddressItem name="GroupAdmin" address={constantsAddresses.GroupAdmin} />
+                      <AddressItem name="GroupBanList" address={constantsAddresses.GroupBanList} />
+                      <AddressItem name="GroupMember" address={constantsAddresses.GroupMember} />
+                      <AddressItem name="AdminBanSource" address={constantsAddresses.AdminBanSource} />
+                      <AddressItem name="GovVotedBanSource" address={constantsAddresses.GovVotedBanSource} />
+                      <AddressItem name="GroupMemberScope" address={constantsAddresses.GroupMemberScope} />
+                      <AddressItem name="GroupJoinScopeSource" address={constantsAddresses.GroupJoinScopeSource} />
+                      <AddressItem name="TokenMainManager" address={constantsAddresses.TokenMainManager} />
+                      <AddressItem name="TokenGovManager" address={constantsAddresses.TokenGovManager} />
+                      <AddressItem
+                        name="TokenActionMainManager"
+                        nameClassName="text-sm"
+                        address={constantsAddresses.TokenActionMainManager}
+                      />
+                      <AddressItem
+                        name="TokenActionGovManager"
+                        nameClassName="text-sm"
+                        address={constantsAddresses.TokenActionGovManager}
                       />
                     </CardContent>
                   </Card>
