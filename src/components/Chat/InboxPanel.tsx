@@ -171,7 +171,7 @@ function ConversationItem({
             {(hasUnreadMentionMe || hasUnreadMentionAll || visibleUnreadCount > BigInt(0)) && (
               <span className="conversation-reminders">
                 {hasUnreadMentionMe && <span className="conversation-badge mention-me">@我</span>}
-                {hasUnreadMentionAll && <span className="conversation-badge mention-all">@全部</span>}
+                {hasUnreadMentionAll && <span className="conversation-badge mention-all">@所有人</span>}
                 {visibleUnreadCount > BigInt(0) && (
                   <span className="conversation-badge unread-meta">未读 {visibleUnreadCount.toString()}</span>
                 )}

@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
 import { quotedMessageSummary } from './chatUtils';
+import { ChatMessageText } from './ChatMessageText';
 import type { SendAvailability } from './sendAvailability';
 
 export const ChatComposer = forwardRef<HTMLElement, {
@@ -88,26 +89,33 @@ export const ChatComposer = forwardRef<HTMLElement, {
               onClick={onToggleMentionAll}
               disabled={mentionAllDisabled && !mentionAllActive}
               aria-pressed={mentionAllActive}
-              aria-label={mentionAllActive ? '取消 @全部' : '添加 @全部'}
-              title={mentionAllDisabled && !mentionAllActive ? '只有群 owner、delegate 或管理员 NFT 可用' : mentionAllActive ? '取消 @全部' : '添加 @全部'}
+              aria-label={mentionAllActive ? '取消 @所有人' : '添加 @所有人'}
+              title={mentionAllDisabled && !mentionAllActive ? '只有群 owner、delegate 或管理员 NFT 可用' : mentionAllActive ? '取消 @所有人' : '添加 @所有人'}
             >
               <AtSign className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>全部</span>
+              <span>所有人</span>
             </button>
             {!activeCanPost && <span className="composer-identity-status">不可发言</span>}
           </div>
           {quotedMessage && (
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
+              <div
                 className="chip inline-flex max-w-full items-center gap-1 rounded-full border border-greyscale-200 bg-greyscale-50 px-2 py-1 text-xs text-greyscale-600"
-                onClick={onClearQuote}
-                title="取消引用"
               >
                 <Quote className="h-3 w-3 shrink-0" />
-                <span className="truncate">引用 {quotedMessageSummary(quotedMessage, 18)}</span>
-                <X className="h-3 w-3 shrink-0" />
-              </button>
+                <span className="truncate">
+                  引用 <ChatMessageText content={quotedMessageSummary(quotedMessage, 18)} sourceContent={quotedMessage.content} />
+                </span>
+                <button
+                  type="button"
+                  className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 text-greyscale-500 hover:text-greyscale-900"
+                  onClick={onClearQuote}
+                  title="取消引用"
+                  aria-label="取消引用"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
             </div>
           )}
           <div className="composer-row">

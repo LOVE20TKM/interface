@@ -247,7 +247,18 @@ function countMentionTokenOccurrences(content: string, token: string) {
   return Array.from(content.matchAll(new RegExp(`${escapeRegExp(token)}${tokenBoundary}`, 'gu'))).length;
 }
 
-const MENTION_ALL_TOKEN_PATTERN = /(^|[\s,，。.!?！？;；:：、([{（【])(@(?:all|全部|全体))(?=$|\s|[,.!?;:，。！？；：、)）\]】])/giu;
+export const MENTION_ALL_DISPLAY_TOKEN = '@所有人';
+
+const MENTION_ALL_TOKEN_ALTERNATIVES = [
+  MENTION_ALL_DISPLAY_TOKEN,
+  `@${'全部'}`,
+  `@${'全体'}`,
+  '@all',
+];
+const MENTION_ALL_TOKEN_PATTERN = new RegExp(
+  String.raw`(^|[\s,，。.!?！？;；:：、([{（【])(${MENTION_ALL_TOKEN_ALTERNATIVES.map(escapeRegExp).join('|')})(?=$|\s|[,.!?;:，。！？；：、)）\]】])`,
+  'giu',
+);
 
 export function hasMentionAllToken(content: string) {
   MENTION_ALL_TOKEN_PATTERN.lastIndex = 0;
@@ -257,7 +268,11 @@ export function hasMentionAllToken(content: string) {
 export function addMentionAllToken(content: string) {
   if (hasMentionAllToken(content)) return content;
   const trimmedEnd = /\s$/.test(content) || content.length === 0 ? content : `${content} `;
-  return `${trimmedEnd}@全部 `;
+  return `${trimmedEnd}${MENTION_ALL_DISPLAY_TOKEN} `;
+}
+
+export function normalizeMentionAllDisplayTokens(content: string) {
+  return content.replace(MENTION_ALL_TOKEN_PATTERN, (_match, prefix) => `${prefix}${MENTION_ALL_DISPLAY_TOKEN}`);
 }
 
 export function removeMentionAllTokens(content: string) {

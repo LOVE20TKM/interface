@@ -978,9 +978,9 @@ async function main() {
   const delegateBanTarget = mentionTarget;
   const groupName = makeTestGroupName();
   const content = `${process.env.PUBLIC_TEST_MESSAGE_PREFIX || DEFAULT_MESSAGE_PREFIX}:member:${new Date().toISOString()}:${crypto.randomBytes(4).toString('hex')}`;
-  const mentionAllContent = `${process.env.PUBLIC_TEST_MESSAGE_PREFIX || DEFAULT_MESSAGE_PREFIX}:all:${new Date().toISOString()}:${crypto.randomBytes(4).toString('hex')} @全部`;
-  const adminMentionAllContent = `${process.env.PUBLIC_TEST_MESSAGE_PREFIX || DEFAULT_MESSAGE_PREFIX}:admin-all:${new Date().toISOString()}:${crypto.randomBytes(4).toString('hex')} @全部`;
-  const delegateMentionAllContent = `${process.env.PUBLIC_TEST_MESSAGE_PREFIX || DEFAULT_MESSAGE_PREFIX}:delegate-all:${new Date().toISOString()}:${crypto.randomBytes(4).toString('hex')} @全部`;
+  const mentionAllContent = `${process.env.PUBLIC_TEST_MESSAGE_PREFIX || DEFAULT_MESSAGE_PREFIX}:all:${new Date().toISOString()}:${crypto.randomBytes(4).toString('hex')} @所有人`;
+  const adminMentionAllContent = `${process.env.PUBLIC_TEST_MESSAGE_PREFIX || DEFAULT_MESSAGE_PREFIX}:admin-all:${new Date().toISOString()}:${crypto.randomBytes(4).toString('hex')} @所有人`;
+  const delegateMentionAllContent = `${process.env.PUBLIC_TEST_MESSAGE_PREFIX || DEFAULT_MESSAGE_PREFIX}:delegate-all:${new Date().toISOString()}:${crypto.randomBytes(4).toString('hex')} @所有人`;
   const replyContent = `${process.env.PUBLIC_TEST_MESSAGE_PREFIX || DEFAULT_MESSAGE_PREFIX}:reply:${new Date().toISOString()}:${crypto.randomBytes(4).toString('hex')}`;
 
   const groupId = await mintFreshGroup({ env, tools, participant: primary, groupName });
@@ -1047,9 +1047,9 @@ async function main() {
   console.log(`测试新链群 groupId=${groupId.toString()} name=${groupName}`);
   console.log(`测试代理 ${delegateTarget.accountName} NFT=${delegateTarget.defaultGroupId.toString()}`);
   console.log(`测试成员消息 ${content}`);
-  console.log(`测试 @全部 ${mentionAllContent}`);
-  console.log(`测试管理员 @全部 ${adminMentionAllContent}`);
-  console.log(`测试代理 @全部 ${delegateMentionAllContent}`);
+  console.log(`测试 @所有人 ${mentionAllContent}`);
+  console.log(`测试管理员 @所有人 ${adminMentionAllContent}`);
+  console.log(`测试代理 @所有人 ${delegateMentionAllContent}`);
   console.log(`测试回复 ${replyContent}`);
 
   let next;
@@ -1084,20 +1084,20 @@ async function main() {
         if (participant === adminTarget) {
           await sendMessageFromComposer(page, adminMentionAllContent);
           const adminMentionAll = await waitForChainMessage({ env, tools, groupId, content: adminMentionAllContent });
-          assert(adminMentionAll, `${participant.accountName} 前端显示管理员 @全部 已发送，但链上没有读到对应消息`);
-          assert(tupleValue(adminMentionAll.message, 'mentionAll', 9) === true, '链上管理员 @全部 消息 mentionAll 应为 true');
+          assert(adminMentionAll, `${participant.accountName} 前端显示管理员 @所有人 已发送，但链上没有读到对应消息`);
+          assert(tupleValue(adminMentionAll.message, 'mentionAll', 9) === true, '链上管理员 @所有人 消息 mentionAll 应为 true');
           const adminSenderAddress = tupleValue(adminMentionAll.message, 'senderAddress', 2);
-          assert(adminSenderAddress.toLowerCase() === participant.address.toLowerCase(), '链上管理员 @全部 senderAddress 不匹配');
-          console.log(`${participant.accountName} 管理员 @全部 通过: messageId=${adminMentionAll.messageId.toString()}`);
+          assert(adminSenderAddress.toLowerCase() === participant.address.toLowerCase(), '链上管理员 @所有人 senderAddress 不匹配');
+          console.log(`${participant.accountName} 管理员 @所有人 通过: messageId=${adminMentionAll.messageId.toString()}`);
         }
         if (participant === delegateTarget) {
           await sendMessageFromComposer(page, delegateMentionAllContent);
           const delegateMentionAll = await waitForChainMessage({ env, tools, groupId, content: delegateMentionAllContent });
-          assert(delegateMentionAll, `${participant.accountName} 前端显示代理 @全部 已发送，但链上没有读到对应消息`);
-          assert(tupleValue(delegateMentionAll.message, 'mentionAll', 9) === true, '链上代理 @全部 消息 mentionAll 应为 true');
+          assert(delegateMentionAll, `${participant.accountName} 前端显示代理 @所有人 已发送，但链上没有读到对应消息`);
+          assert(tupleValue(delegateMentionAll.message, 'mentionAll', 9) === true, '链上代理 @所有人 消息 mentionAll 应为 true');
           const delegateSenderAddress = tupleValue(delegateMentionAll.message, 'senderAddress', 2);
-          assert(delegateSenderAddress.toLowerCase() === participant.address.toLowerCase(), '链上代理 @全部 senderAddress 不匹配');
-          console.log(`${participant.accountName} 代理 @全部 通过: messageId=${delegateMentionAll.messageId.toString()}`);
+          assert(delegateSenderAddress.toLowerCase() === participant.address.toLowerCase(), '链上代理 @所有人 senderAddress 不匹配');
+          console.log(`${participant.accountName} 代理 @所有人 通过: messageId=${delegateMentionAll.messageId.toString()}`);
         }
       } finally {
         await context.close().catch(() => {});
@@ -1114,9 +1114,9 @@ async function main() {
       await page.getByText(targetMessage.content, { exact: true }).waitFor({ state: 'visible', timeout: 180000 });
       await sendMessageFromComposer(page, mentionAllContent);
       const mentionAllMessage = await waitForChainMessage({ env, tools, groupId, content: mentionAllContent });
-      assert(mentionAllMessage, '前端显示 @全部 已发送，但链上没有读到对应消息');
-      assert(tupleValue(mentionAllMessage.message, 'mentionAll', 9) === true, '链上 @全部 消息 mentionAll 应为 true');
-      assert(tupleArray(mentionAllMessage.message, 'mentionedSenderIds', 8).length === 0, '链上 @全部 消息不应携带 mentionedSenderIds');
+      assert(mentionAllMessage, '前端显示 @所有人 已发送，但链上没有读到对应消息');
+      assert(tupleValue(mentionAllMessage.message, 'mentionAll', 9) === true, '链上 @所有人 消息 mentionAll 应为 true');
+      assert(tupleArray(mentionAllMessage.message, 'mentionedSenderIds', 8).length === 0, '链上 @所有人 消息不应携带 mentionedSenderIds');
 
       let targetMessageRow = await openMessageMenu(page, targetMessage.content);
       await targetMessageRow.getByRole('button', { name: '提及' }).click();

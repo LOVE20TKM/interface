@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { AtSign, Loader2, UserRound } from 'lucide-react';
 import { useAccount } from 'wagmi';
 
@@ -19,6 +19,7 @@ import {
   formatMessageFullTime,
   quotedMessageSummary,
 } from './chatUtils';
+import { ChatMessageText } from './ChatMessageText';
 
 export function MentionAllMessagesPanel({
   groupId,
@@ -46,9 +47,9 @@ export function MentionAllMessagesPanel({
   }, [account, data.messages, groupId, page]);
 
   return (
-    <section className="workspace-screen mention-all-list-screen" aria-label="@全部 消息列表">
+    <section className="workspace-screen mention-all-list-screen" aria-label="@所有人消息列表">
       <GroupDetailHeader
-        title="@全部"
+        title="@所有人"
         groupId={groupId}
         subtitle={groupTitle}
         meta={data.messagesCount !== undefined ? `${data.messagesCount.toString()} 条` : '读取中'}
@@ -58,12 +59,12 @@ export function MentionAllMessagesPanel({
         {loadingInitial ? (
           <div className="message-detail-loading" role="status" aria-live="polite">
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            <span>正在读取 @全部 消息...</span>
+            <span>正在读取 @所有人消息...</span>
           </div>
         ) : data.error ? (
-          <div className="empty-state">加载失败：{formatMentionListError(data.error, '@全部')}</div>
+          <div className="empty-state">加载失败：{formatMentionListError(data.error, '@所有人')}</div>
         ) : data.messages.length === 0 ? (
-          <div className="empty-state">暂无 @全部 消息</div>
+          <div className="empty-state">暂无 @所有人消息</div>
         ) : (
           <div className="mention-all-list">
             {displayMessages.map((message) => (
@@ -112,6 +113,7 @@ export function MentionMessageRow({
   senderNames: Record<string, string>;
   variant: 'all' | 'me' | 'sender';
 }) {
+  const router = useRouter();
   const senderName = senderNames[message.senderId.toString()] || `NFT #${message.senderId.toString()}`;
   const timeLabel = formatMessageFullTime(message.timestamp);
   const href = buildGroupChatMessageDetailHref(message.groupId, message.messageId);
@@ -124,7 +126,18 @@ export function MentionMessageRow({
   );
 
   return (
-    <Link href={href} className={`list-row mention-all-list-row mention-${variant}`}>
+    <div
+      className={`list-row mention-all-list-row mention-${variant}`}
+      role="button"
+      tabIndex={0}
+      onClick={() => router.push(href)}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        router.push(href);
+      }}
+    >
       <div className="mention-all-list-icon">
         {variant === 'sender' ? (
           <UserRound className="h-4 w-4" aria-hidden="true" />
@@ -141,10 +154,10 @@ export function MentionMessageRow({
           {mentionedIdsLabel && <span>{mentionedIdsLabel}</span>}
         </div>
         <div className="mention-all-list-content">
-          {quotedMessageSummary(message, 140)}
+          <ChatMessageText content={quotedMessageSummary(message, 140)} sourceContent={message.content} />
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

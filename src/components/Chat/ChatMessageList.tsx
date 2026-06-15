@@ -6,6 +6,7 @@ import { ArrowUp, Loader2 } from 'lucide-react';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import type { GroupChatPublicData, ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
 import { cn } from '@/lib/utils';
+import { ChatMessageContent, ChatMessageText } from './ChatMessageText';
 import {
   formatMessageDividerTime,
   formatMessageTime,
@@ -17,36 +18,6 @@ import {
   sameAddress,
   shouldRenderMessageTimeDivider,
 } from './chatUtils';
-
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function messageMentionTokens(message: ParsedGroupChatMessage, senderNames: Record<string, string>) {
-  const tokens = new Set<string>();
-  if (message.mentionAll) {
-    tokens.add('@全部');
-    tokens.add('@全体');
-    tokens.add('@all');
-  }
-  message.mentionedSenderIds.forEach((senderId) => {
-    const key = senderId.toString();
-    const name = senderNames[key];
-    if (name) tokens.add(`@${name}`);
-    tokens.add(`@NFT #${key}`);
-  });
-  return Array.from(tokens).sort((left, right) => right.length - left.length);
-}
-
-function renderMessageContent(message: ParsedGroupChatMessage, senderNames: Record<string, string>) {
-  const tokens = messageMentionTokens(message, senderNames);
-  if (tokens.length === 0) return message.content;
-  const tokenSet = new Set(tokens);
-  const parts = message.content.split(new RegExp(`(${tokens.map(escapeRegExp).join('|')})`, 'g'));
-  return parts.map((part, index) =>
-    tokenSet.has(part) ? <span className="message-mention" key={`${part}-${index}`}>{part}</span> : part,
-  );
-}
 
 export function ChatMessageList({
   account,
@@ -198,9 +169,11 @@ export function ChatMessageList({
                       )}
                     >
                       {message.quotedMessageId > BigInt(0) && (
-                        <div className={cn('quote-preview', !quoted && 'unavailable')}>{quotePreview}</div>
+                        <div className={cn('quote-preview', !quoted && 'unavailable')}>
+                          <ChatMessageText content={quotePreview} sourceContent={quoted?.content} />
+                        </div>
                       )}
-                      {renderMessageContent(message, data.senderNames)}
+                      <ChatMessageContent message={message} senderNames={data.senderNames} />
                     </div>
                     {(message.mentionAll || mentionsMe) && (
                       <div className="message-mention-notes">
@@ -210,7 +183,7 @@ export function ChatMessageList({
                             href={buildGroupChatMentionAllHref(groupId)}
                             onClick={(event) => event.stopPropagation()}
                           >
-                            @全部
+                            @所有人
                           </Link>
                         )}
                         {mentionsMe && (

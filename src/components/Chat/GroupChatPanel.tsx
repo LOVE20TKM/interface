@@ -1,7 +1,7 @@
 'use client';
 
 import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 
 import { useGroupChatSyncState, useMarkGroupRead, useRegisterActiveChat } from '@/src/contexts/GroupChatSyncContext';
@@ -27,6 +27,7 @@ import {
 } from '@/src/hooks/composite/useGroupChatData';
 import { ChatComposer } from './ChatComposer';
 import { ChatMessageList } from './ChatMessageList';
+import { ChatMessageText } from './ChatMessageText';
 import { GroupChatToolbar } from './GroupChatToolbar';
 import {
   DEFAULT_MESSAGE_WINDOW_SIZE,
@@ -542,11 +543,11 @@ export function GroupChatPanel({
     }
     if (finalMentionAll) {
       if (mentionAllPermission.isPending) {
-        toast('正在读取 @全部 权限');
+        toast('正在读取 @所有人权限');
         return;
       }
       if (!mentionAllPermission.canMentionAll) {
-        toast.error('只有群 owner、delegate 或 GroupAdmin 管理员 NFT 可以发送 @全部。');
+        toast.error('只有群 owner、delegate 或 GroupAdmin 管理员 NFT 可以发送 @所有人。');
         return;
       }
     }
@@ -680,8 +681,12 @@ function MentionAllSummary({
   unread: boolean;
   onOpen: () => void;
 }) {
+  const router = useRouter();
+  const sourceContent = message
+    ? removeMentionAllTokens(message.content).trim() || message.content
+    : '';
   const content = message
-    ? quotedMessageSummary({ content: removeMentionAllTokens(message.content).trim() || message.content }, 72)
+    ? quotedMessageSummary({ content: sourceContent }, 72)
     : '';
   const timeLabel = formatMessageTime(message?.timestamp);
 
@@ -695,7 +700,9 @@ function MentionAllSummary({
           {timeLabel && <span>{timeLabel}</span>}
         </div>
         <div className="mention-all-summary-content">
-          <strong>{content}</strong>
+          <strong>
+            <ChatMessageText content={content} sourceContent={sourceContent} />
+          </strong>
         </div>
       </div>
       {unread && <span className="mention-all-summary-unread">未读</span>}
@@ -703,13 +710,24 @@ function MentionAllSummary({
   );
 
   return (
-    <Link
+    <div
       className={`mention-all-summary${unread ? ' mention-all-summary-is-unread' : ''}`}
-      href={href}
-      aria-label={unread ? '查看未读全员通知' : '查看全部全员通知'}
-      onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      aria-label={unread ? '查看未读全员通知' : '查看所有全员通知'}
+      onClick={() => {
+        onOpen();
+        router.push(href);
+      }}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        onOpen();
+        router.push(href);
+      }}
     >
       {body}
-    </Link>
+    </div>
   );
 }

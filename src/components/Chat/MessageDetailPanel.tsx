@@ -10,6 +10,7 @@ import {
   useGroupNames,
 } from '@/src/hooks/composite/useGroupChatData';
 import { GroupDetailHeader } from './ChatGroupDetailHeader';
+import { ChatMessageText } from './ChatMessageText';
 
 function formatError(error: unknown) {
   if (error instanceof Error) return error.message;
@@ -135,7 +136,9 @@ export function MessageDetailPanel({
               {message.messageId.toString()}
             </DetailRow>
             <DetailRow label="content">
-              <span className="message-detail-inline-content">{message.content || '（空）'}</span>
+              <span className="message-detail-inline-content">
+                <ChatMessageText content={message.content} emptyText="（空）" />
+              </span>
             </DetailRow>
             <DetailRow label="blockNumber">
               {message.blockNumber.toString()}

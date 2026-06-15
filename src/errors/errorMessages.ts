@@ -101,7 +101,7 @@ export const ErrorMessages: Record<string, string> = {
   MaxContentLengthZero: '最大内容长度不能为0',
   MaxAdminIdsZero: '管理员 NFT 上限不能为 0',
   MaxRandomAccountsZero: '最大随机账户数量必须大于0',
-  MentionAllUnauthorized: '只有群 owner、delegate 或 GroupAdmin 管理员 NFT 可以发送 @全部',
+  MentionAllUnauthorized: '只有群 owner、delegate 或 GroupAdmin 管理员 NFT 可以发送 @所有人',
   MinStakeZero: '最小参与代币数必须大于0',
   MinSupportToOpposeRatioZero: '支持与反对比例下限不能为0',
   ModifierAddressCannotBeZero: '修改者地址不能为零地址',

@@ -17,14 +17,14 @@ const GroupChatMentionAllPage: NextPage = () => {
 
   return (
     <>
-      <Header title="@全部" backUrl={backUrl} replaceBack />
+      <Header title="@所有人" backUrl={backUrl} replaceBack />
       <main className={styles.chatPrototype} data-detail="false" data-entry="love20-chat-mention-all">
         {groupId ? (
           <MentionAllMessagesPanel groupId={groupId} />
         ) : (
           <section className="workspace-screen mention-all-list-screen">
             <section className="workspace-band">
-              <div className="empty-state">缺少 groupId，无法打开 @全部 消息列表。</div>
+              <div className="empty-state">缺少 groupId，无法打开 @所有人消息列表。</div>
             </section>
           </section>
         )}

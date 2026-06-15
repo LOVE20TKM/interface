@@ -2645,6 +2645,19 @@
   white-space: pre-wrap;
 }
 
+.chatPrototype :global(.message-link) {
+  color: var(--primary-action);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.chatPrototype :global(.message-link:hover) {
+  color: var(--secondary);
+}
+
 .chatPrototype :global(.message-detail-token-list) {
   display: flex;
   flex-wrap: wrap;
@@ -2690,8 +2703,11 @@
   grid-template-columns: 34px minmax(0, 1fr);
   align-items: start;
   gap: 10px;
+  width: 100%;
   margin-bottom: 0;
   color: inherit;
+  cursor: pointer;
+  text-align: left;
   text-decoration: none;
 }
 
@@ -3123,11 +3139,14 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
+  width: 100%;
   border-bottom: 1px solid #fed7aa;
   background: #fff7ed;
   box-shadow: inset 3px 0 0 #f97316;
   padding: 8px 12px 8px 14px;
   color: inherit;
+  cursor: pointer;
+  text-align: left;
   text-decoration: none;
 }
 
