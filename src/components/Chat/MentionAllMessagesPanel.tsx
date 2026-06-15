@@ -17,9 +17,8 @@ import { GroupDetailHeader } from './ChatGroupDetailHeader';
 import {
   buildGroupChatMessageDetailHref,
   formatMessageFullTime,
-  quotedMessageSummary,
 } from './chatUtils';
-import { ChatMessageText } from './ChatMessageText';
+import { ChatMessageContent } from './ChatMessageText';
 
 export function MentionAllMessagesPanel({
   groupId,
@@ -154,7 +153,7 @@ export function MentionMessageRow({
           {mentionedIdsLabel && <span>{mentionedIdsLabel}</span>}
         </div>
         <div className="mention-all-list-content">
-          <ChatMessageText content={quotedMessageSummary(message, 140)} sourceContent={message.content} />
+          <ChatMessageContent message={message} senderNames={senderNames} />
         </div>
       </div>
     </div>
