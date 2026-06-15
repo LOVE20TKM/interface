@@ -2,7 +2,13 @@ import { useAccount } from 'wagmi';
 import { useJoinableActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useEstimatedActionRewardOfCurrentRound } from '@/src/hooks/contracts/useLOVE20MintViewer';
 import { useExtensionsBaseData } from '@/src/hooks/extension';
+import {
+  mergeJoinableActionsWithExtensionData,
+  type ActingPageJoinableAction,
+} from '@/src/lib/actingPageData';
 import { useMemo } from 'react';
+
+export type { ActingPageJoinableAction } from '@/src/lib/actingPageData';
 
 export interface UseActingPageDataParams {
   tokenAddress: `0x${string}` | undefined;
@@ -11,7 +17,7 @@ export interface UseActingPageDataParams {
 
 export interface UseActingPageDataResult {
   // 行动列表相关
-  joinableActions: any[] | undefined;
+  joinableActions: ActingPageJoinableAction[] | undefined;
 
   // 统计数据相关
   totalJoinedAmount: bigint; // 含 LP 扩展行动的 ×2 溢价（适用于行动页展示）
@@ -70,33 +76,15 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
   });
 
   // 增强 joinableActions 数据：用扩展的 convertedJoinedValue 覆盖原始 joinedAmount
-  const joinableActions = useMemo(() => {
-    if (!rawActions) return undefined;
-    if (!extensionData || extensionData.length === 0) return rawActions;
+  const joinableActions = useMemo(
+    () => mergeJoinableActionsWithExtensionData(rawActions, extensionData),
+    [rawActions, extensionData],
+  );
 
-    return rawActions.map((action, index) => {
-      const extension = extensionData[index];
-
-      // 如果是扩展行动且有 convertedJoinedValue 数据，使用扩展数据覆盖
-      if (extension?.isExtension && extension.convertedJoinedValue !== undefined) {
-        return {
-          ...action,
-          joinedAmount: extension.convertedJoinedValue, // 使用扩展的转换后参与值
-          accountsCount: extension.accountsCount, // 添加参与地址数
-          isConvertedJoinedValueSuccess: extension.isConvertedJoinedValueSuccess, // 标记是否为“转换成功”的结果
-          isExtension: true,
-          isFromTokenLP: extension.isFromTokenLP ?? false,
-          extensionAddress: extension.extension,
-        };
-      }
-
-      // 非扩展行动，返回原始数据
-      return {
-        ...action,
-        isExtension: false,
-      };
-    });
-  }, [rawActions, extensionData]);
+  const hasPendingExtensionAmount = useMemo(
+    () => joinableActions?.some((action) => action.isExtensionAmountPending) ?? false,
+    [joinableActions],
+  );
 
   // 计算所有行动的参与代币数总和（LP 扩展行动含 ×2 溢价，用于行动页展示）
   const totalJoinedAmount = useMemo(() => {
@@ -141,9 +129,9 @@ export const useActingPageData = ({ tokenAddress, currentRound }: UseActingPageD
     expectedReward,
 
     // 加载状态
-    isPending: isPendingActions || isPendingExtension || isPendingReward,
+    isPending: isPendingActions || isPendingExtension || hasPendingExtensionAmount || isPendingReward,
     isPendingActions,
-    isPendingExtension,
+    isPendingExtension: isPendingExtension || hasPendingExtensionAmount,
     isPendingReward,
 
     // 错误信息

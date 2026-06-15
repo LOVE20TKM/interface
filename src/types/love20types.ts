@@ -48,6 +48,7 @@ export interface VotingAction {
 
 export interface JoinableAction {
   action: ActionInfo;
+  submitter: `0x${string}`;
   votesNum: bigint;
   hasReward: boolean;
   joinedAmount: bigint;

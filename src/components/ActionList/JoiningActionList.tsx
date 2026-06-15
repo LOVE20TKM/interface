@@ -2,14 +2,14 @@
 import React, { useContext } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
-import { ChevronRight, UserPen } from 'lucide-react';
+import { ChevronRight, HandHelping } from 'lucide-react';
 
-import { JoinableAction } from '@/src/types/love20types';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 // my utils
 import { calculateActionAPY } from '@/src/lib/domainUtils';
 import { formatPercentage } from '@/src/lib/format';
+import type { ActingPageJoinableAction } from '@/src/hooks/composite/useActingPageData';
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
@@ -21,8 +21,9 @@ import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton
 
 interface JoiningActionListProps {
   currentRound: bigint;
-  joinableActions: JoinableAction[] | undefined;
+  joinableActions: ActingPageJoinableAction[] | undefined;
   isPendingActions: boolean;
+  isPendingExtension?: boolean;
   expectedReward: bigint | undefined;
   isPendingReward: boolean;
 }
@@ -31,6 +32,7 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
   currentRound,
   joinableActions,
   isPendingActions,
+  isPendingExtension = false,
   expectedReward,
   isPendingReward,
 }) => {
@@ -70,7 +72,7 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
               const votesB = Number(b.votesNum);
               return votesB - votesA;
             })
-            .map((actionDetail: JoinableAction) => {
+            .map((actionDetail: ActingPageJoinableAction) => {
               // 计算投票占比
               const voteRatio =
                 Number(totalVotes) > 0 ? Number(actionDetail.votesNum || BigInt(0)) / Number(totalVotes) : 0;
@@ -87,7 +89,6 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
                   : BigInt(0);
 
               const actionCost = actionDetail.joinedAmount;
-
               return (
                 <Card key={actionDetail.action.head.id} className={cardClassName}>
                   <Link href={href} className="relative block">
@@ -107,14 +108,9 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
                     <CardContent className="px-3 pt-1 pb-2">
                       <div className="flex justify-between text-sm">
                         <span className="flex items-center">
-                          <UserPen className="text-greyscale-400 mr-1 h-3 w-3" />
-                          {/* <span className="text-greyscale-400 text-xs mr-1">创建人</span> */}
+                          <HandHelping className="text-greyscale-400 mr-1 h-3 w-3" />
                           <span className="text-greyscale-400">
-                            <AddressWithCopyButton
-                              address={actionDetail.action.head.author as `0x${string}`}
-                              showCopyButton={false}
-                              // colorClassName2="text-secondary"
-                            />
+                            <AddressWithCopyButton address={actionDetail.submitter} showCopyButton={false} />
                           </span>
                         </span>
                       </div>
@@ -129,7 +125,7 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
                           <span>
                             <span className="text-greyscale-400 text-xs mr-1">APY</span>
                             <span className="text-secondary text-xs">
-                              {isPendingReward ? (
+                              {isPendingReward || isPendingExtension || actionDetail.isExtensionAmountPending ? (
                                 <LoadingIcon />
                               ) : (
                                 calculateActionAPY(actionExpectedReward, actionCost)

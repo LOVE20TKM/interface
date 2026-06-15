@@ -76,6 +76,7 @@ const ActingPage = () => {
               currentRound={currentRound}
               joinableActions={actingPageData.joinableActions}
               isPendingActions={actingPageData.isPendingActions}
+              isPendingExtension={actingPageData.isPendingExtension}
               expectedReward={actingPageData.expectedReward}
               isPendingReward={actingPageData.isPendingReward}
             />

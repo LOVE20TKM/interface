@@ -716,6 +716,11 @@ export const LOVE20RoundViewerAbi = [
             ]
           },
           {
+            "name": "submitter",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
             "name": "votesNum",
             "type": "uint256",
             "internalType": "uint256"

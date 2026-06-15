@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useContext, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import {
   AppWindow,
   CheckCircle2,
@@ -13,25 +13,29 @@ import {
   Plus,
   Settings,
   ShieldCheck,
-} from 'lucide-react';
-import { useAccount } from 'wagmi';
+} from "lucide-react";
+import { useAccount } from "wagmi";
 
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import Header from '@/src/components/Header';
-import LeftTitle from '@/src/components/Common/LeftTitle';
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import RoundLite from '@/src/components/Common/RoundLite';
-import AlertBox from '@/src/components/Common/AlertBox';
-import _GroupSetRecipientsTrigger from '@/src/components/Extension/Plugins/Group/_GroupSetRecipientsTrigger';
-import { TokenContext } from '@/src/contexts/TokenContext';
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useJoinableActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
-import { useExtensionsByActionInfosWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
-import { useMyGroupsPage } from '@/src/hooks/extension/base/composite/useMyGroups';
-import { useMyGroupIdsNeedVerifiedByRound } from '@/src/hooks/extension/plugins/group/composite/useMyGroupIdsNeedVerifiedByRound';
-import { useActionsWithActiveGroupsByOwner } from '@/src/hooks/extension/plugins/group-service/composite/useActionsWithActiveGroupsByOwner';
-import { formatTokenAmount } from '@/src/lib/format';
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Header from "@/src/components/Header";
+import LeftTitle from "@/src/components/Common/LeftTitle";
+import LoadingIcon from "@/src/components/Common/LoadingIcon";
+import RoundLite from "@/src/components/Common/RoundLite";
+import AlertBox from "@/src/components/Common/AlertBox";
+import _GroupSetRecipientsTrigger from "@/src/components/Extension/Plugins/Group/_GroupSetRecipientsTrigger";
+import { TokenContext } from "@/src/contexts/TokenContext";
+import { useCurrentRound as useVerifyCurrentRound } from "@/src/hooks/contracts/useLOVE20Verify";
+import { useJoinableActions } from "@/src/hooks/contracts/useLOVE20RoundViewer";
+import { useExtensionsByActionInfosWithCache } from "@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache";
+import { useMyGroupsPage } from "@/src/hooks/extension/base/composite/useMyGroups";
+import { useMyGroupIdsNeedVerifiedByRound } from "@/src/hooks/extension/plugins/group/composite/useMyGroupIdsNeedVerifiedByRound";
+import { useActionsWithActiveGroupsByOwner } from "@/src/hooks/extension/plugins/group-service/composite/useActionsWithActiveGroupsByOwner";
+import {
+  GroupServiceIncentiveRatioItem,
+  useMyGroupServiceIncentiveRatios,
+} from "@/src/hooks/extension/plugins/group-service/composite/useMyGroupServiceIncentiveRatios";
+import { formatTokenAmount } from "@/src/lib/format";
 import {
   ActivatableActionRow,
   MyActivatedGroupActionRow,
@@ -50,7 +54,7 @@ import {
   getVerificationButtonClass,
   shouldShowMyGroupsPageLoader,
   toggleExpandedGroupId,
-} from '@/src/lib/myGroupsPage';
+} from "@/src/lib/myGroupsPage";
 
 const NFT_PAGE_SIZE = 100;
 const MyGroupsPage: React.FC = () => {
@@ -63,14 +67,14 @@ const MyGroupsPage: React.FC = () => {
   const [hasShownPageContent, setHasShownPageContent] = useState(false);
 
   const groupActionTokenAddress = token?.address as `0x${string}` | undefined;
-  const activationReturnTo = router.asPath || '/extension/my_groups';
+  const activationReturnTo = router.asPath || "/extension/my_groups";
   const mintGroupHref = buildMintGroupHref(activationReturnTo);
 
-  const { currentRound, isPending: isPendingCurrentRound, error: currentRoundError } = useCurrentRound();
-  const verifyRound = useMemo(() => {
-    if (!currentRound || currentRound < BigInt(2)) return BigInt(0);
-    return currentRound - BigInt(2);
-  }, [currentRound]);
+  const {
+    currentRound: verifyRound,
+    isPending: isPendingCurrentRound,
+    error: currentRoundError,
+  } = useVerifyCurrentRound();
 
   const joinRound = useMemo(() => {
     if (verifyRound <= BigInt(0)) return undefined;
@@ -98,6 +102,22 @@ const MyGroupsPage: React.FC = () => {
   });
 
   const {
+    currentItems: currentServiceRatioItems,
+    parentItems: parentServiceRatioItems,
+    totalRatioBasisPoints: serviceTotalRatioBasisPoints,
+    isPending: isPendingServiceRatios,
+    error: serviceRatiosError,
+  } = useMyGroupServiceIncentiveRatios({
+    groupActionTokenAddress,
+    groupActionPairAddress: token?.uniswapV2PairAddress as `0x${string}` | undefined,
+    parentCommunityTokenAddress: token?.parentTokenAddress as `0x${string}` | undefined,
+    currentCommunitySymbol: token?.symbol,
+    parentCommunitySymbol: token?.parentTokenSymbol,
+    account: account as `0x${string}`,
+    round: verifyRound,
+  });
+
+  const {
     myGroups: ownedGroups,
     balance: ownedGroupBalance,
     hasMore: hasMoreOwnedGroups,
@@ -110,7 +130,7 @@ const MyGroupsPage: React.FC = () => {
     isPending: isPendingJoinableActions,
     error: joinableActionsError,
   } = useJoinableActions(
-    groupActionTokenAddress || ('' as `0x${string}`),
+    groupActionTokenAddress || ("" as `0x${string}`),
     joinRound || BigInt(0),
     account as `0x${string}`,
   );
@@ -183,7 +203,10 @@ const MyGroupsPage: React.FC = () => {
   };
 
   const activatableActions = useMemo<ActivatableActionRow[]>(() => {
-    const extensionMap = new Map<string, { isExtension: boolean; extensionAddress?: `0x${string}`; factoryAddress?: `0x${string}` }>();
+    const extensionMap = new Map<
+      string,
+      { isExtension: boolean; extensionAddress?: `0x${string}`; factoryAddress?: `0x${string}` }
+    >();
     for (const contractInfo of activatableContractInfos) {
       extensionMap.set(contractInfo.actionId.toString(), {
         isExtension: contractInfo.isExtension,
@@ -209,14 +232,8 @@ const MyGroupsPage: React.FC = () => {
     isPendingOwnedGroups,
   });
   const pageError = verificationGroupsError || activeGroupsError || ownedGroupsError;
-  const isActivatePending =
-    isPendingCurrentRound ||
-    isPendingJoinableActions ||
-    isPendingActivatableExtensions;
-  const activateError =
-    currentRoundError ||
-    joinableActionsError ||
-    activatableExtensionsError;
+  const isActivatePending = isPendingCurrentRound || isPendingJoinableActions || isPendingActivatableExtensions;
+  const activateError = currentRoundError || joinableActionsError || activatableExtensionsError;
 
   return (
     <>
@@ -252,26 +269,29 @@ const MyGroupsPage: React.FC = () => {
               </Button>
             </div>
             <RoundLite currentRound={verifyRound} roundType="verify" showCountdown={false} />
+            <ServiceIncentiveRatioPanel
+              currentItems={currentServiceRatioItems}
+              parentItems={parentServiceRatioItems}
+              totalRatioBasisPoints={serviceTotalRatioBasisPoints}
+              isPending={isPendingServiceRatios}
+              error={serviceRatiosError}
+            />
 
             <div className="space-y-4 mt-3">
               {nftRows.map((group) => {
                 const isGroupActivated = group.actions.length > 0;
-                const activationLabel = isActivationStatusSyncing
-                  ? '同步中'
-                  : isGroupActivated
-                  ? '已激活'
-                  : '未激活';
+                const activationLabel = isActivationStatusSyncing ? "同步中" : isGroupActivated ? "已激活" : "未激活";
 
                 return (
                   <section
                     key={group.groupId.toString()}
                     className={`border rounded-lg overflow-hidden bg-white shadow-sm ${
-                      isGroupActivated ? 'border-secondary/25' : 'border-gray-200'
+                      isGroupActivated ? "border-secondary/25" : "border-gray-200"
                     }`}
                   >
                     <div
                       className={`w-full flex items-stretch justify-between gap-2 ${
-                        isGroupActivated ? 'bg-secondary/5' : 'bg-gray-50'
+                        isGroupActivated ? "bg-secondary/5" : "bg-gray-50"
                       }`}
                     >
                       <button
@@ -285,10 +305,10 @@ const MyGroupsPage: React.FC = () => {
                           <span
                             className={`shrink-0 rounded border bg-white px-1.5 py-0.5 text-[11px] font-semibold ${
                               isGroupActivated
-                                ? 'border-green-200 text-green-600'
+                                ? "border-green-200 text-green-600"
                                 : isActivationStatusSyncing
-                                ? 'border-yellow-200 text-yellow-600'
-                                : 'border-gray-200 text-greyscale-500'
+                                  ? "border-yellow-200 text-yellow-600"
+                                  : "border-gray-200 text-greyscale-500"
                             }`}
                           >
                             {activationLabel}
@@ -298,21 +318,21 @@ const MyGroupsPage: React.FC = () => {
                               <span className="text-gray-500 text-xs shrink-0">#</span>
                               <span
                                 className={`text-lg font-semibold shrink-0 ${
-                                  isGroupActivated ? 'text-secondary' : 'text-greyscale-600'
+                                  isGroupActivated ? "text-secondary" : "text-greyscale-600"
                                 }`}
                               >
                                 {group.groupId.toString()}
                               </span>
                               <span className="font-semibold text-greyscale-800 truncate">
-                                {group.groupName || '未命名链群'}
+                                {group.groupName || "未命名链群"}
                               </span>
                             </div>
                             <div className="mt-0.5 text-xs text-greyscale-500">
                               {isActivationStatusSyncing
-                                ? '正在同步激活状态'
+                                ? "正在同步激活状态"
                                 : isGroupActivated
-                                ? `${group.actions.length} 个已激活行动`
-                                : '暂无已激活行动'}
+                                  ? `${group.actions.length} 个已激活行动`
+                                  : "暂无已激活行动"}
                             </div>
                           </div>
                         </div>
@@ -341,10 +361,13 @@ const MyGroupsPage: React.FC = () => {
                       <div className="ml-4 bg-gray-50/60">
                         <div className="divide-y divide-gray-100">
                           {group.actions.map((action) => (
-                            <div key={`${action.actionId.toString()}-${action.groupId.toString()}`} className="pl-3 bg-white/90">
+                            <div
+                              key={`${action.actionId.toString()}-${action.groupId.toString()}`}
+                              className="pl-3 bg-white/90"
+                            >
                               <ActionRow
                                 action={action}
-                                symbol={token?.symbol || ''}
+                                symbol={token?.symbol || ""}
                                 tokenAddress={token?.address}
                                 verifyRound={verifyRound}
                               />
@@ -366,7 +389,7 @@ const MyGroupsPage: React.FC = () => {
                     disabled={isPendingOwnedGroups}
                     onClick={handleLoadMoreOwnedGroups}
                   >
-                    {isPendingOwnedGroups ? '加载中...' : '加载更多 NFT'}
+                    {isPendingOwnedGroups ? "加载中..." : "加载更多 NFT"}
                   </Button>
                 ) : (
                   <div className="text-xs text-greyscale-500">已获取全部 NFT</div>
@@ -393,6 +416,136 @@ const MyGroupsPage: React.FC = () => {
   );
 };
 
+interface ServiceIncentiveRatioPanelProps {
+  currentItems: GroupServiceIncentiveRatioItem[];
+  parentItems: GroupServiceIncentiveRatioItem[];
+  totalRatioBasisPoints: bigint;
+  isPending: boolean;
+  error: unknown;
+}
+
+const formatServiceTokensPerHundred = (basisPoints: bigint | undefined) => {
+  if (basisPoints === undefined) return "--";
+
+  const whole = basisPoints / BigInt(100);
+  const decimal = basisPoints % BigInt(100);
+  if (decimal === BigInt(0)) return whole.toString();
+
+  return `${whole.toString()}.${decimal.toString().padStart(2, "0").replace(/0+$/, "")}`;
+};
+
+const ServiceIncentiveRatioPanel: React.FC<ServiceIncentiveRatioPanelProps> = ({
+  currentItems,
+  parentItems,
+  totalRatioBasisPoints,
+  isPending,
+  error,
+}) => {
+  const allItems = useMemo(() => [...currentItems, ...parentItems], [currentItems, parentItems]);
+  const hasItems = allItems.length > 0;
+  const joinedItemsCount = useMemo(() => allItems.filter((item) => item.isJoined).length, [allItems]);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const totalServiceTokensPerHundred = formatServiceTokensPerHundred(totalRatioBasisPoints);
+  const getConversionLabel = (item: GroupServiceIncentiveRatioItem) => {
+    if (item.conversionStatus === "converted") return " (已折算)";
+    if (item.conversionStatus === "missing-pair" || item.conversionStatus === "unusable-pair") return " (无法折算)";
+    return "";
+  };
+  const getCommunityLabel = (item: GroupServiceIncentiveRatioItem, fallback: string) => {
+    const symbol = item.communitySymbol?.trim();
+    if (!symbol) return fallback;
+    return symbol.endsWith("社区") ? symbol : `${symbol}社区`;
+  };
+
+  if (isPending) {
+    return (
+      <div className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-3">
+        <div className="text-xs text-greyscale-500">链群服务激励指数计算中</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-3">
+        <div className="text-xs text-greyscale-500">链群服务激励统计暂不可用</div>
+      </div>
+    );
+  }
+
+  if (!hasItems) {
+    return (
+      <div className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-3">
+        <div className="text-xs text-greyscale-500">无链群服务激励</div>
+      </div>
+    );
+  }
+
+  const renderItem = (item: GroupServiceIncentiveRatioItem, communityLabel: string) => (
+    <div
+      key={`${communityLabel}-${item.actionId.toString()}`}
+      className="flex items-start justify-between gap-3 border-t border-gray-100 py-2 first:border-t-0 first:pt-0"
+    >
+      <div className="min-w-0">
+        <div className="break-words text-sm font-medium text-greyscale-800">
+          <span className="font-semibold text-secondary">No.{item.actionId.toString()}</span> {item.actionTitle}
+        </div>
+        <div className="mt-1 text-xs text-greyscale-500">
+          {getCommunityLabel(item, communityLabel)} · 预计铸币{" "}
+          {formatTokenAmount(item.estimatedRewardInGroupActionToken)} /{" "}
+          {formatTokenAmount(item.totalGroupActionEstimatedReward)}
+          {getConversionLabel(item)}
+        </div>
+      </div>
+      <div className="shrink-0 text-right">
+        <div className="text-sm font-semibold text-secondary">
+          约 {formatServiceTokensPerHundred(item.ratioBasisPoints)}
+        </div>
+        <div className={`mt-1 text-xs ${item.isJoined ? "text-green-600" : "text-greyscale-400"}`}>
+          {item.isJoined ? `已加入 #${item.joinedRound.toString()}` : "未加入"}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <section className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-xs text-greyscale-500">链群服务激励指数</div>
+          <div className="mt-1 text-4xl font-bold leading-none text-secondary">{totalServiceTokensPerHundred}</div>
+        </div>
+        <div className="shrink-0 text-right text-xs text-greyscale-500">
+          已加入 {joinedItemsCount}/{allItems.length} 个服务行动
+        </div>
+      </div>
+      <p className="mt-2 text-sm leading-6 text-greyscale-700">
+        链群行动者每铸造 100 个代币，链群服务者最多获得约 {totalServiceTokensPerHundred} 个代币激励。
+      </p>
+      <div className="mt-3 border-t border-gray-100 pt-2">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-3 text-left"
+          onClick={() => setIsDetailsOpen((prev) => !prev)}
+          aria-expanded={isDetailsOpen}
+        >
+          <span className="text-sm font-medium text-greyscale-700">链群服务激励行动明细</span>
+          <span className="flex shrink-0 items-center gap-1 text-xs text-greyscale-500">
+            {allItems.length} 个
+            {isDetailsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </span>
+        </button>
+        {isDetailsOpen && (
+          <div className="mt-2">
+            {currentItems.length > 0 && <div>{currentItems.map((item) => renderItem(item, "当前代币社区"))}</div>}
+            {parentItems.length > 0 && <div>{parentItems.map((item) => renderItem(item, "父币社区"))}</div>}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
 interface ActionRowProps {
   action: MyActivatedGroupActionRow;
   symbol: string;
@@ -414,9 +567,9 @@ const ActionRow: React.FC<ActionRowProps> = ({ action, symbol, tokenAddress, ver
   });
 
   const verifyButton = (() => {
-    if (action.verificationState === 'verified') {
+    if (action.verificationState === "verified") {
       return (
-        <Button variant="outline" size="sm" asChild className={getVerificationButtonClass('verified')}>
+        <Button variant="outline" size="sm" asChild className={getVerificationButtonClass("verified")}>
           <Link
             href={buildGroupPublicHref({
               symbol,
@@ -432,9 +585,9 @@ const ActionRow: React.FC<ActionRowProps> = ({ action, symbol, tokenAddress, ver
       );
     }
 
-    if (action.verificationState === 'pending') {
+    if (action.verificationState === "pending") {
       return (
-        <Button variant="outline" size="sm" asChild className={getVerificationButtonClass('pending')}>
+        <Button variant="outline" size="sm" asChild className={getVerificationButtonClass("pending")}>
           <Link href={buildGroupVerifyHref({ actionId: action.actionId, groupId: action.groupId })}>
             <Clock3 className="mr-0.5 h-3.5 w-3.5" />
             待验证
@@ -444,7 +597,7 @@ const ActionRow: React.FC<ActionRowProps> = ({ action, symbol, tokenAddress, ver
     }
 
     return (
-      <Button variant="outline" size="sm" asChild className={getVerificationButtonClass('not_required')}>
+      <Button variant="outline" size="sm" asChild className={getVerificationButtonClass("not_required")}>
         <Link href={statsHref}>
           <ShieldCheck className="mr-0.5 h-3.5 w-3.5" />
           无需验证
@@ -540,7 +693,7 @@ const ActivateActionDialog: React.FC<ActivateActionDialogProps> = ({
         </DialogHeader>
         {selectedGroup ? (
           <div className="text-sm text-greyscale-500">
-            链群NFT #{selectedGroup.groupId.toString()} {selectedGroup.groupName || '未命名链群'}
+            链群NFT #{selectedGroup.groupId.toString()} {selectedGroup.groupName || "未命名链群"}
           </div>
         ) : null}
         <div className="py-2">
