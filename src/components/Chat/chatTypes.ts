@@ -6,11 +6,13 @@ export type GroupChatRecommendationReason =
   | 'governor'
   | 'joined-action'
   | 'voted-action'
-  | 'joined-chain-group';
+  | 'joined-chain-group'
+  | 'configured';
 
 export type GroupChatRecommendationSignal = {
   groupId: bigint;
   reason: GroupChatRecommendationReason;
+  reasonLabel?: string;
 };
 
 export const GROUP_CHAT_RECOMMENDATION_REASON_LABELS: Record<GroupChatRecommendationReason, string> = {
@@ -20,6 +22,7 @@ export const GROUP_CHAT_RECOMMENDATION_REASON_LABELS: Record<GroupChatRecommenda
   'joined-action': '我参与的行动',
   'voted-action': '我投票过',
   'joined-chain-group': '我参与行动关联的链群',
+  configured: '推荐群聊',
 };
 
 export const GROUP_CHAT_RECOMMENDATION_REASON_RANK: Record<GroupChatRecommendationReason, number> = {
@@ -29,4 +32,5 @@ export const GROUP_CHAT_RECOMMENDATION_REASON_RANK: Record<GroupChatRecommendati
   'joined-action': 3,
   'voted-action': 2,
   'joined-chain-group': 1,
+  configured: 7,
 };

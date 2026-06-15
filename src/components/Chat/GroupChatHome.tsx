@@ -26,6 +26,7 @@ import { useMyGroups } from "@/src/hooks/extension/base/composite/useMyGroups";
 import { useMyJoinedExtensionActions } from "@/src/hooks/extension/base/composite/useMyJoinedExtensionActions";
 import { TokenContext } from "@/src/contexts/TokenContext";
 import { useRegisterGroupChatGroups, useRegisterWatchedGroups } from "@/src/contexts/GroupChatSyncContext";
+import { getConfiguredGroupChatRecommendations } from "@/src/config/groupChatRecommendations";
 import { safeToBigInt } from "@/src/lib/clientUtils";
 import { NavigationUtils } from "@/src/lib/navigationUtils";
 import { useUniversalReadContracts } from "@/src/lib/universalReadContract";
@@ -89,6 +90,8 @@ function bestRecommendationSignals(signals: readonly (GroupChatRecommendationSig
       GROUP_CHAT_RECOMMENDATION_REASON_RANK[signal.reason] > GROUP_CHAT_RECOMMENDATION_REASON_RANK[current.reason]
     ) {
       byGroup.set(key, signal);
+    } else if (current.reasonLabel === undefined && signal.reasonLabel !== undefined) {
+      byGroup.set(key, { ...current, reasonLabel: signal.reasonLabel });
     }
   });
   return Array.from(byGroup.values());
@@ -435,6 +438,22 @@ export function GroupChatHome() {
     () => displayedOwnedChainGroupIds.map((groupId) => ({ groupId, reason: "owned-chain-group" as const })),
     [displayedOwnedChainGroupIds],
   );
+  const configuredRecommendationSignals = useMemo(
+    () =>
+      getConfiguredGroupChatRecommendations()
+        .map((item): GroupChatRecommendationSignal | undefined => {
+          const groupId = safeBigIntFromString(item.groupId);
+          const reasonLabel = item.reason.trim();
+          if (groupId <= BigInt(0) || !reasonLabel) return undefined;
+          return {
+            groupId,
+            reason: "configured",
+            reasonLabel,
+          };
+        })
+        .filter((item): item is GroupChatRecommendationSignal => !!item),
+    [],
+  );
   const liveTokenRecommendationSignals = useMemo(
     () =>
       bestRecommendationSignals([
@@ -468,8 +487,17 @@ export function GroupChatHome() {
     return liveTokenRecommendationSignals;
   }, [cachedGroupSetsKey, isRecommendedGroupIdsPending, liveTokenRecommendationSignals]);
   const recommendationSignals = useMemo(
-    () => bestRecommendationSignals([...ownedChainRecommendationSignals, ...tokenRecommendationSignals]),
-    [ownedChainRecommendationSignals, tokenRecommendationSignals],
+    () =>
+      bestRecommendationSignals([
+        ...ownedChainRecommendationSignals,
+        ...tokenRecommendationSignals,
+        ...configuredRecommendationSignals,
+      ]),
+    [configuredRecommendationSignals, ownedChainRecommendationSignals, tokenRecommendationSignals],
+  );
+  const configuredRecommendedGroupIds = useMemo(
+    () => uniqueGroupIds(configuredRecommendationSignals.map((signal) => signal.groupId)),
+    [configuredRecommendationSignals],
   );
   const tokenRecommendedGroupIds = useMemo(
     () => uniqueGroupIds(tokenRecommendationSignals.map((signal) => signal.groupId)),
@@ -480,12 +508,25 @@ export function GroupChatHome() {
     [liveTokenRecommendationSignals],
   );
   const displayedRecommendedGroupIds = useMemo(() => {
-    if (tokenRecommendedGroupIds.length > 0) return tokenRecommendedGroupIds;
-    if (!isRecommendedGroupIdsPending) return [];
-    if (cachedRecommendedPriorityGroupIds.length > 0) return cachedRecommendedPriorityGroupIds;
-    const lastResolved = lastDisplayGroupSetsRef.current;
-    return lastResolved.key === cachedGroupSetsKey ? lastResolved.recommendedGroupIds : [];
-  }, [cachedGroupSetsKey, cachedRecommendedPriorityGroupIds, isRecommendedGroupIdsPending, tokenRecommendedGroupIds]);
+    let baseGroupIds: bigint[] = [];
+    if (tokenRecommendedGroupIds.length > 0) {
+      baseGroupIds = tokenRecommendedGroupIds;
+    } else if (!isRecommendedGroupIdsPending) {
+      baseGroupIds = [];
+    } else if (cachedRecommendedPriorityGroupIds.length > 0) {
+      baseGroupIds = cachedRecommendedPriorityGroupIds;
+    } else {
+      const lastResolved = lastDisplayGroupSetsRef.current;
+      baseGroupIds = lastResolved.key === cachedGroupSetsKey ? lastResolved.recommendedGroupIds : [];
+    }
+    return uniqueGroupIds([...baseGroupIds, ...configuredRecommendedGroupIds]);
+  }, [
+    cachedGroupSetsKey,
+    cachedRecommendedPriorityGroupIds,
+    configuredRecommendedGroupIds,
+    isRecommendedGroupIdsPending,
+    tokenRecommendedGroupIds,
+  ]);
   const displayedRecommendationGroupIds = useMemo(
     () => uniqueGroupIds([...displayedOwnedChainGroupIds, ...displayedRecommendedGroupIds]),
     [displayedOwnedChainGroupIds, displayedRecommendedGroupIds],

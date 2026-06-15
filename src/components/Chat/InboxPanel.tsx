@@ -25,14 +25,14 @@ const CONVERSATION_MENU_GUTTER = 8;
 function ConversationItem({
   item,
   followed,
-  recommendationReason,
+  recommendationReasonLabel,
   readCursor,
   tokenSymbol,
   onToggleFollow,
 }: {
   item: GroupChatListItem;
   followed: boolean;
-  recommendationReason?: GroupChatRecommendationReason;
+  recommendationReasonLabel?: string;
   readCursor: bigint;
   tokenSymbol?: string;
   onToggleFollow: (groupId: bigint) => void;
@@ -163,9 +163,9 @@ function ConversationItem({
           </div>
           <div className="conversation-kicker">
             <span className="conversation-meta-text">G#{item.groupId.toString()}</span>
-            {recommendationReason && (
+            {recommendationReasonLabel && (
               <span className="conversation-badge recommendation-reason">
-                {GROUP_CHAT_RECOMMENDATION_REASON_LABELS[recommendationReason]}
+                {recommendationReasonLabel}
               </span>
             )}
             {(hasUnreadMentionMe || hasUnreadMentionAll || visibleUnreadCount > BigInt(0)) && (
@@ -325,15 +325,19 @@ export function InboxPanel({
   onToggleFollow: (groupId: bigint) => void;
 }) {
   const recommendationReasonByGroup = useMemo(() => {
-    const map: Record<string, GroupChatRecommendationReason> = {};
+    const map: Record<string, { reason: GroupChatRecommendationReason; label: string }> = {};
     recommendationSignals.forEach((signal) => {
       const key = signal.groupId.toString();
       const current = map[key];
+      const label = signal.reasonLabel || GROUP_CHAT_RECOMMENDATION_REASON_LABELS[signal.reason];
       if (
         !current ||
-        GROUP_CHAT_RECOMMENDATION_REASON_RANK[signal.reason] > GROUP_CHAT_RECOMMENDATION_REASON_RANK[current]
+        GROUP_CHAT_RECOMMENDATION_REASON_RANK[signal.reason] > GROUP_CHAT_RECOMMENDATION_REASON_RANK[current.reason]
       ) {
-        map[key] = signal.reason;
+        map[key] = {
+          reason: signal.reason,
+          label,
+        };
       }
     });
     return map;
@@ -366,7 +370,7 @@ export function InboxPanel({
                   key={item.groupId.toString()}
                   item={item}
                   followed
-                  recommendationReason={recommendationReasonByGroup[item.groupId.toString()]}
+                  recommendationReasonLabel={recommendationReasonByGroup[item.groupId.toString()]?.label}
                   readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
                   tokenSymbol={tokenSymbol}
                   onToggleFollow={onToggleFollow}
@@ -390,7 +394,7 @@ export function InboxPanel({
                     key={item.groupId.toString()}
                     item={item}
                     followed={false}
-                    recommendationReason={recommendationReasonByGroup[item.groupId.toString()]}
+                    recommendationReasonLabel={recommendationReasonByGroup[item.groupId.toString()]?.label}
                     readCursor={safeBigIntFromString(readCursors[item.groupId.toString()])}
                     tokenSymbol={tokenSymbol}
                     onToggleFollow={onToggleFollow}
