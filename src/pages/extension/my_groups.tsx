@@ -515,9 +515,6 @@ const ServiceIncentiveRatioPanel: React.FC<ServiceIncentiveRatioPanelProps> = ({
           <div className="text-xs text-greyscale-500">链群服务激励指数</div>
           <div className="mt-1 text-4xl font-bold leading-none text-secondary">{totalServiceTokensPerHundred}</div>
         </div>
-        <div className="shrink-0 text-right text-xs text-greyscale-500">
-          已加入 {joinedItemsCount}/{allItems.length} 个服务行动
-        </div>
       </div>
       <p className="mt-2 text-sm leading-6 text-greyscale-700">
         链群行动者每铸造 100 个代币，链群服务者最多获得约 {totalServiceTokensPerHundred} 个代币激励。
@@ -525,14 +522,23 @@ const ServiceIncentiveRatioPanel: React.FC<ServiceIncentiveRatioPanelProps> = ({
       <div className="mt-3 border-t border-gray-100 pt-2">
         <button
           type="button"
-          className="flex w-full items-center justify-between gap-3 text-left"
+          className="group flex w-full items-center justify-end text-left"
           onClick={() => setIsDetailsOpen((prev) => !prev)}
           aria-expanded={isDetailsOpen}
         >
-          <span className="text-sm font-medium text-greyscale-700">链群服务激励行动明细</span>
-          <span className="flex shrink-0 items-center gap-1 text-xs text-greyscale-500">
-            {allItems.length} 个
-            {isDetailsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <span className="inline-flex max-w-full items-center gap-1.5 rounded-md px-2 py-1 text-xs text-greyscale-500 transition-colors group-hover:bg-gray-50 group-hover:text-greyscale-700">
+            <span className="whitespace-nowrap">
+              已加入{" "}
+              <span className="font-semibold text-secondary">
+                {joinedItemsCount}/{allItems.length}
+              </span>{" "}
+              个链群服务激励行动
+            </span>
+            {isDetailsOpen ? (
+              <ChevronDown className="h-4 w-4 shrink-0" />
+            ) : (
+              <ChevronRight className="h-4 w-4 shrink-0" />
+            )}
           </span>
         </button>
         {isDetailsOpen && (
