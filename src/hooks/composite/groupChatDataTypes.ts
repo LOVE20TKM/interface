@@ -97,6 +97,9 @@ export interface GroupChatAccountData {
   defaultSenderName: string;
   hasDefaultSender: boolean;
   isDefaultSenderPending: boolean;
+  activeSenderId: bigint | undefined;
+  activeSenderName: string;
+  hasActiveSender: boolean;
   canPost: boolean;
   canPostReasonCode?: `0x${string}`;
   isPending: boolean;

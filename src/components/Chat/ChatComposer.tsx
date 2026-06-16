@@ -2,19 +2,26 @@
 
 import { forwardRef } from 'react';
 import Link from 'next/link';
-import { AtSign, Loader2, Quote, Send, ShieldCheck, X } from 'lucide-react';
+import { AtSign, Loader2, Quote, Send, ShieldCheck, UserRoundCog, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import type { ParsedGroupChatMessage } from '@/src/hooks/composite/useGroupChatData';
+import type { GroupNFT } from '@/src/hooks/extension/base/composite/useMyGroups';
 import { cn } from '@/lib/utils';
 import { quotedMessageSummary } from './chatUtils';
 import { ChatMessageText } from './ChatMessageText';
 import type { SendAvailability } from './sendAvailability';
+
+type SenderOption = Pick<GroupNFT, 'tokenId' | 'groupName'>;
 
 export const ChatComposer = forwardRef<HTMLElement, {
   activeSenderId: bigint | undefined;
   activeSenderName: string;
   activeCanPost: boolean;
   sendAvailability: SendAvailability;
+  canSwitchSender: boolean;
+  senderOptions: SenderOption[];
+  selectedSenderId: bigint | undefined;
+  isSenderOptionsPending: boolean;
   content: string;
   quotedMessage: ParsedGroupChatMessage | undefined;
   mentionValidationHint: string;
@@ -24,6 +31,7 @@ export const ChatComposer = forwardRef<HTMLElement, {
   sendDisabled: boolean;
   isPending: boolean;
   isConfirming: boolean;
+  onSelectSender: (senderId: bigint | undefined) => void;
   onContentChange: (value: string) => void;
   onToggleMentionAll: () => void;
   onSend: () => void;
@@ -33,6 +41,10 @@ export const ChatComposer = forwardRef<HTMLElement, {
   activeSenderName,
   activeCanPost,
   sendAvailability,
+  canSwitchSender,
+  senderOptions,
+  selectedSenderId,
+  isSenderOptionsPending,
   content,
   quotedMessage,
   mentionValidationHint,
@@ -42,26 +54,45 @@ export const ChatComposer = forwardRef<HTMLElement, {
   sendDisabled,
   isPending,
   isConfirming,
+  onSelectSender,
   onContentChange,
   onToggleMentionAll,
   onSend,
   onClearQuote,
 }, ref) {
   const composerLocked = !sendAvailability.canSend;
-  const showDefaultNftSetupLink = !sendAvailability.canSend && sendAvailability.source === 'defaultNft';
+  const showDefaultNftSetupLink = !canSwitchSender && !sendAvailability.canSend && sendAvailability.source === 'defaultNft';
   const cannotSendMessage = showDefaultNftSetupLink
     ? '请先设置默认 LOVE20 NFT 后再发言。'
     : sendAvailability.canSend
       ? ''
-      : sendAvailability.message || '当前无法发言。';
+      : canSwitchSender && sendAvailability.source === 'defaultNft'
+        ? '请选择发言 NFT 后再发言。'
+        : sendAvailability.message || '当前无法发言。';
   const activeSenderLabel = activeSenderId
     ? formatSenderIdentity(activeSenderName, activeSenderId)
     : '';
+  const selectedSenderValue = selectedSenderId ? selectedSenderId.toString() : '';
+  const senderControlDisabled = isPending || isConfirming || isSenderOptionsPending || senderOptions.length === 0;
   const sending = isPending || isConfirming;
   const sendButtonLabel = sending ? (isConfirming ? '确认中' : '发送中') : '发送';
+  const senderControl = (
+    <SenderIdentityControl
+      activeSenderId={activeSenderId}
+      activeSenderLabel={activeSenderLabel}
+      activeCanPost={activeCanPost}
+      canSwitchSender={canSwitchSender}
+      disabled={senderControlDisabled}
+      isPending={isSenderOptionsPending}
+      options={senderOptions}
+      value={selectedSenderValue}
+      onChange={(value) => onSelectSender(value ? BigInt(value) : undefined)}
+    />
+  );
 
   return (
     <footer ref={ref} className={composerLocked ? 'composer-banned' : 'composer'}>
+      {composerLocked && canSwitchSender && senderControl}
       {!sendAvailability.canSend ? (
         <div className="cannot-post">
           <div className="cannot-post-inline">
@@ -77,12 +108,7 @@ export const ChatComposer = forwardRef<HTMLElement, {
       ) : (
         <div className="space-y-2">
           <div className="composer-identity-row">
-            <div className="composer-identity-label">
-              <ShieldCheck className={cn('h-3.5 w-3.5', activeCanPost ? 'text-secondary' : 'text-warning')} />
-              <span className="truncate">
-                {activeSenderId ? `使用 ${activeSenderLabel} 发言` : '默认 NFT 身份不可用'}
-              </span>
-            </div>
+            {senderControl}
             <button
               type="button"
               className={cn('composer-tool-button inline-flex', mentionAllActive && 'active')}
@@ -160,4 +186,77 @@ function formatSenderIdentity(name: string, senderId: bigint) {
   const trimmedName = name.trim();
   if (!trimmedName || trimmedName === idLabel || trimmedName === `LOVE20 ${idLabel}`) return idLabel;
   return `${trimmedName} (${idLabel})`;
+}
+
+function SenderIdentityControl({
+  activeSenderId,
+  activeSenderLabel,
+  activeCanPost,
+  canSwitchSender,
+  disabled,
+  isPending,
+  options,
+  value,
+  onChange,
+}: {
+  activeSenderId: bigint | undefined;
+  activeSenderLabel: string;
+  activeCanPost: boolean;
+  canSwitchSender: boolean;
+  disabled: boolean;
+  isPending: boolean;
+  options: SenderOption[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const displayValue = value || activeSenderId?.toString() || '';
+  const statusText = activeSenderId
+    ? `使用 ${activeSenderLabel} 发言`
+    : canSwitchSender
+      ? '选择发言 NFT'
+      : '默认 NFT 身份不可用';
+
+  if (!canSwitchSender) {
+    return (
+      <div className="composer-identity-control">
+        <ShieldCheck className={cn('h-3.5 w-3.5 shrink-0', activeCanPost ? 'text-secondary' : 'text-warning')} />
+        <span className="truncate">{statusText}</span>
+      </div>
+    );
+  }
+
+  return (
+    <label className={cn('composer-identity-control interactive', disabled && 'disabled')} title="切换本次发言 NFT">
+      <UserRoundCog className={cn('h-3.5 w-3.5 shrink-0', activeCanPost ? 'text-secondary' : 'text-warning')} aria-hidden="true" />
+      <span className="sr-only">发言 NFT</span>
+      <span className="composer-identity-prefix">使用</span>
+      <select
+        value={displayValue}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label="选择发言 NFT"
+      >
+        {!value && !activeSenderId && <option value="">选择发言 NFT</option>}
+        {options.length === 0 && activeSenderId && (
+          <option value={activeSenderId.toString()}>
+            NFT #{activeSenderId.toString()}
+          </option>
+        )}
+        {options.map((option) => (
+          <option key={option.tokenId.toString()} value={option.tokenId.toString()}>
+            {senderOptionLabel(option)}
+          </option>
+        ))}
+      </select>
+      <span className="composer-identity-suffix">发言</span>
+      {isPending && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden="true" />}
+    </label>
+  );
+}
+
+function senderOptionLabel(option: SenderOption) {
+  const idLabel = `NFT #${option.tokenId.toString()}`;
+  const name = option.groupName.trim();
+  if (!name || name === idLabel || name === `LOVE20 ${idLabel}`) return idLabel;
+  return `${name} (${idLabel})`;
 }

@@ -3674,19 +3674,69 @@
   align-items: center;
 }
 
-.chatPrototype :global(.composer-identity-label) {
+.chatPrototype :global(.composer-identity-control) {
   min-width: 0;
+  width: fit-content;
+  max-width: 100%;
+  justify-self: start;
+  min-height: 24px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--greyscale-700);
+  padding: 0 7px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.chatPrototype :global(.composer-identity-control.interactive) {
+  cursor: pointer;
+}
+
+.chatPrototype :global(.composer-identity-control select) {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatPrototype :global(.composer-identity-control:focus-within) {
+  border-color: var(--accent-border);
+  outline: 2px solid rgba(30, 58, 138, 0.12);
+  outline-offset: 1px;
+}
+
+.chatPrototype :global(.composer-identity-control.disabled) {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.chatPrototype :global(.composer-identity-prefix),
+.chatPrototype :global(.composer-identity-suffix) {
+  flex: 0 0 auto;
   color: var(--greyscale-500);
-  font-size: 13px;
+  font-weight: 600;
 }
 
 .chatPrototype :global(.composer-identity-status) {
   grid-column: 1 / -1;
   color: var(--warning);
   font-size: 13px;
+}
+
+.chatPrototype :global(.composer-banned .composer-identity-control) {
+  max-width: 100%;
+  margin: 0 0 8px;
 }
 
 .chatPrototype :global(.composer-mention-hint) {
@@ -4274,6 +4324,14 @@
 
   .chatPrototype :global(.contract-rule-summary-grid) {
     grid-template-columns: 1fr;
+  }
+
+  .chatPrototype :global(.composer-identity-row) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .chatPrototype :global(.composer-identity-control) {
+    max-width: 100%;
   }
 }
 

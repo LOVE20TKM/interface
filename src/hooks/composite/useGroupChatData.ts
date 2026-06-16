@@ -1082,18 +1082,28 @@ export function useGroupChatAccountData(
   groupId: bigint | undefined,
   account: `0x${string}` | undefined,
   senderNames: Record<string, string> = {},
+  senderIdOverride?: bigint | null,
 ): GroupChatAccountData {
   const { defaultGroup, defaultGroupId, defaultGroupName, hasDefaultGroup, isPending: isPendingDefaultGroup, refetch: refetchDefaultGroup } =
     useDefaultGroupOf(account, !!account);
-  const { canPost, reasonCode, isPending: isPendingCanPost, error: canPostError, refetch: refetchCanPost } =
-    useGroupChatCanPost(groupId, defaultGroupId, account, !!account && hasDefaultGroup);
   const effectiveDefaultSenderId = defaultGroup?.groupId || defaultGroupId;
+  const activeSenderId = senderIdOverride === undefined ? effectiveDefaultSenderId : senderIdOverride || undefined;
+  const hasActiveSender = activeSenderId !== undefined && activeSenderId > BigInt(0);
+  const { canPost, reasonCode, isPending: isPendingCanPost, error: canPostError, refetch: refetchCanPost } =
+    useGroupChatCanPost(groupId, activeSenderId, account, !!account && hasActiveSender);
+  const defaultSenderName = defaultGroupName || (effectiveDefaultSenderId ? senderNames[effectiveDefaultSenderId.toString()] : '') || '';
+  const activeSenderName = activeSenderId
+    ? senderNames[activeSenderId.toString()] || (activeSenderId === effectiveDefaultSenderId ? defaultSenderName : '')
+    : '';
 
   return {
     defaultSenderId: effectiveDefaultSenderId,
-    defaultSenderName: defaultGroupName || (effectiveDefaultSenderId ? senderNames[effectiveDefaultSenderId.toString()] : '') || '',
+    defaultSenderName,
     hasDefaultSender: hasDefaultGroup,
     isDefaultSenderPending: isPendingDefaultGroup,
+    activeSenderId,
+    activeSenderName,
+    hasActiveSender,
     canPost,
     canPostReasonCode: reasonCode,
     isPending: isPendingDefaultGroup || isPendingCanPost,

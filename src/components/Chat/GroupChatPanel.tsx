@@ -5,9 +5,11 @@ import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 
 import { useGroupChatSyncState, useMarkGroupRead, useRegisterActiveChat } from '@/src/contexts/GroupChatSyncContext';
+import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
 import { useGroupChatVotingPower } from '@/src/hooks/contracts/useGroupChatManagers';
 import {
   useGroupChatCurrentRound,
+  usePostGroupChatMessage,
   usePostAsDefaultSender,
 } from '@/src/hooks/contracts/useGroupChat';
 import {
@@ -37,6 +39,8 @@ import {
 } from './chatConstants';
 import {
   readMentionAllReadCursors,
+  readSelectedChatSenderId,
+  writeSelectedChatSenderId,
   writeMentionAllReadCursor,
 } from './chatStorage';
 import type { ChatWorkspaceView } from './chatTypes';
@@ -103,11 +107,28 @@ export function GroupChatPanel({
   const [composerHeight, setComposerHeight] = useState(0);
   const [messageListHeight, setMessageListHeight] = useState<number | undefined>();
   const [mentionAllReadCursors, setMentionAllReadCursors] = useState<Record<string, string>>({});
+  const [selectedOwnerSenderId, setSelectedOwnerSenderId] = useState<bigint | null | undefined>();
+  const [selectedOwnerSenderLoaded, setSelectedOwnerSenderLoaded] = useState(false);
   useRegisterActiveChat(groupId);
   const markGroupRead = useMarkGroupRead();
   const syncState = useGroupChatSyncState(groupId);
   const publicData = useGroupChatPublicData(groupId, messageWindowSize);
-  const accountData = useGroupChatAccountData(groupId, account, publicData.senderNames);
+  const accountOwnsChat = !!account && !!publicData.chatInfo?.owner && sameAddress(publicData.chatInfo.owner, account);
+  const { myGroups, isPending: isMyGroupsPending } = useMyGroups(accountOwnsChat ? account : undefined);
+  const ownerSenderId = accountOwnsChat
+    ? selectedOwnerSenderLoaded
+      ? selectedOwnerSenderId
+      : null
+    : undefined;
+  const senderNamesWithOwnedGroups = useMemo(() => {
+    if (!accountOwnsChat || myGroups.length === 0) return publicData.senderNames;
+    const next = { ...publicData.senderNames };
+    myGroups.forEach((group) => {
+      if (group.groupName) next[group.tokenId.toString()] = group.groupName;
+    });
+    return next;
+  }, [accountOwnsChat, myGroups, publicData.senderNames]);
+  const accountData = useGroupChatAccountData(groupId, account, senderNamesWithOwnedGroups, ownerSenderId);
   const { currentRound, isPending: isCurrentRoundPending } = useGroupChatCurrentRound();
   const managedTitle = useGroupChatManagedTitle(
     groupId,
@@ -124,8 +145,13 @@ export function GroupChatPanel({
     activeGovBanSource,
   );
   const canVoteMessageGovBan = activeGovBanSource && messageGovVotingPower.voteWeight > BigInt(0);
-  const postTx = usePostAsDefaultSender();
-  const { postAsDefaultSender, isPending, isConfirming } = postTx;
+  const defaultPostTx = usePostAsDefaultSender();
+  const explicitPostTx = usePostGroupChatMessage();
+  const { postAsDefaultSender } = defaultPostTx;
+  const { post } = explicitPostTx;
+  const usingExplicitSender = accountOwnsChat && ownerSenderId !== undefined && ownerSenderId !== null;
+  const isPending = defaultPostTx.isPending || explicitPostTx.isPending;
+  const isConfirming = defaultPostTx.isConfirming || explicitPostTx.isConfirming;
   const mentionAllPermission = useGroupMentionAllPermission(groupId, account);
   const messageAdminPermission = useGroupAdminOperatorPermission(groupId, account, activeAdminBanSource);
   const canManageMessageAdminBan = activeAdminBanSource && messageAdminPermission.canOperate;
@@ -135,6 +161,8 @@ export function GroupChatPanel({
     setContent('');
     setQuotedMessage(undefined);
     setMentionedSenderIds([]);
+    setSelectedOwnerSenderId(undefined);
+    setSelectedOwnerSenderLoaded(false);
     setActiveMenuMessageId(undefined);
     setMessageWindowSize(DEFAULT_MESSAGE_WINDOW_SIZE);
     setIsLoadingEarlierMessages(false);
@@ -147,6 +175,38 @@ export function GroupChatPanel({
     setComposerHeight(0);
     setMessageListHeight(undefined);
   }, [groupId]);
+
+  useEffect(() => {
+    if (!groupId) return;
+    if (!accountOwnsChat) {
+      if (selectedOwnerSenderId !== undefined || selectedOwnerSenderLoaded) {
+        setSelectedOwnerSenderId(undefined);
+        setSelectedOwnerSenderLoaded(false);
+      }
+      return;
+    }
+    if (!selectedOwnerSenderLoaded) {
+      setSelectedOwnerSenderId(readSelectedChatSenderId(account, groupId) ?? null);
+      setSelectedOwnerSenderLoaded(true);
+      return;
+    }
+    if (selectedOwnerSenderId && !myGroups.some((group) => group.tokenId === selectedOwnerSenderId)) {
+      if (isMyGroupsPending) return;
+      setSelectedOwnerSenderId(null);
+      return;
+    }
+    if (selectedOwnerSenderId !== null) return;
+    if (isMyGroupsPending) return;
+    const nextSenderId = myGroups.find((group) => group.tokenId === groupId)?.tokenId || myGroups[0]?.tokenId || null;
+    if (nextSenderId) {
+      setSelectedOwnerSenderId(nextSenderId);
+    }
+  }, [account, accountOwnsChat, groupId, isMyGroupsPending, myGroups, selectedOwnerSenderId, selectedOwnerSenderLoaded]);
+
+  useEffect(() => {
+    if (!groupId || !accountOwnsChat || !selectedOwnerSenderLoaded) return;
+    writeSelectedChatSenderId(account, groupId, selectedOwnerSenderId === null ? undefined : selectedOwnerSenderId);
+  }, [account, accountOwnsChat, groupId, selectedOwnerSenderId, selectedOwnerSenderLoaded]);
 
   const stopBottomResizeObserver = useCallback(() => {
     bottomResizeObserverRef.current?.disconnect();
@@ -252,15 +312,20 @@ export function GroupChatPanel({
 
   useEffect(() => stopBottomResizeObserver, [stopBottomResizeObserver]);
 
-  useConfirmedTransactionEffect(postTx, () => {
+  const refetchPublicData = publicData.refetch;
+  const refetchAccountData = accountData.refetch;
+  const handlePostConfirmed = useCallback(() => {
     setContent('');
     setQuotedMessage(undefined);
     setMentionedSenderIds([]);
     toast.success('已发送');
-    publicData.refetch();
-    accountData.refetch();
+    refetchPublicData();
+    refetchAccountData();
     onPosted();
-  });
+  }, [onPosted, refetchAccountData, refetchPublicData]);
+
+  useConfirmedTransactionEffect(defaultPostTx, handlePostConfirmed);
+  useConfirmedTransactionEffect(explicitPostTx, handlePostConfirmed);
 
   const composerState = useChatComposerState({
     groupId,
@@ -518,8 +583,8 @@ export function GroupChatPanel({
     if (!groupId) return;
     const trimmed = content.trim();
     if (!trimmed) return;
-    if (!composerState.activeSenderId) {
-      toast.error('请先设置默认 NFT 身份。');
+    if (composerState.activeSenderId === undefined || composerState.activeSenderId === null) {
+      toast.error(accountOwnsChat ? '请选择发言 NFT。' : '请先设置默认 NFT 身份。');
       return;
     }
     if (!composerState.activeCanPost) {
@@ -552,13 +617,24 @@ export function GroupChatPanel({
       }
     }
     try {
-      await postAsDefaultSender(
-        groupId,
-        trimmed,
-        composerState.draftMentions.mentionedSenderIds,
-        finalMentionAll,
-        quotedMessage?.messageId || BigInt(0),
-      );
+      if (usingExplicitSender && composerState.activeSenderId) {
+        await post(
+          groupId,
+          composerState.activeSenderId,
+          trimmed,
+          composerState.draftMentions.mentionedSenderIds,
+          finalMentionAll,
+          quotedMessage?.messageId || BigInt(0),
+        );
+      } else {
+        await postAsDefaultSender(
+          groupId,
+          trimmed,
+          composerState.draftMentions.mentionedSenderIds,
+          finalMentionAll,
+          quotedMessage?.messageId || BigInt(0),
+        );
+      }
     } catch (error) {
       console.error(error);
     }
@@ -652,6 +728,10 @@ export function GroupChatPanel({
         activeSenderName={composerState.activeSenderName}
         activeCanPost={composerState.activeCanPost}
         sendAvailability={composerState.sendAvailability}
+        canSwitchSender={accountOwnsChat}
+        senderOptions={myGroups}
+        selectedSenderId={composerState.activeSenderId}
+        isSenderOptionsPending={isMyGroupsPending}
         content={content}
         quotedMessage={quotedMessage}
         mentionValidationHint={composerState.mentionValidationHint}
@@ -661,6 +741,7 @@ export function GroupChatPanel({
         sendDisabled={composerState.sendDisabled}
         isPending={isPending}
         isConfirming={isConfirming}
+        onSelectSender={(senderId) => setSelectedOwnerSenderId(senderId)}
         onContentChange={setContent}
         onToggleMentionAll={toggleMentionAll}
         onSend={onSend}

@@ -8,6 +8,7 @@ import {
   MESSAGE_PREFERENCES_STORAGE_KEY,
   OWNED_CHAIN_GROUPS_CHANGED_EVENT,
   OWNED_CHAIN_GROUPS_STORAGE_KEY,
+  SELECTED_CHAT_SENDER_STORAGE_KEY,
 } from './chatConstants';
 import { GROUP_CHAT_CONTRACT_ADDRESS } from '@/src/hooks/contracts/useGroupChat';
 
@@ -52,6 +53,10 @@ export function followedGroupsStorageKey(account: AccountAddress) {
 
 export function ownedChainGroupsStorageKey(account: AccountAddress) {
   return `${OWNED_CHAIN_GROUPS_STORAGE_KEY}:${groupChatStorageScope(account)}`;
+}
+
+export function selectedChatSenderStorageKey(account: AccountAddress, groupId: bigint | undefined) {
+  return `${SELECTED_CHAT_SENDER_STORAGE_KEY}:${groupChatStorageScope(account)}:${groupId?.toString() || 'no-group'}`;
 }
 
 export function cachedGroupSetsScopePrefix(account: AccountAddress) {
@@ -108,6 +113,25 @@ export function readRecordStorage(key: string): Record<string, string> {
 function safeStorageBigInt(value: string | undefined) {
   if (!value || !/^\d+$/.test(value)) return BigInt(0);
   return BigInt(value);
+}
+
+export function readSelectedChatSenderId(account: AccountAddress, groupId: bigint | undefined) {
+  if (typeof window === 'undefined' || !account || !groupId || groupId <= BigInt(0)) return undefined;
+  return safeStorageBigInt(window.localStorage.getItem(selectedChatSenderStorageKey(account, groupId)) || undefined) || undefined;
+}
+
+export function writeSelectedChatSenderId(
+  account: AccountAddress,
+  groupId: bigint | undefined,
+  senderId: bigint | undefined,
+) {
+  if (typeof window === 'undefined' || !account || !groupId || groupId <= BigInt(0)) return;
+  const key = selectedChatSenderStorageKey(account, groupId);
+  if (!senderId || senderId <= BigInt(0)) {
+    window.localStorage.removeItem(key);
+    return;
+  }
+  window.localStorage.setItem(key, senderId.toString());
 }
 
 export function mentionAllReadCursorsStorageKey(account: AccountAddress) {

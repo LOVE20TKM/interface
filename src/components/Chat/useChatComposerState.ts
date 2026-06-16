@@ -24,10 +24,9 @@ export function useChatComposerState({
   isPending: boolean;
   isConfirming: boolean;
 }) {
-  const activeSenderId = accountData.defaultSenderId;
+  const activeSenderId = accountData.activeSenderId;
   const activeSenderName = activeSenderId
-    ? publicData.senderNames[activeSenderId.toString()] ||
-      (activeSenderId === accountData.defaultSenderId ? accountData.defaultSenderName : '')
+    ? publicData.senderNames[activeSenderId.toString()] || accountData.activeSenderName
     : '';
   const activeCanPost = activeSenderId ? accountData.canPost : false;
   const draftMentions = useMemo(

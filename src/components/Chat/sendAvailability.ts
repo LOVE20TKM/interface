@@ -104,13 +104,13 @@ const banDescriptors: BanDescriptor[] = [
     key: 'admin-ban-source',
     matches: (chatInfo) =>
       isAdminBanSourceEnabled && sameAddress(chatInfo.banSource, GROUP_CHAT_ADMIN_BAN_SOURCE_ADDRESS),
-    banRejectedMessage: '当前地址或默认 NFT 已被管理员禁言。',
+    banRejectedMessage: '当前地址或当前发言 NFT 已被管理员禁言。',
   },
   {
     key: 'gov-voted-ban-source',
     matches: (chatInfo) =>
       isGovVotedBanSourceEnabled && sameAddress(chatInfo.banSource, GROUP_CHAT_GOV_VOTED_BAN_SOURCE_ADDRESS),
-    banRejectedMessage: '当前地址或默认 NFT 已被治理禁言。',
+    banRejectedMessage: '当前地址或当前发言 NFT 已被治理禁言。',
   },
 ];
 
@@ -125,10 +125,10 @@ type SendAvailabilityContext = {
 };
 
 function formatDefaultSender(accountData: GroupChatAccountData) {
-  const senderId = accountData.defaultSenderId;
-  if (!senderId) return '当前默认 NFT';
+  const senderId = accountData.activeSenderId;
+  if (!senderId) return '当前发言 NFT';
   const idLabel = `NFT #${senderId.toString()}`;
-  const name = accountData.defaultSenderName.trim();
+  const name = accountData.activeSenderName.trim();
   if (!name || name === idLabel || name === `LOVE20 ${idLabel}`) return idLabel;
   return `${name} (${idLabel})`;
 }
@@ -140,9 +140,9 @@ function scopeRejectedMessage(chatInfo: ParsedGroupChatInfo | undefined, context
 }
 
 function banRejectedMessage(chatInfo: ParsedGroupChatInfo | undefined) {
-  if (!chatInfo) return '当前地址或默认 NFT 被禁言规则拒绝。';
+  if (!chatInfo) return '当前地址或当前发言 NFT 被禁言规则拒绝。';
   const descriptor = banDescriptors.find((item) => item.matches(chatInfo));
-  return descriptor?.banRejectedMessage || '当前地址或默认 NFT 被禁言规则拒绝。';
+  return descriptor?.banRejectedMessage || '当前地址或当前发言 NFT 被禁言规则拒绝。';
 }
 
 export function resolveSendAvailability({
@@ -158,11 +158,11 @@ export function resolveSendAvailability({
     return { canSend: false, source: 'wallet', message: '连接钱包后可参与聊天。' };
   }
 
-  if (!chatInfo || accountData.isDefaultSenderPending || accountData.isPending) {
+  if (!chatInfo || accountData.isPending) {
     return { canSend: false, source: 'loading', message: '正在检查发言权限...' };
   }
 
-  if (!accountData.hasDefaultSender || !accountData.defaultSenderId) {
+  if (!accountData.hasActiveSender || !accountData.activeSenderId) {
     return { canSend: false, source: 'defaultNft', message: '设置默认 LOVE20 NFT 后可参与聊天。' };
   }
 
@@ -175,10 +175,10 @@ export function resolveSendAvailability({
       return { canSend: false, source: 'chat', message: '该群聊已暂停发言。' };
     }
     if (reasonCode === CAN_POST_REASON.GROUP_NOT_EXIST) {
-      return { canSend: false, source: 'chat', message: '群聊或默认 NFT 身份不存在。' };
+      return { canSend: false, source: 'chat', message: '群聊或当前发言 NFT 不存在。' };
     }
     if (reasonCode === CAN_POST_REASON.SENDER_ADDRESS_NOT_SENDER_ID_OWNER) {
-      return { canSend: false, source: 'defaultNft', message: '当前钱包不是默认 NFT 持有人。' };
+      return { canSend: false, source: 'scope', message: '当前钱包不是发言 NFT 持有人。' };
     }
     if (reasonCode === CAN_POST_REASON.SCOPE_REJECTED) {
       return { canSend: false, source: 'scope', message: scopeRejectedMessage(chatInfo, { accountData }) };

@@ -537,6 +537,55 @@ export function usePostAsDefaultSender() {
   };
 }
 
+export function usePostGroupChatMessage() {
+  const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
+    GroupChatAbi,
+    getContractAddress(),
+    'post',
+  );
+
+  const post = async (
+    groupId: bigint,
+    senderId: bigint,
+    content: string,
+    mentionedSenderIds: bigint[] = [],
+    mentionAll: boolean = false,
+    quotedMessageId: bigint = BigInt(0),
+  ) => {
+    console.log('提交post交易:', {
+      groupId,
+      senderId,
+      contentLength: content.length,
+      mentionedSenderIds,
+      mentionAll,
+      quotedMessageId,
+      isTukeMode,
+    });
+    return await execute([groupId, senderId, content, mentionedSenderIds, mentionAll, quotedMessageId]);
+  };
+
+  useEffect(() => {
+    if (hash) {
+      console.log('post tx hash:', hash);
+    }
+    if (error) {
+      console.log('提交post交易错误:');
+      logWeb3Error(error);
+      logError(error);
+    }
+  }, [hash, error]);
+
+  return {
+    post,
+    isPending,
+    isConfirming,
+    writeError: error,
+    isConfirmed,
+    hash,
+    isTukeMode,
+  };
+}
+
 function useGroupChatWrite(functionName: string) {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
     GroupChatAbi,

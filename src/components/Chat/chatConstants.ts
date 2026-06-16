@@ -13,6 +13,7 @@ export const FOLLOWED_GROUPS_STORAGE_KEY = 'love20-chat:followed-groups:v1';
 export const FOLLOWED_GROUPS_CHANGED_EVENT = 'love20-chat:followed-groups-changed';
 export const OWNED_CHAIN_GROUPS_STORAGE_KEY = 'love20-chat:owned-chain-groups:v1';
 export const OWNED_CHAIN_GROUPS_CHANGED_EVENT = 'love20-chat:owned-chain-groups-changed';
+export const SELECTED_CHAT_SENDER_STORAGE_KEY = 'love20-chat:selected-chat-sender:v1';
 export const CACHED_GROUP_SETS_STORAGE_KEY = 'love20-chat:cached-group-sets:v2';
 export const CACHED_GROUP_SETS_CHANGED_EVENT = 'love20-chat:cached-group-sets-changed';
 export const MESSAGE_PREFERENCES_STORAGE_KEY = 'love20-chat:message-preferences:v3';
