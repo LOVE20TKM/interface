@@ -214,18 +214,23 @@ export const useGroupInfo = (extensionAddress: `0x${string}`, groupId: bigint) =
 /**
  * Hook for isGroupActive - 检查链群是否活跃
  */
-export const useIsGroupActive = (extensionAddress: `0x${string}`, groupId: bigint) => {
+export const useIsGroupActive = (extensionAddress: `0x${string}`, groupId: bigint, enabled: boolean = true) => {
+  const isEnabled = !!extensionAddress && groupId !== undefined && enabled;
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupManagerAbi,
     functionName: 'isGroupActive',
     args: [extensionAddress, groupId],
     query: {
-      enabled: !!extensionAddress && groupId !== undefined,
+      enabled: isEnabled,
     },
   });
 
-  return { isGroupActive: data as boolean | undefined, isPending, error };
+  return {
+    isGroupActive: isEnabled ? (data as boolean | undefined) : undefined,
+    isPending: isEnabled && isPending,
+    error: isEnabled ? error : null,
+  };
 };
 
 /**

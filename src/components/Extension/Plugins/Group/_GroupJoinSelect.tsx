@@ -16,7 +16,7 @@ import { z } from 'zod';
 
 // UI 组件
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 
@@ -27,9 +27,8 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useTokenIdOf, useGroupNameOf } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
-import { useExtensionGroupInfosOfAction } from '@/src/hooks/extension/plugins/group/composite';
+import { useIsGroupActive } from '@/src/hooks/extension/plugins/group/contracts/useGroupManager';
 
 // 工具函数
 import { LocalCache } from '@/src/lib/LocalCache';
@@ -37,7 +36,6 @@ import { buildGroupActivateHref } from '@/src/lib/myGroupsPage';
 
 // 组件
 import LeftTitle from '@/src/components/Common/LeftTitle';
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
 
 interface FormValues {
   groupName: string;
@@ -59,19 +57,6 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
 
-  // 获取当前加入轮次
-  const { currentRound } = useCurrentRound();
-
-  // 获取行动的所有活跃链群列表
-  const {
-    groups,
-    isPending: isPendingGroups,
-    error: errorGroups,
-  } = useExtensionGroupInfosOfAction({
-    extensionAddress,
-    round: currentRound,
-  });
-
   // 读取缓存的 groupId（加入时设置）
   const cachedGroupIdStr = LocalCache.get<string>(`joined_group_id`);
   const cachedGroupId = cachedGroupIdStr ? BigInt(cachedGroupIdStr) : null;
@@ -79,6 +64,7 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
   // 如果有缓存的 groupId，获取对应的 groupName
   const { groupName: cachedGroupName, isPending: isPendingCachedGroupName } = useGroupNameOf(
     cachedGroupId || BigInt(0),
+    cachedGroupId !== null,
   );
 
   // 用户输入的链群名称
@@ -99,6 +85,13 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
 
   // isPendingGroupId：只有在实际查询时才为 true，使用缓存时为 false
   const isPendingGroupId = shouldQueryGroupId ? isPendingQueriedGroupId : false;
+
+  const shouldCheckGroupActive = !!groupId && groupId > BigInt(0);
+  const {
+    isGroupActive,
+    isPending: isPendingGroupActive,
+    error: errorGroupActive,
+  } = useIsGroupActive(extensionAddress, groupId || BigInt(0), shouldCheckGroupActive);
 
   // 表单实例
   const form = useForm<FormValues>({
@@ -131,13 +124,13 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
   const [validationError, setValidationError] = useState<string>('');
   useEffect(() => {
     // 如果输入为空或正在查询，清空错误
-    if (!inputGroupName || isPendingGroupId) {
+    if (!inputGroupName || isPendingGroupId || isPendingGroupActive) {
       setValidationError('');
       return;
     }
 
     // 如果查询出错
-    if (errorGroupId) {
+    if (errorGroupId || errorGroupActive) {
       setValidationError('查询链群信息失败');
       return;
     }
@@ -148,16 +141,15 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
       return;
     }
 
-    // 检查该链群是否在行动的活跃链群列表中
-    const isInActionGroups = groups?.some((g) => g.groupId === groupId);
-    if (!isInActionGroups) {
+    // 检查该链群是否已在当前行动中激活
+    if (!isGroupActive) {
       setValidationError('该链群不在此行动的可用链群列表中');
       return;
     }
 
     // 验证通过
     setValidationError('');
-  }, [inputGroupName, groupId, isPendingGroupId, errorGroupId, groups]);
+  }, [inputGroupName, groupId, isPendingGroupId, isPendingGroupActive, errorGroupId, errorGroupActive, isGroupActive]);
 
   // 错误处理
 
@@ -172,33 +164,6 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
       `/acting/join?tab=join&groupId=${groupId.toString()}&id=${actionId.toString()}&symbol=${token?.symbol}`,
     );
   };
-
-  if (isPendingGroups) {
-    return (
-      <div className="flex flex-col items-center px-4 pt-6">
-        <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载链群列表...</p>
-      </div>
-    );
-  }
-
-  if (!groups || groups.length === 0) {
-    return (
-      <div className="flex flex-col items-center px-6 pt-6">
-        <LeftTitle title="还没有已激活的链群" />
-        <div className="text-center py-8 text-gray-500">
-          <p>链群行动，需要先激活链群，才能加入行动</p>
-          <div className="mt-4 flex justify-center">
-            <Link href={buildGroupActivateHref({ actionId, returnTo: router.asPath })}>
-              <Button className="text-secondary border-secondary" variant="outline">
-                去激活链群 &gt;&gt;
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="px-6 pt-6 pb-2">
@@ -231,11 +196,20 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
                   <Input placeholder="请输入链群名称" className="!ring-secondary-foreground" {...field} />
                 </FormControl>
                 <FormMessage />
-                {isPendingGroupId && inputGroupName && <div className="text-xs text-gray-500">验证链群中...</div>}
-                {validationError && !isPendingGroupId && <div className="text-xs text-red-500">{validationError}</div>}
-                {!isPendingGroupId && !validationError && groupId && groupId > BigInt(0) && (
-                  <div className="text-xs text-green-600">✓ 链群验证通过</div>
+                {(isPendingGroupId || isPendingGroupActive) && inputGroupName && (
+                  <div className="text-xs text-gray-500">验证链群中...</div>
                 )}
+                {validationError && !isPendingGroupId && !isPendingGroupActive && (
+                  <div className="text-xs text-red-500">{validationError}</div>
+                )}
+                {!isPendingGroupId &&
+                  !isPendingGroupActive &&
+                  !validationError &&
+                  groupId &&
+                  groupId > BigInt(0) &&
+                  isGroupActive && (
+                    <div className="text-xs text-green-600">✓ 链群验证通过</div>
+                  )}
               </FormItem>
             )}
           />
@@ -246,7 +220,13 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
               type="submit"
               className="w-full"
               disabled={
-                !form.formState.isValid || isPendingGroupId || !!validationError || !groupId || groupId === BigInt(0)
+                !form.formState.isValid ||
+                isPendingGroupId ||
+                isPendingGroupActive ||
+                !!validationError ||
+                !groupId ||
+                groupId === BigInt(0) ||
+                !isGroupActive
               }
             >
               下一步
@@ -260,6 +240,12 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
         <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
         <div className="space-y-1 text-gray-600">
           <div>如不知道链群名称，可询问链群服务者或周围朋友</div>
+          <div>
+            没有可加入的链群？
+            <Link href={buildGroupActivateHref({ actionId, returnTo: router.asPath })} className="text-secondary">
+              去激活链群 &gt;&gt;
+            </Link>
+          </div>
         </div>
       </div>
     </div>
