@@ -215,8 +215,12 @@ const sentryConfig =
         },
         silent: true, // 开发环境静默 Sentry 日志
         widenClientFileUpload: false, // 开发环境关闭以提高速度
-        disableLogger: true,
-        automaticVercelMonitors: false, // 开发环境关闭
+        webpack: {
+          treeshake: {
+            removeDebugLogging: true,
+          },
+          automaticVercelMonitors: false, // 开发环境关闭
+        },
       }
     : {
         // 生产环境完整配置
@@ -232,8 +236,12 @@ const sentryConfig =
         silent: !process.env.CI,
         widenClientFileUpload: true,
         tunnelRoute: enableSentryTunnel ? sentryTunnelRoute : undefined,
-        disableLogger: true,
-        automaticVercelMonitors: true,
+        webpack: {
+          treeshake: {
+            removeDebugLogging: true,
+          },
+          automaticVercelMonitors: true,
+        },
       };
 
 module.exports = withSentryConfig(module.exports, sentryConfig);
