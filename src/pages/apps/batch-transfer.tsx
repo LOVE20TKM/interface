@@ -115,6 +115,25 @@ const formatSignedTokenAmount = (value: bigint | undefined, decimals: number) =>
   return formatTokenAmount(value, decimals);
 };
 
+const splitRecipientRow = (raw: string) => {
+  const trimmed = raw.trim();
+  const match = trimmed.match(/^([^\s,]+)[\s,]*(.*)$/);
+  return {
+    addressInput: match?.[1] || '',
+    amountInput: (match?.[2] || '').trim(),
+  };
+};
+
+const normalizeTransferAmountInput = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed.includes(',')) return trimmed;
+
+  const groupedAmountPattern = /^-?(?:(?:\d{1,3}(?:,\d{3})+)|\d+)(?:\.\d+)?$/;
+  if (!groupedAmountPattern.test(trimmed)) return undefined;
+
+  return trimmed.replace(/,/g, '');
+};
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const buildKnownContractTargets = (): ProtectedTargetInfo[] => {
@@ -331,17 +350,13 @@ const parseRecipientRows = (
     .map((raw, index) => ({ raw, lineNumber: index + 1 }))
     .filter(({ raw }) => raw.trim().length > 0)
     .map(({ raw, lineNumber }) => {
-      const parts = raw.trim().replace(/[\t,]+/g, ' ').split(/\s+/).filter(Boolean);
-      const addressInput = parts[0] || '';
-      const amountInput = parts[1] || '';
+      const { addressInput, amountInput } = splitRecipientRow(raw);
       const errors: string[] = [];
       const normalizedAddress = normalizeAddressInput(addressInput);
       let parsedAmount: bigint | undefined;
 
-      if (parts.length < 2) {
+      if (!addressInput || !amountInput) {
         errors.push('缺少地址或数量');
-      } else if (parts.length > 2) {
-        errors.push('每行只能包含地址和数量两列');
       }
 
       if (!normalizedAddress || !isAddress(normalizedAddress) || normalizedAddress === zeroAddress) {
@@ -355,8 +370,10 @@ const parseRecipientRows = (
       if (!amountInput) {
         errors.push('缺少数量');
       } else {
+        const normalizedAmountInput = normalizeTransferAmountInput(amountInput);
         try {
-          parsedAmount = parseUnits(amountInput, decimals);
+          if (!normalizedAmountInput) throw new Error('Invalid amount');
+          parsedAmount = parseUnits(normalizedAmountInput, decimals);
           if (parsedAmount <= BigInt(0)) {
             errors.push('数量必须大于0');
           }
@@ -1051,11 +1068,11 @@ export default function BatchTransferPage() {
                     <Textarea
                       value={recipientsInput}
                       onChange={(event) => setRecipientsInput(event.target.value)}
-                      placeholder={'每行一个地址和数量，例如：\n0x1234... 1.5\nTH... , 2'}
+                      placeholder={'每行一个地址和数量，例如：\n0x1234... 1.5\nTH... , 25,555.123'}
                       className="min-h-56 font-mono text-sm"
                     />
                     <div className="mt-1 text-xs text-greyscale-500">
-                      支持空格、逗号、制表符分隔；地址会统一标准化后检查重复。
+                      地址和数量可用空格、逗号、制表符分隔；数量支持 25,555.123 这种千分位写法。
                     </div>
                   </div>
 
