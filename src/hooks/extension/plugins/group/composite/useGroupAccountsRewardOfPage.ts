@@ -70,11 +70,16 @@ export const useGroupAccountsRewardOfPage = ({
     },
   });
 
+  const hasAddressData = useMemo(() => {
+    if (!enabled || addressContracts.length === 0) return true;
+    return !!addressData && addressData.length === addressContracts.length;
+  }, [enabled, addressContracts.length, addressData]);
+
   // 解析地址
   const accounts = useMemo(() => {
-    if (!addressData) return [];
+    if (!hasAddressData || !addressData) return [];
     return addressData.map((v) => v.result as `0x${string}`).filter((addr) => !!addr);
-  }, [addressData]);
+  }, [addressData, hasAddressData]);
 
   // 阶段2：批量获取每个账户的奖励数据
   const rewardContracts = useMemo(() => {
@@ -132,9 +137,16 @@ export const useGroupAccountsRewardOfPage = ({
     },
   });
 
+  const hasRewardData = useMemo(() => {
+    if (accounts.length === 0 || rewardContracts.length === 0) return true;
+    return !!rewardData && rewardData.length === rewardContracts.length;
+  }, [accounts.length, rewardContracts.length, rewardData]);
+
+  const hasReadError = !!addressError || !!rewardError;
+
   // 解析数据
   const pageRecords = useMemo(() => {
-    if (!rewardData || accounts.length === 0) return [];
+    if (!hasRewardData || !rewardData || accounts.length === 0) return [];
 
     const result: AccountRewardRecord[] = [];
     const recordSize = 5;
@@ -161,15 +173,18 @@ export const useGroupAccountsRewardOfPage = ({
     }
 
     return result;
-  }, [rewardData, accounts]);
+  }, [rewardData, accounts, hasRewardData]);
 
   // isPending: 阶段1加载中，或阶段1完成有地址但阶段2还在加载
   const isPending = useMemo(() => {
     if (!enabled) return false;
+    if (hasReadError) return false;
+    if (!hasAddressData) return true;
     if (isAddressPending) return true;
     if (accounts.length === 0) return false;
+    if (!hasRewardData) return true;
     return isRewardPending;
-  }, [enabled, isAddressPending, accounts.length, isRewardPending]);
+  }, [enabled, hasReadError, hasAddressData, isAddressPending, accounts.length, hasRewardData, isRewardPending]);
 
   return {
     pageRecords,

@@ -203,6 +203,9 @@ const ActionGroupPage: React.FC = () => {
       case 'rewards':
         return (
           <_GroupRewards
+            key={`${actionId?.toString() || '0'}-${groupIdBigInt.toString()}-${
+              typeof router.query.round === 'string' ? router.query.round : 'default'
+            }`}
             extensionAddress={extensionAddress}
             groupId={groupIdBigInt}
             actionId={actionId!}

@@ -56,23 +56,38 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
   // 获取当前轮次
   const { currentRound, isPending: isPendingRound, error: errorRound } = useCurrentRound();
 
+  const maxSelectableRound = useMemo(() => {
+    if (!currentRound || currentRound <= BigInt(0)) return BigInt(0);
+    return currentRound + BigInt(1);
+  }, [currentRound]);
+
   // 从URL获取round参数
   const { round: urlRound } = router.query;
-  const [selectedRound, setSelectedRound] = useState<bigint>(BigInt(0));
-
-  // 初始化轮次状态
-  useEffect(() => {
+  const selectedRound = useMemo(() => {
     if (!currentRound || currentRound <= BigInt(0)) return;
 
-    if (urlRound && !isNaN(Number(urlRound))) {
-      const urlRoundBigInt = BigInt(urlRound as string);
-      if (urlRoundBigInt > BigInt(0) && urlRoundBigInt <= currentRound + BigInt(1)) {
-        setSelectedRound(urlRoundBigInt);
+    if (typeof urlRound === 'string') {
+      try {
+        const urlRoundBigInt = BigInt(urlRound);
+        if (urlRoundBigInt > BigInt(0) && urlRoundBigInt <= maxSelectableRound) {
+          return urlRoundBigInt;
+        }
+      } catch {
+        // URL 轮次非法时使用默认轮次
       }
-    } else {
-      setSelectedRound(currentRound - BigInt(1) > BigInt(0) ? currentRound - BigInt(1) : BigInt(1));
     }
-  }, [urlRound, currentRound]);
+
+    return currentRound - BigInt(1) > BigInt(0) ? currentRound - BigInt(1) : BigInt(1);
+  }, [urlRound, currentRound, maxSelectableRound]);
+  const selectedRoundForQuery = selectedRound || BigInt(0);
+
+  const selectedRoundStageLabel = useMemo(() => {
+    if (selectedRound === undefined || !currentRound || currentRound <= BigInt(0)) return undefined;
+
+    if (selectedRound === currentRound) return '验证阶段';
+    if (selectedRound === currentRound + BigInt(1)) return '行动阶段';
+    return undefined;
+  }, [selectedRound, currentRound]);
 
   // 分页常量
   const PAGE_SIZE = 20;
@@ -82,14 +97,14 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
     verifiedAccountCount,
     isPending: isPendingVerifiedAccountCount,
     error: errorVerifiedAccountCount,
-  } = useVerifiedAccountCount(extensionAddress, selectedRound, groupId);
+  } = useVerifiedAccountCount(extensionAddress, selectedRoundForQuery, groupId);
 
   // 获取账户总数（用于分页）
   const {
     count: totalCount,
     isPending: isPendingCount,
     error: errorCount,
-  } = useAccountsByGroupIdCount(extensionAddress, selectedRound, groupId);
+  } = useAccountsByGroupIdCount(extensionAddress, selectedRoundForQuery, groupId);
 
   // 分页状态
   const [allRecords, setAllRecords] = useState<AccountRewardRecord[]>([]);
@@ -113,7 +128,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
     error: pageError,
   } = useGroupAccountsRewardOfPage({
     extensionAddress,
-    round: selectedRound,
+    round: selectedRoundForQuery,
     groupId,
     startIndex,
     endIndex,
@@ -129,7 +144,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
     error: errorSummary,
   } = useGroupSummaryOfRound({
     extensionAddress,
-    round: selectedRound,
+    round: selectedRoundForQuery,
     groupId,
   });
 
@@ -138,7 +153,15 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
     distrustRate,
     isPending: isPendingWarningRates,
     error: errorWarningRates,
-  } = useDistrustRateByGroupId(extensionAddress, selectedRound, groupId);
+  } = useDistrustRateByGroupId(extensionAddress, selectedRoundForQuery, groupId);
+
+  // 轮次切换时重置分页状态
+  useEffect(() => {
+    setAllRecords([]);
+    setCurrentPage(0);
+    setHasMore(true);
+    setIsFirstPageLoaded(false);
+  }, [selectedRound]);
 
   // 数据累积：将新页数据追加到 allRecords
   useEffect(() => {
@@ -158,15 +181,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
         setHasMore(false);
       }
     }
-  }, [pageRecords]);
-
-  // 轮次切换时重置分页状态
-  useEffect(() => {
-    setAllRecords([]);
-    setCurrentPage(0);
-    setHasMore(true);
-    setIsFirstPageLoaded(false);
-  }, [selectedRound]);
+  }, [pageRecords, currentPage, totalCount, endIndex]);
 
   // 无限滚动：IntersectionObserver
   useEffect(() => {
@@ -208,8 +223,8 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
     actionId,
     accounts,
     verificationKeys: actionInfo?.body.verificationKeys || [],
-    round: selectedRound,
-    enabled: !!token?.address && !!actionInfo && accounts.length > 0,
+    round: selectedRoundForQuery,
+    enabled: selectedRound !== undefined && !!token?.address && !!actionInfo && accounts.length > 0,
   });
 
   // 展开/收起状态
@@ -231,7 +246,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
   // 错误处理
 
   const handleChangedRound = (round: number) => {
-    // 只更新URL参数，由useEffect统一处理selectedRound，避免竞争
+    // 只更新 URL，selectedRound 由当前 URL 和链上当前轮次推导
     const currentQuery = { ...router.query };
     currentQuery.round = round.toString();
 
@@ -286,19 +301,24 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
 
   return (
     <div className="relative pb-4">
-      {selectedRound === BigInt(0) && (
+      {selectedRound === undefined && (
         <div className="flex items-center justify-center">
           <div className="text-center text-sm text-greyscale-500">暂无激励数据</div>
         </div>
       )}
-      <div className="flex items-center">
-        {selectedRound > 0 && (
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        {selectedRound !== undefined && selectedRound > BigInt(0) && (
           <>
             <LeftTitle title={`第 ${selectedRound.toString()} 轮`} />
-            <span className="text-sm text-greyscale-500 ml-2">(</span>
+            {selectedRoundStageLabel && (
+              <span className="rounded border border-greyscale-200 bg-greyscale-50 px-1.5 py-0.5 text-xs text-greyscale-500">
+                {selectedRoundStageLabel}
+              </span>
+            )}
+            <span className="text-sm text-greyscale-500">(</span>
             <ChangeRound
               currentRound={currentRound - BigInt(1) || BigInt(0)}
-              maxRound={currentRound + BigInt(1)}
+              maxRound={maxSelectableRound}
               handleChangedRound={handleChangedRound}
             />
             <span className="text-sm text-greyscale-500">)</span>
@@ -308,7 +328,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
 
       {/* 警告：所选轮次不信任率 */}
       {(() => {
-        if (selectedRound <= BigInt(0)) return null;
+        if (selectedRound === undefined || selectedRound <= BigInt(0)) return null;
         if (isPendingWarningRates) return null;
 
         const distrustRatePercent = distrustRate !== undefined ? parseFloat(formatUnits(distrustRate)) * 100 : 0;
@@ -367,7 +387,8 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
       {/* 激励详情列表 */}
       {!pageError &&
         !errorCount &&
-        selectedRound > 0 &&
+        selectedRound !== undefined &&
+        selectedRound > BigInt(0) &&
         (totalCount !== undefined && totalCount === BigInt(0) ? (
           <div className="text-center text-sm text-greyscale-400 p-4">该轮次没有地址记录</div>
         ) : combinedData.length > 0 ? (
@@ -490,7 +511,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
               </td>
               <td className="px-1 text-right text-greyscale-400">-</td>
               <td className="px-1 text-right">
-                {selectedRound >= currentRound ? (
+                {selectedRound !== undefined && selectedRound >= currentRound ? (
                   <div className="text-greyscale-500">未生成</div>
                 ) : (
                   <div className="font-mono">{formatTokenAmount(totalReward)}</div>
