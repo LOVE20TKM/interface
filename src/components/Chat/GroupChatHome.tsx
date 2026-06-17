@@ -193,9 +193,9 @@ function AddGroupDialog({
           : isInactive
             ? "这个群聊还没有激活，不能添加。"
             : isAlreadyFollowed
-              ? "这个群聊已经在我的群聊里。"
+              ? "这个群聊已经在我的收藏里。"
               : isActivated
-                ? "检查通过，确认后会加入我的群聊。"
+                ? "检查通过，确认后会加入我的收藏。"
                 : "没有读到这个群聊，请确认 ID 是否正确。";
 
   return (
@@ -250,7 +250,7 @@ function AddGroupDialog({
           )}
           {!isConnected && (
             <div className="manual-group-status" data-tone="bad">
-              连接钱包后才能加入我的群聊。
+              连接钱包后才能收藏群聊。
             </div>
           )}
         </div>

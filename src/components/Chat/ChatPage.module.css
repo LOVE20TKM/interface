@@ -382,7 +382,11 @@
 }
 
 .chatPrototype :global(.conversation-row-wrap:has(.conversation-follow-button) .conversation-row) {
-  padding-right: 74px;
+  padding-right: 52px;
+}
+
+.chatPrototype :global(.conversation-row-wrap:has(.conversation-more-button) .conversation-row) {
+  padding-right: 58px;
 }
 
 .chatPrototype :global(.conversation-follow-button) {
@@ -390,19 +394,62 @@
   right: 12px;
   top: 50%;
   z-index: 7;
-  min-height: 28px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--accent-border);
   border-radius: 999px;
   background: var(--accent-soft);
   color: var(--primary-action);
-  padding: 0 12px;
-  font-size: 13px;
-  font-weight: 800;
+  padding: 0;
   transform: translateY(-50%);
+  box-shadow: 0 1px 2px rgba(25, 28, 31, 0.04);
+}
+
+.chatPrototype :global(.conversation-follow-icon) {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
 }
 
 .chatPrototype :global(.conversation-follow-button:active) {
   transform: translateY(-50%) scale(0.98);
+}
+
+.chatPrototype :global(.conversation-more-button) {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  z-index: 7;
+  width: 32px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--greyscale-700);
+  transform: translateY(-50%);
+  box-shadow: 0 1px 2px rgba(25, 28, 31, 0.04);
+}
+
+.chatPrototype :global(.conversation-more-button[aria-expanded="true"]) {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--primary-action);
+}
+
+.chatPrototype :global(.conversation-more-button:active) {
+  transform: translateY(-50%) scale(0.98);
+}
+
+.chatPrototype :global(.conversation-more-icon) {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
 }
 
 .chatPrototype :global(.conversation-row[data-menu-open="true"]) {
@@ -453,10 +500,11 @@
 
 .chatPrototype :global(.inbox-menu-button) {
   width: 32px;
-  height: 28px;
+  height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
   border: 1px solid var(--greyscale-200);
   border-radius: 999px;
   background: #fff;
@@ -475,7 +523,8 @@
   top: calc(100% + 6px);
   right: 0;
   z-index: 40;
-  width: 136px;
+  width: max-content;
+  min-width: 88px;
   display: grid;
   gap: 4px;
   padding: 6px;
@@ -536,6 +585,7 @@
   min-height: 18px;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 3px;
   min-width: 0;
@@ -554,13 +604,15 @@
 }
 
 .chatPrototype :global(.conversation-reminders) {
-  min-width: 0;
+  flex: 1 1 100%;
+  min-width: 100%;
   display: flex;
-  margin-left: auto;
+  flex-wrap: wrap;
+  margin-left: 0;
   justify-self: end;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 4px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .chatPrototype :global(.conversation-badge) {

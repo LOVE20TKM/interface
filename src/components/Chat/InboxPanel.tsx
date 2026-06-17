@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { MessagesSquare, MoreHorizontal } from "lucide-react";
+import { CirclePlus, MessagesSquare, MoreHorizontal, Plus } from "lucide-react";
 
 import LoadingIcon from "@/src/components/Common/LoadingIcon";
 import { useGroupChatSyncState } from "@/src/contexts/GroupChatSyncContext";
@@ -21,6 +21,7 @@ import { buildGroupChatDetailHref, buildGroupChatDetailUrl, safeBigIntFromString
 const CONVERSATION_MENU_WIDTH = 132;
 const CONVERSATION_MENU_HEIGHT = 44;
 const CONVERSATION_MENU_GUTTER = 8;
+const CONVERSATION_MENU_TRIGGER_GAP = 4;
 
 function ConversationItem({
   item,
@@ -66,6 +67,48 @@ function ConversationItem({
     pressRef.current = null;
   }, []);
 
+  const positionMenuAtPoint = useCallback((clientX: number, clientY: number) => {
+    const rect = rowRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const maxLeft = Math.max(
+      CONVERSATION_MENU_GUTTER,
+      rect.width - CONVERSATION_MENU_WIDTH - CONVERSATION_MENU_GUTTER,
+    );
+    const maxTop = Math.max(
+      CONVERSATION_MENU_GUTTER,
+      rect.height - CONVERSATION_MENU_HEIGHT - CONVERSATION_MENU_GUTTER,
+    );
+    setMenuPosition({
+      left: Math.min(
+        Math.max(clientX - rect.left - CONVERSATION_MENU_WIDTH / 2, CONVERSATION_MENU_GUTTER),
+        maxLeft,
+      ),
+      top: Math.min(
+        Math.max(clientY - rect.top - CONVERSATION_MENU_HEIGHT / 2, CONVERSATION_MENU_GUTTER),
+        maxTop,
+      ),
+    });
+  }, []);
+
+  const positionMenuAtElement = useCallback((element: HTMLElement) => {
+    const rowRect = rowRef.current?.getBoundingClientRect();
+    const triggerRect = element.getBoundingClientRect();
+    if (!rowRect) return;
+
+    const maxLeft = Math.max(
+      CONVERSATION_MENU_GUTTER,
+      rowRect.width - CONVERSATION_MENU_WIDTH - CONVERSATION_MENU_GUTTER,
+    );
+    setMenuPosition({
+      left: Math.min(
+        Math.max(triggerRect.right - rowRect.left - CONVERSATION_MENU_WIDTH, CONVERSATION_MENU_GUTTER),
+        maxLeft,
+      ),
+      top: Math.max(triggerRect.bottom - rowRect.top + CONVERSATION_MENU_TRIGGER_GAP, CONVERSATION_MENU_GUTTER),
+    });
+  }, []);
+
   useEffect(() => clearPress, [clearPress]);
 
   useEffect(() => {
@@ -81,7 +124,10 @@ function ConversationItem({
   }, [menuOpen]);
 
   const startLongPress = (event: React.PointerEvent<HTMLElement>) => {
-    if (event.button !== 0 || (event.target as HTMLElement).closest(".conversation-menu")) {
+    if (
+      event.button !== 0 ||
+      (event.target as HTMLElement).closest(".conversation-menu, .conversation-follow-button, .conversation-more-button")
+    ) {
       return;
     }
     const { clientX, clientY, pointerId } = event;
@@ -91,27 +137,7 @@ function ConversationItem({
       x: clientX,
       y: clientY,
       timer: setTimeout(() => {
-        const rect = rowRef.current?.getBoundingClientRect();
-        if (rect) {
-          const maxLeft = Math.max(
-            CONVERSATION_MENU_GUTTER,
-            rect.width - CONVERSATION_MENU_WIDTH - CONVERSATION_MENU_GUTTER,
-          );
-          const maxTop = Math.max(
-            CONVERSATION_MENU_GUTTER,
-            rect.height - CONVERSATION_MENU_HEIGHT - CONVERSATION_MENU_GUTTER,
-          );
-          setMenuPosition({
-            left: Math.min(
-              Math.max(clientX - rect.left - CONVERSATION_MENU_WIDTH / 2, CONVERSATION_MENU_GUTTER),
-              maxLeft,
-            ),
-            top: Math.min(
-              Math.max(clientY - rect.top - CONVERSATION_MENU_HEIGHT / 2, CONVERSATION_MENU_GUTTER),
-              maxTop,
-            ),
-          });
-        }
+        positionMenuAtPoint(clientX, clientY);
         pressRef.current = null;
         suppressClickRef.current = true;
         setMenuOpen((value) => !value);
@@ -180,10 +206,28 @@ function ConversationItem({
           </div>
         </div>
       </Link>
-      {!followed && (
+      {followed ? (
+        <button
+          type="button"
+          className="conversation-more-button"
+          title="更多操作"
+          aria-label="打开群聊操作菜单"
+          aria-expanded={menuOpen}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            positionMenuAtElement(event.currentTarget);
+            setMenuOpen((value) => !value);
+          }}
+        >
+          <MoreHorizontal className="conversation-more-icon" aria-hidden="true" />
+        </button>
+      ) : (
         <button
           type="button"
           className="conversation-follow-button"
+          title="收藏群聊"
+          aria-label="收藏这个群聊"
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => {
             event.preventDefault();
@@ -191,7 +235,7 @@ function ConversationItem({
             onToggleFollow(item.groupId);
           }}
         >
-          添加
+          <Plus className="conversation-follow-icon" aria-hidden="true" />
         </button>
       )}
       {menuOpen && (
@@ -213,7 +257,7 @@ function ConversationItem({
               setMenuOpen(false);
             }}
           >
-            {followed ? "移出" : "添加"}
+            {followed ? "移除收藏" : "收藏"}
           </button>
         </div>
       )}
@@ -275,12 +319,12 @@ function InboxHeaderMenu({
       <button
         className="inbox-menu-button"
         type="button"
-        title="我的群聊菜单"
-        aria-label="打开我的群聊菜单"
+        title="更多操作"
+        aria-label="打开更多操作"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+        <CirclePlus className="h-5 w-5" aria-hidden="true" />
       </button>
       {open && (
         <div className="inbox-menu" role="menu">
@@ -355,8 +399,7 @@ export function InboxPanel({
           <div className="conversation-section">
             <div className="conversation-section-label conversation-section-heading">
               <div className="conversation-section-title">
-                <strong>我的群聊</strong>
-                <span>{followedItems.length} 个</span>
+                <strong>我的收藏</strong>
               </div>
               <InboxHeaderMenu
                 onOpenAddGroup={onOpenAddGroup}
@@ -378,7 +421,7 @@ export function InboxPanel({
               ))
             ) : (
               <div className="empty-state compact">
-                暂无已关注群聊，可在下方推荐群聊点击添加，或点击右上角菜单添加群聊
+                暂无收藏群聊，可在下方推荐群聊点击收藏，或点击右上角更多添加群聊
               </div>
             )}
           </div>
@@ -386,7 +429,6 @@ export function InboxPanel({
             <div className="conversation-section">
               <div className="conversation-section-label">
                 <strong>推荐群聊</strong>
-                <span>{recommendedItems.length} 个</span>
               </div>
               {recommendedItems.length ? (
                 recommendedItems.map((item) => (
