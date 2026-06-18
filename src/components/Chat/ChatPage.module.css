@@ -777,6 +777,69 @@
   margin-top: 2px;
 }
 
+.chatPrototype :global(.action-joinable-list) {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.chatPrototype :global(.action-joinable-list-head) {
+  color: var(--greyscale-700);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.chatPrototype :global(.action-joinable-rows) {
+  display: grid;
+  gap: 8px;
+}
+
+.chatPrototype :global(.action-joinable-row) {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--greyscale-200);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.chatPrototype :global(.action-joinable-main) {
+  min-width: 0;
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  color: var(--greyscale-900);
+}
+
+.chatPrototype :global(.action-joinable-main span) {
+  flex: 0 0 auto;
+  color: var(--secondary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.chatPrototype :global(.action-joinable-main strong) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.chatPrototype :global(.action-joinable-actions) {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.chatPrototype :global(.action-joinable-actions .sheet-button) {
+  width: 100%;
+}
+
 .chatPrototype :global(.activation-action-card) {
   grid-template-columns: minmax(0, 1fr);
   align-items: stretch;

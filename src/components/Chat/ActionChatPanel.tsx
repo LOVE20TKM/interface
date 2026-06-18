@@ -3,11 +3,14 @@ import { useRouter } from 'next/router';
 
 import { Input } from '@/components/ui/input';
 import {
+  useTokenActionChatGroupIdsByActions,
   useTokenActionGovChatGroupIdOfAction,
   useTokenActionMainChatGroupIdOfAction,
 } from '@/src/hooks/contracts/useGroupChatManagers';
+import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
+import { useJoinableActions } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { useActionInfo, useActionsCount } from '@/src/hooks/contracts/useLOVE20Submit';
-import { ActivationCard } from './ActivationCard';
+import { ActivationCard, activationActionButtonClass } from './ActivationCard';
 import { parseActionIdInput } from './chatUtils';
 
 type ActionActivationSelection = {
@@ -16,6 +19,7 @@ type ActionActivationSelection = {
 };
 
 export function ActionChatPanel({
+  account,
   tokenAddress,
   tokenSymbol,
   onOpen,
@@ -32,6 +36,16 @@ export function ActionChatPanel({
   const actionId = useMemo(() => parseActionIdInput(actionIdInput), [actionIdInput]);
   const isActionIdEntered = actionIdInput.trim().length > 0;
   const hasInvalidFormat = isActionIdEntered && actionId === undefined;
+  const { currentRound, isPending: isPendingCurrentRound, error: currentRoundError } = useCurrentRound(!!tokenAddress && !!account);
+  const {
+    joinableActions,
+    isPending: isPendingJoinableActions,
+    error: joinableActionsError,
+  } = useJoinableActions(
+    tokenAddress || ('' as `0x${string}`),
+    currentRound || BigInt(0),
+    account || ('' as `0x${string}`),
+  );
   const { actionNum, isPending: isPendingActionsCount } = useActionsCount(tokenAddress, !!tokenAddress);
   const actionExists = actionId !== undefined && actionNum !== undefined && actionId < actionNum;
   const actionableActionId = actionExists ? actionId : undefined;
@@ -59,6 +73,23 @@ export function ActionChatPanel({
     },
     [router],
   );
+  const sortedJoinableActions = useMemo(
+    () =>
+      [...(joinableActions || [])].sort((a, b) => {
+        if (a.hasReward !== b.hasReward) return a.hasReward ? -1 : 1;
+        return Number(b.votesNum - a.votesNum);
+      }),
+    [joinableActions],
+  );
+  const joinableActionIds = useMemo(
+    () => sortedJoinableActions.map((actionDetail) => actionDetail.action.head.id),
+    [sortedJoinableActions],
+  );
+  const {
+    groupIdsByActionId,
+    isPending: isPendingJoinableGroupIds,
+    error: joinableGroupIdsError,
+  } = useTokenActionChatGroupIdsByActions(tokenAddress, joinableActionIds, !!account);
 
   if (!tokenAddress) return null;
 
@@ -91,6 +122,65 @@ export function ActionChatPanel({
           </p>
         )}
         {actionExists && isPendingActionInfo && <p className="action-id-status">读取行动信息...</p>}
+        <div className="action-joinable-list">
+          <div className="action-joinable-list-head">本轮可加入行动</div>
+          {!account ? (
+            <p className="action-id-status">连接钱包后显示当前可加入的行动。</p>
+          ) : isPendingCurrentRound || isPendingJoinableActions ? (
+            <p className="action-id-status">读取本轮可加入行动...</p>
+          ) : currentRoundError || joinableActionsError ? (
+            <p className="action-id-error">可加入行动读取失败，请稍后重试。</p>
+          ) : sortedJoinableActions.length === 0 ? (
+            <p className="action-id-status">本轮暂无可加入行动。</p>
+          ) : (
+            <div className="action-joinable-rows">
+              {sortedJoinableActions.map((actionDetail) => {
+                const listActionId = actionDetail.action.head.id;
+                const title = actionDetail.action.body.title || `行动 #${listActionId.toString()}`;
+                const groupIds = groupIdsByActionId.get(listActionId.toString());
+                const mainGroupId = groupIds?.mainGroupId;
+                const govGroupId = groupIds?.govGroupId;
+                const hasMainGroup = !!mainGroupId && mainGroupId > BigInt(0);
+                const hasGovGroup = !!govGroupId && govGroupId > BigInt(0);
+
+                return (
+                  <div className="action-joinable-row" key={listActionId.toString()}>
+                    <button
+                      type="button"
+                      className="action-joinable-main"
+                      onClick={() => setActionIdInput(listActionId.toString())}
+                    >
+                      <span>No.{listActionId.toString()}</span>
+                      <strong>{title}</strong>
+                    </button>
+                    <div className="action-joinable-actions">
+                      <button
+                        type="button"
+                        className={`${activationActionButtonClass(hasMainGroup)} inline-flex`}
+                        disabled={isPendingJoinableGroupIds || !!joinableGroupIdsError}
+                        onClick={() =>
+                          hasMainGroup ? onOpen(mainGroupId) : openActivationPage({ kind: 'main', actionId: listActionId })
+                        }
+                      >
+                        {hasMainGroup ? '进入主群' : '激活主群'}
+                      </button>
+                      <button
+                        type="button"
+                        className={`${activationActionButtonClass(hasGovGroup)} inline-flex`}
+                        disabled={isPendingJoinableGroupIds || !!joinableGroupIdsError}
+                        onClick={() =>
+                          hasGovGroup ? onOpen(govGroupId) : openActivationPage({ kind: 'gov', actionId: listActionId })
+                        }
+                      >
+                        {hasGovGroup ? '进入治理群' : '激活治理群'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
         {actionExists && (
           <div className="activation-sublist action-id-result">
             <ActivationCard

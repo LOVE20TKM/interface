@@ -6,7 +6,7 @@ import { TokenGovManagerAbi } from '@/src/abis/TokenGovManager';
 import { TokenMainManagerAbi } from '@/src/abis/TokenMainManager';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
-import { useUniversalReadContract } from '@/src/lib/universalReadContract';
+import { useUniversalReadContract, useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
@@ -188,6 +188,88 @@ export const useTokenActionGovChatGroupIdOfAction = (
     refetch,
   };
 };
+
+export function useTokenActionChatGroupIdsByActions(
+  tokenAddress: `0x${string}` | undefined,
+  actionIds: bigint[],
+  enabled: boolean = true,
+) {
+  const contracts = useMemo(() => {
+    if (!enabled || !tokenAddress || actionIds.length === 0) return [];
+
+    return actionIds.flatMap((actionId) => {
+      const reads: Array<{
+        actionId: bigint;
+        kind: 'main' | 'gov';
+        contract: {
+          address: `0x${string}`;
+          abi: typeof TokenActionMainManagerAbi | typeof TokenActionGovManagerAbi;
+          functionName: 'groupIdOfAction';
+          args: [`0x${string}`, bigint];
+        };
+      }> = [];
+
+      if (isTokenActionMainChatManagerEnabled) {
+        reads.push({
+          actionId,
+          kind: 'main',
+          contract: {
+            address: getTokenActionMainManagerAddress(),
+            abi: TokenActionMainManagerAbi,
+            functionName: 'groupIdOfAction',
+            args: [tokenAddress, actionId],
+          },
+        });
+      }
+      if (isTokenActionGovChatManagerEnabled) {
+        reads.push({
+          actionId,
+          kind: 'gov',
+          contract: {
+            address: getTokenActionGovManagerAddress(),
+            abi: TokenActionGovManagerAbi,
+            functionName: 'groupIdOfAction',
+            args: [tokenAddress, actionId],
+          },
+        });
+      }
+
+      return reads;
+    });
+  }, [actionIds, enabled, tokenAddress]);
+
+  const shouldRead = enabled && !!tokenAddress && contracts.length > 0;
+  const { data, isPending, error, refetch } = useUniversalReadContracts({
+    contracts: contracts.map((item) => item.contract) as any,
+    query: { enabled: shouldRead },
+  });
+
+  const groupIdsByActionId = useMemo(() => {
+    const map = new Map<string, { mainGroupId?: bigint; govGroupId?: bigint }>();
+
+    actionIds.forEach((actionId) => {
+      map.set(actionId.toString(), {});
+    });
+
+    contracts.forEach((meta, index) => {
+      const result = data?.[index];
+      const current = map.get(meta.actionId.toString()) || {};
+      const groupId = result?.status === 'success' ? safeToBigInt(result.result) : undefined;
+      if (meta.kind === 'main') current.mainGroupId = groupId;
+      if (meta.kind === 'gov') current.govGroupId = groupId;
+      map.set(meta.actionId.toString(), current);
+    });
+
+    return map;
+  }, [actionIds, contracts, data]);
+
+  return {
+    groupIdsByActionId,
+    isPending: shouldRead ? isPending : false,
+    error: shouldRead ? error : undefined,
+    refetch,
+  };
+}
 
 export function useActivateTokenMainChat() {
   const { execute, isPending, isConfirming, isConfirmed, error, hash, isTukeMode } = useUniversalTransaction(
