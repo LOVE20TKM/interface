@@ -4145,12 +4145,30 @@
   font-weight: 800;
 }
 
-.chatPrototype :global(.manual-group-input) {
+.chatPrototype :global(.manual-group-input-wrap) {
+  display: flex;
+  align-items: center;
   width: 100%;
   min-height: 40px;
   border: 1px solid var(--greyscale-300);
   border-radius: 6px;
   background: #fff;
+}
+
+.chatPrototype :global(.manual-group-input-prefix) {
+  flex: none;
+  padding: 8px 0 8px 10px;
+  color: var(--greyscale-700);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.chatPrototype :global(.manual-group-input) {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
   color: var(--greyscale-900);
   padding: 8px 10px;
   font-size: 16px;
@@ -4158,6 +4176,10 @@
 }
 
 .chatPrototype :global(.manual-group-input:focus) {
+  outline: 0;
+}
+
+.chatPrototype :global(.manual-group-input-wrap:focus-within) {
   border-color: var(--accent-border);
   outline: 2px solid rgba(30, 58, 138, 0.12);
   outline-offset: 1px;
@@ -4213,13 +4235,12 @@
 }
 
 .chatPrototype :global(.chat-modal-actions) {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .chatPrototype :global(.chat-modal-actions .sheet-button) {
-  width: 100%;
+  min-width: 88px;
 }
 
 .chatPrototype :global(.kv-grid) {

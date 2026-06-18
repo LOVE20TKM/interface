@@ -180,23 +180,21 @@ function AddGroupDialog({
   const trimmedInput = inputValue.trim();
   const isActivated = !isInputSettling && lookupItem?.info?.activated === true;
   const isInactive = !isInputSettling && !!lookupGroupId && lookupItem?.info?.activated === false;
-  const statusTone =
-    isActivated && !isAlreadyFollowed ? "ok" : isInactive || isInputInvalid || hasLookupError ? "bad" : "neutral";
-  const statusText = !trimmedInput
-    ? "输入群聊 ID 后自动检查激活状态和群聊名称。"
+  const statusTone = !isConnected || isInactive || isInputInvalid || hasLookupError ? "bad" : "neutral";
+  const statusText = !isConnected
+    ? "请先连接钱包"
     : isInputInvalid
-      ? "请输入大于 0 的数字群聊 ID。"
+      ? "请输入正整数"
       : isInputSettling || isChecking
-        ? "正在检查群聊状态..."
+        ? "检查中..."
         : hasLookupError
-          ? "检查失败，请稍后重试。"
+          ? "检查失败"
           : isInactive
-            ? "这个群聊还没有激活，不能添加。"
+            ? "未激活"
             : isAlreadyFollowed
-              ? "这个群聊已经在我的收藏里。"
-              : isActivated
-                ? "检查通过，确认后会加入我的收藏。"
-                : "没有读到这个群聊，请确认 ID 是否正确。";
+              ? "已添加"
+              : "未找到";
+  const shouldShowStatus = !isConnected || (!!trimmedInput && (!isActivated || isAlreadyFollowed));
 
   return (
     <div
@@ -215,30 +213,32 @@ function AddGroupDialog({
         <div className="chat-modal-head">
           <div>
             <strong id="add-group-dialog-title">添加群聊</strong>
-            <span>检查后确认</span>
           </div>
           <button className="chat-modal-close" type="button" onClick={onClose} aria-label="关闭添加群聊">
             x
           </button>
         </div>
         <div className="manual-group-form">
-          <label className="manual-group-label" htmlFor="manual-group-id-input">
-            群聊 ID
-          </label>
-          <input
-            id="manual-group-id-input"
-            className="manual-group-input"
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={inputValue}
-            onChange={(event) => onInputChange(event.target.value)}
-            placeholder="例如 123"
-            autoFocus
-          />
-          <div className="manual-group-status" data-tone={statusTone}>
-            {statusText}
+          <div className="manual-group-input-wrap">
+            <span className="manual-group-input-prefix">G#</span>
+            <input
+              id="manual-group-id-input"
+              className="manual-group-input"
+              aria-label="群聊 ID"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={inputValue}
+              onChange={(event) => onInputChange(event.target.value)}
+              placeholder="例如 123"
+              autoFocus
+            />
           </div>
+          {shouldShowStatus && (
+            <div className="manual-group-status" data-tone={statusTone}>
+              {statusText}
+            </div>
+          )}
           {isActivated && lookupItem && (
             <div className="manual-group-result">
               <div>
@@ -248,18 +248,10 @@ function AddGroupDialog({
               <strong>{lookupItem.title}</strong>
             </div>
           )}
-          {!isConnected && (
-            <div className="manual-group-status" data-tone="bad">
-              连接钱包后才能收藏群聊。
-            </div>
-          )}
         </div>
         <div className="chat-modal-actions">
-          <button className="sheet-button inline-flex" type="button" onClick={onClose}>
-            取消
-          </button>
           <button className="sheet-button primary inline-flex" type="button" onClick={onConfirm} disabled={!canConfirm}>
-            确认添加
+            添加
           </button>
         </div>
       </section>
