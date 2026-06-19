@@ -1,13 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAccount, useBalance } from 'wagmi';
 import { useForm } from 'react-hook-form';
 import { isAddress } from 'viem';
-import { useQueryClient } from '@tanstack/react-query';
 
 import { normalizeAddressInput, validateAddressInput } from '@/src/lib/addressUtils';
 
@@ -20,13 +19,16 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 import { useUSDTPairAddress } from '@/src/hooks/composite/useUSDTPairAddress';
-import { useBalanceOf, useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
 import { useNativeTransfer } from '@/src/hooks/contracts/useNativeTransfer';
 import useTokenContext from '@/src/hooks/context/useTokenContext';
 import { isGroupDefaultsEnabled, useDefaultGroupOf } from '@/src/hooks/extension/base/contracts/useGroupDefaults';
 import { useNftOwnerLookup } from '@/src/hooks/extension/base/composite/useNftOwnerLookup';
 import { useError } from '@/src/contexts/ErrorContext';
 import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
+import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
+import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
+import { safeToBigInt } from '@/src/lib/clientUtils';
 
 import AddToMetamask from '@/src/components/Common/AddToMetamask';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
@@ -189,26 +191,6 @@ const buildSupportedTokens = (
       });
     }
 
-    if (token.slTokenAddress && token.symbol) {
-      addToken({
-        symbol: `sl${token.symbol}`,
-        address: token.slTokenAddress,
-        decimals: 18,
-        isNative: false,
-        name: `SL代币 (sl${token.symbol})`,
-      });
-    }
-
-    if (token.stTokenAddress && token.symbol) {
-      addToken({
-        symbol: `st${token.symbol}`,
-        address: token.stTokenAddress,
-        decimals: 18,
-        isNative: false,
-        name: `ST代币 (st${token.symbol})`,
-      });
-    }
-
     if (token.uniswapV2PairAddress && token.uniswapV2PairAddress !== ZERO_ADDRESS) {
       const lpSymbolName = `${token.symbol}/${token.parentTokenSymbol}`;
       addToken({
@@ -237,25 +219,154 @@ const buildSupportedTokens = (
   return supportedTokens;
 };
 
-const useTokenBalance = (tokenConfig: TokenConfig, account: `0x${string}` | undefined) => {
+const buildProtectedTokenTargets = (token: any, supportedTokens: TokenConfig[]): ProtectedTargetInfo[] => {
+  const targets = new Map<string, ProtectedTargetInfo>();
+
+  const addTarget = (label: string, address?: string) => {
+    if (!address || !isAddress(address) || address === ZERO_ADDRESS) return;
+    targets.set(address.toLowerCase(), {
+      label,
+      address: address as `0x${string}`,
+      type: 'token',
+    });
+  };
+
+  supportedTokens.forEach((tokenConfig) => {
+    if (tokenConfig.address === 'NATIVE') return;
+    addTarget(tokenConfig.symbol, tokenConfig.address);
+  });
+
+  addTarget(token?.symbol ? `sl${token.symbol}` : 'SL', token?.slTokenAddress);
+  addTarget(token?.symbol ? `st${token.symbol}` : 'ST', token?.stTokenAddress);
+
+  return [...targets.values()];
+};
+
+const tokenBalanceKey = (tokenConfig: TokenConfig) => tokenConfig.address.toLowerCase();
+
+const getTokenBalanceView = (
+  tokenConfig: TokenConfig,
+  balancesByToken: Map<string, bigint | undefined>,
+  failedBalanceTokens: Set<string>,
+  isLoading: boolean,
+  hasAccount: boolean,
+) => {
+  if (!hasAccount) {
+    return {
+      label: '未连接',
+      symbolClassName: '',
+    };
+  }
+
+  const balance = balancesByToken.get(tokenBalanceKey(tokenConfig));
+  if (failedBalanceTokens.has(tokenBalanceKey(tokenConfig))) {
+    return {
+      label: '查询失败',
+      symbolClassName: 'text-red-500',
+    };
+  }
+
+  if (balance === undefined && isLoading) {
+    return {
+      label: '查询中...',
+      symbolClassName: '',
+    };
+  }
+
+  if ((balance || BigInt(0)) > BigInt(0)) {
+    return {
+      label: formatTokenAmount(balance || BigInt(0)),
+      symbolClassName: '',
+    };
+  }
+
+  return {
+    label: '0',
+    symbolClassName: 'text-gray-400',
+  };
+};
+
+const useTokenBalances = (tokens: TokenConfig[], account: `0x${string}` | undefined) => {
   const { setError } = useError();
+  const hasNativeToken = tokens.some((tokenConfig) => tokenConfig.isNative);
+  const erc20Tokens = useMemo(
+    () => tokens.filter((tokenConfig) => !tokenConfig.isNative && tokenConfig.address !== 'NATIVE'),
+    [tokens],
+  );
 
   const {
     data: nativeBalance,
     isLoading: isLoadingNative,
     error: nativeBalanceError,
+    refetch: refetchNativeBalance,
   } = useBalance({
     address: account,
     query: {
-      enabled: !!account && tokenConfig.isNative,
+      enabled: !!account && hasNativeToken,
     },
   });
 
-  const { balance: erc20Balance, isPending: isPendingERC20 } = useBalanceOf(
-    tokenConfig.isNative ? ZERO_ADDRESS : (tokenConfig.address as `0x${string}`),
-    account as `0x${string}`,
-    !tokenConfig.isNative && !!account,
-  );
+  const erc20BalanceContracts = useMemo(() => {
+    if (!account) return [];
+
+    return erc20Tokens.map((tokenConfig) => ({
+      address: tokenConfig.address as `0x${string}`,
+      abi: LOVE20TokenAbi,
+      functionName: 'balanceOf' as const,
+      args: [account],
+    }));
+  }, [account, erc20Tokens]);
+
+  const {
+    data: erc20BalanceResults,
+    isPending: isPendingERC20,
+    error: erc20BalanceError,
+    refetch: refetchErc20Balances,
+  } = useUniversalReadContracts({
+    contracts: erc20BalanceContracts,
+    query: {
+      enabled: !!account && erc20BalanceContracts.length > 0,
+    },
+  });
+
+  const balancesByToken = useMemo(() => {
+    const balances = new Map<string, bigint | undefined>();
+
+    tokens.forEach((tokenConfig) => {
+      balances.set(tokenBalanceKey(tokenConfig), undefined);
+    });
+
+    tokens
+      .filter((tokenConfig) => tokenConfig.isNative)
+      .forEach((tokenConfig) => {
+        balances.set(tokenBalanceKey(tokenConfig), nativeBalance?.value);
+      });
+
+    erc20Tokens.forEach((tokenConfig, index) => {
+      const result = erc20BalanceResults?.[index]?.result;
+      balances.set(tokenBalanceKey(tokenConfig), result !== undefined ? safeToBigInt(result) : undefined);
+    });
+
+    return balances;
+  }, [erc20BalanceResults, erc20Tokens, nativeBalance?.value, tokens]);
+
+  const failedBalanceTokens = useMemo(() => {
+    const failedTokens = new Set<string>();
+
+    if (nativeBalanceError) {
+      tokens
+        .filter((tokenConfig) => tokenConfig.isNative)
+        .forEach((tokenConfig) => failedTokens.add(tokenBalanceKey(tokenConfig)));
+    }
+
+    erc20Tokens.forEach((tokenConfig, index) => {
+      if (erc20BalanceError || erc20BalanceResults?.[index]?.status === 'failure') {
+        failedTokens.add(tokenBalanceKey(tokenConfig));
+      }
+    });
+
+    return failedTokens;
+  }, [erc20BalanceError, erc20BalanceResults, erc20Tokens, nativeBalanceError, tokens]);
 
   useEffect(() => {
     if (nativeBalanceError) {
@@ -266,9 +377,50 @@ const useTokenBalance = (tokenConfig: TokenConfig, account: `0x${string}` | unde
     }
   }, [nativeBalanceError, setError]);
 
+  // 单条 ERC20 余额失败也上报到全局错误，与原生代币失败的行为保持一致。
+  // 用 ref 记录已上报过的代币，避免同一失败在每次重渲染时重复弹提示。
+  const reportedFailedTokens = useRef<Set<string>>(new Set());
+  const prevTokensRef = useRef(tokens);
+  useEffect(() => {
+    if (prevTokensRef.current !== tokens) {
+      reportedFailedTokens.current.clear();
+      prevTokensRef.current = tokens;
+    }
+
+    if (erc20BalanceError) return;
+
+    failedBalanceTokens.forEach((failedKey) => {
+      if (reportedFailedTokens.current.has(failedKey)) return;
+
+      const failedToken = tokens.find((tokenConfig) => tokenBalanceKey(tokenConfig) === failedKey);
+      if (!failedToken || failedToken.isNative) return;
+
+      reportedFailedTokens.current.add(failedKey);
+      toast.error(`查询 ${failedToken.symbol} 余额失败，请检查网络后重试`);
+    });
+  }, [erc20BalanceError, failedBalanceTokens, tokens]);
+
+  const refetchBalances = useCallback(
+    (tokenConfig?: TokenConfig) => {
+      if (!account) return;
+
+      if (!tokenConfig || tokenConfig.isNative) {
+        refetchNativeBalance();
+      }
+
+      if (!tokenConfig || !tokenConfig.isNative) {
+        refetchErc20Balances();
+      }
+    },
+    [account, refetchErc20Balances, refetchNativeBalance],
+  );
+
   return {
-    balance: tokenConfig.isNative ? nativeBalance?.value : erc20Balance,
-    isPending: tokenConfig.isNative ? isLoadingNative : isPendingERC20,
+    balancesByToken,
+    failedBalanceTokens,
+    isLoadingNative,
+    isPendingERC20,
+    refetchBalances,
   };
 };
 
@@ -321,7 +473,6 @@ const TransferPanel = () => {
   const isOnTargetChain = useIsOnTargetChain();
   const { address: account } = useAccount();
   const { token } = useTokenContext();
-  const queryClient = useQueryClient();
   const { pairAddress: usdtLpPairAddress, usdtSymbol } = useUSDTPairAddress(token?.address);
 
   const [transferMode, setTransferMode] = useState<TransferMode>('address');
@@ -349,9 +500,19 @@ const TransferPanel = () => {
       }),
     [token, usdtLpPairAddress, usdtSymbol],
   );
+  const protectedTokenTargets = useMemo(
+    () => buildProtectedTokenTargets(token, supportedTokens),
+    [supportedTokens, token],
+  );
 
+  const { balancesByToken, failedBalanceTokens, isLoadingNative, isPendingERC20, refetchBalances } = useTokenBalances(
+    supportedTokens,
+    account,
+  );
   const balanceToken = selectedToken || supportedTokens[0] || FALLBACK_TOKEN;
-  const { balance, isPending: isPendingBalance } = useTokenBalance(balanceToken, account);
+  const balance = balancesByToken.get(tokenBalanceKey(balanceToken));
+  const isBalanceReadFailed = failedBalanceTokens.has(tokenBalanceKey(balanceToken));
+  const isPendingBalance = balanceToken.isNative ? isLoadingNative : isPendingERC20;
 
   const form = useForm<TransferFormValues>({
     resolver: zodResolver(getTransferFormSchema(balance || BigInt(0), transferMode)),
@@ -449,20 +610,16 @@ const TransferPanel = () => {
       return undefined;
     }
 
-    const protectedToken = supportedTokens.find(
-      (tokenConfig) => tokenConfig.address !== 'NATIVE' && tokenConfig.address.toLowerCase() === targetAddress.toLowerCase(),
+    const protectedToken = protectedTokenTargets.find(
+      (tokenConfig) => tokenConfig.address.toLowerCase() === targetAddress.toLowerCase(),
     );
 
     if (protectedToken) {
-      return {
-        label: protectedToken.symbol,
-        address: protectedToken.address as `0x${string}`,
-        type: 'token',
-      };
+      return protectedToken;
     }
 
     return KNOWN_CONTRACT_TARGETS.find((contract) => contract.address.toLowerCase() === targetAddress.toLowerCase());
-  }, [supportedTokens, targetAddress]);
+  }, [protectedTokenTargets, targetAddress]);
 
   const isAssetProtectionTriggered = isAssetProtectionEnabled && !!protectedTargetInfo;
   const isProtectedSelectedTokenSelf =
@@ -484,24 +641,8 @@ const TransferPanel = () => {
   const refreshBalance = useCallback(() => {
     if (!selectedToken || !account) return;
 
-    if (selectedToken.isNative) {
-      queryClient.invalidateQueries({
-        queryKey: ['balance', { address: account }],
-      });
-      return;
-    }
-
-    queryClient.invalidateQueries({
-      queryKey: [
-        'readContract',
-        {
-          address: selectedToken.address,
-          functionName: 'balanceOf',
-          args: [account],
-        },
-      ],
-    });
-  }, [account, queryClient, selectedToken]);
+    refetchBalances(selectedToken);
+  }, [account, refetchBalances, selectedToken]);
 
   const {
     transfer: erc20Transfer,
@@ -756,11 +897,30 @@ const TransferPanel = () => {
                           <SelectValue placeholder="请选择代币" />
                         </SelectTrigger>
                         <SelectContent>
-                          {supportedTokens.map((item) => (
-                            <SelectItem key={item.address} value={item.address}>
-                              <span className="font-mono font-medium">{item.symbol}</span>
-                            </SelectItem>
-                          ))}
+                          {supportedTokens.map((item) => {
+                            const balanceView = getTokenBalanceView(
+                              item,
+                              balancesByToken,
+                              failedBalanceTokens,
+                              item.isNative ? isLoadingNative : isPendingERC20,
+                              !!account,
+                            );
+
+                            return (
+                              <SelectItem
+                                key={item.address}
+                                value={item.address}
+                                className="w-full"
+                                decoration={
+                                  <span className="text-xs text-gray-500">余额 {balanceView.label}</span>
+                                }
+                              >
+                                <span className={`font-mono font-medium ${balanceView.symbolClassName}`}>
+                                  {item.symbol}
+                                </span>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
 
@@ -847,7 +1007,7 @@ const TransferPanel = () => {
                         </div>
                         {selectedToken && (
                           <span className="text-sm text-gray-600">
-                            {formatTokenAmount(balance || BigInt(0))} {selectedToken.symbol}
+                            {isBalanceReadFailed ? '查询失败' : formatTokenAmount(balance || BigInt(0))} {selectedToken.symbol}
                           </span>
                         )}
                       </div>

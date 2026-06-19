@@ -111,8 +111,14 @@ SelectLabel.displayName = SelectPrimitive.Label.displayName
 
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item> & {
+    /**
+     * 额外展示内容（仅在下拉项内渲染，不会镜像到触发器 SelectValue 中）。
+     * 仅 {children} 才会被 Radix 镜像为触发器显示的文本。
+     */
+    decoration?: React.ReactNode;
+  }
+>(({ className, children, decoration, ...props }, ref) => (
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
@@ -127,7 +133,10 @@ const SelectItem = React.forwardRef<
       </SelectPrimitive.ItemIndicator>
     </span>
 
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    <span className="min-w-0 flex-1 truncate">
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    </span>
+    {decoration ? <span className="ml-auto pl-2">{decoration}</span> : null}
   </SelectPrimitive.Item>
 ))
 SelectItem.displayName = SelectPrimitive.Item.displayName

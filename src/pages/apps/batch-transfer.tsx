@@ -280,28 +280,6 @@ const buildDefaultTokens = (
     });
   }
 
-  if (token?.slTokenAddress && isAddress(token.slTokenAddress)) {
-    addToken({
-      key: 'sl-token',
-      symbol: `sl${token.symbol || ''}`,
-      name: `SL代币 (sl${token.symbol || '未知'})`,
-      address: token.slTokenAddress as `0x${string}`,
-      decimals: DEFAULT_DECIMALS,
-      isNative: false,
-    });
-  }
-
-  if (token?.stTokenAddress && isAddress(token.stTokenAddress)) {
-    addToken({
-      key: 'st-token',
-      symbol: `st${token.symbol || ''}`,
-      name: `ST代币 (st${token.symbol || '未知'})`,
-      address: token.stTokenAddress as `0x${string}`,
-      decimals: DEFAULT_DECIMALS,
-      isNative: false,
-    });
-  }
-
   if (token?.uniswapV2PairAddress && isAddress(token.uniswapV2PairAddress) && token.uniswapV2PairAddress !== zeroAddress) {
     const lpSymbolName = `${token.symbol}/${token.parentTokenSymbol}`;
     addToken({
@@ -336,6 +314,29 @@ const buildDefaultTokens = (
   });
 
   return tokens;
+};
+
+const buildProtectedTokenTargets = (token: Token | null | undefined, tokens: TokenOption[]): ProtectedTargetInfo[] => {
+  const targets = new Map<string, ProtectedTargetInfo>();
+
+  const addTarget = (label: string, address?: string) => {
+    if (!address || !isAddress(address) || address === zeroAddress) return;
+    targets.set(address.toLowerCase(), {
+      label,
+      address: address as `0x${string}`,
+      type: 'token',
+    });
+  };
+
+  tokens.forEach((item) => {
+    if (item.address === 'NATIVE' || item.address === CUSTOM_TOKEN_VALUE) return;
+    addTarget(item.symbol, item.address);
+  });
+
+  addTarget(token?.symbol ? `sl${token.symbol}` : 'SL', token?.slTokenAddress);
+  addTarget(token?.symbol ? `st${token.symbol}` : 'ST', token?.stTokenAddress);
+
+  return [...targets.values()];
 };
 
 const parseRecipientRows = (
@@ -535,13 +536,8 @@ export default function BatchTransferPage() {
   const protectedTargetMap = useMemo(() => {
     const targets = new Map<string, ProtectedTargetInfo>();
 
-    defaultTokens.forEach((item) => {
-      if (item.address === 'NATIVE' || item.address === CUSTOM_TOKEN_VALUE) return;
-      targets.set(item.address.toLowerCase(), {
-        label: item.symbol,
-        address: item.address,
-        type: 'token',
-      });
+    buildProtectedTokenTargets(token, defaultTokens).forEach((target) => {
+      targets.set(target.address.toLowerCase(), target);
     });
 
     if (customTokenAddress) {
@@ -560,7 +556,7 @@ export default function BatchTransferPage() {
     });
 
     return targets;
-  }, [customTokenAddress, defaultTokens, selectedToken.symbol]);
+  }, [customTokenAddress, defaultTokens, selectedToken.symbol, token]);
 
   const { rows: parsedRows, batchErrors } = useMemo(
     () => parseRecipientRows(recipientsInput, selectedTokenDecimals, account),
