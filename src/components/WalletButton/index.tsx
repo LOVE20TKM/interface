@@ -25,6 +25,7 @@ import { isGroupDefaultsEnabled, useDefaultGroupOf } from '@/src/hooks/extension
 import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
 import { NavigationUtils } from '@/src/lib/navigationUtils';
 import { useChildTokensCount } from '@/src/hooks/contracts/useLOVE20Launch';
+import { getDefaultTokenSwitchPathname, getTokenSwitchRule } from '@/src/config/tokenSwitchRoutes';
 
 interface WalletButtonProps {
   className?: string;
@@ -390,9 +391,19 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   const nativeBalanceSymbol = balance?.symbol || process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL || 'TKM';
 
   const goToRecentToken = (recentToken: RecentToken) => {
-    NavigationUtils.redirectWithOverlay(
-      `${basePath}/${recentToken.hasEnded ? 'acting' : 'launch'}/?symbol=${recentToken.symbol}`,
-      '正在切换代币...',
+    setIsTokenMenuOpen(false);
+
+    const rule = getTokenSwitchRule(router.pathname);
+    const shouldStay = rule?.mode === 'stay';
+    const pathname = rule?.mode === 'redirect' ? rule.to : shouldStay ? router.pathname : getDefaultTokenSwitchPathname(recentToken.hasEnded);
+
+    router.replace(
+      {
+        pathname,
+        query: shouldStay ? { ...router.query, symbol: recentToken.symbol } : { symbol: recentToken.symbol },
+      },
+      undefined,
+      { shallow: shouldStay, scroll: false },
     );
   };
 

@@ -122,6 +122,9 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children }) => {
 
       // 从 路由symbol 加载 token（当token发生变化时也会重新加载）
       if (tokenSymbol && tokenSymbol.length > 0 && !ifNoSymbol) {
+        if (token?.symbol && token.symbol !== tokenSymbol) {
+          setToken(null);
+        }
         setSymbolToGetDetail(tokenSymbol as string); //有指定token
       } else {
         // 没有指定 symbol 时，不再主动清空 token；
@@ -131,7 +134,7 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Failed to load token from localStorage:', error);
     }
-  }, [router.isReady, router.query.symbol]);
+  }, [router.isReady, router.query.symbol, token?.symbol]);
 
   // Step 3. 如果localstorage没有token缓存，则从合约获取 token 信息
   const shouldFetchTokenDetail = isProviderReady && !!symbolToGetDetail;
