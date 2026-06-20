@@ -514,9 +514,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                                       最高
                                     </Button>
                                   </div>
-                                  <span className="text-sm text-gray-600">
-                                    {formatTokenAmount(parentTokenBalance)} {token?.parentTokenSymbol}
-                                  </span>
+                                  <span className="text-sm text-gray-600">{formatTokenAmount(parentTokenBalance)}</span>
                                 </div>
                               </CardContent>
                             </Card>
@@ -586,9 +584,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                                       最高
                                     </Button>
                                   </div>
-                                  <span className="text-sm text-gray-600">
-                                    {formatTokenAmount(tokenBalance)} {token?.symbol}
-                                  </span>
+                                  <span className="text-sm text-gray-600">{formatTokenAmount(tokenBalance)}</span>
                                 </div>
                               </CardContent>
                             </Card>
@@ -782,10 +778,10 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                       <h2 className="text-xl font-semibold mb-2">第3步: 授权并存入</h2>
                     </div>
 
-                    <div className="flex justify-center lg:justify-start space-x-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                       <Button
                         type="button"
-                        className="flex-1 lg:w-auto lg:px-4"
+                        className="w-full min-w-0 whitespace-normal"
                         ref={approveTokenButtonRef}
                         disabled={isPendingApproveToken || isConfirmingApproveToken || isTokenApproved}
                         onClick={form.handleSubmit(onApproveToken)}
@@ -801,7 +797,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
 
                       <Button
                         type="button"
-                        className="flex-1 lg:w-auto lg:px-4"
+                        className="w-full min-w-0 whitespace-normal"
                         disabled={
                           !isTokenApproved ||
                           isPendingApproveParentToken ||
@@ -821,7 +817,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
 
                       <Button
                         type="submit"
-                        className="flex-1 lg:w-auto lg:px-4"
+                        className="w-full min-w-0 whitespace-normal"
                         disabled={
                           !isTokenApproved ||
                           !isParentTokenApproved ||

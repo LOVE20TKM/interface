@@ -23,6 +23,7 @@ import { formatTokenAmount, formatPercentage, formatSeconds } from '@/src/lib/fo
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import LpStatsCard from '@/src/components/Extension/Plugins/Lp/_LpStatsCard';
+import LiquidityStakeOverflowHint from '@/src/components/Common/LiquidityStakeOverflowHint';
 
 interface LpMyParticipationProps {
   actionId: bigint;
@@ -76,6 +77,7 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
 
   // 格式化 LP 占比
   const lpRatioStr = formatPercentage(lpRatio);
+  const lpTargetRatio = BigInt(Math.floor(lpRatio * 1e16));
 
   // 退出 LP（直接退出）
   const {
@@ -146,6 +148,20 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
               <div className="text-xs text-amber-600 mt-1">请质押更多代币以增加治理票数。</div>
             </div>
           )}
+
+          <LiquidityStakeOverflowHint
+            tokenAddress={token?.address as `0x${string}` | undefined}
+            slTokenAddress={token?.slTokenAddress as `0x${string}` | undefined}
+            symbol={token?.symbol}
+            parentTokenSymbol={token?.parentTokenSymbol}
+            account={account as `0x${string}` | undefined}
+            targetRatio={lpTargetRatio}
+            userGovVotes={userGovVotes}
+            totalGovVotes={totalGovVotes}
+            govRatioMultiplier={govRatioMultiplier}
+            isGovDataPending={isPendingData}
+            className="mt-3"
+          />
         </>
       )}
 

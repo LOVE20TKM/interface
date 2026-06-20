@@ -19,6 +19,11 @@ import {
   shouldRenderMessageTimeDivider,
 } from './chatUtils';
 
+function hasSelectedText() {
+  const selection = window.getSelection();
+  return !!selection && !selection.isCollapsed && selection.toString().trim().length > 0;
+}
+
 export function ChatMessageList({
   account,
   currentSenderId,
@@ -152,7 +157,13 @@ export function ChatMessageList({
                 {showTimeDivider && timestamp !== undefined && (
                   <div className="message-time-divider">{formatMessageDividerTime(timestamp)}</div>
                 )}
-                <article className={cn('message-row', mine && 'mine', banned && 'banned')} onClick={() => onOpenMessageMenu(messageKey)}>
+                <article
+                  className={cn('message-row', mine && 'mine', banned && 'banned')}
+                  onClick={() => {
+                    if (hasSelectedText()) return;
+                    onOpenMessageMenu(messageKey);
+                  }}
+                >
                   <div className="message-body">
                     <div className="message-meta">
                       {senderName}
@@ -167,6 +178,13 @@ export function ChatMessageList({
                         message.mentionAll && 'mention-all',
                         message.quotedMessageId > BigInt(0) && 'with-quote',
                       )}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (hasSelectedText()) return;
+                        onOpenMessageMenu(messageKey);
+                      }}
                     >
                       {message.quotedMessageId > BigInt(0) && (
                         <div className={cn('quote-preview', !quoted && 'unavailable')}>
