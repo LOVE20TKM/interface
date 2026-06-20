@@ -4,22 +4,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount, useBalance, useBytecode } from 'wagmi';
 import { useForm } from 'react-hook-form';
-import { isAddress } from 'viem';
+import { formatUnits as viemFormatUnits, isAddress, parseUnits as viemParseUnits } from 'viem';
 
 import { normalizeAddressInput, validateAddressInput } from '@/src/lib/addressUtils';
+import { Token } from '@/src/contexts/TokenContext';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 import { useUSDTPairAddress } from '@/src/hooks/composite/useUSDTPairAddress';
-import { useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
+import { useDecimals, useSymbol, useTransfer } from '@/src/hooks/contracts/useLOVE20Token';
 import { useNativeTransfer } from '@/src/hooks/contracts/useNativeTransfer';
 import useTokenContext from '@/src/hooks/context/useTokenContext';
 import { isGroupDefaultsEnabled, useDefaultGroupOf } from '@/src/hooks/extension/base/contracts/useGroupDefaults';
@@ -29,22 +28,14 @@ import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
 import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
+import { buildSupportedTokenOptions, TokenOption, ZERO_ADDRESS } from '@/src/lib/tokenOptions';
 
-import AddToMetamask from '@/src/components/Common/AddToMetamask';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LeftTitle from '@/src/components/Common/LeftTitle';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import TokenSelect, { CUSTOM_TOKEN_VALUE } from '@/src/components/Token/TokenSelect';
 import NftOwnerLookup from '@/src/components/Extension/Base/Group/NftOwnerLookup';
-
-interface TokenConfig {
-  symbol: string;
-  address: `0x${string}` | 'NATIVE';
-  decimals: number;
-  isNative: boolean;
-  name: string;
-  isLp?: boolean;
-}
 
 interface ProtectedTargetInfo {
   label: string;
@@ -60,13 +51,33 @@ type TransferFormValues = {
   tokenAddress: string;
 };
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const FALLBACK_TOKEN: TokenConfig = {
+const FALLBACK_TOKEN: TokenOption = {
   symbol: '',
   address: 'NATIVE',
   decimals: 18,
   isNative: true,
   name: '',
+};
+
+const trimFormattedAmount = (value: string) => (value.includes('.') ? value.replace(/\.?0+$/, '') : value);
+
+const parseTokenUnits = (value: string, decimals: number) => {
+  try {
+    return viemParseUnits(value.replace(/,/g, ''), decimals);
+  } catch {
+    return BigInt(0);
+  }
+};
+
+const formatTokenUnits = (value: bigint, decimals: number) => trimFormattedAmount(viemFormatUnits(value, decimals));
+
+const formatTokenAmountForDecimals = (value: bigint, decimals: number, maxFractionDigits = 4) => {
+  const formatted = formatTokenUnits(value, decimals);
+  const [whole, fraction] = formatted.split('.');
+  if (!fraction || fraction.length <= maxFractionDigits) return formatted;
+
+  const visibleFraction = fraction.slice(0, maxFractionDigits).replace(/0+$/, '') || fraction.slice(0, maxFractionDigits);
+  return `${whole}.${visibleFraction}...`;
 };
 
 const buildKnownContractTargets = (): ProtectedTargetInfo[] => {
@@ -117,109 +128,7 @@ const buildKnownContractTargets = (): ProtectedTargetInfo[] => {
 
 const KNOWN_CONTRACT_TARGETS = buildKnownContractTargets();
 
-const buildSupportedTokens = (
-  token: any,
-  options?: {
-    usdtLpPairAddress?: `0x${string}`;
-    usdtSymbol?: string;
-  },
-): TokenConfig[] => {
-  const supportedTokens: TokenConfig[] = [];
-  const addedAddresses = new Set<string>();
-
-  const addToken = (tokenConfig: TokenConfig) => {
-    const key = tokenConfig.address.toLowerCase();
-    if (!addedAddresses.has(key)) {
-      addedAddresses.add(key);
-      supportedTokens.push(tokenConfig);
-    }
-  };
-
-  const nativeSymbol = process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL;
-  if (nativeSymbol) {
-    addToken({
-      symbol: nativeSymbol,
-      address: 'NATIVE',
-      decimals: 18,
-      isNative: true,
-      name: `原生代币 (${nativeSymbol})`,
-    });
-  }
-
-  const wethSymbol = process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL;
-  const wethAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN;
-  if (wethSymbol && wethAddress) {
-    addToken({
-      symbol: wethSymbol,
-      address: wethAddress as `0x${string}`,
-      decimals: 18,
-      isNative: false,
-      name: `包装代币 (${wethSymbol})`,
-    });
-  }
-
-  const usdtSymbol = process.env.NEXT_PUBLIC_USDT_SYMBOL;
-  const usdtAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS;
-  if (usdtSymbol && usdtAddress) {
-    addToken({
-      symbol: usdtSymbol,
-      address: usdtAddress as `0x${string}`,
-      decimals: 18,
-      isNative: false,
-      name: `TUSDT 代币 (${usdtSymbol})`,
-    });
-  }
-
-  if (token) {
-    if (token.symbol && token.address) {
-      addToken({
-        symbol: token.symbol,
-        address: token.address,
-        decimals: 18,
-        isNative: false,
-        name: `当前代币 (${token.symbol})`,
-      });
-    }
-
-    if (token.parentTokenSymbol && token.parentTokenAddress) {
-      addToken({
-        symbol: token.parentTokenSymbol,
-        address: token.parentTokenAddress,
-        decimals: 18,
-        isNative: false,
-        name: `父币 (${token.parentTokenSymbol})`,
-      });
-    }
-
-    if (token.uniswapV2PairAddress && token.uniswapV2PairAddress !== ZERO_ADDRESS) {
-      const lpSymbolName = `${token.symbol}/${token.parentTokenSymbol}`;
-      addToken({
-        symbol: `LP(${lpSymbolName})`,
-        address: token.uniswapV2PairAddress as `0x${string}`,
-        decimals: 18,
-        isNative: false,
-        name: `LP代币 (${lpSymbolName})`,
-        isLp: true,
-      });
-    }
-
-    if (options?.usdtLpPairAddress && options.usdtLpPairAddress !== ZERO_ADDRESS && options.usdtSymbol) {
-      const lpSymbolName = `${token.symbol}/${options.usdtSymbol}`;
-      addToken({
-        symbol: `LP(${lpSymbolName})`,
-        address: options.usdtLpPairAddress,
-        decimals: 18,
-        isNative: false,
-        name: `LP代币 (${lpSymbolName})`,
-        isLp: true,
-      });
-    }
-  }
-
-  return supportedTokens;
-};
-
-const buildProtectedTokenTargets = (token: any, supportedTokens: TokenConfig[]): ProtectedTargetInfo[] => {
+const buildProtectedTokenTargets = (token: Token | null | undefined, supportedTokens: TokenOption[]): ProtectedTargetInfo[] => {
   const targets = new Map<string, ProtectedTargetInfo>();
 
   const addTarget = (label: string, address?: string) => {
@@ -242,10 +151,10 @@ const buildProtectedTokenTargets = (token: any, supportedTokens: TokenConfig[]):
   return [...targets.values()];
 };
 
-const tokenBalanceKey = (tokenConfig: TokenConfig) => tokenConfig.address.toLowerCase();
+const tokenBalanceKey = (tokenConfig: TokenOption) => tokenConfig.address.toLowerCase();
 
 const getTokenBalanceView = (
-  tokenConfig: TokenConfig,
+  tokenConfig: TokenOption,
   balancesByToken: Map<string, bigint | undefined>,
   failedBalanceTokens: Set<string>,
   isLoading: boolean,
@@ -275,7 +184,7 @@ const getTokenBalanceView = (
 
   if ((balance || BigInt(0)) > BigInt(0)) {
     return {
-      label: formatTokenAmount(balance || BigInt(0)),
+      label: formatTokenAmountForDecimals(balance || BigInt(0), tokenConfig.decimals),
       symbolClassName: '',
     };
   }
@@ -286,7 +195,7 @@ const getTokenBalanceView = (
   };
 };
 
-const useTokenBalances = (tokens: TokenConfig[], account: `0x${string}` | undefined) => {
+const useTokenBalances = (tokens: TokenOption[], account: `0x${string}` | undefined) => {
   const { setError } = useError();
   const hasNativeToken = tokens.some((tokenConfig) => tokenConfig.isNative);
   const erc20Tokens = useMemo(
@@ -401,7 +310,7 @@ const useTokenBalances = (tokens: TokenConfig[], account: `0x${string}` | undefi
   }, [erc20BalanceError, failedBalanceTokens, tokens]);
 
   const refetchBalances = useCallback(
-    (tokenConfig?: TokenConfig) => {
+    (tokenConfig?: TokenOption) => {
       if (!account) return;
 
       if (!tokenConfig || tokenConfig.isNative) {
@@ -424,7 +333,7 @@ const useTokenBalances = (tokens: TokenConfig[], account: `0x${string}` | undefi
   };
 };
 
-const getTransferFormSchema = (balance: bigint, transferMode: TransferMode) =>
+const getTransferFormSchema = (balance: bigint, transferMode: TransferMode, decimals: number) =>
   z
     .object({
       to: z.string().default(''),
@@ -435,12 +344,8 @@ const getTransferFormSchema = (balance: bigint, transferMode: TransferMode) =>
           (val) => {
             if (val.endsWith('.')) return true;
             if (val === '0') return true;
-            try {
-              const amount = parseUnits(val);
-              return amount > BigInt(0) && amount <= balance;
-            } catch {
-              return false;
-            }
+            const amount = parseTokenUnits(val, decimals);
+            return amount > BigInt(0) && amount <= balance;
           },
           { message: '转账数量必须大于0且不超过您的可用余额' },
         ),
@@ -476,8 +381,9 @@ const TransferPanel = () => {
   const { pairAddress: usdtLpPairAddress, usdtSymbol } = useUSDTPairAddress(token?.address);
 
   const [transferMode, setTransferMode] = useState<TransferMode>('address');
-  const [selectedToken, setSelectedToken] = useState<TokenConfig | undefined>();
+  const [selectedToken, setSelectedToken] = useState<TokenOption | undefined>();
   const [isUserManuallySelected, setIsUserManuallySelected] = useState(false);
+  const [customTokenAddress, setCustomTokenAddress] = useState('');
   const [lastProcessedTxHash, setLastProcessedTxHash] = useState<string | null>(null);
   const [addressConversionInfo, setAddressConversionInfo] = useState('');
   const [convertedAddress, setConvertedAddress] = useState<`0x${string}` | null>(null);
@@ -493,29 +399,74 @@ const TransferPanel = () => {
 
   const supportedTokens = useMemo(
     () =>
-      buildSupportedTokens(token, {
+      buildSupportedTokenOptions(token, {
         usdtLpPairAddress:
           usdtLpPairAddress && usdtLpPairAddress !== ZERO_ADDRESS ? usdtLpPairAddress : undefined,
         usdtSymbol,
       }),
     [token, usdtLpPairAddress, usdtSymbol],
   );
+  const normalizedCustomTokenAddress = useMemo(
+    () => {
+      const normalized = normalizeAddressInput(customTokenAddress);
+      return normalized && isAddress(normalized) && normalized !== ZERO_ADDRESS ? (normalized as `0x${string}`) : undefined;
+    },
+    [customTokenAddress],
+  );
+  const { data: customTokenBytecode, isLoading: isLoadingCustomTokenBytecode } = useBytecode({
+    address: normalizedCustomTokenAddress,
+    query: {
+      enabled: !!normalizedCustomTokenAddress,
+    },
+  });
+  const isCustomTokenContract = !!customTokenBytecode && customTokenBytecode !== '0x';
+  const isCustomTokenEoa = !!normalizedCustomTokenAddress && !isLoadingCustomTokenBytecode && !isCustomTokenContract;
+  const { symbol: customTokenSymbol, error: customTokenSymbolError } = useSymbol(
+    normalizedCustomTokenAddress || ZERO_ADDRESS,
+    isCustomTokenContract,
+  );
+  const { decimals: customTokenDecimals, error: customTokenDecimalsError } = useDecimals(
+    normalizedCustomTokenAddress || ZERO_ADDRESS,
+    isCustomTokenContract,
+  );
+  const customTokenInfoFailed =
+    !!normalizedCustomTokenAddress && (isCustomTokenEoa || !!customTokenSymbolError || !!customTokenDecimalsError);
+  const isCustomTokenReady =
+    isCustomTokenContract &&
+    !customTokenInfoFailed &&
+    customTokenSymbol !== undefined &&
+    customTokenDecimals !== undefined;
+  const selectedTokenOption = useMemo(() => {
+    if (selectedToken) return selectedToken;
+    if (!normalizedCustomTokenAddress || !isCustomTokenReady) return undefined;
+    return {
+      symbol: customTokenSymbol || '自定义代币',
+      address: normalizedCustomTokenAddress,
+      decimals: customTokenDecimals ?? 18,
+      isNative: false,
+      name: `自定义代币 (${customTokenSymbol || 'TOKEN'})`,
+    };
+  }, [customTokenDecimals, customTokenSymbol, isCustomTokenReady, normalizedCustomTokenAddress, selectedToken]);
   const protectedTokenTargets = useMemo(
-    () => buildProtectedTokenTargets(token, supportedTokens),
-    [supportedTokens, token],
+    () => buildProtectedTokenTargets(token, selectedTokenOption ? [...supportedTokens, selectedTokenOption] : supportedTokens),
+    [selectedTokenOption, supportedTokens, token],
   );
 
   const { balancesByToken, failedBalanceTokens, isLoadingNative, isPendingERC20, refetchBalances } = useTokenBalances(
-    supportedTokens,
+    selectedTokenOption ? [...supportedTokens, selectedTokenOption] : supportedTokens,
     account,
   );
-  const balanceToken = selectedToken || supportedTokens[0] || FALLBACK_TOKEN;
+  const balanceToken = selectedTokenOption || supportedTokens[0] || FALLBACK_TOKEN;
+  const selectedErc20Address =
+    selectedTokenOption && !selectedTokenOption.isNative && selectedTokenOption.address !== 'NATIVE'
+      ? selectedTokenOption.address
+      : ZERO_ADDRESS;
   const balance = balancesByToken.get(tokenBalanceKey(balanceToken));
   const isBalanceReadFailed = failedBalanceTokens.has(tokenBalanceKey(balanceToken));
   const isPendingBalance = balanceToken.isNative ? isLoadingNative : isPendingERC20;
 
   const form = useForm<TransferFormValues>({
-    resolver: zodResolver(getTransferFormSchema(balance || BigInt(0), transferMode)),
+    resolver: zodResolver(getTransferFormSchema(balance || BigInt(0), transferMode, balanceToken.decimals)),
     defaultValues: {
       to: '',
       amount: '',
@@ -526,6 +477,7 @@ const TransferPanel = () => {
 
   const watchedToAddress = form.watch('to');
   const watchedAmount = form.watch('amount');
+  const selectedTokenValue = selectedToken ? selectedToken.address : CUSTOM_TOKEN_VALUE;
 
   useEffect(() => {
     if (supportedTokens.length === 0) return;
@@ -533,8 +485,12 @@ const TransferPanel = () => {
     const currentTokenConfig = token ? supportedTokens.find((item) => item.address === token.address) : null;
 
     if (!selectedToken) {
+      if (isUserManuallySelected) return;
       setSelectedToken(currentTokenConfig || supportedTokens[0]);
-    } else if (currentTokenConfig && selectedToken.address !== currentTokenConfig.address && !isUserManuallySelected) {
+      return;
+    }
+
+    if (currentTokenConfig && selectedToken.address !== currentTokenConfig.address && !isUserManuallySelected) {
       const isBasicToken =
         selectedToken.isNative || selectedToken.address === process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN;
       if (isBasicToken) {
@@ -544,10 +500,10 @@ const TransferPanel = () => {
   }, [isUserManuallySelected, selectedToken, supportedTokens, token]);
 
   useEffect(() => {
-    if (selectedToken) {
-      form.setValue('tokenAddress', selectedToken.address);
+    if (selectedTokenOption) {
+      form.setValue('tokenAddress', selectedTokenOption.address);
     }
-  }, [form, selectedToken]);
+  }, [form, selectedTokenOption]);
 
   useEffect(() => {
     if (transferMode !== 'address') {
@@ -623,26 +579,21 @@ const TransferPanel = () => {
 
   const isAssetProtectionTriggered = isAssetProtectionEnabled && !!protectedTargetInfo;
   const isProtectedSelectedTokenSelf =
-    selectedToken?.address !== 'NATIVE' && !!protectedTargetInfo && selectedToken?.address === protectedTargetInfo.address;
+    selectedTokenOption?.address !== 'NATIVE' && !!protectedTargetInfo && selectedTokenOption?.address === protectedTargetInfo.address;
   const protectedTargetLabel = protectedTargetInfo
     ? `${protectedTargetInfo.label}${protectedTargetInfo.type === 'token' ? ' 代币' : ''}合约地址`
     : '';
 
   const [transferAmount, setTransferAmount] = useState<bigint>(BigInt(0));
   useEffect(() => {
-    try {
-      const amount = parseUnits(watchedAmount || '0');
-      setTransferAmount(amount);
-    } catch {
-      setTransferAmount(BigInt(0));
-    }
-  }, [watchedAmount]);
+    setTransferAmount(parseTokenUnits(watchedAmount || '0', balanceToken.decimals));
+  }, [balanceToken.decimals, watchedAmount]);
 
   const refreshBalance = useCallback(() => {
-    if (!selectedToken || !account) return;
+    if (!selectedTokenOption || !account) return;
 
-    refetchBalances(selectedToken);
-  }, [account, refetchBalances, selectedToken]);
+    refetchBalances(selectedTokenOption);
+  }, [account, refetchBalances, selectedTokenOption]);
 
   const {
     transfer: erc20Transfer,
@@ -650,7 +601,7 @@ const TransferPanel = () => {
     isConfirming: isConfirmingERC20Transfer,
     isConfirmed: isConfirmedERC20Transfer,
     hash: erc20TxHash,
-  } = useTransfer((selectedToken?.address as `0x${string}`) || ZERO_ADDRESS);
+  } = useTransfer(selectedErc20Address);
 
   const {
     transfer: nativeTransfer,
@@ -668,7 +619,7 @@ const TransferPanel = () => {
     const currentTxHash = isConfirmedERC20Transfer ? erc20TxHash : isConfirmedNativeTransfer ? nativeTxHash : undefined;
 
     if (isTransferConfirmed && currentTxHash && currentTxHash !== lastProcessedTxHash) {
-      toast.success(`转账 ${selectedToken?.symbol} 成功`);
+      toast.success(`转账 ${selectedTokenOption?.symbol} 成功`);
       form.setValue('amount', '');
       refreshBalance();
       setLastProcessedTxHash(currentTxHash);
@@ -682,24 +633,24 @@ const TransferPanel = () => {
     lastProcessedTxHash,
     nativeTxHash,
     refreshBalance,
-    selectedToken?.symbol,
+    selectedTokenOption?.symbol,
   ]);
 
   const setPercentageAmount = (percentage: number) => {
     if (!balance || balance <= BigInt(0)) return;
 
     const amount = (balance * BigInt(percentage)) / BigInt(100);
-    form.setValue('amount', formatUnits(amount));
+    form.setValue('amount', formatTokenUnits(amount, balanceToken.decimals));
   };
 
   const setMaxAmount = () => {
     if (!balance || balance <= BigInt(0)) return;
 
-    form.setValue('amount', formatUnits(balance));
+    form.setValue('amount', formatTokenUnits(balance, balanceToken.decimals));
   };
 
   const handleTransfer = form.handleSubmit(async (data) => {
-    if (!selectedToken || !account) return;
+    if (!selectedTokenOption || !account) return;
 
     if (isAssetProtectionEnabled && protectedTargetInfo) {
       toast.error(`资产保护已触发：目标地址是 ${protectedTargetLabel}，关闭保护开关后才可强制转账`);
@@ -723,15 +674,15 @@ const TransferPanel = () => {
     }
 
     try {
-      if (selectedToken.isNative) {
-        console.log('执行原生代币转账:', { to: toAddress, amount: transferAmount, symbol: selectedToken.symbol });
+      if (selectedTokenOption.isNative) {
+        console.log('执行原生代币转账:', { to: toAddress, amount: transferAmount, symbol: selectedTokenOption.symbol });
         await nativeTransfer(toAddress, transferAmount);
       } else {
         console.log('执行ERC20代币转账:', {
-          token: selectedToken.address,
+          token: selectedTokenOption.address,
           to: toAddress,
           amount: transferAmount,
-          symbol: selectedToken.symbol,
+          symbol: selectedTokenOption.symbol,
         });
         await erc20Transfer(toAddress, transferAmount);
       }
@@ -753,7 +704,8 @@ const TransferPanel = () => {
     );
   }
 
-  const isDisabled = isPendingBalance || !selectedToken;
+  const isDisabled = isPendingBalance || !selectedTokenOption;
+  const isTokenSelectDisabled = isPendingBalance && !!selectedTokenOption;
   const isLoadingOverlay = isTransferring;
   const isSubmitDisabled =
     isTransferring || isDisabled || isAssetProtectionTriggered || (transferMode === 'nftOwner' && !hasResolvedNftOwner);
@@ -879,75 +831,78 @@ const TransferPanel = () => {
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-gray-700">选择代币</FormLabel>
                   <FormControl>
-                    <div className="space-y-2">
-                      <Select
-                        value={field.value}
-                        onValueChange={(value) => {
+                    <TokenSelect
+                      value={selectedTokenValue}
+                      onValueChange={(value) => {
+                        setIsUserManuallySelected(true);
+                        if (value === CUSTOM_TOKEN_VALUE) {
+                          setSelectedToken(undefined);
+                          field.onChange(normalizedCustomTokenAddress || CUSTOM_TOKEN_VALUE);
+                        } else {
                           const nextToken = supportedTokens.find((item) => item.address === value);
                           if (!nextToken) return;
-
-                          setIsUserManuallySelected(true);
                           setSelectedToken(nextToken);
                           field.onChange(value);
-                          form.setValue('amount', '');
-                        }}
-                        disabled={isDisabled}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="请选择代币" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {supportedTokens.map((item) => {
-                            const balanceView = getTokenBalanceView(
-                              item,
-                              balancesByToken,
-                              failedBalanceTokens,
-                              item.isNative ? isLoadingNative : isPendingERC20,
-                              !!account,
-                            );
-
-                            return (
-                              <SelectItem
-                                key={item.address}
-                                value={item.address}
-                                className="w-full"
-                                decoration={
-                                  <span className="text-xs text-gray-500">余额 {balanceView.label}</span>
-                                }
-                              >
-                                <span className={`font-mono font-medium ${balanceView.symbolClassName}`}>
-                                  {item.symbol}
-                                </span>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-
-                      {selectedToken && (
-                        <div className="text-xs text-gray-600 flex items-center gap-1">
-                          <span className="shrink-0">合约地址:</span>
-                          {selectedToken.address === 'NATIVE' ? (
-                            <span>原生代币，无合约地址</span>
-                          ) : (
-                            <div className="flex items-center gap-1 min-w-0">
-                              <AddressWithCopyButton
-                                address={selectedToken.address as `0x${string}`}
-                                showAddress={true}
-                                showCopyButton={true}
-                                colorClassName="text-gray-600"
-                              />
-                              <AddToMetamask
-                                tokenAddress={selectedToken.address as `0x${string}`}
-                                tokenSymbol={selectedToken.symbol}
-                                tokenDecimals={selectedToken.decimals}
-                                isUniswapV2Lp={selectedToken.isLp}
-                              />
+                        }
+                        form.setValue('amount', '');
+                      }}
+                      tokens={supportedTokens}
+                      selectedToken={selectedTokenOption}
+                      customTokenAddress={customTokenAddress}
+                      onCustomTokenAddressChange={(value) => {
+                        setCustomTokenAddress(value);
+                        const normalized = normalizeAddressInput(value);
+                        if (normalized && isAddress(normalized) && normalized !== ZERO_ADDRESS) field.onChange(normalized);
+                      }}
+                      disabled={isTokenSelectDisabled}
+                      showAddToMetamask={true}
+                      customTokenDetails={
+                        normalizedCustomTokenAddress ? (
+                          isLoadingCustomTokenBytecode ? (
+                            <div className="text-xs text-greyscale-500">正在检查地址...</div>
+                          ) : customTokenInfoFailed ? (
+                            <div className="text-xs text-red-600">
+                              {isCustomTokenEoa
+                                ? '这是钱包地址，不是代币合约地址。'
+                                : '无法读取代币信息，请确认这是有效的 ERC20 代币合约地址。'}
                             </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                          ) : (
+                            <div className="grid grid-cols-3 gap-2 text-xs text-greyscale-600">
+                              <div>
+                                <div className="text-greyscale-400">代币</div>
+                                <div className="mt-0.5 font-mono">{customTokenSymbol || '读取中...'}</div>
+                              </div>
+                              <div>
+                                <div className="text-greyscale-400">精度</div>
+                                <div className="mt-0.5 font-mono">{customTokenDecimals ?? '读取中...'}</div>
+                              </div>
+                              <div>
+                                <div className="text-greyscale-400">余额</div>
+                                <div className="mt-0.5 font-mono">
+                                  {!account
+                                    ? '未连接'
+                                    : !isCustomTokenReady || isPendingBalance
+                                      ? '读取中...'
+                                      : isBalanceReadFailed
+                                        ? '查询失败'
+                                        : formatTokenAmountForDecimals(balance || BigInt(0), balanceToken.decimals)}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        ) : null
+                      }
+                      renderDecoration={(item) => {
+                        const balanceView = getTokenBalanceView(
+                          item,
+                          balancesByToken,
+                          failedBalanceTokens,
+                          item.isNative ? isLoadingNative : isPendingERC20,
+                          !!account,
+                        );
+                        return <span className="text-xs text-gray-500">余额 {balanceView.label}</span>;
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -972,9 +927,9 @@ const TransferPanel = () => {
                             className="text-xl border-none p-0 h-auto bg-transparent focus:ring-0 focus:outline-none mr-2"
                           />
                         </FormControl>
-                        {selectedToken && (
+                        {selectedTokenOption && (
                           <div className="w-auto border-none bg-white hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors border border-gray-200 font-mono">
-                            <span className="font-medium text-gray-800 font-mono">{selectedToken.symbol}</span>
+                            <span className="font-medium text-gray-800 font-mono">{selectedTokenOption.symbol}</span>
                           </div>
                         )}
                       </div>
@@ -1005,9 +960,11 @@ const TransferPanel = () => {
                             最高
                           </Button>
                         </div>
-                        {selectedToken && (
+                        {selectedTokenOption && (
                           <span className="text-sm text-gray-600">
-                            {isBalanceReadFailed ? '查询失败' : formatTokenAmount(balance || BigInt(0))} {selectedToken.symbol}
+                            {isBalanceReadFailed
+                              ? '查询失败'
+                              : formatTokenAmountForDecimals(balance || BigInt(0), balanceToken.decimals)}
                           </span>
                         )}
                       </div>

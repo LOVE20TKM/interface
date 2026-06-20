@@ -48,18 +48,12 @@ export interface UseGetInfoForJoinResult {
   joinedAmount: bigint | undefined;
   /** 代币余额 */
   balance: bigint | undefined;
-  /** 已授权数量 */
-  allowance: bigint | undefined;
   /** 验证信息列表（与 verificationKeys 顺序一一对应） */
   verificationInfos: (string | undefined)[];
   /** 加载状态 */
   isPending: boolean;
-  /** 授权额度加载状态（单独返回，用于 UI 响应） */
-  isPendingAllowance: boolean;
   /** 错误信息 */
   error: Error | null;
-  /** 刷新授权额度的方法 */
-  refetchAllowance: () => void;
 }
 
 // ==================== Hook 实现 ====================
@@ -107,29 +101,7 @@ export function useGetInfoForJoin(params: UseGetInfoForJoinParams): UseGetInfoFo
   }, [currentRoundData]);
 
   // ==========================================
-  // 步骤2：单独调用 allowance 以保留 refetch 功能
-  // ==========================================
-  const {
-    data: allowanceData,
-    isPending: isPendingAllowance,
-    error: errorAllowance,
-    refetch: refetchAllowance,
-  } = useUniversalReadContract({
-    address: joinTokenAddress,
-    abi: LOVE20TokenAbi,
-    functionName: 'allowance',
-    args: [account as `0x${string}`, groupJoinContractAddress],
-    query: {
-      enabled: !!joinTokenAddress && !!account,
-    },
-  });
-
-  const allowance = useMemo(() => {
-    return allowanceData ? safeToBigInt(allowanceData) : undefined;
-  }, [allowanceData]);
-
-  // ==========================================
-  // 步骤3：构建批量合约调用配置（不包括 allowance）
+  // 步骤2：构建批量合约调用配置
   // ==========================================
   const contracts = useMemo(() => {
     const contractList: any[] = [];
@@ -192,7 +164,7 @@ export function useGetInfoForJoin(params: UseGetInfoForJoinParams): UseGetInfoFo
   ]);
 
   // ==========================================
-  // 步骤4：批量调用合约（不包括 allowance）
+  // 步骤3：批量调用合约
   // ==========================================
   const {
     data: batchData,
@@ -206,7 +178,7 @@ export function useGetInfoForJoin(params: UseGetInfoForJoinParams): UseGetInfoFo
   });
 
   // ==========================================
-  // 步骤5：解析返回数据
+  // 步骤4：解析返回数据
   // ==========================================
   // 计算各个数据在 batchData 中的索引（基于 contracts 数组的结构）
   const indices = useMemo(() => {
@@ -270,10 +242,10 @@ export function useGetInfoForJoin(params: UseGetInfoForJoinParams): UseGetInfoFo
   }, [batchData, indices.verificationInfosStartIndex, verificationKeys]);
 
   // ==========================================
-  // 步骤6：合并加载状态和错误
+  // 步骤5：合并加载状态和错误
   // ==========================================
-  const isPending = isPendingCurrentRound || isPendingBatch || isPendingAllowance;
-  const error = errorCurrentRound || errorBatch || errorAllowance || null;
+  const isPending = isPendingCurrentRound || isPendingBatch;
+  const error = errorCurrentRound || errorBatch || null;
 
   // ==========================================
   // 返回结果
@@ -283,11 +255,8 @@ export function useGetInfoForJoin(params: UseGetInfoForJoinParams): UseGetInfoFo
     isActionIdVoted,
     joinedAmount,
     balance,
-    allowance,
     verificationInfos,
     isPending,
-    isPendingAllowance,
     error,
-    refetchAllowance: refetchAllowance || (() => {}),
   };
 }

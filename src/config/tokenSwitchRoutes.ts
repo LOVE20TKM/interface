@@ -44,6 +44,7 @@ export const tokenSwitchStayRoutes = [
   '/stake/unstake',
   '/submit/actions',
   '/token',
+  '/token/approvals',
   '/token/intro',
   '/token/transfer',
   '/tokens',

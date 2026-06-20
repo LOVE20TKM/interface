@@ -19,7 +19,8 @@ import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/
 import { useAcquireLpJump } from '@/src/hooks/composite/useAcquireLpJump';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useIsActionIdVoted } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
+import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useMyLpActionData } from '@/src/hooks/extension/plugins/lp/composite/useMyLpActionData';
 import { useJoin } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLp';
 import { useFormatLPSymbol } from '@/src/hooks/extension/base/composite/useFormatLPSymbol';
@@ -241,15 +242,6 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     pairAddress: joinTokenAddress,
   });
 
-  // 获取已授权数量
-  const {
-    allowance: allowanceLp,
-    isPending: isPendingAllowanceLp,
-    refetch: refetchAllowance,
-  } = useAllowance(joinTokenAddress as `0x${string}`, account as `0x${string}`, extensionAddress, !!joinTokenAddress);
-
-  // 定义授权状态变量：是否已完成LP授权
-  const [isLpApproved, setIsLpApproved] = useState(false);
   // 标记是否正在等待跳转（加入成功后，在跳转前保持加入前的状态）
   const [isWaitingRedirect, setIsWaitingRedirect] = useState(false);
 
@@ -295,15 +287,23 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     mode: 'onChange',
   });
 
-  // ------------------------------
-  //  授权(approve)
-  // ------------------------------
+  const joinAmount = form.watch('joinAmount');
+  const parsedJoinAmount = parseUnits(joinAmount || '0') ?? BigInt(0);
   const {
+    isApproved: isLpApproved,
+    isChecking: isPendingAllowanceLp,
     approve: approveLp,
-    isPending: isPendingApproveLp,
+    isApprovingTx: isPendingApproveLp,
     isConfirming: isConfirmingApproveLp,
-    isConfirmed: isConfirmedApproveLp,
-  } = useApprove(joinTokenAddress as `0x${string}`);
+    approvalActionText,
+  } = useTokenApproval({
+    token: joinTokenAddress as `0x${string}` | undefined,
+    owner: account as `0x${string}` | undefined,
+    spender: extensionAddress,
+    amount: parsedJoinAmount,
+    enabled: !!joinTokenAddress && !!account && parsedJoinAmount > BigInt(0),
+    successMessage: '授权LP成功',
+  });
 
   // 新增：为授权按钮设置 ref ，用于在授权等待状态结束后调用 blur() 取消 hover 效果
   const approveButtonRef = useRef<HTMLButtonElement>(null);
@@ -331,32 +331,11 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
     }
 
     try {
-      await approveLp(extensionAddress, joinAmount);
+      await approveLp();
     } catch (error) {
       console.error('Approve failed', error);
     }
   }
-
-  // 监听授权交易确认后更新状态
-  useEffect(() => {
-    if (isConfirmedApproveLp) {
-      setIsLpApproved(true);
-      toast.success('授权LP成功');
-      // 授权成功后，刷新授权额度
-      refetchAllowance();
-    }
-  }, [isConfirmedApproveLp, refetchAllowance]);
-
-  // 监听用户输入的加入数量及链上返回的授权额度判断是否已授权
-  const joinAmount = form.watch('joinAmount');
-  const parsedJoinAmount = parseUnits(joinAmount || '0') ?? BigInt(0);
-  useEffect(() => {
-    if (parsedJoinAmount > BigInt(0) && allowanceLp && allowanceLp > BigInt(0) && allowanceLp >= parsedJoinAmount) {
-      setIsLpApproved(true);
-    } else {
-      setIsLpApproved(false);
-    }
-  }, [parsedJoinAmount, isPendingAllowanceLp, allowanceLp]);
 
   // ------------------------------
   //  加入提交
@@ -590,7 +569,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                 ) : isLpApproved ? (
                   '1.LP已授权'
                 ) : (
-                  '1.授权LP'
+                  `1.${approvalActionText}LP`
                 )}
               </Button>
 

@@ -26,7 +26,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useError } from '@/src/contexts/ErrorContext';
 
 // my hooks
-import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useStakeLpPageData } from '@/src/hooks/composite/useStakeLpPageData';
 import { useAccountStakeStatus, useInitialStakeRound } from '@/src/hooks/contracts/useLOVE20Stake';
 import { useStakeLiquidity } from '@/src/hooks/contracts/useLOVE20Hub';
@@ -112,8 +112,6 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
   // 获取质押LP页面数据（包含 pairInfo 和授权信息）
   const {
     pairInfo,
-    allowanceToken,
-    allowanceParentToken,
     isPending: isPendingStakeLpData,
     error: errorStakeLpData,
   } = useStakeLpPageData({
@@ -157,6 +155,11 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
     mode: 'onChange',
   });
 
+  const parentTokenValue = form.watch('parentToken');
+  const stakeTokenValue = form.watch('stakeToken');
+  const parsedParentToken = parseUnits(parentTokenValue || '0');
+  const parsedStakeToken = parseUnits(stakeTokenValue || '0');
+
   // --------------------------------------------------
   // 2.1 获取质押状态
   // --------------------------------------------------
@@ -168,34 +171,51 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
   } = useAccountStakeStatus(token?.address as `0x${string}`, account as `0x${string}`);
 
   // --------------------------------------------------
-  // 2.2 授权逻辑，使用 useApprove 保持不变
+  // 2.2 授权逻辑
   // --------------------------------------------------
-  const [isTokenApproved, setIsTokenApproved] = useState(false);
-  const [isParentTokenApproved, setIsParentTokenApproved] = useState(false);
   const [approveFlowStarted, setApproveFlowStarted] = useState(false);
+  const spenderAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB as `0x${string}`;
 
   const {
+    isApproved: isTokenApproved,
+    isChecking: isCheckingTokenApproval,
     approve: approveToken,
-    isPending: isPendingApproveToken,
+    isApprovingTx: isPendingApproveToken,
     isConfirming: isConfirmingApproveToken,
-    isConfirmed: isConfirmedApproveToken,
-    writeError: errApproveToken,
-  } = useApprove(token?.address as `0x${string}`);
+    error: errApproveToken,
+    approvalActionText: tokenApprovalActionText,
+  } = useTokenApproval({
+    token: token?.address as `0x${string}` | undefined,
+    owner: account as `0x${string}` | undefined,
+    spender: spenderAddress,
+    amount: parsedStakeToken,
+    enabled: !!token?.address && !!account && parsedStakeToken > BigInt(0),
+    successMessage: `授权${token?.symbol}成功`,
+  });
 
   const {
+    isApproved: isParentTokenApproved,
+    isChecking: isCheckingParentTokenApproval,
     approve: approveParentToken,
-    isPending: isPendingApproveParentToken,
+    isApprovingTx: isPendingApproveParentToken,
     isConfirming: isConfirmingApproveParentToken,
-    isConfirmed: isConfirmedApproveParentToken,
-    writeError: errApproveParentToken,
-  } = useApprove(token?.parentTokenAddress as `0x${string}`);
+    error: errApproveParentToken,
+    approvalActionText: parentApprovalActionText,
+  } = useTokenApproval({
+    token: token?.parentTokenAddress as `0x${string}` | undefined,
+    owner: account as `0x${string}` | undefined,
+    spender: spenderAddress,
+    amount: parsedParentToken,
+    enabled: !!token?.parentTokenAddress && !!account && parsedParentToken > BigInt(0),
+    successMessage: `授权${token?.parentTokenSymbol}成功`,
+  });
 
   async function onApproveToken(data: z.infer<ReturnType<typeof buildFormSchema>>) {
     try {
       setApproveFlowStarted(true);
       const stakeAmount = parseUnits(data.stakeToken);
       if (stakeAmount === null) throw new Error('无效的输入格式');
-      await approveToken(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB as `0x${string}`, stakeAmount);
+      await approveToken();
     } catch (error) {
       console.error('Token 授权失败', error);
       toast.error('token 授权失败，请检查输入格式');
@@ -207,26 +227,12 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
       setApproveFlowStarted(true);
       const parentAmount = parseUnits(data.parentToken);
       if (parentAmount === null) throw new Error('无效的输入格式');
-      await approveParentToken(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_HUB as `0x${string}`, parentAmount);
+      await approveParentToken();
     } catch (error) {
       console.error('父币授权失败', error);
       toast.error('父币授权失败，请检查输入格式');
     }
   }
-
-  useEffect(() => {
-    if (isConfirmedApproveToken) {
-      setIsTokenApproved(true);
-      toast.success(`授权${token?.symbol}成功`);
-    }
-  }, [isConfirmedApproveToken]);
-
-  useEffect(() => {
-    if (isConfirmedApproveParentToken) {
-      setIsParentTokenApproved(true);
-      toast.success(`授权${token?.parentTokenSymbol}成功`);
-    }
-  }, [isConfirmedApproveParentToken]);
 
   // --------------------------------------------------
   // 2.3 自动计算兑换数量，利用 pairReserve 进行计算
@@ -234,11 +240,6 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
   // 标记是否由用户手动输入，目的是区分"自动计算"与手动输入
   const [isParentTokenChangedByUser, setIsParentTokenChangedByUser] = useState(false);
   const [isTokenChangedByUser, setIsTokenChangedByUser] = useState(false);
-
-  const parentTokenValue = form.watch('parentToken');
-  const stakeTokenValue = form.watch('stakeToken');
-  const parsedParentToken = parseUnits(parentTokenValue);
-  const parsedStakeToken = parseUnits(stakeTokenValue);
 
   // 当用户修改父币时，根据 pairReserve 计算 token 数量
   useEffect(() => {
@@ -271,23 +272,6 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
       }
     }
   }, [pairExists, isTokenChangedByUser, parsedStakeToken, pairInfo, form]);
-
-  // 根据授权额度判断授权状态
-  useEffect(() => {
-    if (parsedParentToken > BigInt(0) && allowanceParentToken && allowanceParentToken >= parsedParentToken) {
-      setIsParentTokenApproved(true);
-    } else {
-      setIsParentTokenApproved(false);
-    }
-  }, [parsedParentToken, allowanceParentToken]);
-
-  useEffect(() => {
-    if (parsedStakeToken > BigInt(0) && allowanceToken && allowanceToken >= parsedStakeToken) {
-      setIsTokenApproved(true);
-    } else {
-      setIsTokenApproved(false);
-    }
-  }, [parsedStakeToken, allowanceToken]);
 
   // 当授权流程已启动，但某个 token 授权状态变为不足时，重置授权流程
   useEffect(() => {
@@ -783,16 +767,23 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                         type="button"
                         className="w-full min-w-0 whitespace-normal"
                         ref={approveTokenButtonRef}
-                        disabled={isPendingApproveToken || isConfirmingApproveToken || isTokenApproved}
+                        disabled={
+                          isCheckingTokenApproval ||
+                          isPendingApproveToken ||
+                          isConfirmingApproveToken ||
+                          isTokenApproved
+                        }
                         onClick={form.handleSubmit(onApproveToken)}
                       >
-                        {isPendingApproveToken
+                        {isCheckingTokenApproval
+                          ? `1.读取授权...`
+                          : isPendingApproveToken
                           ? `1.提交中...`
                           : isConfirmingApproveToken
                           ? `1.确认中...`
                           : isTokenApproved
                           ? `1.${token?.symbol}已授权`
-                          : `1.授权${token?.symbol}`}
+                          : `1.${tokenApprovalActionText}${token?.symbol}`}
                       </Button>
 
                       <Button
@@ -800,19 +791,22 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                         className="w-full min-w-0 whitespace-normal"
                         disabled={
                           !isTokenApproved ||
+                          isCheckingParentTokenApproval ||
                           isPendingApproveParentToken ||
                           isConfirmingApproveParentToken ||
                           isParentTokenApproved
                         }
                         onClick={form.handleSubmit(onApproveParentToken)}
                       >
-                        {isPendingApproveParentToken
+                        {isCheckingParentTokenApproval
+                          ? `2.读取授权...`
+                          : isPendingApproveParentToken
                           ? `2.提交中...`
                           : isConfirmingApproveParentToken
                           ? `2.确认中...`
                           : isParentTokenApproved
                           ? `2.${token?.parentTokenSymbol}已授权`
-                          : `2.授权${token?.parentTokenSymbol}`}
+                          : `2.${parentApprovalActionText}${token?.parentTokenSymbol}`}
                       </Button>
 
                       <Button

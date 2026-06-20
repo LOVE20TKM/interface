@@ -42,6 +42,7 @@ interface SwapFormProps {
   isApproving: boolean;
   isSwapping: boolean;
   isSwapConfirmed: boolean;
+  approvalActionText?: string;
 
   // 操作方法
   setMaxAmount: () => string;
@@ -75,6 +76,7 @@ const SwapForm = ({
   isApproving,
   isSwapping,
   isSwapConfirmed,
+  approvalActionText,
   setMaxAmount,
   handleApprove,
   executeSwap,
@@ -292,6 +294,7 @@ const SwapForm = ({
           onApprove={form.handleSubmit(handleApprove)}
           onSwap={form.handleSubmit(executeSwap)}
           disabled={isDisabled}
+          approvalActionText={approvalActionText}
         />
       </form>
     </Form>

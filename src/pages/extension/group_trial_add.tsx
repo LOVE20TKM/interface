@@ -32,7 +32,7 @@ import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/com
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
 import { useExtensionByActionInfoWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionInfosWithCache';
 import { TokenContext } from '@/src/contexts/TokenContext';
-import { useApprove, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 
 const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
 
@@ -136,27 +136,6 @@ const GroupTrialAddPage: React.FC = () => {
     isConfirmed: isConfirmedAdd,
   } = useTrialAccountsWaitingAdd();
 
-  // 代币授权相关
-  const {
-    approve,
-    isPending: isPendingApprove,
-    isConfirming: isConfirmingApprove,
-    isConfirmed: isConfirmedApprove,
-  } = useApprove(contractInfo?.joinedAmountTokenAddress as `0x${string}`);
-
-  // 获取授权额度
-  const {
-    allowance,
-    isPending: isPendingAllowance,
-    error: errorAllowance,
-    refetch: refetchAllowance,
-  } = useAllowance(
-    contractInfo?.joinedAmountTokenAddress as `0x${string}`,
-    account as `0x${string}`,
-    GROUP_JOIN_CONTRACT_ADDRESS,
-    !!contractInfo?.joinedAmountTokenAddress && !!account && !!GROUP_JOIN_CONTRACT_ADDRESS,
-  );
-
   const formSchema = useMemo(
     () =>
       z
@@ -218,19 +197,21 @@ const GroupTrialAddPage: React.FC = () => {
   // 显示提示的条件：有输入或总金额大于0
   const shouldShowAmountHint = hasAmountInput || totalTrialAmount > BigInt(0);
 
-  // 检查是否已授权
-  const isTokenApproved = useMemo(() => {
-    if (!allowance || totalTrialAmount === BigInt(0)) return false;
-    return allowance >= totalTrialAmount;
-  }, [allowance, totalTrialAmount]);
-
-  // 监听授权成功
-  useEffect(() => {
-    if (isConfirmedApprove) {
-      toast.success('授权成功');
-      refetchAllowance();
-    }
-  }, [isConfirmedApprove, refetchAllowance]);
+  const {
+    approve,
+    isApproved: isTokenApproved,
+    isChecking: isPendingAllowance,
+    isApprovingTx: isPendingApprove,
+    isConfirming: isConfirmingApprove,
+    error: errorAllowance,
+    approvalActionText,
+  } = useTokenApproval({
+    token: contractInfo?.joinedAmountTokenAddress as `0x${string}` | undefined,
+    owner: account as `0x${string}` | undefined,
+    spender: GROUP_JOIN_CONTRACT_ADDRESS,
+    amount: totalTrialAmount,
+    enabled: !!contractInfo?.joinedAmountTokenAddress && !!account && totalTrialAmount > BigInt(0),
+  });
 
   useEffect(() => {
     if (isConfirmedAdd && !hasCalledSuccessRef.current) {
@@ -253,7 +234,7 @@ const GroupTrialAddPage: React.FC = () => {
     }
 
     try {
-      await approve(GROUP_JOIN_CONTRACT_ADDRESS, totalTrialAmount);
+      await approve();
     } catch (error) {
       console.error('授权失败:', error);
     }
@@ -478,7 +459,7 @@ const GroupTrialAddPage: React.FC = () => {
                     ? '1.确认中...'
                     : isTokenApproved
                     ? '1.代币已授权'
-                    : '1.代币授权'}
+                    : `1.${approvalActionText}代币`}
                 </Button>
 
                 <Button type="submit" className="w-1/2" disabled={isPendingAdd || isConfirmingAdd || !isTokenApproved}>

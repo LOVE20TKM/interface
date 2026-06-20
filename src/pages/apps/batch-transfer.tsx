@@ -5,22 +5,20 @@ import { readContract } from '@wagmi/core';
 import { AlertTriangle, CheckCircle2, RefreshCw, XCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatUnits, isAddress, parseUnits, zeroAddress } from 'viem';
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount, useBalance, useBytecode } from 'wagmi';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 
 import Header from '@/src/components/Header';
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import TokenSelect, { CUSTOM_TOKEN_VALUE } from '@/src/components/Token/TokenSelect';
 import { BatchTransferAbi } from '@/src/abis/BatchTransfer';
 import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
-import { TokenContext } from '@/src/contexts/TokenContext';
-import type { Token } from '@/src/contexts/TokenContext';
+import { TokenContext, type Token } from '@/src/contexts/TokenContext';
 import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
 import { useUSDTPairAddress } from '@/src/hooks/composite/useUSDTPairAddress';
 import {
@@ -29,22 +27,15 @@ import {
   useBatchTransferERC20,
   useBatchTransferNative,
 } from '@/src/hooks/contracts/useBatchTransfer';
-import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { config } from '@/src/wagmi';
 import { normalizeAddressInput } from '@/src/lib/addressUtils';
+import { buildSupportedTokenOptions, TokenOption } from '@/src/lib/tokenOptions';
 
 type TransferMode = 'native' | 'erc20';
 type AuditStatus = 'pending' | 'ok' | 'changed';
-
-interface TokenOption {
-  key: string;
-  symbol: string;
-  name: string;
-  address: `0x${string}` | 'NATIVE' | 'CUSTOM';
-  decimals: number;
-  isNative: boolean;
-}
 
 interface ProtectedTargetInfo {
   label: string;
@@ -76,7 +67,6 @@ interface BalanceAudit {
   postBalances?: Record<string, bigint>;
 }
 
-const CUSTOM_TOKEN_VALUE = 'CUSTOM';
 const DEFAULT_DECIMALS = 18;
 const DISPLAY_FRACTION_DIGITS = 6;
 const POST_BALANCE_RETRY_MS = 2500;
@@ -204,118 +194,6 @@ const buildKnownContractTargets = (): ProtectedTargetInfo[] => {
 
 const KNOWN_CONTRACT_TARGETS = buildKnownContractTargets();
 
-const buildDefaultTokens = (
-  token?: Token | null,
-  options?: {
-    usdtLpPairAddress?: `0x${string}`;
-    usdtSymbol?: string;
-  },
-): TokenOption[] => {
-  const tokens: TokenOption[] = [];
-  const added = new Set<string>();
-
-  const addToken = (option: TokenOption) => {
-    const key = option.address === 'NATIVE' || option.address === 'CUSTOM' ? option.address : option.address.toLowerCase();
-    if (added.has(key)) return;
-    added.add(key);
-    tokens.push(option);
-  };
-
-  const nativeSymbol = process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL || 'TKM';
-  addToken({
-    key: 'native',
-    symbol: nativeSymbol,
-    name: `原生代币 (${nativeSymbol})`,
-    address: 'NATIVE',
-    decimals: DEFAULT_DECIMALS,
-    isNative: true,
-  });
-
-  const configuredTokens = [
-    {
-      key: 'root-parent',
-      symbol: process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL,
-      namePrefix: '包装代币',
-      address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_ROOT_PARENT_TOKEN,
-    },
-    {
-      key: 'usdt',
-      symbol: process.env.NEXT_PUBLIC_USDT_SYMBOL,
-      namePrefix: '测试稳定币',
-      address: process.env.NEXT_PUBLIC_USDT_ADDRESS,
-    },
-  ];
-
-  configuredTokens.forEach(({ key, symbol, namePrefix, address }) => {
-    if (!symbol || !address || !isAddress(address)) return;
-    addToken({
-      key,
-      symbol,
-      name: `${namePrefix} (${symbol})`,
-      address: address as `0x${string}`,
-      decimals: DEFAULT_DECIMALS,
-      isNative: false,
-    });
-  });
-
-  if (token?.address && isAddress(token.address)) {
-    addToken({
-      key: 'current-token',
-      symbol: token.symbol || '当前代币',
-      name: `当前代币 (${token.symbol || '未知'})`,
-      address: token.address as `0x${string}`,
-      decimals: token.decimals,
-      isNative: false,
-    });
-  }
-
-  if (token?.parentTokenAddress && isAddress(token.parentTokenAddress)) {
-    addToken({
-      key: 'parent-token',
-      symbol: token.parentTokenSymbol || '父币',
-      name: `父币 (${token.parentTokenSymbol || '未知'})`,
-      address: token.parentTokenAddress as `0x${string}`,
-      decimals: DEFAULT_DECIMALS,
-      isNative: false,
-    });
-  }
-
-  if (token?.uniswapV2PairAddress && isAddress(token.uniswapV2PairAddress) && token.uniswapV2PairAddress !== zeroAddress) {
-    const lpSymbolName = `${token.symbol}/${token.parentTokenSymbol}`;
-    addToken({
-      key: 'current-parent-lp',
-      symbol: `LP(${lpSymbolName})`,
-      name: `LP代币 (${lpSymbolName})`,
-      address: token.uniswapV2PairAddress,
-      decimals: DEFAULT_DECIMALS,
-      isNative: false,
-    });
-  }
-
-  if (token?.symbol && options?.usdtLpPairAddress && options.usdtLpPairAddress !== zeroAddress && options.usdtSymbol) {
-    const lpSymbolName = `${token.symbol}/${options.usdtSymbol}`;
-    addToken({
-      key: 'current-usdt-lp',
-      symbol: `LP(${lpSymbolName})`,
-      name: `LP代币 (${lpSymbolName})`,
-      address: options.usdtLpPairAddress,
-      decimals: DEFAULT_DECIMALS,
-      isNative: false,
-    });
-  }
-
-  addToken({
-    key: CUSTOM_TOKEN_VALUE,
-    symbol: '自定义ERC20',
-    name: '自定义 ERC20',
-    address: CUSTOM_TOKEN_VALUE,
-    decimals: DEFAULT_DECIMALS,
-    isNative: false,
-  });
-
-  return tokens;
-};
-
 const buildProtectedTokenTargets = (token: Token | null | undefined, tokens: TokenOption[]): ProtectedTargetInfo[] => {
   const targets = new Map<string, ProtectedTargetInfo>();
 
@@ -329,7 +207,7 @@ const buildProtectedTokenTargets = (token: Token | null | undefined, tokens: Tok
   };
 
   tokens.forEach((item) => {
-    if (item.address === 'NATIVE' || item.address === CUSTOM_TOKEN_VALUE) return;
+    if (item.address === 'NATIVE') return;
     addTarget(item.symbol, item.address);
   });
 
@@ -450,7 +328,7 @@ export default function BatchTransferPage() {
   const { pairAddress: usdtLpPairAddress, usdtSymbol } = useUSDTPairAddress(token?.address);
 
   const [mode, setMode] = useState<TransferMode>('native');
-  const [selectedTokenKey, setSelectedTokenKey] = useState('native');
+  const [selectedTokenKey, setSelectedTokenKey] = useState('NATIVE');
   const [customTokenInput, setCustomTokenInput] = useState('');
   const [recipientsInput, setRecipientsInput] = useState('');
   const [audit, setAudit] = useState<BalanceAudit | null>(null);
@@ -462,30 +340,44 @@ export default function BatchTransferPage() {
 
   const defaultTokens = useMemo(
     () =>
-      buildDefaultTokens(token, {
+      buildSupportedTokenOptions(token, {
         usdtLpPairAddress:
           usdtLpPairAddress && usdtLpPairAddress !== zeroAddress ? usdtLpPairAddress : undefined,
         usdtSymbol,
       }),
     [token, usdtLpPairAddress, usdtSymbol],
   );
+  const erc20Tokens = useMemo(() => defaultTokens.filter((item) => !item.isNative), [defaultTokens]);
   const customTokenAddress = useMemo(() => normalizeTokenAddress(customTokenInput), [customTokenInput]);
-
-  const { data: customSymbolData, isPending: isPendingCustomSymbol } = useUniversalReadContract({
-    address: customTokenAddress || zeroAddress,
-    abi: LOVE20TokenAbi,
-    functionName: 'symbol',
+  const { data: customTokenBytecode, isLoading: isLoadingCustomTokenBytecode } = useBytecode({
+    address: customTokenAddress,
     query: {
       enabled: mode === 'erc20' && selectedTokenKey === CUSTOM_TOKEN_VALUE && !!customTokenAddress,
     },
   });
+  const isCustomTokenContract = !!customTokenBytecode && customTokenBytecode !== '0x';
+  const isCustomTokenEoa =
+    mode === 'erc20' &&
+    selectedTokenKey === CUSTOM_TOKEN_VALUE &&
+    !!customTokenAddress &&
+    !isLoadingCustomTokenBytecode &&
+    !isCustomTokenContract;
 
-  const { data: customDecimalsData, isPending: isPendingCustomDecimals } = useUniversalReadContract({
+  const { data: customSymbolData, isPending: isPendingCustomSymbol, error: customSymbolError } = useUniversalReadContract({
+    address: customTokenAddress || zeroAddress,
+    abi: LOVE20TokenAbi,
+    functionName: 'symbol',
+    query: {
+      enabled: mode === 'erc20' && selectedTokenKey === CUSTOM_TOKEN_VALUE && isCustomTokenContract,
+    },
+  });
+
+  const { data: customDecimalsData, isPending: isPendingCustomDecimals, error: customDecimalsError } = useUniversalReadContract({
     address: customTokenAddress || zeroAddress,
     abi: LOVE20TokenAbi,
     functionName: 'decimals',
     query: {
-      enabled: mode === 'erc20' && selectedTokenKey === CUSTOM_TOKEN_VALUE && !!customTokenAddress,
+      enabled: mode === 'erc20' && selectedTokenKey === CUSTOM_TOKEN_VALUE && isCustomTokenContract,
     },
   });
 
@@ -494,23 +386,27 @@ export default function BatchTransferPage() {
       return defaultTokens.find((item) => item.address === 'NATIVE') || defaultTokens[0];
     }
 
-    const defaultOption = defaultTokens.find((item) => item.key === selectedTokenKey) || defaultTokens[1] || defaultTokens[0];
     if (selectedTokenKey !== CUSTOM_TOKEN_VALUE) {
-      return defaultOption;
+      return erc20Tokens.find((item) => item.address === selectedTokenKey) || erc20Tokens[0] || {
+        symbol: '自定义ERC20',
+        name: '自定义 ERC20',
+        address: zeroAddress,
+        decimals: DEFAULT_DECIMALS,
+        isNative: false,
+      };
     }
 
     return {
-      key: CUSTOM_TOKEN_VALUE,
       symbol: (customSymbolData as string | undefined) || '自定义ERC20',
       name: '自定义 ERC20',
-      address: customTokenAddress || CUSTOM_TOKEN_VALUE,
+      address: customTokenAddress || zeroAddress,
       decimals: typeof customDecimalsData === 'number' ? customDecimalsData : DEFAULT_DECIMALS,
       isNative: false,
     };
-  }, [customDecimalsData, customSymbolData, customTokenAddress, defaultTokens, mode, selectedTokenKey]);
+  }, [customDecimalsData, customSymbolData, customTokenAddress, defaultTokens, erc20Tokens, mode, selectedTokenKey]);
 
   const selectedTokenAddress =
-    selectedToken.address !== 'NATIVE' && selectedToken.address !== CUSTOM_TOKEN_VALUE ? selectedToken.address : zeroAddress;
+    selectedToken.address !== 'NATIVE' ? selectedToken.address : zeroAddress;
   const selectedTokenDecimals = selectedToken.decimals;
   const isCustomTokenSelected = mode === 'erc20' && selectedTokenKey === CUSTOM_TOKEN_VALUE;
   const selectedTokenDecimalsText = isCustomTokenSelected
@@ -525,9 +421,10 @@ export default function BatchTransferPage() {
   const canUseCustomToken =
     selectedTokenKey !== CUSTOM_TOKEN_VALUE ||
     (!!customTokenAddress && typeof customDecimalsData === 'number' && !isPendingCustomSymbol && !isPendingCustomDecimals);
+  const customTokenInfoFailed = !!customTokenAddress && (isCustomTokenEoa || !!customSymbolError || !!customDecimalsError);
   const fallbackErc20Address = useMemo(
-    () => defaultTokens.find((item) => !item.isNative && item.address !== CUSTOM_TOKEN_VALUE)?.address as `0x${string}` | undefined,
-    [defaultTokens],
+    () => erc20Tokens[0]?.address as `0x${string}` | undefined,
+    [erc20Tokens],
   );
   const shouldReadErc20Data =
     mode === 'erc20' && !selectedToken.isNative && selectedTokenAddress !== zeroAddress && !!account && canUseCustomToken;
@@ -616,22 +513,22 @@ export default function BatchTransferPage() {
   );
 
   const {
-    allowance,
-    isPending: isPendingAllowance,
-    refetch: refetchAllowance,
-  } = useAllowance(
-    erc20HookAddress,
-    account as `0x${string}`,
-    BATCH_TRANSFER_CONTRACT_ADDRESS,
-    shouldReadErc20Data,
-  );
-
-  const {
     approve,
-    isPending: isPendingApprove,
+    allowance,
+    needsApproval,
+    isChecking: isPendingAllowance,
+    isApprovingTx: isPendingApprove,
     isConfirming: isConfirmingApprove,
-    isConfirmed: isConfirmedApprove,
-  } = useApprove(erc20HookAddress);
+    refetchAllowance,
+    approvalActionText,
+  } = useTokenApproval({
+    token: erc20HookAddress,
+    owner: account as `0x${string}` | undefined,
+    spender: BATCH_TRANSFER_CONTRACT_ADDRESS,
+    amount: totalAmount,
+    enabled: shouldReadErc20Data && totalAmount > BigInt(0),
+    successMessage: '授权已确认',
+  });
 
   const {
     batchTransferNative,
@@ -652,7 +549,6 @@ export default function BatchTransferPage() {
   const accountBalance = selectedToken.isNative ? nativeBalance?.value : erc20Balance;
   const isPendingBalance = selectedToken.isNative ? isPendingNativeBalance : isPendingErc20Balance;
   const hasEnoughBalance = accountBalance !== undefined && accountBalance >= totalAmount;
-  const needsApproval = !selectedToken.isNative && totalAmount > BigInt(0) && (allowance === undefined || allowance < totalAmount);
   const isBusy =
     isLoadingAudit ||
     isPendingApprove ||
@@ -703,13 +599,6 @@ export default function BatchTransferPage() {
     setPendingAuditKey(null);
     setPendingTransferMode(null);
   }, [currentAuditKey]);
-
-  useEffect(() => {
-    if (isConfirmedApprove) {
-      refetchAllowance?.();
-      toast.success('授权已确认');
-    }
-  }, [isConfirmedApprove, refetchAllowance]);
 
   const readRecipientBalances = useCallback(async () => {
     if (recipients.length === 0) return {};
@@ -764,7 +653,7 @@ export default function BatchTransferPage() {
     }
 
     try {
-      await approve(BATCH_TRANSFER_CONTRACT_ADDRESS, totalAmount);
+      await approve();
     } catch (error) {
       console.error('Approve batch transfer failed:', error);
     }
@@ -884,7 +773,7 @@ export default function BatchTransferPage() {
           ? '2.批量转账'
           : '3.批量转账';
   const approveButtonText =
-    isPendingApprove || isConfirmingApprove ? '1.授权中...' : needsApproval ? '1.授权' : '1.已授权';
+    isPendingApprove || isConfirmingApprove ? '1.授权中...' : needsApproval ? `1.${approvalActionText}` : '1.已授权';
   const loadPreBalancesButtonText = selectedToken.isNative ? '1.加载余额' : '2.加载余额';
 
   const isSubmitDisabled =
@@ -973,7 +862,7 @@ export default function BatchTransferPage() {
                     onValueChange={(value) => {
                       const nextMode = value as TransferMode;
                       setMode(nextMode);
-                      setSelectedTokenKey(nextMode === 'native' ? 'native' : defaultTokens.find((item) => !item.isNative)?.key || CUSTOM_TOKEN_VALUE);
+                      setSelectedTokenKey(nextMode === 'native' ? 'NATIVE' : erc20Tokens[0]?.address || CUSTOM_TOKEN_VALUE);
                     }}
                   >
                     <TabsList className="grid w-full grid-cols-2">
@@ -986,35 +875,56 @@ export default function BatchTransferPage() {
                     <div className="space-y-3">
                       <div>
                         <label className="mb-1 block text-sm font-medium text-greyscale-700">选择代币</label>
-                        <Select value={selectedTokenKey} onValueChange={setSelectedTokenKey}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {defaultTokens
-                              .filter((item) => !item.isNative)
-                              .map((item) => (
-                                <SelectItem key={item.key} value={item.key}>
-                                  {item.symbol}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
+                        <TokenSelect
+                          value={selectedTokenKey}
+                          onValueChange={setSelectedTokenKey}
+                          tokens={erc20Tokens}
+                          selectedToken={selectedTokenAddress !== zeroAddress ? selectedToken : undefined}
+                          customTokenAddress={customTokenInput}
+                          onCustomTokenAddressChange={setCustomTokenInput}
+                          showAddToMetamask={true}
+                          customTokenDetails={
+                            customTokenAddress ? (
+                              isLoadingCustomTokenBytecode ? (
+                                <div className="text-xs text-greyscale-500">正在检查地址...</div>
+                              ) : customTokenInfoFailed ? (
+                                <div className="text-xs text-red-600">
+                                  {isCustomTokenEoa
+                                    ? '这是钱包地址，不是代币合约地址。'
+                                    : '无法读取代币信息，请确认这是有效的 ERC20 代币合约地址。'}
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-3 gap-2 text-xs text-greyscale-600">
+                                  <div>
+                                    <div className="text-greyscale-400">代币</div>
+                                    <div className="mt-0.5 font-mono">{(customSymbolData as string | undefined) || '读取中...'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-greyscale-400">精度</div>
+                                    <div className="mt-0.5 font-mono">{customDecimalsData !== undefined ? String(customDecimalsData) : '读取中...'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-greyscale-400">余额</div>
+                                    <div className="mt-0.5 font-mono">
+                                      {isPendingBalance ? '读取中...' : formatTokenAmount(accountBalance, selectedTokenDecimals)}
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                            ) : null
+                          }
+                          renderDecoration={(item) =>
+                            item.address === selectedTokenAddress ? (
+                              <span className="text-xs text-greyscale-500">
+                                余额 {isPendingBalance ? '读取中...' : formatTokenAmount(accountBalance, item.decimals)}
+                              </span>
+                            ) : null
+                          }
+                        />
                       </div>
 
-                      {selectedTokenKey === CUSTOM_TOKEN_VALUE && (
-                        <div>
-                          <label className="mb-1 block text-sm font-medium text-greyscale-700">自定义 ERC20 地址</label>
-                          <Input
-                            value={customTokenInput}
-                            onChange={(event) => setCustomTokenInput(event.target.value)}
-                            placeholder="0x... 或 TH..."
-                            className="font-mono text-sm"
-                          />
-                          {customTokenInput && !customTokenAddress && (
-                            <div className="mt-1 text-xs text-red-600">请输入合法且非零的 ERC20 地址</div>
-                          )}
-                        </div>
+                      {selectedTokenKey === CUSTOM_TOKEN_VALUE && customTokenInput && !customTokenAddress && (
+                        <div className="text-xs text-red-600">请输入合法且非零的 ERC20 地址</div>
                       )}
                     </div>
                   )}
@@ -1028,7 +938,7 @@ export default function BatchTransferPage() {
 	                      <span className="text-greyscale-500">Decimals</span>
 	                      <span className="font-mono text-greyscale-900">{selectedTokenDecimalsText}</span>
 	                    </div>
-	                    {!selectedToken.isNative && selectedToken.address !== CUSTOM_TOKEN_VALUE && (
+	                    {!selectedToken.isNative && selectedTokenAddress !== zeroAddress && (
 	                      <div className="mt-2 flex items-center justify-between gap-3">
 	                        <span className="text-greyscale-500">代币地址</span>
                         <AddressWithCopyButton

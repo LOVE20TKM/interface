@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useEffect } from 'react';
 import { useAccount, useBalance } from 'wagmi';
-import { useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
+import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
 import { useGetPair } from '@/src/hooks/contracts/useUniswapV2Factory';
 import { useError } from '@/src/contexts/ErrorContext';
 import {
@@ -29,7 +29,6 @@ interface LiquidityPageDataParams {
  * 将多个RPC调用合并，减少请求次数，提高效率
  */
 export const useLiquidityPageData = ({ baseToken, targetToken, account }: LiquidityPageDataParams) => {
-  const spenderAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER as `0x${string}`;
   const { setError } = useError();
 
   // 1. 获取交易对地址
@@ -68,30 +67,17 @@ export const useLiquidityPageData = ({ baseToken, targetToken, account }: Liquid
     refetch: refetchTargetBalance,
   } = useBalanceOf(targetToken?.address || '0x0000000000000000000000000000000000000000', account as `0x${string}`);
 
-  // 4. 授权额度查询
-  const { allowance: baseAllowance, isPending: isPendingBaseAllowance } = useAllowance(
-    baseToken.isNative ? '0x0000000000000000000000000000000000000000' : baseToken.address,
-    account as `0x${string}`,
-    spenderAddress,
-  );
-
-  const { allowance: targetAllowance, isPending: isPendingTargetAllowance } = useAllowance(
-    targetToken?.address || '0x0000000000000000000000000000000000000000',
-    account as `0x${string}`,
-    spenderAddress,
-  );
-
-  // 5. LP代币余额查询
+  // 4. LP代币余额查询
   const { lpBalance, isLoading: isLoadingLPBalance, refetch: refetchLPBalance } = useLPBalance(pairAddress, account);
 
-  // 6. 交易对储备量查询
+  // 5. 交易对储备量查询
   const { reserve0, reserve1, isLoading: isLoadingReserves, refetch: refetchReserves } = useGetReserves(pairAddress);
 
-  // 7. 交易对token0和token1地址查询
+  // 6. 交易对token0和token1地址查询
   const { token0, isLoading: isLoadingToken0 } = useToken0(pairAddress);
   const { token1, isLoading: isLoadingToken1 } = useToken1(pairAddress);
 
-  // 8. LP代币总供应量查询
+  // 7. LP代币总供应量查询
   const {
     totalSupply: lpTotalSupply,
     isLoading: isLoadingTotalSupply,
@@ -138,8 +124,6 @@ export const useLiquidityPageData = ({ baseToken, targetToken, account }: Liquid
     isLoadingBaseNative ||
     isPendingBaseERC20 ||
     isPendingTarget ||
-    isPendingBaseAllowance ||
-    isPendingTargetAllowance ||
     isLoadingLPBalance ||
     isLoadingReserves ||
     isLoadingToken0 ||
@@ -171,8 +155,6 @@ export const useLiquidityPageData = ({ baseToken, targetToken, account }: Liquid
     pairAddress,
     baseBalance: baseToken.isNative ? baseNativeBalance?.value : baseERC20Balance,
     targetBalance,
-    baseAllowance: baseToken.isNative ? undefined : baseAllowance,
-    targetAllowance,
     lpBalance,
     lpTotalSupply,
 

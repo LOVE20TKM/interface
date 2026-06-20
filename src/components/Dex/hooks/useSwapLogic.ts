@@ -13,7 +13,7 @@ import {
 } from '../utils/swapValidation';
 
 // 导入交换相关的hooks
-import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useDeposit, useWithdraw } from '@/src/hooks/contracts/useWETH';
 import {
   useSwapExactTokensForTokens,
@@ -62,11 +62,19 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig, suppo
   // 合约操作hooks
   const {
     approve,
-    isPending: isPendingApprove,
+    isApprovingTx: isPendingApprove,
     isConfirming: isConfirmingApprove,
-    isConfirmed: isConfirmedApprove,
-    writeError: errApprove,
-  } = useApprove(fromToken.address as `0x${string}`);
+    error: errApprove,
+    isApproved,
+    approvalActionText,
+  } = useTokenApproval({
+    token: fromToken.address as `0x${string}`,
+    owner: account as `0x${string}` | undefined,
+    spender: approvalTarget,
+    amount: fromAmount,
+    enabled: needsApproval && !!account && fromAmount > BigInt(0),
+    successMessage: `授权${fromToken.symbol}成功`,
+  });
 
   const {
     deposit,
@@ -110,7 +118,7 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig, suppo
 
   // 计算状态
   const isApproving = isPendingApprove || isConfirmingApprove;
-  const isApproved = isConfirmedApprove || !needsApproval;
+  const isSwapApproved = !needsApproval || isApproved;
   const isSwapping = isPendingDeposit || isConfirmingDeposit || isPendingWithdraw || isConfirmingWithdraw ||
     isPendingTokenToToken || isConfirmingTokenToToken || isPendingETHToToken || isConfirmingETHToToken ||
     isPendingTokenToETH || isConfirmingTokenToETH;
@@ -128,13 +136,6 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig, suppo
       setToAmount(BigInt(0));
     }
   }, [swapMethod, fromAmount, amountsOut]);
-
-  // 授权成功提示
-  useEffect(() => {
-    if (isConfirmedApprove) {
-      toast.success(`授权${fromToken.symbol}成功`);
-    }
-  }, [isConfirmedApprove, fromToken.symbol]);
 
   // 交换成功提示和页面刷新
   useEffect(() => {
@@ -164,7 +165,7 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig, suppo
     }
 
     try {
-      await approve(approvalTarget, fromAmount);
+      await approve();
     } catch (error: any) {
       console.error(error);
     }
@@ -288,10 +289,11 @@ export const useSwapLogic = (fromToken: TokenConfig, toToken: TokenConfig, suppo
 
     // 操作状态
     needsApproval,
-    isApproved,
+    isApproved: isSwapApproved,
     isApproving,
     isSwapping,
     isSwapConfirmed,
+    approvalActionText,
 
     // 操作方法
     setMaxAmount,

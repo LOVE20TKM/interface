@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 import { toast } from 'react-hot-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,7 +20,7 @@ import { formatPhaseText } from '@/src/lib/domainUtils';
 
 // my hooks
 import { useAccountStakeStatus, useStakeToken } from '@/src/hooks/contracts/useLOVE20Stake';
-import { useApprove, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useMaxGovBoostRewardMultiplier } from '@/src/hooks/contracts/useLOVE20Mint';
 import { useMyGovData } from '@/src/hooks/composite/useMyGovData';
 // my contexts
@@ -65,17 +65,6 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
   const chainId = useChainId();
   const { token } = useContext(TokenContext) || {};
 
-  // 状态变量：是否完成授权的
-  const [isTokenApproved, setIsTokenApproved] = useState(false);
-
-  const {
-    approve: approveToken,
-    isPending: isPendingApproveToken,
-    isConfirming: isConfirmingApproveToken,
-    isConfirmed: isConfirmedApproveToken,
-    writeError: errApproveToken,
-  } = useApprove(token?.address as `0x${string}`);
-
   const {
     stakeToken,
     isPending: isPendingStakeToken,
@@ -105,31 +94,6 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
     isPending: isPendingMaxGovBoostRewardMultiplier,
   } = useMaxGovBoostRewardMultiplier();
 
-  // 1. 获取已授权数量
-  const {
-    allowance: allowanceToken,
-    isPending: isPendingAllowanceToken,
-    error: errAllowanceToken,
-    refetch: refetchAllowance,
-  } = useAllowance(
-    token?.address as `0x${string}`,
-    account as `0x${string}`,
-    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`,
-  );
-
-  // 新增：为授权按钮创建 ref
-  const approveButtonRef = useRef<HTMLButtonElement>(null);
-  // 保存 isPendingAllowanceToken 的上一个值
-  const prevIsPendingAllowance = useRef(isPendingAllowanceToken);
-
-  // 当 isPendingAllowanceToken 从 true 变为 false 时，调用按钮的 blur() 方法
-  useEffect(() => {
-    if (prevIsPendingAllowance.current && !isPendingAllowanceToken) {
-      approveButtonRef.current?.blur();
-    }
-    prevIsPendingAllowance.current = isPendingAllowanceToken;
-  }, [isPendingAllowanceToken]);
-
   // 在文件顶部添加环境变量读取
   const PROMISED_WAITING_PHASES_MIN = Number(process.env.NEXT_PUBLIC_PROMISED_WAITING_PHASES_MIN) || 1;
   const PROMISED_WAITING_PHASES_MAX = Number(process.env.NEXT_PUBLIC_PROMISED_WAITING_PHASES_MAX) || 2;
@@ -144,28 +108,48 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
     mode: 'onChange',
   });
 
+  const stakeTokenAmountValue = form.watch('stakeTokenAmount');
+  const parsedStakeToken = parseUnits(stakeTokenAmountValue || '0');
+
+  const {
+    isApproved: isTokenApproved,
+    isChecking: isPendingAllowanceToken,
+    isApprovingTx: isPendingApproveToken,
+    isConfirming: isConfirmingApproveToken,
+    approve: approveToken,
+    error: errApproveToken,
+    approvalActionText,
+  } = useTokenApproval({
+    token: token?.address as `0x${string}` | undefined,
+    owner: account as `0x${string}` | undefined,
+    spender: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`,
+    amount: parsedStakeToken,
+    enabled: !!token?.address && !!account,
+    successMessage: `授权${token?.symbol}成功`,
+  });
+
+  // 新增：为授权按钮创建 ref
+  const approveButtonRef = useRef<HTMLButtonElement>(null);
+  // 保存 isPendingAllowanceToken 的上一个值
+  const prevIsPendingAllowance = useRef(isPendingAllowanceToken);
+
+  // 当 isPendingAllowanceToken 从 true 变为 false 时，调用按钮的 blur() 方法
+  useEffect(() => {
+    if (prevIsPendingAllowance.current && !isPendingAllowanceToken) {
+      approveButtonRef.current?.blur();
+    }
+    prevIsPendingAllowance.current = isPendingAllowanceToken;
+  }, [isPendingAllowanceToken]);
+
   // 3. 授权按钮点击
   const handleApprove = async (data: z.infer<ReturnType<typeof stakeSchemaFactory>>) => {
     try {
-      await approveToken(
-        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_STAKE as `0x${string}`,
-        parseUnits(data.stakeTokenAmount),
-      );
+      await approveToken();
     } catch (error: any) {
       console.error('Approve failed', error);
       console.error('Approve error:', error);
     }
   };
-
-  // 监听授权成功
-  useEffect(() => {
-    if (isConfirmedApproveToken) {
-      setIsTokenApproved(true);
-      toast.success(`授权${token?.symbol}成功`);
-      // 授权成功后，刷新授权额度
-      refetchAllowance();
-    }
-  }, [isConfirmedApproveToken, token?.symbol, refetchAllowance]);
 
   // 4. 质押按钮点击
   const handleStake = async (data: z.infer<ReturnType<typeof stakeSchemaFactory>>) => {
@@ -194,23 +178,6 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
       }, 2000);
     }
   }, [isConfirmedStakeToken, form, token?.symbol]);
-
-  // 监听用户输入的质押数量以及 allowance 值，动态判断是否已授权
-  const stakeTokenAmountValue = form.watch('stakeTokenAmount');
-  useEffect(() => {
-    let parsedStakeToken = BigInt(0);
-    try {
-      parsedStakeToken = parseUnits(stakeTokenAmountValue || '0');
-    } catch {
-      parsedStakeToken = BigInt(0);
-    }
-
-    if (parsedStakeToken > BigInt(0) && allowanceToken && allowanceToken > BigInt(0) && allowanceToken >= parsedStakeToken) {
-      setIsTokenApproved(true);
-    } else {
-      setIsTokenApproved(false);
-    }
-  }, [stakeTokenAmountValue, allowanceToken, isPendingAllowanceToken]);
 
   const recommendedStakeTokenData = useMemo(() => {
     if (validGovVotes === undefined || !govData || maxGovBoostRewardMultiplier === undefined) {
@@ -494,7 +461,7 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
               ) : isTokenApproved ? (
                 `1.${token?.symbol}已授权`
               ) : (
-                `1.授权${token?.symbol}`
+                `1.${approvalActionText}${token?.symbol}`
               )}
             </Button>
             <Button

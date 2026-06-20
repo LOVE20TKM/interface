@@ -7,6 +7,7 @@ import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logWeb3Error, logError } from '@/src/lib/debugUtils';
+import { resolveTokenApprovalValue, type TokenApprovalMode } from '@/src/lib/tokenApproval';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
@@ -94,14 +95,14 @@ export const useBalancesOf = (token: `0x${string}`, accounts: readonly `0x${stri
 /**
  * useDecimals Hook
  */
-export const useDecimals = (token: `0x${string}`) => {
+export const useDecimals = (token: `0x${string}`, flag: boolean = true) => {
   const { data, isPending, error } = useUniversalReadContract({
     address: token,
     abi: LOVE20TokenAbi,
     functionName: 'decimals',
     args: [],
     query: {
-      enabled: !!token,
+      enabled: flag && !!token && token !== ZERO_ADDRESS,
     },
   });
 
@@ -179,14 +180,14 @@ export const useParentTokenAddress = (token: `0x${string}`) => {
 /**
  * useSymbol Hook
  */
-export const useSymbol = (token: `0x${string}`) => {
+export const useSymbol = (token: `0x${string}`, flag: boolean = true) => {
   const { data, isPending, error } = useUniversalReadContract({
     address: token,
     abi: LOVE20TokenAbi,
     functionName: 'symbol',
     args: [],
     query: {
-      enabled: !!token,
+      enabled: flag && !!token && token !== ZERO_ADDRESS,
     },
   });
 
@@ -223,9 +224,16 @@ export function useApprove(token: `0x${string}`) {
     'approve',
   );
 
-  const approve = async (spender: `0x${string}`, value: bigint) => {
-    console.log('提交approve交易:', { token, spender, value, isTukeMode });
-    return await execute([spender, value]);
+  const approve = async (
+    spender: `0x${string}`,
+    value: bigint,
+    options?: {
+      approvalMode?: TokenApprovalMode;
+    },
+  ) => {
+    const finalValue: bigint = resolveTokenApprovalValue(value, options?.approvalMode);
+    console.log('提交approve交易:', { token, spender, value: finalValue, isTukeMode });
+    return await execute([spender, finalValue]);
   };
 
   // 错误日志记录

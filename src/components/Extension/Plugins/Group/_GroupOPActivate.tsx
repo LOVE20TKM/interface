@@ -31,7 +31,8 @@ import { ActionInfo } from '@/src/types/love20types';
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // hooks
-import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useMyGroups } from '@/src/hooks/extension/base/composite/useMyGroups';
 import { useGroupNamesWithCache } from '@/src/hooks/extension/base/composite/useGroupNamesWithCache';
 import { useFormatLPSymbol } from '@/src/hooks/extension/base/composite/useFormatLPSymbol';
@@ -285,26 +286,20 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   });
 
   const {
-    allowance,
-    isPending: isPendingAllowance,
-    error: errorAllowance,
-    refetch: refetchAllowance,
-  } = useAllowance(
-    (actionParams?.tokenAddress || ZERO_ADDRESS) as `0x${string}`,
-    (account || ZERO_ADDRESS) as `0x${string}`,
-    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`,
-    !!actionParams?.tokenAddress && !!account,
-  );
-
-  const isTokenApproved = allowance !== undefined && allowance >= stakeAmount;
-
-  // 授权
-  const {
+    isApproved: isTokenApproved,
     approve,
-    isPending: isPendingApprove,
+    isChecking: isPendingAllowance,
+    isApprovingTx: isPendingApprove,
     isConfirming: isConfirmingApprove,
-    isConfirmed: isConfirmedApprove,
-  } = useApprove((actionParams?.tokenAddress || ZERO_ADDRESS) as `0x${string}`);
+    error: errorAllowance,
+    approvalActionText,
+  } = useTokenApproval({
+    token: actionParams?.tokenAddress as `0x${string}` | undefined,
+    owner: account as `0x${string}` | undefined,
+    spender: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`,
+    amount: stakeAmount,
+    enabled: !!actionParams?.tokenAddress && !!account && stakeAmount > BigInt(0),
+  });
 
   async function handleApprove(values: FormValues) {
     if (!stakeAmount || stakeAmount === BigInt(0)) {
@@ -319,19 +314,11 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     }
 
     try {
-      await approve(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_MANAGER as `0x${string}`, stakeAmount);
+      await approve();
     } catch (error) {
       console.error('Approve failed', error);
     }
   }
-
-  useEffect(() => {
-    if (isConfirmedApprove) {
-      toast.success('授权成功');
-      // 授权成功后，刷新授权额度
-      refetchAllowance();
-    }
-  }, [isConfirmedApprove, refetchAllowance]);
 
   // 激活链群
   const {
@@ -665,6 +652,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               actionLabelPending="2.提交中..."
               actionLabelConfirming="2.确认中..."
               actionLabelConfirmed="2.已激活"
+              approvalActionText={approvalActionText}
               disableApprove={isGovRatioInsufficient}
               disableAction={
                 !finalGroupId || (userBalance !== undefined && userBalance < stakeAmount) || isGovRatioInsufficient

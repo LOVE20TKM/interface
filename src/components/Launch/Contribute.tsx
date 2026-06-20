@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,7 +20,8 @@ import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 import { LaunchInfo } from '@/src/types/love20types';
 import { useContribute, useContributed } from '@/src/hooks/contracts/useLOVE20Launch';
 import { useContributeFirstTokenWithETH } from '@/src/hooks/contracts/useLOVE20Hub';
-import { useAllowance, useBalanceOf, useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useError } from '@/src/contexts/ErrorContext';
 
 // my context
@@ -135,61 +136,26 @@ const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: Launch
     }
   };
 
+  const contributeAmount = form.watch('contributeAmount');
+  const parsedContributeAmount = parseUnits(contributeAmount || '0');
+
   // 3. ERC20代币授权相关逻辑（仅在非native代币时使用）
   const {
-    approve: approveParentToken,
-    isPending: isPendingApproveParentToken,
+    isApproved: isTokenApproved,
+    isChecking: isPendingAllowanceParentToken,
+    isApprovingTx: isPendingApproveParentToken,
     isConfirming: isConfirmingApproveParentToken,
-    isConfirmed: isConfirmedApproveParentToken,
-    writeError: errApproveParentToken,
-  } = useApprove(token?.parentTokenAddress as `0x${string}`);
-
-  // 新增状态变量，判断是否已授权足够额度（包括之前已授权）
-  const [isTokenApproved, setIsTokenApproved] = useState(false);
-
-  // 获取已授权额度（仅在非native代币时才读取）
-  const {
-    allowance: allowanceParentTokenApproved,
-    isPending: isPendingAllowanceParentToken,
-    error: errAllowanceParentToken,
-    refetch: refetchAllowance,
-  } = useAllowance(
-    token?.parentTokenAddress as `0x${string}`,
-    account as `0x${string}`,
-    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_LAUNCH as `0x${string}`,
-    !isNativeContribute, // 只有在非native代币时才读取授权额度
-  );
-
-  // 授权交易确认后，设置状态
-  useEffect(() => {
-    if (isConfirmedApproveParentToken && !isNativeContribute) {
-      setIsTokenApproved(true);
-      toast.success(`授权${token?.parentTokenSymbol}成功`);
-      // 授权成功后，刷新授权额度
-      refetchAllowance();
-    }
-  }, [isConfirmedApproveParentToken, token?.parentTokenSymbol, isNativeContribute, refetchAllowance]);
-
-  // 根据用户输入和已授权额度，判断是否满足当前申购数额的授权
-  const contributeAmount = form.watch('contributeAmount');
-  useEffect(() => {
-    if (isNativeContribute) {
-      setIsTokenApproved(true); // native代币不需要授权
-      return;
-    }
-
-    const parsedContributeToken = parseUnits(contributeAmount) ?? BigInt(0);
-    if (
-      parsedContributeToken > BigInt(0) &&
-      allowanceParentTokenApproved &&
-      allowanceParentTokenApproved > BigInt(0) &&
-      allowanceParentTokenApproved >= parsedContributeToken
-    ) {
-      setIsTokenApproved(true);
-    } else {
-      setIsTokenApproved(false);
-    }
-  }, [contributeAmount, allowanceParentTokenApproved, isNativeContribute]);
+    approve: approveParentToken,
+    error: errApproveParentToken,
+    approvalActionText,
+  } = useTokenApproval({
+    token: token?.parentTokenAddress as `0x${string}` | undefined,
+    owner: account as `0x${string}` | undefined,
+    spender: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_LAUNCH as `0x${string}`,
+    amount: parsedContributeAmount,
+    enabled: !isNativeContribute && !!token?.parentTokenAddress && !!account,
+    successMessage: `授权${token?.parentTokenSymbol}成功`,
+  });
 
   useEffect(() => {
     if (errorETHBalance) {
@@ -203,8 +169,7 @@ const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: Launch
   const onApprove = async (data: z.infer<ReturnType<typeof getFormSchema>>) => {
     try {
       // parseUnits 用于将 string 转换为 BigInt
-      const amountBigInt = parseUnits(data.contributeAmount) ?? BigInt(0);
-      await approveParentToken(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_LAUNCH as `0x${string}`, amountBigInt);
+      await approveParentToken();
     } catch (error) {
       console.error(error);
     }
@@ -405,7 +370,7 @@ const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: Launch
                     ) : isTokenApproved ? (
                       `1.${token?.parentTokenSymbol}已授权`
                     ) : (
-                      `1.授权${token?.parentTokenSymbol}`
+                      `1.${approvalActionText}${token?.parentTokenSymbol}`
                     )}
                   </Button>
 

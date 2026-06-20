@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +21,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 // my hooks
 import { formatTokenAmount } from '@/src/lib/format';
 import { useError } from '@/src/contexts/ErrorContext';
-import { useBalanceOf, useAllowance, useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import {
   useMint,
   useMaxGroupNameLength,
@@ -103,52 +104,22 @@ export default function MintGroup() {
     }
   }, [groupName, isValid, validationError, isValidationPending, form]);
 
-  // 授权相关
+  const approvalAmount = mintCost ? (mintCost * BigInt(1001)) / BigInt(1000) : BigInt(0);
   const {
-    approve,
-    isPending: isPendingApprove,
+    isApproved: isTokenApproved,
+    isChecking: isPendingAllowance,
+    isApprovingTx: isPendingApprove,
     isConfirming: isConfirmingApprove,
-    isConfirmed: isConfirmedApprove,
-  } = useApprove(FIRST_TOKEN_ADDRESS);
-
-  const [isTokenApproved, setIsTokenApproved] = useState(false);
-
-  // 获取已授权额度
-  const {
-    allowance,
-    isPending: isPendingAllowance,
-    error: errAllowance,
-    refetch: refetchAllowance,
-  } = useAllowance(FIRST_TOKEN_ADDRESS, account as `0x${string}`, GROUP_CONTRACT_ADDRESS);
-
-  // 授权交易确认后，设置状态
-  const hasHandledApproveSuccessRef = useRef(false);
-
-  // 当开始新的授权交易时，重置成功标记
-  useEffect(() => {
-    if (isPendingApprove) {
-      hasHandledApproveSuccessRef.current = false;
-    }
-  }, [isPendingApprove]);
-
-  useEffect(() => {
-    if (isConfirmedApprove && !hasHandledApproveSuccessRef.current) {
-      hasHandledApproveSuccessRef.current = true;
-      setIsTokenApproved(true);
-      toast.success('授权成功');
-      // 授权成功后，刷新授权额度
-      refetchAllowance();
-    }
-  }, [isConfirmedApprove, refetchAllowance]);
-
-  // 根据铸造成本和已授权额度，判断是否满足授权
-  useEffect(() => {
-    if (mintCost && mintCost > BigInt(0) && allowance && allowance >= mintCost) {
-      setIsTokenApproved(true);
-    } else {
-      setIsTokenApproved(false);
-    }
-  }, [mintCost, allowance]);
+    approve,
+    approvalActionText,
+  } = useTokenApproval({
+    token: FIRST_TOKEN_ADDRESS,
+    owner: account as `0x${string}` | undefined,
+    spender: GROUP_CONTRACT_ADDRESS,
+    amount: approvalAmount,
+    enabled: !!account && approvalAmount > BigInt(0),
+    successMessage: '授权成功',
+  });
 
   const onApprove = async () => {
     if (!mintCost || mintCost <= BigInt(0)) {
@@ -156,9 +127,7 @@ export default function MintGroup() {
       return;
     }
     try {
-      // 授权 mintCost 的 100.1%，避免铸造价格变化
-      const approveAmount = (mintCost * BigInt(1001)) / BigInt(1000);
-      await approve(GROUP_CONTRACT_ADDRESS, approveAmount);
+      await approve();
     } catch (error) {
       console.error(error);
     }
@@ -358,7 +327,7 @@ export default function MintGroup() {
                 ) : isTokenApproved ? (
                   '1.已授权'
                 ) : (
-                  '1.授权'
+                  `1.${approvalActionText}`
                 )}
               </Button>
 

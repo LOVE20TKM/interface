@@ -79,9 +79,7 @@ const AmountInput = ({
             <div />
           )}
 
-          <span className="text-sm text-gray-600">
-            {formatTokenAmount(balance || BigInt(0))} {token.symbol}
-          </span>
+          <span className="text-sm text-gray-600">{formatTokenAmount(balance || BigInt(0))}</span>
         </div>
 
         {maxNativeInputLimit && (

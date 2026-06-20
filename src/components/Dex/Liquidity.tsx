@@ -21,7 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 // my funcs
 import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/src/lib/format';
 // my hooks
-import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useAddLiquidity, useAddLiquidityETH } from '@/src/hooks/contracts/useUniswapV2Router';
 import { useLiquidityPageData } from '@/src/hooks/composite/useLiquidityPageData';
 
@@ -199,8 +199,6 @@ const LiquidityPanel = () => {
   const {
     baseBalance,
     targetBalance: tokenBalance,
-    baseAllowance,
-    targetAllowance,
     lpBalance,
     lpTotalSupply,
     pairAddress,
@@ -286,50 +284,47 @@ const LiquidityPanel = () => {
   // --------------------------------------------------
   // 5. 授权逻辑
   // --------------------------------------------------
-  const [isBaseTokenApproved, setIsBaseTokenApproved] = useState(false);
-  const [isTokenApproved, setIsTokenApproved] = useState(false);
-
-  // 根据授权额度判断授权状态
-  useEffect(() => {
-    if (parsedBaseAmount && baseAllowance !== undefined) {
-      setIsBaseTokenApproved(baseAllowance >= parsedBaseAmount);
-    } else if (baseToken.isNative) {
-      setIsBaseTokenApproved(true); // 原生代币不需要授权
-    } else {
-      setIsBaseTokenApproved(false);
-    }
-  }, [parsedBaseAmount, baseAllowance, baseToken.isNative]);
-
-  useEffect(() => {
-    if (parsedTokenAmount && targetAllowance !== undefined) {
-      setIsTokenApproved(targetAllowance >= parsedTokenAmount);
-    } else {
-      setIsTokenApproved(false);
-    }
-  }, [parsedTokenAmount, targetAllowance]);
-
-  const {
-    approve: approveBaseToken,
-    isPending: isPendingApproveBase,
-    isConfirming: isConfirmingApproveBase,
-    isConfirmed: isConfirmedApproveBase,
-    writeError: errApproveBase,
-  } = useApprove(baseToken.address);
-
-  const {
-    approve: approveToken,
-    isPending: isPendingApproveToken,
-    isConfirming: isConfirmingApproveToken,
-    isConfirmed: isConfirmedApproveToken,
-    writeError: errApproveToken,
-  } = useApprove(targetToken?.address as `0x${string}`);
-
   const spenderAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER as `0x${string}`;
+
+  const {
+    isApproved: isBaseTokenApprovedRaw,
+    isChecking: isPendingApproveBaseAllowance,
+    isApprovingTx: isPendingApproveBase,
+    isConfirming: isConfirmingApproveBase,
+    approve: approveBaseToken,
+    error: errApproveBase,
+    approvalActionText: baseApprovalActionText,
+  } = useTokenApproval({
+    token: baseToken.address,
+    owner: account as `0x${string}` | undefined,
+    spender: spenderAddress,
+    amount: parsedBaseAmount,
+    enabled: !baseToken.isNative && !!account && parsedBaseAmount > BigInt(0),
+    successMessage: `授权${baseToken.symbol}成功`,
+  });
+
+  const {
+    isApproved: isTokenApproved,
+    isChecking: isPendingApproveTokenAllowance,
+    isApprovingTx: isPendingApproveToken,
+    isConfirming: isConfirmingApproveToken,
+    approve: approveToken,
+    error: errApproveToken,
+    approvalActionText: tokenApprovalActionText,
+  } = useTokenApproval({
+    token: targetToken?.address as `0x${string}` | undefined,
+    owner: account as `0x${string}` | undefined,
+    spender: spenderAddress,
+    amount: parsedTokenAmount,
+    enabled: !!targetToken?.address && !!account && parsedTokenAmount > BigInt(0),
+    successMessage: `授权${targetToken?.symbol}成功`,
+  });
+
+  const isBaseTokenApproved = baseToken.isNative || isBaseTokenApprovedRaw;
 
   const handleApproveBase = form.handleSubmit(async () => {
     try {
-      const amount = parseUnits(baseTokenValue || '0');
-      await approveBaseToken(spenderAddress, amount);
+      await approveBaseToken();
     } catch (error: any) {
       console.error(error);
     }
@@ -337,26 +332,11 @@ const LiquidityPanel = () => {
 
   const handleApproveToken = form.handleSubmit(async () => {
     try {
-      const amount = parseUnits(tokenAmountValue || '0');
-      await approveToken(spenderAddress, amount);
+      await approveToken();
     } catch (error: any) {
       console.error(error);
     }
   });
-
-  useEffect(() => {
-    if (isConfirmedApproveBase) {
-      setIsBaseTokenApproved(true);
-      toast.success(`授权${baseToken.symbol}成功`);
-    }
-  }, [isConfirmedApproveBase, baseToken.symbol]);
-
-  useEffect(() => {
-    if (isConfirmedApproveToken) {
-      setIsTokenApproved(true);
-      toast.success(`授权${targetToken?.symbol}成功`);
-    }
-  }, [isConfirmedApproveToken, targetToken?.symbol]);
 
   // --------------------------------------------------
   // 6. 添加流动性逻辑
@@ -520,8 +500,6 @@ const LiquidityPanel = () => {
         tokenAmount: '',
         baseTokenAddress: baseToken.address,
       });
-      setIsBaseTokenApproved(false);
-      setIsTokenApproved(false);
 
       // 立即刷新一次
       refreshLiquidityData();
@@ -699,9 +677,7 @@ const LiquidityPanel = () => {
                               最高
                             </Button>
                           </div>
-                          <span className="text-sm text-gray-600">
-                            {formatTokenAmount(baseBalance || BigInt(0))} {baseToken.symbol}
-                          </span>
+                          <span className="text-sm text-gray-600">{formatTokenAmount(baseBalance || BigInt(0))}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -769,9 +745,7 @@ const LiquidityPanel = () => {
                               最高
                             </Button>
                           </div>
-                          <span className="text-sm text-gray-600">
-                            {formatTokenAmount(tokenBalance || BigInt(0))} {targetToken.symbol}
-                          </span>
+                          <span className="text-sm text-gray-600">{formatTokenAmount(tokenBalance || BigInt(0))}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -927,30 +901,42 @@ const LiquidityPanel = () => {
               <Button
                 type="button"
                 className="flex-1 lg:w-auto lg:px-4"
-                disabled={isPendingApproveBase || isConfirmingApproveBase || isBaseTokenApproved}
+                disabled={
+                  isPendingApproveBaseAllowance || isPendingApproveBase || isConfirmingApproveBase || isBaseTokenApproved
+                }
                 onClick={handleApproveBase}
               >
-                {isPendingApproveBase
+                {isPendingApproveBaseAllowance
+                  ? '1.读取授权...'
+                  : isPendingApproveBase
                   ? '1.授权中...'
                   : isConfirmingApproveBase
                   ? '1.确认中...'
                   : isBaseTokenApproved
                   ? `1.${baseToken.symbol}已授权`
-                  : `1.授权${baseToken.symbol}`}
+                  : `1.${baseApprovalActionText}${baseToken.symbol}`}
               </Button>
               <Button
                 type="button"
                 className="flex-1 lg:w-auto lg:px-4"
-                disabled={!isBaseTokenApproved || isPendingApproveToken || isConfirmingApproveToken || isTokenApproved}
+                disabled={
+                  !isBaseTokenApproved ||
+                  isPendingApproveTokenAllowance ||
+                  isPendingApproveToken ||
+                  isConfirmingApproveToken ||
+                  isTokenApproved
+                }
                 onClick={handleApproveToken}
               >
-                {isPendingApproveToken
+                {isPendingApproveTokenAllowance
+                  ? '2.读取授权...'
+                  : isPendingApproveToken
                   ? '2.授权中...'
                   : isConfirmingApproveToken
                   ? '2.确认中...'
                   : isTokenApproved
                   ? `2.${targetToken.symbol}已授权`
-                  : `2.授权${targetToken.symbol}`}
+                  : `2.${tokenApprovalActionText}${targetToken.symbol}`}
               </Button>
               <Button
                 className="flex-1 lg:w-auto lg:px-4"

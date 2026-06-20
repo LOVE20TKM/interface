@@ -33,7 +33,7 @@ import { useError } from '@/src/contexts/ErrorContext';
 import { useTrialMode } from '@/src/contexts/TrialModeContext';
 
 // hooks
-import { useApprove } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useAcquireLpJump } from '@/src/hooks/composite/useAcquireLpJump';
 import { useExtensionsByActionIdsWithCache } from '@/src/hooks/extension/base/composite/useExtensionsByActionIdsWithCache';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
@@ -125,11 +125,8 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     isActionIdVoted,
     joinedAmount,
     balance,
-    allowance,
     verificationInfos: existingVerificationInfos,
     isPending: isPendingJoinInfo,
-    isPendingAllowance,
-    refetchAllowance,
   } = useGetInfoForJoin({
     tokenAddress: token?.address as `0x${string}`,
     extensionAddress,
@@ -237,9 +234,6 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     return isActionIdVoted === true;
   }, [isPendingJoinInfo, isActionIdVoted]);
 
-  // 授权状态
-  const [isTokenApproved, setIsTokenApproved] = useState(false);
-
   // 动态构造 zod schema
   const formSchema = z.object({
     joinAmount: z
@@ -312,13 +306,24 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     }
   }, [isPendingJoinInfo, existingVerificationInfos, verificationKeys, form]);
 
-  // 授权
+  const joinAmount = form.watch('joinAmount');
+  const parsedJoinAmount = parseUnits(joinAmount || '0') ?? BigInt(0);
+
   const {
+    isApproved: isTokenApproved,
     approve,
-    isPending: isPendingApprove,
+    isChecking: isPendingAllowance,
+    isApprovingTx: isPendingApprove,
     isConfirming: isConfirmingApprove,
-    isConfirmed: isConfirmedApprove,
-  } = useApprove(joinTokenAddress as `0x${string}`);
+    approvalActionText,
+  } = useTokenApproval({
+    token: joinTokenAddress as `0x${string}` | undefined,
+    owner: account as `0x${string}` | undefined,
+    spender: GROUP_JOIN_CONTRACT_ADDRESS,
+    amount: parsedJoinAmount,
+    enabled: !!joinTokenAddress && !!account && parsedJoinAmount > BigInt(0) && !uiIsTrialMode,
+    successMessage: '授权代币成功',
+  });
 
   const approveButtonRef = useRef<HTMLButtonElement>(null);
   const prevIsPendingAllowanceRef = useRef(isPendingAllowance);
@@ -338,32 +343,11 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     }
 
     try {
-      await approve(GROUP_JOIN_CONTRACT_ADDRESS, joinAmount);
+      await approve();
     } catch (error) {
       console.error('Approve failed', error);
     }
   }
-
-  useEffect(() => {
-    if (isConfirmedApprove) {
-      setIsTokenApproved(true);
-      toast.success('授权代币成功');
-      // 授权成功后，刷新授权额度
-      refetchAllowance();
-    }
-  }, [isConfirmedApprove, refetchAllowance]);
-
-  // 监听用户输入的加入数量及链上返回的授权额度判断是否已授权
-  const joinAmount = form.watch('joinAmount');
-  const parsedJoinAmount = parseUnits(joinAmount || '0') ?? BigInt(0);
-
-  useEffect(() => {
-    if (parsedJoinAmount > BigInt(0) && allowance && allowance > BigInt(0) && allowance >= parsedJoinAmount) {
-      setIsTokenApproved(true);
-    } else {
-      setIsTokenApproved(false);
-    }
-  }, [parsedJoinAmount, isPendingAllowance, allowance]);
 
   // 加入提交
   const {
@@ -689,7 +673,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                   ) : isTokenApproved ? (
                     `1.代币已授权`
                   ) : (
-                    `1.授权代币`
+                    `1.${approvalActionText}代币`
                   )}
                 </Button>
               )}

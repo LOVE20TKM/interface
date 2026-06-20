@@ -15,6 +15,7 @@ import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useApprove as useApproveST } from '@/src/hooks/contracts/useLOVE20STToken';
 import { useApprove as useApproveSL } from '@/src/hooks/contracts/useLOVE20SLToken';
 import { useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApprovalPreference } from '@/src/hooks/contracts/useTokenApproval';
 
 // my contexts
 import { Token } from '@/src/contexts/TokenContext';
@@ -37,6 +38,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
   onStakeStatusChange,
 }) => {
   const { address: account } = useAccount();
+  const { approvalActionText } = useTokenApprovalPreference();
 
   // Hook：获取当前轮次
   const { currentRound, isPending: isPendingCurrentRound, error: errorCurrentRound } = useCurrentRound();
@@ -331,7 +333,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
                     ? '1.确认中...'
                     : isSlTokenApproved
                     ? `1.sl${token?.symbol} 已授权`
-                    : `1.授权 sl${token?.symbol}`}
+                    : `1.${approvalActionText} sl${token?.symbol}`}
                 </Button>
                 <Button
                   className="w-1/3"
@@ -344,7 +346,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
                     ? '2.确认中...'
                     : isStTokenApproved
                     ? `2.st${token?.symbol} 已授权`
-                    : `2.授权 st${token?.symbol}`}
+                    : `2.${approvalActionText} st${token?.symbol}`}
                 </Button>
                 <Button
                   className="w-1/3"

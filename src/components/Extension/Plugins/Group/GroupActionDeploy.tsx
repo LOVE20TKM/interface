@@ -26,6 +26,7 @@ import { useError } from '@/src/contexts/ErrorContext';
 
 // hooks
 import { useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApprovalPreference } from '@/src/hooks/contracts/useTokenApproval';
 import { useCanSubmit } from '@/src/hooks/composite/useCanSubmit';
 import { useCreateExtension } from '@/src/hooks/extension/plugins/group/contracts/useExtensionGroupActionFactory';
 
@@ -87,6 +88,7 @@ type FormValues = z.infer<typeof formSchema>;
  * 链群行动扩展部署组件
  */
 export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployProps) {
+  const { approvalActionText } = useTokenApprovalPreference();
   const context = useContext(TokenContext);
   const tokenAddress = context?.token?.address || ('' as `0x${string}`);
   const tokenSymbol = context?.token?.symbol || '';
@@ -459,7 +461,7 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                         ? '1.确认中...'
                         : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
                         ? '1.代币已授权'
-                        : '1.代币授权'}
+                        : `1.${approvalActionText}代币`}
                     </Button>
 
                     <Button

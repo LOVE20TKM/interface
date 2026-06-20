@@ -9,6 +9,7 @@ interface SwapButtonProps {
   onApprove: () => void;
   onSwap: () => void;
   disabled?: boolean;
+  approvalActionText?: string;
 }
 
 const SwapButton = ({
@@ -20,11 +21,12 @@ const SwapButton = ({
   onApprove,
   onSwap,
   disabled,
+  approvalActionText = '授权',
 }: SwapButtonProps) => {
   const getApproveButtonText = () => {
     if (isApproving) return '1.授权中...';
     if (isApproved) return '1.已授权';
-    return '1.授权';
+    return `1.${approvalActionText}`;
   };
 
   const getSwapButtonText = () => {

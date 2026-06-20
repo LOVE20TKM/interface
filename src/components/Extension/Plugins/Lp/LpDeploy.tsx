@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { useCreateExtension } from '@/src/hooks/extension/plugins/lp/contracts/useExtensionLpFactory';
 import { ExtensionLpFactoryAbi } from '@/src/abis/ExtensionLpFactory';
 import { useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApprovalPreference } from '@/src/hooks/contracts/useTokenApproval';
 import { useCanSubmit } from '@/src/hooks/composite/useCanSubmit';
 import {
   ExtensionType,
@@ -66,6 +67,7 @@ type FormValues = z.infer<typeof formSchema>;
  * LP扩展部署组件
  */
 export default function LpDeploy({ factoryAddress }: LpDeployProps) {
+  const { approvalActionText } = useTokenApprovalPreference();
   const extensionConfig = getExtensionConfigByFactory(factoryAddress);
   const recommendedLpConfig = getRecommendedExtensionConfigByType(ExtensionType.LP);
   const context = useContext(TokenContext);
@@ -417,7 +419,7 @@ export default function LpDeploy({ factoryAddress }: LpDeployProps) {
                         ? '1.确认中...'
                         : approvalStep === 'approved' || approvalStep === 'deploying' || approvalStep === 'deployed'
                         ? '1.代币已授权'
-                        : '1.代币授权'}
+                        : `1.${approvalActionText}代币`}
                     </Button>
 
                     <Button

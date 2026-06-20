@@ -19,7 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 // my funcs
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
 // my hooks
-import { useApprove, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useRemoveLiquidity, useRemoveLiquidityETH } from '@/src/hooks/contracts/useUniswapV2Router';
 
 // my components
@@ -95,11 +95,6 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
   // 1. LP代币授权查询
   // --------------------------------------------------
   const spenderAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER as `0x${string}`;
-  const {
-    allowance: lpAllowance,
-    refetch: refetchAllowance,
-  } = useAllowance(pairAddress, account as `0x${string}`, spenderAddress);
-
   // --------------------------------------------------
   // 2. 表单设置
   // --------------------------------------------------
@@ -138,42 +133,30 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
   // --------------------------------------------------
   // 4. LP代币授权逻辑
   // --------------------------------------------------
-  const [isLPApproved, setIsLPApproved] = useState(false);
-
-  // 根据授权额度判断授权状态
-  useEffect(() => {
-    if (parsedLPAmount && lpAllowance !== undefined) {
-      setIsLPApproved(lpAllowance >= parsedLPAmount);
-    } else {
-      setIsLPApproved(false);
-    }
-  }, [parsedLPAmount, lpAllowance]);
-
   const {
-    approve: approveLPToken,
-    isPending: isPendingApproveLP,
+    isApproved: isLPApproved,
+    isChecking: isPendingLPAllowance,
+    isApprovingTx: isPendingApproveLP,
     isConfirming: isConfirmingApproveLP,
-    isConfirmed: isConfirmedApproveLP,
-    writeError: errApproveLP,
-  } = useApprove(pairAddress);
+    approve: approveLPToken,
+    error: errApproveLP,
+    approvalActionText,
+  } = useTokenApproval({
+    token: pairAddress,
+    owner: account as `0x${string}` | undefined,
+    spender: spenderAddress,
+    amount: parsedLPAmount,
+    enabled: !!pairAddress && !!account && parsedLPAmount > BigInt(0),
+    successMessage: 'LP代币授权成功',
+  });
 
   const handleApproveLP = form.handleSubmit(async () => {
     try {
-      const amount = parseUnits(lpAmountValue || '0');
-      await approveLPToken(spenderAddress, amount);
+      await approveLPToken();
     } catch (error: any) {
       console.error(error);
     }
   });
-
-  useEffect(() => {
-    if (isConfirmedApproveLP) {
-      setIsLPApproved(true);
-      toast.success('LP代币授权成功');
-      // 授权成功后，刷新授权额度
-      refetchAllowance();
-    }
-  }, [isConfirmedApproveLP, refetchAllowance]);
 
   // --------------------------------------------------
   // 5. 撤销流动性逻辑
@@ -273,7 +256,6 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
         lpAmount: '',
         baseTokenAddress: baseToken.address,
       });
-      setIsLPApproved(false);
 
       // 延迟刷新数据
       setTimeout(() => {
@@ -525,16 +507,18 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
             <Button
               type="button"
               className="flex-1 lg:w-auto lg:px-4"
-              disabled={isPendingApproveLP || isConfirmingApproveLP || isLPApproved}
+              disabled={isPendingLPAllowance || isPendingApproveLP || isConfirmingApproveLP || isLPApproved}
               onClick={handleApproveLP}
             >
-              {isPendingApproveLP
+              {isPendingLPAllowance
+                ? '读取授权...'
+                : isPendingApproveLP
                 ? '授权中...'
                 : isConfirmingApproveLP
                 ? '确认中...'
                 : isLPApproved
                 ? 'LP已授权'
-                : '授权LP代币'}
+                : `${approvalActionText}LP代币`}
             </Button>
             <Button
               className="flex-1 lg:w-auto lg:px-4"

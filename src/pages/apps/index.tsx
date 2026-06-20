@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Repeat2,
   SendHorizontal,
+  Shield,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -55,6 +56,11 @@ const appSections: AppSection[] = [
         name: "代币转账",
         href: (symbol?: string) => (symbol ? `/token/transfer/?symbol=${symbol}` : "/token/transfer/"),
         icon: SendHorizontal,
+      },
+      {
+        name: "代币授权",
+        href: (symbol?: string) => (symbol ? `/token/approvals/?symbol=${symbol}` : "/token/approvals/"),
+        icon: Shield,
       },
       ...(isBatchTransferEnabled
         ? [

@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useContext, useEffect, useState, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 import { toast } from 'react-hot-toast';
@@ -18,7 +18,8 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 
 // my hooks
 import { formatTokenAmount, formatUnits, parseUnits } from '@/src/lib/format';
-import { useApprove, useBalanceOf, useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
+import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useJoin, useJoinedAmountByActionId } from '@/src/hooks/contracts/useLOVE20Join';
 import { useVerificationInfosByAccount } from '@/src/hooks/contracts/useLOVE20RoundViewer';
 import { calculateTokensFor100Percent } from '@/src/lib/probabilityUtils';
@@ -58,17 +59,6 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
     account as `0x${string}`,
   );
 
-  // 获取已授权数量
-  const {
-    allowance: allowanceToken,
-    isPending: isPendingAllowanceToken,
-    error: errAllowanceToken,
-    refetch: refetchAllowance,
-  } = useAllowance(
-    token?.address as `0x${string}`,
-    account as `0x${string}`,
-    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`,
-  );
 
   // 获取验证信息
   const {
@@ -88,8 +78,6 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
     BigInt(actionInfo.head.id),
   );
 
-  // 定义授权状态变量：是否已完成代币授权
-  const [isTokenApproved, setIsTokenApproved] = useState(false);
 
   // 计算达到100%概率所需的代币数
   const tokensFor100Percent =
@@ -173,16 +161,24 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
     }
   }, [oldUserVerificationInfos, verificationKeys, form, actionInfo.body.verificationKeys]);
 
-  // ------------------------------
-  //  授权(approve)
-  // ------------------------------
+  // 监听用户输入的质押数量及链上返回的授权额度判断是否已授权
+  const additionalStakeAmount = form.watch('additionalStakeAmount');
+  const parsedStakeAmount = parseUnits(additionalStakeAmount || '0') ?? BigInt(0);
   const {
-    approve: approveToken,
-    isPending: isPendingApprove,
+    isApproved: isTokenApproved,
+    isChecking: isPendingAllowanceToken,
+    isApprovingTx: isPendingApprove,
     isConfirming: isConfirmingApprove,
-    isConfirmed: isConfirmedApprove,
-    writeError: errApprove,
-  } = useApprove(token?.address as `0x${string}`);
+    approve: approveToken,
+    approvalActionText,
+  } = useTokenApproval({
+    token: token?.address as `0x${string}` | undefined,
+    owner: account as `0x${string}` | undefined,
+    spender: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`,
+    amount: parsedStakeAmount,
+    enabled: !!token?.address && !!account,
+    successMessage: `授权${token?.symbol}成功`,
+  });
 
   // 新增：为授权按钮设置 ref ，用于在授权等待状态结束后调用 blur() 取消 hover 效果
   const approveButtonRef = useRef<HTMLButtonElement>(null);
@@ -204,37 +200,11 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
     }
 
     try {
-      await approveToken(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`, newStake);
+      await approveToken();
     } catch (error) {
       console.error('Approve failed', error);
     }
   }
-
-  // 监听授权交易确认后更新状态
-  useEffect(() => {
-    if (isConfirmedApprove) {
-      setIsTokenApproved(true);
-      toast.success(`授权${token?.symbol}成功`);
-      // 授权成功后，刷新授权额度
-      refetchAllowance();
-    }
-  }, [isConfirmedApprove, token?.symbol, refetchAllowance]);
-
-  // 监听用户输入的质押数量及链上返回的授权额度判断是否已授权
-  const additionalStakeAmount = form.watch('additionalStakeAmount');
-  const parsedStakeAmount = parseUnits(additionalStakeAmount || '0') ?? BigInt(0);
-  useEffect(() => {
-    if (
-      parsedStakeAmount > BigInt(0) &&
-      allowanceToken &&
-      allowanceToken > BigInt(0) &&
-      allowanceToken >= parsedStakeAmount
-    ) {
-      setIsTokenApproved(true);
-    } else {
-      setIsTokenApproved(false);
-    }
-  }, [parsedStakeAmount, isPendingAllowanceToken, allowanceToken]);
 
   // ------------------------------
   //  加入提交
@@ -418,7 +388,7 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
                 ) : isTokenApproved ? (
                   `1.${token?.symbol}已授权`
                 ) : (
-                  `1.授权${token?.symbol}`
+                  `1.${approvalActionText}${token?.symbol}`
                 )}
               </Button>
 

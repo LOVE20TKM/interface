@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useAllowance, useApprove, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
+import { useTokenApprovalPreference } from '@/src/hooks/contracts/useTokenApproval';
 import { useCalculateMintCost, useLove20Token } from '@/src/hooks/extension/base/contracts/useLOVE20Group';
 import { formatTokenAmount } from '@/src/lib/format';
 import { FIRST_TOKEN_SYMBOL, ZERO_ADDRESS } from './chatConstants';
@@ -67,6 +68,7 @@ export function ManagerActivationForm({
   onBack?: () => void;
 }) {
   const { love20Token } = useLove20Token();
+  const { approvalActionText } = useTokenApprovalPreference();
   const paymentToken = love20Token || (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_FIRST_TOKEN as `0x${string}` | undefined);
   const { mintCost, isPending: isPendingMintCost } = useCalculateMintCost('GroupChatCost');
   const { balance, isPending: isPendingBalance } = useBalanceOf(
@@ -175,7 +177,7 @@ export function ManagerActivationForm({
       ? '1.确认授权...'
       : approved
         ? '1.已授权'
-        : '1.授权';
+        : `1.${approvalActionText}`;
   const activateLabel = isPending
     ? requiresApproval
       ? '2.提交中...'

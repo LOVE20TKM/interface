@@ -23,6 +23,7 @@ interface GroupTokenApproveButtonsProps {
   actionLabelPending?: string; // 操作中的标签
   actionLabelConfirming?: string; // 确认中的标签
   actionLabelConfirmed?: string; // 已完成的标签
+  approvalActionText?: string;
   disableApprove?: boolean; // 授权按钮的额外禁用条件
   disableAction?: boolean; // 操作按钮的额外禁用条件
 }
@@ -41,6 +42,7 @@ const _GroupTokenApproveButtons: React.FC<GroupTokenApproveButtonsProps> = ({
   actionLabelPending,
   actionLabelConfirming,
   actionLabelConfirmed,
+  approvalActionText = '授权',
   disableApprove = false,
   disableAction = false,
 }) => {
@@ -52,7 +54,13 @@ const _GroupTokenApproveButtons: React.FC<GroupTokenApproveButtonsProps> = ({
         type="button"
         onClick={onApprove}
       >
-        {isTokenApproved ? `1.${tokenSymbol}已授权` : `1.授权${tokenSymbol}`}
+        {isPendingApprove
+          ? '1.提交中...'
+          : isConfirmingApprove
+          ? '1.确认中...'
+          : isTokenApproved
+          ? `1.${tokenSymbol}已授权`
+          : `1.${approvalActionText}${tokenSymbol}`}
       </Button>
       <Button
         className="w-1/2"

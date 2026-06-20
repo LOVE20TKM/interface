@@ -7,6 +7,7 @@ import { LOVE20SLTokenAbi } from '@/src/abis/LOVE20SLToken';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logWeb3Error, logError } from '@/src/lib/debugUtils';
+import { resolveTokenApprovalValue, type TokenApprovalMode } from '@/src/lib/tokenApproval';
 
 // =====================
 // === 读取 Hook ===
@@ -234,9 +235,16 @@ export const useApprove = (address: `0x${string}`) => {
     'approve',
   );
 
-  const approve = async (spender: `0x${string}`, value: bigint) => {
-    console.log('提交approve交易:', { address, spender, value, isTukeMode });
-    return await execute([spender, value]);
+  const approve = async (
+    spender: `0x${string}`,
+    value: bigint,
+    options?: {
+      approvalMode?: TokenApprovalMode;
+    },
+  ) => {
+    const finalValue: bigint = resolveTokenApprovalValue(value, options?.approvalMode);
+    console.log('提交approve交易:', { address, spender, value: finalValue, isTukeMode });
+    return await execute([spender, finalValue]);
   };
 
   // 错误日志记录
