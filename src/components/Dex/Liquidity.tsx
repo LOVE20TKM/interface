@@ -897,10 +897,10 @@ const LiquidityPanel = () => {
             </div>
 
             {/* 授权和确认按钮 */}
-            <div className="flex justify-center lg:justify-start space-x-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-center lg:justify-start">
               <Button
                 type="button"
-                className="flex-1 lg:w-auto lg:px-4"
+                className="w-full sm:flex-1 lg:w-auto lg:px-4"
                 disabled={
                   isPendingApproveBaseAllowance || isPendingApproveBase || isConfirmingApproveBase || isBaseTokenApproved
                 }
@@ -918,7 +918,7 @@ const LiquidityPanel = () => {
               </Button>
               <Button
                 type="button"
-                className="flex-1 lg:w-auto lg:px-4"
+                className="w-full sm:flex-1 lg:w-auto lg:px-4"
                 disabled={
                   !isBaseTokenApproved ||
                   isPendingApproveTokenAllowance ||
@@ -939,7 +939,7 @@ const LiquidityPanel = () => {
                   : `2.${tokenApprovalActionText}${targetToken.symbol}`}
               </Button>
               <Button
-                className="flex-1 lg:w-auto lg:px-4"
+                className="w-full sm:flex-1 lg:w-auto lg:px-4"
                 onClick={handleAddLiquidity}
                 disabled={
                   !isBaseTokenApproved ||
