@@ -6,7 +6,7 @@
     "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" NEXT_TELEMETRY_DISABLED=1 next dev --hostname 0.0.0.0 --port 3000",
     "dev:fast": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" NEXT_TELEMETRY_DISABLED=1 SENTRY_TUNNEL=false next dev --hostname 0.0.0.0 --port 3000",
     "build": "npx next build",
-    "test": "node scripts/checkTokenSwitchRoutes.js && cross-env NODE_ENV=test npx next build",
+    "test": "node scripts/checkTokenSwitchRoutes.js && node scripts/checkLiquidityAmountInput.js && cross-env NODE_ENV=test npx next build",
     "public-test": "cp .env.public_test .env.local && npx next build",
     "verify:group-chat": "node scripts/verifyGroupChatPublicTest.js",
     "verify:group-chat:rpc": "node scripts/verifyGroupChatPublicTest.js --rpc",

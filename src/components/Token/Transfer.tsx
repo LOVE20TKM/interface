@@ -29,6 +29,7 @@ import { useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { LOVE20TokenAbi } from '@/src/abis/LOVE20Token';
 import { safeToBigInt } from '@/src/lib/clientUtils';
 import { buildSupportedTokenOptions, TokenOption, ZERO_ADDRESS } from '@/src/lib/tokenOptions';
+import { assetProtectionPreference } from '@/src/lib/uiPreferences';
 
 import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -388,6 +389,12 @@ const TransferPanel = () => {
   const [addressConversionInfo, setAddressConversionInfo] = useState('');
   const [convertedAddress, setConvertedAddress] = useState<`0x${string}` | null>(null);
   const [isAssetProtectionEnabled, setIsAssetProtectionEnabled] = useState(true);
+  useEffect(() => {
+    const syncPreference = () => setIsAssetProtectionEnabled(assetProtectionPreference.get());
+    syncPreference();
+    window.addEventListener(assetProtectionPreference.eventName, syncPreference);
+    return () => window.removeEventListener(assetProtectionPreference.eventName, syncPreference);
+  }, []);
   const {
     lookupMode: nftLookupMode,
     setLookupMode: setNftLookupMode,
@@ -805,7 +812,7 @@ const TransferPanel = () => {
                   type="checkbox"
                   className="checkbox accent-secondary mt-0.5"
                   checked={isAssetProtectionEnabled}
-                  onChange={(event) => setIsAssetProtectionEnabled(event.target.checked)}
+                  onChange={(event) => assetProtectionPreference.set(event.target.checked)}
                 />
                 <div className="min-w-0">
                   <div className="text-sm font-medium text-amber-900">资产保护开关</div>

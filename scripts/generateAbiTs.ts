@@ -59,7 +59,7 @@ const coreFilesToConvert = [
   'UniswapV2Pair',
 ];
 
-const peripheralFilesToConvert = ['LOVE20TokenViewer', 'LOVE20RoundViewer', 'LOVE20MintViewer', 'LOVE20Hub'];
+const peripheralFilesToConvert = ['LOVE20TokenViewer', 'LOVE20RoundViewer', 'LOVE20MintViewer', 'LOVE20Hub', 'UniswapV2Zap'];
 
 const groupFilesToConvert = ['LOVE20Group', 'GroupDefaults'];
 

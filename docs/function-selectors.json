@@ -630,6 +630,12 @@
     "selector": "0x176c4edc"
   },
   {
+    "contract": "UniswapV2Zap",
+    "functionName": "wrappedNativeToken",
+    "signature": "wrappedNativeToken()",
+    "selector": "0x17fcb39b"
+  },
+  {
     "contract": "LOVE20Group",
     "functionName": "totalSupply",
     "signature": "totalSupply()",
@@ -1774,6 +1780,12 @@
     "functionName": "launchedChildTokensByPage",
     "signature": "launchedChildTokensByPage(address,uint256,uint256)",
     "selector": "0x43e10458"
+  },
+  {
+    "contract": "UniswapV2Zap",
+    "functionName": "zapNativeToken",
+    "signature": "zapNativeToken(address,uint256,uint256,uint256,uint256,address,uint256)",
+    "selector": "0x44003d1c"
   },
   {
     "contract": "GroupMember",
@@ -4392,6 +4404,12 @@
     "selector": "0xc45a0155"
   },
   {
+    "contract": "UniswapV2Zap",
+    "functionName": "factory",
+    "signature": "factory()",
+    "selector": "0xc45a0155"
+  },
+  {
     "contract": "VerificationInfo",
     "functionName": "factory",
     "signature": "factory()",
@@ -4516,6 +4534,12 @@
     "functionName": "groupIdsByVerifierAtIndex",
     "signature": "groupIdsByVerifierAtIndex(address,uint256,address,uint256)",
     "selector": "0xc94315ad"
+  },
+  {
+    "contract": "UniswapV2Zap",
+    "functionName": "zapToken",
+    "signature": "zapToken(tuple)",
+    "selector": "0xc992442a"
   },
   {
     "contract": "TokenActionGovManager",
@@ -4756,6 +4780,12 @@
     "functionName": "randomAddress",
     "signature": "randomAddress()",
     "selector": "0xd5bee9f5"
+  },
+  {
+    "contract": "UniswapV2Zap",
+    "functionName": "quoteZapToken",
+    "signature": "quoteZapToken(address,address,uint256,uint256)",
+    "selector": "0xd5c043c6"
   },
   {
     "contract": "GroupJoin",
@@ -5448,6 +5478,12 @@
     "selector": "0xf305d719"
   },
   {
+    "contract": "UniswapV2Zap",
+    "functionName": "quoteZapNativeToken",
+    "signature": "quoteZapNativeToken(address,uint256,uint256)",
+    "selector": "0xf346e75f"
+  },
+  {
     "contract": "GroupVerify",
     "functionName": "distrustRateByGroupId",
     "signature": "distrustRateByGroupId(address,uint256,uint256)",
@@ -5560,6 +5596,12 @@
     "functionName": "scopeSource",
     "signature": "scopeSource(uint256)",
     "selector": "0xf80c6b5e"
+  },
+  {
+    "contract": "UniswapV2Zap",
+    "functionName": "router",
+    "signature": "router()",
+    "selector": "0xf887ea40"
   },
   {
     "contract": "LOVE20Token",

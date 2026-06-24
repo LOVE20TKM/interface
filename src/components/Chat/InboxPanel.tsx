@@ -71,23 +71,14 @@ function ConversationItem({
     const rect = rowRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const maxLeft = Math.max(
-      CONVERSATION_MENU_GUTTER,
-      rect.width - CONVERSATION_MENU_WIDTH - CONVERSATION_MENU_GUTTER,
-    );
+    const maxLeft = Math.max(CONVERSATION_MENU_GUTTER, rect.width - CONVERSATION_MENU_WIDTH - CONVERSATION_MENU_GUTTER);
     const maxTop = Math.max(
       CONVERSATION_MENU_GUTTER,
       rect.height - CONVERSATION_MENU_HEIGHT - CONVERSATION_MENU_GUTTER,
     );
     setMenuPosition({
-      left: Math.min(
-        Math.max(clientX - rect.left - CONVERSATION_MENU_WIDTH / 2, CONVERSATION_MENU_GUTTER),
-        maxLeft,
-      ),
-      top: Math.min(
-        Math.max(clientY - rect.top - CONVERSATION_MENU_HEIGHT / 2, CONVERSATION_MENU_GUTTER),
-        maxTop,
-      ),
+      left: Math.min(Math.max(clientX - rect.left - CONVERSATION_MENU_WIDTH / 2, CONVERSATION_MENU_GUTTER), maxLeft),
+      top: Math.min(Math.max(clientY - rect.top - CONVERSATION_MENU_HEIGHT / 2, CONVERSATION_MENU_GUTTER), maxTop),
     });
   }, []);
 
@@ -126,7 +117,9 @@ function ConversationItem({
   const startLongPress = (event: React.PointerEvent<HTMLElement>) => {
     if (
       event.button !== 0 ||
-      (event.target as HTMLElement).closest(".conversation-menu, .conversation-follow-button, .conversation-more-button")
+      (event.target as HTMLElement).closest(
+        ".conversation-menu, .conversation-follow-button, .conversation-more-button",
+      )
     ) {
       return;
     }
@@ -190,9 +183,7 @@ function ConversationItem({
           <div className="conversation-kicker">
             <span className="conversation-meta-text">G#{item.groupId.toString()}</span>
             {recommendationReasonLabel && (
-              <span className="conversation-badge recommendation-reason">
-                {recommendationReasonLabel}
-              </span>
+              <span className="conversation-badge recommendation-reason">{recommendationReasonLabel}</span>
             )}
             {(hasUnreadMentionMe || hasUnreadMentionAll || visibleUnreadCount > BigInt(0)) && (
               <span className="conversation-reminders">
@@ -271,7 +262,7 @@ function EmptyInbox({ isConnected, tokenSymbol }: { isConnected: boolean; tokenS
       <MessagesSquare className="mx-auto mb-2 h-5 w-5 text-secondary" />
       <strong className="block text-greyscale-900">暂无已激活群聊</strong>
       <p className="mt-2 leading-6">
-        当前没有链上群聊记录。可以从当前代币{tokenSymbol ? ` ${tokenSymbol} ` : " "}开始创建主群或治理群。
+        建议通过右上角按钮，激活当前代币{tokenSymbol ? ` ${tokenSymbol} ` : " "}主群或治理群。
       </p>
       {!isConnected && <p className="mt-3 text-secondary">连接钱包后可创建群聊。</p>}
     </div>

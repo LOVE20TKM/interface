@@ -30,17 +30,18 @@ export const useAllowance = (
   spender: `0x${string}`,
   flag: boolean = true,
 ) => {
+  const canRead = canReadErc20(token, owner, flag) && !!spender;
   const { data, isPending, error, refetch } = useUniversalReadContract({
     address: token,
     abi: LOVE20TokenAbi,
     functionName: 'allowance',
     args: [owner, spender],
     query: {
-      enabled: canReadErc20(token, owner, flag) && !!spender,
+      enabled: canRead,
     },
   });
 
-  return { allowance: data !== undefined ? safeToBigInt(data) : undefined, isPending, error, refetch };
+  return { allowance: data !== undefined ? safeToBigInt(data) : undefined, isPending: canRead && isPending, error, refetch };
 };
 
 /**

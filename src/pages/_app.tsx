@@ -24,6 +24,7 @@ import { usePageRecovery } from '@/src/hooks/usePageRecovery';
 import { extractErrorMessage } from '@/src/errors/contractErrorParser';
 import { buildGlobalErrorInfo } from '@/src/errors/globalErrorInfo';
 import { takeRouteLoadingSuppression } from '@/src/lib/routeLoading';
+import { shouldHandleZapQuoteErrorLocally } from '@/src/lib/zapQuoteError';
 import * as Sentry from '@sentry/nextjs';
 
 import 'core-js/stable';
@@ -68,6 +69,11 @@ const GlobalErrorBridge = () => {
 
   useEffect(() => {
     const handleWindowError = (event: ErrorEvent) => {
+      if (shouldHandleZapQuoteErrorLocally(event.error ?? event.message)) {
+        event.preventDefault();
+        return;
+      }
+
       const errorInfo = buildGlobalErrorInfo(event.error ?? event.message, '运行时错误');
       if (!errorInfo) return;
       setError(errorInfo);
@@ -91,6 +97,11 @@ const GlobalErrorBridge = () => {
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      if (shouldHandleZapQuoteErrorLocally(event.reason)) {
+        event.preventDefault();
+        return;
+      }
+
       const errorInfo = buildGlobalErrorInfo(event.reason, '异步错误');
       if (!errorInfo) return;
       setError(errorInfo);

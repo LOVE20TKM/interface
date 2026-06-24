@@ -19,10 +19,24 @@ import { Form, FormField, FormItem, FormControl, FormMessage } from '@/component
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 // my funcs
-import { formatTokenAmount, formatUnits, parseUnits, formatPercentage } from '@/src/lib/format';
+import { formatTokenAmount, formatUnits, formatPercentage } from '@/src/lib/format';
+import {
+  calculateLiquiditySlippageMins,
+  formatLiquidityAmountInputError,
+  parseLiquidityAmountInput,
+} from '@/src/lib/liquidityAmountInput';
+import { liquidityZapPreference } from '@/src/lib/uiPreferences';
+import { parseContractError } from '@/src/errors/contractErrorParser';
 // my hooks
 import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useAddLiquidity, useAddLiquidityETH } from '@/src/hooks/contracts/useUniswapV2Router';
+import {
+  isUniswapV2ZapConfigured,
+  UNISWAP_V2_ZAP_ADDRESS,
+  useZapQuote,
+  useZapNativeToken,
+  useZapToken,
+} from '@/src/hooks/contracts/useUniswapV2Zap';
 import { useLiquidityPageData } from '@/src/hooks/composite/useLiquidityPageData';
 
 // my context
@@ -42,6 +56,32 @@ interface TokenConfig {
   decimals: number;
   isNative: boolean;
 }
+
+const PRICE_SCALE = BigInt('1000000000000000000');
+
+const buildPriceInfo = (baseReserve: bigint, targetReserve: bigint) => ({
+  baseToTarget: (targetReserve * PRICE_SCALE) / baseReserve,
+  targetToBase: (baseReserve * PRICE_SCALE) / targetReserve,
+});
+
+const formatCalculatedAmount = (amount: bigint) => {
+  const [integerPart, fractionalPart = ''] = formatUnits(amount).split('.');
+  const fraction = fractionalPart.slice(0, 12).replace(/0+$/, '');
+  return fraction ? `${integerPart}.${fraction}` : integerPart;
+};
+
+const formatPriceChangePercentage = (before: bigint, after: bigint) => {
+  if (before <= BigInt(0)) return null;
+
+  const change = after - before;
+  const sign = change > BigInt(0) ? '+' : change < BigInt(0) ? '-' : '';
+  const absChange = change < BigInt(0) ? -change : change;
+  const scaled = (absChange * BigInt(10000) + before / BigInt(2)) / before;
+  const whole = scaled / BigInt(100);
+  const fraction = (scaled % BigInt(100)).toString().padStart(2, '0');
+
+  return `${sign}${whole.toString()}.${fraction}%`;
+};
 
 // 构建支持的基础代币列表 (TUSDT, 父代币)
 const buildBaseTokens = (parentTokenAddress?: `0x${string}`, parentTokenSymbol?: string): TokenConfig[] => {
@@ -77,44 +117,55 @@ const buildBaseTokens = (parentTokenAddress?: `0x${string}`, parentTokenSymbol?:
 // ================================================
 // 表单 Schema 定义
 // ================================================
-const getLiquidityFormSchema = (baseBalance: bigint, tokenBalance: bigint) =>
-  z.object({
-    baseTokenAmount: z
-      .string()
-      .nonempty('请输入数量')
-      .refine(
-        (val) => {
-          if (val.endsWith('.')) return true;
-          if (val === '0') return true;
-          try {
-            const amount = parseUnits(val);
-            return amount > BigInt(0) && amount <= baseBalance;
-          } catch (e) {
-            return false;
-          }
-        },
-        { message: '输入数量必须大于0且不超过您的可用余额' },
-      ),
-    tokenAmount: z
-      .string()
-      .nonempty('请输入数量')
-      .refine(
-        (val) => {
-          if (val.endsWith('.')) return true;
-          if (val === '0') return true;
-          try {
-            const amount = parseUnits(val);
-            return amount > BigInt(0) && amount <= tokenBalance;
-          } catch (e) {
-            return false;
-          }
-        },
-        { message: '输入数量必须大于0且不超过您的可用余额' },
-      ),
-    baseTokenAddress: z.string(),
-  });
+const amountInputSchema = (balance: bigint) =>
+  z.string().refine(
+    (val) => {
+      const amountError = formatLiquidityAmountInputError(val, balance);
+      return !amountError;
+    },
+    (val) => ({ message: formatLiquidityAmountInputError(val, balance) || '请输入有效数字' }),
+  );
+
+const getLiquidityFormSchema = (baseBalance: bigint, tokenBalance: bigint, allowSingleSidedZap: boolean) =>
+  z
+    .object({
+      baseTokenAmount: amountInputSchema(baseBalance),
+      tokenAmount: amountInputSchema(tokenBalance),
+      baseTokenAddress: z.string(),
+    })
+    .superRefine((values, ctx) => {
+      const baseAmount = parseLiquidityAmountInput(values.baseTokenAmount) ?? BigInt(0);
+      const tokenAmount = parseLiquidityAmountInput(values.tokenAmount) ?? BigInt(0);
+
+      if (allowSingleSidedZap) {
+        if (baseAmount <= BigInt(0) && tokenAmount <= BigInt(0)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: '请输入至少一种代币数量',
+            path: ['baseTokenAmount'],
+          });
+        }
+        return;
+      }
+
+      if (baseAmount <= BigInt(0)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: '输入数量必须大于0',
+          path: ['baseTokenAmount'],
+        });
+      }
+      if (tokenAmount <= BigInt(0)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: '输入数量必须大于0',
+          path: ['tokenAmount'],
+        });
+      }
+    });
 
 type LiquidityFormValues = z.infer<ReturnType<typeof getLiquidityFormSchema>>;
+type EditedSide = 'base' | 'token';
 
 // ================================================
 // 主组件
@@ -213,11 +264,23 @@ const LiquidityPanel = () => {
     account,
   });
 
+  const [useZap, setUseZap] = useState(false);
+  const shouldUseZap = useZap && isUniswapV2ZapConfigured;
+
+  useEffect(() => {
+    const syncPreference = () => setUseZap(liquidityZapPreference.get());
+    syncPreference();
+    window.addEventListener(liquidityZapPreference.eventName, syncPreference);
+    return () => window.removeEventListener(liquidityZapPreference.eventName, syncPreference);
+  }, []);
+
   // --------------------------------------------------
   // 3. 表单设置
   // --------------------------------------------------
   const form = useForm<LiquidityFormValues>({
-    resolver: zodResolver(getLiquidityFormSchema(baseBalance || BigInt(0), tokenBalance || BigInt(0))),
+    resolver: zodResolver(
+      getLiquidityFormSchema(baseBalance || BigInt(0), tokenBalance || BigInt(0), shouldUseZap && pairExists),
+    ),
     defaultValues: {
       baseTokenAmount: '',
       tokenAmount: '',
@@ -236,11 +299,12 @@ const LiquidityPanel = () => {
   // --------------------------------------------------
   const [isBaseTokenChangedByUser, setIsBaseTokenChangedByUser] = useState(false);
   const [isTokenChangedByUser, setIsTokenChangedByUser] = useState(false);
+  const [lastEditedSide, setLastEditedSide] = useState<EditedSide | null>(null);
 
   const baseTokenValue = form.watch('baseTokenAmount');
   const tokenAmountValue = form.watch('tokenAmount');
-  const parsedBaseAmount = parseUnits(baseTokenValue);
-  const parsedTokenAmount = parseUnits(tokenAmountValue);
+  const parsedBaseAmount = parseLiquidityAmountInput(baseTokenValue) ?? BigInt(0);
+  const parsedTokenAmount = parseLiquidityAmountInput(tokenAmountValue) ?? BigInt(0);
 
   // 根据流动性池储备量计算另一个代币的数量
   // 当用户修改基础代币数量时，计算需要的目标代币数量
@@ -253,14 +317,15 @@ const LiquidityPanel = () => {
     if (isBaseTokenChangedByUser && parsedBaseAmount && parsedBaseAmount > BigInt(0) && baseReserve && targetReserve) {
       // 使用 AMM 公式：ratio = baseAmount / targetAmount
       const calculatedTokenAmount = (parsedBaseAmount * targetReserve) / baseReserve;
-      const calculatedStr = Number(formatUnits(calculatedTokenAmount))
-        .toFixed(12)
-        .replace(/\.?0+$/, '');
-      form.setValue('tokenAmount', calculatedStr, { shouldValidate: true });
+      const tokenAmountToSet =
+        shouldUseZap && calculatedTokenAmount > (tokenBalance || BigInt(0))
+          ? tokenBalance || BigInt(0)
+          : calculatedTokenAmount;
+      form.setValue('tokenAmount', formatCalculatedAmount(tokenAmountToSet), { shouldValidate: true });
       setIsBaseTokenChangedByUser(false);
       setIsTokenChangedByUser(false);
     }
-  }, [isBaseTokenChangedByUser, parsedBaseAmount, pairExists, baseReserve, targetReserve, form]);
+  }, [isBaseTokenChangedByUser, parsedBaseAmount, pairExists, baseReserve, targetReserve, shouldUseZap, tokenBalance, form]);
 
   // 当用户修改目标代币数量时，计算需要的基础代币数量
   useEffect(() => {
@@ -272,19 +337,74 @@ const LiquidityPanel = () => {
     if (isTokenChangedByUser && parsedTokenAmount && parsedTokenAmount > BigInt(0) && baseReserve && targetReserve) {
       // 使用 AMM 公式：ratio = baseAmount / targetAmount
       const calculatedBaseAmount = (parsedTokenAmount * baseReserve) / targetReserve;
-      const calculatedStr = Number(formatUnits(calculatedBaseAmount))
-        .toFixed(12)
-        .replace(/\.?0+$/, '');
-      form.setValue('baseTokenAmount', calculatedStr, { shouldValidate: true });
+      const baseAmountToSet =
+        shouldUseZap && calculatedBaseAmount > (baseBalance || BigInt(0))
+          ? baseBalance || BigInt(0)
+          : calculatedBaseAmount;
+      form.setValue('baseTokenAmount', formatCalculatedAmount(baseAmountToSet), { shouldValidate: true });
       setIsBaseTokenChangedByUser(false);
       setIsTokenChangedByUser(false);
     }
-  }, [isTokenChangedByUser, parsedTokenAmount, pairExists, baseReserve, targetReserve, form]);
+  }, [isTokenChangedByUser, parsedTokenAmount, pairExists, baseReserve, targetReserve, shouldUseZap, baseBalance, form]);
+
+  useEffect(() => {
+    if (!shouldUseZap || !pairExists || !baseReserve || !targetReserve) {
+      return;
+    }
+
+    const validateAmounts = () => {
+      void form.trigger(['baseTokenAmount', 'tokenAmount']);
+    };
+
+    if (lastEditedSide === 'base' && parsedBaseAmount > BigInt(0)) {
+      const calculatedTokenAmount = (parsedBaseAmount * targetReserve) / baseReserve;
+      const tokenAmountToSet =
+        calculatedTokenAmount > (tokenBalance || BigInt(0)) ? tokenBalance || BigInt(0) : calculatedTokenAmount;
+      const nextTokenAmount = formatCalculatedAmount(tokenAmountToSet);
+
+      if (tokenAmountValue !== nextTokenAmount) {
+        form.setValue('tokenAmount', nextTokenAmount, { shouldValidate: true });
+      } else {
+        validateAmounts();
+      }
+      return;
+    }
+
+    if (lastEditedSide === 'token' && parsedTokenAmount > BigInt(0)) {
+      const calculatedBaseAmount = (parsedTokenAmount * baseReserve) / targetReserve;
+      const baseAmountToSet =
+        calculatedBaseAmount > (baseBalance || BigInt(0)) ? baseBalance || BigInt(0) : calculatedBaseAmount;
+      const nextBaseAmount = formatCalculatedAmount(baseAmountToSet);
+
+      if (baseTokenValue !== nextBaseAmount) {
+        form.setValue('baseTokenAmount', nextBaseAmount, { shouldValidate: true });
+      } else {
+        validateAmounts();
+      }
+      return;
+    }
+
+    validateAmounts();
+  }, [
+    shouldUseZap,
+    pairExists,
+    baseReserve,
+    targetReserve,
+    baseBalance,
+    tokenBalance,
+    lastEditedSide,
+    parsedBaseAmount,
+    parsedTokenAmount,
+    baseTokenValue,
+    tokenAmountValue,
+    form,
+  ]);
 
   // --------------------------------------------------
   // 5. 授权逻辑
   // --------------------------------------------------
-  const spenderAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER as `0x${string}`;
+  const routerAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER as `0x${string}`;
+  const spenderAddress = shouldUseZap ? UNISWAP_V2_ZAP_ADDRESS : routerAddress;
 
   const {
     isApproved: isBaseTokenApprovedRaw,
@@ -321,6 +441,12 @@ const LiquidityPanel = () => {
   });
 
   const isBaseTokenApproved = baseToken.isNative || isBaseTokenApprovedRaw;
+  const hasBaseInput = parsedBaseAmount > BigInt(0);
+  const hasTokenInput = parsedTokenAmount > BigInt(0);
+  const canSubmitAmounts = shouldUseZap ? hasBaseInput || hasTokenInput : hasBaseInput && hasTokenInput;
+  const needsZapQuote = shouldUseZap && pairExists;
+  const canSubmitApproval =
+    (isBaseTokenApproved || (shouldUseZap && !hasBaseInput)) && (isTokenApproved || (shouldUseZap && !hasTokenInput));
 
   const handleApproveBase = form.handleSubmit(async () => {
     try {
@@ -357,8 +483,39 @@ const LiquidityPanel = () => {
     writeError: errAddLiquidityETH,
   } = useAddLiquidityETH();
 
+  const {
+    zapToken,
+    isWriting: isPendingZapToken,
+    isConfirming: isConfirmingZapToken,
+    isConfirmed: isConfirmedZapToken,
+  } = useZapToken();
+
+  const {
+    zapNativeToken,
+    isWriting: isPendingZapNativeToken,
+    isConfirming: isConfirmingZapNativeToken,
+    isConfirmed: isConfirmedZapNativeToken,
+  } = useZapNativeToken();
+
+  const {
+    quote: zapQuote,
+    error: zapQuoteError,
+  } = useZapQuote(
+    baseToken.address,
+    targetToken?.address,
+    parsedBaseAmount,
+    parsedTokenAmount,
+    shouldUseZap && pairExists,
+    baseToken.isNative,
+  );
+  const zapQuoteErrorInfo = useMemo(
+    () => (zapQuoteError ? parseContractError(zapQuoteError) : null),
+    [zapQuoteError],
+  );
+  const canSubmitQuote = !needsZapQuote || !!zapQuote;
+
   const handleAddLiquidity = form.handleSubmit(async () => {
-    if (!isBaseTokenApproved || !isTokenApproved) {
+    if (!canSubmitApproval) {
       toast.error('请先完成授权');
       return;
     }
@@ -368,21 +525,33 @@ const LiquidityPanel = () => {
       return;
     }
 
-    const baseAmount = parseUnits(baseTokenValue || '0');
-    const tokenAmount = parseUnits(tokenAmountValue || '0');
+    const baseAmount = parseLiquidityAmountInput(baseTokenValue || '0');
+    const tokenAmount = parseLiquidityAmountInput(tokenAmountValue || '0');
 
-    if (!baseAmount || !tokenAmount || baseAmount <= BigInt(0) || tokenAmount <= BigInt(0)) {
+    if (baseAmount === null || tokenAmount === null) {
+      toast.error('请输入有效数字');
+      return;
+    }
+
+    if (shouldUseZap ? baseAmount <= BigInt(0) && tokenAmount <= BigInt(0) : baseAmount <= BigInt(0) || tokenAmount <= BigInt(0)) {
       toast.error('请输入有效的数量');
+      return;
+    }
+
+    if (needsZapQuote && !zapQuote) {
+      toast.error('正在计算智能模式参数，请稍后再试');
       return;
     }
 
     try {
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60); // 20分钟deadline
 
-      // 计算滑点保护的最小数量
-      const slippageBigInt = BigInt(Math.round(slippage * 10)); // 将百分比转换为千分之一
-      const baseAmountMin = (baseAmount * (BigInt(1000) - slippageBigInt)) / BigInt(1000);
-      const tokenAmountMin = (tokenAmount * (BigInt(1000) - slippageBigInt)) / BigInt(1000);
+      const { baseAmountMin, tokenAmountMin, liquidityMin } = calculateLiquiditySlippageMins(
+        baseAmount,
+        tokenAmount,
+        slippage,
+        shouldUseZap ? zapQuote : undefined,
+      );
 
       console.log('添加流动性参数:', {
         baseToken: baseToken.symbol,
@@ -391,12 +560,36 @@ const LiquidityPanel = () => {
         tokenAmount: tokenAmount.toString(),
         baseAmountMin: baseAmountMin.toString(),
         tokenAmountMin: tokenAmountMin.toString(),
+        liquidityMin: liquidityMin.toString(),
         slippage,
         deadline: deadline.toString(),
+        useZap: shouldUseZap,
       });
 
-      // 如果基础代币是原生代币，使用 addLiquidityETH
-      if (baseToken.isNative) {
+      if (shouldUseZap && baseToken.isNative) {
+        await zapNativeToken(
+          targetToken.address,
+          tokenAmount,
+          tokenAmountMin,
+          baseAmountMin,
+          liquidityMin,
+          account as `0x${string}`,
+          deadline,
+          baseAmount,
+        );
+      } else if (shouldUseZap) {
+        await zapToken({
+          tokenA: baseToken.address,
+          tokenB: targetToken.address,
+          amountAIn: baseAmount,
+          amountBIn: tokenAmount,
+          amountAMin: baseAmountMin,
+          amountBMin: tokenAmountMin,
+          liquidityMin,
+          to: account as `0x${string}`,
+          deadline,
+        });
+      } else if (baseToken.isNative) {
         await addLiquidityETH(
           targetToken.address,
           tokenAmount,
@@ -437,30 +630,49 @@ const LiquidityPanel = () => {
       return null;
     }
 
-    const baseToTarget = (targetReserve * BigInt(10 ** 18)) / baseReserve;
-    const targetToBase = (baseReserve * BigInt(10 ** 18)) / targetReserve;
-
-    return {
-      baseToTarget,
-      targetToBase,
-    };
+    return buildPriceInfo(baseReserve, targetReserve);
   }, [pairExists, baseReserve, targetReserve]);
+
+  const priceAfterZap = useMemo(() => {
+    if (!zapQuote?.willSwap || zapQuote.reserveAAfter <= BigInt(0) || zapQuote.reserveBAfter <= BigInt(0)) {
+      return null;
+    }
+
+    return buildPriceInfo(zapQuote.reserveAAfter, zapQuote.reserveBAfter);
+  }, [zapQuote]);
+
+  const priceChangePercentage = useMemo(() => {
+    if (!priceInfo || !priceAfterZap) {
+      return null;
+    }
+
+    return showTokenToBase
+      ? formatPriceChangePercentage(priceInfo.targetToBase, priceAfterZap.targetToBase)
+      : formatPriceChangePercentage(priceInfo.baseToTarget, priceAfterZap.baseToTarget);
+  }, [priceInfo, priceAfterZap, showTokenToBase]);
 
   // 预估获得的 LP 数量
   const estimatedLP = useMemo(() => {
-    if (!parsedBaseAmount || !parsedTokenAmount || parsedBaseAmount <= BigInt(0) || parsedTokenAmount <= BigInt(0)) {
+    if (shouldUseZap && zapQuote) {
+      return zapQuote.liquidity;
+    }
+
+    const lpBaseAmount = shouldUseZap && zapQuote ? zapQuote.amountAUsed : parsedBaseAmount;
+    const lpTokenAmount = shouldUseZap && zapQuote ? zapQuote.amountBUsed : parsedTokenAmount;
+
+    if (!lpBaseAmount || !lpTokenAmount || lpBaseAmount <= BigInt(0) || lpTokenAmount <= BigInt(0)) {
       return null;
     }
 
     if (pairExists && baseReserve && targetReserve && lpTotalSupply && lpTotalSupply > BigInt(0)) {
       // 已有池子：liquidity = min(amountA * totalSupply / reserveA, amountB * totalSupply / reserveB)
-      const lpFromBase = (parsedBaseAmount * lpTotalSupply) / baseReserve;
-      const lpFromToken = (parsedTokenAmount * lpTotalSupply) / targetReserve;
+      const lpFromBase = (lpBaseAmount * lpTotalSupply) / baseReserve;
+      const lpFromToken = (lpTokenAmount * lpTotalSupply) / targetReserve;
       return lpFromBase < lpFromToken ? lpFromBase : lpFromToken;
     } else if (!pairExists) {
       // 新池子：liquidity = sqrt(amountA * amountB) - MINIMUM_LIQUIDITY
       const MINIMUM_LIQUIDITY = BigInt(1000);
-      const product = parsedBaseAmount * parsedTokenAmount;
+      const product = lpBaseAmount * lpTokenAmount;
       const sqrt = (n: bigint): bigint => {
         if (n <= BigInt(0)) return BigInt(0);
         let x = n;
@@ -476,7 +688,7 @@ const LiquidityPanel = () => {
     }
 
     return null;
-  }, [parsedBaseAmount, parsedTokenAmount, pairExists, baseReserve, targetReserve, lpTotalSupply]);
+  }, [parsedBaseAmount, parsedTokenAmount, shouldUseZap, zapQuote, pairExists, baseReserve, targetReserve, lpTotalSupply]);
 
   // 移除了旧的 exchangeRate 逻辑，现在使用 priceInfo
 
@@ -491,7 +703,7 @@ const LiquidityPanel = () => {
   // 9. 成功处理 - 智能刷新数据
   // --------------------------------------------------
   useEffect(() => {
-    if (isConfirmedAddLiquidity || isConfirmedAddLiquidityETH) {
+    if (isConfirmedAddLiquidity || isConfirmedAddLiquidityETH || isConfirmedZapToken || isConfirmedZapNativeToken) {
       toast.success('添加流动性成功！');
 
       // 清空表单
@@ -526,7 +738,15 @@ const LiquidityPanel = () => {
         clearInterval(refreshInterval);
       };
     }
-  }, [isConfirmedAddLiquidity, isConfirmedAddLiquidityETH, form, baseToken.address, refreshLiquidityData]);
+  }, [
+    isConfirmedAddLiquidity,
+    isConfirmedAddLiquidityETH,
+    isConfirmedZapToken,
+    isConfirmedZapNativeToken,
+    form,
+    baseToken.address,
+    refreshLiquidityData,
+  ]);
 
   // --------------------------------------------------
   // 10. 加载状态
@@ -537,9 +757,11 @@ const LiquidityPanel = () => {
 
   const isApproving = isPendingApproveBase || isPendingApproveToken;
   const isApproveConfirming = isConfirmingApproveBase || isConfirmingApproveToken;
-  const isAddingLiquidity = isPendingAddLiquidity || isPendingAddLiquidityETH;
-  const isConfirmingLiquidity = isConfirmingAddLiquidity || isConfirmingAddLiquidityETH;
-  const isAddLiquidityConfirmed = isConfirmedAddLiquidity || isConfirmedAddLiquidityETH;
+  const isAddingLiquidity = isPendingAddLiquidity || isPendingAddLiquidityETH || isPendingZapToken || isPendingZapNativeToken;
+  const isConfirmingLiquidity =
+    isConfirmingAddLiquidity || isConfirmingAddLiquidityETH || isConfirmingZapToken || isConfirmingZapNativeToken;
+  const isAddLiquidityConfirmed =
+    isConfirmedAddLiquidity || isConfirmedAddLiquidityETH || isConfirmedZapToken || isConfirmedZapNativeToken;
   const isDisabled = isLoadingLiquidityData;
 
   return (
@@ -582,6 +804,24 @@ const LiquidityPanel = () => {
       <div className="w-full max-w-md md:max-w-2xl lg:max-w-4xl mx-auto">
         <Form {...form}>
           <form>
+            {/* 智能模式 */}
+            <label className="mb-3 flex cursor-pointer items-start gap-2 rounded-md bg-[#f7f8f9] px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1 h-3.5 w-3.5 shrink-0 accent-secondary"
+                checked={shouldUseZap}
+                disabled={!isUniswapV2ZapConfigured}
+                onChange={(event) => liquidityZapPreference.set(event.target.checked)}
+                title={isUniswapV2ZapConfigured ? '智能模式' : '智能模式未配置'}
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium leading-5 text-gray-800">智能模式</span>
+                <span className="block text-xs leading-4 text-gray-500">
+                  余额不足时自动补齐比例，可能产生一次内部兑换。
+                </span>
+              </span>
+            </label>
+
             {/* 基础代币输入框 */}
             <div className="mb-2">
               <FormField
@@ -600,6 +840,7 @@ const LiquidityPanel = () => {
                             onChange={(e) => {
                               field.onChange(e);
                               setIsBaseTokenChangedByUser(true);
+                              setLastEditedSide('base');
                             }}
                             className="text-xl border-none p-0 h-auto bg-transparent focus:ring-0 focus:outline-none mr-2"
                           />
@@ -656,6 +897,7 @@ const LiquidityPanel = () => {
                                   const amount = ((baseBalance ?? BigInt(0)) * BigInt(percentage)) / BigInt(100);
                                   form.setValue('baseTokenAmount', formatUnits(amount));
                                   setIsBaseTokenChangedByUser(true);
+                                  setLastEditedSide('base');
                                 }}
                                 disabled={isDisabled || (baseBalance || BigInt(0)) <= BigInt(0)}
                                 className="text-xs h-7 px-2 rounded-lg"
@@ -670,6 +912,7 @@ const LiquidityPanel = () => {
                               onClick={() => {
                                 form.setValue('baseTokenAmount', formatUnits(baseBalance || BigInt(0)));
                                 setIsBaseTokenChangedByUser(true);
+                                setLastEditedSide('base');
                               }}
                               disabled={isDisabled || (baseBalance || BigInt(0)) <= BigInt(0)}
                               className="text-xs h-7 px-2 rounded-lg"
@@ -705,6 +948,7 @@ const LiquidityPanel = () => {
                             onChange={(e) => {
                               field.onChange(e);
                               setIsTokenChangedByUser(true);
+                              setLastEditedSide('token');
                             }}
                             className="text-xl border-none p-0 h-auto bg-transparent focus:ring-0 focus:outline-none mr-2"
                           />
@@ -724,6 +968,7 @@ const LiquidityPanel = () => {
                                   const amount = ((tokenBalance ?? BigInt(0)) * BigInt(percentage)) / BigInt(100);
                                   form.setValue('tokenAmount', formatUnits(amount));
                                   setIsTokenChangedByUser(true);
+                                  setLastEditedSide('token');
                                 }}
                                 disabled={isDisabled || (tokenBalance || BigInt(0)) <= BigInt(0)}
                                 className="text-xs h-7 px-2 rounded-lg"
@@ -738,6 +983,7 @@ const LiquidityPanel = () => {
                               onClick={() => {
                                 form.setValue('tokenAmount', formatUnits(tokenBalance || BigInt(0)));
                                 setIsTokenChangedByUser(true);
+                                setLastEditedSide('token');
                               }}
                               disabled={isDisabled || (tokenBalance || BigInt(0)) <= BigInt(0)}
                               className="text-xs h-7 px-2 rounded-lg"
@@ -754,6 +1000,11 @@ const LiquidityPanel = () => {
                 )}
               />
             </div>
+            {zapQuoteErrorInfo && (
+              <div className="-mt-3 mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+                智能模式报价失败：{zapQuoteErrorInfo.message}
+              </div>
+            )}
 
             {/* 预估获得 LP 数量 */}
             {estimatedLP !== null && (
@@ -766,12 +1017,9 @@ const LiquidityPanel = () => {
             {/* 价格比例显示 */}
             {priceInfo && (
               <div className="space-y-1 text-sm mb-4">
-                <div className="text-gray-600 flex items-center gap-1">
-                  <HelpCircle className="w-4 h-4" />
-                  当前池价格：
-                </div>
                 <div className="flex items-center gap-2">
                   <div className="text-gray-600">
+                    当前池价格：
                     {showTokenToBase ? (
                       <>
                         1 {targetToken.symbol} = {formatTokenAmount(priceInfo.targetToBase)} {baseToken.symbol}
@@ -793,6 +1041,33 @@ const LiquidityPanel = () => {
                     <ArrowUpDown className="h-3 w-3 text-gray-500" />
                   </Button>
                 </div>
+                {priceAfterZap && (
+                  <div className="text-gray-600">
+                    添加后价格：
+                    {showTokenToBase ? (
+                      <>
+                        1 {targetToken.symbol} = {formatTokenAmount(priceAfterZap.targetToBase)} {baseToken.symbol}
+                      </>
+                    ) : (
+                      <>
+                        1 {baseToken.symbol} = {formatTokenAmount(priceAfterZap.baseToTarget)} {targetToken.symbol}
+                      </>
+                    )}
+                    {priceChangePercentage && (
+                      <span
+                        className={`ml-1 ${
+                          priceChangePercentage.startsWith('-')
+                            ? 'text-red-600'
+                            : priceChangePercentage.startsWith('+')
+                            ? 'text-green-600'
+                            : 'text-gray-500'
+                        }`}
+                      >
+                        ({priceChangePercentage})
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             {!priceInfo && pairExists && (
@@ -902,6 +1177,7 @@ const LiquidityPanel = () => {
                 type="button"
                 className="w-full sm:flex-1 lg:w-auto lg:px-4"
                 disabled={
+                  !hasBaseInput ||
                   isPendingApproveBaseAllowance || isPendingApproveBase || isConfirmingApproveBase || isBaseTokenApproved
                 }
                 onClick={handleApproveBase}
@@ -920,7 +1196,8 @@ const LiquidityPanel = () => {
                 type="button"
                 className="w-full sm:flex-1 lg:w-auto lg:px-4"
                 disabled={
-                  !isBaseTokenApproved ||
+                  !hasTokenInput ||
+                  !(isBaseTokenApproved || (shouldUseZap && !hasBaseInput)) ||
                   isPendingApproveTokenAllowance ||
                   isPendingApproveToken ||
                   isConfirmingApproveToken ||
@@ -942,8 +1219,9 @@ const LiquidityPanel = () => {
                 className="w-full sm:flex-1 lg:w-auto lg:px-4"
                 onClick={handleAddLiquidity}
                 disabled={
-                  !isBaseTokenApproved ||
-                  !isTokenApproved ||
+                  !canSubmitAmounts ||
+                  !canSubmitApproval ||
+                  !canSubmitQuote ||
                   isAddingLiquidity ||
                   isConfirmingLiquidity ||
                   isAddLiquidityConfirmed
