@@ -1,51 +1,51 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useMemo } from 'react';
-import { useAccount } from 'wagmi';
-import { toast } from 'react-hot-toast';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { ArrowUpDown, HelpCircle, Settings, Zap } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { useEffect, useState, useMemo } from "react";
+import { useAccount } from "wagmi";
+import { toast } from "react-hot-toast";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { ArrowUpDown, HelpCircle, Settings, Zap } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 // UI components
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { Form, FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Form, FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 // my funcs
-import { formatTokenAmount, formatUnits, formatPercentage } from '@/src/lib/format';
+import { formatTokenAmount, formatUnits, formatPercentage } from "@/src/lib/format";
 import {
   calculateLiquiditySlippageMins,
   formatLiquidityAmountInputError,
   parseLiquidityAmountInput,
-} from '@/src/lib/liquidityAmountInput';
-import { liquidityZapPreference } from '@/src/lib/uiPreferences';
-import { parseContractError } from '@/src/errors/contractErrorParser';
+} from "@/src/lib/liquidityAmountInput";
+import { liquidityZapPreference } from "@/src/lib/uiPreferences";
+import { parseContractError } from "@/src/errors/contractErrorParser";
 // my hooks
-import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
-import { useAddLiquidity, useAddLiquidityETH } from '@/src/hooks/contracts/useUniswapV2Router';
+import { useTokenApproval } from "@/src/hooks/contracts/useTokenApproval";
+import { useAddLiquidity, useAddLiquidityETH } from "@/src/hooks/contracts/useUniswapV2Router";
 import {
   isUniswapV2ZapConfigured,
   UNISWAP_V2_ZAP_ADDRESS,
   useZapQuote,
   useZapNativeToken,
   useZapToken,
-} from '@/src/hooks/contracts/useUniswapV2Zap';
-import { useLiquidityPageData } from '@/src/hooks/composite/useLiquidityPageData';
+} from "@/src/hooks/contracts/useUniswapV2Zap";
+import { useLiquidityPageData } from "@/src/hooks/composite/useLiquidityPageData";
 
 // my context
-import useTokenContext from '@/src/hooks/context/useTokenContext';
+import useTokenContext from "@/src/hooks/context/useTokenContext";
 
 // my components
-import LeftTitle from '@/src/components/Common/LeftTitle';
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
+import LeftTitle from "@/src/components/Common/LeftTitle";
+import LoadingIcon from "@/src/components/Common/LoadingIcon";
+import LoadingOverlay from "@/src/components/Common/LoadingOverlay";
 
 // ================================================
 // Token 配置接口定义
@@ -57,7 +57,7 @@ interface TokenConfig {
   isNative: boolean;
 }
 
-const PRICE_SCALE = BigInt('1000000000000000000');
+const PRICE_SCALE = BigInt("1000000000000000000");
 
 const buildPriceInfo = (baseReserve: bigint, targetReserve: bigint) => ({
   baseToTarget: (targetReserve * PRICE_SCALE) / baseReserve,
@@ -65,8 +65,8 @@ const buildPriceInfo = (baseReserve: bigint, targetReserve: bigint) => ({
 });
 
 const formatCalculatedAmount = (amount: bigint) => {
-  const [integerPart, fractionalPart = ''] = formatUnits(amount).split('.');
-  const fraction = fractionalPart.slice(0, 12).replace(/0+$/, '');
+  const [integerPart, fractionalPart = ""] = formatUnits(amount).split(".");
+  const fraction = fractionalPart.slice(0, 12).replace(/0+$/, "");
   return fraction ? `${integerPart}.${fraction}` : integerPart;
 };
 
@@ -74,11 +74,11 @@ const formatPriceChangePercentage = (before: bigint, after: bigint) => {
   if (before <= BigInt(0)) return null;
 
   const change = after - before;
-  const sign = change > BigInt(0) ? '+' : change < BigInt(0) ? '-' : '';
+  const sign = change > BigInt(0) ? "+" : change < BigInt(0) ? "-" : "";
   const absChange = change < BigInt(0) ? -change : change;
   const scaled = (absChange * BigInt(10000) + before / BigInt(2)) / before;
   const whole = scaled / BigInt(100);
-  const fraction = (scaled % BigInt(100)).toString().padStart(2, '0');
+  const fraction = (scaled % BigInt(100)).toString().padStart(2, "0");
 
   return `${sign}${whole.toString()}.${fraction}%`;
 };
@@ -123,7 +123,7 @@ const amountInputSchema = (balance: bigint) =>
       const amountError = formatLiquidityAmountInputError(val, balance);
       return !amountError;
     },
-    (val) => ({ message: formatLiquidityAmountInputError(val, balance) || '请输入有效数字' }),
+    (val) => ({ message: formatLiquidityAmountInputError(val, balance) || "请输入有效数字" }),
   );
 
 const getLiquidityFormSchema = (baseBalance: bigint, tokenBalance: bigint, allowSingleSidedZap: boolean) =>
@@ -141,8 +141,8 @@ const getLiquidityFormSchema = (baseBalance: bigint, tokenBalance: bigint, allow
         if (baseAmount <= BigInt(0) && tokenAmount <= BigInt(0)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: '请输入至少一种代币数量',
-            path: ['baseTokenAmount'],
+            message: "请输入至少一种代币数量",
+            path: ["baseTokenAmount"],
           });
         }
         return;
@@ -151,21 +151,21 @@ const getLiquidityFormSchema = (baseBalance: bigint, tokenBalance: bigint, allow
       if (baseAmount <= BigInt(0)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: '输入数量必须大于0',
-          path: ['baseTokenAmount'],
+          message: "输入数量必须大于0",
+          path: ["baseTokenAmount"],
         });
       }
       if (tokenAmount <= BigInt(0)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: '输入数量必须大于0',
-          path: ['tokenAmount'],
+          message: "输入数量必须大于0",
+          path: ["tokenAmount"],
         });
       }
     });
 
 type LiquidityFormValues = z.infer<ReturnType<typeof getLiquidityFormSchema>>;
-type EditedSide = 'base' | 'token';
+type EditedSide = "base" | "token";
 
 // ================================================
 // 主组件
@@ -196,8 +196,8 @@ const LiquidityPanel = () => {
     return (
       defaultToken ||
       baseTokens[0] || {
-        symbol: parentTokenSymbol || '',
-        address: parentTokenAddress || ('0x0000000000000000000000000000000000000000' as `0x${string}`),
+        symbol: parentTokenSymbol || "",
+        address: parentTokenAddress || ("0x0000000000000000000000000000000000000000" as `0x${string}`),
         decimals: 18,
         isNative: false,
       }
@@ -209,7 +209,7 @@ const LiquidityPanel = () => {
     if (baseTokens.length === 0) return;
 
     const routeBaseToken = router.query.baseToken;
-    if (typeof routeBaseToken === 'string') {
+    if (typeof routeBaseToken === "string") {
       const matchedToken = baseTokens.find((t) => t.symbol === routeBaseToken);
       if (matchedToken) {
         setBaseToken(matchedToken);
@@ -282,16 +282,16 @@ const LiquidityPanel = () => {
       getLiquidityFormSchema(baseBalance || BigInt(0), tokenBalance || BigInt(0), shouldUseZap && pairExists),
     ),
     defaultValues: {
-      baseTokenAmount: '',
-      tokenAmount: '',
+      baseTokenAmount: "",
+      tokenAmount: "",
       baseTokenAddress: baseToken.address,
     },
-    mode: 'onChange',
+    mode: "onChange",
   });
 
   // 同步表单值与代币状态
   useEffect(() => {
-    form.setValue('baseTokenAddress', baseToken.address);
+    form.setValue("baseTokenAddress", baseToken.address);
   }, [baseToken.address, form]);
 
   // --------------------------------------------------
@@ -301,8 +301,8 @@ const LiquidityPanel = () => {
   const [isTokenChangedByUser, setIsTokenChangedByUser] = useState(false);
   const [lastEditedSide, setLastEditedSide] = useState<EditedSide | null>(null);
 
-  const baseTokenValue = form.watch('baseTokenAmount');
-  const tokenAmountValue = form.watch('tokenAmount');
+  const baseTokenValue = form.watch("baseTokenAmount");
+  const tokenAmountValue = form.watch("tokenAmount");
   const parsedBaseAmount = parseLiquidityAmountInput(baseTokenValue) ?? BigInt(0);
   const parsedTokenAmount = parseLiquidityAmountInput(tokenAmountValue) ?? BigInt(0);
 
@@ -321,11 +321,20 @@ const LiquidityPanel = () => {
         shouldUseZap && calculatedTokenAmount > (tokenBalance || BigInt(0))
           ? tokenBalance || BigInt(0)
           : calculatedTokenAmount;
-      form.setValue('tokenAmount', formatCalculatedAmount(tokenAmountToSet), { shouldValidate: true });
+      form.setValue("tokenAmount", formatCalculatedAmount(tokenAmountToSet), { shouldValidate: true });
       setIsBaseTokenChangedByUser(false);
       setIsTokenChangedByUser(false);
     }
-  }, [isBaseTokenChangedByUser, parsedBaseAmount, pairExists, baseReserve, targetReserve, shouldUseZap, tokenBalance, form]);
+  }, [
+    isBaseTokenChangedByUser,
+    parsedBaseAmount,
+    pairExists,
+    baseReserve,
+    targetReserve,
+    shouldUseZap,
+    tokenBalance,
+    form,
+  ]);
 
   // 当用户修改目标代币数量时，计算需要的基础代币数量
   useEffect(() => {
@@ -341,11 +350,20 @@ const LiquidityPanel = () => {
         shouldUseZap && calculatedBaseAmount > (baseBalance || BigInt(0))
           ? baseBalance || BigInt(0)
           : calculatedBaseAmount;
-      form.setValue('baseTokenAmount', formatCalculatedAmount(baseAmountToSet), { shouldValidate: true });
+      form.setValue("baseTokenAmount", formatCalculatedAmount(baseAmountToSet), { shouldValidate: true });
       setIsBaseTokenChangedByUser(false);
       setIsTokenChangedByUser(false);
     }
-  }, [isTokenChangedByUser, parsedTokenAmount, pairExists, baseReserve, targetReserve, shouldUseZap, baseBalance, form]);
+  }, [
+    isTokenChangedByUser,
+    parsedTokenAmount,
+    pairExists,
+    baseReserve,
+    targetReserve,
+    shouldUseZap,
+    baseBalance,
+    form,
+  ]);
 
   useEffect(() => {
     if (!shouldUseZap || !pairExists || !baseReserve || !targetReserve) {
@@ -353,31 +371,31 @@ const LiquidityPanel = () => {
     }
 
     const validateAmounts = () => {
-      void form.trigger(['baseTokenAmount', 'tokenAmount']);
+      void form.trigger(["baseTokenAmount", "tokenAmount"]);
     };
 
-    if (lastEditedSide === 'base' && parsedBaseAmount > BigInt(0)) {
+    if (lastEditedSide === "base" && parsedBaseAmount > BigInt(0)) {
       const calculatedTokenAmount = (parsedBaseAmount * targetReserve) / baseReserve;
       const tokenAmountToSet =
         calculatedTokenAmount > (tokenBalance || BigInt(0)) ? tokenBalance || BigInt(0) : calculatedTokenAmount;
       const nextTokenAmount = formatCalculatedAmount(tokenAmountToSet);
 
       if (tokenAmountValue !== nextTokenAmount) {
-        form.setValue('tokenAmount', nextTokenAmount, { shouldValidate: true });
+        form.setValue("tokenAmount", nextTokenAmount, { shouldValidate: true });
       } else {
         validateAmounts();
       }
       return;
     }
 
-    if (lastEditedSide === 'token' && parsedTokenAmount > BigInt(0)) {
+    if (lastEditedSide === "token" && parsedTokenAmount > BigInt(0)) {
       const calculatedBaseAmount = (parsedTokenAmount * baseReserve) / targetReserve;
       const baseAmountToSet =
         calculatedBaseAmount > (baseBalance || BigInt(0)) ? baseBalance || BigInt(0) : calculatedBaseAmount;
       const nextBaseAmount = formatCalculatedAmount(baseAmountToSet);
 
       if (baseTokenValue !== nextBaseAmount) {
-        form.setValue('baseTokenAmount', nextBaseAmount, { shouldValidate: true });
+        form.setValue("baseTokenAmount", nextBaseAmount, { shouldValidate: true });
       } else {
         validateAmounts();
       }
@@ -497,10 +515,7 @@ const LiquidityPanel = () => {
     isConfirmed: isConfirmedZapNativeToken,
   } = useZapNativeToken();
 
-  const {
-    quote: zapQuote,
-    error: zapQuoteError,
-  } = useZapQuote(
+  const { quote: zapQuote, error: zapQuoteError } = useZapQuote(
     baseToken.address,
     targetToken?.address,
     parsedBaseAmount,
@@ -508,38 +523,39 @@ const LiquidityPanel = () => {
     shouldUseZap && pairExists,
     baseToken.isNative,
   );
-  const zapQuoteErrorInfo = useMemo(
-    () => (zapQuoteError ? parseContractError(zapQuoteError) : null),
-    [zapQuoteError],
-  );
+  const zapQuoteErrorInfo = useMemo(() => (zapQuoteError ? parseContractError(zapQuoteError) : null), [zapQuoteError]);
   const canSubmitQuote = !needsZapQuote || !!zapQuote;
 
   const handleAddLiquidity = form.handleSubmit(async () => {
     if (!canSubmitApproval) {
-      toast.error('请先完成授权');
+      toast.error("请先完成授权");
       return;
     }
 
     if (!targetToken) {
-      toast.error('目标代币未加载');
+      toast.error("目标代币未加载");
       return;
     }
 
-    const baseAmount = parseLiquidityAmountInput(baseTokenValue || '0');
-    const tokenAmount = parseLiquidityAmountInput(tokenAmountValue || '0');
+    const baseAmount = parseLiquidityAmountInput(baseTokenValue || "0");
+    const tokenAmount = parseLiquidityAmountInput(tokenAmountValue || "0");
 
     if (baseAmount === null || tokenAmount === null) {
-      toast.error('请输入有效数字');
+      toast.error("请输入有效数字");
       return;
     }
 
-    if (shouldUseZap ? baseAmount <= BigInt(0) && tokenAmount <= BigInt(0) : baseAmount <= BigInt(0) || tokenAmount <= BigInt(0)) {
-      toast.error('请输入有效的数量');
+    if (
+      shouldUseZap
+        ? baseAmount <= BigInt(0) && tokenAmount <= BigInt(0)
+        : baseAmount <= BigInt(0) || tokenAmount <= BigInt(0)
+    ) {
+      toast.error("请输入有效的数量");
       return;
     }
 
     if (needsZapQuote && !zapQuote) {
-      toast.error('正在计算智能模式参数，请稍后再试');
+      toast.error("正在计算智能模式参数，请稍后再试");
       return;
     }
 
@@ -553,7 +569,7 @@ const LiquidityPanel = () => {
         shouldUseZap ? zapQuote : undefined,
       );
 
-      console.log('添加流动性参数:', {
+      console.log("添加流动性参数:", {
         baseToken: baseToken.symbol,
         targetToken: targetToken.symbol,
         baseAmount: baseAmount.toString(),
@@ -613,9 +629,9 @@ const LiquidityPanel = () => {
         );
       }
 
-      toast.success('添加流动性交易已提交');
+      toast.success("添加流动性交易已提交");
     } catch (error: any) {
-      console.error('添加流动性失败', error);
+      console.error("添加流动性失败", error);
     }
   });
 
@@ -688,7 +704,16 @@ const LiquidityPanel = () => {
     }
 
     return null;
-  }, [parsedBaseAmount, parsedTokenAmount, shouldUseZap, zapQuote, pairExists, baseReserve, targetReserve, lpTotalSupply]);
+  }, [
+    parsedBaseAmount,
+    parsedTokenAmount,
+    shouldUseZap,
+    zapQuote,
+    pairExists,
+    baseReserve,
+    targetReserve,
+    lpTotalSupply,
+  ]);
 
   // 移除了旧的 exchangeRate 逻辑，现在使用 priceInfo
 
@@ -697,19 +722,19 @@ const LiquidityPanel = () => {
   // --------------------------------------------------
   const [slippage, setSlippage] = useState(2.5); // 默认2.5%
   const [isSlippageDialogOpen, setIsSlippageDialogOpen] = useState(false);
-  const [customSlippage, setCustomSlippage] = useState('');
+  const [customSlippage, setCustomSlippage] = useState("");
 
   // --------------------------------------------------
   // 9. 成功处理 - 智能刷新数据
   // --------------------------------------------------
   useEffect(() => {
     if (isConfirmedAddLiquidity || isConfirmedAddLiquidityETH || isConfirmedZapToken || isConfirmedZapNativeToken) {
-      toast.success('添加流动性成功！');
+      toast.success("添加流动性成功！");
 
       // 清空表单
       form.reset({
-        baseTokenAmount: '',
-        tokenAmount: '',
+        baseTokenAmount: "",
+        tokenAmount: "",
         baseTokenAddress: baseToken.address,
       });
 
@@ -757,7 +782,8 @@ const LiquidityPanel = () => {
 
   const isApproving = isPendingApproveBase || isPendingApproveToken;
   const isApproveConfirming = isConfirmingApproveBase || isConfirmingApproveToken;
-  const isAddingLiquidity = isPendingAddLiquidity || isPendingAddLiquidityETH || isPendingZapToken || isPendingZapNativeToken;
+  const isAddingLiquidity =
+    isPendingAddLiquidity || isPendingAddLiquidityETH || isPendingZapToken || isPendingZapNativeToken;
   const isConfirmingLiquidity =
     isConfirmingAddLiquidity || isConfirmingAddLiquidityETH || isConfirmingZapToken || isConfirmingZapNativeToken;
   const isAddLiquidityConfirmed =
@@ -785,7 +811,7 @@ const LiquidityPanel = () => {
           </div>
           {(lpBalance || BigInt(0)) > BigInt(0) && (
             <Link
-              href={`/dex/withdraw?symbol=${encodeURIComponent(token?.symbol || '')}&baseToken=${encodeURIComponent(
+              href={`/dex/withdraw?symbol=${encodeURIComponent(token?.symbol || "")}&baseToken=${encodeURIComponent(
                 baseToken.symbol,
               )}`}
               className="inline-flex items-center gap-1 text-sm text-secondary hover:text-blue-800 transition-colors underline"
@@ -812,12 +838,12 @@ const LiquidityPanel = () => {
                 checked={shouldUseZap}
                 disabled={!isUniswapV2ZapConfigured}
                 onChange={(event) => liquidityZapPreference.set(event.target.checked)}
-                title={isUniswapV2ZapConfigured ? '智能模式' : '智能模式未配置'}
+                title={isUniswapV2ZapConfigured ? "智能模式" : "智能模式未配置"}
               />
               <span className="min-w-0">
                 <span className="block text-sm font-medium leading-5 text-gray-800">智能模式</span>
                 <span className="block text-xs leading-4 text-gray-500">
-                  余额不足时自动补齐比例，可能产生一次内部兑换。
+                  支持单币添加流动性、双币不平衡添加流动性：自动完成兑换 & 添加流动性。
                 </span>
               </span>
             </label>
@@ -840,7 +866,7 @@ const LiquidityPanel = () => {
                             onChange={(e) => {
                               field.onChange(e);
                               setIsBaseTokenChangedByUser(true);
-                              setLastEditedSide('base');
+                              setLastEditedSide("base");
                             }}
                             className="text-xl border-none p-0 h-auto bg-transparent focus:ring-0 focus:outline-none mr-2"
                           />
@@ -895,9 +921,9 @@ const LiquidityPanel = () => {
                                 type="button"
                                 onClick={() => {
                                   const amount = ((baseBalance ?? BigInt(0)) * BigInt(percentage)) / BigInt(100);
-                                  form.setValue('baseTokenAmount', formatUnits(amount));
+                                  form.setValue("baseTokenAmount", formatUnits(amount));
                                   setIsBaseTokenChangedByUser(true);
-                                  setLastEditedSide('base');
+                                  setLastEditedSide("base");
                                 }}
                                 disabled={isDisabled || (baseBalance || BigInt(0)) <= BigInt(0)}
                                 className="text-xs h-7 px-2 rounded-lg"
@@ -910,9 +936,9 @@ const LiquidityPanel = () => {
                               size="sm"
                               type="button"
                               onClick={() => {
-                                form.setValue('baseTokenAmount', formatUnits(baseBalance || BigInt(0)));
+                                form.setValue("baseTokenAmount", formatUnits(baseBalance || BigInt(0)));
                                 setIsBaseTokenChangedByUser(true);
-                                setLastEditedSide('base');
+                                setLastEditedSide("base");
                               }}
                               disabled={isDisabled || (baseBalance || BigInt(0)) <= BigInt(0)}
                               className="text-xs h-7 px-2 rounded-lg"
@@ -948,7 +974,7 @@ const LiquidityPanel = () => {
                             onChange={(e) => {
                               field.onChange(e);
                               setIsTokenChangedByUser(true);
-                              setLastEditedSide('token');
+                              setLastEditedSide("token");
                             }}
                             className="text-xl border-none p-0 h-auto bg-transparent focus:ring-0 focus:outline-none mr-2"
                           />
@@ -966,9 +992,9 @@ const LiquidityPanel = () => {
                                 type="button"
                                 onClick={() => {
                                   const amount = ((tokenBalance ?? BigInt(0)) * BigInt(percentage)) / BigInt(100);
-                                  form.setValue('tokenAmount', formatUnits(amount));
+                                  form.setValue("tokenAmount", formatUnits(amount));
                                   setIsTokenChangedByUser(true);
-                                  setLastEditedSide('token');
+                                  setLastEditedSide("token");
                                 }}
                                 disabled={isDisabled || (tokenBalance || BigInt(0)) <= BigInt(0)}
                                 className="text-xs h-7 px-2 rounded-lg"
@@ -981,9 +1007,9 @@ const LiquidityPanel = () => {
                               size="sm"
                               type="button"
                               onClick={() => {
-                                form.setValue('tokenAmount', formatUnits(tokenBalance || BigInt(0)));
+                                form.setValue("tokenAmount", formatUnits(tokenBalance || BigInt(0)));
                                 setIsTokenChangedByUser(true);
-                                setLastEditedSide('token');
+                                setLastEditedSide("token");
                               }}
                               disabled={isDisabled || (tokenBalance || BigInt(0)) <= BigInt(0)}
                               className="text-xs h-7 px-2 rounded-lg"
@@ -1056,11 +1082,11 @@ const LiquidityPanel = () => {
                     {priceChangePercentage && (
                       <span
                         className={`ml-1 ${
-                          priceChangePercentage.startsWith('-')
-                            ? 'text-red-600'
-                            : priceChangePercentage.startsWith('+')
-                            ? 'text-green-600'
-                            : 'text-gray-500'
+                          priceChangePercentage.startsWith("-")
+                            ? "text-red-600"
+                            : priceChangePercentage.startsWith("+")
+                              ? "text-green-600"
+                              : "text-gray-500"
                         }`}
                       >
                         ({priceChangePercentage})
@@ -1118,11 +1144,11 @@ const LiquidityPanel = () => {
                           <Button
                             key={preset}
                             type="button"
-                            variant={slippage === preset ? 'default' : 'outline'}
+                            variant={slippage === preset ? "default" : "outline"}
                             size="sm"
                             onClick={() => {
                               setSlippage(preset);
-                              setCustomSlippage('');
+                              setCustomSlippage("");
                               setIsSlippageDialogOpen(false);
                             }}
                             className="text-xs"
@@ -1157,7 +1183,7 @@ const LiquidityPanel = () => {
                               setSlippage(value);
                               setIsSlippageDialogOpen(false);
                             } else {
-                              toast.error('滑点应在 0-50% 之间');
+                              toast.error("滑点应在 0-50% 之间");
                             }
                           }}
                           className="w-full"
@@ -1178,19 +1204,22 @@ const LiquidityPanel = () => {
                 className="w-full sm:flex-1 lg:w-auto lg:px-4"
                 disabled={
                   !hasBaseInput ||
-                  isPendingApproveBaseAllowance || isPendingApproveBase || isConfirmingApproveBase || isBaseTokenApproved
+                  isPendingApproveBaseAllowance ||
+                  isPendingApproveBase ||
+                  isConfirmingApproveBase ||
+                  isBaseTokenApproved
                 }
                 onClick={handleApproveBase}
               >
                 {isPendingApproveBaseAllowance
-                  ? '1.读取授权...'
+                  ? "1.读取授权..."
                   : isPendingApproveBase
-                  ? '1.授权中...'
-                  : isConfirmingApproveBase
-                  ? '1.确认中...'
-                  : isBaseTokenApproved
-                  ? `1.${baseToken.symbol}已授权`
-                  : `1.${baseApprovalActionText}${baseToken.symbol}`}
+                    ? "1.授权中..."
+                    : isConfirmingApproveBase
+                      ? "1.确认中..."
+                      : isBaseTokenApproved
+                        ? `1.${baseToken.symbol}已授权`
+                        : `1.${baseApprovalActionText}${baseToken.symbol}`}
               </Button>
               <Button
                 type="button"
@@ -1206,14 +1235,14 @@ const LiquidityPanel = () => {
                 onClick={handleApproveToken}
               >
                 {isPendingApproveTokenAllowance
-                  ? '2.读取授权...'
+                  ? "2.读取授权..."
                   : isPendingApproveToken
-                  ? '2.授权中...'
-                  : isConfirmingApproveToken
-                  ? '2.确认中...'
-                  : isTokenApproved
-                  ? `2.${targetToken.symbol}已授权`
-                  : `2.${tokenApprovalActionText}${targetToken.symbol}`}
+                    ? "2.授权中..."
+                    : isConfirmingApproveToken
+                      ? "2.确认中..."
+                      : isTokenApproved
+                        ? `2.${targetToken.symbol}已授权`
+                        : `2.${tokenApprovalActionText}${targetToken.symbol}`}
               </Button>
               <Button
                 className="w-full sm:flex-1 lg:w-auto lg:px-4"
@@ -1228,12 +1257,12 @@ const LiquidityPanel = () => {
                 }
               >
                 {isAddingLiquidity
-                  ? '3.提交中...'
+                  ? "3.提交中..."
                   : isConfirmingLiquidity
-                  ? '3.确认中...'
-                  : isAddLiquidityConfirmed
-                  ? '3.已添加'
-                  : '3.提交'}
+                    ? "3.确认中..."
+                    : isAddLiquidityConfirmed
+                      ? "3.已添加"
+                      : "3.提交"}
               </Button>
             </div>
           </form>
@@ -1243,7 +1272,7 @@ const LiquidityPanel = () => {
       <LoadingOverlay
         isLoading={isApproving || isApproveConfirming || isAddingLiquidity || isConfirmingLiquidity}
         text={
-          isApproving || isAddingLiquidity ? '提交交易...' : isApproveConfirming ? '确认授权...' : '确认添加流动性...'
+          isApproving || isAddingLiquidity ? "提交交易..." : isApproveConfirming ? "确认授权..." : "确认添加流动性..."
         }
       />
     </div>
