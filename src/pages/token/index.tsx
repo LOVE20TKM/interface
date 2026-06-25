@@ -1,44 +1,44 @@
-'use client';
+"use client";
 
-import React, { useContext, useMemo } from 'react';
-import { useAccount, useBlockNumber } from 'wagmi';
-import { formatUnits as viemFormatUnits } from 'viem';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
+import React, { useContext, useMemo } from "react";
+import { useAccount, useBlockNumber } from "wagmi";
+import { formatUnits as viemFormatUnits } from "viem";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 // ui
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { HandCoins, TableOfContents, Pickaxe, Blocks, BarChart2, Users, Rocket, Info, Lock } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { HandCoins, TableOfContents, Pickaxe, Blocks, BarChart2, Users, Rocket, Info, Lock } from "lucide-react";
 
 // my context
-import { TokenContext } from '@/src/contexts/TokenContext';
+import { TokenContext } from "@/src/contexts/TokenContext";
 
 // my components
-import Header from '@/src/components/Header';
-import LoadingIcon from '@/src/components/Common/LoadingIcon';
-import AddressWithCopyButton from '@/src/components/Common/AddressWithCopyButton';
+import Header from "@/src/components/Header";
+import LoadingIcon from "@/src/components/Common/LoadingIcon";
+import AddressWithCopyButton from "@/src/components/Common/AddressWithCopyButton";
 
 // my hooks
-import { useBalancesOf } from '@/src/hooks/contracts/useLOVE20Token';
-import { useTokenDetailBySymbol, useTokenStatistics } from '@/src/hooks/contracts/useLOVE20TokenViewer';
-import { useLaunchInfo } from '@/src/hooks/contracts/useLOVE20Launch';
-import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
-import { useUSDTPairTokenBalance } from '@/src/hooks/composite/useUSDTPairTokenBalance';
-import { useChildTokenLpBalance } from '@/src/hooks/composite/useChildTokenLpBalance';
-import { formatPercentage } from '@/src/lib/format';
+import { useBalancesOf } from "@/src/hooks/contracts/useLOVE20Token";
+import { useTokenDetailBySymbol, useTokenStatistics } from "@/src/hooks/contracts/useLOVE20TokenViewer";
+import { useLaunchInfo } from "@/src/hooks/contracts/useLOVE20Launch";
+import { useCurrentRound } from "@/src/hooks/contracts/useLOVE20Vote";
+import { useUSDTPairTokenBalance } from "@/src/hooks/composite/useUSDTPairTokenBalance";
+import { useChildTokenLpBalance } from "@/src/hooks/composite/useChildTokenLpBalance";
+import { formatPercentage } from "@/src/lib/format";
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as const;
 
 // 简单的字段组件
 function Field({
   label,
   value,
   percentage,
-  font = '',
+  font = "",
 }: {
   label: string;
   value: string;
@@ -106,7 +106,7 @@ function FieldWithInfo({
 function AddressItem({
   name,
   address,
-  nameClassName = 'text-base',
+  nameClassName = "text-base",
 }: {
   name: string;
   address?: string;
@@ -130,23 +130,23 @@ function AddressItem({
 
 // 数字格式化（带千分位）
 function formatBigIntWithCommas(v?: bigint) {
-  if (v === undefined || v === null) return '0';
+  if (v === undefined || v === null) return "0";
   const s = v.toString();
-  return s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return s.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 // 金额格式化：使用当前 token 的 decimals
 function formatAmount(value?: bigint, decimals?: number, symbol?: string) {
-  if (value === undefined || value === null) return '0';
-  const d = typeof decimals === 'number' ? decimals : 18;
+  if (value === undefined || value === null) return "0";
+  const d = typeof decimals === "number" ? decimals : 18;
   const str = viemFormatUnits(value, d);
   // 默认按 0/2/4 的常用小数展示，并尽量短
   const num = Number(str);
   let formatted: string;
-  if (num === 0) formatted = '0';
-  else if (Math.abs(num) >= 1000) formatted = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(num);
-  else if (Math.abs(num) >= 10) formatted = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(num);
-  else formatted = new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(num);
+  if (num === 0) formatted = "0";
+  else if (Math.abs(num) >= 1000) formatted = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(num);
+  else if (Math.abs(num) >= 10) formatted = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(num);
+  else formatted = new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 }).format(num);
   return symbol ? `${formatted} ${symbol}` : formatted;
 }
 
@@ -155,14 +155,14 @@ const TokenPage = () => {
   const { data: currentBlockNumber } = useBlockNumber({ watch: true });
   const router = useRouter();
   const { token: currentToken } = useContext(TokenContext) || {};
-  const routeSymbol = typeof router.query.symbol === 'string' ? router.query.symbol : undefined;
+  const routeSymbol = typeof router.query.symbol === "string" ? router.query.symbol : undefined;
   const shouldFetchRouteToken = !!routeSymbol && (!currentToken || currentToken.symbol !== routeSymbol);
   const {
     token: routeTokenInfo,
     launchInfo: routeLaunchInfo,
     isPending: isPendingRouteTokenInfo,
     error: errorRouteTokenInfo,
-  } = useTokenDetailBySymbol(shouldFetchRouteToken ? routeSymbol : '');
+  } = useTokenDetailBySymbol(shouldFetchRouteToken ? routeSymbol : "");
 
   const effectiveToken = shouldFetchRouteToken
     ? routeTokenInfo && routeLaunchInfo
@@ -192,11 +192,7 @@ const TokenPage = () => {
     isPending: isPendingTokenStatistics,
   } = useTokenStatistics(effectiveTokenAddress, launchEnded);
 
-  const {
-    launchInfo,
-    error: errorLaunchInfo,
-    isPending: isPendingLaunchInfo,
-  } = useLaunchInfo(effectiveTokenAddress);
+  const { launchInfo, error: errorLaunchInfo, isPending: isPendingLaunchInfo } = useLaunchInfo(effectiveTokenAddress);
 
   const tokenAddress = effectiveTokenAddress || ZERO_ADDRESS;
   const joinContractAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_JOIN as `0x${string}`) || ZERO_ADDRESS;
@@ -222,15 +218,16 @@ const TokenPage = () => {
     actionContractAddresses,
     launchEnded && tokenAddress !== ZERO_ADDRESS,
   );
-  const [joinContractBalanceRaw, groupJoinContractBalanceRaw, groupManagerContractBalanceRaw] = actionContractBalancesRaw;
+  const [joinContractBalanceRaw, groupJoinContractBalanceRaw, groupManagerContractBalanceRaw] =
+    actionContractBalancesRaw;
 
   const decimals = effectiveToken?.decimals ?? 18;
-  const parentSymbol = effectiveToken?.parentTokenSymbol ?? '';
+  const parentSymbol = effectiveToken?.parentTokenSymbol ?? "";
 
   // 代币统计（变量命名与 TokenStats 保持一致）
   const maxSupply = BigInt(process.env.NEXT_PUBLIC_MAX_SUPPLY ?? 0);
   const totalSupply = launchEnded
-    ? tokenStatistics?.totalSupply ?? BigInt(0)
+    ? (tokenStatistics?.totalSupply ?? BigInt(0))
     : BigInt(process.env.NEXT_PUBLIC_LAUNCH_AMOUNT ?? 0);
   const reservedAvailable = tokenStatistics?.reservedAvailable ?? BigInt(0);
   const rewardAvailable = tokenStatistics?.rewardAvailable ?? BigInt(0);
@@ -258,12 +255,14 @@ const TokenPage = () => {
   const actionParticipationBalanceBase = contractBalance + usdtPairBalance + parentCurrentPairBalance;
   const actionParticipationBalance =
     actionParticipationBalanceBase > tokenAmountForSl ? actionParticipationBalanceBase - tokenAmountForSl : BigInt(0);
-  const distributedSupply = tokenAmountForSl + stakedTokenAmountForSt + actionParticipationBalance + childTokenLpBalance;
+  const distributedSupply =
+    tokenAmountForSl + stakedTokenAmountForSt + actionParticipationBalance + childTokenLpBalance;
   const otherBalance = totalSupply > distributedSupply ? totalSupply - distributedSupply : BigInt(0);
   const tvlUsdtPairBalance = usdtPairBalance * BigInt(2);
   const tvlParentPairBalance = parentCurrentPairBalance * BigInt(2);
   const tvlChildTokenLpBalance = childTokenLpBalance * BigInt(2);
-  const tvl = stakedTokenAmountForSt + contractBalance + tvlUsdtPairBalance + tvlParentPairBalance + tvlChildTokenLpBalance;
+  const tvl =
+    stakedTokenAmountForSt + contractBalance + tvlUsdtPairBalance + tvlParentPairBalance + tvlChildTokenLpBalance;
   const shouldWaitForRouteToken = shouldFetchRouteToken;
   const shouldWaitForLaunchInfo = !!effectiveTokenAddress;
   const shouldWaitForTokenStatistics = !!effectiveTokenAddress && launchEnded;
@@ -273,7 +272,7 @@ const TokenPage = () => {
     (shouldWaitForUSDTPair && isPendingUSDTPair) ||
     (shouldWaitForActionContractBalances && isPendingActionContractBalances);
   const formatShare = (value: bigint, total: bigint) =>
-    total > BigInt(0) ? formatPercentage((Number(value) / Number(total)) * 100) : '0%';
+    total > BigInt(0) ? formatPercentage((Number(value) / Number(total)) * 100) : "0%";
 
   // 发射区块
   const startBlock = launchInfo?.startBlock;
@@ -294,6 +293,7 @@ const TokenPage = () => {
     Random: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_RANDOM,
     UniswapV2Factory: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_FACTORY,
     UniswapV2Router02: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ROUTER,
+    UniswapV2Zap: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_UNISWAP_V2_ZAP,
     TokenViewer: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_TOKENVIEWER,
     RoundViewer: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_ROUNDVIEWER,
     MintViewer: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_PERIPHERAL_MINTVIEWER,
@@ -346,7 +346,7 @@ const TokenPage = () => {
         ) : !effectiveToken ? (
           <div className="flex flex-col items-center p-4 mt-4">
             <div className="text-center mb-4 text-greyscale-500">
-              {errorRouteTokenInfo ? '代币信息读取失败，请刷新后重试' : '代币信息加载中'}
+              {errorRouteTokenInfo ? "代币信息读取失败，请刷新后重试" : "代币信息加载中"}
             </div>
           </div>
         ) : (
@@ -397,7 +397,7 @@ const TokenPage = () => {
                           </div>
                           {/* 当存在父币且父币不是第一个父币时显示返回父币链接 */}
                           {effectiveToken.parentTokenAddress &&
-                            effectiveToken.parentTokenAddress !== '0x0000000000000000000000000000000000000000' &&
+                            effectiveToken.parentTokenAddress !== "0x0000000000000000000000000000000000000000" &&
                             effectiveToken.parentTokenSymbol &&
                             effectiveToken.parentTokenSymbol !== process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL && (
                               <Link
@@ -490,8 +490,10 @@ const TokenPage = () => {
                           />
                           <FieldWithInfo
                             label="子币LP"
-                            value={isPendingChildTokenLpBalance ? '...' : formatAmount(childTokenLpBalance, decimals)}
-                            percentage={isPendingChildTokenLpBalance ? undefined : formatShare(childTokenLpBalance, totalSupply)}
+                            value={isPendingChildTokenLpBalance ? "..." : formatAmount(childTokenLpBalance, decimals)}
+                            percentage={
+                              isPendingChildTokenLpBalance ? undefined : formatShare(childTokenLpBalance, totalSupply)
+                            }
                             infoTitle="子币LP统计口径"
                             infoContent={
                               <div className="space-y-2">
@@ -505,16 +507,16 @@ const TokenPage = () => {
                           />
                           <FieldWithInfo
                             label="其他"
-                            value={isPendingChildTokenLpBalance ? '...' : formatAmount(otherBalance, decimals)}
-                            percentage={isPendingChildTokenLpBalance ? undefined : formatShare(otherBalance, totalSupply)}
+                            value={isPendingChildTokenLpBalance ? "..." : formatAmount(otherBalance, decimals)}
+                            percentage={
+                              isPendingChildTokenLpBalance ? undefined : formatShare(otherBalance, totalSupply)
+                            }
                             infoTitle="其他统计口径"
                             infoContent={
                               <div className="space-y-2">
                                 <p className="font-medium">其他统计口径：</p>
                                 <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
-                                  <div>
-                                    其他 = 已铸造量 - 流动性质押 - 加速激励质押 - 行动参与 - 子币LP
-                                  </div>
+                                  <div>其他 = 已铸造量 - 流动性质押 - 加速激励质押 - 行动参与 - 子币LP</div>
                                 </div>
                                 <p>百分比口径：其他 / 已铸造量</p>
                               </div>
@@ -535,7 +537,7 @@ const TokenPage = () => {
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
                           <FieldWithInfo
                             label="TVL总量"
-                            value={isPendingChildTokenLpBalance ? '...' : formatAmount(tvl, decimals)}
+                            value={isPendingChildTokenLpBalance ? "..." : formatAmount(tvl, decimals)}
                             percentage={isPendingChildTokenLpBalance ? undefined : formatShare(tvl, totalSupply)}
                             infoTitle="TVL统计口径"
                             infoContent={
@@ -543,9 +545,8 @@ const TokenPage = () => {
                                 <p className="font-medium">TVL统计口径：</p>
                                 <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
                                   <div>
-                                    TVL = 加速激励质押 + 行动合约托管(Join + GroupJoin + GroupManager) +
-                                    LP(当前代币/{process.env.NEXT_PUBLIC_USDT_SYMBOL}) × 2 + LP(当前代币/父币) × 2 +
-                                    子币LP × 2
+                                    TVL = 加速激励质押 + 行动合约托管(Join + GroupJoin + GroupManager) + LP(当前代币/
+                                    {process.env.NEXT_PUBLIC_USDT_SYMBOL}) × 2 + LP(当前代币/父币) × 2 + 子币LP × 2
                                   </div>
                                 </div>
                                 <p>LP 项按双边口径计入 TVL，即按当前代币侧储备折算两边总价值。</p>
@@ -585,8 +586,14 @@ const TokenPage = () => {
                           />
                           <FieldWithInfo
                             label="子币LP"
-                            value={isPendingChildTokenLpBalance ? '...' : formatAmount(tvlChildTokenLpBalance, decimals)}
-                            percentage={isPendingChildTokenLpBalance ? undefined : formatShare(tvlChildTokenLpBalance, totalSupply)}
+                            value={
+                              isPendingChildTokenLpBalance ? "..." : formatAmount(tvlChildTokenLpBalance, decimals)
+                            }
+                            percentage={
+                              isPendingChildTokenLpBalance
+                                ? undefined
+                                : formatShare(tvlChildTokenLpBalance, totalSupply)
+                            }
                             infoTitle="子币LP TVL统计口径"
                             infoContent={
                               <div className="space-y-2">
@@ -637,7 +644,7 @@ const TokenPage = () => {
                       <CardContent className="grid grid-cols-2 gap-4 px-4 pt-2 pb-4">
                         <Field label="首次治理轮次" value={String(effectiveToken.initialStakeRound ?? 0)} />
                         <Field label="已完成轮数" value={formatBigIntWithCommas(finishedRounds)} />
-                        <Field label="最新轮次" value={isPendingCurrentRound ? '...' : String(currentRound)} />
+                        <Field label="最新轮次" value={isPendingCurrentRound ? "..." : String(currentRound)} />
                         <Field label="当前区块高度" value={String(currentBlockNumber)} />
                         <Field label="累计发起行动数" value={formatBigIntWithCommas(actionsCount)} />
                         <Field label="进行中的行动数" value={formatBigIntWithCommas(joiningActionsCount)} />
@@ -653,9 +660,10 @@ const TokenPage = () => {
                           </div>
                           <div>
                             {effectiveToken.parentTokenAddress &&
-                              effectiveToken.parentTokenAddress !== '0x0000000000000000000000000000000000000000' &&
+                              effectiveToken.parentTokenAddress !== "0x0000000000000000000000000000000000000000" &&
                               effectiveToken.parentTokenSymbol &&
-                              effectiveToken.parentTokenSymbol !== process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL && (
+                              effectiveToken.parentTokenSymbol !==
+                                process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL && (
                                 <Link
                                   href={`/acting/?symbol=${effectiveToken.parentTokenSymbol}`}
                                   className="text-sm text-secondary hover:text-secondary/80 transition-colors mr-4"
@@ -686,7 +694,7 @@ const TokenPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
-                      <CardTitle className="text-lg">LOVE20 核心合约地址：</CardTitle>
+                      <CardTitle className="text-lg">核心合约</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
                       <AddressItem name="TokenFactory" address={constantsAddresses.TokenFactory} />
@@ -703,11 +711,14 @@ const TokenPage = () => {
 
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
-                      <CardTitle className="text-lg">{`${effectiveToken.symbol} 相关代币地址：`}</CardTitle>
+                      <CardTitle className="text-lg">{`${effectiveToken.symbol} 相关代币`}</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
                       <AddressItem name={`${effectiveToken.symbol}(当前代币)`} address={currentAddresses.token} />
-                      <AddressItem name={`${effectiveToken.parentTokenSymbol}(父币)`} address={currentAddresses.parent} />
+                      <AddressItem
+                        name={`${effectiveToken.parentTokenSymbol}(父币)`}
+                        address={currentAddresses.parent}
+                      />
                       <AddressItem
                         name={`${process.env.NEXT_PUBLIC_USDT_SYMBOL}(稳定币)`}
                         address={currentAddresses.usdt}
@@ -719,15 +730,15 @@ const TokenPage = () => {
 
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
-                      <CardTitle className="text-lg">LOVE20 系统代币地址：</CardTitle>
+                      <CardTitle className="text-lg">协议初始代币</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
                       <AddressItem
-                        name={`${process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL || 'RootParentToken'}(根父币)`}
+                        name={`${process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL || "RootParentToken"}(根父币)`}
                         address={constantsAddresses.RootParentToken}
                       />
                       <AddressItem
-                        name={`${process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL || 'FirstToken'}(首个代币)`}
+                        name={`${process.env.NEXT_PUBLIC_FIRST_TOKEN_SYMBOL || "FirstToken"}(首个代币)`}
                         address={constantsAddresses.FirstToken}
                       />
                     </CardContent>
@@ -735,7 +746,7 @@ const TokenPage = () => {
 
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
-                      <CardTitle className="text-lg">UniswapV2 合约地址：</CardTitle>
+                      <CardTitle className="text-lg">UniswapV2 合约</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
                       <AddressItem name="UniswapV2Factory" address={constantsAddresses.UniswapV2Factory} />
@@ -746,7 +757,7 @@ const TokenPage = () => {
 
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
-                      <CardTitle className="text-lg">LOVE20 外围合约地址：</CardTitle>
+                      <CardTitle className="text-lg">外围合约</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
                       <AddressItem name="TokenViewer" address={constantsAddresses.TokenViewer} />
@@ -758,28 +769,42 @@ const TokenPage = () => {
 
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
-                      <CardTitle className="text-lg">LOVE20 应用合约地址：</CardTitle>
+                      <CardTitle className="text-lg">工具合约</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
                       <AddressItem name="BatchTransfer" address={constantsAddresses.BatchTransfer} />
+                      <AddressItem name="UniswapV2Zap" address={constantsAddresses.UniswapV2Zap} />
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="px-4 pt-4 pb-2">
+                      <CardTitle className="text-lg">NFT</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-3 px-4 pt-2 pb-4">
+                      <AddressItem name="Group" address={constantsAddresses.Group} />
+                      <AddressItem name="GroupDefaults" address={constantsAddresses.GroupDefaults} />
+                      <AddressItem name="GroupDelegate" address={constantsAddresses.GroupDelegate} />
                     </CardContent>
                   </Card>
 
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
                       <CardTitle className="flex items-center justify-between text-lg">
-                        <span>LOVE20 生态合约地址：</span>
+                        <span>扩展协议</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
-                      <AddressItem name="Group" address={constantsAddresses.Group} />
-                      <AddressItem name="GroupDefaults" address={constantsAddresses.GroupDefaults} />
-                      <AddressItem name="GroupDelegate" address={constantsAddresses.GroupDelegate} />
                       <AddressItem name="ExtensionCenter" address={constantsAddresses.ExtensionCenter} />
                       {constantsAddresses.ExtensionLpFactoryV2 ? (
                         <>
-                          <AddressItem name="ExtensionLpFactoryV2(推荐)" address={constantsAddresses.ExtensionLpFactoryV2} />
-                          <AddressItem name="ExtensionLpFactory(V1旧版)" address={constantsAddresses.ExtensionLpFactory} />
+                          <AddressItem
+                            name="ExtensionLpFactoryV2(推荐)"
+                            address={constantsAddresses.ExtensionLpFactoryV2}
+                          />
+                          <AddressItem
+                            name="ExtensionLpFactory(V1旧版)"
+                            address={constantsAddresses.ExtensionLpFactory}
+                          />
                         </>
                       ) : (
                         <AddressItem name="ExtensionLpFactory" address={constantsAddresses.ExtensionLpFactory} />
@@ -803,7 +828,7 @@ const TokenPage = () => {
 
                   <Card>
                     <CardHeader className="px-4 pt-4 pb-2">
-                      <CardTitle className="text-lg">GroupChat 合约地址：</CardTitle>
+                      <CardTitle className="text-lg">群聊协议</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3 px-4 pt-2 pb-4">
                       <AddressItem name="GroupChat" address={constantsAddresses.GroupChat} />
