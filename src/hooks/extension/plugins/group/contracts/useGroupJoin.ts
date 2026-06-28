@@ -58,14 +58,19 @@ export const useJoinInfo = (extensionAddress: `0x${string}`, round: bigint, acco
 /**
  * Hook for accountsByGroupIdCount - 获取指定组ID的账户数量
  */
-export const useAccountsByGroupIdCount = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
+export const useAccountsByGroupIdCount = (
+  extensionAddress: `0x${string}`,
+  round: bigint,
+  groupId: bigint,
+  enabled = true,
+) => {
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupJoinAbi,
     functionName: 'accountsByGroupIdCount',
     args: [extensionAddress, round, groupId],
     query: {
-      enabled: !!extensionAddress && !!round && !!groupId,
+      enabled: enabled && !!extensionAddress && !!round && !!groupId,
     },
   });
 

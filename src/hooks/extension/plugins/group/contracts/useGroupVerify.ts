@@ -66,7 +66,7 @@ export const useIsVerified = (extensionAddress: `0x${string}`, round: bigint, gr
  * Hook for verifiedAccountCount - 获取指定轮次和组ID的已验证账户数量
  */
 export const useVerifiedAccountCount = (extensionAddress: `0x${string}`, round: bigint, groupId: bigint) => {
-  const { data, isPending, error } = useUniversalReadContract({
+  const { data, isPending, error, refetch } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: GroupVerifyAbi,
     functionName: 'verifiedAccountCount',
@@ -76,7 +76,7 @@ export const useVerifiedAccountCount = (extensionAddress: `0x${string}`, round: 
     },
   });
 
-  return { verifiedAccountCount: safeToBigInt(data), isPending, error };
+  return { verifiedAccountCount: safeToBigInt(data), isPending, error, refetch };
 };
 
 /**

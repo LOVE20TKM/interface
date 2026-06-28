@@ -37,6 +37,8 @@ export interface UseAccountsByGroupIdByRoundParams {
   groupId: bigint;
   /** 轮次 */
   round: bigint;
+  /** 是否启用读取 */
+  enabled?: boolean;
 }
 
 /**
@@ -82,7 +84,7 @@ export interface UseAccountsByGroupIdByRoundResult {
 export function useAccountsByGroupIdByRound(
   params: UseAccountsByGroupIdByRoundParams,
 ): UseAccountsByGroupIdByRoundResult {
-  const { extensionAddress, groupId, round } = params;
+  const { extensionAddress, groupId, round, enabled = true } = params;
 
   // 第一步：获取账号总数
   // 新版合约 useAccountsByGroupIdByRoundCount 需要 extensionAddress, groupId, round 参数
@@ -90,7 +92,7 @@ export function useAccountsByGroupIdByRound(
     count,
     isPending: isPendingCount,
     error: errorCount,
-  } = useAccountsByGroupIdCount(extensionAddress, round, groupId);
+  } = useAccountsByGroupIdCount(extensionAddress, round, groupId, enabled);
 
   // 转换为数字类型
   const accountCount = useMemo(() => {
@@ -101,7 +103,7 @@ export function useAccountsByGroupIdByRound(
   // 第二步：构建批量查询合约调用
   // 新版合约的 accountsByGroupIdByRoundAtIndex 参数顺序为 extensionAddress, groupId, round, index
   const accountsContracts = useMemo(() => {
-    if (!extensionAddress || accountCount === BigInt(0)) return [];
+    if (!enabled || !extensionAddress || accountCount === BigInt(0)) return [];
 
     const contracts = [];
     for (let i = BigInt(0); i < accountCount; i++) {
@@ -114,7 +116,7 @@ export function useAccountsByGroupIdByRound(
     }
 
     return contracts;
-  }, [extensionAddress, round, groupId, accountCount]);
+  }, [enabled, extensionAddress, round, groupId, accountCount]);
 
   // 第三步：批量获取账号地址
   const {
@@ -124,7 +126,7 @@ export function useAccountsByGroupIdByRound(
   } = useUniversalReadContracts({
     contracts: accountsContracts as any,
     query: {
-      enabled: accountCount > BigInt(0) && accountsContracts.length > 0,
+      enabled: enabled && accountCount > BigInt(0) && accountsContracts.length > 0,
     },
   });
 
@@ -137,10 +139,11 @@ export function useAccountsByGroupIdByRound(
   // 计算最终的 pending 状态
   // 如果账号数为 0，则不需要等待账号列表的加载
   const finalIsPending = useMemo(() => {
+    if (!enabled) return false;
     if (isPendingCount) return true;
     if (accountCount === BigInt(0)) return false;
     return isAccountsPending;
-  }, [isPendingCount, accountCount, isAccountsPending]);
+  }, [enabled, isPendingCount, accountCount, isAccountsPending]);
 
   return {
     accounts,
