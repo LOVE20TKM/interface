@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
@@ -297,126 +297,75 @@ const LiquidityPanel = () => {
   // --------------------------------------------------
   // 4. 自动计算数量逻辑
   // --------------------------------------------------
-  const [isBaseTokenChangedByUser, setIsBaseTokenChangedByUser] = useState(false);
-  const [isTokenChangedByUser, setIsTokenChangedByUser] = useState(false);
-  const [lastEditedSide, setLastEditedSide] = useState<EditedSide | null>(null);
-
+  const lastEditedSideRef = useRef<EditedSide | null>(null);
   const baseTokenValue = form.watch("baseTokenAmount");
   const tokenAmountValue = form.watch("tokenAmount");
   const parsedBaseAmount = parseLiquidityAmountInput(baseTokenValue) ?? BigInt(0);
   const parsedTokenAmount = parseLiquidityAmountInput(tokenAmountValue) ?? BigInt(0);
 
   // 根据流动性池储备量计算另一个代币的数量
-  // 当用户修改基础代币数量时，计算需要的目标代币数量
-  useEffect(() => {
-    // 如果池子不存在，不执行任何自动计算，让用户自由输入
-    if (!pairExists) {
+  const syncTokenAmountFromBaseAmount = useCallback((baseAmount: bigint) => {
+    if (!pairExists || baseAmount <= BigInt(0) || !baseReserve || !targetReserve) {
       return;
     }
 
-    if (isBaseTokenChangedByUser && parsedBaseAmount && parsedBaseAmount > BigInt(0) && baseReserve && targetReserve) {
-      // 使用 AMM 公式：ratio = baseAmount / targetAmount
-      const calculatedTokenAmount = (parsedBaseAmount * targetReserve) / baseReserve;
-      const tokenAmountToSet =
-        shouldUseZap && calculatedTokenAmount > (tokenBalance || BigInt(0))
-          ? tokenBalance || BigInt(0)
-          : calculatedTokenAmount;
-      form.setValue("tokenAmount", formatCalculatedAmount(tokenAmountToSet), { shouldValidate: true });
-      setIsBaseTokenChangedByUser(false);
-      setIsTokenChangedByUser(false);
-    }
-  }, [
-    isBaseTokenChangedByUser,
-    parsedBaseAmount,
-    pairExists,
-    baseReserve,
-    targetReserve,
-    shouldUseZap,
-    tokenBalance,
-    form,
-  ]);
+    const calculatedTokenAmount = (baseAmount * targetReserve) / baseReserve;
+    const tokenAmountToSet =
+      shouldUseZap && calculatedTokenAmount > (tokenBalance || BigInt(0))
+        ? tokenBalance || BigInt(0)
+        : calculatedTokenAmount;
+    const nextTokenAmount = formatCalculatedAmount(tokenAmountToSet);
 
-  // 当用户修改目标代币数量时，计算需要的基础代币数量
-  useEffect(() => {
-    // 如果池子不存在，不执行任何自动计算，让用户自由输入
-    if (!pairExists) {
+    if (form.getValues("tokenAmount") !== nextTokenAmount) {
+      form.setValue("tokenAmount", nextTokenAmount, { shouldValidate: true });
+    }
+  }, [baseReserve, form, pairExists, shouldUseZap, targetReserve, tokenBalance]);
+
+  const syncBaseAmountFromTokenAmount = useCallback((tokenAmount: bigint) => {
+    if (!pairExists || tokenAmount <= BigInt(0) || !baseReserve || !targetReserve) {
       return;
     }
 
-    if (isTokenChangedByUser && parsedTokenAmount && parsedTokenAmount > BigInt(0) && baseReserve && targetReserve) {
-      // 使用 AMM 公式：ratio = baseAmount / targetAmount
-      const calculatedBaseAmount = (parsedTokenAmount * baseReserve) / targetReserve;
-      const baseAmountToSet =
-        shouldUseZap && calculatedBaseAmount > (baseBalance || BigInt(0))
-          ? baseBalance || BigInt(0)
-          : calculatedBaseAmount;
-      form.setValue("baseTokenAmount", formatCalculatedAmount(baseAmountToSet), { shouldValidate: true });
-      setIsBaseTokenChangedByUser(false);
-      setIsTokenChangedByUser(false);
-    }
-  }, [
-    isTokenChangedByUser,
-    parsedTokenAmount,
-    pairExists,
-    baseReserve,
-    targetReserve,
-    shouldUseZap,
-    baseBalance,
-    form,
-  ]);
+    const calculatedBaseAmount = (tokenAmount * baseReserve) / targetReserve;
+    const baseAmountToSet =
+      shouldUseZap && calculatedBaseAmount > (baseBalance || BigInt(0))
+        ? baseBalance || BigInt(0)
+        : calculatedBaseAmount;
+    const nextBaseAmount = formatCalculatedAmount(baseAmountToSet);
 
-  useEffect(() => {
-    if (!shouldUseZap || !pairExists || !baseReserve || !targetReserve) {
+    if (form.getValues("baseTokenAmount") !== nextBaseAmount) {
+      form.setValue("baseTokenAmount", nextBaseAmount, { shouldValidate: true });
+    }
+  }, [baseBalance, baseReserve, form, pairExists, shouldUseZap, targetReserve]);
+
+  const resyncLastEditedAmounts = useCallback(() => {
+    const lastEditedSide = lastEditedSideRef.current;
+    if (!lastEditedSide) {
       return;
     }
 
-    const validateAmounts = () => {
-      void form.trigger(["baseTokenAmount", "tokenAmount"]);
-    };
-
-    if (lastEditedSide === "base" && parsedBaseAmount > BigInt(0)) {
-      const calculatedTokenAmount = (parsedBaseAmount * targetReserve) / baseReserve;
-      const tokenAmountToSet =
-        calculatedTokenAmount > (tokenBalance || BigInt(0)) ? tokenBalance || BigInt(0) : calculatedTokenAmount;
-      const nextTokenAmount = formatCalculatedAmount(tokenAmountToSet);
-
-      if (tokenAmountValue !== nextTokenAmount) {
-        form.setValue("tokenAmount", nextTokenAmount, { shouldValidate: true });
-      } else {
-        validateAmounts();
+    if (lastEditedSide === "base") {
+      const baseAmount = parseLiquidityAmountInput(form.getValues("baseTokenAmount"));
+      if (baseAmount !== null) {
+        syncTokenAmountFromBaseAmount(baseAmount);
       }
-      return;
-    }
-
-    if (lastEditedSide === "token" && parsedTokenAmount > BigInt(0)) {
-      const calculatedBaseAmount = (parsedTokenAmount * baseReserve) / targetReserve;
-      const baseAmountToSet =
-        calculatedBaseAmount > (baseBalance || BigInt(0)) ? baseBalance || BigInt(0) : calculatedBaseAmount;
-      const nextBaseAmount = formatCalculatedAmount(baseAmountToSet);
-
-      if (baseTokenValue !== nextBaseAmount) {
-        form.setValue("baseTokenAmount", nextBaseAmount, { shouldValidate: true });
-      } else {
-        validateAmounts();
+    } else {
+      const tokenAmount = parseLiquidityAmountInput(form.getValues("tokenAmount"));
+      if (tokenAmount !== null) {
+        syncBaseAmountFromTokenAmount(tokenAmount);
       }
+    }
+
+    void form.trigger(["baseTokenAmount", "tokenAmount"]);
+  }, [form, syncBaseAmountFromTokenAmount, syncTokenAmountFromBaseAmount]);
+
+  useEffect(() => {
+    if (isLoadingLiquidityData) {
       return;
     }
 
-    validateAmounts();
-  }, [
-    shouldUseZap,
-    pairExists,
-    baseReserve,
-    targetReserve,
-    baseBalance,
-    tokenBalance,
-    lastEditedSide,
-    parsedBaseAmount,
-    parsedTokenAmount,
-    baseTokenValue,
-    tokenAmountValue,
-    form,
-  ]);
+    resyncLastEditedAmounts();
+  }, [baseToken.address, isLoadingLiquidityData, resyncLastEditedAmounts]);
 
   // --------------------------------------------------
   // 5. 授权逻辑
@@ -737,6 +686,7 @@ const LiquidityPanel = () => {
         tokenAmount: "",
         baseTokenAddress: baseToken.address,
       });
+      lastEditedSideRef.current = null;
 
       // 立即刷新一次
       refreshLiquidityData();
@@ -865,8 +815,11 @@ const LiquidityPanel = () => {
                             disabled={isDisabled}
                             onChange={(e) => {
                               field.onChange(e);
-                              setIsBaseTokenChangedByUser(true);
-                              setLastEditedSide("base");
+                              lastEditedSideRef.current = "base";
+                              const amount = parseLiquidityAmountInput(e.target.value);
+                              if (amount !== null) {
+                                syncTokenAmountFromBaseAmount(amount);
+                              }
                             }}
                             className="text-xl border-none p-0 h-auto bg-transparent focus:ring-0 focus:outline-none mr-2"
                           />
@@ -921,9 +874,9 @@ const LiquidityPanel = () => {
                                 type="button"
                                 onClick={() => {
                                   const amount = ((baseBalance ?? BigInt(0)) * BigInt(percentage)) / BigInt(100);
-                                  form.setValue("baseTokenAmount", formatUnits(amount));
-                                  setIsBaseTokenChangedByUser(true);
-                                  setLastEditedSide("base");
+                                  lastEditedSideRef.current = "base";
+                                  form.setValue("baseTokenAmount", formatUnits(amount), { shouldValidate: true });
+                                  syncTokenAmountFromBaseAmount(amount);
                                 }}
                                 disabled={isDisabled || (baseBalance || BigInt(0)) <= BigInt(0)}
                                 className="text-xs h-7 px-2 rounded-lg"
@@ -936,9 +889,10 @@ const LiquidityPanel = () => {
                               size="sm"
                               type="button"
                               onClick={() => {
-                                form.setValue("baseTokenAmount", formatUnits(baseBalance || BigInt(0)));
-                                setIsBaseTokenChangedByUser(true);
-                                setLastEditedSide("base");
+                                const amount = baseBalance || BigInt(0);
+                                lastEditedSideRef.current = "base";
+                                form.setValue("baseTokenAmount", formatUnits(amount), { shouldValidate: true });
+                                syncTokenAmountFromBaseAmount(amount);
                               }}
                               disabled={isDisabled || (baseBalance || BigInt(0)) <= BigInt(0)}
                               className="text-xs h-7 px-2 rounded-lg"
@@ -973,8 +927,11 @@ const LiquidityPanel = () => {
                             disabled={isDisabled}
                             onChange={(e) => {
                               field.onChange(e);
-                              setIsTokenChangedByUser(true);
-                              setLastEditedSide("token");
+                              lastEditedSideRef.current = "token";
+                              const amount = parseLiquidityAmountInput(e.target.value);
+                              if (amount !== null) {
+                                syncBaseAmountFromTokenAmount(amount);
+                              }
                             }}
                             className="text-xl border-none p-0 h-auto bg-transparent focus:ring-0 focus:outline-none mr-2"
                           />
@@ -992,9 +949,9 @@ const LiquidityPanel = () => {
                                 type="button"
                                 onClick={() => {
                                   const amount = ((tokenBalance ?? BigInt(0)) * BigInt(percentage)) / BigInt(100);
-                                  form.setValue("tokenAmount", formatUnits(amount));
-                                  setIsTokenChangedByUser(true);
-                                  setLastEditedSide("token");
+                                  lastEditedSideRef.current = "token";
+                                  form.setValue("tokenAmount", formatUnits(amount), { shouldValidate: true });
+                                  syncBaseAmountFromTokenAmount(amount);
                                 }}
                                 disabled={isDisabled || (tokenBalance || BigInt(0)) <= BigInt(0)}
                                 className="text-xs h-7 px-2 rounded-lg"
@@ -1007,9 +964,10 @@ const LiquidityPanel = () => {
                               size="sm"
                               type="button"
                               onClick={() => {
-                                form.setValue("tokenAmount", formatUnits(tokenBalance || BigInt(0)));
-                                setIsTokenChangedByUser(true);
-                                setLastEditedSide("token");
+                                const amount = tokenBalance || BigInt(0);
+                                lastEditedSideRef.current = "token";
+                                form.setValue("tokenAmount", formatUnits(amount), { shouldValidate: true });
+                                syncBaseAmountFromTokenAmount(amount);
                               }}
                               disabled={isDisabled || (tokenBalance || BigInt(0)) <= BigInt(0)}
                               className="text-xs h-7 px-2 rounded-lg"

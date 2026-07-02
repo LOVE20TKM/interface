@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 import { parseContractError } from '../src/errors/contractErrorParser';
 import { calculateLiquiditySlippageMins, parseLiquidityAmountInput } from '../src/lib/liquidityAmountInput';
@@ -49,5 +51,49 @@ const zapMins = calculateLiquiditySlippageMins(BigInt(10000), BigInt(20000), 2.5
 assert.equal(zapMins.baseAmountMin, BigInt(3900));
 assert.equal(zapMins.tokenAmountMin, BigInt(5850));
 assert.equal(zapMins.liquidityMin, BigInt(975));
+
+const liquidityPanelSource = readFileSync(join(__dirname, '../src/components/Dex/Liquidity.tsx'), 'utf8');
+const autoCalculationStart = liquidityPanelSource.indexOf('// 4. 自动计算数量逻辑');
+const autoCalculationEnd = liquidityPanelSource.indexOf('// 5. 授权逻辑');
+assert.ok(autoCalculationStart >= 0, '需要找到流动性输入自动计算逻辑起点');
+assert.ok(autoCalculationEnd > autoCalculationStart, '需要找到流动性输入自动计算逻辑终点');
+const autoCalculationBlock = liquidityPanelSource.slice(autoCalculationStart, autoCalculationEnd);
+const autoCalculationEffects = autoCalculationBlock.match(
+  /useEffect\(\(\) => \{[\s\S]*?\n  \}, \[[\s\S]*?\]\);/g,
+) ?? [];
+
+assert.equal(
+  autoCalculationBlock.includes('const lastEditedSideRef = useRef') &&
+    liquidityPanelSource.includes('lastEditedSideRef.current = "base"') &&
+    liquidityPanelSource.includes('lastEditedSideRef.current = "token"'),
+  true,
+  '需要记录最后编辑的输入侧，才能在智能模式、储备量或基础代币变化后按正确方向重新同步',
+);
+assert.equal(
+  autoCalculationBlock.includes('resyncLastEditedAmounts();') &&
+    autoCalculationBlock.includes('baseToken.address') &&
+    autoCalculationBlock.includes('void form.trigger(["baseTokenAmount", "tokenAmount"])'),
+  true,
+  '智能模式、储备量或基础代币变化后需要重新同步并重新校验当前表单',
+);
+assert.equal(
+  autoCalculationEffects.some(
+    (effect) =>
+      effect.includes('form.trigger') &&
+      /baseTokenValue|tokenAmountValue|parsedBaseAmount|parsedTokenAmount/.test(effect),
+  ),
+  false,
+  '智能模式输入联动不能在 watch 驱动的 effect 中调用 form.trigger，否则删除数字时会反复验证并卡死',
+);
+assert.equal(
+  autoCalculationEffects.some((effect) => effect.includes('form.setValue')),
+  false,
+  '流动性输入联动不能在 watch 驱动的 effect 中写回表单值，否则手动删除和点击最高会互相触发',
+);
+assert.match(
+  liquidityPanelSource,
+  /form\.reset\(\{[\s\S]*?baseTokenAddress: baseToken\.address,[\s\S]*?\}\);\s*lastEditedSideRef\.current = null;/,
+  '添加流动性成功并清空表单后，也要清空最后编辑侧，避免后续刷新对空表单触发校验',
+);
 
 console.log('liquidity amount input ok');
