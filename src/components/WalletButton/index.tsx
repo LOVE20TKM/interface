@@ -384,6 +384,12 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
       token.parentTokenSymbol !== rootParentTokenSymbol,
   );
   const parentTokenHref = hasReturnParentToken ? `${basePath}/acting/?symbol=${token?.parentTokenSymbol}` : '';
+  const siblingTokensHref = hasReturnParentToken ? `${basePath}/tokens/children/?symbol=${token?.parentTokenSymbol}` : '';
+  const { childTokenNum: siblingTokenNum } = useChildTokensCount(
+    hasReturnParentToken ? token?.parentTokenAddress : undefined,
+    hasReturnParentToken && isOnTargetChain,
+  );
+  const hasOtherChildTokens = siblingTokenNum !== undefined && siblingTokenNum > BigInt(1);
   const isTokenInfoDisabled = isTokenSymbolPending || !tokenInfoHref;
   const isChildTokensDisabled = isTokenSymbolPending || !childTokensHref || !isOnTargetChain || childTokenNum === BigInt(0);
   const isReturnParentDisabled = isTokenSymbolPending || !parentTokenHref;
@@ -460,6 +466,15 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
     }
 
     NavigationUtils.redirectWithOverlay(parentTokenHref, '正在返回父币...');
+  };
+
+  const goToSiblingTokensPage = () => {
+    if (!hasOtherChildTokens || !siblingTokensHref) {
+      toast.error('当前代币暂无其他子币');
+      return;
+    }
+
+    NavigationUtils.redirectWithOverlay(siblingTokensHref, '正在打开其他子币...');
   };
 
   const goToMyLove20NftPage = () => {
@@ -866,6 +881,18 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               </span>
             )}
           </DropdownMenuItem>
+
+          {hasOtherChildTokens && (
+            <DropdownMenuItem
+              disabled={isTokenSymbolPending || !siblingTokensHref}
+              onClick={goToSiblingTokensPage}
+              className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+            >
+              <List className="mr-1.5 h-4 w-4 text-gray-500" />
+              <span className="min-w-0 flex-1">其他子币</span>
+              <span className="ml-auto text-xs text-gray-400">{(siblingTokenNum - BigInt(1)).toString()}</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
