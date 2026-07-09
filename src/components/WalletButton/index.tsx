@@ -11,6 +11,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Wallet, Copy, LogOut, ChevronDown, Check, Loader2, ArrowUpLeft, List, Pin, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,6 +32,7 @@ import { isGroupDefaultsEnabled, useDefaultGroupOf } from '@/src/hooks/extension
 import { useIsOnTargetChain } from '@/src/hooks/useIsOnTargetChain';
 import { NavigationUtils } from '@/src/lib/navigationUtils';
 import { useChildTokensCount } from '@/src/hooks/contracts/useLOVE20Launch';
+import { useChildTokensByPage, useTokenDetails } from '@/src/hooks/contracts/useLOVE20TokenViewer';
 import { getDefaultTokenSwitchPathname, getTokenSwitchRule } from '@/src/config/tokenSwitchRoutes';
 
 interface WalletButtonProps {
@@ -33,8 +41,17 @@ interface WalletButtonProps {
 
 const PINNED_TOKEN_LIMIT = 5;
 const RECENT_TOKEN_LIMIT = 3;
+const TOKEN_DRAWER_PAGE_SIZE = 50;
+const TOKEN_DRAWER_PAGE_SIZE_BIGINT = BigInt(TOKEN_DRAWER_PAGE_SIZE);
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const RECENT_TOKENS_KEY = (process.env.NEXT_PUBLIC_BASE_PATH || '') + '_recentTokens';
+
+type TokenSwitchTarget = Pick<Token, 'symbol' | 'hasEnded'>;
+
+type DrawerToken = TokenSwitchTarget & {
+  address: `0x${string}`;
+  name: string;
+};
 
 type RecentToken = Pick<
   Token,
@@ -128,6 +145,140 @@ const upsertRecentToken = (items: RecentToken[], token: Token) => {
   ]);
 };
 
+function TokenSwitchDrawer({
+  open,
+  onOpenChange,
+  title,
+  parentTokenAddress,
+  totalTokenCount,
+  excludeTokenAddress,
+  onSelectToken,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  parentTokenAddress?: `0x${string}`;
+  totalTokenCount?: bigint;
+  excludeTokenAddress?: `0x${string}`;
+  onSelectToken: (token: TokenSwitchTarget) => void;
+}) {
+  const [start, setStart] = useState(BigInt(0));
+  const [tokens, setTokens] = useState<DrawerToken[]>([]);
+  const rawTokenCount = totalTokenCount ?? BigInt(0);
+  const pageEnd = start + TOKEN_DRAWER_PAGE_SIZE_BIGINT - BigInt(1);
+  const end =
+    rawTokenCount > BigInt(0) ? (pageEnd < rawTokenCount ? pageEnd : rawTokenCount - BigInt(1)) : BigInt(0);
+  const canRead = open && !!parentTokenAddress && rawTokenCount > BigInt(0) && start < rawTokenCount;
+  const { childTokens, isPending: isLoadingAddresses, error: addressesError } = useChildTokensByPage(
+    parentTokenAddress,
+    start,
+    end,
+    canRead,
+  );
+  const {
+    tokens: tokenDetails,
+    launchInfos,
+    isPending: isLoadingDetails,
+    error: detailsError,
+  } = useTokenDetails(open ? childTokens || [] : []);
+  const visibleTokenCount =
+    rawTokenCount > BigInt(0) ? rawTokenCount - (excludeTokenAddress ? BigInt(1) : BigInt(0)) : BigInt(0);
+  const hasMore = start + TOKEN_DRAWER_PAGE_SIZE_BIGINT < rawTokenCount && BigInt(tokens.length) < visibleTokenCount;
+  const isLoading = isLoadingAddresses || isLoadingDetails;
+  const error = addressesError || detailsError;
+
+  useEffect(() => {
+    setStart(BigInt(0));
+    setTokens([]);
+  }, [excludeTokenAddress, open, parentTokenAddress]);
+
+  useEffect(() => {
+    if (!open || !childTokens || !tokenDetails || !launchInfos || tokenDetails.length !== childTokens.length) return;
+
+    const excludeAddress = excludeTokenAddress?.toLowerCase();
+    const nextTokens = tokenDetails
+      .map((tokenInfo, index) => ({
+        name: tokenInfo.name,
+        symbol: tokenInfo.symbol,
+        address: childTokens[index],
+        hasEnded: launchInfos[index].hasEnded,
+      }))
+      .filter((item) => item.address.toLowerCase() !== excludeAddress);
+
+    setTokens((prev) => {
+      const existingAddresses = new Set(prev.map((item) => item.address.toLowerCase()));
+      const missingTokens = nextTokens.filter((item) => !existingAddresses.has(item.address.toLowerCase()));
+      return missingTokens.length > 0 ? [...prev, ...missingTokens] : prev;
+    });
+  }, [childTokens, excludeTokenAddress, launchInfos, open, tokenDetails]);
+
+  const loadMore = () => {
+    if (!isLoading && hasMore) {
+      setStart((prev) => prev + TOKEN_DRAWER_PAGE_SIZE_BIGINT);
+    }
+  };
+
+  const handleSelect = (token: TokenSwitchTarget) => {
+    onOpenChange(false);
+    onSelectToken(token);
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="flex h-[82vh] max-h-[82vh] flex-col gap-0 overflow-hidden rounded-t-[10px] p-0">
+        <SheetHeader className="px-4 pb-2 pt-5 text-left">
+          <SheetTitle>{title}</SheetTitle>
+        </SheetHeader>
+
+        <div
+          className="min-h-0 flex-1 touch-pan-y space-y-2 overflow-y-auto overscroll-contain px-4 pb-2 [-webkit-overflow-scrolling:touch]"
+        >
+          {tokens.length === 0 && !isLoading && !error && (
+            <div className="py-8 text-center text-sm text-gray-400">暂无可选择的代币</div>
+          )}
+
+          {tokens.map((token) => (
+            <button
+              key={token.address}
+              type="button"
+              onClick={() => handleSelect(token)}
+              className="flex w-full items-center justify-between gap-3 rounded-lg border border-greyscale-200 bg-white px-3 py-3 text-left transition-colors hover:bg-greyscale-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+            >
+              <span className="min-w-0">
+                <span className="block truncate font-mono text-sm font-semibold text-gray-900">{token.symbol}</span>
+                <span className="block truncate text-xs text-gray-500">{token.name}</span>
+              </span>
+              <span className={cn('shrink-0 text-xs', token.hasEnded ? 'text-greyscale-500' : 'text-secondary')}>
+                {token.hasEnded ? '已完成' : '发射中'}
+              </span>
+            </button>
+          ))}
+
+          {isLoading && (
+            <div className="flex items-center justify-center gap-2 py-4 text-sm text-gray-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              加载中
+            </div>
+          )}
+
+          {error && <div className="py-4 text-center text-sm text-red-500">代币列表读取失败，请稍后重试</div>}
+        </div>
+
+        <SheetFooter className="flex-col gap-2 px-4 py-4 sm:flex-col sm:space-x-0">
+          {hasMore && (
+            <Button type="button" variant="outline" onClick={loadMore} disabled={isLoading}>
+              {isLoading ? '加载中...' : '加载更多'}
+            </Button>
+          )}
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            关闭
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export function WalletButton({ className }: WalletButtonProps = {}) {
   const router = useRouter();
   const tokenContext = useContext(TokenContext);
@@ -151,6 +302,12 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   const [isCheckingEthereum, setIsCheckingEthereum] = useState(typeof window !== 'undefined' && !window.ethereum);
   const [recentTokens, setRecentTokens] = useState<RecentToken[]>([]);
   const [isTokenMenuOpen, setIsTokenMenuOpen] = useState(false);
+  const [tokenDrawer, setTokenDrawer] = useState<{
+    title: string;
+    parentTokenAddress?: `0x${string}`;
+    totalTokenCount?: bigint;
+    excludeTokenAddress?: `0x${string}`;
+  } | null>(null);
   const { setError } = useError();
   const { defaultGroupId, defaultGroupName, hasDefaultGroup } = useDefaultGroupOf(
     address,
@@ -375,7 +532,6 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
 
   const myLove20NftHref = `${basePath}/group/groupids/`;
   const tokenInfoHref = token?.symbol ? `${basePath}/token/?symbol=${token.symbol}` : '';
-  const childTokensHref = token?.symbol ? `${basePath}/tokens/children/?symbol=${token.symbol}` : '';
   const rootParentTokenSymbol = process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL || 'TKM20';
   const hasReturnParentToken = Boolean(
     token?.parentTokenAddress &&
@@ -384,29 +540,30 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
       token.parentTokenSymbol !== rootParentTokenSymbol,
   );
   const parentTokenHref = hasReturnParentToken ? `${basePath}/acting/?symbol=${token?.parentTokenSymbol}` : '';
-  const siblingTokensHref = hasReturnParentToken ? `${basePath}/tokens/children/?symbol=${token?.parentTokenSymbol}` : '';
   const { childTokenNum: siblingTokenNum } = useChildTokensCount(
     hasReturnParentToken ? token?.parentTokenAddress : undefined,
     hasReturnParentToken && isOnTargetChain,
   );
   const hasOtherChildTokens = siblingTokenNum !== undefined && siblingTokenNum > BigInt(1);
   const isTokenInfoDisabled = isTokenSymbolPending || !tokenInfoHref;
-  const isChildTokensDisabled = isTokenSymbolPending || !childTokensHref || !isOnTargetChain || childTokenNum === BigInt(0);
+  const isChildTokensDisabled =
+    isTokenSymbolPending || !token?.address || !isOnTargetChain || childTokenNum === undefined || childTokenNum === BigInt(0);
   const isReturnParentDisabled = isTokenSymbolPending || !parentTokenHref;
+  const showSiblingTokens = !isTokenSymbolPending && hasReturnParentToken && hasOtherChildTokens;
   const nativeBalanceValue = balance ? formatTokenAmount(balance.value) : '0';
   const nativeBalanceSymbol = balance?.symbol || process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL || 'TKM';
 
-  const goToRecentToken = (recentToken: RecentToken) => {
+  const switchToken = (targetToken: TokenSwitchTarget) => {
     setIsTokenMenuOpen(false);
 
     const rule = getTokenSwitchRule(router.pathname);
     const shouldStay = rule?.mode === 'stay';
-    const pathname = rule?.mode === 'redirect' ? rule.to : shouldStay ? router.pathname : getDefaultTokenSwitchPathname(recentToken.hasEnded);
+    const pathname = rule?.mode === 'redirect' ? rule.to : shouldStay ? router.pathname : getDefaultTokenSwitchPathname(targetToken.hasEnded);
 
     router.replace(
       {
         pathname,
-        query: shouldStay ? { ...router.query, symbol: recentToken.symbol } : { symbol: recentToken.symbol },
+        query: shouldStay ? { ...router.query, symbol: targetToken.symbol } : { symbol: targetToken.symbol },
       },
       undefined,
       { shallow: shouldStay, scroll: false },
@@ -441,13 +598,13 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
     });
   };
 
-  const goToChildTokensPage = () => {
-    if (isChildTokensDisabled) {
-      toast.error(childTokenNum === BigInt(0) ? '当前代币暂无子币' : '当前代币尚未加载');
-      return;
-    }
-
-    NavigationUtils.redirectWithOverlay(childTokensHref, '正在打开子币列表...');
+  const openChildTokensDrawer = () => {
+    setIsTokenMenuOpen(false);
+    setTokenDrawer({
+      title: `${token?.symbol} 的子币`,
+      parentTokenAddress: token?.address,
+      totalTokenCount: childTokenNum,
+    });
   };
 
   const goToTokenInfoPage = () => {
@@ -468,13 +625,19 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
     NavigationUtils.redirectWithOverlay(parentTokenHref, '正在返回父币...');
   };
 
-  const goToSiblingTokensPage = () => {
-    if (!hasOtherChildTokens || !siblingTokensHref) {
+  const openSiblingTokensDrawer = () => {
+    if (!hasOtherChildTokens || !token?.parentTokenAddress || !token?.address) {
       toast.error('当前代币暂无其他子币');
       return;
     }
 
-    NavigationUtils.redirectWithOverlay(siblingTokensHref, '正在打开其他子币...');
+    setIsTokenMenuOpen(false);
+    setTokenDrawer({
+      title: `${token.parentTokenSymbol} 的其他子币`,
+      parentTokenAddress: token.parentTokenAddress,
+      totalTokenCount: siblingTokenNum,
+      excludeTokenAddress: token.address,
+    });
   };
 
   const goToMyLove20NftPage = () => {
@@ -810,7 +973,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                   >
                     <DropdownMenuItem
                       className="flex min-h-12 min-w-0 flex-1 items-center rounded-md px-2 py-2.5 text-left focus:bg-gray-50 focus:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                      onSelect={() => goToRecentToken(recentToken)}
+                      onSelect={() => switchToken(recentToken)}
                       title={recentToken.symbol}
                     >
                       <span className="min-w-0 flex-1">
@@ -847,6 +1010,43 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
 
           <DropdownMenuSeparator className="my-1" />
 
+          {!isReturnParentDisabled && (
+            <DropdownMenuItem
+              onClick={goToParentTokenPage}
+              className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+            >
+              <ArrowUpLeft className="mr-1.5 h-4 w-4 text-gray-500" />
+              <span className="min-w-0 flex-1">返回父币</span>
+              {token?.parentTokenSymbol && (
+                <span className="ml-auto max-w-[96px] truncate font-mono text-xs text-gray-400">
+                  {token.parentTokenSymbol}
+                </span>
+              )}
+            </DropdownMenuItem>
+          )}
+
+          {showSiblingTokens && (
+            <DropdownMenuItem
+              onClick={openSiblingTokensDrawer}
+              className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+            >
+              <List className="mr-1.5 h-4 w-4 text-gray-500" />
+              <span className="min-w-0 flex-1">其他子币</span>
+              <span className="ml-auto text-xs text-gray-400">{(siblingTokenNum - BigInt(1)).toString()}</span>
+            </DropdownMenuItem>
+          )}
+
+          {!isChildTokensDisabled && (
+            <DropdownMenuItem
+              onClick={openChildTokensDrawer}
+              className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+            >
+              <List className="mr-1.5 h-4 w-4 text-gray-500" />
+              <span className="min-w-0 flex-1">子币列表</span>
+              <span className="ml-auto text-xs text-gray-400">{childTokenNum.toString()}</span>
+            </DropdownMenuItem>
+          )}
+
           <DropdownMenuItem
             disabled={isTokenInfoDisabled}
             onClick={goToTokenInfoPage}
@@ -855,46 +1055,20 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
             <Info className="mr-1.5 h-4 w-4 text-gray-500" />
             <span className="min-w-0 flex-1">代币信息</span>
           </DropdownMenuItem>
-
-          <DropdownMenuItem
-            disabled={isChildTokensDisabled}
-            onClick={goToChildTokensPage}
-            className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
-          >
-            <List className="mr-1.5 h-4 w-4 text-gray-500" />
-            <span className="min-w-0 flex-1">子币列表</span>
-            {childTokenNum !== undefined && (
-              <span className="ml-auto text-xs text-gray-400">{childTokenNum.toString()}</span>
-            )}
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            disabled={isReturnParentDisabled}
-            onClick={goToParentTokenPage}
-            className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
-          >
-            <ArrowUpLeft className="mr-1.5 h-4 w-4 text-gray-500" />
-            <span className="min-w-0 flex-1">返回父币</span>
-            {hasReturnParentToken && token?.parentTokenSymbol && (
-              <span className="ml-auto max-w-[96px] truncate font-mono text-xs text-gray-400">
-                {token.parentTokenSymbol}
-              </span>
-            )}
-          </DropdownMenuItem>
-
-          {hasOtherChildTokens && (
-            <DropdownMenuItem
-              disabled={isTokenSymbolPending || !siblingTokensHref}
-              onClick={goToSiblingTokensPage}
-              className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
-            >
-              <List className="mr-1.5 h-4 w-4 text-gray-500" />
-              <span className="min-w-0 flex-1">其他子币</span>
-              <span className="ml-auto text-xs text-gray-400">{(siblingTokenNum - BigInt(1)).toString()}</span>
-            </DropdownMenuItem>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <TokenSwitchDrawer
+        open={!!tokenDrawer}
+        onOpenChange={(open) => {
+          if (!open) setTokenDrawer(null);
+        }}
+        title={tokenDrawer?.title || '选择代币'}
+        parentTokenAddress={tokenDrawer?.parentTokenAddress}
+        totalTokenCount={tokenDrawer?.totalTokenCount}
+        excludeTokenAddress={tokenDrawer?.excludeTokenAddress}
+        onSelectToken={switchToken}
+      />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
