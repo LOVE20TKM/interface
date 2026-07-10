@@ -1,4 +1,4 @@
-export type GroupVerificationState = 'verified' | 'pending' | 'not_required';
+export type GroupVerificationState = 'verified' | 'pending' | 'syncing' | 'not_required';
 
 export interface ActiveGroupStats {
   groupId: bigint;
@@ -251,11 +251,19 @@ export function getVerificationButtonClass(state: GroupVerificationState) {
     return `${baseClass} border-green-200 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700`;
   }
 
+  if (state === 'syncing') {
+    return `${baseClass} border-blue-200 bg-blue-50 text-blue-600`;
+  }
+
   if (state === 'pending') {
     return `${baseClass} border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700`;
   }
 
   return `${baseClass} border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-700`;
+}
+
+export function getEffectiveVerificationState(state: GroupVerificationState, isSyncing: boolean): GroupVerificationState {
+  return isSyncing && state === 'pending' ? 'syncing' : state;
 }
 
 export function getInitialExpandedGroupIds(groups: MyActivatedGroupRow[]) {

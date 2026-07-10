@@ -73,6 +73,8 @@ export interface UseMyGroupIdsNeedVerifiedByRoundResult {
   groups: GroupNeedVerifyInfo[];
   /** 加载状态 */
   isPending: boolean;
+  /** 后台刷新状态 */
+  isFetching: boolean;
   /** 错误信息 */
   error: any;
 }
@@ -296,6 +298,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
   const {
     data: combinedData,
     isPending: isCombinedPending,
+    isFetching: isCombinedFetching,
     error: combinedError,
   } = useUniversalReadContracts({
     contracts: combinedContracts as any,
@@ -413,6 +416,7 @@ export function useMyGroupIdsNeedVerifiedByRound({
   return {
     groups,
     isPending,
+    isFetching: isCombinedFetching,
     error,
   };
 }

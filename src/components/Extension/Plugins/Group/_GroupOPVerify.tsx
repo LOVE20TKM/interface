@@ -13,6 +13,7 @@ import { useRouter } from "next/router";
 // 第三方库
 import { toast } from "react-hot-toast";
 import { useAccount } from "wagmi";
+import { useQueryClient } from "@tanstack/react-query";
 
 // UI 组件
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ import {
   useSubmitOriginScores,
   useVerifiedAccountCount,
 } from "@/src/hooks/extension/plugins/group/contracts/useGroupVerify";
+import { invalidateGroupVerifyQueries } from "@/src/hooks/extension/plugins/group/contracts/groupVerifyQueryUtils";
 
 // 工具函数
 import { copyWithToast } from "@/src/lib/clipboardUtils";
@@ -78,6 +80,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
   groupName,
 }) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
 
@@ -444,6 +447,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     }
     toast.success(isLastBatch ? "打分提交完成" : "本批打分提交成功");
     void refetchVerifiedAccountCount();
+    void invalidateGroupVerifyQueries(queryClient);
     if (isLastBatch) {
       setTimeout(() => {
         router.push(`/extension/my_groups?symbol=${token?.symbol}`);
@@ -457,6 +461,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     cacheKey,
     accountScores.length,
     refetchVerifiedAccountCount,
+    queryClient,
     token?.symbol,
   ]);
 

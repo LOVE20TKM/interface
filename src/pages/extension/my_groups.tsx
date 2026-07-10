@@ -50,6 +50,7 @@ import {
   buildMintGroupHref,
   buildMyActivatedGroupRows,
   buildMyGroupNftRows,
+  getEffectiveVerificationState,
   getInitialExpandedGroupIds,
   getVerificationButtonClass,
   shouldShowMyGroupsPageLoader,
@@ -84,6 +85,7 @@ const MyGroupsPage: React.FC = () => {
   const {
     groups: verificationGroups,
     isPending: isPendingVerificationGroups,
+    isFetching: isFetchingVerificationGroups,
     error: verificationGroupsError,
   } = useMyGroupIdsNeedVerifiedByRound({
     account: account as `0x${string}`,
@@ -370,6 +372,7 @@ const MyGroupsPage: React.FC = () => {
                                 symbol={token?.symbol || ""}
                                 tokenAddress={token?.address}
                                 verifyRound={verifyRound}
+                                isVerificationSyncing={isFetchingVerificationGroups}
                               />
                             </div>
                           ))}
@@ -557,9 +560,10 @@ interface ActionRowProps {
   symbol: string;
   tokenAddress?: `0x${string}`;
   verifyRound: bigint;
+  isVerificationSyncing: boolean;
 }
 
-const ActionRow: React.FC<ActionRowProps> = ({ action, symbol, tokenAddress, verifyRound }) => {
+const ActionRow: React.FC<ActionRowProps> = ({ action, symbol, tokenAddress, verifyRound, isVerificationSyncing }) => {
   const statsHref = buildGroupPublicHref({
     symbol,
     actionId: action.actionId,
@@ -571,9 +575,10 @@ const ActionRow: React.FC<ActionRowProps> = ({ action, symbol, tokenAddress, ver
     actionId: action.actionId,
     groupId: action.groupId,
   });
+  const verificationState = getEffectiveVerificationState(action.verificationState, isVerificationSyncing);
 
   const verifyButton = (() => {
-    if (action.verificationState === "verified") {
+    if (verificationState === "verified") {
       return (
         <Button variant="outline" size="sm" asChild className={getVerificationButtonClass("verified")}>
           <Link
@@ -591,7 +596,16 @@ const ActionRow: React.FC<ActionRowProps> = ({ action, symbol, tokenAddress, ver
       );
     }
 
-    if (action.verificationState === "pending") {
+    if (verificationState === "syncing") {
+      return (
+        <Button variant="outline" size="sm" disabled className={getVerificationButtonClass("syncing")}>
+          <Clock3 className="mr-0.5 h-3.5 w-3.5" />
+          同步中
+        </Button>
+      );
+    }
+
+    if (verificationState === "pending") {
       return (
         <Button variant="outline" size="sm" asChild className={getVerificationButtonClass("pending")}>
           <Link href={buildGroupVerifyHref({ actionId: action.actionId, groupId: action.groupId })}>

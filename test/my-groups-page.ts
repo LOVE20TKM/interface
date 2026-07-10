@@ -10,12 +10,14 @@ import {
   buildMyActivatedGroupRows,
   buildMyGroupNftRows,
   formatRetainedRewardRatio,
+  getEffectiveVerificationState,
   getVerificationButtonClass,
   getInitialExpandedGroupIds,
   toggleExpandedGroupId,
   shouldRedirectGroupManagementTab,
   shouldShowMyGroupsPageLoader,
 } from '../src/lib/myGroupsPage';
+import { isGroupVerifyQueryKey } from '../src/hooks/extension/plugins/group/contracts/groupVerifyQueryUtils';
 
 const EXT_1 = '0x0000000000000000000000000000000000000001';
 const EXT_2 = '0x0000000000000000000000000000000000000002';
@@ -186,7 +188,43 @@ assert.strictEqual(formatRetainedRewardRatio([1200000000000000000n]), '0%');
 
 assert.strictEqual(getVerificationButtonClass('verified').includes('text-green-600'), true);
 assert.strictEqual(getVerificationButtonClass('pending').includes('text-orange-600'), true);
+assert.strictEqual(getVerificationButtonClass('syncing').includes('text-blue-600'), true);
 assert.strictEqual(getVerificationButtonClass('not_required').includes('text-gray-600'), true);
+assert.strictEqual(getEffectiveVerificationState('pending', true), 'syncing');
+assert.strictEqual(getEffectiveVerificationState('pending', false), 'pending');
+assert.strictEqual(getEffectiveVerificationState('verified', true), 'verified');
+
+const GROUP_VERIFY_ADDRESS = '0x0000000000000000000000000000000000000999';
+const GROUP_JOIN_ADDRESS = '0x0000000000000000000000000000000000000888';
+assert.strictEqual(
+  isGroupVerifyQueryKey(
+    ['readContract', { address: GROUP_VERIFY_ADDRESS, functionName: 'isVerified' }],
+    GROUP_VERIFY_ADDRESS,
+  ),
+  true,
+);
+assert.strictEqual(
+  isGroupVerifyQueryKey(
+    [
+      'readContracts',
+      {
+        contracts: [
+          { address: GROUP_JOIN_ADDRESS, functionName: 'accountsByGroupIdCount' },
+          { address: GROUP_VERIFY_ADDRESS, functionName: 'isVerified' },
+        ],
+      },
+    ],
+    GROUP_VERIFY_ADDRESS,
+  ),
+  true,
+);
+assert.strictEqual(
+  isGroupVerifyQueryKey(
+    ['readContracts', { contracts: [{ address: GROUP_JOIN_ADDRESS, functionName: 'accountsByGroupIdCount' }] }],
+    GROUP_VERIFY_ADDRESS,
+  ),
+  false,
+);
 
 const initialExpanded = getInitialExpandedGroupIds(groupedRows);
 assert.deepStrictEqual(Array.from(initialExpanded), ['3', '10']);
