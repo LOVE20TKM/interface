@@ -3,17 +3,27 @@
 
 'use client';
 
-import React, { useContext, useEffect, useMemo, useRef } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
-import { Plus, Trash2 } from 'lucide-react';
+import { ClipboardPaste, Plus, Trash2 } from 'lucide-react';
 import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 import AlertBox from '@/src/components/Common/AlertBox';
@@ -25,6 +35,7 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay';
 import { parseUnits, formatTokenAmount } from '@/src/lib/format';
 import { isValidEthAddress, normalizeAddressInput } from '@/src/lib/addressUtils';
 import { getMaxJoinAmount } from '@/src/lib/extensionGroup';
+import { parseGroupTrialBatch } from '@/src/lib/groupTrialBatch';
 
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
 import { useTrialAccountsWaitingAdd } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
@@ -35,6 +46,7 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 
 const GROUP_JOIN_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_EXTENSION_GROUP_JOIN as `0x${string}`;
+const MAX_GROUP_TRIAL_ACCOUNTS = 500;
 
 type FormValues = {
   items: Array<{
@@ -49,6 +61,10 @@ const GroupTrialAddPage: React.FC = () => {
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
   const hasCalledSuccessRef = useRef(false);
+  const [batchInput, setBatchInput] = useState('');
+  const [batchError, setBatchError] = useState('');
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [isBatchDialogOpen, setIsBatchDialogOpen] = useState(false);
 
   // 从 query 获取必要参数
   const actionId = actionIdParam ? BigInt(actionIdParam as string) : undefined;
@@ -96,7 +112,11 @@ const GroupTrialAddPage: React.FC = () => {
   const itemSchema = useMemo(
     () =>
       z.object({
-        address: z.string().trim().min(1, '请输入地址'),
+        address: z
+          .string()
+          .trim()
+          .min(1, '请输入地址')
+          .refine((val) => !!normalizeAddressInput(val), { message: '请输入有效的地址' }),
         amount: z
           .string()
           .trim()
@@ -144,7 +164,7 @@ const GroupTrialAddPage: React.FC = () => {
         })
         .refine(
           (data) => {
-            const addresses = data.items.map((item) => item.address.toLowerCase().trim()).filter(Boolean);
+            const addresses = data.items.map((item) => normalizeAddressInput(item.address)).filter(Boolean);
             const uniqueAddresses = new Set(addresses);
             return addresses.length === uniqueAddresses.size;
           },
@@ -164,7 +184,7 @@ const GroupTrialAddPage: React.FC = () => {
     mode: 'onChange',
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: 'items',
   });
@@ -174,6 +194,63 @@ const GroupTrialAddPage: React.FC = () => {
     control: form.control,
     name: 'items',
   });
+
+  const hasManualEntries = useMemo(
+    () =>
+      !isBatchMode &&
+      (fields.length > 1 ||
+        (watchedItems || []).some((item) => !!item?.address?.trim() || !!String(item?.amount || '').trim())),
+    [fields.length, isBatchMode, watchedItems],
+  );
+  const hasAnyEntries = isBatchMode || hasManualEntries;
+
+  const resetItems = () => {
+    replace([{ address: '', amount: '' }]);
+    setIsBatchMode(false);
+    setIsBatchDialogOpen(false);
+    setBatchInput('');
+    setBatchError('');
+    form.clearErrors();
+  };
+
+  const handleBatchImport = () => {
+    if (hasManualEntries) return;
+
+    const result = parseGroupTrialBatch(batchInput);
+    if (result.invalidLineNumbers.length > 0) {
+      setBatchError(`第 ${result.invalidLineNumbers.join('、')} 行格式不正确`);
+      return;
+    }
+    if (result.items.length === 0) {
+      setBatchError('请粘贴要添加的地址和数量');
+      return;
+    }
+    if (result.items.length > MAX_GROUP_TRIAL_ACCOUNTS) {
+      setBatchError(`单次最多导入 ${MAX_GROUP_TRIAL_ACCOUNTS} 个体验地址`);
+      return;
+    }
+
+    replace(result.items);
+    setIsBatchMode(true);
+    setIsBatchDialogOpen(false);
+    setBatchInput('');
+    setBatchError('');
+    void form.trigger();
+    toast.success(`已导入 ${result.items.length} 个体验地址`);
+  };
+
+  const handleRemove = (index: number) => {
+    if (isBatchMode && fields.length === 1) {
+      resetItems();
+      return;
+    }
+    remove(index);
+  };
+
+  const handleClearAll = () => {
+    if (!hasAnyEntries || !window.confirm('确定清除全部体验地址吗？')) return;
+    resetItems();
+  };
 
   // 计算所有体验金额的总数
   const totalTrialAmount = useMemo(() => {
@@ -243,6 +320,10 @@ const GroupTrialAddPage: React.FC = () => {
   const onSubmit = async (values: FormValues) => {
     if (!extensionAddress || !groupIdBigInt) {
       toast.error('参数不完整');
+      return;
+    }
+    if (values.items.length > MAX_GROUP_TRIAL_ACCOUNTS) {
+      form.setError('root', { message: `单次最多提交 ${MAX_GROUP_TRIAL_ACCOUNTS} 个体验地址` });
       return;
     }
 
@@ -403,7 +484,7 @@ const GroupTrialAddPage: React.FC = () => {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              onClick={() => remove(index)}
+                              onClick={() => handleRemove(index)}
                               className="h-8 w-8 px-0 mx-0"
                             >
                               <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
@@ -415,16 +496,71 @@ const GroupTrialAddPage: React.FC = () => {
                   </tbody>
                 </table>
 
-                <div className="flex justify-center mt-2">
+                <div className="grid grid-cols-3 gap-2 mt-2">
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-1/2 text-secondary border-secondary"
+                    className="min-w-0 px-2 text-sm text-secondary border-secondary"
                     onClick={() => append({ address: '', amount: '' })}
+                    disabled={isBatchMode || fields.length >= MAX_GROUP_TRIAL_ACCOUNTS}
                   >
-                    <Plus className="w-4 h-4 mr-2" /> 增加体验地址
+                    <Plus className="w-4 h-4 mr-1 shrink-0" /> 单个添加
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-w-0 px-2 text-sm text-secondary border-secondary"
+                    onClick={() => setIsBatchDialogOpen(true)}
+                    disabled={hasManualEntries || isBatchMode}
+                    title={hasManualEntries ? '请先全部清除手工地址' : undefined}
+                  >
+                    <ClipboardPaste className="w-4 h-4 mr-1 shrink-0" /> 批量添加
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-w-0 px-2 text-sm text-red-500 border-red-300 hover:text-red-600 hover:bg-red-50"
+                    onClick={handleClearAll}
+                    disabled={!hasAnyEntries}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1 shrink-0" /> 全部清除
                   </Button>
                 </div>
+
+                <Dialog open={isBatchDialogOpen} onOpenChange={setIsBatchDialogOpen}>
+                  <DialogContent className="w-[calc(100%-2rem)] max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>批量添加体验地址</DialogTitle>
+                      <DialogDescription>每行填写一个地址和体验代币数量。</DialogDescription>
+                    </DialogHeader>
+                    <Textarea
+                      id="group-trial-batch"
+                      value={batchInput}
+                      onChange={(event) => {
+                        setBatchInput(event.target.value);
+                        setBatchError('');
+                      }}
+                      aria-invalid={!!batchError}
+                      placeholder={'0x1234... 1.5\nTH... , 25'}
+                      className="min-h-40 font-mono text-sm"
+                    />
+                    {batchError && (
+                      <div role="alert" className="text-sm text-red-500">
+                        {batchError}
+                      </div>
+                    )}
+                    <DialogFooter className="gap-2 sm:space-x-0">
+                      <DialogClose asChild>
+                        <Button type="button" variant="outline">
+                          取消
+                        </Button>
+                      </DialogClose>
+                      <Button type="button" onClick={handleBatchImport} disabled={!batchInput.trim()}>
+                        <ClipboardPaste className="w-4 h-4 mr-2" /> 确认导入
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
                 {/* 参与范围提示 */}
                 {groupDetail && (
