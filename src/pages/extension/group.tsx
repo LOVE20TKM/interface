@@ -213,7 +213,7 @@ const ActionGroupPage: React.FC = () => {
           />
         );
       case 'apps': {
-        return <_GroupApps extensionAddress={extensionAddress} groupId={groupIdBigInt} actionId={actionId!} />;
+        return <_GroupApps groupId={groupIdBigInt} actionId={actionId!} groupName={groupDetail?.groupName} />;
       }
       case 'management': {
         return (

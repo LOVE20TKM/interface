@@ -2,16 +2,34 @@
 
 import React from 'react';
 import { useRouter } from 'next/router';
-import { ArrowRight, Users, Gift, Bell } from 'lucide-react';
+import { ArrowRight, MessageCircle, Users } from 'lucide-react';
+
+import { buildChatChainActivationHref, buildGroupChatDetailHref } from '@/src/components/Chat/chatUtils';
+import { isGroupChatEnabled, useGroupChatActivationStatusMap } from '@/src/hooks/contracts/useGroupChat';
 
 interface GroupAppsProps {
-  extensionAddress: `0x${string}`;
   groupId: bigint;
   actionId: bigint;
+  groupName?: string;
 }
 
-const _GroupApps: React.FC<GroupAppsProps> = ({ extensionAddress, groupId, actionId }) => {
+const _GroupApps: React.FC<GroupAppsProps> = ({ groupId, actionId, groupName }) => {
   const router = useRouter();
+  const {
+    activationStatusMap,
+    isPending: isActivationStatusPending,
+    error: activationStatusError,
+  } = useGroupChatActivationStatusMap([groupId]);
+  const activationStatus = activationStatusMap.get(groupId.toString());
+  const isActivationStatusUnavailable =
+    !isGroupChatEnabled || (activationStatus === undefined && isActivationStatusPending);
+  const chatButtonTitle = !isGroupChatEnabled
+    ? '当前环境未配置 GroupChat 合约'
+    : activationStatusError
+      ? '群聊状态读取失败，点击进入后重试'
+      : isActivationStatusPending
+        ? '正在读取群聊状态'
+        : undefined;
 
   const handleTrialClick = () => {
     const { symbol } = router.query;
@@ -19,6 +37,15 @@ const _GroupApps: React.FC<GroupAppsProps> = ({ extensionAddress, groupId, actio
       `/extension/group_trial?groupId=${groupId.toString()}&actionId=${actionId.toString()}${
         symbol ? `&symbol=${symbol}` : ''
       }`,
+    );
+  };
+
+  const handleChatClick = () => {
+    if (!isGroupChatEnabled || isActivationStatusPending) return;
+    router.push(
+      activationStatus
+        ? buildGroupChatDetailHref(groupId)
+        : buildChatChainActivationHref(groupId, groupName),
     );
   };
 
@@ -37,27 +64,21 @@ const _GroupApps: React.FC<GroupAppsProps> = ({ extensionAddress, groupId, actio
         <ArrowRight className="w-5 h-5 text-greyscale-400 group-hover:text-secondary group-hover:translate-x-1 transition-all" />
       </div>
 
-      {/* 链群红包 - 未实现，置灰 */}
-      <div className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg opacity-50 cursor-not-allowed">
+      <button
+        type="button"
+        onClick={handleChatClick}
+        disabled={isActivationStatusUnavailable}
+        title={chatButtonTitle}
+        className="flex w-full items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg text-left transition-all group hover:border-secondary hover:bg-secondary/5 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
         <div className="flex items-center gap-3">
-          <Gift className="w-5 h-5 text-greyscale-400" />
+          <MessageCircle className="w-5 h-5 text-secondary" />
           <div>
-            <div className="text-base font-medium text-greyscale-400">链群红包</div>
+            <div className="text-base font-medium">链群群聊</div>
           </div>
         </div>
-        <ArrowRight className="w-5 h-5 text-greyscale-400" />
-      </div>
-
-      {/* 链群通知 - 未实现，置灰 */}
-      <div className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg opacity-50 cursor-not-allowed">
-        <div className="flex items-center gap-3">
-          <Bell className="w-5 h-5 text-greyscale-400" />
-          <div>
-            <div className="text-base font-medium text-greyscale-400">链群通知</div>
-          </div>
-        </div>
-        <ArrowRight className="w-5 h-5 text-greyscale-400" />
-      </div>
+        <ArrowRight className="w-5 h-5 text-greyscale-400 group-hover:text-secondary group-hover:translate-x-1 transition-all" />
+      </button>
     </div>
   );
 };
