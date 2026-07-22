@@ -32,6 +32,7 @@ import { useTokenApproval } from '@/src/hooks/contracts/useTokenApproval';
 import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { config } from '@/src/wagmi';
 import { normalizeAddressInput } from '@/src/lib/addressUtils';
+import { isUnlimitedTokenApproval } from '@/src/lib/tokenApproval';
 import { buildSupportedTokenOptions, TokenOption } from '@/src/lib/tokenOptions';
 
 type TransferMode = 'native' | 'erc20';
@@ -82,9 +83,15 @@ const trimFormattedAmount = (value: string) => {
   return value.replace(/\.?0+$/, '');
 };
 
+const addThousandsSeparators = (value: string) => {
+  const [whole, fraction] = value.split('.');
+  const groupedWhole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return fraction ? `${groupedWhole}.${fraction}` : groupedWhole;
+};
+
 const formatFullTokenAmount = (value: bigint | undefined, decimals: number) => {
   if (value === undefined) return '-';
-  return trimFormattedAmount(formatUnits(value, decimals));
+  return addThousandsSeparators(trimFormattedAmount(formatUnits(value, decimals)));
 };
 
 const formatTokenAmount = (value: bigint | undefined, decimals: number, maxFractionDigits = DISPLAY_FRACTION_DIGITS) => {
@@ -853,7 +860,7 @@ export default function BatchTransferPage() {
             批量转账是原子操作：任意一笔失败会导致整批回滚。提交前会加载收款地址余额快照，交易确认后会再次读取余额并校验差值。
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-[minmax(360px,430px),minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(360px,430px),minmax(0,1fr)]">
             <section className="space-y-4">
               <Card>
                 <CardContent className="space-y-4 p-4">
@@ -957,9 +964,13 @@ export default function BatchTransferPage() {
                     </div>
                     {!selectedToken.isNative && (
                       <div className="mt-2 flex items-center justify-between gap-3">
-                        <span className="text-greyscale-500">授权额度</span>
-                        <span className="font-mono">
-                          {isPendingAllowance ? '读取中...' : renderAmountValue(allowance)}
+                        <span className="shrink-0 text-greyscale-500">授权额度</span>
+                        <span className="min-w-0 truncate font-mono">
+                          {isPendingAllowance
+                            ? '读取中...'
+                            : isUnlimitedTokenApproval(allowance)
+                              ? '长期授权'
+                              : renderAmountValue(allowance)}
                         </span>
                       </div>
                     )}
