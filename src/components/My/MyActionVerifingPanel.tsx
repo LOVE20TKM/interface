@@ -16,12 +16,14 @@ import LoadingIcon from '@/src/components/Common/LoadingIcon';
 interface MyActionVerifingPanelProps {
   currentRound: bigint;
   actionId: bigint;
+  isExtensionAction?: boolean;
   onRemainingVotesChange?: (votes: bigint) => void;
 }
 
 const MyActionVerifingPanel: React.FC<MyActionVerifingPanelProps> = ({
   currentRound,
   actionId,
+  isExtensionAction,
   onRemainingVotesChange,
 }) => {
   const { token } = useContext(TokenContext) || {};
@@ -81,10 +83,11 @@ const MyActionVerifingPanel: React.FC<MyActionVerifingPanelProps> = ({
             <span className="text-secondary">{formatTokenAmount(remainingVotes)}</span>
           )}
         </span>
-        <div className="mt-2 text-sm text-greyscale-500 text-center">
-          {/* 提示: 最大可验证票数，等于您本轮对该行动的投票数 */}
-          提示: 您的验证票，将按“打分比例”分配给行动参与者
-        </div>
+        {isExtensionAction === false && (
+          <div className="mt-2 text-sm text-greyscale-500 text-center">
+            提示: 您的验证票，将按“打分比例”分配给行动参与者
+          </div>
+        )}
       </div>
     </div>
   );

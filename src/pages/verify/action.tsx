@@ -45,7 +45,12 @@ const VerifyPage = () => {
   const [actionInfo, setActionInfo] = useState<ActionInfo | undefined>(undefined);
 
   // 获取行动详情数据（包括扩展信息）
-  const { isExtensionAction, extensionAddress, factory } = useActionDetailData({
+  const {
+    isExtensionAction,
+    extensionAddress,
+    factory,
+    isPending: isActionDetailPending,
+  } = useActionDetailData({
     tokenAddress: token?.address,
     actionId,
     account,
@@ -58,7 +63,7 @@ const VerifyPage = () => {
         {remainingVotes > 0 && (
           <div className="px-2 pt-4">
             <div className="flex justify-between items-center">
-              <LeftTitle title="请分配您的验证票：" />
+              <LeftTitle title={isExtensionAction ? '请选择验证结果：' : '请分配您的验证票：'} />
               <Link
                 href={`/action/info/?id=${actionId}&symbol=${token?.symbol}&tab=verify&tab2=current`}
                 className="text-blue-600 hover:text-blue-800 underline text-sm"
@@ -73,22 +78,28 @@ const VerifyPage = () => {
         <MyActionVerifingPanel
           currentRound={currentRound}
           actionId={actionId}
+          isExtensionAction={isActionDetailPending ? undefined : isExtensionAction}
           onRemainingVotesChange={onRemainingVotesChange}
         />
 
         <div className="flex flex-col items-center px-2 py-4">
-          {remainingVotes > BigInt(1) && (
+          {!isActionDetailPending && remainingVotes > (isExtensionAction ? BigInt(0) : BigInt(1)) && (
             <AddressesForVerifying
               currentRound={currentRound}
               actionId={actionId}
               actionInfo={actionInfo}
               remainingVotes={remainingVotes}
+              isExtensionAction={isExtensionAction}
+              extensionAddress={extensionAddress}
             />
           )}
-          {remainingVotes >= BigInt(0) && remainingVotes <= BigInt(1) && (
+          {(remainingVotes === BigInt(0) ||
+            (!isActionDetailPending &&
+              remainingVotes > BigInt(0) &&
+              remainingVotes <= (isExtensionAction ? BigInt(0) : BigInt(1)))) && (
             <AddressesStatus currentRound={currentRound} actionId={actionId} actionInfo={actionInfo} />
           )}
-          {remainingVotes < BigInt(0) && <LoadingIcon />}
+          {(remainingVotes < BigInt(0) || (isActionDetailPending && remainingVotes > BigInt(0))) && <LoadingIcon />}
         </div>
 
         <ActionDetail

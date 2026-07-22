@@ -1,13 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'react-hot-toast';
 import React, { useState, useEffect, useContext, useMemo } from 'react';
 import InfoTooltip from '@/src/components/Common/InfoTooltip';
 import ManualPasteDialog from '@/src/components/Common/ManualPasteDialog';
 import ManualCopyDialog from '@/src/components/Common/ManualCopyDialog';
 import { copyWithToast } from '@/src/lib/clipboardUtils';
-import { Clipboard, Copy, UserCheck } from 'lucide-react';
+import { CheckCircle2, CircleSlash, Clipboard, Copy, UserCheck } from 'lucide-react';
 
 // my types & funcs
 import { ActionInfo } from '@/src/types/love20types';
@@ -40,6 +41,8 @@ interface VerifyAddressesProps {
   actionId: bigint;
   actionInfo: ActionInfo | undefined;
   remainingVotes: bigint;
+  isExtensionAction?: boolean;
+  extensionAddress?: `0x${string}`;
 }
 
 const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
@@ -47,6 +50,8 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
   actionId,
   actionInfo,
   remainingVotes,
+  isExtensionAction = false,
+  extensionAddress,
 }) => {
   const { token } = useContext(TokenContext) || {};
 
@@ -82,6 +87,11 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
   const [showManualPasteDialog, setShowManualPasteDialog] = useState(false);
   const [showManualCopyDialog, setShowManualCopyDialog] = useState(false);
   const [copyText, setCopyText] = useState('');
+  const [verifyMode, setVerifyMode] = useState<'simple' | 'original'>('simple');
+
+  useEffect(() => {
+    setVerifyMode('simple');
+  }, [actionId]);
 
   // 验证者打分弹窗状态
   const [showVerifierDialog, setShowVerifierDialog] = useState(false);
@@ -479,6 +489,26 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
 
   // 提交验证
   const { verify, isPending, isConfirming, isConfirmed, writeError: submitError } = useVerify();
+  const canUseSimpleVerify =
+    !!extensionAddress &&
+    verificationInfos?.length === 1 &&
+    verificationInfos[0].account.toLowerCase() === extensionAddress.toLowerCase();
+  const effectiveVerifyMode =
+    isExtensionAction && !isPendingVerificationInfosByAction && !canUseSimpleVerify ? 'original' : verifyMode;
+  const showOriginalVerification = !isExtensionAction || effectiveVerifyMode === 'original';
+
+  const handleSimpleVerify = (choice: 'verify' | 'abstain') => {
+    if (!canUseSimpleVerify || remainingVotes <= BigInt(0)) return;
+
+    const abstain = choice === 'abstain';
+    verify(
+      token?.address as `0x${string}`,
+      actionId,
+      abstain ? remainingVotes : BigInt(0),
+      [abstain ? BigInt(0) : remainingVotes],
+    );
+  };
+
   const checkInput = () => {
     if (remainingVotes <= BigInt(2)) {
       toast.error('剩余票数不足，无法验证');
@@ -707,7 +737,61 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
   // 渲染
   return (
     <>
-      <div className="w-full max-w-2xl">
+      {isExtensionAction && (
+        <div className="mb-5 w-full max-w-2xl">
+          <Tabs
+            value={effectiveVerifyMode}
+            onValueChange={(value) => setVerifyMode(value as 'simple' | 'original')}
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger
+                value="simple"
+                disabled={!isPendingVerificationInfosByAction && !canUseSimpleVerify}
+              >
+                快捷验证
+              </TabsTrigger>
+              <TabsTrigger value="original">原始验证</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      )}
+
+      {isExtensionAction && effectiveVerifyMode === 'simple' && (
+        <div className="w-full max-w-2xl">
+          <p className="mb-3 text-sm leading-6 text-greyscale-600">
+            此行动由扩展协议合约进行行动激励分配。如果扩展协议合约运行无问题，请投验证票；否则请投弃权票。
+          </p>
+          <div className="grid h-12 grid-cols-2 gap-3">
+            <Button
+              onClick={() => handleSimpleVerify('verify')}
+              disabled={isPendingVerificationInfosByAction || isPending || isConfirming || isConfirmed}
+              className="h-12"
+            >
+              <CheckCircle2 />
+              投验证票
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleSimpleVerify('abstain')}
+              disabled={isPendingVerificationInfosByAction || isPending || isConfirming || isConfirmed}
+              className="h-12"
+            >
+              <CircleSlash />
+              投弃权票
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {isExtensionAction && showOriginalVerification && (
+        <p className="mb-3 w-full max-w-2xl text-sm leading-6 text-greyscale-600">
+          协议以行动参与代币数量为基础，随机抽取行动参与地址。请按照行动验证规则，对抽取出的地址进行验证。为了方便分配验证票，请为地址打分，协议最终会按照得分比例分配您的验证票。
+        </p>
+      )}
+
+      <div
+        className={`${showOriginalVerification ? '' : 'hidden'} w-full max-w-2xl`}
+      >
         {/* 复制被抽中地址按钮 */}
         <div className="mb-4 flex justify-center">
           <button
@@ -900,42 +984,46 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
       </div>
 
       {/* 复制分数按钮、粘贴分数按钮和采用其他验证者打分按钮 */}
-      <div className="mt-4 flex justify-center gap-1">
-        <button
-          onClick={handleCopyScores}
-          disabled={isPending || isConfirmed}
-          className="flex items-center gap-0 px-2 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-          title="复制当前所有分数到剪贴板（每行一个分数）"
-        >
-          复制分数
-        </button>
+      {showOriginalVerification && (
+        <div className="mt-4 flex justify-center gap-1">
+          <button
+            onClick={handleCopyScores}
+            disabled={isPending || isConfirmed}
+            className="flex items-center gap-0 px-2 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            title="复制当前所有分数到剪贴板（每行一个分数）"
+          >
+            复制分数
+          </button>
 
-        <button
-          onClick={handlePasteScores}
-          disabled={isPending || isConfirmed}
-          className="flex items-center gap-0 px-2 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-          title="粘贴分数数据（自动检测剪贴板或手动输入，每行一个数字）"
-        >
-          从剪贴板粘贴
-        </button>
+          <button
+            onClick={handlePasteScores}
+            disabled={isPending || isConfirmed}
+            className="flex items-center gap-0 px-2 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            title="粘贴分数数据（自动检测剪贴板或手动输入，每行一个数字）"
+          >
+            从剪贴板粘贴
+          </button>
 
-        <button
-          onClick={() => setShowVerifierDialog(true)}
-          disabled={isPending || isConfirmed || !verificationInfos || verificationInfos.length === 0}
-          className="flex items-center gap-1 px-2 py-2 text-sm text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg border border-gray-200 hover:border-green-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-          title="输入验证者地址，自动获取其打分并填入表单"
-        >
-          <UserCheck size={16} />
-          用其他验证者打分
-        </button>
-      </div>
+          <button
+            onClick={() => setShowVerifierDialog(true)}
+            disabled={isPending || isConfirmed || !verificationInfos || verificationInfos.length === 0}
+            className="flex items-center gap-1 px-2 py-2 text-sm text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg border border-gray-200 hover:border-green-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            title="输入验证者地址，自动获取其打分并填入表单"
+          >
+            <UserCheck size={16} />
+            用其他验证者打分
+          </button>
+        </div>
+      )}
 
-      <Button onClick={handleSubmit} disabled={isPending || isConfirming || isConfirmed} className="mt-6 w-1/2">
-        {!isPending && !isConfirming && !isConfirmed && '提交验证'}
-        {isPending && '提交中...'}
-        {isConfirming && '确认中...'}
-        {isConfirmed && '已验证'}
-      </Button>
+      {showOriginalVerification && (
+        <Button onClick={handleSubmit} disabled={isPending || isConfirming || isConfirmed} className="mt-6 w-1/2">
+          {!isPending && !isConfirming && !isConfirmed && '提交验证'}
+          {isPending && '提交中...'}
+          {isConfirming && '确认中...'}
+          {isConfirmed && '已验证'}
+        </Button>
+      )}
 
       <LoadingOverlay isLoading={isPending || isConfirming} text={isPending ? '提交交易...' : '确认交易...'} />
 
