@@ -80,7 +80,7 @@ const MyActionVerifingPanel: React.FC<MyActionVerifingPanelProps> = ({
           {isPendingVotesNumByAccount || isPendingScoreByVerifier ? (
             <LoadingIcon />
           ) : (
-            <span className="text-secondary">{formatTokenAmount(remainingVotes)}</span>
+            <span className="text-data-personal">{formatTokenAmount(remainingVotes)}</span>
           )}
         </span>
         {isExtensionAction === false && (

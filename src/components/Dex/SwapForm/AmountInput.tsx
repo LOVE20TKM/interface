@@ -33,7 +33,7 @@ const AmountInput = ({
   tokenSelector,
 }: AmountInputProps) => {
   return (
-    <Card className="bg-[#f7f8f9] border-none">
+    <Card className="bg-greyscale-50 border-none">
       <CardContent className="py-4 px-2">
         <div className="flex items-center justify-between mb-3">
           <Input
@@ -79,11 +79,11 @@ const AmountInput = ({
             <div />
           )}
 
-          <span className="text-sm text-gray-600">{formatTokenAmount(balance || BigInt(0))}</span>
+          <span className="text-sm text-data-personal">{formatTokenAmount(balance || BigInt(0))}</span>
         </div>
 
         {maxNativeInputLimit && (
-          <div className="text-xs text-gray-500 mt-2">
+          <div className="text-xs text-greyscale-500 mt-2">
             测试环境限制：
             {token.isWETH ? '最多可使用 1 ' : `最多可使用 ${MIN_NATIVE_TO_TOKEN} `}
             {token.symbol}

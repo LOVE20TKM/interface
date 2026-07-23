@@ -34,7 +34,7 @@ export default function TokenFairLaunch() {
   }, [launchInfo, token]);
 
   if (!isLaunchInfoPending && !launchInfo) {
-    return <div className="text-red-500">找不到发射信息</div>;
+    return <div className="text-status-error">找不到发射信息</div>;
   }
 
   return (

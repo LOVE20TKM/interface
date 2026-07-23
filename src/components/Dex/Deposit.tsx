@@ -182,7 +182,10 @@ const Deposit: React.FC = () => {
                   <FormMessage />
                   <FormDescription className="flex items-center justify-between">
                     <span>
-                      共 {isLoadingBalance ? <LoadingIcon /> : formatTokenAmount(balance?.value || BigInt(0))}{' '}
+                      共{' '}
+                      <span className="text-data-personal">
+                        {isLoadingBalance ? <LoadingIcon /> : formatTokenAmount(balance?.value || BigInt(0))}
+                      </span>{' '}
                       {balance?.symbol}
                     </span>
                     <Button
@@ -224,7 +227,7 @@ const Deposit: React.FC = () => {
           </form>
         </Form>
       </div>
-      <div className="bg-gray-100 text-greyscale-500 rounded-lg p-4 text-sm mt-0 m-6">
+      <div className="bg-greyscale-100 text-greyscale-500 rounded-lg p-4 text-sm mt-0 m-6">
         <p className="mb-1">说明：</p>
         <p>
           1. {process.env.NEXT_PUBLIC_FIRST_PARENT_TOKEN_SYMBOL} 是用 WETH9 协议，将 {balance?.symbol} 包装的符合 ERC20

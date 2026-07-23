@@ -147,7 +147,7 @@ const Burn: React.FC<{ token: Token | null | undefined; launchInfo: LaunchInfo }
         <div className="stats w-full">
           <div className="stat place-items-center">
             <div className="stat-title text-sm mr-6">父币托底池总量</div>
-            <div className="stat-value text-secondary mt-2">
+            <div className="stat-value text-data-public mt-2">
               {formatTokenAmount(balanceOfParentToken || BigInt(0))}
               <span className="text-greyscale-500 font-normal text-sm ml-2">{token.parentTokenSymbol}</span>
             </div>
@@ -163,7 +163,7 @@ const Burn: React.FC<{ token: Token | null | undefined; launchInfo: LaunchInfo }
               <div className="flex items-center text-sm my-0">
                 <span className="text-greyscale-400">
                   我的 {token.symbol}:{' '}
-                  <span className="text-secondary">{formatTokenAmount(balanceOfToken || BigInt(0))}</span>
+                  <span className="text-data-personal">{formatTokenAmount(balanceOfToken || BigInt(0))}</span>
                 </span>
                 <Button
                   variant="link"
@@ -196,7 +196,7 @@ const Burn: React.FC<{ token: Token | null | undefined; launchInfo: LaunchInfo }
               />
               <div className="flex items-center text-sm mt-1 mb-2">
                 <span className="text-greyscale-400">
-                  预计可取回 <span className="text-secondary">{formatTokenAmount(expectedParentTokenBalance)}</span>{' '}
+                  预计可取回 <span className="text-data-personal">{formatTokenAmount(expectedParentTokenBalance)}</span>{' '}
                   {token.parentTokenSymbol}
                 </span>
               </div>
@@ -220,7 +220,7 @@ const Burn: React.FC<{ token: Token | null | undefined; launchInfo: LaunchInfo }
               <div className="flex items-center justify-center text-sm my-2">
                 <span className="text-greyscale-400">
                   我的 {token.parentTokenSymbol}:{' '}
-                  <span className="text-secondary">{formatTokenAmount(balanceOfParentTokenOfMy || BigInt(0))}</span>{' '}
+                  <span className="text-data-personal">{formatTokenAmount(balanceOfParentTokenOfMy || BigInt(0))}</span>{' '}
                   {token.parentTokenSymbol}
                 </span>
                 <Button
@@ -243,7 +243,7 @@ const Burn: React.FC<{ token: Token | null | undefined; launchInfo: LaunchInfo }
             </form>
           </Form>
 
-          <div className="bg-gray-100 text-greyscale-500 rounded-lg p-4 text-sm mt-4">
+          <div className="bg-greyscale-100 text-greyscale-500 rounded-lg p-4 text-sm mt-4">
             <p className="mb-1">计算公式：</p>
             <p>
               所得 {token.parentTokenSymbol} 数量 = 底池 {token.parentTokenSymbol} 总量 * (销毁 {token.symbol} 数量 /{' '}

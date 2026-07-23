@@ -117,7 +117,7 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
             .map((action: JoinedAction) => {
               // 根据是否有激励且有投票设置背景色和标题颜色
               const isGoodAction = action.hasReward && action.votesNum > 0;
-              const cardClassName = isGoodAction ? 'shadow-none' : 'shadow-none bg-gray-50';
+              const cardClassName = isGoodAction ? 'shadow-none' : 'shadow-none bg-greyscale-50';
               const joinedAmountTokenSymbol = action.joinedAmountTokenSymbol || token?.symbol;
 
               return (
@@ -130,7 +130,7 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
                     <CardHeader className="px-3 pt-2 pb-1 flex-row justify-between items-baseline">
                       <div className="flex items-baseline">
                         <span className="text-greyscale-400 text-sm">{`No.`}</span>
-                        <span className="text-secondary text-xl font-bold mr-2">{String(action.action.head.id)}</span>
+                        <span className="text-data-public text-xl font-bold mr-2">{String(action.action.head.id)}</span>
                         <span
                           className={`font-bold ${isGoodAction ? 'text-greyscale-800' : 'text-greyscale-400'}`}
                         >{`${action.action.body.title}`}</span>
@@ -151,7 +151,7 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
                           {action.votesNum > 0 && (
                             <>
                             <span className="text-greyscale-400 mr-1">投票</span>
-                            <span className="text-secondary">
+                            <span className="text-data-public">
                               {formatPercentage(Number(action.votePercentPerTenThousand) / 100)}
                             </span>
                             </>
@@ -159,7 +159,7 @@ const MyJoinedActionList: React.FC<MyJoinedActionListProps> = ({ token, onAction
                         </span>
                         <span className="text-right">
                           <span className="text-greyscale-400 mr-1">我参与代币</span>
-                          <span className="text-secondary">
+                          <span className="text-data-personal">
                             {formatTokenAmount(action.joinedAmountOfAccount)}
                             {joinedAmountTokenSymbol ? ` ${joinedAmountTokenSymbol}` : ''}
                           </span>

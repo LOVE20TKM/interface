@@ -62,7 +62,7 @@ const _MyGroups: React.FC<MyGroupsProps> = ({ groups, actionId }) => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 text-gray-500">暂无链群</div>
+        <div className="text-center py-8 text-greyscale-500">暂无链群</div>
       )}
     </div>
   );
@@ -92,26 +92,26 @@ const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, actionId, token }) => 
 
   // 根据用量设置百分比颜色
   const percentageColorClass =
-    percentage > 95 ? 'text-red-600' : percentage >= 90 ? 'text-yellow-600' : 'text-gray-500';
+    percentage > 95 ? 'text-status-error' : percentage >= 90 ? 'text-status-warning' : 'text-greyscale-500';
 
   return (
     <div
       onClick={handleGroupClick}
-      className="border border-gray-200 rounded-lg py-3 pl-3 pr-0 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all"
+      className="border border-greyscale-200 rounded-lg py-3 pl-3 pr-0 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <div className="text-gray-800 mb-2">
-            <span className="text-gray-500 text-xs">#</span>
-            <span className="text-secondary text-base font-semibold ">{group.groupId.toString()}</span>{' '}
+          <div className="text-greyscale-800 mb-2">
+            <span className="text-greyscale-500 text-xs">#</span>
+            <span className="text-data-public text-base font-semibold ">{group.groupId.toString()}</span>{' '}
             <span className="font-semibold">{group.groupName}</span>
           </div>
 
           <div className="flex items-center justify-between text-xs mt-2">
             <div className="flex items-center gap-2">
-              <span className="text-gray-500">参与量: </span>
+              <span className="text-greyscale-500">参与量: </span>
               {group.maxCapacity <= BigInt(0) ? (
-                <span className="text-gray-500">{formatTokenAmount(group.totalJoinedAmount, 2)}</span>
+                <span className="text-greyscale-500">{formatTokenAmount(group.totalJoinedAmount, 2)}</span>
               ) : (
                 <span className={percentageColorClass}>
                   {formatTokenAmount(group.totalJoinedAmount, 2)} / {formatTokenAmount(group.maxCapacity, 2)} (
@@ -120,14 +120,14 @@ const MyGroupItem: React.FC<MyGroupItemProps> = ({ group, actionId, token }) => 
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-gray-500">参与地址数:</span>
-              <span className="text-gray-500">{group.accountCount.toString()}</span>
+              <span className="text-greyscale-500">参与地址数:</span>
+              <span className="text-greyscale-500">{group.accountCount.toString()}</span>
             </div>
           </div>
         </div>
 
         {/* 右侧箭头 */}
-        <ChevronRight className="w-5 h-5 text-gray-400" />
+        <ChevronRight className="w-5 h-5 text-greyscale-400" />
       </div>
     </div>
   );

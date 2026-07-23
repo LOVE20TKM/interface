@@ -66,27 +66,27 @@ const ManualPasteDialog: React.FC<ManualPasteDialogProps> = ({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000] p-5"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg p-6 w-full max-w-md text-center shadow-xl">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
+      <div className="bg-card rounded-lg p-6 w-full max-w-md text-center shadow-xl">
+        <h3 className="text-lg font-semibold text-greyscale-800 mb-4">{title}</h3>
 
-        <p className="text-sm text-gray-600 mb-4 leading-relaxed">{description}</p>
+        <p className="text-sm text-greyscale-600 mb-4 leading-relaxed">{description}</p>
 
         <textarea
           ref={textareaRef}
           placeholder={placeholder}
-          className="w-full h-32 p-3 border border-gray-300 rounded-md font-mono text-sm resize-none mb-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className="w-full h-32 p-3 border border-greyscale-300 rounded-md font-mono text-sm resize-none mb-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
         />
 
         <div className="flex gap-3 justify-center">
           <button
             onClick={handleConfirm}
-            className="px-4 py-2 bg-[#1e3a8a] text-white rounded-md hover:bg-gray-500/90 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
+            className="px-4 py-2 bg-[#1e3a8a] text-white rounded-md hover:bg-[#2849a6] focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
           >
             确认粘贴
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors font-medium"
+            className="px-4 py-2 bg-muted text-foreground rounded-md hover:bg-accent focus:ring-2 focus:ring-greyscale-500 focus:ring-offset-2 transition-colors font-medium"
           >
             取消
           </button>

@@ -1,8 +1,9 @@
 import { Html, Head, Main, NextScript } from 'next/document';
+import { THEME_BOOTSTRAP_SCRIPT } from '@/src/lib/theme';
 
 export default function Document() {
   return (
-    <Html lang="zh-CN">
+    <Html lang="zh-CN" suppressHydrationWarning>
       <Head>
         {/* 基本的meta标签 */}
         <meta charSet="utf-8" />
@@ -16,6 +17,8 @@ export default function Document() {
 
         {/* Favicon */}
         <link rel="icon" href="/favicon.ico" />
+
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </Head>
       <body>
         <Main />

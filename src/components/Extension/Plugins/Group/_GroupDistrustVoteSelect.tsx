@@ -66,7 +66,7 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载服务者列表...</p>
+        <p className="mt-4 text-greyscale-600">加载服务者列表...</p>
       </div>
     );
   }
@@ -76,7 +76,7 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
       <div className="space-y-4">
         <LeftTitle title="选择不信任的服务者：" />
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">暂无可投票的服务者</p>
+          <p className="text-greyscale-500 mb-4">暂无可投票的服务者</p>
           <Button variant="outline" onClick={onCancel}>
             返回
           </Button>
@@ -95,24 +95,24 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
           <div
             key={`${ownerGroup.owner}-${index}`}
             onClick={() => onSelectOwner(ownerGroup.owner)}
-            className="border border-gray-200 rounded-lg p-4 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all"
+            className="border border-greyscale-200 rounded-lg p-4 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all"
           >
             <div className="flex items-center gap-3">
               {/* 单选框样式 */}
-              <div className="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center flex-shrink-0">
+              <div className="w-5 h-5 rounded-full border-2 border-greyscale-300 flex items-center justify-center flex-shrink-0">
                 <div className="w-2.5 h-2.5 rounded-full bg-transparent" />
               </div>
 
               <div className="flex-1">
                 {/* 服务者地址 */}
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm text-gray-500">服务者:</span>
+                  <span className="text-sm text-greyscale-500">服务者:</span>
                   <AddressWithCopyButton address={ownerGroup.owner} showCopyButton={true} />
                 </div>
 
                 {/* 管理的链群列表 */}
-                <div className="text-sm text-gray-600">
-                  <span className="text-gray-500">链群: </span>
+                <div className="text-sm text-greyscale-600">
+                  <span className="text-greyscale-500">链群: </span>
                   {ownerGroup.groups.map((group, idx) => (
                     <span key={group.groupId.toString()}>
                       #{group.groupId.toString()} {group.groupName}
@@ -134,9 +134,9 @@ const _GroupDistrustVoteSelect: React.FC<GroupDistrustVoteSelectProps> = ({
       </div>
 
       {/* 说明 */}
-      <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-        <div className="font-medium text-gray-700 mb-1">💡 投票说明</div>
-        <div className="space-y-1 text-gray-600">
+      <div className="mt-6 text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
+        <div className="font-medium text-greyscale-700 mb-1">💡 投票说明</div>
+        <div className="space-y-1 text-greyscale-600">
           <div>• 只有给本行动投过票的治理者才能投不信任票</div>
           <div>• 不信任票不能超过您对本行动投的验证票数</div>
           <div>• 投票时需要说明不信任的原因</div>

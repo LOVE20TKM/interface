@@ -27,7 +27,7 @@ export default function BurnPage() {
         {isLaunchInfoPending ? (
           <LoadingIcon />
         ) : !launchInfo ? (
-          <div className="text-red-500">找不到发射信息</div>
+          <div className="text-status-error">找不到发射信息</div>
         ) : (
           <Burn token={token} launchInfo={launchInfo} />
         )}

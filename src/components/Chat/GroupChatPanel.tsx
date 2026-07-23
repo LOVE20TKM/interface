@@ -642,7 +642,7 @@ export function GroupChatPanel({
 
   if (!groupId) {
     return (
-      <section className="hidden min-h-[420px] items-center justify-center rounded-md border border-greyscale-200 bg-white p-6 text-center text-sm text-greyscale-500 md:flex">
+      <section className="hidden min-h-[420px] items-center justify-center rounded-md border border-greyscale-200 bg-card p-6 text-center text-sm text-greyscale-500 md:flex">
         选择一个群聊开始查看链上消息
       </section>
     );
@@ -657,7 +657,7 @@ export function GroupChatPanel({
 
   return (
     <section
-      className="group-chat-shell flex min-h-0 flex-1 flex-col bg-white"
+      className="group-chat-shell flex min-h-0 flex-1 flex-col bg-card"
       style={{
         '--detail-composer-height': `${composerHeight || 128}px`,
         ...(messageListHeight ? { '--detail-message-list-height': `${messageListHeight}px` } : {}),
@@ -777,7 +777,7 @@ function MentionAllSummary({
     <>
       <div className="mention-all-summary-main">
         <div className="mention-all-summary-meta">
-          <span className="mention-all-summary-label">全员通知</span>
+          <span className="mention-all-summary-label">@所有人</span>
           {timeLabel && <span>{timeLabel}</span>}
         </div>
         <div className="mention-all-summary-content">
@@ -795,7 +795,7 @@ function MentionAllSummary({
       className={`mention-all-summary${unread ? ' mention-all-summary-is-unread' : ''}`}
       role="button"
       tabIndex={0}
-      aria-label={unread ? '查看未读全员通知' : '查看所有全员通知'}
+      aria-label={unread ? '查看未读 @所有人 消息' : '查看全部 @所有人 消息'}
       onClick={() => {
         onOpen();
         router.push(href);

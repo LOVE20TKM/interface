@@ -227,7 +227,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
       <div className="space-y-4">
         <LeftTitle title="对该服务者投不信任票" />
         <div className="text-center py-12">
-          <p className="text-red-500 mb-4">请先连接钱包</p>
+          <p className="text-status-error mb-4">请先连接钱包</p>
           <Button variant="outline" onClick={onCancel}>
             返回
           </Button>
@@ -241,7 +241,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载投票信息...</p>
+        <p className="mt-4 text-greyscale-600">加载投票信息...</p>
       </div>
     );
   }
@@ -255,9 +255,9 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
       <div className="space-y-4">
         <LeftTitle title="对该服务者投不信任票" />
         <div className="text-center py-12">
-          <p className="text-red-500 mb-4">您没有投票权限</p>
-          <p className="text-sm text-gray-600 mb-6">只有给本行动投过验证票的治理者才能投不信任票</p>
-          <div className="text-xs text-gray-500 mt-4 p-3 bg-gray-50 rounded border border-gray-200">
+          <p className="text-status-error mb-4">您没有投票权限</p>
+          <p className="text-sm text-greyscale-600 mb-6">只有给本行动投过验证票的治理者才能投不信任票</p>
+          <div className="text-xs text-greyscale-500 mt-4 p-3 bg-greyscale-50 rounded border border-greyscale-200">
             <div>调试信息：</div>
             <div>Token: {token?.address}</div>
             <div>Round: {currentRound?.toString()}</div>
@@ -280,9 +280,9 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
       <div className="space-y-4">
         <LeftTitle title="对该服务者投不信任票" />
         <div className="text-center py-12">
-          <p className="text-amber-600 mb-4">您已投完所有不信任票</p>
-          <p className="text-sm text-gray-600 mb-6">您对该服务者的不信任票已全部投出</p>
-          <div className="text-xs text-gray-500 mt-4 p-3 bg-gray-50 rounded border border-gray-200">
+          <p className="text-status-warning mb-4">您已投完所有不信任票</p>
+          <p className="text-sm text-greyscale-600 mb-6">您对该服务者的不信任票已全部投出</p>
+          <div className="text-xs text-greyscale-500 mt-4 p-3 bg-greyscale-50 rounded border border-greyscale-200">
             <div>总验证票数: {formatTokenAmount(myVerifyVotes)}</div>
             <div>已投不信任票: {formatTokenAmount(alreadyVotedAmount || BigInt(0))}</div>
             <div>剩余票数: {formatTokenAmount(remainingVotes)}</div>
@@ -301,21 +301,21 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
         <LeftTitle title="对该服务者投不信任票" />
 
         {/* 服务者信息 */}
-        <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-          <div className="text-sm text-gray-600 mb-2">
+        <div className="p-4 bg-greyscale-50 border border-greyscale-200 rounded-lg">
+          <div className="text-sm text-greyscale-600 mb-2">
             <span className="font-medium">服务者：</span>
             <AddressWithCopyButton address={groupOwner} />
           </div>
 
           {/* 管理的链群列表 */}
           {ownerGroups.length > 0 && (
-            <div className="mt-3 text-sm text-gray-600">
+            <div className="mt-3 text-sm text-greyscale-600">
               <span className="font-medium">链群：</span>
               {ownerGroups.map((group, idx) => (
                 <span key={group.groupId.toString()}>
-                  <span className="text-gray-500 text-xs">#</span>
+                  <span className="text-greyscale-500 text-xs">#</span>
                   <span className="font-semibold ">{group.groupId.toString()}</span>{' '}
-                  <span className="font-semibold text-gray-800">{group.groupName}</span>
+                  <span className="font-semibold text-greyscale-800">{group.groupName}</span>
                   {idx < ownerGroups.length - 1 && ', '}
                 </span>
               ))}
@@ -325,22 +325,22 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
 
         {/* 我的验证票信息 */}
         {myVerifyVotes !== remainingVotes && (
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+          <div className="p-3 bg-status-info-soft border border-status-info-border rounded-lg text-sm">
             <div className="space-y-1">
               {/* <div>
-              <span className="text-gray-600">您对本行动的验证票: </span>
-              <span className="font-medium text-blue-800">{formatTokenAmount(myVerifyVotes)}</span>
+              <span className="text-greyscale-600">您对本行动的验证票: </span>
+              <span className="font-medium text-status-info">{formatTokenAmount(myVerifyVotes)}</span>
             </div> */}
               <>
                 <div>
-                  <span className="text-gray-600">已投不信任票: </span>
-                  <span className="font-medium text-amber-700">
+                  <span className="text-greyscale-600">已投不信任票: </span>
+                  <span className="font-medium text-status-warning">
                     {formatTokenAmount(alreadyVotedAmount || BigInt(0))}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-600">剩余可投票数: </span>
-                  <span className="font-medium text-green-700">{formatTokenAmount(remainingVotes)}</span>
+                  <span className="text-greyscale-600">剩余可投票数: </span>
+                  <span className="font-medium text-status-success">{formatTokenAmount(remainingVotes)}</span>
                 </div>
               </>
             </div>
@@ -377,7 +377,7 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
                         </SelectContent>
                       </Select>
                       {field.value > 0 && (
-                        <div className="text-sm text-gray-600 mt-1">
+                        <div className="text-sm text-greyscale-600 mt-1">
                           将投 {formatTokenAmount(BigInt(Number(remainingVotes) * field.value))} 不信任票
                         </div>
                       )}
@@ -432,9 +432,9 @@ const _GroupDistrustVoteSubmit: React.FC<GroupDistrustVoteSubmitProps> = ({
         </Form>
 
         {/* 说明 */}
-        <div className="mt-6 text-sm text-gray-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-          <div className="font-medium text-amber-800 mb-1">⚠️ 小贴士</div>
-          <div className="space-y-1 text-amber-700">
+        <div className="mt-6 text-sm text-greyscale-600 bg-status-warning-soft border border-status-warning-border rounded px-3 py-2">
+          <div className="font-medium text-status-warning mb-1">⚠️ 小贴士</div>
+          <div className="space-y-1 text-status-warning">
             <div>• 不信任投票会降低该服务者管理的所有链群的激励</div>
           </div>
         </div>

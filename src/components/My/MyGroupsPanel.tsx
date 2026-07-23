@@ -124,14 +124,14 @@ const MyGroupsPanel: React.FC<MyGroupsPanelProps> = ({ currentRound }) => {
           <AlertBox
             type="error"
             message={
-              <div className="space-y-1 text-red-600">
+              <div className="space-y-1 text-status-error">
                 {warningActionInfos.map((info) => (
                   <div key={info.actionId.toString()}>
                     <Link
                       href={`/action/info/?symbol=${encodeURIComponent(
                         token?.symbol || '',
                       )}&id=${info.actionId.toString()}&tab=public&tab2=distrust&round=${currentRound.toString()}`}
-                      className="underline underline-offset-2 hover:text-red-700"
+                      className="underline underline-offset-2 hover:text-status-error"
                     >
                       你在行动"No.{info.actionId.toString()} {info.actionTitle}"中被投不信任票，不信任率
                       {formatPercentage(info.distrustRatioPercent)}；
@@ -147,11 +147,11 @@ const MyGroupsPanel: React.FC<MyGroupsPanelProps> = ({ currentRound }) => {
       <div className="stats w-full grid grid-cols-2 divide-x-0">
         <div className="stat place-items-center pt-1 pb-2">
           <div className="stat-title text-sm">已验证链群</div>
-          <div className="stat-value text-xl">{isPending ? <LoadingIcon /> : verifiedCount}</div>
+          <div className="stat-value text-xl text-data-personal">{isPending ? <LoadingIcon /> : verifiedCount}</div>
         </div>
         <div className="stat place-items-center pt-0 pb-2">
           <div className="stat-title text-sm">待验证链群</div>
-          <div className="stat-value text-xl">{isPending ? <LoadingIcon /> : unverifiedCount}</div>
+          <div className="stat-value text-xl text-data-personal">{isPending ? <LoadingIcon /> : unverifiedCount}</div>
         </div>
       </div>
       <div className="flex justify-center">

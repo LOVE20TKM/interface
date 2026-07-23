@@ -88,7 +88,7 @@ export function BottomNavigation() {
   };
 
   return (
-    <nav className="mobile-bottom-navigation fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-gray-50 shadow-lg dark:border-gray-700 dark:bg-gray-900 md:hidden">
+    <nav className="mobile-bottom-navigation fixed bottom-0 left-0 right-0 z-50 border-t border-greyscale-100 bg-greyscale-50 shadow-lg md:hidden">
       <div className="flex h-[var(--bottom-navigation-content-height)] items-center justify-around px-4 py-2">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -127,7 +127,7 @@ export function BottomNavigation() {
 
               {/* 普通按钮的激活背景 */}
               {!item.isMain && item.isActive && (
-                <div className="absolute inset-0 rounded-lg bg-blue-50 dark:bg-blue-900/30 -top-1 -bottom-1" />
+                <div className="absolute inset-0 rounded-lg bg-status-info-soft dark:bg-blue-900/30 -top-1 -bottom-1" />
               )}
 
               {/* 图标容器 */}
@@ -140,14 +140,14 @@ export function BottomNavigation() {
                 <Icon
                   className={cn(
                     'transition-all duration-200 w-6 h-6',
-                    item.isMain ? 'text-white' : item.isActive ? 'text-blue-600' : 'text-gray-600 dark:text-gray-400',
+                    item.isMain ? 'text-white' : item.isActive ? 'text-status-info' : 'text-greyscale-600',
                     !item.isMain && 'mb-1',
                   )}
                 />
                 {item.chatBadgeType && item.chatBadgeType !== 'none' && (
                   item.chatBadgeType === 'intro-dot' ? (
                     <span
-                      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-gray-50 bg-red-500 shadow-md shadow-red-500/40 dark:border-gray-900"
+                      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-greyscale-50 bg-red-500 shadow-md shadow-red-500/40"
                       aria-label="聊天入口提示"
                     >
                       <span
@@ -157,7 +157,7 @@ export function BottomNavigation() {
                     </span>
                   ) : (
                     <span
-                      className="absolute -right-2 -top-1 min-w-5 rounded-full border-2 border-gray-50 bg-red-500 px-1 text-center text-[10px] font-semibold leading-4 text-white dark:border-gray-900"
+                      className="absolute -right-2 -top-1 min-w-5 rounded-full border-2 border-greyscale-50 bg-red-500 px-1 text-center text-[10px] font-semibold leading-4 text-white"
                       aria-label="有新消息"
                     >
                       {item.chatBadgeLabel}
@@ -170,7 +170,7 @@ export function BottomNavigation() {
               <span
                 className={cn(
                   'text-xs font-medium transition-all duration-200 relative z-10',
-                  item.isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 dark:text-gray-400',
+                  item.isActive ? 'text-status-info font-semibold' : 'text-greyscale-600',
                   item.isMain && 'mt-1',
                 )}
               >

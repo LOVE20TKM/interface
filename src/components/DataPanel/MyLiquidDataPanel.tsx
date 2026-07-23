@@ -59,19 +59,19 @@ const MyLiquidDataPanel: React.FC<MyLiquidDataPanelProps> = ({}) => {
         <div className="stats w-full">
           <div className="stat place-items-center pb-0">
             <div className="stat-title">我的流动性质押凭证 sl{token?.symbol} 数量</div>
-            <div className="stat-value text-secondary text-2xl">{formatTokenAmount(slAmount || BigInt(0))}</div>
+            <div className="stat-value text-data-personal text-2xl">{formatTokenAmount(slAmount || BigInt(0))}</div>
           </div>
         </div>
         <div className="stats rounded-lg w-full grid grid-cols-2 divide-x-0 mt-2">
           <div className="stat place-items-center pt-3 ">
             <div className="stat-title text-sm">可换回 {token?.symbol} 数量</div>
-            <div className="stat-value text-xl">
+            <div className="stat-value text-xl text-data-personal">
               {formatTokenAmount(tokenAmountsBySlAmount?.tokenAmount || BigInt(0))}
             </div>
           </div>
           <div className="stat place-items-center pt-3 ">
             <div className="stat-title text-sm">可换回 {token?.parentTokenSymbol} 数量</div>
-            <div className="stat-value text-xl">
+            <div className="stat-value text-xl text-data-personal">
               {formatTokenAmount(tokenAmountsBySlAmount?.parentTokenAmount || BigInt(0))}
             </div>
           </div>

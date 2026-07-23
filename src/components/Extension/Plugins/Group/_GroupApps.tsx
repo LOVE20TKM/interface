@@ -50,7 +50,7 @@ const _GroupApps: React.FC<GroupAppsProps> = ({ groupId, actionId, groupName }) 
   };
 
   return (
-    <div className="bg-white rounded-lg px-4 py-2 space-y-3">
+    <div className="bg-card rounded-lg px-4 py-2 space-y-3">
       <div
         onClick={handleTrialClick}
         className="flex items-center justify-between py-3 px-4 border border-greyscale-200 rounded-lg hover:border-secondary hover:bg-secondary/5 transition-all group cursor-pointer"

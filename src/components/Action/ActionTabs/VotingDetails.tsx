@@ -114,16 +114,16 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
       {selectedRound > 0 && actionVoters && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 mt-4 mb-4">
           <div className="">
-            <span className="text-gray-500 mr-1">投票地址数:</span>
-            <span className="font-mono text-secondary">{actionVoters.length}</span>
+            <span className="text-greyscale-500 mr-1">投票地址数:</span>
+            <span className="font-mono text-data-public">{actionVoters.length}</span>
           </div>
           <div className="">
-            <span className="text-gray-500 mr-1">票数:</span>
-            <span className="font-mono text-secondary">{formatTokenAmount(totalVotes)}</span>
+            <span className="text-greyscale-500 mr-1">票数:</span>
+            <span className="font-mono text-data-public">{formatTokenAmount(totalVotes)}</span>
           </div>
           <div>
-            <span className="text-gray-500 mr-1">所在轮投票率:</span>
-            <span className="font-mono text-secondary inline-flex items-center">
+            <span className="text-greyscale-500 mr-1">所在轮投票率:</span>
+            <span className="font-mono text-data-public inline-flex items-center">
               {isPendingRoundVotes ? <LoadingIcon /> : formatPercentage(voteRate)}
             </span>
           </div>
@@ -162,7 +162,7 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
         ) : (
           <table className="table w-full">
             <thead>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-greyscale-100">
                 <th className="px-1 text-left">排名</th>
                 <th className="px-1 text-left">投票地址</th>
                 <th className="px-1 text-right">投票数</th>
@@ -171,14 +171,14 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
             </thead>
             <tbody>
               {sortedVoters.map((voter, index) => (
-                <tr key={voter.account} className="border-b border-gray-100">
+                <tr key={voter.account} className="border-b border-greyscale-100">
                   <td className="px-1 text-greyscale-400">{index + 1}</td>
                   <td className="px-1">
                     <Link href={`/vote/records?account=${voter.account}`}>
-                      <div className="inline-flex items-center bg-gray-50 hover:bg-gray-100 rounded-md px-2 py-1 transition-colors duration-150 active:bg-gray-200">
+                      <div className="inline-flex items-center bg-greyscale-50 hover:bg-greyscale-100 rounded-md px-2 py-1 transition-colors duration-150 active:bg-greyscale-200">
                         <AddressWithCopyButton address={voter.account} showCopyButton={true} />
                         <svg
-                          className="h-3 w-3 text-gray-400 ml-2 opacity-60 flex-shrink-0"
+                          className="h-3 w-3 text-greyscale-400 ml-2 opacity-60 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -188,7 +188,7 @@ export default function VotingDetails({ actionId, currentRound }: VotingDetailsP
                       </div>
                     </Link>
                   </td>
-                  <td className="px-1 text-right font-mono text-secondary">{formatTokenAmount(voter.voteCount)}</td>
+                  <td className="px-1 text-right font-mono text-data-public">{formatTokenAmount(voter.voteCount)}</td>
                   <td className="px-1 text-right text-greyscale-500">{calculatePercentage(voter.voteCount)}</td>
                 </tr>
               ))}

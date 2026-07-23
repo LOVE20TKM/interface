@@ -368,7 +368,7 @@ const GroupTrialAddPage: React.FC = () => {
         <Header title="增加体验地址" showBackButton={true} />
         <main className="flex-grow">
           <div className="container mx-auto px-4 py-8">
-            <div className="text-sm text-gray-500">请先连接钱包</div>
+            <div className="text-sm text-greyscale-500">请先连接钱包</div>
           </div>
         </main>
       </>
@@ -383,7 +383,7 @@ const GroupTrialAddPage: React.FC = () => {
           <div className="container mx-auto px-4 py-8">
             <div className="flex flex-col items-center py-12">
               <LoadingIcon />
-              <p className="mt-4 text-gray-600">加载中...</p>
+              <p className="mt-4 text-greyscale-600">加载中...</p>
             </div>
           </div>
         </main>
@@ -412,7 +412,7 @@ const GroupTrialAddPage: React.FC = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               {form.formState.errors.root && (
-                <div className="text-red-500 text-sm p-2 bg-red-50 rounded-md border border-red-200">
+                <div className="text-status-error text-sm p-2 bg-status-error-soft rounded-md border border-status-error-border">
                   {form.formState.errors.root.message}
                 </div>
               )}
@@ -422,7 +422,7 @@ const GroupTrialAddPage: React.FC = () => {
                 <LeftTitle title="增加新的体验地址" />
                 <table className="table w-full mt-6">
                   <thead>
-                    <tr className="border-b border-gray-100">
+                    <tr className="border-b border-greyscale-100">
                       <th className="px-1 text-left w-12">No</th>
                       <th className="px-1 text-left min-w-[200px]">地址</th>
                       <th className="px-1 text-right w-28">体验代币数量</th>
@@ -438,7 +438,7 @@ const GroupTrialAddPage: React.FC = () => {
                       </tr>
                     ) : (
                       fields.map((field, index) => (
-                        <tr key={field.id} className="border-b border-gray-100">
+                        <tr key={field.id} className="border-b border-greyscale-100">
                           <td className="px-1">{index + 1}</td>
                           <td className="px-1 min-w-[200px]">
                             <FormField
@@ -487,7 +487,7 @@ const GroupTrialAddPage: React.FC = () => {
                               onClick={() => handleRemove(index)}
                               className="h-8 w-8 px-0 mx-0"
                             >
-                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
+                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-status-error" />
                             </Button>
                           </td>
                         </tr>
@@ -519,7 +519,7 @@ const GroupTrialAddPage: React.FC = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    className="min-w-0 px-2 text-sm text-red-500 border-red-300 hover:text-red-600 hover:bg-red-50"
+                    className="min-w-0 px-2 text-sm text-status-error border-status-error-border hover:text-status-error hover:bg-status-error-soft"
                     onClick={handleClearAll}
                     disabled={!hasAnyEntries}
                   >
@@ -545,7 +545,7 @@ const GroupTrialAddPage: React.FC = () => {
                       className="min-h-40 font-mono text-sm"
                     />
                     {batchError && (
-                      <div role="alert" className="text-sm text-red-500">
+                      <div role="alert" className="text-sm text-status-error">
                         {batchError}
                       </div>
                     )}
@@ -564,16 +564,16 @@ const GroupTrialAddPage: React.FC = () => {
 
                 {/* 参与范围提示 */}
                 {groupDetail && (
-                  <div className="mt-2 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
+                  <div className="mt-2 text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
                     <div className="flex items-center justify-between">
                       <span>体验代币数量范围：</span>
-                      <span className="font-mono text-secondary">
+                      <span className="font-mono text-data-public">
                         {formatTokenAmount(groupDetail.actualMinJoinAmount, 2)} ~{' '}
                         {maxJoinResult.amount > BigInt(0) ? formatTokenAmount(maxJoinResult.amount) : '不限'}
                       </span>
                     </div>
                     {maxJoinResult.reason && maxJoinResult.amount && (
-                      <div className="text-xs text-gray-500 mt-1">限制: {maxJoinResult.reason}</div>
+                      <div className="text-xs text-greyscale-500 mt-1">限制: {maxJoinResult.reason}</div>
                     )}
                   </div>
                 )}
@@ -604,11 +604,11 @@ const GroupTrialAddPage: React.FC = () => {
               </div>
               {/* 授权金额提示 */}
               {shouldShowAmountHint && (
-                <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded px-3 py-2 mt-2">
+                <div className="text-sm text-greyscale-600 bg-status-info-soft border border-status-info-border rounded px-3 py-2 mt-2">
                   <div className="flex items-center justify-between">
                     <span>需质押代币：</span>
                     <span>
-                      <span className="font-mono text-secondary mr-2">{formatTokenAmount(totalTrialAmount)}</span>
+                      <span className="font-mono text-data-personal mr-2">{formatTokenAmount(totalTrialAmount)}</span>
                       <span className="text-greyscale-500">{contractInfo?.joinedAmountTokenSymbol || ''}</span>
                     </span>
                   </div>

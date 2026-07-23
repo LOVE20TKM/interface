@@ -62,14 +62,14 @@ const SwapInfo = ({
   if (fromAmount <= BigInt(0)) return null;
 
   return (
-    <div className="mt-4 p-4 bg-gray-50 rounded-md">
+    <div className="mt-4 p-4 bg-greyscale-50 rounded-md">
       {swapMethod === 'WETH9' && (
-        <div className="text-sm text-green-600 mb-2">💡 这是 1:1 包装转换，无手续费，无滑点</div>
+        <div className="text-sm text-status-success mb-2">💡 这是 1:1 包装转换，无手续费，无滑点</div>
       )}
 
       {/* 价格查询失败时的友好提示 */}
       {amountsOutError && swapMethod !== 'WETH9' && (
-        <div className="text-sm text-amber-600 mb-2 bg-amber-50 p-2 rounded border-l-4 border-amber-400">
+        <div className="text-sm text-status-warning mb-2 bg-status-warning-soft p-2 rounded border-l-4 border-status-warning-border">
           ⚠️ 价格信息更新中，请稍后重试。这通常是因为链上交易活跃导致的临时状态。
         </div>
       )}
@@ -101,7 +101,7 @@ const SwapInfo = ({
 
       {/* 当价格查询失败且输出金额为0时，显示额外说明 */}
       {amountsOutError && toAmount === BigInt(0) && swapMethod !== 'WETH9' && (
-        <div className="text-xs text-gray-500 mt-2">
+        <div className="text-xs text-greyscale-500 mt-2">
           💡 提示：同时进行相同交易可能会因MEV保护机制而失败，这是为了保护您的资金安全。
         </div>
       )}

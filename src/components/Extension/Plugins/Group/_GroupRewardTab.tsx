@@ -126,7 +126,7 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载激励数据...</p>
+        <p className="mt-4 text-greyscale-600">加载激励数据...</p>
       </div>
     );
   }
@@ -144,18 +144,18 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
       {/* 激励列表 */}
       {!sortedGroupRewards || sortedGroupRewards.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-2">该轮次没有激励数据</p>
+          <p className="text-greyscale-500 mb-2">该轮次没有激励数据</p>
         </div>
       ) : (
         <div className="overflow-x-auto mt-4">
           <table className="table w-full">
             <thead>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-greyscale-100">
                 <th className="px-1 text-left hidden md:table-cell">No</th>
                 <th className="px-1 text-left">
                   <div className="">
                     <span>链群</span>
-                    <span className="md:hidden text-xs text-gray-500 mt-1">/参与代币</span>
+                    <span className="md:hidden text-xs text-greyscale-500 mt-1">/参与代币</span>
                   </div>
                 </th>
                 <th className="px-1 text-center hidden md:table-cell">参与代币</th>
@@ -165,18 +165,18 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
             </thead>
             <tbody>
               {sortedGroupRewards.map((item, index) => (
-                <tr key={item.groupId.toString()} className="border-b border-gray-100">
+                <tr key={item.groupId.toString()} className="border-b border-greyscale-100">
                   <td className="px-1 text-greyscale-400 hidden md:table-cell">{index + 1}</td>
                   <td className="px-1 text-left">
                     <div className="flex flex-col">
                       <div className="flex items-center">
-                        <span className="text-gray-500 text-xs">#</span>
+                        <span className="text-greyscale-500 text-xs">#</span>
                         <span className="text-sm font-medium">{item.groupId.toString()}</span>
-                        {item.groupName && <span className="text-sm text-gray-800 ml-1">{item.groupName}</span>}
+                        {item.groupName && <span className="text-sm text-greyscale-800 ml-1">{item.groupName}</span>}
                       </div>
                       {/* 手机上显示参与代币 */}
                       <div className="md:hidden mt-1">
-                        <div className="font-mono text-secondary text-xs">
+                        <div className="font-mono text-data-public text-xs">
                           {item.joinedAmount !== undefined ? formatTokenAmount(item.joinedAmount) : '-'}
                         </div>
                       </div>
@@ -184,21 +184,21 @@ const _GroupRewardTab: React.FC<GroupRewardTabProps> = ({ actionId, extensionAdd
                   </td>
                   {/* 电脑上显示参与代币 */}
                   <td className="px-1 text-center hidden md:table-cell">
-                    <div className="font-mono text-secondary">
+                    <div className="font-mono text-data-public">
                       {item.joinedAmount !== undefined ? formatTokenAmount(item.joinedAmount) : '-'}
                     </div>
                   </td>
                   <td className="px-1 text-center">
-                    <div className="font-mono text-secondary">
+                    <div className="font-mono text-data-public">
                       {item.distrustRatio !== undefined ? (
-                        <span className="text-red-500">-{formatPercentage(item.distrustRatio * 100)}</span>
+                        <span className="text-status-error">-{formatPercentage(item.distrustRatio * 100)}</span>
                       ) : (
                         <>-</>
                       )}
                     </div>
                   </td>
                   <td className="px-1 text-center">
-                    <div className="font-mono text-secondary">
+                    <div className="font-mono text-data-public">
                       {(() => {
                         const rewardText = item.reward !== undefined ? formatTokenAmount(item.reward) : '-';
                         const tokenSymbol = token?.symbol;

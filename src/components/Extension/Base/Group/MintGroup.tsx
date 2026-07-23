@@ -256,37 +256,37 @@ export default function MintGroup() {
 
             {/* 显示验证状态和铸造成本 */}
             {groupName && (
-              <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+              <div className="bg-greyscale-50 rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">链群名称:</span>
+                  <span className="text-greyscale-500">链群名称:</span>
                   {isValidationPending ? (
-                    <span className="text-gray-400">检查中...</span>
+                    <span className="text-greyscale-400">检查中...</span>
                   ) : isValid ? (
-                    <span className="text-green-600 font-medium">✓ 可用</span>
+                    <span className="text-status-success font-medium">✓ 可用</span>
                   ) : (
-                    <span className="text-red-600 font-medium">✗ {validationError}</span>
+                    <span className="text-status-error font-medium">✗ {validationError}</span>
                   )}
                 </div>
 
                 {isValid && mintCost !== undefined && (
                   <>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">铸造成本:</span>
-                      <span className="font-mono text-secondary font-medium">
+                      <span className="text-greyscale-500">铸造成本:</span>
+                      <span className="font-mono text-data-public font-medium">
                         {formatTokenAmount(mintCost)} {FIRST_TOKEN_SYMBOL}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">滑点:</span>
-                      <span className="font-mono text-secondary font-medium">0.1%</span>
+                      <span className="text-greyscale-500">滑点:</span>
+                      <span className="font-mono text-data-public font-medium">0.1%</span>
                     </div>
                   </>
                 )}
 
                 {balance !== undefined && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">我的余额:</span>
-                    <span className="font-mono text-greyscale-600">
+                    <span className="text-greyscale-500">我的余额:</span>
+                    <span className="font-mono text-data-personal">
                       {formatTokenAmount(balance)} {FIRST_TOKEN_SYMBOL}
                     </span>
                   </div>
@@ -294,7 +294,7 @@ export default function MintGroup() {
 
                 {/* 余额不足提示 */}
                 {isValid && mintCost !== undefined && balance !== undefined && balance < mintCost && (
-                  <div className="text-xs text-red-600 mt-1">
+                  <div className="text-xs text-status-error mt-1">
                     余额不足，还需要 {formatTokenAmount(mintCost - balance)} {FIRST_TOKEN_SYMBOL}
                   </div>
                 )}

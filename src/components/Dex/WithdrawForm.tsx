@@ -288,7 +288,7 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
           <Card className="mb-4">
             <CardContent className="p-4">
               <div className="space-y-4">
-                <div className="text-sm font-medium text-gray-700 mb-3">选择交易对</div>
+                <div className="text-sm font-medium text-greyscale-700 mb-3">选择交易对</div>
 
                 <div className="grid grid-cols-2 gap-3">
                   {/* 基础代币选择 */}
@@ -297,7 +297,7 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
                     name="baseTokenAddress"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs text-gray-500">基础代币</FormLabel>
+                        <FormLabel className="text-xs text-greyscale-500">基础代币</FormLabel>
                         <FormControl>
                           <Select
                             onValueChange={(val) => {
@@ -328,8 +328,8 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
 
                   {/* 目标代币显示 */}
                   <FormItem>
-                    <FormLabel className="text-xs text-gray-500">目标代币</FormLabel>
-                    <div className="h-10 px-3 py-2 border border-gray-200 rounded-md bg-gray-50 flex items-center text-sm text-gray-700">
+                    <FormLabel className="text-xs text-greyscale-500">目标代币</FormLabel>
+                    <div className="h-10 px-3 py-2 border border-greyscale-200 rounded-md bg-greyscale-50 flex items-center text-sm text-greyscale-700">
                       {targetToken.symbol}
                     </div>
                   </FormItem>
@@ -345,7 +345,7 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
               name="lpAmount"
               render={({ field }) => (
                 <FormItem>
-                  <Card className="bg-[#f7f8f9] border-none">
+                  <Card className="bg-greyscale-50 border-none">
                     <CardContent className="py-4 px-2">
                       <div className="flex items-center justify-between mb-3">
                         <Input
@@ -354,8 +354,8 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
                           {...field}
                           className="text-xl border-none p-0 h-auto bg-transparent focus:ring-0 focus:outline-none mr-2"
                         />
-                        <div className="bg-white px-3 py-1.5 rounded-full border border-gray-200">
-                          <span className="font-medium text-gray-800 font-mono">LP</span>
+                        <div className="bg-card px-3 py-1.5 rounded-full border border-greyscale-200">
+                          <span className="font-medium text-greyscale-800 font-mono">LP</span>
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
@@ -389,7 +389,9 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
                             最高
                           </Button>
                         </div>
-                        <span className="text-sm text-gray-600">余额：{formatTokenAmount(lpBalance)} LP</span>
+                        <span className="text-sm text-greyscale-600">
+                          余额：<span className="text-data-personal">{formatTokenAmount(lpBalance)}</span> LP
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
@@ -403,14 +405,14 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
           {parsedLPAmount > BigInt(0) && (
             <Card className="mb-4">
               <CardContent className="p-4">
-                <div className="text-sm font-medium text-gray-700 mb-3">预计获得</div>
+                <div className="text-sm font-medium text-greyscale-700 mb-3">预计获得</div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">{baseToken.symbol}</span>
+                    <span className="text-sm text-greyscale-600">{baseToken.symbol}</span>
                     <span className="font-medium">{formatTokenAmount(baseTokenAmount)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">{targetToken.symbol}</span>
+                    <span className="text-sm text-greyscale-600">{targetToken.symbol}</span>
                     <span className="font-medium">{formatTokenAmount(targetTokenAmount)}</span>
                   </div>
                 </div>
@@ -420,7 +422,7 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
 
           {/* 滑点设置 */}
           <div className="flex items-center text-sm mb-4">
-            <div className="text-gray-600 flex items-center gap-1 mr-2">
+            <div className="text-greyscale-600 flex items-center gap-1 mr-2">
               <Zap className="w-4 h-4" />
               滑点上限：{slippage}%
             </div>
@@ -430,7 +432,7 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-2 text-xs hover:bg-gray-100 transition-colors"
+                  className="h-6 px-2 text-xs hover:bg-greyscale-100 transition-colors"
                   title="设置滑点"
                 >
                   <Settings className="h-3 w-3" />
@@ -476,7 +478,7 @@ const WithdrawForm: React.FC<WithdrawFormProps> = ({
                         max="50"
                         step="0.1"
                       />
-                      <span className="text-sm text-gray-500">%</span>
+                      <span className="text-sm text-greyscale-500">%</span>
                     </div>
                     {customSlippage && (
                       <Button

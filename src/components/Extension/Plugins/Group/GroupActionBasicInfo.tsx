@@ -59,10 +59,10 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
   // 加载中状态
   if (isPending || isStakeSymbolPending || isJoinSymbolPending || isFormatJoinSymbolPending) {
     return (
-      <div className="mt-6 bg-gray-50 rounded-lg p-4">
+      <div className="mt-6 bg-greyscale-50 rounded-lg p-4">
         <div className="text-center">
           <LoadingIcon />
-          <p className="mt-2 text-sm text-gray-600">加载扩展部署参数...</p>
+          <p className="mt-2 text-sm text-greyscale-600">加载扩展部署参数...</p>
         </div>
       </div>
     );
@@ -71,8 +71,8 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
   // 错误状态
   if (error) {
     return (
-      <div className="mt-6 bg-red-50 rounded-lg p-4">
-        <p className="text-sm text-red-600">加载扩展部署参数失败</p>
+      <div className="mt-6 bg-status-error-soft rounded-lg p-4">
+        <p className="text-sm text-status-error">加载扩展部署参数失败</p>
       </div>
     );
   }
@@ -96,7 +96,7 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
   const minGovRatioDisplay = formatPercentage(Number(activationMinGovRatio) / Number(RATIO_DENOMINATOR));
 
   return (
-    <div className="mt-6 bg-gray-50 rounded-lg p-4">
+    <div className="mt-6 bg-greyscale-50 rounded-lg p-4">
       <div className="font-bold text-base mb-4">扩展协议参数:</div>
 
       <div className="space-y-3">
@@ -121,7 +121,7 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
         {/* 激活需质押代币数量 */}
         <div className="md:max-w-2xl">
           <div className="text-sm font-bold mb-1">激活链群需质押的代币数:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">
+          <div className="font-mono text-data-public text-sm md:text-base">
             {formatTokenAmount(activationStakeAmount)}
           </div>
         </div>
@@ -129,8 +129,8 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
         {/* 最大参与代币占比 */}
         <div className="md:max-w-2xl">
           <div className="text-sm font-bold mb-1">最大参与代币占比:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">{ratioPercentageDisplay}</div>
-          <div className="text-xs text-gray-600">
+          <div className="font-mono text-data-public text-sm md:text-base">{ratioPercentageDisplay}</div>
+          <div className="text-xs text-greyscale-600">
             行动者最大参与代币数 = 已铸造代币总量 × 最大参与代币占比 × 该行动投票率
           </div>
         </div>
@@ -138,8 +138,8 @@ const GroupActionBasicInfo: React.FC<GroupActionBasicInfoProps> = ({ extensionAd
         {/* 激活链群最小治理票比例 */}
         <div className="md:max-w-2xl">
           <div className="text-sm font-bold mb-1">激活链群最小治理票比例:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">{minGovRatioDisplay}</div>
-          <div className="text-xs text-gray-600">服务者激活链群时，其治理票占比需不低于此值</div>
+          <div className="font-mono text-data-public text-sm md:text-base">{minGovRatioDisplay}</div>
+          <div className="text-xs text-greyscale-600">服务者激活链群时，其治理票占比需不低于此值</div>
         </div>
       </div>
     </div>

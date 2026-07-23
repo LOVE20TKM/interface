@@ -98,8 +98,8 @@ const ActionGroupOpPage: React.FC = () => {
         <main className="flex-grow">
           <div className="container mx-auto px-4 py-8">
             <div className="text-center py-12">
-              <p className="text-red-500">缺少必要参数</p>
-              <p className="text-sm text-gray-600 mt-2">需要: actionId (行动ID), op (操作类型)</p>
+              <p className="text-status-error">缺少必要参数</p>
+              <p className="text-sm text-greyscale-600 mt-2">需要: actionId (行动ID), op (操作类型)</p>
             </div>
           </div>
         </main>
@@ -112,8 +112,8 @@ const ActionGroupOpPage: React.FC = () => {
         <main className="flex-grow">
           <div className="container mx-auto px-4 py-8">
             <div className="text-center py-12">
-              <p className="text-red-500">缺少必要参数</p>
-              <p className="text-sm text-gray-600 mt-2">需要: groupId</p>
+              <p className="text-status-error">缺少必要参数</p>
+              <p className="text-sm text-greyscale-600 mt-2">需要: groupId</p>
             </div>
           </div>
         </main>
@@ -128,7 +128,7 @@ const ActionGroupOpPage: React.FC = () => {
         <main className="flex-grow">
           <div className="container mx-auto px-4 py-8">
             <div className="text-center py-12">
-              <p className="text-red-500">未找到行动信息</p>
+              <p className="text-status-error">未找到行动信息</p>
             </div>
           </div>
         </main>
@@ -159,7 +159,7 @@ const ActionGroupOpPage: React.FC = () => {
       default:
         return (
           <div className="text-center py-12">
-            <p className="text-red-500">未知的操作类型: {op}</p>
+            <p className="text-status-error">未知的操作类型: {op}</p>
           </div>
         );
     }

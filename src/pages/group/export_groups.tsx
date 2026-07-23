@@ -266,7 +266,7 @@ const ExportGroupsPage: React.FC = () => {
       <>
         <Header title="导出链群参与地址" showBackButton={true} />
         <main className="flex-grow p-4">
-          <p className="text-red-500 text-center mt-8">缺少参数：actionId</p>
+          <p className="text-status-error text-center mt-8">缺少参数：actionId</p>
         </main>
       </>
     );
@@ -277,10 +277,10 @@ const ExportGroupsPage: React.FC = () => {
       <Header title="导出链群参与地址" showBackButton={true} />
       <main className="flex-grow p-4 space-y-4">
         {/* 行动信息 */}
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-greyscale-600">
           <span>行动：</span>
           <span className="text-greyscale-400 text-sm">No.</span>
-          <span className="text-secondary text-xl font-bold mr-2">{actionId.toString()}</span>
+          <span className="text-data-public text-xl font-bold mr-2">{actionId.toString()}</span>
           {actionInfo?.body?.title && (
             <span className="font-bold text-greyscale-800 text-base">{actionInfo.body.title}</span>
           )}
@@ -288,9 +288,9 @@ const ExportGroupsPage: React.FC = () => {
 
         {/* 轮次 & 统计 */}
         {currentRound !== undefined && (
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-greyscale-500">
             <span>打分轮次：</span>
-            <span className="font-semibold text-secondary">{currentRound.toString()}</span>
+            <span className="font-semibold text-data-public">{currentRound.toString()}</span>
           </div>
         )}
 
@@ -300,7 +300,7 @@ const ExportGroupsPage: React.FC = () => {
             <Button onClick={handleDownload} disabled={totalAccounts === 0} className="w-full">
               下载 TSV 文件（可直接用 Excel 打开）
             </Button>
-            <p className="text-xs text-gray-400 mt-2 text-center">
+            <p className="text-xs text-greyscale-400 mt-2 text-center">
               文件包含所有链群的参与地址及验证信息，用 Excel 打开后即可打分
             </p>
           </div>
@@ -310,40 +310,40 @@ const ExportGroupsPage: React.FC = () => {
         {isLoading ? (
           <div className="flex flex-col items-center gap-3 py-6">
             <LoadingIcon />
-            <div className="text-gray-500 text-sm">{loadingText}</div>
+            <div className="text-greyscale-500 text-sm">{loadingText}</div>
           </div>
         ) : combinedError ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-2">
-            <p className="text-sm font-semibold text-red-700">导出数据加载失败，已阻止错误导出</p>
-            <p className="text-sm text-red-600 break-all">{getErrorMessage(combinedError)}</p>
+          <div className="rounded-lg border border-status-error-border bg-status-error-soft p-4 space-y-2">
+            <p className="text-sm font-semibold text-status-error">导出数据加载失败，已阻止错误导出</p>
+            <p className="text-sm text-status-error break-all">{getErrorMessage(combinedError)}</p>
             {groups.length > 0 && (
-              <p className="text-xs text-red-500">
+              <p className="text-xs text-status-error">
                 当前已加载 {totalAccounts} / 预期 {expectedTotalAccounts} 个地址
               </p>
             )}
           </div>
         ) : sortedGroups.length === 0 ? (
-          <p className="text-gray-500 text-sm py-4">暂无活跃链群</p>
+          <p className="text-greyscale-500 text-sm py-4">暂无活跃链群</p>
         ) : (
           <div className="space-y-2">
             {/* 汇总 */}
-            <div className="text-sm text-gray-600">
-              共 <span className="font-semibold text-secondary">{sortedGroups.length}</span> 个链群， 共{' '}
-              <span className="font-semibold text-secondary">{totalAccounts}</span> 个参与地址
+            <div className="text-sm text-greyscale-600">
+              共 <span className="font-semibold text-data-public">{sortedGroups.length}</span> 个链群， 共{' '}
+              <span className="font-semibold text-data-public">{totalAccounts}</span> 个参与地址
             </div>
 
             {/* 每个群的简要信息 */}
-            <div className="border border-gray-200 rounded-lg divide-y divide-gray-100">
+            <div className="border border-greyscale-200 rounded-lg divide-y divide-greyscale-100">
               {sortedGroups.map((group) => {
                 const count = groupAccountsMap.get(group.groupId.toString())?.length ?? Number(group.accountCount);
                 return (
                   <div key={group.groupId.toString()} className="flex items-center justify-between px-3 py-2 text-sm">
                     <div>
-                      <span className="text-gray-400 text-xs">#</span>
-                      <span className="text-secondary font-semibold mr-1">{group.groupId.toString()}</span>
-                      <span className="text-gray-800">{group.groupName}</span>
+                      <span className="text-greyscale-400 text-xs">#</span>
+                      <span className="text-data-public font-semibold mr-1">{group.groupId.toString()}</span>
+                      <span className="text-greyscale-800">{group.groupName}</span>
                     </div>
-                    <span className="text-gray-500">{count} 个地址</span>
+                    <span className="text-greyscale-500">{count} 个地址</span>
                   </div>
                 );
               })}

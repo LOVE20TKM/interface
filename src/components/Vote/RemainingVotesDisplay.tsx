@@ -26,7 +26,7 @@ const RemainingVotesDisplay: React.FC<RemainingVotesDisplayProps> = ({
     <div className="stats w-full">
       <div className="stat place-items-center">
         <div className="stat-title text-sm">我的剩余票数</div>
-        <div className="stat-value text-secondary mt-2">
+        <div className="stat-value text-data-personal mt-2">
           {isPendingValidGovVotes || isPendingVotesNumByAccount ? (
             <LoadingIcon />
           ) : (

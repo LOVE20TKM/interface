@@ -172,7 +172,7 @@ const getTokenBalanceView = (
   if (failedBalanceTokens.has(tokenBalanceKey(tokenConfig))) {
     return {
       label: '查询失败',
-      symbolClassName: 'text-red-500',
+      symbolClassName: 'text-status-error',
     };
   }
 
@@ -192,7 +192,7 @@ const getTokenBalanceView = (
 
   return {
     label: '0',
-    symbolClassName: 'text-gray-400',
+    symbolClassName: 'text-greyscale-400',
   };
 };
 
@@ -750,7 +750,7 @@ const TransferPanel = () => {
                 name="to"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">目标地址</FormLabel>
+                    <FormLabel className="text-sm font-medium text-greyscale-700">目标地址</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="请输入目标钱包地址（支持 0x、TH 格式）"
@@ -761,14 +761,14 @@ const TransferPanel = () => {
                     </FormControl>
 
                     {addressConversionInfo && (
-                      <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                      <div className="text-xs text-status-info mt-1 flex items-center gap-1">
                         <span>{addressConversionInfo}</span>
                         {convertedAddress && (
                           <AddressWithCopyButton
                             address={convertedAddress}
                             showCopyButton={true}
                             showAddress={true}
-                            colorClassName="text-blue-600"
+                            colorClassName="text-status-info"
                           />
                         )}
                       </div>
@@ -777,16 +777,16 @@ const TransferPanel = () => {
                     {isGroupDefaultsEnabled && normalizedToAddress && (
                       <div className="text-xs mt-1">
                         {isPendingTargetDefaultGroup ? (
-                          <span className="text-gray-400">默认NFT查询中...</span>
+                          <span className="text-greyscale-400">默认NFT查询中...</span>
                         ) : hasTargetDefaultGroup ? (
-                          <span className="inline-flex items-center gap-1 text-gray-700">
+                          <span className="inline-flex items-center gap-1 text-greyscale-700">
                             <span className="inline-flex items-center rounded-full bg-secondary/10 px-1.5 py-0.5 text-[10px] font-medium text-secondary">
                               NFT#{targetDefaultGroupId?.toString()}
                             </span>
                             <span>{targetDefaultGroupName || '...'}</span>
                           </span>
                         ) : (
-                          <span className="text-gray-400">该地址未关联默认NFT</span>
+                          <span className="text-greyscale-400">该地址未关联默认NFT</span>
                         )}
                       </div>
                     )}
@@ -806,7 +806,7 @@ const TransferPanel = () => {
               />
             )}
 
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3">
+            <div className="rounded-lg border border-status-warning-border bg-status-warning-soft px-3 py-3">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -815,15 +815,15 @@ const TransferPanel = () => {
                   onChange={(event) => assetProtectionPreference.set(event.target.checked)}
                 />
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-amber-900">资产保护开关</div>
-                  <div className="text-xs text-amber-800 mt-1">
+                  <div className="text-sm font-medium text-status-warning">资产保护开关</div>
+                  <div className="text-xs text-status-warning mt-1">
                     默认开启。若目标地址填写为前端已知的任意合约地址，系统会拦截本次转账，避免误把资产转入代币或协议合约。
                   </div>
                 </div>
               </label>
 
               {isAssetProtectionTriggered && protectedTargetInfo && (
-                <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className="mt-3 rounded-md border border-status-error-border bg-status-error-soft px-3 py-2 text-sm text-status-error">
                   已触发资产保护开关：目标地址是 {protectedTargetLabel}
                   {isProtectedSelectedTokenSelf ? '，当前正在尝试把该代币转到它自己的合约地址。' : '。'}
                   如需强制转账，请先关闭上方保护开关，再重新提交。
@@ -836,7 +836,7 @@ const TransferPanel = () => {
               name="tokenAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">选择代币</FormLabel>
+                  <FormLabel className="text-sm font-medium text-greyscale-700">选择代币</FormLabel>
                   <FormControl>
                     <TokenSelect
                       value={selectedTokenValue}
@@ -868,7 +868,7 @@ const TransferPanel = () => {
                           isLoadingCustomTokenBytecode ? (
                             <div className="text-xs text-greyscale-500">正在检查地址...</div>
                           ) : customTokenInfoFailed ? (
-                            <div className="text-xs text-red-600">
+                            <div className="text-xs text-status-error">
                               {isCustomTokenEoa
                                 ? '这是钱包地址，不是代币合约地址。'
                                 : '无法读取代币信息，请确认这是有效的 ERC20 代币合约地址。'}
@@ -885,7 +885,7 @@ const TransferPanel = () => {
                               </div>
                               <div>
                                 <div className="text-greyscale-400">余额</div>
-                                <div className="mt-0.5 font-mono">
+                                <div className="mt-0.5 font-mono text-data-personal">
                                   {!account
                                     ? '未连接'
                                     : !isCustomTokenReady || isPendingBalance
@@ -907,7 +907,7 @@ const TransferPanel = () => {
                           item.isNative ? isLoadingNative : isPendingERC20,
                           !!account,
                         );
-                        return <span className="text-xs text-gray-500">余额 {balanceView.label}</span>;
+                        return <span className="text-xs text-data-personal">余额 {balanceView.label}</span>;
                       }}
                     />
                   </FormControl>
@@ -921,8 +921,8 @@ const TransferPanel = () => {
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">转账数量</FormLabel>
-                  <Card className="bg-[#f7f8f9] border-none">
+                  <FormLabel className="text-sm font-medium text-greyscale-700">转账数量</FormLabel>
+                  <Card className="bg-greyscale-50 border-none">
                     <CardContent className="py-4 px-2">
                       <div className="flex items-center justify-between mb-3">
                         <FormControl>
@@ -935,8 +935,8 @@ const TransferPanel = () => {
                           />
                         </FormControl>
                         {selectedTokenOption && (
-                          <div className="w-auto border-none bg-white hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors border border-gray-200 font-mono">
-                            <span className="font-medium text-gray-800 font-mono">{selectedTokenOption.symbol}</span>
+                          <div className="w-auto border-none bg-card hover:bg-greyscale-50 px-3 py-1.5 rounded-full transition-colors border border-greyscale-200 font-mono">
+                            <span className="font-medium text-greyscale-800 font-mono">{selectedTokenOption.symbol}</span>
                           </div>
                         )}
                       </div>
@@ -968,7 +968,7 @@ const TransferPanel = () => {
                           </Button>
                         </div>
                         {selectedTokenOption && (
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-greyscale-600">
                             {isBalanceReadFailed
                               ? '查询失败'
                               : formatTokenAmountForDecimals(balance || BigInt(0), balanceToken.decimals)}

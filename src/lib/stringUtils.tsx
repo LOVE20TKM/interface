@@ -40,7 +40,7 @@ export const renderTextWithLinks = (text: string, preserveLineBreaks: boolean = 
         if (!isUrlSafe(url)) {
           // 如果URL包含危险内容，显示警告信息
           return (
-            <span key={i} className="text-red-500 font-semibold">
+            <span key={i} className="text-status-error font-semibold">
               [危险链接已被拦截]
             </span>
           );
@@ -68,7 +68,7 @@ export const renderTextWithLinks = (text: string, preserveLineBreaks: boolean = 
               // 返回 false 确保不会触发默认行为
               return false;
             }}
-            className="text-blue-500 underline hover:text-blue-700 break-words break-all whitespace-normal"
+            className="text-status-info underline hover:text-status-info break-words break-all whitespace-normal"
             title={`外部链接: ${url}`}
             // 添加这些属性防止默认行为
             rel="noopener noreferrer"

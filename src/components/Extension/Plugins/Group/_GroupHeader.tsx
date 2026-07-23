@@ -135,10 +135,10 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
   };
 
   return (
-    <div className="bg-gray-100 rounded-lg px-4 pt-3 pb-3 text-sm my-4">
+    <div className="bg-greyscale-100 rounded-lg px-4 pt-3 pb-3 text-sm my-4">
       {/* 链群关闭提示 */}
       {!groupDetail.isActive && (
-        <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+        <div className="mb-3 rounded-md border border-status-error-border bg-status-error-soft px-3 py-2 text-sm font-medium text-status-error">
           此链群已关闭！ 请退出行动并取回代币。
         </div>
       )}
@@ -147,11 +147,11 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
       <div className="mb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline">
-            <span className="text-gray-500 text-sm">#</span>
-            <span className="text-secondary text-xl font-semibold">{groupId.toString()}</span>
-            <span className="font-semibold text-gray-800 text-lg ml-1">{groupDetail.groupName}</span>
+            <span className="text-greyscale-500 text-sm">#</span>
+            <span className="text-data-public text-xl font-semibold">{groupId.toString()}</span>
+            <span className="font-semibold text-greyscale-800 text-lg ml-1">{groupDetail.groupName}</span>
           </div>
-          <div className="text-sm text-gray-600 flex items-center gap-1">
+          <div className="text-sm text-greyscale-600 flex items-center gap-1">
             <User className="text-greyscale-400 h-3 w-3" />
             <span className="text-greyscale-400">
               <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />
@@ -161,14 +161,14 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
       </div>
 
       {/* 第二行：参与统计信息 */}
-      <div className="space-y-2 text-sm text-gray-500 mb-1">
+      <div className="space-y-2 text-sm text-greyscale-500 mb-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="">参与代币数:</span>
             <span className="">{formattedTotalAmount}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-gray-500">参与地址数:</span>
+            <span className="text-greyscale-500">参与地址数:</span>
             <span className="">{isPendingAccountsCount ? '...' : accountsCount?.toString() || '0'}</span>
           </div>
         </div>
@@ -188,7 +188,7 @@ const _GroupHeader: React.FC<GroupHeaderProps> = ({ actionId, actionInfo, extens
           <span
             onClick={handleDistrustClick}
             className={`text-sm cursor-pointer ${
-              hasVoted ? 'text-secondary hover:text-secondary/80' : 'text-gray-400 cursor-not-allowed'
+              hasVoted ? 'text-secondary hover:text-secondary/80' : 'text-greyscale-400 cursor-not-allowed'
             }`}
           >
             投不信任票 &gt;&gt;

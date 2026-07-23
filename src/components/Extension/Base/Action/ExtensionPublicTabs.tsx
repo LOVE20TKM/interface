@@ -55,10 +55,10 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
   // 如果正在加载工厂地址
   if (isFactoryPending) {
     return (
-      <div className="bg-white rounded-lg p-8">
+      <div className="bg-card rounded-lg p-8">
         <div className="text-center">
           <LoadingIcon />
-          <p className="mt-4 text-gray-600">加载扩展信息中...</p>
+          <p className="mt-4 text-greyscale-600">加载扩展信息中...</p>
         </div>
       </div>
     );
@@ -70,8 +70,8 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
   // 如果是未知的扩展类型，显示暂不支持
   if (!extensionConfig) {
     return (
-      <div className="bg-white rounded-lg p-8">
-        <div className="text-center text-gray-500">
+      <div className="bg-card rounded-lg p-8">
+        <div className="text-center text-greyscale-500">
           <p>该扩展类型暂不支持行动公示</p>
         </div>
       </div>
@@ -86,8 +86,8 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
     case ExtensionType.GROUP_ACTION:
       if (!actionInfo) {
         return (
-          <div className="bg-white rounded-lg p-8">
-            <div className="text-center text-gray-500">
+          <div className="bg-card rounded-lg p-8">
+            <div className="text-center text-greyscale-500">
               <p>缺少必要的行动信息</p>
             </div>
           </div>
@@ -111,8 +111,8 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
     case ExtensionType.GROUP_SERVICE:
       if (!actionInfo) {
         return (
-          <div className="bg-white rounded-lg p-8">
-            <div className="text-center text-gray-500">
+          <div className="bg-card rounded-lg p-8">
+            <div className="text-center text-greyscale-500">
               <p>缺少必要的行动信息</p>
             </div>
           </div>
@@ -139,8 +139,8 @@ const ExtensionPublicTabs: React.FC<ExtensionPublicTabsProps> = ({
 
     default:
       return (
-        <div className="bg-white rounded-lg p-8">
-          <div className="text-center text-gray-500">
+        <div className="bg-card rounded-lg p-8">
+          <div className="text-center text-greyscale-500">
             <p>该扩展类型暂不支持行动公示</p>
           </div>
         </div>

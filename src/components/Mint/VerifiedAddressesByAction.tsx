@@ -243,7 +243,7 @@ const VerifiedAddressesByAction: React.FC<{
       ) : (
         <table className="table w-full">
           <thead>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-greyscale-100">
               {shouldShowVerificationInfo && <th></th>}
               <th>
                 <div className="flex items-center gap-1">
@@ -253,7 +253,7 @@ const VerifiedAddressesByAction: React.FC<{
                     content={
                       <p className="leading-relaxed text-base">
                         每轮从所有参与行动的代币中，随机抽取
-                        <span className="font-mono font-bold text-blue-600 mx-1 text-base">
+                        <span className="font-mono font-bold text-status-info mx-1 text-base">
                           {actionInfo?.body.maxRandomAccounts.toString()}
                         </span>
                         份代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。
@@ -273,7 +273,7 @@ const VerifiedAddressesByAction: React.FC<{
 
               return (
                 <React.Fragment key={item.account}>
-                  <tr className={`border-b border-gray-100 ${item.account === account ? 'text-secondary' : ''}`}>
+                  <tr className={`border-b border-greyscale-100 ${item.account === account ? 'text-data-personal' : ''}`}>
                     {shouldShowVerificationInfo && (
                       <td className="px-1 w-8">
                         <button
@@ -304,7 +304,7 @@ const VerifiedAddressesByAction: React.FC<{
                   </tr>
 
                   {verificationInfo && actionInfo && isExpanded && shouldShowVerificationInfo && (
-                    <tr className="border-b border-gray-100 bg-gray-50">
+                    <tr className="border-b border-greyscale-100 bg-greyscale-50">
                       <td></td>
                       <td colSpan={3} className="px-1 py-3">
                         <div className="text-sm text-greyscale-600">

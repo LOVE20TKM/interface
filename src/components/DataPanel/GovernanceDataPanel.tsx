@@ -34,7 +34,7 @@ export const GovernanceApyCard: React.FC<GovernanceApyCardProps> = ({
   return (
     <div className="mx-3 mt-3 mb-2 px-4 py-4 text-center">
       <div className="text-sm font-medium text-greyscale-500">预估年化收益率</div>
-      <div className="mt-1 text-3xl font-bold text-secondary">
+      <div className="mt-1 text-3xl font-bold text-data-public">
         {isPending ? <LoadingIcon /> : calculateAPY(expectedReward, tokenAmountForSl, stAmount)}
       </div>
       <div className="mt-1 text-xs text-greyscale-400">APY</div>
@@ -76,13 +76,13 @@ const GovernanceDataPanel: React.FC<GovernanceDataPanelProps> = ({ afterApy }) =
         <div className="stats w-full grid grid-cols-2 divide-x-0">
           <div className="stat place-items-center pb-2 pl-1">
             <div className="stat-title text-sm pb-1">预计新增铸币</div>
-            <div className="stat-value text-secondary text-xl">
+            <div className="stat-value text-data-public text-xl">
               {isPendingEstimatedGovReward ? <LoadingIcon /> : formatTokenAmount(expectedReward ?? BigInt(0))}
             </div>
           </div>
           <div className="stat place-items-center pb-2 pl-1">
             <div className="stat-title text-sm pb-1">总治理票数</div>
-            <div className="stat-value text-secondary text-xl">
+            <div className="stat-value text-data-public text-xl">
               {isPending ? <LoadingIcon /> : formatTokenAmount(govData?.govVotes ?? BigInt(0))}
             </div>
           </div>
@@ -91,7 +91,7 @@ const GovernanceDataPanel: React.FC<GovernanceDataPanelProps> = ({ afterApy }) =
         <div className="stats w-full grid grid-cols-2 divide-x-0 mt-2">
           <div className="stat place-items-center pb-0 pt-0 pl-1">
             <div className="stat-title text-sm">流动性质押凭证SL代币</div>
-            <div className="stat-value text-lg text-gray-600">
+            <div className="stat-value text-lg text-data-public">
               {isPending ? (
                 <LoadingIcon />
               ) : (
@@ -112,7 +112,7 @@ const GovernanceDataPanel: React.FC<GovernanceDataPanelProps> = ({ afterApy }) =
           </div>
           <div className="stat place-items-center pb-0 pt-0 pl-1">
             <div className="stat-title text-sm">代币质押凭证ST代币</div>
-            <div className="stat-value text-lg text-gray-600">
+            <div className="stat-value text-lg text-data-public">
               {isPending ? <LoadingIcon /> : formatTokenAmount(govData?.stAmount ?? BigInt(0))}
             </div>
             <div className="stat-desc text-xs">

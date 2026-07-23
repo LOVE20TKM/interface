@@ -110,7 +110,7 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
     <div className="mb-4">
       <table className="table w-full table-auto">
         <thead>
-          <tr className="border-b border-gray-100">
+          <tr className="border-b border-greyscale-100">
             <th>轮次</th>
             <th className="text-center">可铸造激励</th>
             <th className="text-center">操作</th>
@@ -119,13 +119,13 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
         <tbody>
           {rewards.length === 0 && isLoading ? (
             <tr>
-              <td colSpan={3} className="text-center text-sm text-gray-500 py-4">
+              <td colSpan={3} className="text-center text-sm text-greyscale-500 py-4">
                 加载中...
               </td>
             </tr>
           ) : rewards.length === 0 ? (
             <tr>
-              <td colSpan={3} className="text-center text-sm text-gray-500 py-4">
+              <td colSpan={3} className="text-center text-sm text-greyscale-500 py-4">
                 该行动在指定轮次范围内没有获得激励
               </td>
             </tr>
@@ -139,7 +139,7 @@ export const ActionRewardsList: React.FC<ActionRewardsListProps> = ({
               return (
                 <tr
                   key={`reward-${item.round.toString()}`}
-                  className={index === rewards.length - 1 ? 'border-none' : 'border-b border-gray-100'}
+                  className={index === rewards.length - 1 ? 'border-none' : 'border-b border-greyscale-100'}
                 >
                   <td>{formatRoundForDisplay(item.round, tokenData).toString()}</td>
                   <td className="text-center">{formatTokenAmount(mintReward)}</td>

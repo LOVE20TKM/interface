@@ -59,11 +59,11 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
     <button
       ref={ref}
       type="button"
-      className={`inline-flex items-center p-1 rounded hover:bg-gray-100 transition-colors ${className}`}
+      className={`inline-flex items-center p-1 rounded hover:bg-greyscale-100 transition-colors ${className}`}
       aria-label="查看激励计算详情"
       {...props}
     >
-      <Info className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+      <Info className="h-4 w-4 text-greyscale-500 hover:text-greyscale-700" />
     </button>
   ));
   TriggerButton.displayName = 'TriggerButton';
@@ -80,7 +80,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
 
     if (error) {
       return (
-        <div className="text-center text-red-500 py-4">
+        <div className="text-center text-status-error py-4">
           <p>加载失败：{error.message || '获取数据失败'}</p>
         </div>
       );
@@ -88,7 +88,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
 
     if (!data) {
       return (
-        <div className="text-center text-gray-500 py-4">
+        <div className="text-center text-greyscale-500 py-4">
           <p>暂无数据</p>
         </div>
       );
@@ -131,20 +131,20 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
               {!hasOverflow ? (
                 // 无溢出：实际激励 = 锁定激励
                 <>
-                  = 锁定激励 = <span className="text-secondary">{formatTokenAmount(data.userReward)}</span>
+                  = 锁定激励 = <span className="text-data-personal">{formatTokenAmount(data.userReward)}</span>
                 </>
               ) : (
                 // 治理票不足溢出
                 <>
                   = 行动总激励 × MIN(有效LP代币占比, 治理票占比 × 倍数)
                   <br />= {formatTokenAmount(data.totalReward)} × MIN(
-                  <span className="text-secondary">{formatPercentage(data.effectiveLpRatioPercent, 6)}</span>,{' '}
-                  <span className="text-secondary">{formatPercentage(govEffectiveRatioPercent, 6)}</span>)
+                  <span className="text-data-personal">{formatPercentage(data.effectiveLpRatioPercent, 6)}</span>,{' '}
+                  <span className="text-data-personal">{formatPercentage(govEffectiveRatioPercent, 6)}</span>)
                   <br />= {formatTokenAmount(data.totalReward)} ×{' '}
-                  <span className="text-secondary">
+                  <span className="text-data-personal">
                     {formatPercentage(Math.min(data.effectiveLpRatioPercent, govEffectiveRatioPercent), 6)}
                   </span>
-                  <br />= <span className="text-secondary">{formatTokenAmount(data.userReward)}</span>
+                  <br />= <span className="text-data-personal">{formatTokenAmount(data.userReward)}</span>
                 </>
               )}
             </div>
@@ -155,45 +155,45 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
             <div className="font-medium">溢出销毁激励</div>
             <div>
               {!hasOverflow ? (
-                <span className="text-green-600">0</span>
+                <span className="text-status-success">0</span>
               ) : (
                 <>
                   = 锁定激励 - 实际可铸造激励
                   <br />= {formatTokenAmount(lockedReward)} - {formatTokenAmount(data.userReward)}
-                  <br />= <span className="text-red-600">{formatTokenAmount(lockedReward - data.userReward)}</span>
+                  <br />= <span className="text-status-error">{formatTokenAmount(lockedReward - data.userReward)}</span>
                 </>
               )}
             </div>
           </div>
         </div>
         {/* (4) 有效 LP 代币计算 */}
-        <div className="bg-gray-50 py-4 px-2 rounded-lg space-y-2">
-          <div className="font-semibold text-base text-gray-900">有效 LP 代币占比：</div>
-          <div className="space-y-2 text-sm text-gray-600 leading-relaxed">
+        <div className="bg-greyscale-50 py-4 px-2 rounded-lg space-y-2">
+          <div className="font-semibold text-base text-greyscale-900">有效 LP 代币占比：</div>
+          <div className="space-y-2 text-sm text-greyscale-600 leading-relaxed">
             {/* 当轮扣除量 */}
             <div>
               {data.joinBlocks.length > 0 ? (
                 <>
                   <div className="mt-1">
-                    <span className="text-gray-700 font-medium">该账户 当轮扣除量</span>
+                    <span className="text-greyscale-700 font-medium">该账户 当轮扣除量</span>
                     <button
                       type="button"
-                      className="ml-2 text-xs text-blue-500 hover:text-blue-700 underline"
+                      className="ml-2 text-xs text-status-info hover:text-status-info underline"
                       onClick={() => setShowDeductionDetail(!showDeductionDetail)}
                     >
                       {showDeductionDetail ? '隐藏明细' : '查看明细'}
                     </button>
-                    <br />= <span className="text-secondary">{formatTokenAmount(data.totalDeduction)}</span>
+                    <br />= <span className="text-data-personal">{formatTokenAmount(data.totalDeduction)}</span>
                   </div>
 
                   {/* 逐条加入记录及扣除量（折叠区） */}
                   {showDeductionDetail && (
-                    <div className="mt-2 bg-gray-100 border border-gray-200 rounded-lg p-3 space-y-1">
+                    <div className="mt-2 bg-greyscale-100 border border-greyscale-200 rounded-lg p-3 space-y-1">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-gray-700 font-medium text-xs">-- 本轮加入记录明细 --</span>
+                        <span className="text-greyscale-700 font-medium text-xs">-- 本轮加入记录明细 --</span>
                         <button
                           type="button"
-                          className="text-xs text-blue-500 hover:text-blue-700 underline"
+                          className="text-xs text-status-info hover:text-status-info underline"
                           onClick={() => setShowDeductionDetail(false)}
                         >
                           隐藏明细
@@ -204,7 +204,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                         const elapsed = block - data.roundStartBlock;
                         return (
                           <div key={i} className="mt-1">
-                            <span className="text-gray-700 font-medium">
+                            <span className="text-greyscale-700 font-medium">
                               在区块 {block.toString()} 加入 {formatTokenAmount(amount)} 个LP 代币：
                             </span>
                             <br />
@@ -213,7 +213,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                             <br />= {formatTokenAmount(amount)} × ({block.toString()} -{' '}
                             {data.roundStartBlock.toString()}) / {data.phaseBlocks.toString()}
                             <br />={' '}
-                            <span className="text-secondary">
+                            <span className="text-data-personal">
                               {formatTokenAmount(
                                 data.phaseBlocks > BigInt(0) ? (amount * elapsed) / data.phaseBlocks : BigInt(0),
                               )}
@@ -221,7 +221,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                           </div>
                         );
                       })}
-                      <div className="mt-2 text-xs text-gray-400">
+                      <div className="mt-2 text-xs text-greyscale-400">
                         备注：本轮起始区块 {data.roundStartBlock.toString()}；每轮总区块数 {data.phaseBlocks.toString()}
                       </div>
                     </div>
@@ -229,7 +229,7 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
                 </>
               ) : (
                 <div className="mt-1">
-                  <span className="text-gray-700 font-medium">该账户 当轮扣除量</span>
+                  <span className="text-greyscale-700 font-medium">该账户 当轮扣除量</span>
                   <br />
                   &nbsp;&nbsp;&nbsp;当轮没有追加代币，当轮扣除量 = 0
                 </div>
@@ -238,43 +238,43 @@ const LpAccountRewardDetailModal: React.FC<LpAccountRewardDetailModalProps> = ({
 
             {/* 总有效 LP 代币数量 */}
             <div className="mt-3">
-              <span className="text-gray-700 font-medium">总有效 LP 代币数量</span>
+              <span className="text-greyscale-700 font-medium">总有效 LP 代币数量</span>
               <br />= 总参与 LP 代币数量 - 当轮总扣除量
               <br />= {formatTokenAmount(data.totalLp)} - {formatTokenAmount(data.roundTotalDeduction)}
-              <br />= <span className="text-secondary">{formatTokenAmount(data.totalEffectiveLp)}</span>
+              <br />= <span className="text-data-personal">{formatTokenAmount(data.totalEffectiveLp)}</span>
             </div>
 
             {/* 有效LP代币占比 */}
             <div className="mt-3">
-              <span className="text-gray-700 font-medium">有效 LP 代币占比</span>
+              <span className="text-greyscale-700 font-medium">有效 LP 代币占比</span>
               <br />= (参与 LP 代币数量 - 当轮扣除量) / 总有效 LP 代币数量
               <br />= ({formatTokenAmount(data.userLp)} - {formatTokenAmount(data.totalDeduction)}) /{' '}
               {formatTokenAmount(data.totalEffectiveLp)}
-              <br />= <span className="text-secondary">{formatPercentage(data.effectiveLpRatioPercent, 6)}</span>
+              <br />= <span className="text-data-personal">{formatPercentage(data.effectiveLpRatioPercent, 6)}</span>
             </div>
           </div>
         </div>
 
         {/* (3) 治理票检查 */}
         {hasGovLimit && (
-          <div className="bg-gray-50 py-4 px-2 rounded-lg space-y-2">
-            <div className="font-semibold text-base text-gray-900">
-              <span className={hasGovShortage ? 'text-red-600' : 'text-green-600'}>
+          <div className="bg-greyscale-50 py-4 px-2 rounded-lg space-y-2">
+            <div className="font-semibold text-base text-greyscale-900">
+              <span className={hasGovShortage ? 'text-status-error' : 'text-status-success'}>
                 {hasGovShortage ? '治理票不足溢出：' : '治理票充足，无溢出：'}
               </span>
             </div>
-            <div className="space-y-2 text-sm text-gray-600 leading-relaxed">
+            <div className="space-y-2 text-sm text-greyscale-600 leading-relaxed">
               &nbsp;&nbsp;&nbsp;治理票占比 × 治理票占比倍数
               <br />= {formatPercentage(data.govRatioPercent, 6)} × {Number(data.govRatioMultiplier)}
               <br />
               ={' '}
-              <span className="text-secondary">{formatPercentage(govEffectiveRatioPercent, 6)}</span>{' '}
+              <span className="text-data-personal">{formatPercentage(govEffectiveRatioPercent, 6)}</span>{' '}
               {hasGovShortage ? '<' : '≥'} 有效LP代币占比(
               {formatPercentage(data.effectiveLpRatioPercent, 6)})
               {hasGovShortage && (
                 <>
                   <br />
-                  <span className="inline-block text-gray-700 font-medium mt-1">可铸造激励，降级为：</span>
+                  <span className="inline-block text-greyscale-700 font-medium mt-1">可铸造激励，降级为：</span>
                   <br />
                   &nbsp;&nbsp;&nbsp;行动总激励 × 治理票占比 × 治理票占比倍数
                 </>

@@ -190,7 +190,7 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
     return (
       <div className="flex flex-col items-center px-4 pt-6">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载验证信息...</p>
+        <p className="mt-4 text-greyscale-600">加载验证信息...</p>
       </div>
     );
   }
@@ -198,7 +198,7 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
   if (!groupDetail) {
     return (
       <div className="flex flex-col items-center px-6 pt-6">
-        <p className="text-red-500">链群信息加载失败</p>
+        <p className="text-status-error">链群信息加载失败</p>
       </div>
     );
   }
@@ -209,8 +209,8 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
       <div className="flex flex-col items-center px-6 pt-6">
         <LeftTitle title="完成加入" />
         <div className="text-center py-8">
-          <div className="text-green-600 text-lg font-medium mb-4">✓ 加入链群成功</div>
-          <p className="text-gray-600 mb-6">本行动无需填写验证信息</p>
+          <div className="text-status-success text-lg font-medium mb-4">✓ 加入链群成功</div>
+          <p className="text-greyscale-600 mb-6">本行动无需填写验证信息</p>
           <Button onClick={() => router.push(`/my/myaction?id=${actionId}&symbol=${token?.symbol}`)}>
             查看我的参与
           </Button>
@@ -225,30 +225,30 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
         <LeftTitle title="更新验证信息" />
 
         {/* 行动和链群信息 */}
-        <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-          <div className="text-sm text-gray-600 mb-2">
+        <div className="mt-4 p-4 bg-greyscale-50 border border-greyscale-200 rounded-lg">
+          <div className="text-sm text-greyscale-600 mb-2">
             <span className="font-medium">行动：</span>
-            <span className="text-gray-800">
+            <span className="text-greyscale-800">
               #{actionId.toString()} {actionInfo.body.title}
             </span>
           </div>
 
-          <div className="text-sm text-gray-600 mb-2">
+          <div className="text-sm text-greyscale-600 mb-2">
             <span className="font-medium">链群：</span>
-            <span className="text-gray-800">
+            <span className="text-greyscale-800">
               #{groupDetail.groupId.toString()} {groupDetail.groupName}
             </span>
           </div>
 
-          <div className="text-sm text-gray-600 flex items-center gap-2">
+          <div className="text-sm text-greyscale-600 flex items-center gap-2">
             <span className="font-medium">服务者：</span>
             <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />
           </div>
 
           {amount && amount > BigInt(0) && (
-            <div className="text-sm text-gray-600 mt-2">
+            <div className="text-sm text-greyscale-600 mt-2">
               <span className="font-medium">参与代币数：</span>
-              <span className="text-secondary font-medium">
+              <span className="text-data-public font-medium">
                 {formatTokenAmount(amount, 2)} {token?.symbol}
               </span>
             </div>
@@ -311,9 +311,9 @@ const _GroupUpdateVerificationInfo: React.FC<GroupUpdateVerificationInfoProps> =
         </Form>
 
         {/* 提示信息 */}
-        <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 关于验证信息</div>
-          <div className="space-y-1 text-gray-600">
+        <div className="mt-6 text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
+          <div className="font-medium text-greyscale-700 mb-1">💡 关于验证信息</div>
+          <div className="space-y-1 text-greyscale-600">
             <div>• 验证信息用于链群服务者验证您的行动完成情况</div>
             <div>• 填写准确的信息有助于获得更高的验证分数</div>
             <div>• 您可以随时修改验证信息</div>

@@ -744,16 +744,16 @@ const LiquidityPanel = () => {
     <div className="py-6 px-2">
       <div className="mb-6 flex items-center justify-between">
         <div className="text-sm">
-          <span className="text-gray-600">底池总LP:&nbsp;</span>
-          <span className="text-secondary">{formatTokenAmount(lpTotalSupply || BigInt(0))}</span>
+          <span className="text-greyscale-600">底池总LP:&nbsp;</span>
+          <span className="text-data-public">{formatTokenAmount(lpTotalSupply || BigInt(0))}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="text-sm">
-            <span className="text-gray-600">我的LP:&nbsp;</span>
-            <span className="text-secondary">
+            <span className="text-greyscale-600">我的LP:&nbsp;</span>
+            <span className="text-data-personal">
               {formatTokenAmount(lpBalance || BigInt(0))}
               {lpTotalSupply && lpTotalSupply > BigInt(0) && lpBalance && lpBalance > BigInt(0) && (
-                <span className="text-gray-500 ml-1">
+                <span className="text-greyscale-500 ml-1">
                   ({formatPercentage((Number(lpBalance) / Number(lpTotalSupply)) * 100)})
                 </span>
               )}
@@ -764,7 +764,7 @@ const LiquidityPanel = () => {
               href={`/dex/withdraw?symbol=${encodeURIComponent(token?.symbol || "")}&baseToken=${encodeURIComponent(
                 baseToken.symbol,
               )}`}
-              className="inline-flex items-center gap-1 text-sm text-secondary hover:text-blue-800 transition-colors underline"
+              className="inline-flex items-center gap-1 text-sm text-secondary hover:text-status-info transition-colors underline"
               title="撤出流动性"
             >
               撤出
@@ -781,7 +781,7 @@ const LiquidityPanel = () => {
         <Form {...form}>
           <form>
             {/* 智能模式 */}
-            <label className="mb-3 flex cursor-pointer items-start gap-2 rounded-md bg-[#f7f8f9] px-3 py-2 text-sm">
+            <label className="mb-3 flex cursor-pointer items-start gap-2 rounded-md bg-greyscale-50 px-3 py-2 text-sm">
               <input
                 type="checkbox"
                 className="mt-1 h-3.5 w-3.5 shrink-0 accent-secondary"
@@ -791,8 +791,8 @@ const LiquidityPanel = () => {
                 title={isUniswapV2ZapConfigured ? "智能模式" : "智能模式未配置"}
               />
               <span className="min-w-0">
-                <span className="block text-sm font-medium leading-5 text-gray-800">智能模式</span>
-                <span className="block text-xs leading-4 text-gray-500">
+                <span className="block text-sm font-medium leading-5 text-greyscale-800">智能模式</span>
+                <span className="block text-xs leading-4 text-greyscale-500">
                   支持单币添加流动性、双币不平衡添加流动性：自动完成兑换 & 添加流动性。
                 </span>
               </span>
@@ -805,7 +805,7 @@ const LiquidityPanel = () => {
                 name="baseTokenAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <Card className="bg-[#f7f8f9] border-none">
+                    <Card className="bg-greyscale-50 border-none">
                       <CardContent className="py-4 px-2">
                         <div className="flex items-center justify-between mb-3">
                           <Input
@@ -840,9 +840,9 @@ const LiquidityPanel = () => {
                                     }}
                                     disabled={isDisabled}
                                   >
-                                    <SelectTrigger className="w-auto border-none bg-white hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors border border-gray-200 font-mono">
+                                    <SelectTrigger className="w-auto border-none bg-card hover:bg-greyscale-50 px-3 py-1.5 rounded-full transition-colors border border-greyscale-200 font-mono">
                                       <div className="flex items-center gap-2">
-                                        <span className="font-medium text-gray-800 font-mono">{baseToken.symbol}</span>
+                                        <span className="font-medium text-greyscale-800 font-mono">{baseToken.symbol}</span>
                                       </div>
                                     </SelectTrigger>
                                     <SelectContent>
@@ -900,7 +900,9 @@ const LiquidityPanel = () => {
                               最高
                             </Button>
                           </div>
-                          <span className="text-sm text-gray-600">{formatTokenAmount(baseBalance || BigInt(0))}</span>
+                          <span className="text-sm text-data-personal">
+                            {formatTokenAmount(baseBalance || BigInt(0))}
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
@@ -917,7 +919,7 @@ const LiquidityPanel = () => {
                 name="tokenAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <Card className="bg-[#f7f8f9] border-none">
+                    <Card className="bg-greyscale-50 border-none">
                       <CardContent className="py-4 px-2">
                         <div className="flex items-center justify-between mb-3">
                           <Input
@@ -935,8 +937,8 @@ const LiquidityPanel = () => {
                             }}
                             className="text-xl border-none p-0 h-auto bg-transparent focus:ring-0 focus:outline-none mr-2"
                           />
-                          <div className="bg-white px-3 py-1.5 rounded-full border border-gray-200">
-                            <span className="font-medium text-gray-800 font-mono">{targetToken.symbol}</span>
+                          <div className="bg-card px-3 py-1.5 rounded-full border border-greyscale-200">
+                            <span className="font-medium text-greyscale-800 font-mono">{targetToken.symbol}</span>
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
@@ -975,7 +977,9 @@ const LiquidityPanel = () => {
                               最高
                             </Button>
                           </div>
-                          <span className="text-sm text-gray-600">{formatTokenAmount(tokenBalance || BigInt(0))}</span>
+                          <span className="text-sm text-data-personal">
+                            {formatTokenAmount(tokenBalance || BigInt(0))}
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
@@ -985,16 +989,16 @@ const LiquidityPanel = () => {
               />
             </div>
             {zapQuoteErrorInfo && (
-              <div className="-mt-3 mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+              <div className="-mt-3 mb-4 rounded-md bg-status-error-soft px-3 py-2 text-sm text-status-error">
                 智能模式报价失败：{zapQuoteErrorInfo.message}
               </div>
             )}
 
             {/* 预估获得 LP 数量 */}
             {estimatedLP !== null && (
-              <div className="text-sm text-gray-600 mb-2 flex items-center gap-1">
+              <div className="text-sm text-greyscale-600 mb-2 flex items-center gap-1">
                 <Zap className="w-4 h-4" />
-                预估获得 LP: <span className="font-medium text-gray-800">{formatTokenAmount(estimatedLP)}</span>
+                预估获得 LP: <span className="font-medium text-greyscale-800">{formatTokenAmount(estimatedLP)}</span>
               </div>
             )}
 
@@ -1002,7 +1006,7 @@ const LiquidityPanel = () => {
             {priceInfo && (
               <div className="space-y-1 text-sm mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="text-gray-600">
+                  <div className="text-greyscale-600">
                     当前池价格：
                     {showTokenToBase ? (
                       <>
@@ -1019,14 +1023,14 @@ const LiquidityPanel = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowTokenToBase(!showTokenToBase)}
-                    className="h-6 w-6 p-0 hover:bg-gray-100 transition-colors"
+                    className="h-6 w-6 p-0 hover:bg-greyscale-100 transition-colors"
                     title="切换价格显示"
                   >
-                    <ArrowUpDown className="h-3 w-3 text-gray-500" />
+                    <ArrowUpDown className="h-3 w-3 text-greyscale-500" />
                   </Button>
                 </div>
                 {priceAfterZap && (
-                  <div className="text-gray-600">
+                  <div className="text-greyscale-600">
                     添加后价格：
                     {showTokenToBase ? (
                       <>
@@ -1041,10 +1045,10 @@ const LiquidityPanel = () => {
                       <span
                         className={`ml-1 ${
                           priceChangePercentage.startsWith("-")
-                            ? "text-red-600"
+                            ? "text-status-error"
                             : priceChangePercentage.startsWith("+")
-                              ? "text-green-600"
-                              : "text-gray-500"
+                              ? "text-status-success"
+                              : "text-greyscale-500"
                         }`}
                       >
                         ({priceChangePercentage})
@@ -1056,7 +1060,7 @@ const LiquidityPanel = () => {
             )}
             {!priceInfo && pairExists && (
               <div className="space-y-1 text-sm mb-4">
-                <div className="text-gray-600 flex items-center gap-1">
+                <div className="text-greyscale-600 flex items-center gap-1">
                   <HelpCircle className="w-4 h-4" />
                   正在加载价格信息...
                 </div>
@@ -1064,7 +1068,7 @@ const LiquidityPanel = () => {
             )}
             {!pairExists && (
               <div className="space-y-1 text-sm mb-4">
-                <div className="text-gray-600 flex items-center gap-1">
+                <div className="text-greyscale-600 flex items-center gap-1">
                   <HelpCircle className="w-4 h-4" />
                   将创建新的流动性池
                 </div>
@@ -1073,7 +1077,7 @@ const LiquidityPanel = () => {
 
             {/* 滑点设置 */}
             <div className="flex items-center text-sm mb-4">
-              <div className="text-gray-600 flex items-center gap-1 mr-2">
+              <div className="text-greyscale-600 flex items-center gap-1 mr-2">
                 <Zap className="w-4 h-4" />
                 滑点上限：{slippage}%
               </div>
@@ -1083,7 +1087,7 @@ const LiquidityPanel = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-6 px-2 text-xs hover:bg-gray-100 transition-colors"
+                    className="h-6 px-2 text-xs hover:bg-greyscale-100 transition-colors"
                     title="设置滑点"
                   >
                     <Settings className="h-3 w-3" />
@@ -1129,7 +1133,7 @@ const LiquidityPanel = () => {
                           max="50"
                           step="0.1"
                         />
-                        <span className="text-sm text-gray-500">%</span>
+                        <span className="text-sm text-greyscale-500">%</span>
                       </div>
                       {customSlippage && (
                         <Button

@@ -75,7 +75,7 @@ const ActionDetail: React.FC<ActivityDetailProps> = ({
       <div className="mx-auto p-4 pb-2 ">
         <div className="flex flex-col">
           <span className="text-sm text-greyscale-500">No.{actionInfo?.head.id.toString()}</span>
-          <span className="text-xl font-bold text-black">{actionInfo?.body.title}</span>
+          <span className="text-xl font-bold text-foreground">{actionInfo?.body.title}</span>
         </div>
         <div className="mt-0 text-xs text-greyscale-500 flex justify-between">
           <div className="flex items-center">
@@ -104,7 +104,7 @@ const ActionDetail: React.FC<ActivityDetailProps> = ({
                 content={
                   <p className="leading-relaxed text-base">
                     每轮从所有参与行动的代币中，随机抽取
-                    <span className="font-mono font-bold text-blue-600 mx-1 text-base">
+                    <span className="font-mono font-bold text-status-info mx-1 text-base">
                       {actionInfo?.body.maxRandomAccounts.toString()}
                     </span>
                     份代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。

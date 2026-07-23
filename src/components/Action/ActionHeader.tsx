@@ -57,23 +57,23 @@ export default function ActionHeader({
     : '';
 
   return (
-    <div className="!bg-gray-100 rounded-lg px-2 pt-2 pb-2 text-sm my-4">
+    <div className="!bg-greyscale-100 rounded-lg px-2 pt-2 pb-2 text-sm my-4">
       <div className="mb-2">
         <h1 className="text-lg mb-1">
           <div className="flex items-baseline">
-            <span className="text-gray-400 text-sm">No.</span>
-            <span className="text-secondary text-xl font-bold mr-2">{actionInfo.head.id.toString()}</span>
-            <span className="font-bold text-gray-800">{actionInfo.body.title}</span>
+            <span className="text-greyscale-400 text-sm">No.</span>
+            <span className="text-data-public text-xl font-bold mr-2">{actionInfo.head.id.toString()}</span>
+            <span className="font-bold text-greyscale-800">{actionInfo.body.title}</span>
           </div>
         </h1>
       </div>
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center">
-          <span className="text-gray-500 mr-2">{displayTitle}</span>
-          <span className="font-mono text-secondary">
+          <span className="text-greyscale-500 mr-2">{displayTitle}</span>
+          <span className="font-mono text-data-public">
             {formattedDisplayAmount}
             {totalAmount && shouldShowJoinedTokenSymbol && !shouldShowConverted && (
-              <span className="ml-1 text-xs text-gray-500">{joinedTokenSymbolForDisplay}</span>
+              <span className="ml-1 text-xs text-greyscale-500">{joinedTokenSymbolForDisplay}</span>
             )}{' '}
           </span>
           {shouldShowConverted && tooltipContent && (
@@ -81,8 +81,8 @@ export default function ActionHeader({
           )}
         </div>
         <div className="flex items-center">
-          <span className="text-gray-500 mr-2">总参与地址:</span>
-          <span className="font-mono text-secondary">{participantCount?.toString() || '0'}</span>
+          <span className="text-greyscale-500 mr-2">总参与地址:</span>
+          <span className="font-mono text-data-public">{participantCount?.toString() || '0'}</span>
         </div>
       </div>
 

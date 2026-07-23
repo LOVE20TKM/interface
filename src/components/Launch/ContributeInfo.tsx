@@ -92,7 +92,7 @@ const ContributeInfo: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> 
       <div className="stats w-full">
         <div className="stat place-items-center">
           <div className="stat-title text-sm mr-6">我的申购质押</div>
-          <div className="stat-value text-secondary">
+          <div className="stat-value text-data-personal">
             {formatTokenAmount(contributed || BigInt(0))}
             <span className="text-greyscale-500 font-normal text-sm ml-2">{parentTokenSymbol}</span>
           </div>
@@ -132,7 +132,7 @@ const ContributeInfo: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> 
           </div>
         </div>
       )}
-      <div className="border-t border-gray-200 mt-6 mb-6"></div>
+      <div className="border-t border-greyscale-200 mt-6 mb-6"></div>
       <LoadingOverlay
         isLoading={isWithdrawPending || isWithdrawConfirming}
         text={isWithdrawPending ? '提交交易...' : '确认交易...'}

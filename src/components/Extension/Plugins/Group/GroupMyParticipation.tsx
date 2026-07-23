@@ -113,10 +113,10 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
 
   if (isPendingJoinInfo || isPendingDetail) {
     return (
-      <div className="bg-white rounded-lg p-8">
+      <div className="bg-card rounded-lg p-8">
         <div className="text-center">
           <LoadingIcon />
-          <p className="mt-4 text-gray-600">加载数据中...</p>
+          <p className="mt-4 text-greyscale-600">加载数据中...</p>
         </div>
       </div>
     );
@@ -125,7 +125,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
   if (!isJoined) {
     return (
       <div className="flex flex-col items-center pt-8">
-        <p className="text-gray-600 mb-6">您还没有参与此链群行动</p>
+        <p className="text-greyscale-600 mb-6">您还没有参与此链群行动</p>
         <Button variant="outline" className="text-secondary border-secondary" asChild>
           <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol}`}>加入链群参与</Link>
         </Button>
@@ -137,7 +137,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
     <div className="flex flex-col items-center pt-1">
       {/* 链群关闭提示 */}
       {groupDetail && !groupDetail.isActive && (
-        <div className="w-full mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+        <div className="w-full mb-3 rounded-md border border-status-error-border bg-status-error-soft px-3 py-2 text-sm font-medium text-status-error">
           此链群已关闭！ 请退出行动并取回代币。
         </div>
       )}
@@ -152,10 +152,10 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
       {/* 所属链群 */}
       {groupDetail && (
         <div className="w-full mb-2">
-          <div className="text-sm text-gray-600 mb-2 font-medium flex items-center justify-between">
+          <div className="text-sm text-greyscale-600 mb-2 font-medium flex items-center justify-between">
             <span>所属链群：</span>
             <span className="flex items-center">
-              <span className="text-gray-500 text-xs">#</span>
+              <span className="text-greyscale-500 text-xs">#</span>
               <Link
                 href={`/extension/group?groupId=${groupId?.toString()}&actionId=${actionId.toString()}&symbol=${
                   token?.symbol
@@ -174,7 +174,7 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
       {/* 验证信息 */}
       {verificationKeys && verificationKeys.length > 0 && (
         <div className="w-full mb-6">
-          <div className="text-sm text-gray-600 mb-2 font-medium flex items-center justify-between">
+          <div className="text-sm text-greyscale-600 mb-2 font-medium flex items-center justify-between">
             <span>我提供的验证信息：</span>
             <Button
               variant="link"
@@ -192,19 +192,19 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
               修改
             </Button>
           </div>
-          <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+          <div className="border border-greyscale-200 rounded-lg p-4 bg-greyscale-50">
             {isPendingVerificationInfos ? (
-              <div className="text-sm text-gray-500">加载中...</div>
+              <div className="text-sm text-greyscale-500">加载中...</div>
             ) : (
               <div className="space-y-3">
                 {verificationKeys.map((key, index) => (
                   <div key={key} className="last:mb-0">
-                    <div className="text-sm font-semibold text-gray-700 mb-1">{key}</div>
-                    <div className="text-base text-gray-800">
+                    <div className="text-sm font-semibold text-greyscale-700 mb-1">{key}</div>
+                    <div className="text-base text-greyscale-800">
                       {verificationInfos[index] ? (
                         <LinkIfUrl text={verificationInfos[index] || ''} />
                       ) : (
-                        <span className="text-gray-400">未填写</span>
+                        <span className="text-greyscale-400">未填写</span>
                       )}
                     </div>
                   </div>
@@ -268,9 +268,9 @@ const GroupMyParticipation: React.FC<GroupMyParticipationProps> = ({ actionId, a
       </div>
 
       {/* 说明 */}
-      <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2 w-full">
-        <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
-        <div className="space-y-1 text-gray-600">
+      <div className="mt-6 text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2 w-full">
+        <div className="font-medium text-greyscale-700 mb-1">💡 小贴士</div>
+        <div className="space-y-1 text-greyscale-600">
           <div>可以随时取回参与的代币，不影响已产生的激励</div>
         </div>
       </div>

@@ -798,7 +798,7 @@ export default function BatchTransferPage() {
   const renderRowStatus = (row: ParsedRecipient, auditRow: AuditRow | undefined, isProtectedRow: boolean) => {
     if (row.errors.length > 0) {
       return (
-        <span className="inline-flex items-center gap-1 text-red-600">
+        <span className="inline-flex items-center gap-1 text-status-error">
           <XCircle className="h-4 w-4 shrink-0" />
           待修正
         </span>
@@ -807,7 +807,7 @@ export default function BatchTransferPage() {
 
     if (isProtectedRow) {
       return (
-        <span className="inline-flex items-start gap-1 text-amber-700">
+        <span className="inline-flex items-start gap-1 text-status-warning">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           资产保护已拦截
         </span>
@@ -816,7 +816,7 @@ export default function BatchTransferPage() {
 
     if (auditRow?.status === 'ok') {
       return (
-        <span className="inline-flex items-center gap-1 text-green-700">
+        <span className="inline-flex items-center gap-1 text-status-success">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           差值一致
         </span>
@@ -825,14 +825,14 @@ export default function BatchTransferPage() {
 
     if (auditRow?.status === 'changed') {
       return (
-        <span className="inline-flex items-start gap-1 text-amber-700">
+        <span className="inline-flex items-start gap-1 text-status-warning">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           差值不一致，可能转账期间该钱包有其他余额变化
         </span>
       );
     }
 
-    return isAuditFresh ? <span className="text-greyscale-500">等待转账</span> : <span className="text-amber-700">需加载快照</span>;
+    return isAuditFresh ? <span className="text-greyscale-500">等待转账</span> : <span className="text-status-warning">需加载快照</span>;
   };
 
   if (!isBatchTransferEnabled) {
@@ -841,7 +841,7 @@ export default function BatchTransferPage() {
         <Header title="批量转账" showBackButton={true} />
         <main className="flex-grow">
           <div className="mx-auto w-full max-w-4xl px-4 py-6">
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <div className="rounded-lg border border-status-warning-border bg-status-warning-soft p-4 text-sm text-status-warning">
               当前环境未配置批量转账合约地址，因此此工具不可用。
             </div>
           </div>
@@ -856,7 +856,7 @@ export default function BatchTransferPage() {
       <LoadingOverlay isLoading={isBusy} text="处理中..." />
       <main className="flex-grow">
         <div className="mx-auto w-full max-w-[1400px] px-3 pb-24 pt-3 sm:px-4 sm:pt-6">
-          <div className="mb-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+          <div className="mb-4 rounded-lg border border-status-info-border bg-status-info-soft px-4 py-3 text-sm text-status-info">
             批量转账是原子操作：任意一笔失败会导致整批回滚。提交前会加载收款地址余额快照，交易确认后会再次读取余额并校验差值。
           </div>
 
@@ -895,7 +895,7 @@ export default function BatchTransferPage() {
                               isLoadingCustomTokenBytecode ? (
                                 <div className="text-xs text-greyscale-500">正在检查地址...</div>
                               ) : customTokenInfoFailed ? (
-                                <div className="text-xs text-red-600">
+                                <div className="text-xs text-status-error">
                                   {isCustomTokenEoa
                                     ? '这是钱包地址，不是代币合约地址。'
                                     : '无法读取代币信息，请确认这是有效的 ERC20 代币合约地址。'}
@@ -912,7 +912,7 @@ export default function BatchTransferPage() {
                                   </div>
                                   <div>
                                     <div className="text-greyscale-400">余额</div>
-                                    <div className="mt-0.5 font-mono">
+                                    <div className="mt-0.5 font-mono text-data-personal">
                                       {isPendingBalance ? '读取中...' : formatTokenAmount(accountBalance, selectedTokenDecimals)}
                                     </div>
                                   </div>
@@ -922,7 +922,7 @@ export default function BatchTransferPage() {
                           }
                           renderDecoration={(item) =>
                             item.address === selectedTokenAddress ? (
-                              <span className="text-xs text-greyscale-500">
+                              <span className="text-xs text-data-personal">
                                 余额 {isPendingBalance ? '读取中...' : formatTokenAmount(accountBalance, item.decimals)}
                               </span>
                             ) : null
@@ -931,7 +931,7 @@ export default function BatchTransferPage() {
                       </div>
 
                       {selectedTokenKey === CUSTOM_TOKEN_VALUE && customTokenInput && !customTokenAddress && (
-                        <div className="text-xs text-red-600">请输入合法且非零的 ERC20 地址</div>
+                        <div className="text-xs text-status-error">请输入合法且非零的 ERC20 地址</div>
                       )}
                     </div>
                   )}
@@ -958,14 +958,14 @@ export default function BatchTransferPage() {
                     )}
                     <div className="mt-2 flex items-center justify-between gap-3">
                       <span className="text-greyscale-500">钱包余额</span>
-                      <span className="min-w-0 truncate font-mono">
+                      <span className="min-w-0 truncate font-mono text-data-personal">
                         {isPendingBalance ? '读取中...' : renderAmountValue(accountBalance)}
                       </span>
                     </div>
                     {!selectedToken.isNative && (
                       <div className="mt-2 flex items-center justify-between gap-3">
                         <span className="shrink-0 text-greyscale-500">授权额度</span>
-                        <span className="min-w-0 truncate font-mono">
+                        <span className="min-w-0 truncate font-mono text-data-personal">
                           {isPendingAllowance
                             ? '读取中...'
                             : isUnlimitedTokenApproval(allowance)
@@ -993,7 +993,7 @@ export default function BatchTransferPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3">
+                  <div className="rounded-lg border border-status-warning-border bg-status-warning-soft px-3 py-3">
                     <label className="flex cursor-pointer items-start gap-3">
                       <input
                         type="checkbox"
@@ -1002,15 +1002,15 @@ export default function BatchTransferPage() {
                         onChange={(event) => setIsAssetProtectionEnabled(event.target.checked)}
                       />
                       <div className="min-w-0">
-                        <div className="text-sm font-medium text-amber-900">资产保护开关</div>
-                        <div className="mt-1 text-xs text-amber-800">
+                        <div className="text-sm font-medium text-status-warning">资产保护开关</div>
+                        <div className="mt-1 text-xs text-status-warning">
                           默认开启。若任意收款地址命中已知代币或协议合约地址，本次批量转账会被拦截，避免误把资产转入合约。
                         </div>
                       </div>
                     </label>
 
                     {hasProtectedRecipients && (
-                      <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                      <div className="mt-3 rounded-md border border-status-error-border bg-status-error-soft px-3 py-2 text-sm text-status-error">
                         已触发资产保护：{protectedRecipientCount} 行收款地址命中已知合约地址。如需强制转账，请关闭上方保护开关后重新检查。
                       </div>
                     )}
@@ -1029,20 +1029,20 @@ export default function BatchTransferPage() {
                     </div>
                     <div className="rounded-md bg-greyscale-50 p-3">
                       <div className="text-greyscale-500">错误行数</div>
-                      <div className={rowErrorCount > 0 ? 'mt-1 font-semibold text-red-600' : 'mt-1 font-semibold'}>
+                      <div className={rowErrorCount > 0 ? 'mt-1 font-semibold text-status-error' : 'mt-1 font-semibold'}>
                         {rowErrorCount}
                       </div>
                     </div>
                     <div className="rounded-md bg-greyscale-50 p-3">
                       <div className="text-greyscale-500">余额快照</div>
-                      <div className={isAuditFresh ? 'mt-1 font-semibold text-green-700' : 'mt-1 font-semibold text-amber-700'}>
+                      <div className={isAuditFresh ? 'mt-1 font-semibold text-status-success' : 'mt-1 font-semibold text-status-warning'}>
                         {isAuditFresh ? '已加载' : '未加载'}
                       </div>
                     </div>
                   </div>
 
                   {validationErrors.length > 0 && (
-                    <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <div className="rounded-md border border-status-error-border bg-status-error-soft px-3 py-2 text-sm text-status-error">
                       {validationErrors[0]}
                     </div>
                   )}
@@ -1069,7 +1069,7 @@ export default function BatchTransferPage() {
               </Card>
             </section>
 
-            <section className="rounded-lg border border-greyscale-200 bg-white">
+            <section className="rounded-lg border border-greyscale-200 bg-card">
               <div className="border-b border-greyscale-200 px-4 py-3">
                 <h2 className="font-semibold text-greyscale-900">收款明细与余额审计</h2>
               </div>
@@ -1104,7 +1104,7 @@ export default function BatchTransferPage() {
                             key={row.id}
                             className={
                               isProtectedRow
-                                ? 'border-t border-amber-100 bg-amber-50/50 align-top'
+                                ? 'border-t border-status-warning-border bg-status-warning-soft align-top'
                                 : 'border-t border-greyscale-100 align-top'
                             }
                           >
@@ -1118,13 +1118,13 @@ export default function BatchTransferPage() {
                                   colorClassName="text-greyscale-900"
                                 />
                               ) : (
-                                <span className="break-all font-mono text-red-600">{row.addressInput || '-'}</span>
+                                <span className="break-all font-mono text-status-error">{row.addressInput || '-'}</span>
                               )}
                               {row.errors.length > 0 && (
-                                <div className="mt-1 text-xs text-red-600">{row.errors.join('，')}</div>
+                                <div className="mt-1 text-xs text-status-error">{row.errors.join('，')}</div>
                               )}
                               {isProtectedRow && protectedTargetInfo && (
-                                <div className="mt-1 text-xs text-amber-700">
+                                <div className="mt-1 text-xs text-status-warning">
                                   资产保护：目标是 {protectedTargetInfo.label}
                                   {protectedTargetInfo.type === 'token' ? ' 代币' : ''}合约地址
                                 </div>
@@ -1165,7 +1165,7 @@ export default function BatchTransferPage() {
                     const isProtectedRow = isAssetProtectionEnabled && !!protectedTargetInfo;
 
                     return (
-                      <div key={row.id} className={isProtectedRow ? 'bg-amber-50/50 p-4' : 'p-4'}>
+                      <div key={row.id} className={isProtectedRow ? 'bg-status-warning-soft p-4' : 'p-4'}>
                         <div className="mb-3 flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="text-xs text-greyscale-500">第 {row.lineNumber} 行</div>
@@ -1178,7 +1178,7 @@ export default function BatchTransferPage() {
                                   colorClassName="text-greyscale-900"
                                 />
                               ) : (
-                                <span className="break-all font-mono text-sm text-red-600">{row.addressInput || '-'}</span>
+                                <span className="break-all font-mono text-sm text-status-error">{row.addressInput || '-'}</span>
                               )}
                             </div>
                           </div>
@@ -1186,10 +1186,10 @@ export default function BatchTransferPage() {
                         </div>
 
                         {(row.errors.length > 0 || (isProtectedRow && protectedTargetInfo)) && (
-                          <div className="mb-3 rounded-md bg-white/70 px-3 py-2 text-xs">
-                            {row.errors.length > 0 && <div className="text-red-600">{row.errors.join('，')}</div>}
+                          <div className="mb-3 rounded-md bg-card/70 px-3 py-2 text-xs">
+                            {row.errors.length > 0 && <div className="text-status-error">{row.errors.join('，')}</div>}
                             {isProtectedRow && protectedTargetInfo && (
-                              <div className="text-amber-700">
+                              <div className="text-status-warning">
                                 资产保护：目标是 {protectedTargetInfo.label}
                                 {protectedTargetInfo.type === 'token' ? ' 代币' : ''}合约地址
                               </div>

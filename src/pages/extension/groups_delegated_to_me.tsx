@@ -204,7 +204,7 @@ const GroupsDelegatedToMePage: React.FC = () => {
         ) : (
           <div className="flex flex-col space-y-4 p-4">
             {/* 搜索框 */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div className="bg-card border border-greyscale-200 rounded-lg p-4 shadow-sm">
               <div className="flex flex-col space-y-3">
                 <label className="text-sm font-medium text-greyscale-700">查看某个行动下委托给我验证的链群：</label>
                 <div className="flex space-x-3">
@@ -244,26 +244,26 @@ const GroupsDelegatedToMePage: React.FC = () => {
                     <div
                       key={group.groupId.toString()}
                       onClick={() => handleGroupClick(group)}
-                      className="border border-gray-200 rounded-lg py-3 pl-3 pr-0 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all"
+                      className="border border-greyscale-200 rounded-lg py-3 pl-3 pr-0 hover:border-secondary hover:bg-secondary/5 cursor-pointer transition-all"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           {/* 链群ID和名称 + 验证状态 */}
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center items-baseline">
-                              <span className="text-gray-500 text-xs">#</span>
-                              <span className="text-secondary text-base font-semibold">{group.groupId.toString()}</span>
+                              <span className="text-greyscale-500 text-xs">#</span>
+                              <span className="text-data-public text-base font-semibold">{group.groupId.toString()}</span>
                               <span className="font-semibold ml-1">{group.groupName}</span>
                             </div>
                             {group.isVerified ? (
-                              <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">已验证</span>
+                              <span className="text-xs text-status-success bg-status-success-soft px-2 py-1 rounded">已验证</span>
                             ) : (
-                              <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">待验证</span>
+                              <span className="text-xs text-status-warning bg-status-warning-soft px-2 py-1 rounded">待验证</span>
                             )}
                           </div>
 
                           {/* 链群服务者地址 */}
-                          <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                          <div className="text-sm text-greyscale-600 flex items-center gap-1 mb-1">
                             <User className="text-greyscale-400 h-3 w-3" />
                             <span className="text-greyscale-400 text-xs">服务者: </span>
                             <span className="text-greyscale-400">
@@ -274,18 +274,18 @@ const GroupsDelegatedToMePage: React.FC = () => {
                           {/* 参与代币数和参与地址数 */}
                           <div className="flex items-center justify-between text-xs mt-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-500">参与代币数:</span>
-                              <span className="text-gray-500">{formatTokenAmount(group.totalJoinedAmount)}</span>
+                              <span className="text-greyscale-500">参与代币数:</span>
+                              <span className="text-greyscale-500">{formatTokenAmount(group.totalJoinedAmount)}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-500">参与地址数:</span>
-                              <span className="text-gray-500">{group.accountCount.toString()}</span>
+                              <span className="text-greyscale-500">参与地址数:</span>
+                              <span className="text-greyscale-500">{group.accountCount.toString()}</span>
                             </div>
                           </div>
                         </div>
 
                         {/* 右侧箭头 */}
-                        <ChevronRight className="w-5 h-5 text-gray-400 ml-1" />
+                        <ChevronRight className="w-5 h-5 text-greyscale-400 ml-1" />
                       </div>
                     </div>
                   ))}

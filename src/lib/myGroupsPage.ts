@@ -248,18 +248,18 @@ export function getVerificationButtonClass(state: GroupVerificationState) {
   const baseClass = 'h-8 px-1 text-xs';
 
   if (state === 'verified') {
-    return `${baseClass} border-green-200 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700`;
+    return `${baseClass} border-status-success-border bg-status-success-soft text-status-success hover:bg-status-success-soft hover:text-status-success`;
   }
 
   if (state === 'syncing') {
-    return `${baseClass} border-blue-200 bg-blue-50 text-blue-600`;
+    return `${baseClass} border-status-info-border bg-status-info-soft text-status-info`;
   }
 
   if (state === 'pending') {
-    return `${baseClass} border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700`;
+    return `${baseClass} border-status-warning-border bg-status-warning-soft text-status-warning hover:bg-status-warning-soft hover:text-status-warning`;
   }
 
-  return `${baseClass} border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-700`;
+  return `${baseClass} border-greyscale-200 bg-greyscale-50 text-greyscale-600 hover:bg-greyscale-100 hover:text-greyscale-700`;
 }
 
 export function getEffectiveVerificationState(state: GroupVerificationState, isSyncing: boolean): GroupVerificationState {

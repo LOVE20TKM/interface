@@ -98,14 +98,14 @@ const _GroupSetRecipientsTrigger: React.FC<GroupSetRecipientsTriggerProps> = ({
           className={`flex items-center justify-between py-3 px-4 border rounded-lg transition-all group ${
             isReady
               ? "border-greyscale-200 hover:border-secondary hover:bg-secondary/5 cursor-pointer"
-              : "border-greyscale-200 bg-gray-50 cursor-not-allowed opacity-70"
+              : "border-greyscale-200 bg-greyscale-50 cursor-not-allowed opacity-70"
           }`}
         >
           <div className="flex items-center gap-3">
             <Coins className="w-5 h-5 text-secondary" />
             <div>
               <div className="text-base font-medium">设置激励分配</div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-greyscale-500">
                 {isLoading ? "正在加载当前配置..." : "将自己本行动产生的链群服务激励进行二次分配"}
               </div>
             </div>

@@ -146,7 +146,7 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
         )}
 
         {/* 服务者信息 */}
-        <div className="mb-4 bg-gray-50 px-3 py-2 rounded space-y-2">
+        <div className="mb-4 bg-greyscale-50 px-3 py-2 rounded space-y-2">
           {/* 服务者地址 */}
           <div className="flex items-center">
             <span className="text-sm text-greyscale-500 mr-2">服务者:</span>
@@ -166,8 +166,8 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                     </span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-sm text-red-500 mr-2">• 溢出销毁激励:</span>
-                    <span className="text-sm font-medium text-red-600 mr-2">
+                    <span className="text-sm text-status-error mr-2">• 溢出销毁激励:</span>
+                    <span className="text-sm font-medium text-status-error mr-2">
                       {formatTokenAmount(verifierRewardSummary.burnReward)}
                     </span>
                     <span className="text-sm text-greyscale-500">, 原因:</span>
@@ -195,7 +195,7 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                       {')'}
                     </div>
                   </div>
-                  {/* <div className="text-xs text-red-500 font-mono">
+                  {/* <div className="text-xs text-status-error font-mono">
                     <div>
                       &nbsp;&nbsp;溢出部分 ={' '}
                       <span className="font-medium">{formatPercentage(verifierRewardSummary.generatedRatioPercent)}</span>
@@ -229,7 +229,7 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                       <div className="flex items-center">
                         <span className="text-sm text-greyscale-500 mr-2">无溢出销毁激励</span>
                       </div>
-                      {/* <div className="text-xs text-green-600">&nbsp;&nbsp;治理票占比 × 治理票占比倍数 ≥ 铸币量占比</div> */}
+                      {/* <div className="text-xs text-status-success">&nbsp;&nbsp;治理票占比 × 治理票占比倍数 ≥ 铸币量占比</div> */}
                     </div>
                   )}
                 </div>
@@ -246,7 +246,7 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
         </div>
       ) : !actionRewards || actionRewards.length === 0 ? (
         selectedRound > BigInt(0) && (
-          <div className="text-center text-sm text-greyscale-400 p-8 border rounded-lg bg-gray-50">
+          <div className="text-center text-sm text-greyscale-400 p-8 border rounded-lg bg-greyscale-50">
             本轮暂无激励数据
           </div>
         )
@@ -257,18 +257,18 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
               {/* 行动标题 */}
               <div className="flex items-baseline mb-3">
                 <span className="text-greyscale-400 text-sm">{`No.`}</span>
-                <span className="text-secondary text-xl font-bold mr-2">{String(actionReward.actionId)}</span>
+                <span className="text-data-public text-xl font-bold mr-2">{String(actionReward.actionId)}</span>
                 <span className="font-bold text-greyscale-800">{actionReward.actionTitle}</span>
               </div>
 
               {/* 链群激励表格 */}
               {actionReward.groupRewards.length === 0 ? (
-                <div className="text-sm text-gray-500 text-center py-4">该行动下暂无链群激励</div>
+                <div className="text-sm text-greyscale-500 text-center py-4">该行动下暂无链群激励</div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="table w-full">
                     <thead>
-                      <tr className="border-b border-gray-100">
+                      <tr className="border-b border-greyscale-100">
                         <th className="px-2 py-2 text-left text-sm">链群</th>
                         <th className="px-2 py-2 text-right text-sm">链群铸币量</th>
                         <th className="px-2 py-2 text-right text-sm">
@@ -282,11 +282,11 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                       {actionReward.groupRewards.map((groupReward) => {
                         const totalReward = groupReward.ownerAmount + groupReward.distributedAmount;
                         return (
-                          <tr key={groupReward.groupId.toString()} className="border-b border-gray-100">
+                          <tr key={groupReward.groupId.toString()} className="border-b border-greyscale-100">
                             <td className="px-1 py-2">
-                              <div className="text-gray-800">
-                                <span className="text-gray-500 text-xs">#</span>
-                                <span className="text-secondary text-base font-semibold">
+                              <div className="text-greyscale-800">
+                                <span className="text-greyscale-500 text-xs">#</span>
+                                <span className="text-data-public text-base font-semibold">
                                   {groupReward.groupId.toString()}
                                 </span>{' '}
                                 <span className="text-sm">
@@ -317,7 +317,7 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                                     {formatTokenAmount(totalReward)}
                                   </Button>
                                 ) : (
-                                  <div className="font-mono text-sm text-secondary">
+                                  <div className="font-mono text-sm text-data-public">
                                     {formatTokenAmount(totalReward)}
                                   </div>
                                 )}
@@ -340,7 +340,7 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                       })}
 
                       {/* 汇总行 */}
-                      <tr className="bg-gray-50 font-semibold">
+                      <tr className="bg-greyscale-50 font-semibold">
                         <td className="px-2 py-2 text-left">汇总</td>
                         <td className="px-2 py-2 text-right">
                           <div className="font-mono text-sm">
@@ -363,7 +363,7 @@ const _RewardDetailByVerifier: React.FC<_RewardDetailByVerifierProps> = ({
                             return (
                               <div className="space-y-0.5">
                                 {/* 第一行：激励总数汇总 */}
-                                <div className="font-mono text-sm text-secondary">
+                                <div className="font-mono text-sm text-data-public">
                                   {formatTokenAmount(totalRewardSum)}
                                 </div>
                                 {/* 第二行：(服务者激励/二次分配激励) */}

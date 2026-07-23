@@ -377,7 +377,7 @@ export default function NewAction() {
                     <Input
                       type="number"
                       placeholder="地址数必须大于0"
-                      className="!ring-secondary-foreground disabled:bg-gray-200 disabled:text-gray-500 disabled:opacity-70"
+                      className="!ring-secondary-foreground disabled:bg-greyscale-200 disabled:text-greyscale-500 disabled:opacity-70"
                       autoComplete="off"
                       disabled={isValidExtension}
                       {...field}
@@ -400,7 +400,7 @@ export default function NewAction() {
                     <Input
                       type="number"
                       placeholder="最小参与代币数必须大于0"
-                      className="!ring-secondary-foreground disabled:bg-gray-200 disabled:text-gray-500 disabled:opacity-70"
+                      className="!ring-secondary-foreground disabled:bg-greyscale-200 disabled:text-greyscale-500 disabled:opacity-70"
                       autoComplete="off"
                       disabled={isValidExtension}
                       {...field}
@@ -423,7 +423,7 @@ export default function NewAction() {
                     <Input
                       type="text"
                       placeholder="不填为不限"
-                      className="!ring-secondary-foreground disabled:bg-gray-200 disabled:text-gray-500 disabled:opacity-70"
+                      className="!ring-secondary-foreground disabled:bg-greyscale-200 disabled:text-greyscale-500 disabled:opacity-70"
                       disabled={isValidExtension}
                       {...field}
                     />
@@ -446,7 +446,7 @@ export default function NewAction() {
         </Form>
 
         {/* 说明 */}
-        <div className="bg-gray-100 text-greyscale-500 rounded-lg p-4 text-sm mt-4">
+        <div className="bg-greyscale-100 text-greyscale-500 rounded-lg p-4 text-sm mt-4">
           <p className="mb-1">说明：</p>
           <p>1. 每个轮次，1个地址最多可以 创建/推举 1 个行动；</p>
           <p>2. 创建后，会自动推举该行动；</p>

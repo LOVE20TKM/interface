@@ -48,7 +48,7 @@ function Field({
   return (
     <div className="flex flex-col gap-1">
       <div className={`text-sm text-muted-foreground ${font}`}>{label}</div>
-      <div className={`text-sm font-medium break-all text-secondary ${font}`}>
+      <div className={`text-sm font-medium break-all text-data-public ${font}`}>
         {value}
         {percentage && <span className="text-sm text-muted-foreground ml-1">({percentage})</span>}
       </div>
@@ -80,21 +80,21 @@ function FieldWithInfo({
           <DialogTrigger asChild>
             <button
               type="button"
-              className="inline-flex items-center p-0.5 rounded hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center p-0.5 rounded hover:bg-greyscale-100 transition-colors"
               aria-label={`查看${infoTitle}`}
             >
-              <Info className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700" />
+              <Info className="h-3.5 w-3.5 text-greyscale-500 hover:text-greyscale-700" />
             </button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold">{infoTitle}</DialogTitle>
             </DialogHeader>
-            <div className="pt-2 pb-4 text-sm text-gray-700">{infoContent}</div>
+            <div className="pt-2 pb-4 text-sm text-greyscale-700">{infoContent}</div>
           </DialogContent>
         </Dialog>
       </div>
-      <div className={`text-sm font-medium break-all text-secondary ${font}`}>
+      <div className={`text-sm font-medium break-all text-data-public ${font}`}>
         {value}
         {percentage && <span className="text-sm text-muted-foreground ml-1">({percentage})</span>}
       </div>
@@ -478,7 +478,7 @@ const TokenPage = () => {
                             infoContent={
                               <div className="space-y-2">
                                 <p className="font-medium">行动参与统计口径：</p>
-                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                <div className="bg-greyscale-50 p-3 rounded-md font-mono text-sm">
                                   <div>
                                     行动参与 = 行动合约托管(Join + GroupJoin + GroupManager) + LP(当前代币/
                                     {process.env.NEXT_PUBLIC_USDT_SYMBOL}) + LP(当前代币/父币) - 流动性质押
@@ -498,7 +498,7 @@ const TokenPage = () => {
                             infoContent={
                               <div className="space-y-2">
                                 <p className="font-medium">子币LP统计口径：</p>
-                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                <div className="bg-greyscale-50 p-3 rounded-md font-mono text-sm">
                                   <div>子币LP = 累加 LP(当前代币/子币)</div>
                                 </div>
                                 <p>百分比口径：子币LP / 已铸造量</p>
@@ -515,7 +515,7 @@ const TokenPage = () => {
                             infoContent={
                               <div className="space-y-2">
                                 <p className="font-medium">其他统计口径：</p>
-                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                <div className="bg-greyscale-50 p-3 rounded-md font-mono text-sm">
                                   <div>其他 = 已铸造量 - 流动性质押 - 加速激励质押 - 行动参与 - 子币LP</div>
                                 </div>
                                 <p>百分比口径：其他 / 已铸造量</p>
@@ -543,7 +543,7 @@ const TokenPage = () => {
                             infoContent={
                               <div className="space-y-2">
                                 <p className="font-medium">TVL统计口径：</p>
-                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                <div className="bg-greyscale-50 p-3 rounded-md font-mono text-sm">
                                   <div>
                                     TVL = 加速激励质押 + 行动合约托管(Join + GroupJoin + GroupManager) + LP(当前代币/
                                     {process.env.NEXT_PUBLIC_USDT_SYMBOL}) × 2 + LP(当前代币/父币) × 2 + 子币LP × 2
@@ -567,7 +567,7 @@ const TokenPage = () => {
                             infoContent={
                               <div className="space-y-2">
                                 <p className="font-medium">行动合约托管统计口径：</p>
-                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                <div className="bg-greyscale-50 p-3 rounded-md font-mono text-sm">
                                   <div>行动合约托管 = Join + GroupJoin + GroupManager 合约余额</div>
                                 </div>
                                 <p>百分比口径：行动合约托管 / 已铸造量</p>
@@ -598,7 +598,7 @@ const TokenPage = () => {
                             infoContent={
                               <div className="space-y-2">
                                 <p className="font-medium">子币LP TVL统计口径：</p>
-                                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
+                                <div className="bg-greyscale-50 p-3 rounded-md font-mono text-sm">
                                   <div>子币LP TVL = 累加 LP(当前代币/子币) × 2</div>
                                 </div>
                                 <p>LP 项按双边口径计入 TVL，即按当前代币侧储备折算两边总价值。</p>

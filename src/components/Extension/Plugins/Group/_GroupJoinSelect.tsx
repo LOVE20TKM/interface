@@ -170,15 +170,15 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
       <LeftTitle title="输入要加入的链群" />
 
       {/* 行动信息
-      <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-        <div className="text-sm text-gray-600 mb-2">
+      <div className="mt-4 p-4 bg-greyscale-50 border border-greyscale-200 rounded-lg">
+        <div className="text-sm text-greyscale-600 mb-2">
           <span className="font-medium">行动：</span>
-          <span className="text-gray-800">
+          <span className="text-greyscale-800">
             #{actionId.toString()} {actionInfo.body.title}
           </span>
         </div>
-        <div className="text-xs text-gray-500">
-          此行动有 <span className="text-secondary font-medium">{groups.length}</span> 个可用链群
+        <div className="text-xs text-greyscale-500">
+          此行动有 <span className="text-data-public font-medium">{groups.length}</span> 个可用链群
         </div>
       </div> */}
 
@@ -197,10 +197,10 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
                 </FormControl>
                 <FormMessage />
                 {(isPendingGroupId || isPendingGroupActive) && inputGroupName && (
-                  <div className="text-xs text-gray-500">验证链群中...</div>
+                  <div className="text-xs text-greyscale-500">验证链群中...</div>
                 )}
                 {validationError && !isPendingGroupId && !isPendingGroupActive && (
-                  <div className="text-xs text-red-500">{validationError}</div>
+                  <div className="text-xs text-status-error">{validationError}</div>
                 )}
                 {!isPendingGroupId &&
                   !isPendingGroupActive &&
@@ -208,7 +208,7 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
                   groupId &&
                   groupId > BigInt(0) &&
                   isGroupActive && (
-                    <div className="text-xs text-green-600">✓ 链群验证通过</div>
+                    <div className="text-xs text-status-success">✓ 链群验证通过</div>
                   )}
               </FormItem>
             )}
@@ -236,9 +236,9 @@ const _GroupJoinSelect: React.FC<GroupJoinSelectProps> = ({ actionId, actionInfo
       </Form>
 
       {/* 提示信息 */}
-      <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-        <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
-        <div className="space-y-1 text-gray-600">
+      <div className="mt-6 text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
+        <div className="font-medium text-greyscale-700 mb-1">💡 小贴士</div>
+        <div className="space-y-1 text-greyscale-600">
           <div>如不知道链群名称，可询问链群服务者或周围朋友</div>
           <div>
             没有可加入的链群？

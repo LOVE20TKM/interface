@@ -50,7 +50,7 @@ const ActRewardsPage = () => {
         <Header title="行动激励" showBackButton={true} />
         <main className="flex-grow">
           <div className="container mx-auto px-4 py-8">
-            <div className="text-center text-red-500">参数错误：缺少行动ID参数</div>
+            <div className="text-center text-status-error">参数错误：缺少行动ID参数</div>
           </div>
         </main>
       </>
@@ -79,15 +79,15 @@ const ActRewardsPage = () => {
 
           {/* 主要内容 */}
           {isPending ? (
-            <div className="bg-white rounded-lg p-8">
+            <div className="bg-card rounded-lg p-8">
               <div className="text-center">
                 <LoadingIcon />
-                <p className="mt-4 text-gray-600">加载数据中...</p>
+                <p className="mt-4 text-greyscale-600">加载数据中...</p>
               </div>
             </div>
           ) : error ? (
-            <div className="bg-white rounded-lg p-8">
-              <div className="text-center text-red-500">
+            <div className="bg-card rounded-lg p-8">
+              <div className="text-center text-status-error">
                 加载失败：{error.message || '获取行动信息失败，请稍后重试'}
               </div>
             </div>
@@ -102,8 +102,8 @@ const ActRewardsPage = () => {
               <ActionPanelForJoin actionId={actionId} actionInfo={actionInfo} />
             )
           ) : (
-            <div className="bg-white rounded-lg p-8">
-              <div className="text-center text-yellow-600">行动不存在：找不到指定的行动信息</div>
+            <div className="bg-card rounded-lg p-8">
+              <div className="text-center text-status-warning">行动不存在：找不到指定的行动信息</div>
             </div>
           )}
         </div>

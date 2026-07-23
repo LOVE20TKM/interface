@@ -252,16 +252,16 @@ export default function MyGroups() {
 
   return (
     <div className="px-4 mt-4">
-      <div className="bg-gray-100 rounded-lg p-3 mb-4 space-y-2">
-        <div className="text-sm text-gray-600">
+      <div className="bg-greyscale-100 rounded-lg p-3 mb-4 space-y-2">
+        <div className="text-sm text-greyscale-600">
           社区共铸造 NFT：
-          <span className="font-medium text-gray-800 ml-1">
+          <span className="font-medium text-data-public ml-1">
             {totalSupply !== undefined ? totalSupply.toString() : "..."} 个
           </span>
         </div>
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-greyscale-600">
           累计销毁 {FIRST_TOKEN_SYMBOL} 代币：
-          <span className="font-medium text-gray-800 ml-1">
+          <span className="font-medium text-data-public ml-1">
             {totalBurnedForMint !== undefined ? formatTokenAmount(totalBurnedForMint) : "..."}
           </span>
         </div>
@@ -277,20 +277,20 @@ export default function MyGroups() {
       <div className="mb-4">
         {balance > 3 && (
           <>
-            <span className="text-gray-500 mr-1">数量:</span>
-            <span className="font-mono text-secondary">{balance.toString()}</span>
+            <span className="text-greyscale-500 mr-1">数量:</span>
+            <span className="font-mono text-data-personal">{balance.toString()}</span>
           </>
         )}
       </div>
 
       {canManageDefaultGroup && (
-        <div className="text-xs text-gray-500 mb-3">
+        <div className="text-xs text-greyscale-500 mb-3">
           LOVE20 NFT
           是LOVE20生态的身份凭证，既可作为链上社群的唯一凭证，又可作为个人的身份凭证。个人可将自己的钱包地址设置一个默认NFT，以用于转账、群聊等应用场景下的默认身份。
         </div>
       )}
       {isGroupDefaultsEnabled && !isOnTargetChain && (
-        <div className="text-xs text-amber-600 mb-3">切换到目标网络后才可设置默认NFT。</div>
+        <div className="text-xs text-status-warning mb-3">切换到目标网络后才可设置默认NFT。</div>
       )}
 
       {myGroups.length === 0 ? (
@@ -304,7 +304,7 @@ export default function MyGroups() {
         <div className="overflow-x-auto">
           <table className="table w-full table-fixed">
             <thead>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-greyscale-100">
                 <th className="w-[64px] px-2 text-left">ID</th>
                 <th className="px-2 text-left">名称</th>
                 <th className="w-[160px] px-1 text-right">操作</th>
@@ -317,9 +317,9 @@ export default function MyGroups() {
                 return (
                   <tr
                     key={group.tokenId.toString()}
-                    className={`border-b border-gray-100 hover:bg-gray-50 ${isCurrentDefault ? "bg-secondary/5" : ""}`}
+                    className={`border-b border-greyscale-100 hover:bg-greyscale-50 ${isCurrentDefault ? "bg-secondary/5" : ""}`}
                   >
-                    <td className="w-[64px] px-2 font-mono text-secondary">{group.tokenId.toString()}</td>
+                    <td className="w-[64px] px-2 font-mono text-data-public">{group.tokenId.toString()}</td>
                     <td className="px-2">
                       <div className="flex flex-col gap-1">
                         <span className={`font-medium break-all ${isCurrentDefault ? "text-secondary" : ""}`}>

@@ -225,7 +225,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
     return (
       <div className="p-6">
         <LeftTitle title="转让LOVE20 NFT" />
-        <div className="text-center text-red-500 mt-4">加载NFT信息失败: {groupNameError.message}</div>
+        <div className="text-center text-status-error mt-4">加载NFT信息失败: {groupNameError.message}</div>
       </div>
     );
   }
@@ -234,7 +234,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
     return (
       <div className="p-6">
         <LeftTitle title="转让LOVE20 NFT" />
-        <div className="text-center text-gray-500 mt-4">未找到NFT信息</div>
+        <div className="text-center text-greyscale-500 mt-4">未找到NFT信息</div>
       </div>
     );
   }
@@ -251,23 +251,23 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
           <form className="space-y-4">
             {/* NFT 名称显示 */}
             <div className="mb-4">
-              <FormLabel className="text-sm font-medium text-gray-700">LOVE20 NFT</FormLabel>
-              <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <span className="mr-2 text-sm text-gray-500 font-mono">(ID: {tokenId.toString()})</span>
-                <span className="font-medium text-gray-800">{groupName}</span>
+              <FormLabel className="text-sm font-medium text-greyscale-700">LOVE20 NFT</FormLabel>
+              <div className="mt-2 p-3 bg-greyscale-50 rounded-lg border border-greyscale-200">
+                <span className="mr-2 text-sm text-greyscale-500 font-mono">(ID: {tokenId.toString()})</span>
+                <span className="font-medium text-greyscale-800">{groupName}</span>
               </div>
             </div>
 
-            {isCheckingDefaultGroup && <div className="text-xs text-gray-500">正在检查默认NFT状态...</div>}
+            {isCheckingDefaultGroup && <div className="text-xs text-greyscale-500">正在检查默认NFT状态...</div>}
 
             {hasDefaultGroupLookupError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div className="rounded-lg border border-status-error-border bg-status-error-soft px-3 py-2 text-sm text-status-error">
                 默认NFT状态校验失败，暂时无法转让，请稍后重试。
               </div>
             )}
 
             {isCurrentDefaultGroup && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+              <div className="rounded-lg border border-status-warning-border bg-status-warning-soft px-3 py-2 text-sm text-status-warning">
                 当前NFT已设为默认NFT，请先在“我的NFT”中取消默认后再转让。
               </div>
             )}
@@ -278,7 +278,7 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
               name="to"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">目标地址</FormLabel>
+                  <FormLabel className="text-sm font-medium text-greyscale-700">目标地址</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="请输入目标钱包地址（支持 0x、TH 格式）"
@@ -288,14 +288,14 @@ const GroupTransfer: React.FC<GroupTransferProps> = ({ tokenId }) => {
                     />
                   </FormControl>
                   {addressConversionInfo && (
-                    <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                    <div className="text-xs text-status-info mt-1 flex items-center gap-1">
                       <span>{addressConversionInfo}</span>
                       {convertedAddress && (
                         <AddressWithCopyButton
                           address={convertedAddress}
                           showCopyButton={true}
                           showAddress={true}
-                          colorClassName="text-blue-600"
+                          colorClassName="text-status-info"
                         />
                       )}
                     </div>

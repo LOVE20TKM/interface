@@ -77,14 +77,14 @@ const ActionListToVerify: React.FC<VerifingActionListProps> = ({ currentRound })
                 <CardContent className="px-3 pt-1 pb-2">
                   <div className="text-xs text-greyscale-400 mt-2 flex justify-between">
                     <span>
-                      总票数: <span className="text-secondary">{formatTokenAmount(verifyingAction.totalVotesNum)}</span>
+                      总票数: <span className="text-data-public">{formatTokenAmount(verifyingAction.totalVotesNum)}</span>
                     </span>
                     <span>
-                      我的票数: <span className="text-secondary">{formatTokenAmount(verifyingAction.myVotesNum)}</span>
+                      我的票数: <span className="text-data-personal">{formatTokenAmount(verifyingAction.myVotesNum)}</span>
                     </span>
                     <span>
                       我的占比:{' '}
-                      <span className="text-secondary">
+                      <span className="text-data-personal">
                         {formatPercentage(
                           Number((verifyingAction.myVotesNum * BigInt(10000)) / verifyingAction.totalVotesNum) / 100,
                         )}

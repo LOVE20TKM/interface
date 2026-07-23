@@ -118,14 +118,14 @@ const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
   };
 
   if (!account) {
-    return <div className="text-sm text-gray-500">请先连接钱包</div>;
+    return <div className="text-sm text-greyscale-500">请先连接钱包</div>;
   }
 
   if (isPendingWaitingList) {
     return (
       <div className="flex flex-col items-center py-6">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载待使用列表...</p>
+        <p className="mt-4 text-greyscale-600">加载待使用列表...</p>
       </div>
     );
   }
@@ -134,7 +134,7 @@ const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
     <div className="space-y-4">
       <table className="table w-full">
         <thead>
-          <tr className="border-b border-gray-100">
+          <tr className="border-b border-greyscale-100">
             <th className="px-1 text-left w-12">No</th>
             <th className="px-1 text-left">地址 / 添加时间</th>
             <th className="px-1 text-right">体验代币数量</th>
@@ -150,7 +150,7 @@ const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
             </tr>
           ) : (
             waitingList.map((item, index) => (
-              <tr key={`${item.account}-${index}`} className="border-b border-gray-100">
+              <tr key={`${item.account}-${index}`} className="border-b border-greyscale-100">
                 <td className="px-1">{index + 1}</td>
                 <td className="px-1">
                   <AddressWithCopyButton address={item.account} showCopyButton={true} />
@@ -163,15 +163,15 @@ const _GroupTrialAccountsWaiting: React.FC<GroupTrialAccountsWaitingProps> = ({
                     )}
                 </td>
                 <td className="px-1 text-right">
-                  <span className="font-mono text-secondary">{formatTokenAmount(item.amount)}</span>
+                  <span className="font-mono text-data-public">{formatTokenAmount(item.amount)}</span>
                 </td>
                 <td className="px-0 text-right" style={{ verticalAlign: 'middle' }}>
                   <button
                     onClick={() => handleRemove(item.account)}
                     disabled={isPendingRemove || isConfirmingRemove}
-                    className="text-sm text-red-500 hover:text-red-600 disabled:text-gray-300"
+                    className="text-sm text-status-error hover:text-status-error disabled:text-greyscale-300"
                   >
-                    <Trash2 className="w-4 h-4 text-red-500" />
+                    <Trash2 className="w-4 h-4 text-status-error" />
                   </button>
                 </td>
               </tr>

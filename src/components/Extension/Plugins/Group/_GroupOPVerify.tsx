@@ -477,7 +477,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载验证信息...</p>
+        <p className="mt-4 text-greyscale-600">加载验证信息...</p>
       </div>
     );
   }
@@ -498,8 +498,8 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         </div>
 
         <div className="text-center py-12">
-          <p className="text-red-500 mb-4">您没有打分权限</p>
-          <p className="text-sm text-gray-600 mb-6">只有链群服务者和打分代理才能打分</p>
+          <p className="text-status-error mb-4">您没有打分权限</p>
+          <p className="text-sm text-greyscale-600 mb-6">只有链群服务者和打分代理才能打分</p>
         </div>
       </div>
     );
@@ -520,7 +520,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         </div>
 
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">暂无待打分的行动者</p>
+          <p className="text-greyscale-500 mb-4">暂无待打分的行动者</p>
         </div>
       </div>
     );
@@ -584,14 +584,14 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
               </Link>
             </Button>
           </div>
-          <p className="text-sm text-gray-600 mt-2">为链群 #{groupId.toString()} 中的行动者打分</p>
+          <p className="text-sm text-greyscale-600 mt-2">为链群 #{groupId.toString()} 中的行动者打分</p>
         </div>
 
         {/* 已完成提示 */}
         <div className="text-center py-6">
           <div className="mb-6">
-            <p className="text-lg font-medium text-gray-900 mb-2">打分已完成</p>
-            <p className="text-sm text-gray-600">本轮已为 {accounts?.length} 个行动者提交打分</p>
+            <p className="text-lg font-medium text-greyscale-900 mb-2">打分已完成</p>
+            <p className="text-sm text-greyscale-600">本轮已为 {accounts?.length} 个行动者提交打分</p>
           </div>
         </div>
       </div>
@@ -614,20 +614,20 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
             </Button>
           </div>
           {/* 行动信息 */}
-          <div className="text-gray-500 mb-2 text-sm">
+          <div className="text-greyscale-500 mb-2 text-sm">
             <span>行动：</span>
             <span className="text-greyscale-400 text-sm">No.</span>
-            <span className="text-secondary text-xl font-bold mr-2">{actionId.toString()}</span>
+            <span className="text-data-public text-xl font-bold mr-2">{actionId.toString()}</span>
             <span className="font-bold text-greyscale-800 text-base">{actionInfo?.body.title || ""}</span>
           </div>
           {/* 链群信息 */}
-          <div className="text-gray-500 mb-2 text-sm">
+          <div className="text-greyscale-500 mb-2 text-sm">
             <span>链群：</span>
-            <span className="text-gray-500 text-xs">#</span>
-            <span className="text-secondary text-base font-semibold ">{groupId.toString()}</span>{" "}
+            <span className="text-greyscale-500 text-xs">#</span>
+            <span className="text-data-public text-base font-semibold ">{groupId.toString()}</span>{" "}
             <span className="font-semibold">{groupName}</span>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-greyscale-600">
             已提交 {submittedCount} / {accountScores.length} 个，本次提交第 {nextBatchRange.startIndex + 1}-
             {nextBatchRange.endIndex} 个
           </p>
@@ -659,7 +659,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         <div className="w-full max-w-2xl">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-greyscale-100">
                 <th className="pb-3 text-left text-sm text-greyscale-500">行动者地址</th>
                 <th className="pb-3 text-left whitespace-nowrap w-16 text-sm text-greyscale-500">打分</th>
               </tr>
@@ -677,12 +677,12 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
                 const isReadonlyRow = isSubmitted || !isCurrentBatch;
 
                 return (
-                  <tr key={item.account} className={`border-b border-gray-100 ${isReadonlyRow ? "opacity-60" : ""}`}>
+                  <tr key={item.account} className={`border-b border-greyscale-100 ${isReadonlyRow ? "opacity-60" : ""}`}>
                     <td className="py-1">
                       <div className="text-left">
                         {/* 地址和复制按钮 */}
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-gray-500 min-w-[4px]">{index + 1}</span>
+                          <span className="text-xs font-bold text-greyscale-500 min-w-[4px]">{index + 1}</span>
                           <div className="font-mono">
                             <AddressWithCopyButton
                               address={item.account}
@@ -696,7 +696,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
                           <div className="text-sm text-greyscale-800 ml-3">
                             {actionInfo.body.verificationKeys.map((key, i) => (
                               <div key={i} className="mb-2">
-                                <div className="text-xs font-semibold text-gray-600 mb-1">{key}:</div>
+                                <div className="text-xs font-semibold text-greyscale-600 mb-1">{key}:</div>
                                 <div>
                                   <LinkIfUrl text={verificationInfo.infos[i] || ""} />
                                 </div>
@@ -719,10 +719,10 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
                           placeholder="0"
                           onChange={(e) => handleScoreChange(index, e.target.value)}
                           disabled={isReadonlyRow}
-                          className="w-16 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                          className="w-16 px-1 py-1 border rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-greyscale-100"
                         />
                         {isReadonlyRow ? (
-                          <span className="inline-flex h-7 min-w-[44px] items-center justify-center whitespace-nowrap px-2 text-xs text-gray-400">
+                          <span className="inline-flex h-7 min-w-[44px] items-center justify-center whitespace-nowrap px-2 text-xs text-greyscale-400">
                             {isSubmitted ? "已提交" : "未提交"}
                           </span>
                         ) : (
@@ -747,7 +747,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         {/* 按钮 */}
         <div className="flex flex-col items-center gap-2 pb-4">
           <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
-            <span className="text-gray-600">本批次最多提交</span>
+            <span className="text-greyscale-600">本批次最多提交</span>
             <input
               type="number"
               min="1"
@@ -758,7 +758,7 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
               className="h-8 w-24 rounded border px-2 text-right text-sm"
               placeholder="数量"
             />
-            <span className="text-gray-600">个</span>
+            <span className="text-greyscale-600">个</span>
           </div>
           {/* 第一行：主操作按钮 */}
           <Button
@@ -802,9 +802,9 @@ const _GroupOPVerify: React.FC<GroupOPVerifyProps> = ({
         </div>
 
         {/* 说明 */}
-        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
-          <div className="space-y-1 text-gray-600">
+        <div className="text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
+          <div className="font-medium text-greyscale-700 mb-1">💡 小贴士</div>
+          <div className="space-y-1 text-greyscale-600">
             <div>• 验证打分范围为：0~100 之间</div>
             <div>• 可以粘贴每行一个分数，或两列：地址、分数</div>
           </div>

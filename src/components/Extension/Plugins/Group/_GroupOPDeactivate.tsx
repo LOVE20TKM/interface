@@ -110,7 +110,7 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载链群信息...</p>
+        <p className="mt-4 text-greyscale-600">加载链群信息...</p>
       </div>
     );
   }
@@ -118,7 +118,7 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
   if (!groupDetail || activatedRound === undefined) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">未找到链群信息</p>
+        <p className="text-status-error">未找到链群信息</p>
       </div>
     );
   }
@@ -133,24 +133,24 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
         {/* 标题 */}
         <div>
           <LeftTitle title="关闭链群" />
-          <p className="text-sm text-gray-600 mt-2">
-            关闭链群 <span className="text-gray-500 text-xs">#</span>
-            <span className="text-secondary text-base font-semibold">{groupId.toString()}</span>
-            <span className="font-semibold text-gray-800 text-sm ml-1">{groupDetail.groupName}</span> 并取回质押代币
+          <p className="text-sm text-greyscale-600 mt-2">
+            关闭链群 <span className="text-greyscale-500 text-xs">#</span>
+            <span className="text-data-public text-base font-semibold">{groupId.toString()}</span>
+            <span className="font-semibold text-greyscale-800 text-sm ml-1">{groupDetail.groupName}</span> 并取回质押代币
           </p>
         </div>
 
         {/* 链群状态 */}
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="bg-greyscale-50 border border-greyscale-200 rounded-lg p-4">
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">链群状态:</span>
-              <span className={`ftext-sm ${groupDetail.isActive ? 'text-green-600' : 'text-gray-500'}`}>
+              <span className="text-sm text-greyscale-600">链群状态:</span>
+              <span className={`ftext-sm ${groupDetail.isActive ? 'text-status-success' : 'text-greyscale-500'}`}>
                 {groupDetail.isActive ? '活跃中' : '已关闭'}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">当前容量:</span>
+              <span className="text-sm text-greyscale-600">当前容量:</span>
               <span className="text-sm">
                 {formatTokenAmount(groupDetail.totalJoinedAmount, 2)} /{' '}
                 {groupDetail.maxCapacity > BigInt(0) ? formatTokenAmount(groupDetail.maxCapacity, 2) : '不限'}{' '}
@@ -158,7 +158,7 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">参与地址数:</span>
+              <span className="text-sm text-greyscale-600">参与地址数:</span>
               <span className="text-sm">{accountsCount?.toString() || '0'}</span>
             </div>
           </div>
@@ -192,23 +192,23 @@ const _GroupOPDeactivate: React.FC<GroupOPDeactivateProps> = ({ actionId, action
 
         {/* 阻止关闭的原因 */}
         {isInActivationRound && groupDetail.isActive && (
-          <div className="text-center text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+          <div className="text-center text-sm text-status-warning bg-status-warning-soft border border-status-warning-border rounded px-3 py-2">
             ⚠️ 在激活链群的同一轮次内无法关闭，请等待下一轮次再操作。
           </div>
         )}
 
         {!groupDetail.isActive && (
-          <div className="text-center text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
+          <div className="text-center text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
             链群已关闭
           </div>
         )}
 
         {/* 警告 */}
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-status-error-soft border border-status-error-border rounded-lg p-4">
           <div className="flex items-start gap-3">
             <div className="flex-1">
-              <div className="font-medium text-red-800 mb-1">⚠️ 重要提示</div>
-              <div className="text-sm text-red-700 space-y-1">
+              <div className="font-medium text-status-error mb-1">⚠️ 重要提示</div>
+              <div className="text-sm text-status-error space-y-1">
                 <div>• 链群关闭后将无法再验证，也不再有激励</div>
                 <div>• 链群关闭后，新的参与者无法再加入</div>
                 <div>• 链群关闭后可以取回全部质押代币</div>

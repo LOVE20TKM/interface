@@ -75,12 +75,12 @@ const ActRewardsPage: React.FC = () => {
                 const hasRewards = coreRewards.length > 0 || (extensionRewards && extensionRewards.length > 0);
 
                 return (
-                  <div key={action.action.head.id} className="border border-gray-100 rounded-lg p-4 shadow-sm">
+                  <div key={action.action.head.id} className="border border-greyscale-100 rounded-lg p-4 shadow-sm">
                     {/* 行动标题 */}
                     <div className="flex items-center mb-3">
                       <div className="flex items-baseline mr-2">
                         <span className="text-greyscale-500">No.</span>
-                        <span className="text-secondary text-xl font-bold mr-2">{String(action.action.head.id)}</span>
+                        <span className="text-data-public text-xl font-bold mr-2">{String(action.action.head.id)}</span>
                         <span className="font-bold text-greyscale-800">{action.action.body.title}</span>
                       </div>
                     </div>

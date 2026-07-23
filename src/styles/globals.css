@@ -28,6 +28,10 @@ a {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
 
+    /* Data semantics: personal values are neutral, protocol values retain brand purple. */
+    --data-personal: 0 0% 3.9%;
+    --data-public: 241 81% 53%;
+
     --muted: 0 0% 96.1%;
     --muted-foreground: 0 0% 45.1%;
 
@@ -68,6 +72,11 @@ a {
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
+    --status-info: 221 83% 53%;
+    --status-success: 142 64% 24%;
+    --status-warning: 21 84% 31%;
+    --status-error: 0 72% 51%;
+
     --ring: 0 0% 3.9%;
 
     --radius: 0.5rem;
@@ -99,52 +108,73 @@ a {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  .dark {
-    --background: var(--background);
-    --foreground: var(--foreground);
+  [data-theme='dark'] {
+    color-scheme: dark;
 
-    --muted: var(--muted);
-    --muted-foreground: var(--muted-foreground);
+    --background: 0 0% 7%;
+    --foreground: 0 0% 96%;
 
-    --accent: var(--accent);
-    --accent-foreground: var(--accent-foreground);
+    --data-personal: 0 0% 96%;
+    --data-public: 241 77% 72%;
 
-    --popover: var(--popover);
-    --popover-foreground: var(--popover-foreground);
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 64%;
 
-    --border: var(--border);
-    --input: var(--input);
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 96%;
 
-    --card: var(--card);
-    --card-foreground: var(--card-foreground);
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 96%;
 
-    --primary: var(--primary);
-    --primary-foreground: var(--primary-foreground);
+    --border: 0 0% 22%;
+    --input: 0 0% 22%;
 
-    --secondary: var(--secondary);
-    --secondary-foreground: var(--secondary-foreground);
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 96%;
 
-    --destructive: var(--destructive);
-    --destructive-foreground: var(--destructive-foreground);
+    --primary: 0 0% 96%;
+    --primary-foreground: 0 0% 9%;
 
-    --ring: var(--ring);
+    --secondary: 241 77% 68%;
+    --secondary-400: 241 77% 72%;
+    --secondary-100: 241 32% 23%;
+    --secondary-foreground: 0 0% 100%;
 
-    --radius: var(--radius);
+    --destructive: 0 63% 46%;
+    --destructive-foreground: 0 0% 98%;
 
-    --chart-1: var(--chart-1);
-    --chart-2: var(--chart-2);
-    --chart-3: var(--chart-3);
-    --chart-4: var(--chart-4);
-    --chart-5: var(--chart-5);
+    --status-info: 213 94% 68%;
+    --status-success: 160 60% 55%;
+    --status-warning: 45 93% 58%;
+    --status-error: 0 91% 71%;
 
-    --sidebar-background: var(--sidebar-background);
-    --sidebar-foreground: var(--sidebar-foreground);
-    --sidebar-primary: var(--sidebar-primary);
-    --sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --sidebar-accent: var(--sidebar-accent);
-    --sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --sidebar-border: var(--sidebar-border);
-    --sidebar-ring: var(--sidebar-ring);
+    --ring: 0 0% 70%;
+
+    --greyscale-900: 0 0% 96%;
+    --greyscale-800: 0 0% 90%;
+    --greyscale-700: 0 0% 82%;
+    --greyscale-600: 0 0% 72%;
+    --greyscale-500: 0 0% 64%;
+    --greyscale-400: 0 0% 54%;
+    --greyscale-300: 0 0% 32%;
+    --greyscale-200: 0 0% 22%;
+    --greyscale-100: 0 0% 15%;
+    --greyscale-50: 0 0% 12%;
+
+    --chart-1: 220 70% 58%;
+    --chart-2: 160 60% 48%;
+    --chart-3: 30 80% 58%;
+    --chart-4: 280 65% 65%;
+    --chart-5: 340 75% 58%;
+
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 221 83% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 16%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 217 91% 65%;
   }
 }
 
@@ -247,12 +277,12 @@ a {
   /* 修复 Android 10 触摸设备上的 hover 状态误触发 - 排除UI组件库按钮 */
   @media (hover: none) and (pointer: coarse) {
     button:not([class*='bg-']):not([class*='inline-flex']):hover,
-    .hover\:bg-gray-200:hover,
-    .hover\:bg-gray-100:hover,
+    .hover\:bg-greyscale-200:hover,
+    .hover\:bg-greyscale-100:hover,
     button[class*='border-b-2'][class*='flex-1']:hover,
-    button[class*='flex-1'][class*='rounded-md'][class*='text-gray-500']:hover,
+    button[class*='flex-1'][class*='rounded-md'][class*='text-greyscale-500']:hover,
     button[class*='text-secondary'][class*='no-underline']:hover,
-    button[class*='hover:bg-gray-100'][class*='touch-manipulation']:hover {
+    button[class*='hover:bg-greyscale-100'][class*='touch-manipulation']:hover {
       background-color: transparent !important;
       background: none !important;
     }
@@ -270,7 +300,7 @@ a {
   }
 
   /* 修复 Android 10 WebView 子Tab导航按钮的默认灰色背景 - 精准针对VerificationTabs */
-  button[class*='flex-1'][class*='rounded-md'][class*='text-gray-500'] {
+  button[class*='flex-1'][class*='rounded-md'][class*='text-greyscale-500'] {
     -webkit-tap-highlight-color: transparent !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
@@ -282,7 +312,7 @@ a {
 
   /* 修复 Android 10 WebView 切换轮次按钮的默认灰色背景 - 精准针对ChangeRound */
   button[class*='text-secondary'][class*='no-underline'],
-  button[class*='hover:bg-gray-100'][class*='touch-manipulation'] {
+  button[class*='hover:bg-greyscale-100'][class*='touch-manipulation'] {
     -webkit-tap-highlight-color: transparent !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
@@ -293,7 +323,7 @@ a {
   }
 
   /* 为触摸设备提供替代的点击反馈 - 仅对特定元素生效 */
-  button.active\:bg-gray-200:active {
+  button.active\:bg-greyscale-200:active {
     background-color: rgb(229, 231, 235) !important;
     transition: background-color 0.1s ease;
   }

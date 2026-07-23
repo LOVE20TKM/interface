@@ -242,7 +242,7 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
     (recommendedStakeTokenData?.recommendedAmount || BigInt(0)) > BigInt(0);
   const recommendedStakeTokenHelp = useMemo(() => {
     if (!recommendedStakeTokenData) {
-      return <div className="text-sm text-gray-600">正在读取治理票和质押数据。</div>;
+      return <div className="text-sm text-greyscale-600">正在读取治理票和质押数据。</div>;
     }
 
     const govCapRatioText = formatPercentage(
@@ -262,55 +262,57 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
         <p>简化假设：所有治理者都会投票并参与验证，因此用全局 ST 质押量估算加速激励占比。</p>
         <p>估算上限占比 r = 我的有效治理票 / 总治理票 × 加速激励倍数。</p>
         <p>理论追加量 x = (r × 当前总加速质押 - 我已加速质押) / (1 - r)。</p>
-        <div className="space-y-1 rounded border border-gray-200 bg-gray-50 p-3">
+        <div className="space-y-1 rounded border border-greyscale-200 bg-greyscale-50 p-3">
           <div className="flex justify-between gap-3">
             <span>我的有效治理票</span>
-            <span className="font-mono text-secondary">{formatTokenAmount(recommendedStakeTokenData.validGovVotes, 4)}</span>
+            <span className="font-mono text-data-personal">
+              {formatTokenAmount(recommendedStakeTokenData.validGovVotes, 4)}
+            </span>
           </div>
           <div className="flex justify-between gap-3">
             <span>总治理票</span>
-            <span className="font-mono text-secondary">{formatTokenAmount(recommendedStakeTokenData.totalGovVotes, 4)}</span>
+            <span className="font-mono text-data-public">{formatTokenAmount(recommendedStakeTokenData.totalGovVotes, 4)}</span>
           </div>
           <div className="flex justify-between gap-3">
             <span>加速激励倍数</span>
-            <span className="font-mono text-secondary">
+            <span className="font-mono text-data-public">
               {recommendedStakeTokenData.maxGovBoostRewardMultiplier.toString()}
             </span>
           </div>
           <div className="flex justify-between gap-3">
             <span>上限占比 r</span>
-            <span className="font-mono text-secondary">{govCapRatioText}</span>
+            <span className="font-mono text-data-personal">{govCapRatioText}</span>
           </div>
           <div className="flex justify-between gap-3">
             <span>当前总加速质押 T</span>
-            <span className="font-mono text-secondary">
+            <span className="font-mono text-data-public">
               {formatTokenAmount(recommendedStakeTokenData.totalStakedTokenAmount, 4)}
             </span>
           </div>
           <div className="flex justify-between gap-3">
             <span>我已加速质押 A</span>
-            <span className="font-mono text-secondary">
+            <span className="font-mono text-data-personal">
               {formatTokenAmount(recommendedStakeTokenData.currentStakedTokenAmount, 4)}
             </span>
           </div>
-          <div className="border-t border-gray-200 pt-2 text-xs text-gray-600">公式：x = (r × T - A) / (1 - r)</div>
+          <div className="border-t border-greyscale-200 pt-2 text-xs text-greyscale-600">公式：x = (r × T - A) / (1 - r)</div>
           {recommendedStakeTokenData.theoreticalAmount === undefined ? (
             <div className="text-secondary">{recommendedStakeTokenData.noFiniteReason}</div>
           ) : (
             <>
               <div className="flex justify-between gap-3">
                 <span>r × T - A</span>
-                <span className="font-mono text-secondary">
+                <span className="font-mono text-data-personal">
                   {formatSignedTokenAmount(recommendedStakeTokenData.numeratorAmount)}
                 </span>
               </div>
               <div className="flex justify-between gap-3">
                 <span>1 - r</span>
-                <span className="font-mono text-secondary">{denominatorRatioText}</span>
+                <span className="font-mono text-data-personal">{denominatorRatioText}</span>
               </div>
               <div className="flex justify-between gap-3 font-medium">
                 <span>理论追加 x</span>
-                <span className="font-mono text-secondary">
+                <span className="font-mono text-data-personal">
                   {formatTokenAmount(recommendedStakeTokenData.theoreticalAmount, 4)}
                 </span>
               </div>
@@ -318,10 +320,10 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
           )}
           <div className="flex justify-between gap-3 font-medium">
             <span>本次推荐（估算）</span>
-            <span className="font-mono text-secondary">{recommendedStakeTokenText}</span>
+            <span className="font-mono text-data-personal">{recommendedStakeTokenText}</span>
           </div>
         </div>
-        <p className="text-xs text-gray-500">这是按当前全局治理票和 ST 质押量的简化估算。</p>
+        <p className="text-xs text-greyscale-500">这是按当前全局治理票和 ST 质押量的简化估算。</p>
       </div>
     );
   }, [recommendedStakeTokenData, recommendedStakeTokenText]);
@@ -362,7 +364,7 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <div className="flex justify-between items-center">
                     <span>
-                      持有 <span className="mr-2">{formatTokenAmount(tokenBalance)}</span>
+                      持有 <span className="mr-2 text-data-personal">{formatTokenAmount(tokenBalance)}</span>
                       {token?.symbol}
                     </span>
                     <Button
@@ -381,7 +383,8 @@ const StakeTokenPanel: React.FC<StakeTokenPanelProps> = ({ tokenBalance }) => {
                   <div className="flex justify-between items-start gap-2">
                     <span className="min-w-0 inline-flex flex-wrap items-center gap-1 break-words">
                       <span>
-                        推荐质押（估算） <span className="text-secondary">{recommendedStakeTokenText}</span> {token?.symbol}
+                        推荐质押（估算） <span className="text-data-personal">{recommendedStakeTokenText}</span>{' '}
+                        {token?.symbol}
                       </span>
                       <InfoTooltip title="推荐质押（估算）数量说明" content={recommendedStakeTokenHelp} className="p-0" />
                     </span>

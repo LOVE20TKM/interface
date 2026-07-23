@@ -152,10 +152,10 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   // Loading state for initial data
   if (isJoinedPending || (actionId && isPendingJoined)) {
     return (
-      <div className="bg-white rounded-lg p-8">
+      <div className="bg-card rounded-lg p-8">
         <div className="text-center">
           <LoadingIcon />
-          <p className="mt-4 text-gray-600">加载数据中...</p>
+          <p className="mt-4 text-greyscale-600">加载数据中...</p>
         </div>
       </div>
     );
@@ -165,7 +165,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
   if (actionId && !isJoined) {
     return (
       <div className="flex flex-col items-center pt-8">
-        <p className="text-gray-600 mb-6">您还没有参与此链群服务行动</p>
+        <p className="text-greyscale-600 mb-6">您还没有参与此链群服务行动</p>
         <Button variant="outline" className="text-secondary border-secondary" asChild>
           <Link href={`/acting/join?id=${actionId}&symbol=${token?.symbol || ''}`}>加入链群服务行动</Link>
         </Button>
@@ -180,7 +180,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
         {/* 我的参与 */}
         <div className="stat place-items-center flex flex-col justify-center">
           <div className="stat-title">我的参与</div>
-          <div className="stat-value text-2xl text-secondary">{formatTokenAmount(myParticipation)}</div>
+          <div className="stat-value text-2xl text-data-personal">{formatTokenAmount(myParticipation)}</div>
           <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
             {groupActionTokenSymbol || '-'}
           </div>
@@ -189,7 +189,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
         {/* 所占比例 */}
         <div className="stat place-items-center flex flex-col justify-center">
           <div className="stat-title">占总参与量</div>
-          <div className="stat-value text-2xl text-secondary">{displayPercentage}</div>
+          <div className="stat-value text-2xl text-data-personal">{displayPercentage}</div>
           <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
             总量 {formatTokenAmount(totalParticipation)}
           </div>
@@ -234,7 +234,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
             <LoadingIcon />
           </div>
         ) : !actionGroupRecipientsData || actionGroupRecipientsData.length === 0 ? (
-          <div className="text-center text-sm text-greyscale-400 p-4 bg-gray-50 rounded-lg mt-4">
+          <div className="text-center text-sm text-greyscale-400 p-4 bg-greyscale-50 rounded-lg mt-4">
             暂无激励分配配置
           </div>
         ) : (
@@ -243,7 +243,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
               <div key={action.actionId.toString()} className="border rounded-lg p-3">
                 <div className="flex items-baseline mb-2">
                   <span className="text-greyscale-400 text-sm">{`No.`}</span>
-                  <span className="text-secondary text-xl font-bold mr-2">{String(action.actionId)}</span>
+                  <span className="text-data-public text-xl font-bold mr-2">{String(action.actionId)}</span>
                   <span className="font-bold text-greyscale-800">{action.actionTitle}</span>
                 </div>
 
@@ -251,9 +251,9 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                   {action.groups.map((group) => (
                     <div key={group.groupId.toString()} className="border-t pt-4 first:border-t-0 first:pt-0">
                       <div className="flex items-center justify-between">
-                        <div className="text-gray-800">
-                          <span className="text-gray-500 text-xs">#</span>
-                          <span className="text-secondary text-base font-semibold ">
+                        <div className="text-greyscale-800">
+                          <span className="text-greyscale-500 text-xs">#</span>
+                          <span className="text-data-public text-base font-semibold ">
                             {group.groupId.toString()}
                           </span>{' '}
                           <span>{group.groupName || `链群 #${group.groupId}`}</span>
@@ -272,22 +272,22 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                       {group.addrs && group.addrs.length > 0 ? (
                         <div className="space-y-2 mt-2">
                           {group.addrs.map((addr, idx) => (
-                            <div key={`${addr}-${idx}`} className="border rounded-lg p-2 bg-gray-50/50">
+                            <div key={`${addr}-${idx}`} className="border rounded-lg p-2 bg-greyscale-50/50">
                               {/* 第一行：序号 + 地址 + 比例 */}
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-1.5 min-w-0">
                                   <span className="text-xs text-greyscale-400 shrink-0">{idx + 1}.</span>
-                                  <div className="inline-flex items-center bg-white rounded-md px-2 py-0.5 min-w-0">
+                                  <div className="inline-flex items-center bg-card rounded-md px-2 py-0.5 min-w-0">
                                     <AddressWithCopyButton address={addr} showCopyButton={true} />
                                   </div>
                                 </div>
-                                <span className="font-mono text-sm text-secondary shrink-0 ml-2">
+                                <span className="font-mono text-sm text-data-public shrink-0 ml-2">
                                   {group.ratios ? (Number(group.ratios[idx]) / 1e16).toFixed(2) : '0.00'}%
                                 </span>
                               </div>
                               {/* 第二行：备注名称 */}
                               <div className="ml-4">
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-greyscale-600">
                                   {group.remarks?.[idx] || <span className="text-greyscale-400 italic">未命名</span>}
                                 </span>
                               </div>
@@ -295,7 +295,7 @@ export default function GroupServiceMyParticipation({ extensionAddress, actionId
                           ))}
                         </div>
                       ) : (
-                        <div className="text-sm text-greyscale-400 p-2 bg-gray-50 rounded">未设置激励分配</div>
+                        <div className="text-sm text-greyscale-400 p-2 bg-greyscale-50 rounded">未设置激励分配</div>
                       )}
                     </div>
                   ))}

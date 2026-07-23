@@ -82,7 +82,7 @@ const AddressWithCopyButton: React.FC<AddressWithCopyButtonProps> = ({
         // @ts-ignore
         <CopyToClipboard text={address} onCopy={handleCopy}>
           <button
-            className="flex items-center justify-center p-1 rounded focus:outline-none active:bg-gray-200 md:hover:bg-gray-200"
+            className="flex items-center justify-center p-1 rounded focus:outline-none active:bg-greyscale-200 md:hover:bg-greyscale-200"
             onClick={handleClick}
             aria-label="复制地址"
             style={{
@@ -107,7 +107,7 @@ const AddressWithCopyButton: React.FC<AddressWithCopyButtonProps> = ({
         // @ts-ignore
         <CopyToClipboard text={address.substring(address.length - 4)} onCopy={handleCopyLast4}>
           <button
-            className="text-xs px-2 py-1 rounded border border-gray-300 focus:outline-none active:bg-gray-200 md:hover:bg-gray-100 transition-colors"
+            className="text-xs px-2 py-1 rounded border border-greyscale-300 focus:outline-none active:bg-greyscale-200 md:hover:bg-greyscale-100 transition-colors"
             onClick={handleClick}
             aria-label="复制地址后4位"
             style={{

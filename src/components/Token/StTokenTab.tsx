@@ -32,7 +32,7 @@ export default function StTokenTab() {
 
   return (
     <div className="px-4 pt-0 pb-6">
-      <div className="bg-gray-100 rounded-lg p-4 text-sm mt-4">
+      <div className="bg-greyscale-100 rounded-lg p-4 text-sm mt-4">
         <div className="flex items-center">
           <div className="mr-2">
             <div className="flex items-center">
@@ -48,7 +48,7 @@ export default function StTokenTab() {
         </div>
         <div className="mt-1 flex items-center">
           <span className="text-sm text-greyscale-500 mr-1">我持有:</span>
-          <span className="text-sm text-secondary">
+          <span className="text-sm text-data-personal">
             {isBalancePending ? <LoadingIcon /> : formatTokenAmount(balance || BigInt(0))}
           </span>
         </div>

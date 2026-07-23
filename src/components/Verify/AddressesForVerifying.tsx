@@ -797,7 +797,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
           <button
             onClick={handleCopySelectedAddresses}
             disabled={isPending || isConfirmed || !verificationInfos || verificationInfos.length === 0}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:bg-greyscale-300 disabled:cursor-not-allowed transition-colors"
             title="复制被抽中的地址及验证信息（包含地址、后4位、验证信息）"
           >
             <Copy size={16} />
@@ -807,7 +807,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
 
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-greyscale-100">
               <th className="pb-3 text-left text-sm text-greyscale-500">
                 <div className="flex items-center gap-1">
                   被抽中的行动参与者
@@ -816,7 +816,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                     content={
                       <p className="leading-relaxed text-base">
                         每轮从所有参与行动的代币中，随机抽取
-                        <span className="font-mono font-bold text-blue-600 mx-1 text-base">
+                        <span className="font-mono font-bold text-status-info mx-1 text-base">
                           {actionInfo?.body.maxRandomAccounts.toString()}
                         </span>
                         份代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。
@@ -831,7 +831,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                   <button
                     onClick={handlePasteScores}
                     disabled={isPending || isConfirmed}
-                    className="ml-1 p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                    className="ml-1 p-1 text-greyscale-500 hover:text-status-info hover:bg-status-info-soft rounded disabled:text-greyscale-300 disabled:cursor-not-allowed transition-colors"
                     title="粘贴分数数据（自动检测剪贴板或手动输入，每行一个数字）"
                   >
                     <Clipboard size={14} />
@@ -852,7 +852,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                             <li>数字将按顺序自动分配到各个地址的打分框中</li>
                             <li>如果有多余的数字，最后一个会分配给弃权票</li>
                           </ol>
-                          <p className="text-gray-600">
+                          <p className="text-greyscale-600">
                             <strong>示例格式：</strong>
                             <br />
                             10
@@ -879,11 +879,11 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
             )}
             {verificationInfos && verificationInfos.length > 0 ? (
               verificationInfos.map((info, index) => (
-                <tr key={info.account} className="border-b border-gray-100">
+                <tr key={info.account} className="border-b border-greyscale-100">
                   <td className="py-1">
                     <div className="text-left">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-gray-500 min-w-[4px]">{index + 1}</span>
+                        <span className="text-xs font-bold text-greyscale-500 min-w-[4px]">{index + 1}</span>
                         <div className="font-mono">
                           <AddressWithCopyButton address={info.account} showCopyLast4Button={true} />
                         </div>
@@ -892,7 +892,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                         <div className="text-sm text-greyscale-800 ml-3">
                           {actionInfo.body.verificationKeys.map((key, i) => (
                             <div key={i} className="mb-2">
-                              <div className="text-xs font-semibold text-gray-600 mb-1">{key}:</div>
+                              <div className="text-xs font-semibold text-greyscale-600 mb-1">{key}:</div>
                               <div>
                                 <LinkIfUrl text={info.infos[i]} />
                               </div>
@@ -989,7 +989,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
           <button
             onClick={handleCopyScores}
             disabled={isPending || isConfirmed}
-            className="flex items-center gap-0 px-2 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-0 px-2 py-2 text-sm text-greyscale-600 hover:text-status-info hover:bg-status-info-soft rounded-lg border border-greyscale-200 hover:border-status-info-border disabled:text-greyscale-400 disabled:cursor-not-allowed transition-colors"
             title="复制当前所有分数到剪贴板（每行一个分数）"
           >
             复制分数
@@ -998,7 +998,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
           <button
             onClick={handlePasteScores}
             disabled={isPending || isConfirmed}
-            className="flex items-center gap-0 px-2 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-0 px-2 py-2 text-sm text-greyscale-600 hover:text-status-info hover:bg-status-info-soft rounded-lg border border-greyscale-200 hover:border-status-info-border disabled:text-greyscale-400 disabled:cursor-not-allowed transition-colors"
             title="粘贴分数数据（自动检测剪贴板或手动输入，每行一个数字）"
           >
             从剪贴板粘贴
@@ -1007,7 +1007,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
           <button
             onClick={() => setShowVerifierDialog(true)}
             disabled={isPending || isConfirmed || !verificationInfos || verificationInfos.length === 0}
-            className="flex items-center gap-1 px-2 py-2 text-sm text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg border border-gray-200 hover:border-green-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1 px-2 py-2 text-sm text-greyscale-600 hover:text-status-success hover:bg-status-success-soft rounded-lg border border-greyscale-200 hover:border-status-success-border disabled:text-greyscale-400 disabled:cursor-not-allowed transition-colors"
             title="输入验证者地址，自动获取其打分并填入表单"
           >
             <UserCheck size={16} />
@@ -1055,7 +1055,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="verifier-address" className="text-sm font-medium text-gray-700">
+              <label htmlFor="verifier-address" className="text-sm font-medium text-greyscale-700">
                 验证者地址
               </label>
               <Input
@@ -1067,7 +1067,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
                 className="font-mono text-sm"
                 disabled={isLoadingVerifierScores}
               />
-              <p className="text-xs text-gray-500 mt-1">验证者打分，会等比例缩放到区间 0~1000</p>
+              <p className="text-xs text-greyscale-500 mt-1">验证者打分，会等比例缩放到区间 0~1000</p>
             </div>
           </div>
 
@@ -1112,7 +1112,7 @@ const AddressesForVerifying: React.FC<VerifyAddressesProps> = ({
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <p className="text-base text-gray-700 leading-relaxed">{confirmDialogMessage}</p>
+            <p className="text-base text-greyscale-700 leading-relaxed">{confirmDialogMessage}</p>
           </div>
 
           <DialogFooter className="flex gap-2">

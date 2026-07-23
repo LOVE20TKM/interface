@@ -29,13 +29,13 @@ const ActDataPanel: React.FC<ActDataPanelProps> = ({
         <div className="stats w-full grid grid-cols-2 divide-x-0">
           <div className="stat place-items-center pb-2">
             <div className="stat-title text-sm pb-1">参与行动代币总数</div>
-            <div className="stat-value text-xl text-secondary">
+            <div className="stat-value text-xl text-data-public">
               {isPendingJoinedAmount ? <LoadingIcon /> : formatTokenAmount(totalJoinedAmount)}
             </div>
           </div>
           <div className="stat place-items-center pb-2">
             <div className="stat-title text-sm pb-1">预计新增铸币</div>
-            <div className="stat-value text-xl text-secondary">
+            <div className="stat-value text-xl text-data-public">
               {isPendingReward ? <LoadingIcon /> : formatTokenAmount(expectedReward ?? BigInt(0))}
             </div>
           </div>

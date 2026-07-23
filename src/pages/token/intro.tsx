@@ -97,7 +97,7 @@ const TokenIntroPage = () => {
           </div>
         ) : error ? (
           <div className="container mx-auto px-4 py-8 max-w-3xl">
-            <div className="text-red-500">{error}</div>
+            <div className="text-status-error">{error}</div>
           </div>
         ) : (
           <div className="container mx-auto px-4 pb-8 max-w-3xl">
@@ -105,7 +105,7 @@ const TokenIntroPage = () => {
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight]}
-                className="text-lg text-gray-800 font-mono"
+                className="text-lg text-greyscale-800 font-mono"
               >
                 {renderedMd}
               </ReactMarkdown>

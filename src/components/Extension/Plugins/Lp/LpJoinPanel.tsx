@@ -162,32 +162,32 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
         <p>推荐值是理论上不浪费治理票激励上限的追加 LP 数量，不考虑你当前钱包 LP 余额。</p>
         <p>治理票有效占比 = 我的有效治理票 / 总治理票 × 治理票占比倍数。</p>
         <p>推荐追加量 = (治理票有效占比 × 当前总参与 LP - 我已参与 LP) / (1 - 治理票有效占比)。</p>
-        <div className="space-y-1 rounded border border-gray-200 bg-gray-50 p-3">
+        <div className="space-y-1 rounded border border-greyscale-200 bg-greyscale-50 p-3">
           <div className="flex justify-between gap-3">
             <span>我的有效治理票</span>
-            <span className="font-mono text-secondary">{formatTokenAmount(userGovVotes, 4)}</span>
+            <span className="font-mono text-data-personal">{formatTokenAmount(userGovVotes, 4)}</span>
           </div>
           <div className="flex justify-between gap-3">
             <span>总治理票</span>
-            <span className="font-mono text-secondary">{formatTokenAmount(totalGovVotes, 4)}</span>
+            <span className="font-mono text-data-public">{formatTokenAmount(totalGovVotes, 4)}</span>
           </div>
           <div className="flex justify-between gap-3">
             <span>治理票占比倍数</span>
-            <span className="font-mono text-secondary">{govRatioMultiplier.toString()}</span>
+            <span className="font-mono text-data-public">{govRatioMultiplier.toString()}</span>
           </div>
           <div className="flex justify-between gap-3">
             <span>治理票有效占比 r</span>
-            <span className="font-mono text-secondary">{govCapRatioText}</span>
+            <span className="font-mono text-data-personal">{govCapRatioText}</span>
           </div>
           <div className="flex justify-between gap-3">
             <span>当前总参与 LP T</span>
-            <span className="font-mono text-secondary">{formatTokenAmount(totalJoinedAmount, 4)}</span>
+            <span className="font-mono text-data-public">{formatTokenAmount(totalJoinedAmount, 4)}</span>
           </div>
           <div className="flex justify-between gap-3">
             <span>我已参与 LP A</span>
-            <span className="font-mono text-secondary">{formatTokenAmount(joinedAmount, 4)}</span>
+            <span className="font-mono text-data-personal">{formatTokenAmount(joinedAmount, 4)}</span>
           </div>
-          <div className="border-t border-gray-200 pt-2 text-xs text-gray-600">
+          <div className="border-t border-greyscale-200 pt-2 text-xs text-greyscale-600">
             公式：x = (r × T - A) / (1 - r)
           </div>
           {recommendedLpAmount === undefined ? (
@@ -196,21 +196,22 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
             <>
               <div className="flex justify-between gap-3">
                 <span>r × T - A</span>
-                <span className="font-mono text-secondary">{formatSignedTokenAmount(numeratorAmount)}</span>
+                <span className="font-mono text-data-personal">{formatSignedTokenAmount(numeratorAmount)}</span>
               </div>
               <div className="flex justify-between gap-3">
                 <span>1 - r</span>
-                <span className="font-mono text-secondary">{denominatorRatioText}</span>
+                <span className="font-mono text-data-personal">{denominatorRatioText}</span>
               </div>
               <div className="flex justify-between gap-3 font-medium">
                 <span>推荐追加 x</span>
-                <span className="font-mono text-secondary">{recommendedLpAmountText}</span>
+                <span className="font-mono text-data-personal">{recommendedLpAmountText}</span>
               </div>
             </>
           )}
         </div>
-        <p className="text-xs text-gray-500">
-          钱包 LP 余额 {formatTokenAmount(lpBalance || BigInt(0), 4)} 不参与推荐值计算，但实际提交仍受余额限制。
+        <p className="text-xs text-greyscale-500">
+          钱包 LP 余额 <span className="text-data-personal">{formatTokenAmount(lpBalance || BigInt(0), 4)}</span>{' '}
+          不参与推荐值计算，但实际提交仍受余额限制。
         </p>
       </div>
     );
@@ -420,7 +421,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
       {/* 治理票占比不足的警告 */}
       {isGovRatioInsufficient && (
         <div className="px-6 py-0">
-          <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2 mt-3 w-full">
+          <div className="text-sm text-status-error bg-status-error-soft border border-status-error-border rounded px-3 py-2 mt-3 w-full">
             <div className="font-medium">⚠️ 治理票占比不足</div>
             <div className="mt-1">
               你的治理票占比{' '}
@@ -428,7 +429,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
               低于最小限制 <span className="font-semibold">{formatPercentage((Number(minGovRatio) / 1e18) * 100)}</span>
               ，无法参与行动。
             </div>
-            <div className="text-xs text-red-600 mt-1">您可以增加治理票数，再重新参与行动。</div>
+            <div className="text-xs text-status-error mt-1">您可以增加治理票数，再重新参与行动。</div>
           </div>
         </div>
       )}
@@ -458,9 +459,9 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
               前往流动性页 &gt;&gt;
             </button>
           ) : acquireLpJump.status === 'unsupported' ? (
-            <span className="text-sm text-gray-400">该LP代币对暂不支持自动跳转</span>
+            <span className="text-sm text-greyscale-400">该LP代币对暂不支持自动跳转</span>
           ) : (
-            <span className="text-sm text-gray-400">解析LP代币对中...</span>
+            <span className="text-sm text-greyscale-400">解析LP代币对中...</span>
           )}
         </div>
         <Form {...form}>
@@ -491,7 +492,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                   <FormDescription className="space-y-1">
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0">
-                        共有 <span className="text-secondary">{formatTokenAmount(lpBalance || BigInt(0), 4)}</span>{' '}
+                        共有 <span className="text-data-personal">{formatTokenAmount(lpBalance || BigInt(0), 4)}</span>{' '}
                         {lpTokenSymbol}
                       </span>
                       <Button
@@ -515,7 +516,7 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 inline-flex items-center gap-1">
                         <span>
-                          推荐 <span className="text-secondary">{recommendedLpAmountText}</span> {lpTokenSymbol}
+                          推荐 <span className="text-data-personal">{recommendedLpAmountText}</span> {lpTokenSymbol}
                         </span>
                         <InfoTooltip title="推荐值说明" content={recommendedLpAmountHelp} className="p-0" />
                       </span>
@@ -603,9 +604,9 @@ const LpJoinPanel: React.FC<LpJoinPanelProps> = ({ actionId, actionInfo, extensi
 
       {/* 增加一个帮助信息 */}
       <div className="px-6 pt-0 pb-4">
-        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
-          <div className="space-y-1 text-gray-600">
+        <div className="text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
+          <div className="font-medium text-greyscale-700 mb-1">💡 小贴士</div>
+          <div className="space-y-1 text-greyscale-600">
             <div>• 加入代币为 {lpTokenSymbol}</div>
             <div>• 加入行动后，等待 {waitingBlocks.toString()} 区块数后可以取回LP</div>
           </div>

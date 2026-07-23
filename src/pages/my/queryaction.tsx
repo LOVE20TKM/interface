@@ -51,7 +51,7 @@ const ExitedActionRewardsPage: React.FC = () => {
             {/* <LeftTitle title="根据编号查看行动激励" /> */}
 
             {/* 行动ID输入框 */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div className="bg-card border border-greyscale-200 rounded-lg p-4 shadow-sm">
               <div className="flex flex-col space-y-3">
                 <label className="text-sm font-medium text-greyscale-700">查看某个行动的激励：</label>
                 <div className="flex space-x-3">
@@ -75,8 +75,8 @@ const ExitedActionRewardsPage: React.FC = () => {
             </div>
 
             {/* 说明文本 */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="text-sm text-blue-800">
+            <div className="bg-status-info-soft border border-status-info-border rounded-lg p-4">
+              <div className="text-sm text-status-info">
                 <p className="mb-2">
                   <strong>小贴士：</strong>
                 </p>

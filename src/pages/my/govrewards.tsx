@@ -149,12 +149,12 @@ const GovRewardsPage: React.FC = () => {
             <LeftTitle title="铸造治理激励" />
 
             {endRound === BigInt(0) && currentRound !== undefined ? (
-              <div className="text-center text-gray-500 py-4">当前还不能铸造激励，请耐心等待</div>
+              <div className="text-center text-greyscale-500 py-4">当前还不能铸造激励，请耐心等待</div>
             ) : (
               <>
                 <table className="table w-full table-auto">
                   <thead>
-                    <tr className="border-b border-gray-200">
+                    <tr className="border-b border-greyscale-200">
                       <th>轮次</th>
                       <th className="text-center px-1">总激励</th>
                       <th className="text-center px-2">
@@ -189,13 +189,13 @@ const GovRewardsPage: React.FC = () => {
                   <tbody>
                     {rewardList.length === 0 && !isLoadingRewards ? (
                       <tr>
-                        <td colSpan={3} className="text-center text-sm text-gray-500 py-4">
+                        <td colSpan={3} className="text-center text-sm text-greyscale-500 py-4">
                           暂无数据
                         </td>
                       </tr>
                     ) : (
                       rewardList.map((item) => (
-                        <tr key={item.round.toString()} className="border-b border-gray-200">
+                        <tr key={item.round.toString()} className="border-b border-greyscale-200">
                           <td>{token ? formatRoundForDisplay(item.round, token).toString() : '-'}</td>
                           <td className="text-center px-1">{formatTokenAmount(item.reward || BigInt(0))}</td>
                           <td className="text-center px-2 bg-greyscale-100">
@@ -230,9 +230,9 @@ const GovRewardsPage: React.FC = () => {
                   {isLoadingRewards ? (
                     <LoadingIcon />
                   ) : hasMoreRewards ? (
-                    <span className="text-sm text-gray-500">加载更多...</span>
+                    <span className="text-sm text-greyscale-500">加载更多...</span>
                   ) : (
-                    <span className="text-sm text-gray-500">没有更多激励</span>
+                    <span className="text-sm text-greyscale-500">没有更多激励</span>
                   )}
                 </div>
               </>

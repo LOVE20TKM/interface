@@ -81,7 +81,7 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
       <div className="stats w-full grid grid-cols-2 divide-x-0 ">
         <div className="stat place-items-center pt-0 pb-1 pl-1">
           <div className="stat-title text-sm">我的治理票数</div>
-          <div className="stat-value text-xl text-secondary">
+          <div className="stat-value text-xl text-data-personal">
             {isPendingAccountStakeStatus ? <LoadingIcon /> : formatTokenAmount(validGovVotes || BigInt(0))}
           </div>
           <div className="stat-desc text-xs mb-2 mt-1">
@@ -91,10 +91,10 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
         <div className="stat place-items-center pt-0 pb-1 pl-1">
           <div className="stat-title text-sm">我承诺的解锁期</div>
           <div className="stat-value text-lg">
-            <span className="text-secondary">
+            <span className="text-data-personal">
               {isPendingAccountStakeStatus ? <LoadingIcon /> : `${promisedWaitingPhases || BigInt(0)} `}
             </span>
-            <span className="text-sm text-gray-600"> 阶段</span>
+            <span className="text-sm text-greyscale-600"> 阶段</span>
           </div>
           <div className="stat-desc text-xs mb-2 mt-1">{`${formatPhaseText(
             Number(promisedWaitingPhases || BigInt(0)),
@@ -105,7 +105,7 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
       <div className="stats w-full grid grid-cols-2 divide-x-0">
         <div className="stat place-items-center pt-0 pb-1 pl-1">
           <div className="stat-title text-sm flex items-center">我的治理票占比</div>
-          <div className="stat-value text-xl text-secondary">
+          <div className="stat-value text-xl text-data-personal">
             {isPendingGovData || isPendingGovData ? (
               <LoadingIcon />
             ) : (
@@ -120,7 +120,7 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
         </div>
         <div className="stat place-items-center pt-0 pb-1 pl-1">
           <div className="stat-title text-sm flex items-center">加速激励质押占比</div>
-          <div className="stat-value text-xl text-secondary">
+          <div className="stat-value text-xl text-data-personal">
             {isPendingGovRewards || !currentRound ? (
               <LoadingIcon />
             ) : tokenStakedPercentage > 0 ? (
@@ -143,7 +143,7 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
         validGovVotes <= BigInt(0) &&
         govVotes > BigInt(0) && (
           <div className="text-sm mb-4 text-greyscale-500 text-center">
-            <div className="text-red-500">当前 sl 或 st 代币余额不足，导致有效治理票为0，请及时补足</div>
+            <div className="text-status-error">当前 sl 或 st 代币余额不足，导致有效治理票为0，请及时补足</div>
           </div>
         )}
 

@@ -149,7 +149,7 @@ const _GroupOPSetDelegate: React.FC<GroupOPSetDelegatedProps> = ({
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载参数中...</p>
+        <p className="mt-4 text-greyscale-600">加载参数中...</p>
       </div>
     );
   }
@@ -157,7 +157,7 @@ const _GroupOPSetDelegate: React.FC<GroupOPSetDelegatedProps> = ({
   if (delegatedVerifier === undefined) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">未找到扩展参数</p>
+        <p className="text-status-error">未找到扩展参数</p>
       </div>
     );
   }
@@ -173,15 +173,15 @@ const _GroupOPSetDelegate: React.FC<GroupOPSetDelegatedProps> = ({
 
         {/* 当前代理信息 */}
         {hasDelegated && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="text-sm text-blue-800 mb-2">当前打分代理:</div>
+          <div className="bg-status-info-soft border border-status-info-border rounded-lg p-4">
+            <div className="text-sm text-status-info mb-2">当前打分代理:</div>
             <div className="flex items-center gap-3">
               <AddressWithCopyButton address={delegatedVerifier} showCopyButton={true} />
               <button
                 type="button"
                 onClick={handleCancelDelegated}
                 disabled={isPendingSet || isConfirmingSet || isConfirmedSet}
-                className="text-sm text-blue-600 hover:text-blue-800 underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
+                className="text-sm text-status-info hover:text-status-info underline disabled:text-greyscale-400 disabled:no-underline disabled:cursor-not-allowed"
               >
                 取消代理
               </button>
@@ -225,9 +225,9 @@ const _GroupOPSetDelegate: React.FC<GroupOPSetDelegatedProps> = ({
         </Form>
 
         {/* 说明 */}
-        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 打分代理说明</div>
-          <div className="space-y-1 text-gray-600">
+        <div className="text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
+          <div className="font-medium text-greyscale-700 mb-1">💡 打分代理说明</div>
+          <div className="space-y-1 text-greyscale-600">
             <div>• 打分代理可以代替您对链群进行验证打分</div>
             <div>• 代理人不需要是链群所有者</div>
             <div>• 可以随时更换或取消代理</div>

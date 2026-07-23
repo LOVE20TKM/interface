@@ -25,6 +25,7 @@ import { extractErrorMessage } from '@/src/errors/contractErrorParser';
 import { buildGlobalErrorInfo } from '@/src/errors/globalErrorInfo';
 import { takeRouteLoadingSuppression } from '@/src/lib/routeLoading';
 import { shouldHandleZapQuoteErrorLocally } from '@/src/lib/zapQuoteError';
+import { applyTheme, resolveTheme, THEME_STORAGE_KEY } from '@/src/lib/theme';
 import * as Sentry from '@sentry/nextjs';
 
 import 'core-js/stable';
@@ -144,6 +145,17 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   // iOS钱包环境页面恢复功能
   usePageRecovery();
+
+  useEffect(() => {
+    const handleThemeStorage = (event: StorageEvent) => {
+      if (event.key === THEME_STORAGE_KEY) {
+        applyTheme(resolveTheme(event.newValue), false);
+      }
+    };
+
+    window.addEventListener('storage', handleThemeStorage);
+    return () => window.removeEventListener('storage', handleThemeStorage);
+  }, []);
 
   useEffect(() => {
     setMounted(true);

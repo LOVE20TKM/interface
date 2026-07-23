@@ -280,7 +280,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载参数中...</p>
+        <p className="mt-4 text-greyscale-600">加载参数中...</p>
       </div>
     );
   }
@@ -288,7 +288,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
   if (!groupDetail || !actionParams) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">未找到扩展参数</p>
+        <p className="text-status-error">未找到扩展参数</p>
       </div>
     );
   }
@@ -310,7 +310,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    链群容量上限 <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                    链群容量上限 <span className="text-greyscale-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="0 为不限制" className="!ring-secondary-foreground" {...field} />
@@ -347,7 +347,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                 <FormItem>
                   <FormLabel>
                     单地址最小参与代币数{' '}
-                    <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                    <span className="text-greyscale-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="请填写数量，必须大于0" className="!ring-secondary-foreground" {...field} />
@@ -366,7 +366,7 @@ const _GroupOPUpdate: React.FC<GroupOPUpdateProps> = ({ actionId, actionInfo, ex
                 <FormItem>
                   <FormLabel>
                     单地址最大参与代币数{' '}
-                    <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                    <span className="text-greyscale-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                   </FormLabel>
                   <FormControl>
                     <Input

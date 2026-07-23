@@ -86,7 +86,7 @@ const ChangeRound: React.FC<{
         <div className="px-4 flex-grow">
           {/* 跳转到指定轮次的输入框 */}
           <div className="flex items-center justify-center gap-2 mb-3 pb-3 border-b">
-            <span className="text-sm text-gray-600 whitespace-nowrap">跳到</span>
+            <span className="text-sm text-greyscale-600 whitespace-nowrap">跳到</span>
             <Input
               type="number"
               min={1}
@@ -101,12 +101,12 @@ const ChangeRound: React.FC<{
               placeholder={`1 - ${maxRoundNum}`}
               className="w-28 h-8 text-center"
             />
-            <span className="text-sm text-gray-600 whitespace-nowrap">轮</span>
+            <span className="text-sm text-greyscale-600 whitespace-nowrap">轮</span>
             <Button size="sm" variant="secondary" onClick={handleJumpConfirm} className="h-8">
               确认
             </Button>
           </div>
-          {inputError && <p className="text-red-500 text-sm mb-2 -mt-2 text-center w-full">{inputError}</p>}
+          {inputError && <p className="text-status-error text-sm mb-2 -mt-2 text-center w-full">{inputError}</p>}
 
           {/* 轮次列表：最多显示 MAX_DISPLAY_ROUNDS 条 */}
           <div className="max-h-64 overflow-y-auto">
@@ -116,7 +116,7 @@ const ChangeRound: React.FC<{
                 <Button
                   key={round}
                   variant="ghost"
-                  className="w-full p-2 text-center rounded-none hover:bg-gray-100 touch-manipulation"
+                  className="w-full p-2 text-center rounded-none hover:bg-greyscale-100 touch-manipulation"
                   onPointerDown={(e) => {
                     // 记录触摸起点，仅在触摸时处理滑动检测
                     if (e.pointerType === 'touch') {
@@ -157,7 +157,7 @@ const ChangeRound: React.FC<{
             })}
             {/* 如果总轮次超过显示数量，显示提示 */}
             {maxRoundNum > MAX_DISPLAY_ROUNDS && (
-              <p className="text-center text-gray-400 text-sm py-2">
+              <p className="text-center text-greyscale-400 text-sm py-2">
                 仅显示最近 {MAX_DISPLAY_ROUNDS} 轮，更早轮次请使用上方输入框跳转
               </p>
             )}

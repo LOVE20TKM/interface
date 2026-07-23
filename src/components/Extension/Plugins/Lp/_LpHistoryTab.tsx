@@ -95,7 +95,7 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
 
   if (error) {
     return (
-      <div className="text-center text-red-500 py-8">
+      <div className="text-center text-status-error py-8">
         <p>加载失败：{error.message || '获取数据失败'}</p>
       </div>
     );
@@ -146,7 +146,7 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
         <div className="overflow-x-auto mt-4">
           <table className="table w-full">
             <thead>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-greyscale-100">
                 <th className="px-0 text-left"> </th>
                 <th className="px-1 text-left">地址</th>
                 <th className="px-1 text-right">溢出销毁激励</th>
@@ -157,7 +157,7 @@ const LpHistoryTab: React.FC<LpHistoryTabProps> = ({
               {sortedParticipants.map((participant, index) => (
                 <tr
                   key={participant.address}
-                  className={`border-b border-gray-100 ${participant.address === account ? 'text-secondary' : ''}`}
+                  className={`border-b border-greyscale-100 ${participant.address === account ? 'text-data-personal' : ''}`}
                 >
                   <td className="px-0 text-sm text-left text-greyscale-500">{index + 1}</td>
                   <td className="px-1">

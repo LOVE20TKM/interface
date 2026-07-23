@@ -287,13 +287,13 @@ const MyGroupsPage: React.FC = () => {
                 return (
                   <section
                     key={group.groupId.toString()}
-                    className={`border rounded-lg overflow-hidden bg-white shadow-sm ${
-                      isGroupActivated ? "border-secondary/25" : "border-gray-200"
+                    className={`border rounded-lg overflow-hidden bg-card shadow-sm ${
+                      isGroupActivated ? "border-secondary/25" : "border-greyscale-200"
                     }`}
                   >
                     <div
                       className={`w-full flex items-stretch justify-between gap-2 ${
-                        isGroupActivated ? "bg-secondary/5" : "bg-gray-50"
+                        isGroupActivated ? "bg-secondary/5" : "bg-greyscale-50"
                       }`}
                     >
                       <button
@@ -305,19 +305,19 @@ const MyGroupsPage: React.FC = () => {
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span
-                            className={`shrink-0 rounded border bg-white px-1.5 py-0.5 text-[11px] font-semibold ${
+                            className={`shrink-0 rounded border bg-card px-1.5 py-0.5 text-[11px] font-semibold ${
                               isGroupActivated
-                                ? "border-green-200 text-green-600"
+                                ? "border-status-success-border text-status-success"
                                 : isActivationStatusSyncing
-                                  ? "border-yellow-200 text-yellow-600"
-                                  : "border-gray-200 text-greyscale-500"
+                                  ? "border-status-warning-border text-status-warning"
+                                  : "border-greyscale-200 text-greyscale-500"
                             }`}
                           >
                             {activationLabel}
                           </span>
                           <div className="min-w-0">
                             <div className="flex items-baseline gap-1 min-w-0">
-                              <span className="text-gray-500 text-xs shrink-0">#</span>
+                              <span className="text-greyscale-500 text-xs shrink-0">#</span>
                               <span
                                 className={`text-lg font-semibold shrink-0 ${
                                   isGroupActivated ? "text-secondary" : "text-greyscale-600"
@@ -360,12 +360,12 @@ const MyGroupsPage: React.FC = () => {
                       </div>
                     </div>
                     {isGroupActivated && expandedGroupIds.has(group.groupId.toString()) && (
-                      <div className="ml-4 bg-gray-50/60">
-                        <div className="divide-y divide-gray-100">
+                      <div className="ml-4 bg-greyscale-50/60">
+                        <div className="divide-y divide-greyscale-100">
                           {group.actions.map((action) => (
                             <div
                               key={`${action.actionId.toString()}-${action.groupId.toString()}`}
-                              className="pl-3 bg-white/90"
+                              className="pl-3 bg-card/90"
                             >
                               <ActionRow
                                 action={action}
@@ -462,7 +462,7 @@ const ServiceIncentiveRatioPanel: React.FC<ServiceIncentiveRatioPanelProps> = ({
 
   if (isPending) {
     return (
-      <div className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-3">
+      <div className="mt-3 rounded-lg border border-greyscale-200 bg-card px-3 py-3">
         <div className="text-xs text-greyscale-500">链群服务激励指数计算中</div>
       </div>
     );
@@ -470,7 +470,7 @@ const ServiceIncentiveRatioPanel: React.FC<ServiceIncentiveRatioPanelProps> = ({
 
   if (error) {
     return (
-      <div className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-3">
+      <div className="mt-3 rounded-lg border border-greyscale-200 bg-card px-3 py-3">
         <div className="text-xs text-greyscale-500">链群服务激励统计暂不可用</div>
       </div>
     );
@@ -478,7 +478,7 @@ const ServiceIncentiveRatioPanel: React.FC<ServiceIncentiveRatioPanelProps> = ({
 
   if (!hasItems) {
     return (
-      <div className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-3">
+      <div className="mt-3 rounded-lg border border-greyscale-200 bg-card px-3 py-3">
         <div className="text-xs text-greyscale-500">无链群服务激励</div>
       </div>
     );
@@ -487,11 +487,11 @@ const ServiceIncentiveRatioPanel: React.FC<ServiceIncentiveRatioPanelProps> = ({
   const renderItem = (item: GroupServiceIncentiveRatioItem, communityLabel: string) => (
     <div
       key={`${communityLabel}-${item.actionId.toString()}`}
-      className="flex items-start justify-between gap-3 border-t border-gray-100 py-2 first:border-t-0 first:pt-0"
+      className="flex items-start justify-between gap-3 border-t border-greyscale-100 py-2 first:border-t-0 first:pt-0"
     >
       <div className="min-w-0">
         <div className="break-words text-sm font-medium text-greyscale-800">
-          <span className="font-semibold text-secondary">No.{item.actionId.toString()}</span> {item.actionTitle}
+          <span className="font-semibold text-data-public">No.{item.actionId.toString()}</span> {item.actionTitle}
         </div>
         <div className="mt-1 text-xs text-greyscale-500">
           {getCommunityLabel(item, communityLabel)} · 预计铸币{" "}
@@ -501,10 +501,10 @@ const ServiceIncentiveRatioPanel: React.FC<ServiceIncentiveRatioPanelProps> = ({
         </div>
       </div>
       <div className="shrink-0 text-right">
-        <div className="text-sm font-semibold text-secondary">
+        <div className="text-sm font-semibold text-data-personal">
           约 {formatServiceTokensPerHundred(item.ratioBasisPoints)}
         </div>
-        <div className={`mt-1 text-xs ${item.isJoined ? "text-green-600" : "text-greyscale-400"}`}>
+        <div className={`mt-1 text-xs ${item.isJoined ? "text-status-success" : "text-greyscale-400"}`}>
           {item.isJoined ? `已加入 #${item.joinedRound.toString()}` : "未加入"}
         </div>
       </div>
@@ -512,27 +512,27 @@ const ServiceIncentiveRatioPanel: React.FC<ServiceIncentiveRatioPanelProps> = ({
   );
 
   return (
-    <section className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-3">
+    <section className="mt-3 rounded-lg border border-greyscale-200 bg-card px-3 py-3">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-xs text-greyscale-500">链群服务激励指数</div>
-          <div className="mt-1 text-4xl font-bold leading-none text-secondary">{totalServiceTokensPerHundred}</div>
+          <div className="mt-1 text-4xl font-bold leading-none text-data-personal">{totalServiceTokensPerHundred}</div>
         </div>
       </div>
       <p className="mt-2 text-sm leading-6 text-greyscale-700">
         链群行动者每铸造 100 个代币，链群服务者最多获得约 {totalServiceTokensPerHundred} 个代币激励。
       </p>
-      <div className="mt-3 border-t border-gray-100 pt-2">
+      <div className="mt-3 border-t border-greyscale-100 pt-2">
         <button
           type="button"
           className="group flex w-full items-center justify-end text-left"
           onClick={() => setIsDetailsOpen((prev) => !prev)}
           aria-expanded={isDetailsOpen}
         >
-          <span className="inline-flex max-w-full items-center gap-1.5 rounded-md px-2 py-1 text-xs text-greyscale-500 transition-colors group-hover:bg-gray-50 group-hover:text-greyscale-700">
+          <span className="inline-flex max-w-full items-center gap-1.5 rounded-md px-2 py-1 text-xs text-greyscale-500 transition-colors group-hover:bg-greyscale-50 group-hover:text-greyscale-700">
             <span className="whitespace-nowrap">
               已加入{" "}
-              <span className="font-semibold text-secondary">
+              <span className="font-semibold text-data-personal">
                 {joinedItemsCount}/{allItems.length}
               </span>{" "}
               个链群服务激励行动
@@ -632,7 +632,7 @@ const ActionRow: React.FC<ActionRowProps> = ({ action, symbol, tokenAddress, ver
         <div className="min-w-0">
           <div className="flex items-baseline gap-1">
             <span className="text-greyscale-400 text-sm">No.</span>
-            <span className="text-secondary text-base font-bold">{action.actionId.toString()}</span>
+            <span className="text-data-public text-base font-bold">{action.actionId.toString()}</span>
             <Link
               href={detailHref}
               className="font-medium text-greyscale-800 break-words hover:text-secondary hover:underline underline-offset-2"
@@ -736,12 +736,12 @@ const ActivateActionDialog: React.FC<ActivateActionDialogProps> = ({
                     <div className="min-w-0">
                       <div className="flex items-baseline gap-1">
                         <span className="text-greyscale-400 text-sm">No.</span>
-                        <span className="text-secondary text-base font-bold">{action.actionId.toString()}</span>
+                        <span className="text-data-public text-base font-bold">{action.actionId.toString()}</span>
                         <span className="font-medium text-greyscale-800 break-words">{action.actionTitle}</span>
                       </div>
                     </div>
                     {isActivated ? (
-                      <span className="shrink-0 rounded bg-gray-100 px-2 py-1 text-xs text-greyscale-500">已激活</span>
+                      <span className="shrink-0 rounded bg-greyscale-100 px-2 py-1 text-xs text-greyscale-500">已激活</span>
                     ) : (
                       <ChevronRight className="h-5 w-5 shrink-0 text-greyscale-400" />
                     )}
@@ -752,7 +752,7 @@ const ActivateActionDialog: React.FC<ActivateActionDialogProps> = ({
                   return (
                     <div
                       key={action.actionId.toString()}
-                      className="flex cursor-not-allowed items-center justify-between gap-3 p-3 bg-gray-50 opacity-70"
+                      className="flex cursor-not-allowed items-center justify-between gap-3 p-3 bg-greyscale-50 opacity-70"
                     >
                       {content}
                     </div>

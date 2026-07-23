@@ -75,7 +75,7 @@ const GovPublicTabs: React.FC<GovPublicTabsProps> = ({ actionId, currentRound, a
   };
 
   return (
-    <div className="bg-white rounded-lg">
+    <div className="bg-card rounded-lg">
       {/* 子Tab导航 */}
       <div className="flex bg-muted rounded-lg p-1 mb-4 mx-16">
         {subTabs.map((subTab) => (
@@ -84,8 +84,8 @@ const GovPublicTabs: React.FC<GovPublicTabsProps> = ({ actionId, currentRound, a
             onClick={() => handleSubTabChange(subTab.key)}
             className={`flex-1 px-2 py-1 text-sm font-medium rounded-md transition-all duration-200 ${
               activeSubTab === subTab.key
-                ? 'bg-white text-secondary shadow-sm'
-                : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
+                ? 'bg-card text-secondary shadow-sm'
+                : 'text-greyscale-500 hover:text-greyscale-800 hover:bg-greyscale-50'
             }`}
           >
             {subTab.label}

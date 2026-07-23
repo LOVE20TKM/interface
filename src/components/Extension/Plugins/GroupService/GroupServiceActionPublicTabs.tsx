@@ -170,7 +170,7 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
         </div>
       ) : !sortedRewards || sortedRewards.length === 0 ? (
         selectedRound > BigInt(0) && (
-          <div className="text-center text-sm text-greyscale-400 p-8 border rounded-lg bg-gray-50">
+          <div className="text-center text-sm text-greyscale-400 p-8 border rounded-lg bg-greyscale-50">
             本轮暂无激励数据
           </div>
         )
@@ -178,7 +178,7 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
         <div className="overflow-x-auto">
           <table className="table w-full">
             <thead>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-greyscale-100">
                 <th className="px-1 text-left">No.</th>
                 <th className="px-1 text-center">地址</th>
                 <th className="px-1 text-center">链群铸币量</th>
@@ -189,7 +189,7 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
               {sortedRewards.map((item, index) => (
                 <tr
                   key={item.account}
-                  className={`border-b border-gray-100 ${item.account === account ? 'bg-blue-50/50' : ''}`}
+                  className={`border-b border-greyscale-100 ${item.account === account ? 'bg-status-info-soft' : ''}`}
                 >
                   <td className="px-1 text-greyscale-400">{index + 1}</td>
                   <td className="px-1">
@@ -230,7 +230,7 @@ const GroupServiceActionPublicTabs: React.FC<GroupServiceActionPublicTabsProps> 
                   <div className="font-mono text-sm">{formatTokenAmount(totalGeneratedReward)}</div>
                 </td>
                 <td className="px-1 text-center">
-                  <div className="font-mono text-secondary">{formatTokenAmount(totalReward)}</div>
+                  <div className="font-mono text-data-public">{formatTokenAmount(totalReward)}</div>
                   {/* <div className="text-greyscale-500 text-xs">(100%)</div> */}
                 </td>
               </tr>

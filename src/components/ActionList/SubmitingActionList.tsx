@@ -165,7 +165,7 @@ const SubmitingActionList: React.FC<SubmitingActionListProps> = ({ currentRound 
               <Link href={`/submit/submit?id=${action.head.id}&symbol=${token.symbol}&submitted=false`}>
                 <CardHeader className="px-3 pt-2 pb-1 flex-row justify-start items-baseline">
                   <span className="text-greyscale-400 text-sm">{`No.`}</span>
-                  <span className="text-secondary text-xl font-bold mr-2">{String(action.head.id)}</span>
+                  <span className="text-data-public text-xl font-bold mr-2">{String(action.head.id)}</span>
                   <span className="font-bold text-greyscale-800">{`${action.body.title}`}</span>
                 </CardHeader>
                 <CardContent className="px-3 pt-1 pb-2">

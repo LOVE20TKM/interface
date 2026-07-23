@@ -43,7 +43,7 @@
 //       <LeftTitle title="我的服务数据" />
 
 //       {/* 行动者参与总量和链群数量 */}
-//       <div className="stats w-full mt-2 grid grid-cols-2 bg-gray-50 rounded-lg pt-2 pb-1 border border-gray-200">
+//       <div className="stats w-full mt-2 grid grid-cols-2 bg-greyscale-50 rounded-lg pt-2 pb-1 border border-greyscale-200">
 //         <div className="stat place-items-center p-1">
 //           <div className="stat-title text-sm">行动者参与总量</div>
 //           <div className="stat-value h-6 flex items-center">

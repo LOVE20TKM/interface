@@ -42,10 +42,10 @@ const AssetItem: React.FC<AssetItemProps> = ({
 }) => {
   return (
     <div className={`flex flex-col justify-center px-4 py-4 min-w-0 ${className || ''}`}>
-      <div className="text-center text-xl font-semibold break-all">
+      <div className="text-center text-xl font-semibold text-data-personal break-all">
         {isLoading ? <LoadingIcon /> : formatTokenAmount(value)}
       </div>
-      <div className="mt-2 flex items-center justify-center gap-1 text-center text-xs font-mono leading-5 text-gray-500 break-words min-w-0">
+      <div className="mt-2 flex items-center justify-center gap-1 text-center text-xs font-mono leading-5 text-greyscale-500 break-words min-w-0">
         <span className="break-all">{title}</span>
         {tokenAddress && tokenSymbol && tokenDecimals !== undefined && (
           <AddToMetamask
@@ -134,19 +134,19 @@ const MyTokenPanel: React.FC<{ token: Token | null | undefined }> = ({ token }) 
           <Link href={`/token/transfer?symbol=${token.symbol}`}>转账</Link>
         </Button>
       </div>
-      <div className="mt-2 overflow-hidden rounded-lg bg-gray-100">
+      <div className="mt-2 overflow-hidden rounded-lg bg-greyscale-100">
         <div className="grid grid-cols-2">
           <AssetItem
             title={nativeSymbol}
             value={nativeBalance?.value || BigInt(0)}
             isLoading={isLoadingNativeBalance}
-            className="border-b border-r border-gray-200"
+            className="border-b border-r border-greyscale-200"
           />
           <AssetItem
             title={usdtSymbol}
             value={usdtBalance || BigInt(0)}
             isLoading={isPendingUsdtBalance}
-            className="border-b border-gray-200"
+            className="border-b border-greyscale-200"
             tokenAddress={usdtAddress}
             tokenSymbol={usdtSymbol}
             tokenDecimals={18}
@@ -155,7 +155,7 @@ const MyTokenPanel: React.FC<{ token: Token | null | undefined }> = ({ token }) 
             title={token.symbol}
             value={balance || BigInt(0)}
             isLoading={isPendingBalance}
-            className="border-b border-r border-gray-200"
+            className="border-b border-r border-greyscale-200"
             tokenAddress={token.address as `0x${string}`}
             tokenSymbol={token.symbol}
             tokenDecimals={token.decimals}
@@ -164,7 +164,7 @@ const MyTokenPanel: React.FC<{ token: Token | null | undefined }> = ({ token }) 
             title={token.parentTokenSymbol}
             value={parentTokenBalance || BigInt(0)}
             isLoading={isPendingParentTokenBalance}
-            className="border-b border-gray-200"
+            className="border-b border-greyscale-200"
             tokenAddress={token.parentTokenAddress as `0x${string}`}
             tokenSymbol={token.parentTokenSymbol}
             tokenDecimals={token.decimals}
@@ -173,7 +173,7 @@ const MyTokenPanel: React.FC<{ token: Token | null | undefined }> = ({ token }) 
             title={`LP(${token.symbol}/${token.parentTokenSymbol})`}
             value={parentLpBalance || BigInt(0)}
             isLoading={isLoadingParentLpBalance}
-            className="border-r border-gray-200"
+            className="border-r border-greyscale-200"
             tokenAddress={token.uniswapV2PairAddress !== ZERO_ADDRESS ? (token.uniswapV2PairAddress as `0x${string}`) : undefined}
             tokenSymbol={`LP(${token.symbol}/${token.parentTokenSymbol})`}
             tokenDecimals={18}

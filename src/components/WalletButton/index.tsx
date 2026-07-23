@@ -19,7 +19,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Wallet, Copy, LogOut, ChevronDown, Check, Loader2, ArrowUpLeft, List, Pin, Info } from 'lucide-react';
+import { Wallet, Copy, LogOut, ChevronDown, Check, Loader2, ArrowUpLeft, List, Pin, Info, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
@@ -34,6 +34,8 @@ import { NavigationUtils } from '@/src/lib/navigationUtils';
 import { useChildTokensCount } from '@/src/hooks/contracts/useLOVE20Launch';
 import { useChildTokensByPage, useTokenDetails } from '@/src/hooks/contracts/useLOVE20TokenViewer';
 import { getDefaultTokenSwitchPathname, getTokenSwitchRule } from '@/src/config/tokenSwitchRoutes';
+import { THEMES } from '@/src/lib/theme';
+import { useTheme } from '@/src/hooks/useTheme';
 
 interface WalletButtonProps {
   className?: string;
@@ -234,7 +236,7 @@ function TokenSwitchDrawer({
           className="min-h-0 flex-1 touch-pan-y space-y-2 overflow-y-auto overscroll-contain px-4 pb-2 [-webkit-overflow-scrolling:touch]"
         >
           {tokens.length === 0 && !isLoading && !error && (
-            <div className="py-8 text-center text-sm text-gray-400">暂无可选择的代币</div>
+            <div className="py-8 text-center text-sm text-greyscale-400">暂无可选择的代币</div>
           )}
 
           {tokens.map((token) => (
@@ -242,11 +244,11 @@ function TokenSwitchDrawer({
               key={token.address}
               type="button"
               onClick={() => handleSelect(token)}
-              className="flex w-full items-center justify-between gap-3 rounded-lg border border-greyscale-200 bg-white px-3 py-3 text-left transition-colors hover:bg-greyscale-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+              className="flex w-full items-center justify-between gap-3 rounded-lg border border-greyscale-200 bg-card px-3 py-3 text-left transition-colors hover:bg-greyscale-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
             >
               <span className="min-w-0">
-                <span className="block truncate font-mono text-sm font-semibold text-gray-900">{token.symbol}</span>
-                <span className="block truncate text-xs text-gray-500">{token.name}</span>
+                <span className="block truncate font-mono text-sm font-semibold text-greyscale-900">{token.symbol}</span>
+                <span className="block truncate text-xs text-greyscale-500">{token.name}</span>
               </span>
               <span className={cn('shrink-0 text-xs', token.hasEnded ? 'text-greyscale-500' : 'text-secondary')}>
                 {token.hasEnded ? '已完成' : '发射中'}
@@ -255,13 +257,13 @@ function TokenSwitchDrawer({
           ))}
 
           {isLoading && (
-            <div className="flex items-center justify-center gap-2 py-4 text-sm text-gray-500">
+            <div className="flex items-center justify-center gap-2 py-4 text-sm text-greyscale-500">
               <Loader2 className="h-4 w-4 animate-spin" />
               加载中
             </div>
           )}
 
-          {error && <div className="py-4 text-center text-sm text-red-500">代币列表读取失败，请稍后重试</div>}
+          {error && <div className="py-4 text-center text-sm text-status-error">代币列表读取失败，请稍后重试</div>}
         </div>
 
         <SheetFooter className="flex-col gap-2 px-4 py-4 sm:flex-col sm:space-x-0">
@@ -281,6 +283,7 @@ function TokenSwitchDrawer({
 
 export function WalletButton({ className }: WalletButtonProps = {}) {
   const router = useRouter();
+  const { theme, selectTheme } = useTheme();
   const tokenContext = useContext(TokenContext);
   const token = tokenContext?.token;
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
@@ -302,6 +305,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   const [isCheckingEthereum, setIsCheckingEthereum] = useState(typeof window !== 'undefined' && !window.ethereum);
   const [recentTokens, setRecentTokens] = useState<RecentToken[]>([]);
   const [isTokenMenuOpen, setIsTokenMenuOpen] = useState(false);
+  const [isThemeSheetOpen, setIsThemeSheetOpen] = useState(false);
   const [tokenDrawer, setTokenDrawer] = useState<{
     title: string;
     parentTokenAddress?: `0x${string}`;
@@ -546,6 +550,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   );
   const hasOtherChildTokens = siblingTokenNum !== undefined && siblingTokenNum > BigInt(1);
   const isTokenInfoDisabled = isTokenSymbolPending || !tokenInfoHref;
+  const currentTheme = THEMES.find((item) => item.id === theme) ?? THEMES[0];
   const isChildTokensDisabled =
     isTokenSymbolPending || !token?.address || !isOnTargetChain || childTokenNum === undefined || childTokenNum === BigInt(0);
   const isReturnParentDisabled = isTokenSymbolPending || !parentTokenHref;
@@ -937,7 +942,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
   return (
     <div
       className={cn(
-        'inline-flex min-h-[48px] w-fit min-w-0 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border bg-white/60 backdrop-blur-sm transition-all duration-200 hover:border-blue-300 sm:max-w-[360px]',
+        'inline-flex min-h-[48px] w-fit min-w-0 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border bg-card/60 backdrop-blur-sm transition-all duration-200 hover:border-status-info-border sm:max-w-[360px]',
         className,
       )}
     >
@@ -947,7 +952,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
             type="button"
             disabled={isTokenSymbolPending}
             aria-busy={isTokenSymbolPending}
-            className="flex min-h-[48px] max-w-[145px] shrink-0 items-center border-r border-gray-200 px-3 py-1.5 text-left transition-colors hover:bg-blue-50/50 focus-visible:bg-blue-50/50 focus-visible:outline-none disabled:cursor-wait disabled:hover:bg-transparent"
+            className="flex min-h-[48px] max-w-[145px] shrink-0 items-center border-r border-greyscale-200 px-3 py-1.5 text-left transition-colors hover:bg-status-info-soft focus-visible:bg-status-info-soft focus-visible:outline-none disabled:cursor-wait disabled:hover:bg-transparent"
             title={isTokenSymbolPending ? '正在切换代币' : '最近访问代币'}
           >
             <span className="inline-flex h-8 min-w-0 max-w-full items-center justify-center gap-1.5 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 px-2.5 text-sm font-bold text-white">
@@ -962,23 +967,23 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
           className="rounded-md border p-0.5 shadow-lg"
           style={{ width: '10rem', minWidth: '10rem' }}
         >
-          <div className="px-2 py-1 text-xs font-medium text-gray-500">最近访问</div>
+          <div className="px-2 py-1 text-xs font-medium text-greyscale-500">最近访问</div>
           <div className="space-y-1">
             {visibleRecentTokens.length > 0 ? (
               visibleRecentTokens.map((recentToken) => {
                 return (
                   <div
                     key={recentToken.symbol}
-                    className="flex min-w-0 items-center gap-0.5 rounded-md transition-colors hover:bg-gray-50"
+                    className="flex min-w-0 items-center gap-0.5 rounded-md transition-colors hover:bg-greyscale-50"
                   >
                     <DropdownMenuItem
-                      className="flex min-h-12 min-w-0 flex-1 items-center rounded-md px-2 py-2.5 text-left focus:bg-gray-50 focus:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      className="flex min-h-12 min-w-0 flex-1 items-center rounded-md px-2 py-2.5 text-left focus:bg-greyscale-50 focus:text-greyscale-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
                       onSelect={() => switchToken(recentToken)}
                       title={recentToken.symbol}
                     >
                       <span className="min-w-0 flex-1">
                         <span className="flex min-w-0 items-center gap-1.5">
-                          <span className="truncate font-mono text-sm font-medium text-gray-900">
+                          <span className="truncate font-mono text-sm font-medium text-greyscale-900">
                             {recentToken.symbol}
                           </span>
                         </span>
@@ -987,8 +992,8 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                     <button
                       type="button"
                       className={cn(
-                        'mr-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-white hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300',
-                        recentToken.pinned && 'text-blue-600',
+                        'mr-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-greyscale-400 transition-colors hover:bg-card hover:text-status-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300',
+                        recentToken.pinned && 'text-status-info',
                       )}
                       onClick={(event) => {
                         event.preventDefault();
@@ -1004,7 +1009,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
                 );
               })
             ) : (
-              <div className="px-2 py-3 text-center text-sm text-gray-400">暂无其他访问记录</div>
+              <div className="px-2 py-3 text-center text-sm text-greyscale-400">暂无其他访问记录</div>
             )}
           </div>
 
@@ -1013,12 +1018,12 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
           {!isReturnParentDisabled && (
             <DropdownMenuItem
               onClick={goToParentTokenPage}
-              className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+              className="min-h-12 rounded-md px-2 py-2.5 text-sm text-greyscale-700 focus:bg-greyscale-50 focus:text-greyscale-900"
             >
-              <ArrowUpLeft className="mr-1.5 h-4 w-4 text-gray-500" />
+              <ArrowUpLeft className="mr-1.5 h-4 w-4 text-greyscale-500" />
               <span className="min-w-0 flex-1">返回父币</span>
               {token?.parentTokenSymbol && (
-                <span className="ml-auto max-w-[96px] truncate font-mono text-xs text-gray-400">
+                <span className="ml-auto max-w-[96px] truncate font-mono text-xs text-greyscale-400">
                   {token.parentTokenSymbol}
                 </span>
               )}
@@ -1028,31 +1033,31 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
           {showSiblingTokens && (
             <DropdownMenuItem
               onClick={openSiblingTokensDrawer}
-              className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+              className="min-h-12 rounded-md px-2 py-2.5 text-sm text-greyscale-700 focus:bg-greyscale-50 focus:text-greyscale-900"
             >
-              <List className="mr-1.5 h-4 w-4 text-gray-500" />
+              <List className="mr-1.5 h-4 w-4 text-greyscale-500" />
               <span className="min-w-0 flex-1">其他子币</span>
-              <span className="ml-auto text-xs text-gray-400">{(siblingTokenNum - BigInt(1)).toString()}</span>
+              <span className="ml-auto text-xs text-greyscale-400">{(siblingTokenNum - BigInt(1)).toString()}</span>
             </DropdownMenuItem>
           )}
 
           {!isChildTokensDisabled && (
             <DropdownMenuItem
               onClick={openChildTokensDrawer}
-              className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+              className="min-h-12 rounded-md px-2 py-2.5 text-sm text-greyscale-700 focus:bg-greyscale-50 focus:text-greyscale-900"
             >
-              <List className="mr-1.5 h-4 w-4 text-gray-500" />
+              <List className="mr-1.5 h-4 w-4 text-greyscale-500" />
               <span className="min-w-0 flex-1">子币列表</span>
-              <span className="ml-auto text-xs text-gray-400">{childTokenNum.toString()}</span>
+              <span className="ml-auto text-xs text-greyscale-400">{childTokenNum.toString()}</span>
             </DropdownMenuItem>
           )}
 
           <DropdownMenuItem
             disabled={isTokenInfoDisabled}
             onClick={goToTokenInfoPage}
-            className="min-h-12 rounded-md px-2 py-2.5 text-sm text-gray-700 focus:bg-gray-50 focus:text-gray-900"
+            className="min-h-12 rounded-md px-2 py-2.5 text-sm text-greyscale-700 focus:bg-greyscale-50 focus:text-greyscale-900"
           >
-            <Info className="mr-1.5 h-4 w-4 text-gray-500" />
+            <Info className="mr-1.5 h-4 w-4 text-greyscale-500" />
             <span className="min-w-0 flex-1">代币信息</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -1074,15 +1079,15 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="grid min-h-[48px] min-w-0 grid-cols-[minmax(0,1fr)_16px] grid-rows-2 items-center gap-x-2 gap-y-0.5 px-3 py-1.5 text-left transition-colors hover:bg-blue-50/40 focus-visible:bg-blue-50/40 focus-visible:outline-none sm:min-w-[190px]"
+            className="grid min-h-[48px] min-w-0 grid-cols-[minmax(0,1fr)_16px] grid-rows-2 items-center gap-x-2 gap-y-0.5 px-3 py-1.5 text-left transition-colors hover:bg-status-info-soft focus-visible:bg-status-info-soft focus-visible:outline-none sm:min-w-[190px]"
             title="钱包"
           >
             <div className="col-start-1 row-start-1 flex min-w-0 items-center justify-end gap-2">
-              <span className="min-w-0 truncate font-mono text-[13px] font-medium leading-none text-gray-900">
+              <span className="min-w-0 truncate font-mono text-[13px] font-medium leading-none text-greyscale-900">
                 {address ? shortenAddress(address) : ''}
               </span>
               {walletChainId && targetChainId && walletChainId !== targetChainId && (
-                <span className="inline-flex shrink-0 items-center rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-red-500">
+                <span className="inline-flex shrink-0 items-center rounded-full bg-status-error-soft px-1.5 py-0.5 text-[10px] font-medium leading-none text-status-error">
                   网络不匹配
                 </span>
               )}
@@ -1091,21 +1096,21 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
             <div className="col-start-1 row-start-2 flex min-w-0 items-center justify-end text-xs leading-none">
               {hasDefaultGroup ? (
                 <span className="inline-flex min-w-0 max-w-full items-baseline justify-end gap-1.5 text-right">
-                  <span className="min-w-0 truncate font-medium text-gray-600">{defaultGroupName || '...'}</span>
+                  <span className="min-w-0 truncate font-medium text-greyscale-600">{defaultGroupName || '...'}</span>
                 </span>
               ) : (
-                <span className="text-gray-400">未关联 NFT</span>
+                <span className="text-greyscale-400">未关联 NFT</span>
               )}
             </div>
 
-            <ChevronDown className="col-start-2 row-span-2 h-4 w-4 shrink-0 self-center text-gray-500" />
+            <ChevronDown className="col-start-2 row-span-2 h-4 w-4 shrink-0 self-center text-greyscale-500" />
           </button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" className="w-64 rounded-xl border p-2 shadow-xl">
         <div className="px-3 py-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">钱包地址</span>
+            <span className="text-sm font-medium text-greyscale-700">钱包地址</span>
             {address && (
               // @ts-ignore
               <CopyToClipboard text={address} onCopy={handleCopyAddress}>
@@ -1125,7 +1130,7 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
               </CopyToClipboard>
             )}
           </div>
-          <p className="mt-1 font-mono text-xs text-gray-600 break-all">{address}</p>
+          <p className="mt-1 font-mono text-xs text-greyscale-600 break-all">{address}</p>
         </div>
 
         <DropdownMenuSeparator className="my-1" />
@@ -1135,41 +1140,102 @@ export function WalletButton({ className }: WalletButtonProps = {}) {
             (hasDefaultGroup ? (
               <button
                 type="button"
-                className="-mx-1 flex w-[calc(100%+0.5rem)] min-w-0 items-center justify-between gap-2 rounded-md px-1 py-2 text-left transition-colors hover:bg-gray-50"
+                className="-mx-1 flex w-[calc(100%+0.5rem)] min-w-0 items-center justify-between gap-2 rounded-md px-1 py-2 text-left transition-colors hover:bg-greyscale-50"
                 onClick={goToMyLove20NftPage}
                 title="前往我的NFT"
               >
                 <span className="inline-flex min-w-0 flex-1 items-baseline gap-1.5">
-                  <span className="min-w-0 truncate text-xs font-medium text-gray-800">{defaultGroupName || '...'}</span>
+                  <span className="min-w-0 truncate text-xs font-medium text-greyscale-800">{defaultGroupName || '...'}</span>
                 </span>
-                <span className="shrink-0 text-[11px] text-gray-400">查看NFT</span>
+                <span className="shrink-0 text-[11px] text-greyscale-400">查看NFT</span>
               </button>
             ) : (
               <button
                 type="button"
-                className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between gap-2 rounded-md px-1 py-2 text-left transition-colors hover:bg-gray-50"
+                className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between gap-2 rounded-md px-1 py-2 text-left transition-colors hover:bg-greyscale-50"
                 onClick={goToMyLove20NftPage}
                 title="前往我的NFT"
               >
-                <span className="text-xs text-gray-500">未关联 NFT</span>
+                <span className="text-xs text-greyscale-500">未关联 NFT</span>
                 <span className="text-xs font-medium text-secondary">去设置</span>
               </button>
             ))}
-          <div className={cn('flex w-full items-center justify-between gap-2 py-2', isGroupDefaultsEnabled && 'mt-1 border-t border-gray-100')}>
-            <span className="text-xs text-gray-500">{nativeBalanceSymbol} 余额</span>
-            <span className="min-w-0 truncate text-right text-xs font-medium text-gray-800">{nativeBalanceValue}</span>
+          <div className={cn('flex w-full items-center justify-between gap-2 py-2', isGroupDefaultsEnabled && 'mt-1 border-t border-greyscale-100')}>
+            <span className="text-xs text-greyscale-500">{nativeBalanceSymbol} 余额</span>
+            <span className="min-w-0 truncate text-right text-xs font-medium text-data-personal">{nativeBalanceValue}</span>
           </div>
         </div>
 
+        <DropdownMenuSeparator className="my-1" />
+
+        <DropdownMenuItem
+          onSelect={() => setIsThemeSheetOpen(true)}
+          className="min-h-12 rounded-md px-3 text-greyscale-700 focus:bg-greyscale-50 focus:text-greyscale-900"
+          aria-label={`主题，当前${currentTheme.label}，点击切换`}
+        >
+          <Palette className="h-4 w-4" />
+          <span>主题</span>
+          <span className="ml-auto flex items-center gap-1.5 text-xs text-greyscale-500">
+            <span
+              className="h-3.5 w-3.5 rounded-full border"
+              style={{ backgroundColor: currentTheme.swatch }}
+              aria-hidden="true"
+            />
+            {currentTheme.label}
+            <span className="text-greyscale-400">切换</span>
+            <ChevronDown className="h-3.5 w-3.5 -rotate-90" aria-hidden="true" />
+          </span>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator className="my-1" />
+
         <DropdownMenuItem
           onClick={handleDisconnect}
-          className="rounded-lg text-base text-red-600 focus:text-red-600 focus:bg-red-50"
+          className="rounded-lg text-base text-status-error focus:text-status-error focus:bg-status-error-soft"
         >
           <LogOut className="w-4 h-4 mr-3" />
           断开连接
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+
+      <Sheet open={isThemeSheetOpen} onOpenChange={setIsThemeSheetOpen}>
+        <SheetContent side="bottom" className="gap-0 rounded-t-lg px-4 pb-safe pt-5">
+          <SheetHeader className="text-left">
+            <SheetTitle>选择主题</SheetTitle>
+          </SheetHeader>
+          <div className="mx-auto mt-4 grid w-full max-w-lg gap-1" role="radiogroup" aria-label="主题">
+            {THEMES.map((item) => {
+              const selected = item.id === theme;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => {
+                    selectTheme(item.id);
+                    setIsThemeSheetOpen(false);
+                  }}
+                  className={cn(
+                    'flex min-h-12 w-full items-center gap-3 rounded-md px-3 text-left text-sm transition-colors',
+                    selected ? 'bg-greyscale-100 text-greyscale-900' : 'text-greyscale-600 hover:bg-greyscale-50 hover:text-greyscale-900',
+                  )}
+                >
+                  <span
+                    className="h-5 w-5 shrink-0 rounded-full border"
+                    style={{ backgroundColor: item.swatch }}
+                    aria-hidden="true"
+                  />
+                  <span className="font-medium">{item.label}</span>
+                  {selected && <Check className="ml-auto h-4 w-4 text-secondary" aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

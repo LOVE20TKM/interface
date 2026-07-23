@@ -108,7 +108,7 @@ const ActionPanelForSubmit: React.FC<ActionPanelForJoinProps> = ({ actionId, sub
             </Button>
           )}
         </div>
-        <div className="bg-gray-100 text-greyscale-500 rounded-lg p-4 text-sm mt-4 w-full">
+        <div className="bg-greyscale-100 text-greyscale-500 rounded-lg p-4 text-sm mt-4 w-full">
           <p className="mb-1">说明：</p>
           <p>1. 有效治理票数 ≥ 总治理票的{Number(process.env.NEXT_PUBLIC_SUBMIT_MIN_PER_THOUSAND) / 10}%，才能推举；</p>
           <p>2. 每轮次，1个地址最多可 创建/推举 1 个行动；</p>

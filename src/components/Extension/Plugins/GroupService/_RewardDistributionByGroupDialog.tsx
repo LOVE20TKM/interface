@@ -81,15 +81,15 @@ export default function _RewardDistributionByGroupDialog({
         </DialogHeader>
 
         {/* 行动和链群信息 */}
-        <div className="border rounded-lg p-3 bg-gray-50">
+        <div className="border rounded-lg p-3 bg-greyscale-50">
           <div className="flex items-baseline mb-2">
             <span className="text-greyscale-400 text-sm">{`No.`}</span>
-            <span className="text-secondary text-xl font-bold mr-2">{String(actionId)}</span>
+            <span className="text-data-public text-xl font-bold mr-2">{String(actionId)}</span>
             <span className="font-bold text-greyscale-800">{actionTitle}</span>
           </div>
-          <div className="text-gray-800">
-            <span className="text-gray-500 text-xs">链群 #</span>
-            <span className="text-secondary text-base font-semibold">{groupId.toString()}</span>{' '}
+          <div className="text-greyscale-800">
+            <span className="text-greyscale-500 text-xs">链群 #</span>
+            <span className="text-data-public text-base font-semibold">{groupId.toString()}</span>{' '}
             <span>{groupName || `链群 #${groupId}`}</span>
           </div>
         </div>
@@ -97,15 +97,15 @@ export default function _RewardDistributionByGroupDialog({
         {isPending ? (
           <div className="flex flex-col items-center justify-center py-12">
             <LoadingIcon />
-            <p className="mt-4 text-sm text-gray-600">加载分配明细...</p>
+            <p className="mt-4 text-sm text-greyscale-600">加载分配明细...</p>
           </div>
         ) : error ? (
-          <div className="text-center py-8 text-red-500">
+          <div className="text-center py-8 text-status-error">
             <p className="text-sm">加载失败，请稍后重试</p>
-            {error instanceof Error && <p className="text-xs mt-2 text-gray-500">{error.message}</p>}
+            {error instanceof Error && <p className="text-xs mt-2 text-greyscale-500">{error.message}</p>}
           </div>
         ) : !addrs || addrs.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-greyscale-500">
             <p className="text-sm">暂无分配明细</p>
           </div>
         ) : (
@@ -140,11 +140,11 @@ export default function _RewardDistributionByGroupDialog({
 
                 {/* 服务者保留金额 */}
                 {ownerAmount && ownerAmount > BigInt(0) && (
-                  <TableRow className="bg-gray-50 font-medium">
+                  <TableRow className="bg-greyscale-50 font-medium">
                     <TableCell className="px-3 py-2">
-                      <span className="text-sm text-gray-600">服务者保留</span>
+                      <span className="text-sm text-greyscale-600">服务者保留</span>
                     </TableCell>
-                    <TableCell className="px-3 py-2 text-right text-sm text-gray-600">
+                    <TableCell className="px-3 py-2 text-right text-sm text-greyscale-600">
                       {formatPercentage(ownerPercentage)}
                     </TableCell>
                     <TableCell className="px-3 py-2 text-right text-sm font-mono">
@@ -154,7 +154,7 @@ export default function _RewardDistributionByGroupDialog({
                 )}
 
                 {/* 汇总行 */}
-                <TableRow className="bg-gray-100 font-semibold">
+                <TableRow className="bg-greyscale-100 font-semibold">
                   <TableCell className="px-3 py-2">
                     <span className="text-sm">汇总</span>
                   </TableCell>

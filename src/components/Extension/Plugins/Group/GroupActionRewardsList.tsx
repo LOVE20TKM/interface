@@ -154,7 +154,7 @@ export const GroupActionRewardsList: React.FC<GroupActionRewardsListProps> = ({
       />
       <table className="table w-full table-auto">
         <thead>
-          <tr className="border-b border-gray-100">
+          <tr className="border-b border-greyscale-100">
             {enableBatchMint && <th className="w-10 text-center">选择</th>}
             <th>轮次</th>
             <th className="text-center">得分</th>
@@ -165,13 +165,13 @@ export const GroupActionRewardsList: React.FC<GroupActionRewardsListProps> = ({
         <tbody>
           {rewards.length === 0 && isLoading ? (
             <tr>
-              <td colSpan={columnCount} className="text-center text-sm text-gray-500 py-4">
+              <td colSpan={columnCount} className="text-center text-sm text-greyscale-500 py-4">
                 加载中...
               </td>
             </tr>
           ) : rewards.length === 0 ? (
             <tr>
-              <td colSpan={columnCount} className="text-center text-sm text-gray-500 py-4">
+              <td colSpan={columnCount} className="text-center text-sm text-greyscale-500 py-4">
                 该行动在指定轮次范围内没有获得激励
               </td>
             </tr>
@@ -202,7 +202,7 @@ export const GroupActionRewardsList: React.FC<GroupActionRewardsListProps> = ({
               return (
                 <tr
                   key={`reward-${item.round.toString()}`}
-                  className={index === rewards.length - 1 ? 'border-none' : 'border-b border-gray-100'}
+                  className={index === rewards.length - 1 ? 'border-none' : 'border-b border-greyscale-100'}
                 >
                   {enableBatchMint && (
                     <BatchSelectionCell

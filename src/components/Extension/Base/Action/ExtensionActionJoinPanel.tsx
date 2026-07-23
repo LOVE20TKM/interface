@@ -44,8 +44,8 @@ const ExtensionActionJoinPanel: React.FC<ExtensionActionJoinPanelProps> = ({
   // 如果是未知的扩展类型，显示暂不支持
   if (!extensionConfig) {
     return (
-      <div className="bg-white rounded-lg p-8">
-        <div className="text-center text-gray-500">
+      <div className="bg-card rounded-lg p-8">
+        <div className="text-center text-greyscale-500">
           <p>该扩展类型暂不支持行动加入</p>
         </div>
       </div>
@@ -69,8 +69,8 @@ const ExtensionActionJoinPanel: React.FC<ExtensionActionJoinPanelProps> = ({
 
     default:
       return (
-        <div className="bg-white rounded-lg p-8">
-          <div className="text-center text-gray-500">
+        <div className="bg-card rounded-lg p-8">
+          <div className="text-center text-greyscale-500">
             <p>该扩展类型暂不支持行动加入</p>
           </div>
         </div>

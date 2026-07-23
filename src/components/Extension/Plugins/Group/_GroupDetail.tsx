@@ -52,10 +52,10 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
 
   if (isPending || isPendingAccountsCount) {
     return (
-      <div className="bg-white rounded-lg p-8">
+      <div className="bg-card rounded-lg p-8">
         <div className="flex flex-col items-center py-8">
           <LoadingIcon />
-          <p className="mt-4 text-gray-600">加载链群详情...</p>
+          <p className="mt-4 text-greyscale-600">加载链群详情...</p>
         </div>
       </div>
     );
@@ -63,9 +63,9 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
 
   if (!groupDetail) {
     return (
-      <div className="bg-white rounded-lg p-8">
+      <div className="bg-card rounded-lg p-8">
         <div className="text-center py-12">
-          <p className="text-red-500">未找到链群详情</p>
+          <p className="text-status-error">未找到链群详情</p>
         </div>
       </div>
     );
@@ -84,7 +84,7 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
         {/* 链群描述 */}
         <div className="mt-6">
           <div className="text-sm mb-2">链群描述:</div>
-          <div className="leading-loose bg-gray-50 p-2 rounded-md">
+          <div className="leading-loose bg-greyscale-50 p-2 rounded-md">
             <LinkIfUrl text={groupDetail.description} preserveLineBreaks={true} />
           </div>
         </div>
@@ -106,7 +106,7 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
             </div>
 
             {groupDetail.maxCapacity > BigInt(0) && (
-              <div className="col-span-1 md:col-span-2  text-gray-600 bg-gray-100 rounded ">
+              <div className="col-span-1 md:col-span-2  text-greyscale-600 bg-greyscale-100 rounded ">
                 <div className="text-xs px-3 pt-2 pb-1">
                   剩余容量 {formatTokenAmount(groupDetail.remainingCapacity)} (
                   {formatPercentage(remainingCapacityRatio * 100)})
@@ -138,7 +138,7 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
             {/* 当链群设置的最大参与代币数与实际最大参与代币数不同时，显示提示信息 */}
             {groupDetail.maxJoinAmount !== groupDetail.actionMaxJoinAmount && (
               <div className="col-span-1 md:col-span-2">
-                <div className="text-xs text-gray-600 bg-gray-100 rounded px-3 py-2">
+                <div className="text-xs text-greyscale-600 bg-greyscale-100 rounded px-3 py-2">
                   扩展行动限制 最大参与代币数 {formatTokenAmount(groupDetail.actionMaxJoinAmount)}
                 </div>
               </div>
@@ -164,9 +164,9 @@ const _GroupDetail: React.FC<GroupDetailProps> = ({ extensionAddress, groupId })
         </div>
 
         {/* 说明 */}
-        {/* <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
-          <div className="space-y-1 text-gray-600">
+        {/* <div className="text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
+          <div className="font-medium text-greyscale-700 mb-1">💡 小贴士</div>
+          <div className="space-y-1 text-greyscale-600">
             <div>• 容量上限取决于服务者的治理票和质押量</div>
           </div>
         </div> */}

@@ -198,7 +198,7 @@ const GovQueryPanel = () => {
 
             {/* 错误显示 */}
             {(errorValidGovVotes || errorGovData) && hasQueried && (
-              <div className="text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
+              <div className="text-status-error text-sm bg-status-error-soft p-3 rounded-lg border border-status-error-border">
                 查询出错：{errorValidGovVotes?.message || errorGovData?.message || '请检查地址格式或稍后重试'}
               </div>
             )}
@@ -206,7 +206,7 @@ const GovQueryPanel = () => {
             {/* 查询结果显示 */}
             {hasQueried && queryAddress && (
               <div className="space-y-4">
-                <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                <div className="text-sm text-greyscale-600 bg-greyscale-50 p-3 rounded-lg">
                   <span className="font-medium">查询目标地址:</span>
                   <div className="font-mono text-xs mt-1 break-all">{queryAddress}</div>
                 </div>
@@ -215,28 +215,28 @@ const GovQueryPanel = () => {
                   <div className="flex justify-center p-8">
                     <div className="text-center">
                       <LoadingIcon />
-                      <p className="text-gray-500 mt-2">正在查询中...</p>
+                      <p className="text-greyscale-500 mt-2">正在查询中...</p>
                     </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* 治理票数 */}
-                    <div className="border rounded-lg p-6 bg-white">
-                      <div className="text-sm text-gray-600 mb-3">治理票数</div>
+                    <div className="border rounded-lg p-6 bg-card">
+                      <div className="text-sm text-greyscale-600 mb-3">治理票数</div>
                       <div className="flex items-center justify-between">
-                        <div className="text-2xl font-bold text-gray-900">
+                        <div className="text-2xl font-bold text-greyscale-900">
                           {formatTokenAmount(validGovVotes || BigInt(0))}
                         </div>
                         {/* @ts-ignore */}
                         <CopyToClipboard text={formatTokenAmount(validGovVotes || BigInt(0))} onCopy={handleCopyVotes}>
                           <button
-                            className="flex items-center justify-center p-2 rounded hover:bg-gray-100 focus:outline-none"
+                            className="flex items-center justify-center p-2 rounded hover:bg-greyscale-100 focus:outline-none"
                             aria-label="复制治理票数"
                           >
                             {copiedVotes ? (
-                              <Check className="h-4 w-4 text-green-600" />
+                              <Check className="h-4 w-4 text-status-success" />
                             ) : (
-                              <Copy className="h-4 w-4 text-gray-500" />
+                              <Copy className="h-4 w-4 text-greyscale-500" />
                             )}
                           </button>
                         </CopyToClipboard>
@@ -244,20 +244,20 @@ const GovQueryPanel = () => {
                     </div>
 
                     {/* 治理票占比 */}
-                    <div className="border rounded-lg p-6 bg-white">
-                      <div className="text-sm text-gray-600 mb-3">占总治理票比例</div>
+                    <div className="border rounded-lg p-6 bg-card">
+                      <div className="text-sm text-greyscale-600 mb-3">占总治理票比例</div>
                       <div className="flex items-center justify-between">
-                        <div className="text-2xl font-bold text-gray-900">{formatPercentage(governancePercentage)}</div>
+                        <div className="text-2xl font-bold text-greyscale-900">{formatPercentage(governancePercentage)}</div>
                         {/* @ts-ignore */}
                         <CopyToClipboard text={formatPercentage(governancePercentage)} onCopy={handleCopyPercentage}>
                           <button
-                            className="flex items-center justify-center p-2 rounded hover:bg-gray-100 focus:outline-none"
+                            className="flex items-center justify-center p-2 rounded hover:bg-greyscale-100 focus:outline-none"
                             aria-label="复制占比"
                           >
                             {copiedPercentage ? (
-                              <Check className="h-4 w-4 text-green-600" />
+                              <Check className="h-4 w-4 text-status-success" />
                             ) : (
-                              <Copy className="h-4 w-4 text-gray-500" />
+                              <Copy className="h-4 w-4 text-greyscale-500" />
                             )}
                           </button>
                         </CopyToClipboard>
@@ -268,9 +268,9 @@ const GovQueryPanel = () => {
 
                 {/* 说明信息 */}
                 {hasQueried && !isPendingValidGovVotes && !isPendingGovData && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-sm font-medium text-gray-700 mb-2">备注：</div>
-                    <div className="text-xs text-gray-500">票数为有效治理票；如果已经申请解除治理质押，则治理票为0</div>
+                  <div className="bg-greyscale-50 p-4 rounded-lg">
+                    <div className="text-sm font-medium text-greyscale-700 mb-2">备注：</div>
+                    <div className="text-xs text-greyscale-500">票数为有效治理票；如果已经申请解除治理质押，则治理票为0</div>
                   </div>
                 )}
               </div>

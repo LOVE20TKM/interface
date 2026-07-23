@@ -298,9 +298,9 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
                   <FormLabel className="text-greyscale-500 font-normal">
                     {myStakedAmount ? '' : '参与代币数:'}{' '}
                     {tokensFor100Percent > BigInt(0) && !myStakedAmount && (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-greyscale-500">
                         (100%概率抽中，至少需{' '}
-                        <span className="text-secondary">{formatTokenAmount(tokensFor100Percent, 4, 'ceil')}</span>
+                        <span className="text-data-public">{formatTokenAmount(tokensFor100Percent, 4, 'ceil')}</span>
                         代币)
                       </span>
                     )}
@@ -321,7 +321,7 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
                   <FormMessage />
                   <FormDescription className="flex items-center">
                     <span>
-                      共有 <span className="text-secondary">{formatTokenAmount(tokenBalance || BigInt(0))}</span>{' '}
+                      共有 <span className="text-data-personal">{formatTokenAmount(tokenBalance || BigInt(0))}</span>{' '}
                       {token?.symbol}
                     </span>
                     <Button
@@ -417,25 +417,25 @@ const SubmitJoin: React.FC<SubmitJoinProps> = ({ actionInfo, stakedAmount: mySta
         <div className="text-greyscale-500 text-sm">提示：加入行动后，可以随时取回参与代币，无等待期</div>
       </div>
       <div className="flex flex-col w-full p-4">
-        <div className="bg-blue-50/30 border-l-4 border-l-blue-50 rounded-r-lg p-4 mb-8 text-sm">
-          <div className="flex items-center gap-2 text-base font-bold text-blue-800 pb-2">
+        <div className="bg-status-info-soft border-l-4 border-l-status-info-border rounded-r-lg p-4 mb-8 text-sm">
+          <div className="flex items-center gap-2 text-base font-bold text-status-info pb-2">
             <HelpCircle className="w-4 h-4" />
             小贴士
           </div>
-          <div className="text-base font-bold text-blue-700 pt-2 pb-1">行动激励：</div>
-          <div className="text-sm text-blue-700">
+          <div className="text-base font-bold text-status-info pt-2 pb-1">行动激励：</div>
+          <div className="text-sm text-status-info">
             1、验证阶段会随机抽取地址验证打分，然后按得分比例给这些地址分配代币激励
           </div>
-          <div className="text-sm text-blue-700">
+          <div className="text-sm text-status-info">
             2、只有当1个行动获得的投票数，达到该轮总投票数
             {formatPercentage(Number(process.env.NEXT_PUBLIC_ACTION_REWARD_MIN_VOTE_PER_THOUSAND) / 10)}
             时，参与该行动才有激励
           </div>
-          <div className="text-base font-bold text-blue-700 pt-2 pb-1">参与代币：</div>
-          <div className="text-sm text-blue-700">1、参与代币越多，被选中验证并获得激励的概率越大</div>
-          <div className="text-sm text-blue-700">2、参与的代币可随时取回，如不取回则自动参与此行动的后续轮次</div>
-          <div className="text-base font-bold text-blue-700 pt-2 pb-1">加入限制：</div>
-          <div className="text-sm text-blue-700">
+          <div className="text-base font-bold text-status-info pt-2 pb-1">参与代币：</div>
+          <div className="text-sm text-status-info">1、参与代币越多，被选中验证并获得激励的概率越大</div>
+          <div className="text-sm text-status-info">2、参与的代币可随时取回，如不取回则自动参与此行动的后续轮次</div>
+          <div className="text-base font-bold text-status-info pt-2 pb-1">加入限制：</div>
+          <div className="text-sm text-status-info">
             每个行动阶段，最后{process.env.NEXT_PUBLIC_JOIN_END_PHASE_BLOCKS}
             个区块（约
             {formatSeconds(

@@ -45,12 +45,12 @@ export default function TokenTab() {
 
   return (
     <div className="px-4 pt-0 pb-3">
-      <div className="bg-gray-100 rounded-lg p-4 text-sm mt-4">
+      <div className="bg-greyscale-100 rounded-lg p-4 text-sm mt-4">
         <TokenLabel />
         <div className="mt-1 flex items-center" onClick={() => setIsOpen(true)}>
           <Info className="w-4 h-4 mr-1 text-greyscale-500 cursor-pointer" />
           <span className="text-sm text-greyscale-500 mr-1">已铸币量:</span>
-          <span className="text-sm text-secondary font-mono">
+          <span className="text-sm text-data-public font-mono">
             {isTotalSupplyPending ? <LoadingIcon /> : formatTokenAmount(totalSupply || BigInt(0))}
           </span>
         </div>
@@ -61,22 +61,22 @@ export default function TokenTab() {
           <DialogTrigger> </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogTitle>经济模型</DialogTitle>
-            <div className="px-12 pt-2 pb-4 text-gray-800">
+            <div className="px-12 pt-2 pb-4 text-greyscale-800">
               <p className="font-bold text-large mb-2">
                 代币总量：
-                <span>{formatTokenAmount(BigInt(TOKEN_CONFIG.totalSupply))}</span>
+                <span className="text-data-public">{formatTokenAmount(BigInt(TOKEN_CONFIG.totalSupply))}</span>
               </p>
               <p>
                 - 公平发射：
-                <span className="text-secondary">{formatTokenAmount(BigInt(TOKEN_CONFIG.fairLaunch))}</span> (10%)
+                <span className="text-data-public">{formatTokenAmount(BigInt(TOKEN_CONFIG.fairLaunch))}</span> (10%)
               </p>
               <p>
                 - 治理激励：
-                <span className="text-secondary">{formatTokenAmount(BigInt(TOKEN_CONFIG.govRewards))}</span> (45%)
+                <span className="text-data-public">{formatTokenAmount(BigInt(TOKEN_CONFIG.govRewards))}</span> (45%)
               </p>
               <p>
                 - 行动激励：
-                <span className="text-secondary">{formatTokenAmount(BigInt(TOKEN_CONFIG.actionRewards))}</span> (45%)
+                <span className="text-data-public">{formatTokenAmount(BigInt(TOKEN_CONFIG.actionRewards))}</span> (45%)
               </p>
             </div>
           </DialogContent>
@@ -89,22 +89,22 @@ export default function TokenTab() {
               <DrawerTitle>经济模型</DrawerTitle>
               <DrawerClose />
             </DrawerHeader>
-            <div className="px-12 pt-2 pb-4 text-gray-800 text-lg">
+            <div className="px-12 pt-2 pb-4 text-greyscale-800 text-lg">
               <p className="font-bold text-xl mb-2">
                 代币总量：
-                <span>{formatTokenAmount(BigInt(TOKEN_CONFIG.totalSupply))}</span>
+                <span className="text-data-public">{formatTokenAmount(BigInt(TOKEN_CONFIG.totalSupply))}</span>
               </p>
               <p>
                 - 公平发射：
-                <span className="text-secondary">{formatTokenAmount(BigInt(TOKEN_CONFIG.fairLaunch))}</span> (10%)
+                <span className="text-data-public">{formatTokenAmount(BigInt(TOKEN_CONFIG.fairLaunch))}</span> (10%)
               </p>
               <p>
                 - 治理激励：
-                <span className="text-secondary">{formatTokenAmount(BigInt(TOKEN_CONFIG.govRewards))}</span> (45%)
+                <span className="text-data-public">{formatTokenAmount(BigInt(TOKEN_CONFIG.govRewards))}</span> (45%)
               </p>
               <p>
                 - 行动激励：
-                <span className="text-secondary">{formatTokenAmount(BigInt(TOKEN_CONFIG.actionRewards))}</span> (45%)
+                <span className="text-data-public">{formatTokenAmount(BigInt(TOKEN_CONFIG.actionRewards))}</span> (45%)
               </p>
             </div>
             <DrawerFooter>

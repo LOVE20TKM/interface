@@ -100,7 +100,7 @@ const AddressesStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionI
       ) : (
         <table className="table w-full">
           <thead>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-greyscale-100">
               <th></th>
               <th>被抽中地址</th>
               <th className="px-1 text-right">获得验证票</th>
@@ -127,7 +127,7 @@ const AddressesStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionI
 
                 return (
                   <React.Fragment key={info.account}>
-                    <tr className={`border-b border-gray-100 ${info.account === account ? 'text-secondary' : ''}`}>
+                    <tr className={`border-b border-greyscale-100 ${info.account === account ? 'text-data-personal' : ''}`}>
                       <td className="px-1 w-8">
                         <button
                           onClick={() => toggleRow(info.account)}
@@ -152,7 +152,7 @@ const AddressesStatus: React.FC<VerifyAddressesProps> = ({ currentRound, actionI
                     </tr>
 
                     {actionInfo && isExpanded && (
-                      <tr className="border-b border-gray-100 bg-gray-50">
+                      <tr className="border-b border-greyscale-100 bg-greyscale-50">
                         <td></td>
                         <td colSpan={3} className="px-1 py-3">
                           <div className="text-sm text-greyscale-600">

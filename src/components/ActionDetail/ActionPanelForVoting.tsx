@@ -92,13 +92,15 @@ const ActionPanelForVote: React.FC<ActionPanelForVoteProps> = ({ actionId, onRou
         <div className="stats w-full border grid grid-cols-2 divide-x-0 mb-2">
           <div className="stat place-items-center">
             <div className="stat-title">我已投本行动票数</div>
-            <div className="stat-value text-2xl">
+            <div className="stat-value text-2xl text-data-personal">
               {isPendingVotesNumByAccountByActionId ? <LoadingIcon /> : formatTokenAmount(votesNumByAccountByActionId)}
             </div>
           </div>
           <div className="stat place-items-center">
             <div className="stat-title">我的剩余票数</div>
-            <div className="stat-value text-2xl">{isLoading ? <LoadingIcon /> : formatTokenAmount(myLeftVotes)}</div>
+            <div className="stat-value text-2xl text-data-personal">
+              {isLoading ? <LoadingIcon /> : formatTokenAmount(myLeftVotes)}
+            </div>
           </div>
         </div>
 

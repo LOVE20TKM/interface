@@ -122,7 +122,7 @@ export function ChatMessageList({
           <span>正在读取链上消息...</span>
         </div>
       ) : visibleMessages.length === 0 ? (
-        <div className="rounded-md border border-dashed border-greyscale-300 bg-white p-5 text-center text-sm text-greyscale-500">
+        <div className="rounded-md border border-dashed border-greyscale-300 bg-card p-5 text-center text-sm text-greyscale-500">
           {data.messages.length === 0 ? '还没有链上消息' : '禁言消息已按本机偏好隐藏'}
         </div>
       ) : (

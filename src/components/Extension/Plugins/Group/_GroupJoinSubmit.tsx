@@ -442,7 +442,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
     return (
       <div className="flex flex-col items-center px-4 pt-6">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载链群信息...</p>
+        <p className="mt-4 text-greyscale-600">加载链群信息...</p>
       </div>
     );
   }
@@ -450,7 +450,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
   if (!groupDetail) {
     return (
       <div className="flex flex-col items-center px-6 pt-6">
-        <p className="text-red-500">链群信息加载失败</p>
+        <p className="text-status-error">链群信息加载失败</p>
       </div>
     );
   }
@@ -469,11 +469,11 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
           <>
             {/* 体验模式标识 */}
             {isTrialMode && (
-              <div className="mt-4 mb-6 px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="mt-4 mb-6 px-4 py-2 bg-status-warning-soft border border-status-warning-border rounded-lg">
                 <div className="flex items-center gap-2">
-                  <span className="text-orange-600 font-semibold">🎉 恭喜您获得体验资格</span>
+                  <span className="text-status-warning font-semibold">🎉 恭喜您获得体验资格</span>
                 </div>
-                <div className="text-sm text-orange-600 mt-1">每天记得来铸造你的行动激励！</div>
+                <div className="text-sm text-status-warning mt-1">每天记得来铸造你的行动激励！</div>
               </div>
             )}
           </>
@@ -483,19 +483,19 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
 
         {/* 行动标题 */}
         <div className="flex items-baseline mt-4">
-          <span className="text-gray-400 text-xs mr-1">No.</span>
-          <span className="text-secondary text-xl font-bold mr-2 leading-none">{actionInfo.head.id.toString()}</span>
-          <span className="font-bold text-gray-800 text-lg leading-tight">{actionInfo.body.title}</span>
+          <span className="text-greyscale-400 text-xs mr-1">No.</span>
+          <span className="text-data-public text-xl font-bold mr-2 leading-none">{actionInfo.head.id.toString()}</span>
+          <span className="font-bold text-greyscale-800 text-lg leading-tight">{actionInfo.body.title}</span>
         </div>
 
         {/* 链群信息（样式对齐表单项） */}
         <div className="mt-2">
-          <div className="flex min-h-10 w-full items-center justify-between gap-3 rounded-md bg-gray-50/60 px-3 py-2 text-sm">
+          <div className="flex min-h-10 w-full items-center justify-between gap-3 rounded-md bg-greyscale-50/60 px-3 py-2 text-sm">
             <div className="flex items-baseline min-w-0">
               <span className="text-greyscale-500 font-normal text-sm shrink-0">链群</span>
-              <span className="text-gray-400 text-xs">#</span>
-              <span className="text-gray-700 text-sm mr-2 leading-none">{groupDetail.groupId.toString()}</span>
-              <span className="font-semibold text-gray-700 text-sm truncate">{groupDetail.groupName}</span>
+              <span className="text-greyscale-400 text-xs">#</span>
+              <span className="text-greyscale-700 text-sm mr-2 leading-none">{groupDetail.groupId.toString()}</span>
+              <span className="font-semibold text-greyscale-700 text-sm truncate">{groupDetail.groupName}</span>
             </div>
           </div>
         </div>
@@ -513,14 +513,14 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                     <span>
                       {!uiIsJoined ? (
                         <>
-                          <span className="font-bold text-gray-900">
+                          <span className="font-bold text-greyscale-900">
                             {isTrialMode ? '体验代币数：' : '参与代币数：'}
                           </span>{' '}
                           {hasVotes &&
                             (cannotJoin.blocked ? (
-                              <span className="text-red-600 text-sm">{cannotJoin.reason}</span>
+                              <span className="text-status-error text-sm">{cannotJoin.reason}</span>
                             ) : (
-                              <span className="text-xs text-gray-500 inline-flex items-center gap-1">
+                              <span className="text-xs text-greyscale-500 inline-flex items-center gap-1">
                                 限 {formatTokenAmount(groupDetail.actualMinJoinAmount, 4, 'ceil')} ~{' '}
                                 {formatTokenAmount(maxJoinResult.amount)}
                                 <InfoTooltip title="参与上限说明" content={maxJoinDetail} />
@@ -529,12 +529,12 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                         </>
                       ) : (
                         <>
-                          <span className="font-bold text-gray-900">追加代币数：</span>{' '}
+                          <span className="font-bold text-greyscale-900">追加代币数：</span>{' '}
                           {hasVotes &&
                             (cannotIncrease.blocked ? (
-                              <span className="text-red-600 text-sm">{cannotIncrease.reason}</span>
+                              <span className="text-status-error text-sm">{cannotIncrease.reason}</span>
                             ) : (
-                              <span className="text-xs text-gray-500 inline-flex items-center gap-1">
+                              <span className="text-xs text-greyscale-500 inline-flex items-center gap-1">
                                 最大 {formatTokenAmount(maxIncreaseResult.amount)}
                                 <InfoTooltip title="追加上限说明" content={maxIncreaseDetail} />
                               </span>
@@ -556,9 +556,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                           前往流动性页 &gt;&gt;
                         </Link>
                       ) : acquireLpJump.status === 'unsupported' ? (
-                        <span className="text-sm text-gray-400 ml-2">该LP代币对暂不支持自动跳转</span>
+                        <span className="text-sm text-greyscale-400 ml-2">该LP代币对暂不支持自动跳转</span>
                       ) : (
-                        <span className="text-sm text-gray-400 ml-2">解析LP代币对中...</span>
+                        <span className="text-sm text-greyscale-400 ml-2">解析LP代币对中...</span>
                       ))}
                   </FormLabel>
                   <FormControl>
@@ -568,13 +568,13 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                       disabled={
                         isTrialMode || !balance || balance <= BigInt(0) || cannotJoin.blocked || cannotIncrease.blocked
                       }
-                      className={`!ring-secondary-foreground ${isTrialMode ? 'bg-gray-100 text-gray-600' : ''}`}
+                      className={`!ring-secondary-foreground ${isTrialMode ? 'bg-greyscale-100 text-greyscale-600' : ''}`}
                       {...field}
                     />
                   </FormControl>
                   <FormMessage />
                   {isTrialMode && (
-                    <FormDescription className="text-xs text-gray-600">
+                    <FormDescription className="text-xs text-greyscale-600">
                       体验模式，由 <AddressWithCopyButton address={groupDetail.owner} showCopyButton={true} />{' '}
                       代为提供参与代币
                     </FormDescription>
@@ -582,7 +582,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                   {!isTrialMode && (
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        我的余额：<span className="text-secondary">{formatTokenAmount(balance || BigInt(0), 4)}</span>{' '}
+                        我的余额：<span className="text-data-personal">{formatTokenAmount(balance || BigInt(0), 4)}</span>{' '}
                         {joinTokenSymbol}
                       </span>
                       <Button
@@ -606,7 +606,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
               <>
                 <div>
                   {isPendingJoinInfo ? (
-                    <div className="text-sm text-gray-500">加载已有验证信息...</div>
+                    <div className="text-sm text-greyscale-500">加载已有验证信息...</div>
                   ) : (
                     <>
                       {verificationKeys.map((key, index) => {
@@ -619,7 +619,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                             render={({ field }) => (
                               <FormItem className="mb-4">
                                 <FormLabel className="text-greyscale-500 font-normal">
-                                  <span className="font-bold text-gray-900">{key}：</span>
+                                  <span className="font-bold text-greyscale-900">{key}：</span>
                                 </FormLabel>
                                 <FormControl>
                                   <Input
@@ -629,7 +629,7 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
                                   />
                                 </FormControl>
                                 {guide && (
-                                  <FormDescription className="text-xs text-gray-600">提示：{guide}</FormDescription>
+                                  <FormDescription className="text-xs text-greyscale-600">提示：{guide}</FormDescription>
                                 )}
                                 <FormMessage />
                               </FormItem>
@@ -721,9 +721,9 @@ const _GroupJoinSubmit: React.FC<GroupJoinSubmitProps> = ({ actionId, actionInfo
         </Form>
 
         {/* 提示信息 */}
-        <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-2">💡 小贴士</div>
-          <div className="space-y-0 text-gray-600">
+        <div className="mt-6 text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
+          <div className="font-medium text-greyscale-700 mb-2">💡 小贴士</div>
+          <div className="space-y-0 text-greyscale-600">
             {uiIsTrialMode ? (
               <>
                 <div>• 体验结束，可自行退出行动</div>

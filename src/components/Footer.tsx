@@ -12,10 +12,10 @@ const Footer: React.FC<FooterProps> = () => {
   };
 
   return (
-    <footer className="mt-4 bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300">
+    <footer className="mt-4 bg-greyscale-100 text-greyscale-700">
       <div className="container mx-auto px-4 py-4">
-        <div className="p-4 border rounded-lg bg-slate-50 dark:bg-slate-900 flex flex-col items-center space-y-2">
-          <p className="text-center text-sm text-slate-700 dark:text-slate-300">
+        <div className="p-4 border rounded-lg bg-greyscale-50 flex flex-col items-center space-y-2">
+          <p className="text-center text-sm text-greyscale-700">
             LOVE20协议的 白皮书、所有合约 及 前端代码，都在全球最大开源平台 GitHub 上开源。地址：
           </p>
           <a
@@ -40,7 +40,7 @@ const Footer: React.FC<FooterProps> = () => {
             </svg>
             https://love20tkm.github.io/docs/
           </a>
-          <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+          <p className="text-center text-xs text-greyscale-400">
             v{process.env.NEXT_PUBLIC_APP_VERSION} #{process.env.NEXT_PUBLIC_GIT_HASH}
           </p>
         </div>

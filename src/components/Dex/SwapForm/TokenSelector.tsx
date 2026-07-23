@@ -15,9 +15,9 @@ const TokenSelector = ({ selectedToken, supportedTokens, onTokenSelect, disabled
       onValueChange={onTokenSelect}
       disabled={disabled}
     >
-      <SelectTrigger className="w-auto border-none bg-white hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors border border-gray-200 font-mono">
+      <SelectTrigger className="w-auto border-none bg-card hover:bg-greyscale-50 px-3 py-1.5 rounded-full transition-colors border border-greyscale-200 font-mono">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-gray-800 font-mono">{selectedToken.symbol}</span>
+          <span className="font-medium text-greyscale-800 font-mono">{selectedToken.symbol}</span>
         </div>
       </SelectTrigger>
       <SelectContent>

@@ -177,17 +177,4 @@ export class LocalCache {
       return false;
     }
   }
-
-  /**
-   * 清除所有缓存（谨慎使用）
-   */
-  static clear(): void {
-    if (!this.isClient()) return;
-
-    try {
-      localStorage.clear();
-    } catch (error) {
-      console.error('清除所有缓存失败:', error);
-    }
-  }
 }

@@ -64,7 +64,7 @@ const GroupTrialPage: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col items-center py-12">
           <LoadingIcon />
-          <p className="mt-4 text-gray-600">加载链群信息...</p>
+          <p className="mt-4 text-greyscale-600">加载链群信息...</p>
         </div>
       </div>
     );

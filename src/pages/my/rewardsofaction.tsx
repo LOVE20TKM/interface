@@ -216,7 +216,7 @@ const ActRewardsPage: React.FC = () => {
         <Header title="行动激励" showBackButton={true} />
         <main className="flex-grow">
           <div className="flex flex-col space-y-6 p-4">
-            <div className="text-center text-red-500 py-4">缺少行动ID参数</div>
+            <div className="text-center text-status-error py-4">缺少行动ID参数</div>
           </div>
         </main>
       </>
@@ -239,7 +239,7 @@ const ActRewardsPage: React.FC = () => {
                 <div className="flex items-center mb-3">
                   <div className="flex items-baseline mr-2">
                     <span className="text-greyscale-500">No.</span>
-                    <span className="text-secondary text-xl font-bold mr-2">{String(actionInfo.head.id)}</span>
+                    <span className="text-data-public text-xl font-bold mr-2">{String(actionInfo.head.id)}</span>
                     <span className="font-bold text-greyscale-800">{actionInfo.body.title}</span>
                   </div>
                 </div>
@@ -295,10 +295,10 @@ const ActRewardsPage: React.FC = () => {
                   />
                 ) : (
                   // 未知扩展类型
-                  <div className="text-center text-sm text-gray-500 py-4">暂不支持此扩展类型的激励展示</div>
+                  <div className="text-center text-sm text-greyscale-500 py-4">暂不支持此扩展类型的激励展示</div>
                 )
               ) : (
-                <div className="text-center text-sm text-gray-500 py-4">无法加载扩展行动信息</div>
+                <div className="text-center text-sm text-greyscale-500 py-4">无法加载扩展行动信息</div>
               )
             ) : (
               // 普通行动激励列表
@@ -319,9 +319,9 @@ const ActRewardsPage: React.FC = () => {
               {isLoadingRewards ? (
                 <LoadingIcon />
               ) : hasMoreRewards ? (
-                <span className="text-sm text-gray-500">上滑加载更多...</span>
+                <span className="text-sm text-greyscale-500">上滑加载更多...</span>
               ) : (
-                <span className="text-sm text-gray-500">没有更多激励</span>
+                <span className="text-sm text-greyscale-500">没有更多激励</span>
               )}
             </div>
           </div>

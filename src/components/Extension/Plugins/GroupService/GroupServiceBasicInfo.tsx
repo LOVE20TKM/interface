@@ -45,10 +45,10 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
   // 加载中状态
   if (isPending || isGroupActionSymbolPending) {
     return (
-      <div className="mt-6 bg-gray-50 rounded-lg p-4">
+      <div className="mt-6 bg-greyscale-50 rounded-lg p-4">
         <div className="text-center">
           <LoadingIcon />
-          <p className="mt-2 text-sm text-gray-600">加载扩展部署参数...</p>
+          <p className="mt-2 text-sm text-greyscale-600">加载扩展部署参数...</p>
         </div>
       </div>
     );
@@ -57,8 +57,8 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
   // 错误状态
   if (error) {
     return (
-      <div className="mt-6 bg-red-50 rounded-lg p-4">
-        <p className="text-sm text-red-600">加载扩展部署参数失败</p>
+      <div className="mt-6 bg-status-error-soft rounded-lg p-4">
+        <p className="text-sm text-status-error">加载扩展部署参数失败</p>
       </div>
     );
   }
@@ -74,7 +74,7 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
   }
 
   return (
-    <div className="mt-6 bg-gray-50 rounded-lg p-4">
+    <div className="mt-6 bg-greyscale-50 rounded-lg p-4">
       <div className="font-bold text-base mb-4">扩展协议参数:</div>
 
       <div className="space-y-3">
@@ -83,15 +83,15 @@ const GroupServiceBasicInfo: React.FC<GroupServiceBasicInfoProps> = ({
           <div className="text-sm font-bold mb-1">链群行动所在代币地址:</div>
           <div className="flex items-center gap-2">
             <AddressWithCopyButton address={groupActionTokenAddress} showCopyButton={true} colorClassName="text-sm" />
-            {groupActionTokenSymbol && <span className="text-sm text-gray-600">({groupActionTokenSymbol})</span>}
+            {groupActionTokenSymbol && <span className="text-sm text-greyscale-600">({groupActionTokenSymbol})</span>}
           </div>
         </div>
 
         {/* 治理票占比倍数 */}
         <div className="md:max-w-2xl">
           <div className="text-sm font-bold mb-1">治理票占比倍数:</div>
-          <div className="font-mono text-secondary text-sm md:text-base">{govRatioMultiplier.toString()}</div>
-          <div className="text-xs text-gray-600">
+          <div className="font-mono text-data-public text-sm md:text-base">{govRatioMultiplier.toString()}</div>
+          <div className="text-xs text-greyscale-600">
             服务者所属链群，参与代币总量占比，超过 (治理票占比 × 治理票占比倍数) 的部分，不再有铸币激励
           </div>
         </div>

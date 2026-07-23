@@ -220,7 +220,7 @@ const WithdrawPage = () => {
             {!pairExists ? (
               <Card>
                 <CardContent className="p-6 text-center">
-                  <div className="text-gray-500">
+                  <div className="text-greyscale-500">
                     <p className="font-medium">未找到流动性池</p>
                     <p className="text-sm mt-1">
                       {baseToken.symbol}-{targetToken.symbol} 交易对不存在
@@ -231,7 +231,7 @@ const WithdrawPage = () => {
             ) : !hasLPBalance ? (
               <Card>
                 <CardContent className="p-6 text-center">
-                  <div className="text-gray-500">
+                  <div className="text-greyscale-500">
                     <p className="font-medium">您在此交易对中没有LP代币</p>
                     <p className="text-sm mt-1">请先添加流动性</p>
                   </div>

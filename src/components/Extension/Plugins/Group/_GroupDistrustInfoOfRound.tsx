@@ -187,7 +187,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载不信任投票数据...</p>
+        <p className="mt-4 text-greyscale-600">加载不信任投票数据...</p>
       </div>
     );
   }
@@ -214,13 +214,13 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
         {/* 不信任投票列表 */}
         {!distrustVotes || distrustVotes.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 mb-2">该验证轮，没有不信任投票</p>
+            <p className="text-greyscale-500 mb-2">该验证轮，没有不信任投票</p>
           </div>
         ) : (
           <div className="overflow-x-auto mt-4">
             <table className="table w-full">
               <thead>
-                <tr className="border-b border-gray-100">
+                <tr className="border-b border-greyscale-100">
                   <th className="px-8 text-left">服务者 / 验证的链群</th>
                   <th className="px-1 text-center">不信任率</th>
                   <th className="px-1"></th>
@@ -231,7 +231,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
                   <tr
                     key={`${vote.groupOwner}-${index}`}
                     onClick={() => handleRowClick(vote.groupOwner, vote.groupIds)}
-                    className="border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-all"
+                    className="border-b border-greyscale-100 cursor-pointer hover:bg-greyscale-50 transition-all"
                   >
                     {/* 服务者地址 */}
                     <td className="px-1">
@@ -246,19 +246,19 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
                               <span key={id.toString()} className="inline-flex items-center">
                                 {name ? (
                                   <>
-                                    <span className="text-gray-500 text-xs">#</span>
+                                    <span className="text-greyscale-500 text-xs">#</span>
                                     <span className="text-sm font-medium ml-1">{id.toString()}</span>
-                                    <span className="text-sm text-gray-800 ml-2">{name}</span>
+                                    <span className="text-sm text-greyscale-800 ml-2">{name}</span>
                                   </>
                                 ) : (
-                                  <span className="text-xs text-gray-600">#{id.toString()}</span>
+                                  <span className="text-xs text-greyscale-600">#{id.toString()}</span>
                                 )}
-                                {idx < vote.groupIds.length - 1 && <span className="text-gray-400">,</span>}
+                                {idx < vote.groupIds.length - 1 && <span className="text-greyscale-400">,</span>}
                               </span>
                             );
                           })
                         ) : (
-                          <span className="text-xs text-gray-600">-</span>
+                          <span className="text-xs text-greyscale-600">-</span>
                         )}
                       </div>
                     </td>
@@ -269,15 +269,15 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
                         <span
                           className={`font-medium ${
                             vote.distrustRatio > 0.5
-                              ? 'text-red-600'
+                              ? 'text-status-error'
                               : vote.distrustRatio > 0.2
-                              ? 'text-orange-600'
-                              : 'text-gray-800'
+                              ? 'text-status-warning'
+                              : 'text-greyscale-800'
                           }`}
                         >
                           {formatPercentage(vote.distrustRatio * 100.0)}
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-greyscale-400">
                           ({formatTokenAmount(vote.distrustVotes)}/{formatTokenAmount(vote.totalVotes)})
                         </span>
                       </div>
@@ -286,7 +286,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
                     {/* 右侧箭头 */}
                     <td className="px-1">
                       <div className="flex justify-end">
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                        <ChevronRight className="w-5 h-5 text-greyscale-400" />
                       </div>
                     </td>
                   </tr>
@@ -297,9 +297,9 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
         )}
 
         {/* 说明 */}
-        <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
-          <div className="space-y-1 text-gray-600">
+        <div className="mt-6 text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
+          <div className="font-medium text-greyscale-700 mb-1">💡 小贴士</div>
+          <div className="space-y-1 text-greyscale-600">
             <div>• “投票”给本行动、并完成"验证"的治理者，可以投不信任票；</div>
             <div>• 不信任票越多，该服务者的链群获得激励越少；</div>
           </div>
@@ -316,15 +316,15 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
           {isPendingDetail ? (
             <div className="flex flex-col items-center py-8">
               <LoadingIcon />
-              <p className="mt-4 text-gray-600">加载投票详情...</p>
+              <p className="mt-4 text-greyscale-600">加载投票详情...</p>
             </div>
           ) : !voterDistrusts || voterDistrusts.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">暂无投票详情</div>
+            <div className="text-center py-8 text-greyscale-500">暂无投票详情</div>
           ) : (
             <div className="space-y-2">
               {/* 服务者信息 */}
               {selectedOwner && (
-                <div className="text-sm text-gray-600 text-center">
+                <div className="text-sm text-greyscale-600 text-center">
                   服务者：
                   <AddressWithCopyButton address={selectedOwner.address} />
                 </div>
@@ -334,7 +334,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
               <div className="overflow-x-auto">
                 <table className="table w-full">
                   <thead>
-                    <tr className="border-b border-gray-100">
+                    <tr className="border-b border-greyscale-100">
                       <th className="px-8 text-left">投票来源地址</th>
                       <th className="px-1 text-center">所投不信任票</th>
                       <th className="px-1 text-center">不信任程度</th>
@@ -350,7 +350,7 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
                           </td>
 
                           {/* 不信任票 */}
-                          <td className="px-1 pb-0 text-center text-sm text-gray-600">
+                          <td className="px-1 pb-0 text-center text-sm text-greyscale-600">
                             {formatTokenAmount(voter.distrustVotes)}
                           </td>
 
@@ -359,10 +359,10 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
                             <span
                               className={`text-sm font-medium ${
                                 voter.distrustRatio > 0.5
-                                  ? 'text-red-600'
+                                  ? 'text-status-error'
                                   : voter.distrustRatio > 0
-                                  ? 'text-orange-600'
-                                  : 'text-gray-500'
+                                  ? 'text-status-warning'
+                                  : 'text-greyscale-500'
                               }`}
                             >
                               {formatPercentage(voter.distrustRatio * 100.0)}
@@ -371,15 +371,15 @@ const _GroupDistrustInfoOfRound: React.FC<GroupDistrustInfoOfRoundProps> = ({
                         </tr>
                         {/* 原因和验证票信息 */}
                         {(voter.reason || voter.verifyVotes) && (
-                          <tr className="border-b border-gray-100">
+                          <tr className="border-b border-greyscale-100">
                             <td colSpan={3} className="px-1 pt-0 pb-2">
                               {voter.reason && (
-                                <div className="text-xs text-gray-600 mb-1 pl-2 border-l-2 border-gray-200">
+                                <div className="text-xs text-greyscale-600 mb-1 pl-2 border-l-2 border-greyscale-200">
                                   <span className="font-medium">原因: </span>
                                   {voter.reason}
                                 </div>
                               )}
-                              <div className="text-xs text-gray-400">
+                              <div className="text-xs text-greyscale-400">
                                 总验证票: {formatTokenAmount(voter.verifyVotes)}
                               </div>
                             </td>

@@ -51,29 +51,25 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children }) => {
     setIsProviderReady(true);
   }, []);
 
-  const checkAndClearCache = () => {
+  const syncAppVersion = () => {
     // 确保在客户端环境下执行
-    if (!isClient()) return false;
+    if (!isClient()) return;
 
     try {
       const storedVersion = localStorage.getItem(APP_VERSION_KEY);
 
       if (storedVersion !== currentAppVersion) {
         console.log(`currentAppVersion: ${storedVersion || 'null'} -> ${currentAppVersion} ...`);
-        localStorage.clear();
         localStorage.setItem(APP_VERSION_KEY, currentAppVersion);
-        return true;
       }
-      return false;
     } catch (error) {
-      console.error('ERROR checkAndClearCache:', error);
-      return false;
+      console.error('ERROR syncAppVersion:', error);
     }
   };
 
-  // 初始化时检查版本并清理缓存
+  // 版本号只用于记录，升级时保留用户的所有本地选择
   useEffect(() => {
-    checkAndClearCache();
+    syncAppVersion();
   }, []);
 
   // 使用 useEffect 来记录日志，避免在渲染过程中执行
@@ -96,10 +92,8 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children }) => {
     const ifNoSymbol = !tokenSymbol || tokenSymbol.charAt(0) === tokenSymbol.charAt(0).toLowerCase();
 
     try {
-      const cacheCleared = checkAndClearCache();
-
       // 优先从本地缓存恢复（无论是否有 symbol，只要缓存可用）
-      if (!cacheCleared && isClient()) {
+      if (isClient()) {
         try {
           const storedToken = localStorage.getItem(CURRENT_TOKEN_KEY);
           if (storedToken) {
@@ -192,10 +186,6 @@ export const TokenProvider: React.FC<TokenProviderProps> = ({ children }) => {
           setToken(JSON.parse(event.newValue));
         } else {
           setToken(null);
-        }
-      } else if (event.key === APP_VERSION_KEY) {
-        if (event.newValue !== event.oldValue) {
-          clearToken();
         }
       }
     };

@@ -22,6 +22,10 @@ module.exports = {
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        data: {
+          personal: 'hsl(var(--data-personal))',
+          public: 'hsl(var(--data-public))',
+        },
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
@@ -35,6 +39,28 @@ module.exports = {
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
+        },
+        status: {
+          info: {
+            DEFAULT: 'hsl(var(--status-info))',
+            soft: 'hsl(var(--status-info) / 0.14)',
+            border: 'hsl(var(--status-info) / 0.4)',
+          },
+          success: {
+            DEFAULT: 'hsl(var(--status-success))',
+            soft: 'hsl(var(--status-success) / 0.14)',
+            border: 'hsl(var(--status-success) / 0.4)',
+          },
+          warning: {
+            DEFAULT: 'hsl(var(--status-warning))',
+            soft: 'hsl(var(--status-warning) / 0.14)',
+            border: 'hsl(var(--status-warning) / 0.4)',
+          },
+          error: {
+            DEFAULT: 'hsl(var(--status-error))',
+            soft: 'hsl(var(--status-error) / 0.14)',
+            border: 'hsl(var(--status-error) / 0.4)',
+          },
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',
@@ -116,7 +142,34 @@ module.exports = {
     },
   },
   daisyui: {
-    themes: ['light'],
+    themes: [
+      'light',
+      {
+        dark: {
+          'color-scheme': 'dark',
+          primary: '#f5f5f5',
+          'primary-content': '#171717',
+          secondary: '#7c73ff',
+          'secondary-content': '#ffffff',
+          accent: '#3b82f6',
+          'accent-content': '#ffffff',
+          neutral: '#262626',
+          'neutral-content': '#f5f5f5',
+          'base-100': '#171717',
+          'base-200': '#212121',
+          'base-300': '#2a2a2a',
+          'base-content': '#f5f5f5',
+          info: '#60a5fa',
+          success: '#34d399',
+          warning: '#fbbf24',
+          error: '#f87171',
+          '--rounded-box': '0.5rem',
+          '--rounded-btn': '0.375rem',
+          '--rounded-badge': '9999px',
+          '--tab-radius': '0.375rem',
+        },
+      },
+    ],
   },
   plugins: [require('daisyui'), require('tailwindcss-animate'), require('@tailwindcss/typography')],
 };

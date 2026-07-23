@@ -64,13 +64,13 @@ const MyVotingPanel: React.FC<MyVotingPanelProps> = ({
       <div className="stats w-full grid grid-cols-2 divide-x-0">
         <div className="stat place-items-center pt-1 pb-2">
           <div className="stat-title text-sm">我的已投票数</div>
-          <div className="stat-value text-xl">
+          <div className="stat-value text-xl text-data-personal">
             {isPendingVotesNumByAccount ? <LoadingIcon /> : formatTokenAmount(votesNumByAccount || BigInt(0))}
           </div>
         </div>
         <div className="stat place-items-center pt-0 pb-2">
           <div className="stat-title text-sm">我的未投票数</div>
-          <div className="stat-value text-xl">
+          <div className="stat-value text-xl text-data-personal">
             {isPendingValidGovVotes || isPendingVotesNumByAccount ? (
               <LoadingIcon />
             ) : validGovVotes ? (

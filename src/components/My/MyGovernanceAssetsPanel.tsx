@@ -243,7 +243,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
       <div className="stats w-full grid grid-cols-2 divide-x-0 ">
         <div className="stat place-items-center pt-0 pb-1 pl-1">
           <div className="stat-title text-sm">我的治理票数</div>
-          <div className="stat-value text-xl text-secondary">
+          <div className="stat-value text-xl text-data-personal">
             {isPendingAccountStakeStatus ? <LoadingIcon /> : formatTokenAmount(govVotes || BigInt(0))}
           </div>
           <div className="stat-desc text-xs mb-2 mt-1">
@@ -253,10 +253,10 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
         <div className="stat place-items-center pt-0 pb-1 pl-1">
           <div className="stat-title text-sm">我承诺的解锁期</div>
           <div className="stat-value text-lg">
-            <span className="text-secondary">
+            <span className="text-data-personal">
               {isPendingAccountStakeStatus ? <LoadingIcon /> : `${promisedWaitingPhases || BigInt(0)} `}
             </span>
-            <span className="text-sm text-gray-600"> 阶段</span>
+            <span className="text-sm text-greyscale-600"> 阶段</span>
           </div>
           <div className="stat-desc text-xs mb-2 mt-1">{`${formatPhaseText(
             Number(promisedWaitingPhases || BigInt(0)),
@@ -274,7 +274,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
               tokenDecimals={token.decimals}
             />
           </div>
-          <div className="stat-value text-xl text-gray-600">
+          <div className="stat-value text-xl text-data-personal">
             {isPendingAccountStakeStatus ? (
               <LoadingIcon />
             ) : (
@@ -299,7 +299,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
               tokenDecimals={token.decimals}
             />
           </div>
-          <div className="stat-value text-xl text-gray-600">
+          <div className="stat-value text-xl text-data-personal">
             {isPendingAccountStakeStatus ? <LoadingIcon /> : formatTokenAmount(stAmount || BigInt(0))}
           </div>
           <div className="stat-desc text-xs">
@@ -316,7 +316,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
         validGovVotes <= BigInt(0) &&
         govVotes > BigInt(0) && (
           <div className="text-sm mb-4 text-greyscale-500 text-center">
-            <div className="text-red-500">当前 sl 或 st 代币余额不足，导致有效治理票为0，请及时补足</div>
+            <div className="text-status-error">当前 sl 或 st 代币余额不足，导致有效治理票为0，请及时补足</div>
           </div>
         )}
 
@@ -366,7 +366,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
                 解锁期，是从取消质押的阶段结束时开始计算
                 <br />
                 （现在取消质押后，投票轮第
-                <span className="text-secondary mx-1">{`${
+                <span className="text-data-personal mx-1">{`${
                   formatRoundForDisplay(currentRound, token) + (promisedWaitingPhases || BigInt(0)) + BigInt(1)
                 } `}</span>
                 轮才能取回代币）

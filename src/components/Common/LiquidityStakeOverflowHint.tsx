@@ -94,7 +94,7 @@ const LiquidityStakeOverflowHint: React.FC<LiquidityStakeOverflowHintProps> = ({
 
   if (hasInvalidStakeReceipts && targetRatio > BigInt(0) && govRatioMultiplier > BigInt(0)) {
     return (
-      <div className={`text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 w-full ${className}`}>
+      <div className={`text-sm text-status-warning bg-status-warning-soft border border-status-warning-border rounded px-3 py-2 w-full ${className}`}>
         <div className="font-medium">预计激励会溢出</div>
         <div className="mt-1">当前质押凭证不足，治理票暂不可用。请先找回 SL/ST 凭证，再追加流动性质押。</div>
       </div>
@@ -105,7 +105,7 @@ const LiquidityStakeOverflowHint: React.FC<LiquidityStakeOverflowHintProps> = ({
 
   if (requiredSlAmount === undefined) {
     return (
-      <div className={`text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 w-full ${className}`}>
+      <div className={`text-sm text-status-warning bg-status-warning-soft border border-status-warning-border rounded px-3 py-2 w-full ${className}`}>
         <div className="font-medium">预计激励会溢出</div>
         <div className="mt-1">当前治理票占比倍数不足，追加流动性质押也无法完全消除溢出。</div>
       </div>
@@ -117,7 +117,7 @@ const LiquidityStakeOverflowHint: React.FC<LiquidityStakeOverflowHintProps> = ({
   }
 
   return (
-    <div className={`text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 w-full ${className}`}>
+    <div className={`text-sm text-status-warning bg-status-warning-soft border border-status-warning-border rounded px-3 py-2 w-full ${className}`}>
       <div className="font-medium">预计激励会溢出</div>
       <div className="mt-1">
         按最长 {waitingPhases.toString()} 轮解锁期估算，追加流动性质押约{' '}

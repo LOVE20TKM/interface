@@ -113,10 +113,10 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
 
   if (isPendingData || isPendingJoined) {
     return (
-      <div className="bg-white rounded-lg p-8">
+      <div className="bg-card rounded-lg p-8">
         <div className="text-center">
           <LoadingIcon />
-          <p className="mt-4 text-gray-600">加载数据中...</p>
+          <p className="mt-4 text-greyscale-600">加载数据中...</p>
         </div>
       </div>
     );
@@ -136,7 +136,7 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
 
           {/* 治理票占比不足的警告 */}
           {userGovRatio < minGovRatio && (
-            <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-3 w-full">
+            <div className="text-sm text-status-warning bg-status-warning-soft border border-status-warning-border rounded px-3 py-2 mt-3 w-full">
               <div className="font-medium">⚠️ 治理票占比不足</div>
               <div className="mt-1">
                 你的治理票占比{' '}
@@ -145,7 +145,7 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
                 <span className="font-semibold">{formatPercentage((Number(minGovRatio) / 1e18) * 100)}</span>
                 ，无法获得得分和激励。
               </div>
-              <div className="text-xs text-amber-600 mt-1">请质押更多代币以增加治理票数。</div>
+              <div className="text-xs text-status-warning mt-1">请质押更多代币以增加治理票数。</div>
             </div>
           )}
 
@@ -209,14 +209,14 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
 
           {/* 等待退出的提示 */}
           {isJoined && !canExitNow && (
-            <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-3 w-full">
-              <div className="flex items-center gap-2 text-sm font-bold text-amber-800 pb-2">
+            <div className="text-sm text-status-warning bg-status-warning-soft border border-status-warning-border rounded px-3 py-2 mt-3 w-full">
+              <div className="flex items-center gap-2 text-sm font-bold text-status-warning pb-2">
                 <HelpCircle className="w-4 h-4" />
                 小贴士
               </div>
               <div className="mt-1">
                 加入后需要等待 <span className="font-semibold">{waitingBlocks.toString()}</span> 个区块后才能退出
-                <span className="text-sm text-amber-600 mt-1">
+                <span className="text-sm text-status-warning mt-1">
                   （你在区块 <span className="font-semibold">{joinedBlock.toString()}</span> 加入，当前区块{' '}
                   {currentBlock.toString()}，还需等待 {remainingBlocks.toString()} 个区块，大约需要{' '}
                   {formatSeconds((Number(remainingBlocks) * Number(process.env.NEXT_PUBLIC_BLOCK_TIME_MS)) / 1000)}）
@@ -225,9 +225,9 @@ const LpMyParticipation: React.FC<LpMyParticipationProps> = ({ actionId, actionI
             </div>
           )}
 
-          <div className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-3 mt-6 mb-3 w-full">
-            <div className="font-medium text-gray-600 mb-2">💡 计算说明：</div>
-            <div className="ml-4 text-gray-600 space-y-1">
+          <div className="text-sm text-greyscale-700 bg-greyscale-50 border border-greyscale-200 rounded px-2 py-3 mt-6 mb-3 w-full">
+            <div className="font-medium text-greyscale-600 mb-2">💡 计算说明：</div>
+            <div className="ml-4 text-greyscale-600 space-y-1">
               <div>• LP占比 = 你参与的LP数量 / 本行动的LP总量</div>
               <div>• 治理票占比 = 你的治理票 / 总治理票</div>
               <div>• 激励占比 = LP占比 和 (你的治理票占比 × {Number(govRatioMultiplier)}) 中的最小值</div>

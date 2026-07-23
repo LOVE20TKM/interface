@@ -85,13 +85,13 @@ const MyVerifingPanel: React.FC<MyVerifingPanelProps> = ({ currentRound, showBtn
       <div className="stats w-full grid grid-cols-2 divide-x-0 mt-2">
         <div className="stat place-items-center pt-1 pb-2">
           <div className="stat-title text-sm">已验证票数</div>
-          <div className={`stat-value text-xl ${!showBtn ? 'text-secondary' : ''}`}>
+          <div className="stat-value text-xl text-data-personal">
             {isPendingScoreByVerifier ? <LoadingIcon /> : formatTokenAmount(safeToBigInt(scoreByVerifier))}
           </div>
         </div>
         <div className="stat place-items-center pt-0 pb-2">
           <div className="stat-title text-sm">未验证票数</div>
-          <div className={`stat-value text-xl ${!showBtn ? 'text-secondary' : ''}`}>
+          <div className="stat-value text-xl text-data-personal">
             {isPendingVotesNumByAccount || isPendingScoreByVerifier ? (
               <LoadingIcon />
             ) : (

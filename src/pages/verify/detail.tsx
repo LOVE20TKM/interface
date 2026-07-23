@@ -154,7 +154,7 @@ const VerifyDetailPage = () => {
         <Header title="验证详情" showBackButton={true} />
         <main className="flex-grow">
           <div className="container mx-auto px-4 py-8">
-            <div className="text-center text-red-500">参数错误：缺少行动ID参数</div>
+            <div className="text-center text-status-error">参数错误：缺少行动ID参数</div>
           </div>
         </main>
       </>
@@ -164,12 +164,12 @@ const VerifyDetailPage = () => {
   const renderVerificationMatrix = () => {
     if (isMatrixPending) {
       return (
-        <div className="bg-white rounded-lg p-8">
+        <div className="bg-card rounded-lg p-8">
           <div className="text-center">
             <LoadingIcon />
-            <p className="mt-4 text-gray-600">正在加载验证矩阵数据...</p>
+            <p className="mt-4 text-greyscale-600">正在加载验证矩阵数据...</p>
             {progress && progress.loadedVerifiers > 0 && (
-              <div className="mt-2 text-sm text-gray-500">
+              <div className="mt-2 text-sm text-greyscale-500">
                 <p>已加载 {progress.loadedVerifiers} 个验证者，请稍候...</p>
               </div>
             )}
@@ -180,8 +180,8 @@ const VerifyDetailPage = () => {
 
     if (matrixError) {
       return (
-        <div className="bg-white rounded-lg p-8">
-          <div className="text-center text-red-500">
+        <div className="bg-card rounded-lg p-8">
+          <div className="text-center text-status-error">
             加载验证矩阵失败：{matrixError.message || '获取验证矩阵失败，请稍后重试'}
           </div>
         </div>
@@ -191,8 +191,8 @@ const VerifyDetailPage = () => {
     // 如果没有计算结果，显示暂无数据
     if (!matrixCalculations) {
       return (
-        <div className="bg-white rounded-lg p-8">
-          <div className="text-center text-gray-600">无验证数据</div>
+        <div className="bg-card rounded-lg p-8">
+          <div className="text-center text-greyscale-600">无验证数据</div>
         </div>
       );
     }
@@ -212,7 +212,7 @@ const VerifyDetailPage = () => {
     return (
       <>
         {/* 标题部分 */}
-        <div className="bg-white rounded-lg mx-4 mb-4">
+        <div className="bg-card rounded-lg mx-4 mb-4">
           <div className="px-4 ">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -237,25 +237,24 @@ const VerifyDetailPage = () => {
         {/* 表格外层包装器 - 严格控制宽度，防止影响页面 */}
         <div className="w-full max-w-full overflow-hidden px-4">
           {/* 表格容器 - 仅此处允许横向滚动，WebView优化 */}
-          <div className="overflow-x-auto bg-white max-w-full table-container-webview">
+          <div className="overflow-x-auto bg-card max-w-full table-container-webview">
             <table className="w-full min-w-[846px]" style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr>
                   <th
-                    className="border border-gray-300 p-2 bg-gray-50 sticky left-0 z-30"
+                    className="border border-greyscale-300 p-2 bg-greyscale-50 sticky left-0 z-30"
                     style={{
                       WebkitTextSizeAdjust: '100%',
                       width: '156px',
                       minWidth: '156px',
                       maxWidth: '156px',
-                      backgroundColor: '#f9fafb',
-                      boxShadow: '1px 0 0 0 #d1d5db',
+                      boxShadow: '1px 0 0 0 hsl(var(--greyscale-300))',
                     }}
                   >
-                    <div className="text-gray-600 mb-1 whitespace-nowrap" style={{ fontSize: '12px' }}>
+                    <div className="text-greyscale-600 mb-1 whitespace-nowrap" style={{ fontSize: '12px' }}>
                       <div className="flex items-center">
                         <span className="flex flex-col items-center mr-1">
-                          <span className="text-xs text-gray-400 mt-[-2px]">
+                          <span className="text-xs text-greyscale-400 mt-[-2px]">
                             <svg
                               width="12"
                               height="12"
@@ -275,10 +274,10 @@ const VerifyDetailPage = () => {
                           </span>
                         </span>
                         <span>行动参与者</span>
-                        <span className="mx-1 text-gray-400">/</span>
+                        <span className="mx-1 text-greyscale-400">/</span>
                         <span className="flex flex-row items-center">
                           <span>验证者</span>
-                          <span className="text-xs text-gray-400 ml-1">
+                          <span className="text-xs text-greyscale-400 ml-1">
                             <svg
                               width="12"
                               height="12"
@@ -301,17 +300,16 @@ const VerifyDetailPage = () => {
                     </div>
                   </th>
                   <th
-                    className="border border-gray-300 p-2 bg-gray-50 sticky left-[156px] z-30"
+                    className="border border-greyscale-300 p-2 bg-greyscale-50 sticky left-[156px] z-30"
                     style={{
                       WebkitTextSizeAdjust: '100%',
                       width: '46px',
                       minWidth: '46px',
                       maxWidth: '46px',
-                      backgroundColor: '#f9fafb',
-                      boxShadow: '1px 0 0 0 #d1d5db',
+                      boxShadow: '1px 0 0 0 hsl(var(--greyscale-300))',
                     }}
                   >
-                    <div className="text-gray-600 mb-1 whitespace-nowrap" style={{ fontSize: '12px' }}>
+                    <div className="text-greyscale-600 mb-1 whitespace-nowrap" style={{ fontSize: '12px' }}>
                       得票
                       <br />
                       占比
@@ -320,7 +318,7 @@ const VerifyDetailPage = () => {
                   {verifiers.map((verifier, index) => (
                     <th
                       key={`verifier-${index}`}
-                      className="border border-gray-300 p-1 bg-gray-50"
+                      className="border border-greyscale-300 p-1 bg-greyscale-50"
                       style={{
                         WebkitTextSizeAdjust: '100%',
                         width: '148px',
@@ -329,13 +327,13 @@ const VerifyDetailPage = () => {
                       }}
                     >
                       <div>
-                        <AddressWithCopyButton address={verifier} colorClassName="text-gray-700" />
+                        <AddressWithCopyButton address={verifier} colorClassName="text-greyscale-700" />
                       </div>
                     </th>
                   ))}
                   {/* 总票数列 */}
                   <th
-                    className="border border-gray-300 p-1 bg-gray-50"
+                    className="border border-greyscale-300 p-1 bg-greyscale-50"
                     style={{
                       WebkitTextSizeAdjust: '100%',
                       width: '152px',
@@ -343,7 +341,7 @@ const VerifyDetailPage = () => {
                       maxWidth: '152px',
                     }}
                   >
-                    <div className="text-gray-600 text-sm font-medium">得票总数(占比)</div>
+                    <div className="text-greyscale-600 text-sm font-medium">得票总数(占比)</div>
                   </th>
                 </tr>
               </thead>
@@ -353,44 +351,42 @@ const VerifyDetailPage = () => {
                   return (
                     <tr key={`verifiee-${verifieeIndex}`}>
                       <td
-                        className="border border-gray-300 p-2 bg-gray-50 sticky left-0 z-20"
+                        className="border border-greyscale-300 p-2 bg-greyscale-50 sticky left-0 z-20"
                         style={{
                           WebkitTextSizeAdjust: '100%',
                           width: '156px',
                           minWidth: '156px',
                           maxWidth: '156px',
-                          backgroundColor: '#f9fafb',
-                          boxShadow: '1px 0 0 0 #d1d5db',
+                          boxShadow: '1px 0 0 0 hsl(var(--greyscale-300))',
                         }}
                       >
                         <div style={{ fontSize: '12px' }}>
                           <div className="flex items-center gap-1">
-                            <span className="text-xs text-gray-500 font-mono min-w-[16px] mt-0.5">
+                            <span className="text-xs text-greyscale-500 font-mono min-w-[16px] mt-0.5">
                               {sortIndex + 1}.
                             </span>
                             <div className="flex-1">
                               {verifiee === ZERO_ADDRESS ? (
-                                <span className="text-sm text-gray-700 font-medium">弃权票</span>
+                                <span className="text-sm text-greyscale-700 font-medium">弃权票</span>
                               ) : (
-                                <AddressWithCopyButton address={verifiee} colorClassName="text-gray-700" />
+                                <AddressWithCopyButton address={verifiee} colorClassName="text-greyscale-700" />
                               )}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td
-                        className="border border-gray-300 p-1 bg-gray-50 sticky left-[156px] z-20"
+                        className="border border-greyscale-300 p-1 bg-greyscale-50 sticky left-[156px] z-20"
                         style={{
                           WebkitTextSizeAdjust: '100%',
                           width: '46px',
                           minWidth: '46px',
                           maxWidth: '46px',
-                          backgroundColor: '#f9fafb',
-                          boxShadow: '1px 0 0 0 #d1d5db',
+                          boxShadow: '1px 0 0 0 hsl(var(--greyscale-300))',
                         }}
                       >
                         <div className="text-center">
-                          <span className="text-xs font-bold text-gray-700">
+                          <span className="text-xs font-bold text-greyscale-700">
                             {grandTotalVotes > 0
                               ? formatPercentage((verifieeeTotalScores[verifieeIndex] / grandTotalVotes) * 100)
                               : '0%'}
@@ -400,7 +396,7 @@ const VerifyDetailPage = () => {
                       {verifiers.map((_, verifierIndex) => (
                         <td
                           key={`score-${verifierIndex}-${verifieeIndex}`}
-                          className="border border-gray-300 p-1 text-center"
+                          className="border border-greyscale-300 p-1 text-center"
                           style={{
                             WebkitTextSizeAdjust: '100%',
                             width: '148px',
@@ -413,7 +409,7 @@ const VerifyDetailPage = () => {
                               <span className="text-sm font-mono whitespace-nowrap">
                                 {formatTokenAmount(scores[verifierIndex][verifieeIndex])}
                               </span>
-                              <span className="text-gray-500">
+                              <span className="text-greyscale-500">
                                 ({calculatePercentage(verifierIndex, verifieeIndex)})
                               </span>
                             </div>
@@ -426,7 +422,7 @@ const VerifyDetailPage = () => {
                       ))}
                       {/* 总票数列 */}
                       <td
-                        className="border border-gray-300 p-1 text-center bg-blue-50"
+                        className="border border-greyscale-300 p-1 text-center bg-status-info-soft"
                         style={{
                           WebkitTextSizeAdjust: '100%',
                           width: '152px',
@@ -435,10 +431,10 @@ const VerifyDetailPage = () => {
                         }}
                       >
                         <div>
-                          <span className="text-sm font-mono font-bold text-blue-600 whitespace-nowrap">
+                          <span className="text-sm font-mono font-bold text-status-info whitespace-nowrap">
                             {formatTokenAmount(BigInt(verifieeeTotalScores[verifieeIndex]))}
                           </span>
-                          <span className="text-blue-500">
+                          <span className="text-status-info">
                             (
                             {grandTotalVotes > 0
                               ? formatPercentage((verifieeeTotalScores[verifieeIndex] / grandTotalVotes) * 100)
@@ -454,24 +450,23 @@ const VerifyDetailPage = () => {
                 {/* 汇总行 */}
                 <tr className="">
                   <td
-                    className="border border-gray-300 p-2 bg-blue-50 sticky left-0 z-20 font-bold"
+                    className="border border-greyscale-300 p-2 bg-status-info-soft sticky left-0 z-20 font-bold"
                     style={{
                       WebkitTextSizeAdjust: '100%',
                       width: '156px',
                       minWidth: '156px',
                       maxWidth: '156px',
-                      backgroundColor: '#dbeafe',
-                      boxShadow: '1px 0 0 0 #d1d5db',
+                      boxShadow: '1px 0 0 0 hsl(var(--greyscale-300))',
                     }}
                   >
-                    <div className="flex items-center justify-center gap-1 text-sm text-blue-600">
+                    <div className="flex items-center justify-center gap-1 text-sm text-status-info">
                       汇总 ({verifiees.length - 1} 个地址)
                       <InfoTooltip
                         title="最大激励地址数说明"
                         content={
                           <p className="leading-relaxed text-base">
                             每轮从所有参与行动的代币中，随机抽取
-                            <span className="font-mono font-bold text-blue-600 mx-1 text-base">
+                            <span className="font-mono font-bold text-status-info mx-1 text-base">
                               {actionInfo?.body.maxRandomAccounts.toString()}
                             </span>
                             份代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。
@@ -481,17 +476,16 @@ const VerifyDetailPage = () => {
                     </div>
                   </td>
                   <td
-                    className="border border-gray-300 p-1 bg-blue-50 sticky left-[156px] z-20 font-bold"
+                    className="border border-greyscale-300 p-1 bg-status-info-soft sticky left-[156px] z-20 font-bold"
                     style={{
                       WebkitTextSizeAdjust: '100%',
                       width: '46px',
                       minWidth: '46px',
                       maxWidth: '46px',
-                      backgroundColor: '#dbeafe',
-                      boxShadow: '1px 0 0 0 #d1d5db',
+                      boxShadow: '1px 0 0 0 hsl(var(--greyscale-300))',
                     }}
                   >
-                    <div className="text-center text-xs text-blue-600">100%</div>
+                    <div className="text-center text-xs text-status-info">100%</div>
                   </td>
                   {verifiers.map((verifier, verifierIndex) => {
                     // 使用预计算的验证者总票数
@@ -503,7 +497,7 @@ const VerifyDetailPage = () => {
                     return (
                       <td
                         key={`summary-${verifierIndex}`}
-                        className="border border-gray-300 p-1 text-center bg-blue-50"
+                        className="border border-greyscale-300 p-1 text-center bg-status-info-soft"
                         style={{
                           WebkitTextSizeAdjust: '100%',
                           width: '148px',
@@ -512,17 +506,17 @@ const VerifyDetailPage = () => {
                         }}
                       >
                         <div>
-                          <span className="text-sm font-mono font-bold text-blue-600 whitespace-nowrap">
+                          <span className="text-sm font-mono font-bold text-status-info whitespace-nowrap">
                             {formatTokenAmount(BigInt(columnTotal))}
                           </span>
-                          <span className="text-blue-500">({formatPercentage(percentage)})</span>
+                          <span className="text-status-info">({formatPercentage(percentage)})</span>
                         </div>
                       </td>
                     );
                   })}
                   {/* 总计列 */}
                   <td
-                    className="border border-gray-300 p-1 text-center bg-blue-50"
+                    className="border border-greyscale-300 p-1 text-center bg-status-info-soft"
                     style={{
                       WebkitTextSizeAdjust: '100%',
                       width: '152px',
@@ -531,10 +525,10 @@ const VerifyDetailPage = () => {
                     }}
                   >
                     <div>
-                      <span className="text-sm font-mono font-bold text-blue-600 whitespace-nowrap">
+                      <span className="text-sm font-mono font-bold text-status-info whitespace-nowrap">
                         {formatTokenAmount(BigInt(grandTotalVotes))}
                       </span>
-                      <span className="text-blue-500">(100%)</span>
+                      <span className="text-status-info">(100%)</span>
                     </div>
                   </td>
                 </tr>
@@ -544,9 +538,9 @@ const VerifyDetailPage = () => {
         </div>
 
         {/* 说明文字 */}
-        <div className="bg-white mx-4 mt-4 rounded-lg">
-          <div className="px-4 py-3 text-xs text-gray-500">
-            <p className="md:hidden text-blue-600">• 手机端请左右滑动表格查看完整内容</p>
+        <div className="bg-card mx-4 mt-4 rounded-lg">
+          <div className="px-4 py-3 text-xs text-greyscale-500">
+            <p className="md:hidden text-status-info">• 手机端请左右滑动表格查看完整内容</p>
           </div>
         </div>
       </>
@@ -577,17 +571,17 @@ const VerifyDetailPage = () => {
         {/* 主要内容 - 表格突破padding限制 */}
         {isPending ? (
           <div className="px-4">
-            <div className="bg-white rounded-lg p-8">
+            <div className="bg-card rounded-lg p-8">
               <div className="text-center">
                 <LoadingIcon />
-                <p className="mt-4 text-gray-600">加载数据中...</p>
+                <p className="mt-4 text-greyscale-600">加载数据中...</p>
               </div>
             </div>
           </div>
         ) : error ? (
           <div className="px-4">
-            <div className="bg-white rounded-lg p-8">
-              <div className="text-center text-red-500">
+            <div className="bg-card rounded-lg p-8">
+              <div className="text-center text-status-error">
                 加载失败：{error.message || '获取行动信息失败，请稍后重试'}
               </div>
             </div>
@@ -596,8 +590,8 @@ const VerifyDetailPage = () => {
           renderVerificationMatrix()
         ) : (
           <div className="px-4">
-            <div className="bg-white rounded-lg p-8">
-              <div className="text-center text-yellow-600">行动不存在：找不到指定的行动信息</div>
+            <div className="bg-card rounded-lg p-8">
+              <div className="text-center text-status-warning">行动不存在：找不到指定的行动信息</div>
             </div>
           </div>
         )}

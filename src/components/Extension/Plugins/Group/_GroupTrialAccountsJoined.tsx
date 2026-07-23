@@ -60,14 +60,14 @@ const _GroupTrialAccountsJoined: React.FC<GroupTrialAccountsJoinedProps> = ({
   };
 
   if (!account) {
-    return <div className="text-sm text-gray-500">请先连接钱包</div>;
+    return <div className="text-sm text-greyscale-500">请先连接钱包</div>;
   }
 
   if (isPending) {
     return (
       <div className="flex flex-col items-center py-6">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载体验中列表...</p>
+        <p className="mt-4 text-greyscale-600">加载体验中列表...</p>
       </div>
     );
   }
@@ -76,7 +76,7 @@ const _GroupTrialAccountsJoined: React.FC<GroupTrialAccountsJoinedProps> = ({
     <div className="space-y-4">
       <table className="table w-full">
         <thead>
-          <tr className="border-b border-gray-100">
+          <tr className="border-b border-greyscale-100">
             <th className="px-1 text-left w-12">No</th>
             <th className="px-1 text-left">地址 / 加入轮次</th>
             <th className="px-1 text-right">体验代币数量</th>
@@ -92,20 +92,20 @@ const _GroupTrialAccountsJoined: React.FC<GroupTrialAccountsJoinedProps> = ({
             </tr>
           ) : (
             joinedList.map((item, index) => (
-              <tr key={`${item.account}-${index}`} className="border-b border-gray-100">
+              <tr key={`${item.account}-${index}`} className="border-b border-greyscale-100">
                 <td className="px-1">{index + 1}</td>
                 <td className="px-1">
                   <AddressWithCopyButton address={item.account} showCopyButton={true} />
                   <div className="text-xs text-greyscale-400 mt-0.5">第{item.joinedRound.toString()}轮</div>
                 </td>
                 <td className="px-1 text-right">
-                  <span className="font-mono text-secondary">{formatTokenAmount(item.amount)}</span>
+                  <span className="font-mono text-data-public">{formatTokenAmount(item.amount)}</span>
                 </td>
                 <td className="px-1 text-right">
                   <button
                     onClick={() => handleTrialExit(item.account)}
                     disabled={isPendingExit || isConfirmingExit}
-                    className="text-sm text-red-500 hover:text-red-600 disabled:text-gray-300 underline"
+                    className="text-sm text-status-error hover:text-status-error disabled:text-greyscale-300 underline"
                   >
                     终止
                   </button>

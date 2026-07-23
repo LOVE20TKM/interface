@@ -307,21 +307,21 @@ export default function _GroupServiceSetRecipients({
             {/* 顶部固定区域：行动和链群信息 + 错误提示 */}
             <div className="flex-shrink-0 space-y-4">
               {/* 行动和链群信息 */}
-              <div className="border rounded-lg p-3 bg-gray-50">
+              <div className="border rounded-lg p-3 bg-greyscale-50">
                 <div className="flex items-baseline mb-2">
                   <span className="text-greyscale-400 text-sm">{`No.`}</span>
-                  <span className="text-secondary text-xl font-bold mr-2">{String(actionId)}</span>
+                  <span className="text-data-public text-xl font-bold mr-2">{String(actionId)}</span>
                   <span className="font-bold text-greyscale-800">{actionTitle}</span>
                 </div>
-                <div className="text-gray-800">
-                  <span className="text-gray-500 text-xs">链群 #</span>
-                  <span className="text-secondary text-base font-semibold">{groupId.toString()}</span>{" "}
+                <div className="text-greyscale-800">
+                  <span className="text-greyscale-500 text-xs">链群 #</span>
+                  <span className="text-data-public text-base font-semibold">{groupId.toString()}</span>{" "}
                   <span>{groupName || `链群 #${groupId}`}</span>
                 </div>
               </div>
 
               {form.formState.errors.root && (
-                <div className="text-red-500 text-sm p-2 bg-red-50 rounded-md border border-red-200">
+                <div className="text-status-error text-sm p-2 bg-status-error-soft rounded-md border border-status-error-border">
                   {form.formState.errors.root.message}
                 </div>
               )}
@@ -343,7 +343,7 @@ export default function _GroupServiceSetRecipients({
                     <div
                       key={field.id}
                       className={`border rounded-lg p-2 sm:p-3 ${
-                        isDuplicate ? "bg-red-50 border-red-300" : "bg-white border-gray-200"
+                        isDuplicate ? "bg-status-error-soft border-status-error-border" : "bg-card border-greyscale-200"
                       }`}
                     >
                       {/* 第一行：序号 + 地址 */}
@@ -365,7 +365,7 @@ export default function _GroupServiceSetRecipients({
                                 />
                               </FormControl>
                               <FormMessage className="text-xs" />
-                              {isDuplicate && <p className="text-xs text-red-600 mt-1">该地址重复</p>}
+                              {isDuplicate && <p className="text-xs text-status-error mt-1">该地址重复</p>}
                             </FormItem>
                           )}
                         />
@@ -400,7 +400,7 @@ export default function _GroupServiceSetRecipients({
                                     onChange={handleBasisPointsChange(field.onChange, maxForThisInput)}
                                     className="h-8 px-1 sm:px-2 pr-6 w-16"
                                   />
-                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-xs sm:text-sm">
+                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-greyscale-500 pointer-events-none text-xs sm:text-sm">
                                     %
                                   </span>
                                 </div>
@@ -416,7 +416,7 @@ export default function _GroupServiceSetRecipients({
                           onClick={() => remove(index)}
                           className="h-8 w-8 shrink-0"
                         >
-                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
+                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-status-error" />
                         </Button>
                       </div>
                     </div>
@@ -434,8 +434,8 @@ export default function _GroupServiceSetRecipients({
                 <div
                   className={`text-sm p-2 rounded-md border ${
                     isTotalExceeded || hasDuplicateAddresses
-                      ? "bg-red-50 border-red-200 text-red-700"
-                      : "bg-blue-50 border-blue-200 text-blue-700"
+                      ? "bg-status-error-soft border-status-error-border text-status-error"
+                      : "bg-status-info-soft border-status-info-border text-status-info"
                   }`}
                 >
                   <div className="flex justify-between items-center">
@@ -448,10 +448,10 @@ export default function _GroupServiceSetRecipients({
                     </div>
                   )}
                   {isTotalExceeded && (
-                    <div className="text-xs mt-1 text-red-600">警告：总比例超过 99%，请调整百分比</div>
+                    <div className="text-xs mt-1 text-status-error">警告：总比例超过 99%，请调整百分比</div>
                   )}
                   {hasDuplicateAddresses && (
-                    <div className="text-xs mt-1 text-red-600">警告：存在重复地址，请修改或删除</div>
+                    <div className="text-xs mt-1 text-status-error">警告：存在重复地址，请修改或删除</div>
                   )}
                 </div>
               )}
@@ -484,9 +484,9 @@ export default function _GroupServiceSetRecipients({
               </Button>
             </div>
 
-            <div className="flex-shrink-0 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2 mt-4">
-              <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
-              <div className="space-y-1 text-gray-600">
+            <div className="flex-shrink-0 text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2 mt-4">
+              <div className="font-medium text-greyscale-700 mb-1">💡 小贴士</div>
+              <div className="space-y-1 text-greyscale-600">
                 <div>• 这里的设置需先参与链群服务行动后才会实际生效。</div>
                 <div>• 仅影响链群服务者在链群服务行动中的激励二次分配。</div>
                 <div>• 未分配的剩余部分仍归链群服务者。</div>

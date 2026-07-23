@@ -170,7 +170,7 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
         <div className="stats w-full grid grid-cols-2 divide-x-0 gap-4">
           <div className="stat place-items-center min-h-[120px] flex flex-col justify-center">
             <div className="stat-title">我的参与</div>
-            <div className="stat-value text-2xl text-secondary">
+            <div className="stat-value text-2xl text-data-personal">
               {isPendingJoinedAmountByAccount ? (
                 <LoadingIcon />
               ) : (
@@ -181,7 +181,7 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
           </div>
           <div className="stat place-items-center min-h-[120px] flex flex-col justify-center p-0">
             <div className="stat-title">被抽中验证概率</div>
-            <div className="stat-value text-2xl text-secondary">{probabilityStr}</div>
+            <div className="stat-value text-2xl text-data-personal">{probabilityStr}</div>
             <div className="stat-desc text-sm mt-2 whitespace-normal break-words text-center">
               我的占比：{participationRatioStr}
             </div>
@@ -189,9 +189,9 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
         </div>
       )}
       {probability < 100 && tokensNeededFor100 > BigInt(0) && (
-        <div className="text-sm mb-2 text-gray-500 whitespace-normal break-words text-center">
+        <div className="text-sm mb-2 text-greyscale-500 whitespace-normal break-words text-center">
           （要100%概率被抽中，至少还需{' '}
-          <span className="text-secondary"> {formatTokenAmount(tokensNeededFor100, 4, 'ceil')}</span> 代币）
+          <span className="text-data-personal"> {formatTokenAmount(tokensNeededFor100, 4, 'ceil')}</span> 代币）
         </div>
       )}
       {showJoinButton && (
@@ -249,13 +249,13 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
                 </div>
               </div>
 
-              <div className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-3 mt-3 mb-3 w-full">
-                <div className="font-medium text-gray-600 mb-3">💡 小贴士：</div>
-                <div className="ml-4 text-gray-600 mb-2">
+              <div className="text-sm text-greyscale-700 bg-greyscale-50 border border-greyscale-200 rounded px-2 py-3 mt-3 mb-3 w-full">
+                <div className="font-medium text-greyscale-600 mb-3">💡 小贴士：</div>
+                <div className="ml-4 text-greyscale-600 mb-2">
                   1. 要100%被抽中的代币数 = 总参与代币数 / 最大激励地址数。
                   所以，有其他人增加参与代币，就需要更多代币才能达到100%概率被抽中。
                 </div>
-                <div className="ml-4 text-gray-600">
+                <div className="ml-4 text-greyscale-600">
                   2. 当前验证的是上一轮的行动结果，所以取回代币，不会影响正在进行的验证，也不会影响上一轮行动的激励。
                 </div>
               </div>
@@ -268,8 +268,8 @@ const ActionPanelForJoin: React.FC<ActionPanelForJoinProps> = ({
                     verificationKeys &&
                     verificationKeys.length > 0 && (
                       <>
-                        <h3 className="text-base font-medium text-gray-700 mb-3">我提供的验证信息：</h3>
-                        <div className="w-full bg-gray-50 rounded-lg p-4 border border-gray-100">
+                        <h3 className="text-base font-medium text-greyscale-700 mb-3">我提供的验证信息：</h3>
+                        <div className="w-full bg-greyscale-50 rounded-lg p-4 border border-greyscale-100">
                           <div className="w-full text-left">
                             {verificationKeys.map((key, index) => (
                               <div key={index} className="mb-2">

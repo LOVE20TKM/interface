@@ -181,7 +181,7 @@ export default function TokenDeployment() {
             </CardFooter>
           </form>
         </Form>
-        <div className="bg-gray-100 text-greyscale-500 rounded-lg p-4 text-sm mt-0 m-6">
+        <div className="bg-greyscale-100 text-greyscale-500 rounded-lg p-4 text-sm mt-0 m-6">
           <p>
             公平发射募集目标：
             {formatTokenAmount(safeToBigInt(process.env.NEXT_PUBLIC_PARENT_TOKEN_FUNDRAISING_GOAL ?? '0'))}个{' '}

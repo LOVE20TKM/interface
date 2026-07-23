@@ -102,7 +102,7 @@ export default function ActionInfoPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <LoadingIcon />
-          <p className="mt-4 text-gray-600">加载Token信息中...</p>
+          <p className="mt-4 text-greyscale-600">加载Token信息中...</p>
         </div>
       </div>
     );
@@ -154,10 +154,10 @@ export default function ActionInfoPage() {
   const renderTabContent = () => {
     if (isPending) {
       return (
-        <div className="bg-white rounded-lg p-8">
+        <div className="bg-card rounded-lg p-8">
           <div className="text-center">
             <LoadingIcon />
-            <p className="mt-4 text-gray-600">加载数据中...</p>
+            <p className="mt-4 text-greyscale-600">加载数据中...</p>
           </div>
         </div>
       );
@@ -165,7 +165,7 @@ export default function ActionInfoPage() {
 
     if (error) {
       return (
-        <div className="bg-white rounded-lg p-8">
+        <div className="bg-card rounded-lg p-8">
           <AlertBox type="error" message={`加载失败：${error.message || '获取行动信息失败，请稍后重试'}`} />
         </div>
       );
@@ -173,7 +173,7 @@ export default function ActionInfoPage() {
 
     if (!actionInfo) {
       return (
-        <div className="bg-white rounded-lg p-8">
+        <div className="bg-card rounded-lg p-8">
           <AlertBox type="warning" message="行动不存在：找不到指定的行动信息" />
         </div>
       );
@@ -241,7 +241,7 @@ export default function ActionInfoPage() {
           )}
 
           {/* Tab导航 */}
-          <div className="flex border-b border-gray-200 mb-4">
+          <div className="flex border-b border-greyscale-200 mb-4">
             {allTabs.map((tab) => (
               <button
                 key={tab.key}
@@ -249,7 +249,7 @@ export default function ActionInfoPage() {
                 className={`flex-1 px-2 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.key
                     ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    : 'border-transparent text-greyscale-500 hover:text-greyscale-700'
                 }`}
               >
                 {tab.label}

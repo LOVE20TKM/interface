@@ -57,15 +57,15 @@ export default function RecipientsDetailDialog({
         {isPending ? (
           <div className="flex flex-col items-center justify-center py-12">
             <LoadingIcon />
-            <p className="mt-4 text-sm text-gray-600">加载明细数据...</p>
+            <p className="mt-4 text-sm text-greyscale-600">加载明细数据...</p>
           </div>
         ) : error ? (
-          <div className="text-center py-8 text-red-500">
+          <div className="text-center py-8 text-status-error">
             <p className="text-sm">加载失败，请稍后重试</p>
-            {error instanceof Error && <p className="text-xs mt-2 text-gray-500">{error.message}</p>}
+            {error instanceof Error && <p className="text-xs mt-2 text-greyscale-500">{error.message}</p>}
           </div>
         ) : !actionInfosWithGroups || actionInfosWithGroups.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-greyscale-500">
             <p className="text-sm">暂无二次分配明细</p>
           </div>
         ) : (
@@ -75,7 +75,7 @@ export default function RecipientsDetailDialog({
                 {/* 行动标题 */}
                 <div className="flex items-baseline mb-2">
                   <span className="text-greyscale-400 text-sm">{`No.`}</span>
-                  <span className="text-secondary text-xl font-bold mr-2">{String(actionInfo.actionId)}</span>
+                  <span className="text-data-public text-xl font-bold mr-2">{String(actionInfo.actionId)}</span>
                   <span className="font-bold text-greyscale-800">
                     {actionInfo.actionBaseInfo.body.title || `行动 #${actionInfo.actionId.toString()}`}
                   </span>
@@ -83,16 +83,16 @@ export default function RecipientsDetailDialog({
 
                 {/* 链群列表 */}
                 {actionInfo.groups.length === 0 ? (
-                  <p className="text-sm text-gray-500">该行动下暂无链群二次分配</p>
+                  <p className="text-sm text-greyscale-500">该行动下暂无链群二次分配</p>
                 ) : (
                   <div className="space-y-2">
                     {actionInfo.groups.map((group) => (
                       <div key={group.groupId.toString()} className="border-t pt-4 first:border-t-0 first:pt-0">
                         {/* 链群名称 */}
                         <div className="flex items-center justify-between mb-2">
-                          <div className="text-gray-800">
-                            <span className="text-gray-500 text-xs">&nbsp;链群 #</span>
-                            <span className="text-secondary text-base font-semibold ">
+                          <div className="text-greyscale-800">
+                            <span className="text-greyscale-500 text-xs">&nbsp;链群 #</span>
+                            <span className="text-data-public text-base font-semibold ">
                               {group.groupId.toString()}
                             </span>{' '}
                             <span>{group.groupName || `链群 #${group.groupId}`}</span>
@@ -134,11 +134,11 @@ export default function RecipientsDetailDialog({
 
                                 {/* 链群服务者金额 */}
                                 {group.distribution.ownerAmount > BigInt(0) && (
-                                  <TableRow className="bg-gray-50 font-medium">
+                                  <TableRow className="bg-greyscale-50 font-medium">
                                     <TableCell className="px-3 py-2">
-                                      <span className="text-sm text-gray-600">链群服务者保留</span>
+                                      <span className="text-sm text-greyscale-600">链群服务者保留</span>
                                     </TableCell>
-                                    <TableCell className="px-3 py-2 text-right text-sm text-gray-600">-</TableCell>
+                                    <TableCell className="px-3 py-2 text-right text-sm text-greyscale-600">-</TableCell>
                                     <TableCell className="px-3 py-2 text-right text-sm">
                                       {formatTokenAmount(group.distribution.ownerAmount)}
                                     </TableCell>
@@ -146,7 +146,7 @@ export default function RecipientsDetailDialog({
                                 )}
 
                                 {/* 汇总行 */}
-                                <TableRow className="bg-gray-100 font-semibold">
+                                <TableRow className="bg-greyscale-100 font-semibold">
                                   <TableCell className="px-3 py-2">
                                     <span className="text-sm">汇总</span>
                                   </TableCell>
@@ -171,7 +171,7 @@ export default function RecipientsDetailDialog({
                             </Table>
                           </div>
                         ) : (
-                          <div className="px-3 py-4 text-center text-sm text-gray-500">暂无分配明细</div>
+                          <div className="px-3 py-4 text-center text-sm text-greyscale-500">暂无分配明细</div>
                         )}
                       </div>
                     ))}

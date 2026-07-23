@@ -133,7 +133,7 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
                     >
                       <CardHeader className="px-1 pt-2 pb-1 flex-row justify-start items-baseline">
                         <span className="text-greyscale-400 text-sm mr-1">{`No.`}</span>
-                        <span className="text-secondary text-xl font-bold mr-2">{String(action.head.id)}</span>
+                        <span className="text-data-public text-xl font-bold mr-2">{String(action.head.id)}</span>
                         <span className="font-bold text-greyscale-800">{`${action.body.title}`}</span>
                       </CardHeader>
                       <CardContent className="px-1 pt-1 pb-2">
@@ -149,23 +149,23 @@ const StepSelectActions: React.FC<StepSelectActionsProps> = ({ currentRound, onN
                           </span> */}
                           <span>
                             <span className="text-greyscale-400 mr-1">投票数</span>
-                            <span className="text-secondary">{formatTokenAmount(votingAction.votesNum)}</span>
+                            <span className="text-data-public">{formatTokenAmount(votingAction.votesNum)}</span>
                           </span>
                         </div>
                         <div className="flex justify-between gap-0 mt-1 text-sm">
                           <span>
                             <span className="text-greyscale-400 mr-1">占已投票</span>
-                            <span className="text-secondary">
+                            <span className="text-data-public">
                               {totalVotes === BigInt(0)
                                 ? '-'
                                 : formatPercentage((Number(votingAction.votesNum) * 100) / Number(totalVotes))}
                             </span>
                           </span>
                           <span>
-                            <span className={`${isBelowMinThreshold ? 'text-red-500' : 'text-secondary'} mr-1`}>
+                            <span className={`${isBelowMinThreshold ? 'text-status-error' : 'text-data-public'} mr-1`}>
                               占总治理票
                             </span>
-                            <span className={isBelowMinThreshold ? 'text-red-500' : 'text-secondary'}>
+                            <span className={isBelowMinThreshold ? 'text-status-error' : 'text-data-public'}>
                               {!govData?.govVotes || govData.govVotes === BigInt(0)
                                 ? '-'
                                 : formatPercentage(govPercentage)}

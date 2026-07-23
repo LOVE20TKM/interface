@@ -40,7 +40,7 @@ const NftOwnerLookup: React.FC<NftOwnerLookupProps> = ({
           onValueChange={(value) => onLookupModeChange(value as NftLookupMode)}
           disabled={disabled}
         >
-          <SelectTrigger className="h-full w-[112px] shrink-0 rounded-none border-0 border-r border-input bg-gray-50 px-3 focus:ring-0 focus:ring-offset-0">
+          <SelectTrigger className="h-full w-[112px] shrink-0 rounded-none border-0 border-r border-input bg-greyscale-50 px-3 focus:ring-0 focus:ring-offset-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -61,38 +61,38 @@ const NftOwnerLookup: React.FC<NftOwnerLookupProps> = ({
         />
       </div>
 
-      {lookupResult?.status === 'loading' && <div className="text-xs text-gray-400">查询中...</div>}
+      {lookupResult?.status === 'loading' && <div className="text-xs text-greyscale-400">查询中...</div>}
 
       {(lookupResult?.status === 'invalid' || lookupResult?.status === 'not_found') && (
-        <div className="text-xs text-gray-400">{lookupResult.message}</div>
+        <div className="text-xs text-greyscale-400">{lookupResult.message}</div>
       )}
 
-      {lookupResult?.status === 'error' && <div className="text-xs text-red-500">{lookupResult.message}</div>}
+      {lookupResult?.status === 'error' && <div className="text-xs text-status-error">{lookupResult.message}</div>}
 
       {lookupResult?.status === 'resolved' && resultVariant === 'compact' && (
-        <div className="nft-lookup-compact-result text-xs text-gray-500">
+        <div className="nft-lookup-compact-result text-xs text-greyscale-500">
           <span className="font-mono">#{lookupResult.tokenId.toString()}</span>{' '}
           <span>{lookupResult.groupName}</span>
         </div>
       )}
 
       {lookupResult?.status === 'resolved' && resultVariant === 'full' && (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2 text-sm">
+        <div className="rounded-lg border border-greyscale-200 bg-greyscale-50 p-3 space-y-2 text-sm">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-gray-500">NFT ID</span>
-            <span className="font-mono text-secondary">#{lookupResult.tokenId.toString()}</span>
+            <span className="text-greyscale-500">NFT ID</span>
+            <span className="font-mono text-data-public">#{lookupResult.tokenId.toString()}</span>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <span className="text-gray-500">NFT名称</span>
-            <span className="font-medium text-gray-900">{lookupResult.groupName}</span>
+            <span className="text-greyscale-500">NFT名称</span>
+            <span className="font-medium text-greyscale-900">{lookupResult.groupName}</span>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <span className="text-gray-500">当前持有人地址</span>
+            <span className="text-greyscale-500">当前持有人地址</span>
             <AddressWithCopyButton
               address={lookupResult.owner}
               showAddress={true}
               showCopyButton={true}
-              colorClassName="text-gray-600"
+              colorClassName="text-greyscale-600"
             />
           </div>
         </div>

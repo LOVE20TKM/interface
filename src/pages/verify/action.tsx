@@ -66,7 +66,7 @@ const VerifyPage = () => {
               <LeftTitle title={isExtensionAction ? '请选择验证结果：' : '请分配您的验证票：'} />
               <Link
                 href={`/action/info/?id=${actionId}&symbol=${token?.symbol}&tab=verify&tab2=current`}
-                className="text-blue-600 hover:text-blue-800 underline text-sm"
+                className="text-status-info hover:text-status-info underline text-sm"
               >
                 验证结果&gt;&gt;
               </Link>

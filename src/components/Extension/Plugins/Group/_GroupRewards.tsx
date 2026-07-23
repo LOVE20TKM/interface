@@ -269,10 +269,10 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
 
   if (isInitialLoading) {
     return (
-      <div className="bg-white rounded-lg p-8">
+      <div className="bg-card rounded-lg p-8">
         <div className="flex flex-col items-center py-8">
           <LoadingIcon />
-          <p className="mt-4 text-gray-600">加载激励记录...</p>
+          <p className="mt-4 text-greyscale-600">加载激励记录...</p>
         </div>
       </div>
     );
@@ -348,10 +348,10 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
             <AlertBox
               type="error"
               message={
-                <div className="space-y-1 text-red-600">
+                <div className="space-y-1 text-status-error">
                   <div>
                     {distrustHref ? (
-                      <Link href={distrustHref} className="underline underline-offset-2 hover:text-red-700">
+                      <Link href={distrustHref} className="underline underline-offset-2 hover:text-status-error">
                         本链群第 {selectedRound.toString()} 轮，被投不信任票，不信任率
                         {formatPercentage(distrustRatePercent)}
                       </Link>
@@ -394,7 +394,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
         ) : combinedData.length > 0 ? (
           <table className="table w-full">
             <thead>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-greyscale-100">
                 <th className="pl-0 pr-[2px] w-[1%] whitespace-nowrap text-center"> </th>
                 <th className="pl-0 pr-1 text-left">成员 / 加入轮次</th>
                 <th className="px-1 text-right">参与代币</th>
@@ -425,7 +425,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
 
                 return (
                   <React.Fragment key={`${item.account}-${index}`}>
-                    <tr className="border-b border-gray-100">
+                    <tr className="border-b border-greyscale-100">
                       <td className="pl-0 pr-[4px] w-[1%] whitespace-nowrap text-center text-greyscale-400 tabular-nums">
                         {hasVerificationKeys && (
                           <button
@@ -444,7 +444,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
                         <div className="text-xs text-greyscale-400 mt-0.5">
                           第{item.joinedRound.toString()}轮
                           {isTrialUser && (
-                            <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded">体验</span>
+                            <span className="ml-2 px-2 py-0.5 text-xs bg-status-info-soft text-status-info rounded">体验</span>
                           )}
                         </div>
                       </td>
@@ -462,7 +462,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
                         {shouldShowNotGenerated ? (
                           <div className="text-greyscale-500">未生成</div>
                         ) : (
-                          <div className="font-mono text-secondary">{formatTokenAmount(item.totalReward)}</div>
+                          <div className="font-mono text-data-public">{formatTokenAmount(item.totalReward)}</div>
                         )}
                         {/* <div className="text-xs text-greyscale-500">{item.rewardPercentage.toFixed(2)}%</div> */}
                       </td>
@@ -470,7 +470,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
 
                     {/* 展开的验证信息行 */}
                     {hasVerificationKeys && verificationInfo && isExpanded && (
-                      <tr className="border-b border-gray-100 bg-gray-50">
+                      <tr className="border-b border-greyscale-100 bg-greyscale-50">
                         <td></td>
                         <td colSpan={5} className="px-1 py-3">
                           <div className="text-sm text-greyscale-600">
@@ -503,7 +503,7 @@ const _GroupRewards: React.FC<GroupRewardsProps> = ({ extensionAddress, groupId,
       {!hasMore && allRecords.length > 0 && (
         <table className="table w-full">
           <tbody>
-            <tr className="border-t-1 border-gray-300">
+            <tr className="border-t-1 border-greyscale-300">
               <td className="pl-0 pr-[1px] w-[1%] whitespace-nowrap text-center text-greyscale-400">-</td>
               <td className="pl-0 pr-1 text-left">合计</td>
               <td className="px-1 text-right">

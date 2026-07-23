@@ -81,7 +81,7 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
               const href = `/action/info?id=${actionDetail.action.head.id}&symbol=${token?.symbol}`;
 
               // 根据是否有激励设置背景色
-              const cardClassName = actionDetail.hasReward ? 'shadow-none' : 'shadow-none bg-gray-50';
+              const cardClassName = actionDetail.hasReward ? 'shadow-none' : 'shadow-none bg-greyscale-50';
 
               const actionExpectedReward =
                 actionDetail.hasReward && totalRewardVotes > BigInt(0) && expectedReward
@@ -95,7 +95,7 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
                     <CardHeader className="px-3 pt-2 pb-1 flex-row justify-between items-baseline">
                       <div className="flex items-baseline">
                         <span className="text-greyscale-400 text-sm">{`No.`}</span>
-                        <span className="text-secondary text-xl font-bold mr-2">
+                        <span className="text-data-public text-xl font-bold mr-2">
                           {String(actionDetail.action.head.id)}
                         </span>
                         <span
@@ -117,14 +117,14 @@ const JoiningActionList: React.FC<JoiningActionListProps> = ({
                       <div className="flex justify-between">
                         <span>
                           <span className="text-greyscale-400 text-xs mr-1">投票占</span>
-                          <span className="text-secondary text-xs">{formatPercentage(voteRatio * 100)}</span>
+                          <span className="text-data-public text-xs">{formatPercentage(voteRatio * 100)}</span>
                         </span>
                         {!actionDetail.hasReward ? (
                           <span className="flex justify-between text-error text-sm">无铸币激励</span>
                         ) : (
                           <span>
                             <span className="text-greyscale-400 text-xs mr-1">APY</span>
-                            <span className="text-secondary text-xs">
+                            <span className="text-data-public text-xs">
                               {isPendingReward || isPendingExtension || actionDetail.isExtensionAmountPending ? (
                                 <LoadingIcon />
                               ) : (

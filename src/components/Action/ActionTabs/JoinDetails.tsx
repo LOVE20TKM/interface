@@ -95,7 +95,7 @@ export default function JoinDetails({ actionId }: JoinDetailsProps) {
               className={addressError ? 'border-red-500' : ''}
             />
             {addressError && (
-              <p className="text-sm text-red-500 flex items-center gap-1">
+              <p className="text-sm text-status-error flex items-center gap-1">
                 <AlertCircle className="h-4 w-4" />
                 {addressError}
               </p>
@@ -131,12 +131,12 @@ export default function JoinDetails({ actionId }: JoinDetailsProps) {
               <div className="space-y-4">
                 {/* 查询地址信息 */}
                 <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">查询地址</Label>
-                  <div className="p-3 bg-gray-50 rounded-lg">
+                  <Label className="text-sm text-greyscale-600">查询地址</Label>
+                  <div className="p-3 bg-greyscale-50 rounded-lg">
                     <div className="space-y-1">
                       <code className="text-sm font-mono break-all">{queryAddress}</code>
                       {searchAddress !== queryAddress && (
-                        <div className="text-xs text-gray-500">原始输入：{searchAddress}</div>
+                        <div className="text-xs text-greyscale-500">原始输入：{searchAddress}</div>
                       )}
                     </div>
                   </div>
@@ -146,8 +146,8 @@ export default function JoinDetails({ actionId }: JoinDetailsProps) {
                 {joinedAmountByActionIdByAccount !== undefined && joinedAmountByActionIdByAccount > BigInt(0) ? (
                   /* 有参与：显示参与数量 */
                   <div className="space-y-2">
-                    <Label className="text-sm text-gray-600">参与代币数量</Label>
-                    <div className="p-3 bg-gray-50 rounded-lg">
+                    <Label className="text-sm text-greyscale-600">参与代币数量</Label>
+                    <div className="p-3 bg-greyscale-50 rounded-lg">
                       <div className="text-lg font-semibold">
                         {formatTokenAmount(joinedAmountByActionIdByAccount)} {token?.symbol || ''}
                       </div>
@@ -155,12 +155,12 @@ export default function JoinDetails({ actionId }: JoinDetailsProps) {
                   </div>
                 ) : (
                   /* 未参与：显示提示信息 */
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="flex items-center gap-2 text-yellow-800">
+                  <div className="p-4 bg-status-warning-soft border border-status-warning-border rounded-lg">
+                    <div className="flex items-center gap-2 text-status-warning">
                       <AlertCircle className="h-5 w-5" />
                       <span className="font-medium">该地址未参与此行动</span>
                     </div>
-                    <p className="text-sm text-yellow-700 mt-1">参与代币数量为 0</p>
+                    <p className="text-sm text-status-warning mt-1">参与代币数量为 0</p>
                   </div>
                 )}
               </div>
@@ -174,7 +174,7 @@ export default function JoinDetails({ actionId }: JoinDetailsProps) {
         <CardHeader>
           <CardTitle className="text-base">使用说明</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-gray-600 space-y-2">
+        <CardContent className="text-sm text-greyscale-600 space-y-2">
           <p>• 支持两种地址格式：0x 开头的以太坊地址 或 TH 开头的 TKM 地址</p>
           <p>• 查询结果显示该地址参与此行动质押的代币总数量</p>
           <p>• 如果显示 0，表示该地址未参与此行动</p>

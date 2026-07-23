@@ -51,7 +51,7 @@ const GroupServiceAddressesTab: React.FC<GroupServiceAddressesTabProps> = ({ ext
 
   if (error) {
     return (
-      <div className="text-center text-red-500 py-8">
+      <div className="text-center text-status-error py-8">
         <p>加载失败：{error.message || '获取数据失败'}</p>
       </div>
     );
@@ -59,7 +59,7 @@ const GroupServiceAddressesTab: React.FC<GroupServiceAddressesTabProps> = ({ ext
 
   if (participants.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">
+      <div className="text-center text-greyscale-500 py-8">
         <p>暂无参与者</p>
       </div>
     );
@@ -83,7 +83,7 @@ const GroupServiceAddressesTab: React.FC<GroupServiceAddressesTabProps> = ({ ext
       <div className="overflow-x-auto">
         <table className="table w-full">
           <thead>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-greyscale-100">
               <th className="px-0 text-center"> </th>
               <th className="px-2 text-left">链群服务者</th>
               <th className="px-2 text-center">加入轮次</th>
@@ -95,8 +95,8 @@ const GroupServiceAddressesTab: React.FC<GroupServiceAddressesTabProps> = ({ ext
               <tr
                 key={participant.address}
                 onClick={() => handleRowClick(participant.address)}
-                className={`border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
-                  participant.address === account ? 'text-secondary' : ''
+                className={`border-b border-greyscale-100 cursor-pointer hover:bg-greyscale-50 ${
+                  participant.address === account ? 'text-data-personal' : ''
                 }`}
               >
                 <td className="px-0 text-center">{index + 1}</td>
@@ -109,7 +109,7 @@ const GroupServiceAddressesTab: React.FC<GroupServiceAddressesTabProps> = ({ ext
                 </td>
                 <td className="px-2 text-center">{formatNumber(participant.joinedRound)}</td>
                 <td className="px-2 text-center">
-                  <ChevronRight className="h-5 w-5 text-gray-400 inline-block" />
+                  <ChevronRight className="h-5 w-5 text-greyscale-400 inline-block" />
                 </td>
               </tr>
             ))}

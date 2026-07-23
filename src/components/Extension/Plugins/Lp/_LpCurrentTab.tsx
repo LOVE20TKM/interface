@@ -44,7 +44,7 @@ const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddr
 
   if (error) {
     return (
-      <div className="text-center text-red-500 py-8">
+      <div className="text-center text-status-error py-8">
         <p>加载失败：{error.message || '获取数据失败'}</p>
       </div>
     );
@@ -52,7 +52,7 @@ const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddr
 
   if (participants.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">
+      <div className="text-center text-greyscale-500 py-8">
         <p>暂无参与者</p>
       </div>
     );
@@ -69,7 +69,7 @@ const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddr
     <div className="overflow-x-auto">
       <table className="table w-full">
         <thead>
-          <tr className="border-b border-gray-100">
+          <tr className="border-b border-greyscale-100">
             <th className="px-2 text-left">地址</th>
             <th className="px-2 text-right">治理票/LP</th>
             <th className="px-2 text-right">加入轮次</th>
@@ -79,7 +79,7 @@ const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddr
           {sortedParticipants.map((participant) => (
             <tr
               key={participant.address}
-              className={`border-b border-gray-100 ${participant.address === account ? 'text-secondary' : ''}`}
+              className={`border-b border-greyscale-100 ${participant.address === account ? 'text-data-personal' : ''}`}
             >
               <td className="px-2">
                 <AddressWithCopyButton
@@ -90,7 +90,7 @@ const LpCurrentTab: React.FC<LpCurrentTabProps> = ({ extensionAddress, tokenAddr
               </td>
               <td className="px-2 text-right">
                 <div className="flex flex-col">
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-greyscale-500 mt-1">
                     <div>治理票: {formatPercentage(participant.govVotesRatio * 100)}</div>
                     <div>LP: {formatPercentage(participant.lpRatio * 100)}</div>
                   </div>

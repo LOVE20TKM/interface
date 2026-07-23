@@ -99,7 +99,7 @@ const _GroupManagementDialog: React.FC<GroupManagementDialogProps> = ({
           </Button>
           <Button
             variant="outline"
-            className="w-full justify-start text-red-600 hover:text-red-700"
+            className="w-full justify-start text-status-error hover:text-status-error"
             onClick={() => handleNavigateToOp('deactivate')}
           >
             <XCircle className="w-4 h-4 mr-2" />

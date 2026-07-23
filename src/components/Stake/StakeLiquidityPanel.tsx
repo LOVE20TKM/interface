@@ -414,7 +414,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
 
   return (
     <>
-      <div className="bg-white px-4">
+      <div className="bg-card px-4">
         <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-full mx-auto space-y-4">
           <div className="w-full flex justify-between items-center">
             <LeftTitle title="质押获取治理票" />
@@ -430,7 +430,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                       <h2 className="text-xl font-semibold">第1步: 填写质押数量</h2>
                       <Link
                         href="/dex/swap"
-                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                        className="text-sm text-status-info hover:text-status-info hover:underline transition-colors"
                       >
                         获取代币
                       </Link>
@@ -443,7 +443,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                         name="parentToken"
                         render={({ field }) => (
                           <FormItem>
-                            <Card className="bg-[#f7f8f9] border-none">
+                            <Card className="bg-greyscale-50 border-none">
                               <CardContent className="py-4 px-2">
                                 <div className="flex items-center justify-between mb-3">
                                   <Input
@@ -458,8 +458,8 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                                     className="text-xl border-none p-0 h-auto bg-transparent focus:ring-0 focus:outline-none mr-2"
                                   />
                                   <div className="flex items-center gap-2">
-                                    <div className="bg-white hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors ">
-                                      <span className="font-medium text-gray-800">{token?.parentTokenSymbol}</span>
+                                    <div className="bg-card hover:bg-greyscale-50 px-3 py-1.5 rounded-full transition-colors ">
+                                      <span className="font-medium text-greyscale-800">{token?.parentTokenSymbol}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -498,7 +498,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                                       最高
                                     </Button>
                                   </div>
-                                  <span className="text-sm text-gray-600">{formatTokenAmount(parentTokenBalance)}</span>
+                                  <span className="text-sm text-data-personal">{formatTokenAmount(parentTokenBalance)}</span>
                                 </div>
                               </CardContent>
                             </Card>
@@ -513,7 +513,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                         name="stakeToken"
                         render={({ field }) => (
                           <FormItem>
-                            <Card className="bg-[#f7f8f9] border-none">
+                            <Card className="bg-greyscale-50 border-none">
                               <CardContent className="py-4 px-2">
                                 <div className="flex items-center justify-between mb-3">
                                   <Input
@@ -528,8 +528,8 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                                     className="text-xl border-none p-0 h-auto bg-transparent focus:ring-0 focus:outline-none mr-2"
                                   />
                                   <div className="flex items-center gap-2">
-                                    <div className="bg-white hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors">
-                                      <span className="font-medium text-gray-800">{token?.symbol}</span>
+                                    <div className="bg-card hover:bg-greyscale-50 px-3 py-1.5 rounded-full transition-colors">
+                                      <span className="font-medium text-greyscale-800">{token?.symbol}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -568,7 +568,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                                       最高
                                     </Button>
                                   </div>
-                                  <span className="text-sm text-gray-600">{formatTokenAmount(tokenBalance)}</span>
+                                  <span className="text-sm text-data-personal">{formatTokenAmount(tokenBalance)}</span>
                                 </div>
                               </CardContent>
                             </Card>
@@ -580,12 +580,12 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
 
                     {pairExists && (
                       <div className="space-y-1 text-sm mt-2">
-                        <div className="text-gray-600 flex items-center gap-1">
+                        <div className="text-greyscale-600 flex items-center gap-1">
                           <HelpCircle className="w-4 h-4" />
                           质押比例按当前价格计算：
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="text-gray-600">
+                          <div className="text-greyscale-600">
                             {showTokenToParent ? (
                               <>
                                 1 {token?.symbol} ={' '}
@@ -611,17 +611,17 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => setShowTokenToParent(!showTokenToParent)}
-                            className="h-6 w-6 p-0 hover:bg-gray-100 transition-colors"
+                            className="h-6 w-6 p-0 hover:bg-greyscale-100 transition-colors"
                             title="切换比例显示"
                           >
-                            <ArrowUpDown className="h-3 w-3 text-gray-500" />
+                            <ArrowUpDown className="h-3 w-3 text-greyscale-500" />
                           </Button>
                         </div>
                       </div>
                     )}
                     {/* 滑点设置区域 */}
                     <div className="flex items-center text-sm mt-2">
-                      <div className="text-gray-600 flex items-center gap-1 mr-2">
+                      <div className="text-greyscale-600 flex items-center gap-1 mr-2">
                         <Zap className="w-4 h-4" />
                         滑点上限：{slippage}%
                       </div>
@@ -631,7 +631,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="h-6 px-2 text-xs hover:bg-gray-100 transition-colors"
+                            className="h-6 px-2 text-xs hover:bg-greyscale-100 transition-colors"
                             title="设置滑点"
                           >
                             <Settings className="h-3 w-3" />
@@ -677,7 +677,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                                   max="50"
                                   step="0.1"
                                 />
-                                <span className="text-sm text-gray-500">%</span>
+                                <span className="text-sm text-greyscale-500">%</span>
                               </div>
                               {customSlippage && (
                                 <Button
@@ -698,7 +698,7 @@ const StakeLiquidityPanel: React.FC<StakeLiquidityPanelProps> = ({}) => {
                                 </Button>
                               )}
                             </div>
-                            <div className="text-xs text-gray-500 space-y-1">
+                            <div className="text-xs text-greyscale-500 space-y-1">
                               <p>• 滑点是指实际执行价格与预期价格之间的差异</p>
                               <p>• 较低的滑点可能导致交易失败，较高的滑点可能导致不利的价格</p>
                               <p>• 建议设置在 0.5% - 5% 之间</p>

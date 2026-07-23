@@ -66,7 +66,7 @@ export default function TokenSelect({
       )}
 
       {selectedToken && value !== CUSTOM_TOKEN_VALUE && (
-        <div className="text-xs text-gray-600">
+        <div className="text-xs text-greyscale-600">
           <div className="mb-1 font-semibold text-greyscale-500">代币合约地址</div>
           {selectedToken.address === 'NATIVE' ? (
             showNativeAddress ? <span>原生代币，无合约地址</span> : null
@@ -76,7 +76,7 @@ export default function TokenSelect({
                 address={selectedToken.address}
                 showAddress={true}
                 showCopyButton={true}
-                colorClassName="text-gray-600"
+                colorClassName="text-greyscale-600"
               />
               {showAddToMetamask && (
                 <AddToMetamask

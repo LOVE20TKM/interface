@@ -407,24 +407,24 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
 
               {/* 错误信息 */}
               {writeError && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">错误: {writeError.message}</p>
+                <div className="p-4 bg-status-error-soft border border-status-error-border rounded-lg">
+                  <p className="text-sm text-status-error">错误: {writeError.message}</p>
                 </div>
               )}
 
               {/* 部署成功 - 显示扩展地址 */}
               {deployedExtensionAddress && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
+                <div className="p-4 bg-status-success-soft border border-status-success-border rounded-lg space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">🎉</span>
-                    <p className="text-base font-semibold text-green-700">扩展部署完成！</p>
+                    <p className="text-base font-semibold text-status-success">扩展部署完成！</p>
                   </div>
                   <div className="space-y-2">
                     <p className="text-sm text-greyscale-600">扩展合约地址:</p>
                     <AddressWithCopyButton address={deployedExtensionAddress} showAddress={true} />
                   </div>
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded space-y-3">
-                    <p className="text-sm text-blue-700">✨ 扩展已部署！现在可以使用此扩展地址创建行动。</p>
+                  <div className="p-3 bg-status-info-soft border border-status-info-border rounded space-y-3">
+                    <p className="text-sm text-status-info">✨ 扩展已部署！现在可以使用此扩展地址创建行动。</p>
                     <Button className="w-full" asChild>
                       <Link
                         href={`/action/new/?symbol=${tokenSymbol}&extension=${deployedExtensionAddress}`}
@@ -477,9 +477,9 @@ export default function GroupActionDeploy({ factoryAddress }: GroupActionDeployP
                   </div>
 
                   {/* 提示信息 */}
-                  <div className="mt-6 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-                    <div className="font-medium text-gray-700 mb-1">💡 小贴士</div>
-                    <div className="space-y-1 text-gray-600">
+                  <div className="mt-6 text-sm text-greyscale-600 bg-greyscale-50 border border-greyscale-200 rounded px-3 py-2">
+                    <div className="font-medium text-greyscale-700 mb-1">💡 小贴士</div>
+                    <div className="space-y-1 text-greyscale-600">
                       <div>• 每个新的扩展行动，都需部署1个专属扩展合约</div>
                       <div>• 部署时会将 1个 {tokenSymbol} 转给扩展合约，用于扩展合约初始化</div>
                     </div>

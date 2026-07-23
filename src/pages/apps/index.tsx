@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Repeat2,
   SendHorizontal,
+  Palette,
   Shield,
   ShieldCheck,
   Users,
@@ -93,6 +94,16 @@ const appSections: AppSection[] = [
       },
     ],
   },
+  {
+    title: "其他",
+    items: [
+      {
+        name: "主题",
+        href: "/apps/theme",
+        icon: Palette,
+      },
+    ],
+  },
 ];
 
 function resolveHref(href: AppItem["href"], symbol?: string) {
@@ -117,7 +128,7 @@ function AppIcon({ item, symbol }: { item: AppItem; symbol?: string }) {
   return (
     <Link
       href={resolveHref(item.href, symbol)}
-      className="group relative flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-lg bg-white px-2 py-3 text-center transition-all hover:bg-secondary/5"
+      className="group relative flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-lg bg-card px-2 py-3 text-center transition-all hover:bg-secondary/5"
     >
       <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-greyscale-100 text-secondary">
         <Icon className="h-5 w-5" />

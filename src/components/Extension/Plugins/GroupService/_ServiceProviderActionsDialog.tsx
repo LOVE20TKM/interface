@@ -56,7 +56,7 @@ export default function ServiceProviderActionsDialog({
 
         {/* 服务者地址 */}
         {serviceProvider && (
-          <div className="flex items-center mb-4 bg-gray-50 px-3 py-2 rounded">
+          <div className="flex items-center mb-4 bg-greyscale-50 px-3 py-2 rounded">
             <span className="text-sm text-greyscale-500 mr-2">服务者:</span>
             <AddressWithCopyButton address={serviceProvider} showCopyButton={true} />
           </div>
@@ -65,15 +65,15 @@ export default function ServiceProviderActionsDialog({
         {isPending ? (
           <div className="flex flex-col items-center justify-center py-12">
             <LoadingIcon />
-            <p className="mt-4 text-sm text-gray-600">加载数据...</p>
+            <p className="mt-4 text-sm text-greyscale-600">加载数据...</p>
           </div>
         ) : error ? (
-          <div className="text-center py-8 text-red-500">
+          <div className="text-center py-8 text-status-error">
             <p className="text-sm">加载失败，请稍后重试</p>
-            {error instanceof Error && <p className="text-xs mt-2 text-gray-500">{error.message}</p>}
+            {error instanceof Error && <p className="text-xs mt-2 text-greyscale-500">{error.message}</p>}
           </div>
         ) : !actionsWithGroups || actionsWithGroups.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-greyscale-500">
             <p className="text-sm">该服务者暂无激活的行动和链群</p>
           </div>
         ) : (
@@ -83,28 +83,28 @@ export default function ServiceProviderActionsDialog({
                 {/* 行动标题 */}
                 <div className="flex items-baseline mb-3">
                   <span className="text-greyscale-400 text-sm">{`No.`}</span>
-                  <span className="text-secondary text-xl font-bold mr-2">{String(actionWithGroups.actionId)}</span>
+                  <span className="text-data-public text-xl font-bold mr-2">{String(actionWithGroups.actionId)}</span>
                   <span className="font-bold text-greyscale-800">{actionWithGroups.actionTitle}</span>
                 </div>
 
                 {/* 链群列表表格 */}
                 {actionWithGroups.groups.length === 0 ? (
-                  <div className="text-sm text-gray-500 text-center py-4">该行动下暂无链群</div>
+                  <div className="text-sm text-greyscale-500 text-center py-4">该行动下暂无链群</div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="table w-full">
                       <thead>
-                        <tr className="border-b border-gray-100">
+                        <tr className="border-b border-greyscale-100">
                           <th className="px-2 py-2 text-left text-sm">链群</th>
                           <th className="px-2 py-2 text-right text-sm">代币参与量</th>
                         </tr>
                       </thead>
                       <tbody>
                         {actionWithGroups.groups.map((group) => (
-                          <tr key={group.groupId.toString()} className="border-b border-gray-100">
+                          <tr key={group.groupId.toString()} className="border-b border-greyscale-100">
                             <td className="px-2 py-2">
-                              <span className="text-gray-500 text-xs">#</span>
-                              <span className="text-secondary text-base font-semibold">{group.groupId.toString()}</span>
+                              <span className="text-greyscale-500 text-xs">#</span>
+                              <span className="text-data-public text-base font-semibold">{group.groupId.toString()}</span>
                               <span className="text-sm ml-1">{group.groupName || `链群 #${group.groupId}`}</span>
                             </td>
                             <td className="px-2 py-2 text-right">
@@ -114,7 +114,7 @@ export default function ServiceProviderActionsDialog({
                         ))}
 
                         {/* 汇总行 */}
-                        <tr className="bg-gray-50 font-semibold">
+                        <tr className="bg-greyscale-50 font-semibold">
                           <td className="px-2 py-2 text-left">汇总</td>
                           <td className="px-2 py-2 text-right">
                             <div className="font-mono text-sm">

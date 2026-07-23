@@ -55,7 +55,7 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   if (!account) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">请先连接钱包</p>
+        <p className="text-greyscale-500">请先连接钱包</p>
       </div>
     );
   }
@@ -74,7 +74,7 @@ const _ManagerTab: React.FC<ManagerTabProps> = ({ actionId, actionInfo, extensio
   if (!isOwner) {
     return (
       <div className="text-center py-10">
-        <p className="text-gray-500 mb-6">您还不是链群服务者</p>
+        <p className="text-greyscale-500 mb-6">您还不是链群服务者</p>
         <Button variant="outline" asChild className="w-1/2 text-secondary border-secondary">
           <Link href={buildGroupActivateHref({ actionId, returnTo: router.asPath })}>去激活链群 &gt;&gt;</Link>
         </Button>

@@ -39,7 +39,7 @@ const LaunchStatus: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = 
   }, [blockNumber, launchInfo, ratio]);
 
   if (!launchInfo) {
-    return <div className="text-red-500">找不到发射信息</div>;
+    return <div className="text-status-error">找不到发射信息</div>;
   }
   if (!token) {
     return <LoadingIcon />;
@@ -58,7 +58,7 @@ const LaunchStatus: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = 
           <div className="flex-shrink-0">
             <LeftTitle title="公平发射" />
           </div>
-          {launchInfo.hasEnded && <span className={`stat-title text-base text-red-500`}>（已结束）</span>}
+          {launchInfo.hasEnded && <span className={`stat-title text-base text-status-error`}>（已结束）</span>}
           {!launchInfo.hasEnded && launchInfo.secondHalfStartBlock && currentBlocksRemaining > 0 && (
             <span className="text-greyscale-500 text-sm">
               {'('}距离结束还有{' '}
@@ -77,7 +77,7 @@ const LaunchStatus: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = 
           <div className="stat place-items-center p-2">
             <div className="stat-title text-sm mr-6 ">申购累计筹集到</div>
             <div className="stat-value">
-              <span className="text-3xl text-secondary">{formatTokenAmount(launchInfo.totalContributed)}</span>
+              <span className="text-3xl text-data-public">{formatTokenAmount(launchInfo.totalContributed)}</span>
               <span className="text-greyscale-500 font-normal text-sm ml-2">{parentTokenSymbol}</span>
             </div>
 
@@ -156,7 +156,7 @@ const LaunchStatus: React.FC<{ token: Token | null; launchInfo: LaunchInfo }> = 
             </div>
           </div>
         </div>
-        <div className="bg-gray-100 text-greyscale-500 rounded-lg p-4 mt-4 text-sm">
+        <div className="bg-greyscale-100 text-greyscale-500 rounded-lg p-4 mt-4 text-sm">
           <p className="mt-1 font-medium">经济模型：</p>
           <p>1. 代币总量：{formatTokenAmount(BigInt(TOKEN_CONFIG.totalSupply), 4, 'round')}</p>
           <p>2. 发射数量：{formatTokenAmount(BigInt(TOKEN_CONFIG.fairLaunch), 4, 'round')} (10%)</p>

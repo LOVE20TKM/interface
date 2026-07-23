@@ -235,7 +235,7 @@ const StepVoteSubmit: React.FC<StepVoteSubmitProps> = ({ selectedIds, currentRou
 
       {/* 投票注意事项 */}
       <div className="flex flex-col w-full p-4 mt-4">
-        <div className="bg-gray-100 text-greyscale-500 rounded-lg p-4 mb-8 text-sm">
+        <div className="bg-greyscale-100 text-greyscale-500 rounded-lg p-4 mb-8 text-sm">
           <div className="text-base font-bold text-greyscale-700 pb-1">注意：</div>
           <div className="text-sm text-greyscale-500 pb-1">1、每轮最大可投票数，等于您的治理票数；</div>
           <div className="text-sm text-greyscale-500 pb-1">2、前端会帮您自动计算并提交100%票数；</div>

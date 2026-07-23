@@ -20,11 +20,11 @@ const TooltipTriggerButton = React.forwardRef<HTMLButtonElement, TooltipTriggerB
     <button
       ref={ref}
       type="button"
-      className={`inline-flex items-center p-1 rounded hover:bg-gray-100 transition-colors ${className}`}
+      className={`inline-flex items-center p-1 rounded hover:bg-greyscale-100 transition-colors ${className}`}
       aria-label={`查看${title}`}
       {...props}
     >
-      <Info className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+      <Info className="h-4 w-4 text-greyscale-500 hover:text-greyscale-700" />
     </button>
   ),
 );
@@ -35,7 +35,7 @@ export default function InfoTooltip({ title, content, className = '' }: InfoTool
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const contentNode = (
-    <div className="text-gray-700">
+    <div className="text-greyscale-700">
       {typeof content === 'string' ? (
         <p className="leading-relaxed text-sm whitespace-pre-line">{content}</p>
       ) : (

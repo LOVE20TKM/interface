@@ -49,26 +49,26 @@ export default function BasicInfo({ actionInfo, currentRound, isExtensionAction 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="font-bold">单地址最小参与代币数:</span>
-              <span className="font-mono text-secondary">{formatTokenAmount(actionInfo.body.minStake)}</span>
+              <span className="font-mono text-data-public">{formatTokenAmount(actionInfo.body.minStake)}</span>
             </div>
 
             <div className="flex items-center justify-between md:max-w-xs">
               <span className="font-bold">最大激励地址数:</span>
-              <span className="font-mono text-secondary">{actionInfo.body.maxRandomAccounts.toString()}</span>
+              <span className="font-mono text-data-public">{actionInfo.body.maxRandomAccounts.toString()}</span>
             </div>
           </div>
         )}
 
         {/* 小贴士提示框 - 在PC端占据更宽的区域 */}
         {!isExtensionAction && actionInfo.body.whiteListAddress === '0x0000000000000000000000000000000000000000' && (
-          <div className="mt-1 text-sm md:text-base text-gray-700 bg-gray-50 p-1 md:p-4 rounded-md md:rounded-lg w-full">
+          <div className="mt-1 text-sm md:text-base text-greyscale-700 bg-greyscale-50 p-1 md:p-4 rounded-md md:rounded-lg w-full">
             <div className="flex items-start gap-1 md:gap-3">
-              <Lightbulb className="w-4 h-4 md:w-5 md:h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <Lightbulb className="w-4 h-4 md:w-5 md:h-5 text-status-warning flex-shrink-0 mt-0.5" />
               <div>
                 “实际”激励地址数可能小于最大激励地址数。
                 <Dialog open={isAlgorithmDialogOpen} onOpenChange={setIsAlgorithmDialogOpen}>
                   <DialogTrigger asChild>
-                    <button className="text-blue-600 hover:text-blue-800 underline ml-1">详情算法&gt;&gt;</button>
+                    <button className="text-status-info hover:text-status-info underline ml-1">详情算法&gt;&gt;</button>
                   </DialogTrigger>
                   <DialogContent className="w-[calc(100%-2rem)] max-w-2xl max-h-[80vh] overflow-y-auto sm:w-full">
                     <DialogHeader className="text-center">
@@ -77,40 +77,40 @@ export default function BasicInfo({ actionInfo, currentRound, isExtensionAction 
                     <div className="space-y-4 text-base">
                       {/* 第一部分：随机抽取算法 */}
                       <div className="space-y-2">
-                        <h3 className="font-bold text-gray-900">随机抽取地址算法：</h3>
-                        <p className="text-gray-700">
+                        <h3 className="font-bold text-greyscale-900">随机抽取地址算法：</h3>
+                        <p className="text-greyscale-700">
                           每轮验证阶段，会从所有参与行动的代币（例如当前行动为{' '}
                           {isJoinedAmountPending ? (
-                            <span className="text-gray-400">加载中...</span>
+                            <span className="text-greyscale-400">加载中...</span>
                           ) : (
-                            <span className="font-mono font-semibold text-blue-600">
+                            <span className="font-mono font-semibold text-status-info">
                               {formatTokenAmount(totalJoinedAmount)}
                             </span>
                           )}{' '}
                           个）中，随机选中"最大激励地址数"个（例如当前行动目前为{' '}
-                          <span className="font-mono font-semibold text-blue-600">{maxRandomAccounts.toString()}</span>{' '}
+                          <span className="font-mono font-semibold text-status-info">{maxRandomAccounts.toString()}</span>{' '}
                           个）代币，返回对应地址。若多份代币对应相同地址，则会合并为一个地址。
                         </p>
                       </div>
 
                       {/* 第二部分：100%概率被抽中 */}
                       <div className="space-y-2">
-                        <h3 className="font-bold text-gray-900">想要100%被抽中的代币数：</h3>
-                        <p className="text-gray-700">
+                        <h3 className="font-bold text-greyscale-900">想要100%被抽中的代币数：</h3>
+                        <p className="text-greyscale-700">
                           计算公式：总参与代币数 / 最大激励地址数。比如，当前行动目前想要 100%概率被抽中的代币数为{' '}
                           {isJoinedAmountPending ? (
-                            <span className="text-gray-400">加载中...</span>
+                            <span className="text-greyscale-400">加载中...</span>
                           ) : (
                             <>
-                              <span className="font-mono font-semibold text-blue-600">
+                              <span className="font-mono font-semibold text-status-info">
                                 {formatTokenAmount(totalJoinedAmount)}
                               </span>
                               {' / '}
-                              <span className="font-mono font-semibold text-blue-600">
+                              <span className="font-mono font-semibold text-status-info">
                                 {maxRandomAccounts.toString()}
                               </span>
                               {' = '}
-                              <span className="font-mono font-semibold text-green-600">
+                              <span className="font-mono font-semibold text-status-success">
                                 {formatTokenAmount(guaranteedAmount, 4, 'ceil')}
                               </span>
                             </>
@@ -120,8 +120,8 @@ export default function BasicInfo({ actionInfo, currentRound, isExtensionAction 
 
                       {/* 第三部分 */}
                       <div className="space-y-2 mb-4">
-                        <h3 className="font-bold text-gray-900">如何铸造激励：</h3>
-                        <p className="text-gray-700">
+                        <h3 className="font-bold text-greyscale-900">如何铸造激励：</h3>
+                        <p className="text-greyscale-700">
                           被抽中的地址，经社群验证后，会获得行动铸币激励资格。可以点击“我的”=&gt; “我参与的行动”=&gt;
                           “铸造行动激励”进行铸造。
                         </p>
@@ -139,7 +139,7 @@ export default function BasicInfo({ actionInfo, currentRound, isExtensionAction 
       {actionInfo.body.verificationRule && (
         <div className="mt-4">
           <div className="font-bold mb-2">验证规则:</div>
-          <div className="leading-loose bg-gray-50 p-2 rounded-md">
+          <div className="leading-loose bg-greyscale-50 p-2 rounded-md">
             <LinkIfUrl text={actionInfo.body.verificationRule} preserveLineBreaks={true} />
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function BasicInfo({ actionInfo, currentRound, isExtensionAction 
           <div className="font-bold mb-2">报名参加行动时，行动者要提供的信息:</div>
           <ul className="list-disc pl-5">
             {actionInfo.body.verificationKeys.map((key, index) => (
-              <li key={index} className="text-gray-700">
+              <li key={index} className="text-greyscale-700">
                 <div className="text-sm font-bold text-greyscale-900">
                   <SafeText text={key} showWarning={true} /> :
                 </div>
@@ -172,7 +172,7 @@ export default function BasicInfo({ actionInfo, currentRound, isExtensionAction 
         <span className="font-bold">{!isExtensionAction ? '白名单' : '扩展合约'}:</span>
         <div>
           {actionInfo.body.whiteListAddress === '0x0000000000000000000000000000000000000000' ? (
-            <span className="text-gray-400 text-sm">无限制</span>
+            <span className="text-greyscale-400 text-sm">无限制</span>
           ) : (
             <AddressWithCopyButton
               address={actionInfo.body.whiteListAddress}
@@ -192,11 +192,11 @@ export default function BasicInfo({ actionInfo, currentRound, isExtensionAction 
         <span className="font-bold">推举人:</span>
         <div>
           {isSubmitPending ? (
-            <span className="text-gray-400 text-sm">加载中...</span>
+            <span className="text-greyscale-400 text-sm">加载中...</span>
           ) : submitInfo?.submitter && submitInfo.submitter !== '0x0000000000000000000000000000000000000000' ? (
             <AddressWithCopyButton address={submitInfo.submitter} showCopyButton={true} colorClassName="text-sm" />
           ) : (
-            <span className="text-gray-400 text-sm">当前行动轮未被推举</span>
+            <span className="text-greyscale-400 text-sm">当前行动轮未被推举</span>
           )}
         </div>
       </div>

@@ -36,7 +36,7 @@ export default function Tokens() {
                 '正在返回父币...',
               )
             }
-            className="mx-4 mb-4 flex items-center justify-between rounded-lg border border-greyscale-200 bg-white px-4 py-3 text-sm font-medium text-greyscale-700 transition-colors hover:bg-greyscale-50"
+            className="mx-4 mb-4 flex items-center justify-between rounded-lg border border-greyscale-200 bg-card px-4 py-3 text-sm font-medium text-greyscale-700 transition-colors hover:bg-greyscale-50"
           >
             <span className="inline-flex min-w-0 items-center gap-2">
               <ArrowUpLeft className="h-4 w-4 shrink-0 text-greyscale-500" />

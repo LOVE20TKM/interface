@@ -271,7 +271,7 @@ const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: Launch
         <div className="stats w-full">
           <div className="stat place-items-center">
             <div className="stat-title text-sm mr-6">我已申购质押</div>
-            <div className="stat-value text-secondary">
+            <div className="stat-value text-data-personal">
               {formatTokenAmount(contributed || BigInt(0))}
               <span className="text-greyscale-500 font-normal text-sm ml-2">{parentTokenSymbol}</span>
             </div>
@@ -307,7 +307,7 @@ const Contribute: React.FC<{ token: Token | null | undefined; launchInfo: Launch
             />
 
             <div className="flex items-center text-sm mb-4">
-              <span className="text-greyscale-400">
+              <span className="text-data-personal">
                 {formatTokenAmount(balance)} {parentTokenSymbol}
               </span>
               <Button

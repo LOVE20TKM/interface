@@ -42,7 +42,7 @@ export const SafeText: React.FC<SafeTextProps> = ({
   return (
     <span className={className}>
       <span dangerouslySetInnerHTML={{ __html: safeText }} />
-      {showWarning && hasDangerousContent && <span className="text-yellow-500 text-xs ml-1">⚠️ 内容已被安全过滤</span>}
+      {showWarning && hasDangerousContent && <span className="text-status-warning text-xs ml-1">⚠️ 内容已被安全过滤</span>}
     </span>
   );
 };

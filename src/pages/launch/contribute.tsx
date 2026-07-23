@@ -28,7 +28,7 @@ export default function ContributePage() {
         {isLaunchInfoPending ? (
           <LoadingIcon />
         ) : !launchInfo ? (
-          <div className="text-red-500">找不到发射信息</div>
+          <div className="text-status-error">找不到发射信息</div>
         ) : (
           <Contribute token={token} launchInfo={launchInfo} />
         )}

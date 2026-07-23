@@ -283,7 +283,7 @@ const LiquidityQueryPanel: React.FC = () => {
             <Card>
               <CardContent className="px-4 pt-4 pb-2">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-gray-700 mb-3 font-bold">选择交易对：</div>
+                  <div className="text-sm font-medium text-greyscale-700 mb-3 font-bold">选择交易对：</div>
 
                   <div className="grid grid-cols-2 gap-3">
                     {/* 基础代币选择 */}
@@ -292,7 +292,7 @@ const LiquidityQueryPanel: React.FC = () => {
                       name="baseTokenAddress"
                       render={({ field }) => (
                         <FormItem>
-                          {/* <FormLabel className="text-xs text-gray-500">基础代币</FormLabel> */}
+                          {/* <FormLabel className="text-xs text-greyscale-500">基础代币</FormLabel> */}
                           <FormControl>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <SelectTrigger className="w-full">
@@ -314,8 +314,8 @@ const LiquidityQueryPanel: React.FC = () => {
 
                     {/* 目标代币显示 */}
                     <FormItem>
-                      {/* <FormLabel className="text-xs text-gray-500">目标代币</FormLabel> */}
-                      <div className="h-10 px-3 py-2 border border-gray-200 rounded-md bg-gray-50 flex items-center text-sm text-gray-700">
+                      {/* <FormLabel className="text-xs text-greyscale-500">目标代币</FormLabel> */}
+                      <div className="h-10 px-3 py-2 border border-greyscale-200 rounded-md bg-greyscale-50 flex items-center text-sm text-greyscale-700">
                         {targetToken.symbol}
                       </div>
                     </FormItem>
@@ -325,7 +325,7 @@ const LiquidityQueryPanel: React.FC = () => {
                   {pairAddress && pairAddress !== '0x0000000000000000000000000000000000000000' && (
                     <div className="mt-3 pb-1">
                       <div className="flex items-center justify-center gap-1">
-                        <span className="text-xs text-gray-600 whitespace-nowrap">LP代币地址：</span>
+                        <span className="text-xs text-greyscale-600 whitespace-nowrap">LP代币地址：</span>
                         <AddressWithCopyButton address={pairAddress} />
                         <AddToMetamask
                           tokenAddress={pairAddress as `0x${string}`}
@@ -344,39 +344,39 @@ const LiquidityQueryPanel: React.FC = () => {
             {targetToken && (
               <Card>
                 <CardContent className="p-4">
-                  <div className="text-sm font-medium text-gray-700 mb-3 text-center">交易对统计</div>
+                  <div className="text-sm font-medium text-greyscale-700 mb-3 text-center">交易对统计</div>
 
                   {isLoadingStats ? (
                     <div className="text-center py-4">
                       <LoadingIcon />
-                      <p className="text-xs text-gray-500 mt-1">加载中...</p>
+                      <p className="text-xs text-greyscale-500 mt-1">加载中...</p>
                     </div>
                   ) : !pairStatsExists ? (
                     <div className="text-center py-4">
-                      <p className="text-sm text-gray-500">交易对不存在</p>
+                      <p className="text-sm text-greyscale-500">交易对不存在</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       {/* 池子基础信息 */}
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">LP总数量：</span>
-                          <span className="font-medium text-secondary">{formatTokenAmount(statsTotalSupply)}</span>
+                          <span className="text-sm text-greyscale-600">LP总数量：</span>
+                          <span className="font-medium text-data-public">{formatTokenAmount(statsTotalSupply)}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">{baseToken.symbol} 总数量：</span>
-                          <span className="font-medium text-secondary">{formatTokenAmount(statsBaseReserve)}</span>
+                          <span className="text-sm text-greyscale-600">{baseToken.symbol} 总数量：</span>
+                          <span className="font-medium text-data-public">{formatTokenAmount(statsBaseReserve)}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">{targetToken.symbol} 总数量：</span>
-                          <span className="font-medium text-secondary">{formatTokenAmount(statsTargetReserve)}</span>
+                          <span className="text-sm text-greyscale-600">{targetToken.symbol} 总数量：</span>
+                          <span className="font-medium text-data-public">{formatTokenAmount(statsTargetReserve)}</span>
                         </div>
                       </div>
 
                       {/* 价格信息 */}
                       <div className="border-t pt-4">
                         <div className="flex items-center gap-2">
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-greyscale-600">
                             {showTokenToBase ? (
                               <>
                                 1 {targetToken.symbol} ={' '}
@@ -396,10 +396,10 @@ const LiquidityQueryPanel: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => setShowTokenToBase(!showTokenToBase)}
-                            className="h-6 w-6 p-0 hover:bg-gray-100 transition-colors"
+                            className="h-6 w-6 p-0 hover:bg-greyscale-100 transition-colors"
                             title="切换价格显示"
                           >
-                            <ArrowUpDown className="h-3 w-3 text-gray-500" />
+                            <ArrowUpDown className="h-3 w-3 text-greyscale-500" />
                           </Button>
                         </div>
                       </div>
@@ -417,7 +417,7 @@ const LiquidityQueryPanel: React.FC = () => {
                   name="queryAddress"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base font-semibold text-gray-800 mb-4">查询地址：</FormLabel>
+                      <FormLabel className="text-base font-semibold text-greyscale-800 mb-4">查询地址：</FormLabel>
                       <FormControl>
                         <div className="space-y-2">
                           <div className="flex space-x-2">
@@ -441,7 +441,7 @@ const LiquidityQueryPanel: React.FC = () => {
                             )}
                           </div>
                           {!isConnected && (
-                            <div className="text-xs text-orange-600">⚠️ 未连接钱包，请手动输入要查询的地址</div>
+                            <div className="text-xs text-status-warning">⚠️ 未连接钱包，请手动输入要查询的地址</div>
                           )}
                         </div>
                       </FormControl>
@@ -461,13 +461,13 @@ const LiquidityQueryPanel: React.FC = () => {
               <Card>
                 <CardContent className="p-6 text-center">
                   <LoadingIcon />
-                  <p className="text-sm text-gray-500 mt-2">查询中...</p>
+                  <p className="text-sm text-greyscale-500 mt-2">查询中...</p>
                 </CardContent>
               </Card>
             ) : !pairExists ? (
               <Card>
                 <CardContent className="p-6 text-center">
-                  <div className="text-gray-500">
+                  <div className="text-greyscale-500">
                     <p className="font-medium">未找到流动性池</p>
                     <p className="text-sm mt-1">
                       {baseToken.symbol}-{targetToken.symbol} 交易对不存在
@@ -478,7 +478,7 @@ const LiquidityQueryPanel: React.FC = () => {
             ) : !hasLiquidity ? (
               <Card>
                 <CardContent className="p-6 text-center">
-                  <div className="text-gray-500">
+                  <div className="text-greyscale-500">
                     <p className="text-sm mt-1">该地址在此交易对中，没有LP代币</p>
                   </div>
                 </CardContent>
@@ -487,30 +487,30 @@ const LiquidityQueryPanel: React.FC = () => {
               <Card>
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    <div className="text-sm font-medium text-gray-700 mb-3">该地址LP情况：</div>
+                    <div className="text-sm font-medium text-greyscale-700 mb-3">该地址LP情况：</div>
 
                     {/* LP代币数量 */}
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">LP代币数量</span>
+                        <span className="text-sm text-greyscale-600">LP代币数量</span>
                         <span className="font-medium">{formatTokenAmount(userLPBalance)}</span>
                       </div>
 
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">所占份额</span>
+                        <span className="text-sm text-greyscale-600">所占份额</span>
                         <span className="font-medium">{formatPercentage(lpSharePercentage)}</span>
                       </div>
                     </div>
 
                     <div className="border-t pt-4">
-                      <div className="text-sm font-medium text-gray-700 mb-3">可兑换代币数量：</div>
+                      <div className="text-sm font-medium text-greyscale-700 mb-3">可兑换代币数量：</div>
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">{baseToken.symbol}</span>
+                          <span className="text-sm text-greyscale-600">{baseToken.symbol}</span>
                           <span className="font-medium">{formatTokenAmount(userBaseTokenAmount)}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">{targetToken.symbol}</span>
+                          <span className="text-sm text-greyscale-600">{targetToken.symbol}</span>
                           <span className="font-medium">{formatTokenAmount(userTargetTokenAmount)}</span>
                         </div>
                       </div>

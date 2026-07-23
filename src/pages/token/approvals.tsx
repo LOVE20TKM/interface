@@ -171,7 +171,7 @@ export default function TokenApprovalsPage() {
   }, [isConfirmed, refetch]);
 
   const renderApprovalRows = (approvalRows: typeof rows, emptyText: string) => (
-    <section className="overflow-hidden rounded-md border border-greyscale-200 bg-white">
+    <section className="overflow-hidden rounded-md border border-greyscale-200 bg-card">
       <div className="hidden grid-cols-[1.1fr_0.9fr_1fr_0.9fr] gap-3 border-b border-greyscale-200 bg-greyscale-50 px-3 py-2 text-xs font-semibold text-greyscale-600 md:grid">
         <div>合约</div>
         <div>分类</div>
@@ -200,7 +200,7 @@ export default function TokenApprovalsPage() {
               <span>{row.category}</span>
             </div>
             <div className="rounded-md bg-greyscale-50 px-3 py-2 md:bg-transparent md:p-0">
-              <div className="font-mono text-base text-greyscale-900 md:text-sm">
+              <div className="font-mono text-base text-data-personal md:text-sm">
                 {displayAllowance(row.allowance, selectedTokenSymbol, selectedTokenDecimals)}
               </div>
             </div>
@@ -248,11 +248,11 @@ export default function TokenApprovalsPage() {
       <Header title="代币授权" showBackButton={true} />
       <main className="flex-grow">
         <div className="mx-auto w-full max-w-5xl px-4 pb-24 pt-4">
-          <div className="mb-4 rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+          <div className="mb-4 rounded-md border border-status-info-border bg-status-info-soft px-3 py-2 text-sm text-status-info">
             在这里可以查看并管理某个代币对常用合约的授权额度，也可以输入指定地址查询或撤销授权。长期授权可减少后续操作次数，但请只授权给你信任的地址。
           </div>
 
-          <section className="mb-4 rounded-md border border-greyscale-200 bg-white p-4">
+          <section className="mb-4 rounded-md border border-greyscale-200 bg-card p-4">
             <label className="flex items-start gap-3 text-sm text-greyscale-800">
               <input
                 type="checkbox"
@@ -269,7 +269,7 @@ export default function TokenApprovalsPage() {
             </label>
           </section>
 
-          <section className="mb-4 rounded-md border border-greyscale-200 bg-white p-4">
+          <section className="mb-4 rounded-md border border-greyscale-200 bg-card p-4">
             <div className="max-w-xl">
               <div className="mb-2 text-sm font-semibold text-greyscale-800">代币</div>
               <TokenSelect
@@ -285,7 +285,7 @@ export default function TokenApprovalsPage() {
                     isLoadingCustomTokenBytecode ? (
                       <div className="text-xs text-greyscale-500">正在检查地址...</div>
                     ) : customTokenInfoFailed ? (
-                      <div className="text-xs text-red-600">
+                      <div className="text-xs text-status-error">
                         {isCustomTokenEoa
                           ? '这是钱包地址，不是代币合约地址。'
                           : '无法读取代币信息，请确认这是有效的 ERC20 代币合约地址。'}
@@ -302,7 +302,7 @@ export default function TokenApprovalsPage() {
                         </div>
                         <div>
                           <div className="text-greyscale-400">余额</div>
-                          <div className="mt-0.5 font-mono">
+                          <div className="mt-0.5 font-mono text-data-personal">
                             {!account
                               ? '未连接'
                               : !isCustomTokenReady || isPendingCustomTokenBalance
@@ -330,14 +330,14 @@ export default function TokenApprovalsPage() {
             </TabsContent>
 
             <TabsContent value="custom" className="mt-0 space-y-3">
-              <section className="rounded-md border border-greyscale-200 bg-white p-4">
+              <section className="rounded-md border border-greyscale-200 bg-card p-4">
                 <Input
                   value={customSpenderAddress}
                   onChange={(event) => setCustomSpenderAddress(event.target.value.trim())}
                   placeholder="输入地址后查询授权额度"
                 />
                 {customSpenderAddress && !normalizedCustomSpenderAddress && (
-                  <div className="mt-1 text-xs text-red-600">请输入有效地址（支持 0x 或 TH 格式）</div>
+                  <div className="mt-1 text-xs text-status-error">请输入有效地址（支持 0x 或 TH 格式）</div>
                 )}
               </section>
 

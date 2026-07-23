@@ -133,7 +133,7 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
       {/* 我的参与 */}
       <div className="stat place-items-center flex flex-col justify-center">
         <div className="stat-title">我的参与</div>
-        <div className="stat-value text-2xl text-secondary flex items-center gap-2">
+        <div className="stat-value text-2xl text-data-personal flex items-center gap-2">
           {formatTokenAmount(joinedAmount || BigInt(0))}
           {trialProviderAddress && trialProviderAddress !== '0x0000000000000000000000000000000000000000' && (
             <span
@@ -155,7 +155,7 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
       {/* 还可追加 */}
       <div className="stat place-items-center flex flex-col justify-center">
         <div className="stat-title">还可追加</div>
-        <div className="stat-value text-2xl text-secondary inline-flex items-center gap-1">
+        <div className="stat-value text-2xl text-data-personal inline-flex items-center gap-1">
           {formatTokenAmount(additionalAllowed)}
           <InfoTooltip title="还可追加说明" content={increaseDetail} className="-mr-1" />
         </div>
@@ -170,7 +170,7 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
           <DialogTrigger> </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogTitle>体验模式</DialogTitle>
-            <div className="px-12 pt-2 pb-4 text-gray-800">
+            <div className="px-12 pt-2 pb-4 text-greyscale-800">
               <p>当前行动参与模式为体验模式</p>
               <p>- 可以铸造激励</p>
               <p>- 无法追加参与数量</p>
@@ -191,7 +191,7 @@ const _GroupParticipationStats: React.FC<_GroupParticipationStatsProps> = ({ act
               <DrawerTitle>体验模式</DrawerTitle>
               <DrawerClose />
             </DrawerHeader>
-            <div className="px-12 pt-2 pb-4 text-gray-800 text-lg">
+            <div className="px-12 pt-2 pb-4 text-greyscale-800 text-lg">
               <p>当前行动参与模式为体验模式</p>
               <p>- 可以铸造激励</p>
               <p>- 无法增加参与代币数量</p>

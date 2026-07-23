@@ -77,7 +77,7 @@ export default function AddToMetamask({
     <button
       onClick={addToken}
       disabled={isAdding}
-      className="flex items-center justify-center p-1 rounded focus:outline-none active:bg-gray-200 md:hover:bg-gray-200"
+      className="flex items-center justify-center p-1 rounded focus:outline-none active:bg-greyscale-200 md:hover:bg-greyscale-200"
       style={{
         WebkitTapHighlightColor: 'transparent',
         WebkitAppearance: 'none',

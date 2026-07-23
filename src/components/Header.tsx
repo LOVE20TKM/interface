@@ -66,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({ title, showBackButton = false, backUrl 
               variant="outline"
               size="sm"
               onClick={handleGoBack}
-              className="flex items-center space-x-2 px-3 py-1 text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-gray-900"
+              className="flex items-center space-x-2 px-3 py-1 text-greyscale-500 border-greyscale-200 hover:bg-greyscale-50 hover:text-greyscale-900"
               title="返回上一页"
             >
               <span className="text-sm font-medium">&lt;&nbsp;返回</span>

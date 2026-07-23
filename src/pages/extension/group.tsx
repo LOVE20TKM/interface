@@ -181,7 +181,7 @@ const ActionGroupPage: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col items-center py-12">
           <LoadingIcon />
-          <p className="mt-4 text-gray-600">加载链群信息...</p>
+          <p className="mt-4 text-greyscale-600">加载链群信息...</p>
         </div>
       </div>
     );
@@ -263,10 +263,10 @@ const ActionGroupPage: React.FC = () => {
                 <AlertBox
                   type="error"
                   message={
-                    <div className="space-y-1 text-red-600">
+                    <div className="space-y-1 text-status-error">
                       <div>
                         {distrustHref ? (
-                          <Link href={distrustHref} className="underline underline-offset-2 hover:text-red-700">
+                          <Link href={distrustHref} className="underline underline-offset-2 hover:text-status-error">
                             本链群第 {verifyCurrentRound.toString()} 轮，被投不信任票，不信任率
                             {formatPercentage(distrustRatePercent)}
                           </Link>
@@ -285,7 +285,7 @@ const ActionGroupPage: React.FC = () => {
           })()}
 
           {/* Tab导航 */}
-          <div className="flex border-b border-gray-200 mb-4">
+          <div className="flex border-b border-greyscale-200 mb-4">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -293,7 +293,7 @@ const ActionGroupPage: React.FC = () => {
                 className={`flex-1 px-2 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.key
                     ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    : 'border-transparent text-greyscale-500 hover:text-greyscale-700'
                 }`}
               >
                 {tab.label}

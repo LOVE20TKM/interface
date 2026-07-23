@@ -216,16 +216,16 @@ const SwapForm = ({
 
         {/* 交换按钮 */}
         <div className="flex justify-center mb-1">
-          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-greyscale-100 rounded-full flex items-center justify-center">
             <Button
               variant="ghost"
               type="button"
               size="icon"
-              className="rounded-full hover:bg-gray-100"
+              className="rounded-full hover:bg-greyscale-100"
               onClick={onSwapTokens}
               disabled={isDisabled}
             >
-              <ArrowDown className="w-5 h-5 text-gray-600" />
+              <ArrowDown className="w-5 h-5 text-greyscale-600" />
             </Button>
           </div>
         </div>
@@ -261,7 +261,7 @@ const SwapForm = ({
           />
 
           {fromAmount > BigInt(0) && swapMethod !== 'WETH9' && (
-            <div className="mt-2 px-1 text-xs text-gray-600">
+            <div className="mt-2 px-1 text-xs text-greyscale-600">
               {isRouteLoading && (
                 <span>
                   正在比较可用路由
@@ -278,7 +278,7 @@ const SwapForm = ({
               )}
 
               {!isRouteLoading && bestRouteDisplay.length === 0 && amountsOutError && (
-                <span className="text-amber-600">暂无可用路由</span>
+                <span className="text-status-warning">暂无可用路由</span>
               )}
             </div>
           )}

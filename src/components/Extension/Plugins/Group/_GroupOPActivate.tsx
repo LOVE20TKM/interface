@@ -407,7 +407,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
     return (
       <div className="flex flex-col items-center py-8">
         <LoadingIcon />
-        <p className="mt-4 text-gray-600">加载参数中...</p>
+        <p className="mt-4 text-greyscale-600">加载参数中...</p>
       </div>
     );
   }
@@ -417,8 +417,8 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   if (!isPendingActivate && !isRedirecting && !groupId && (!availableGroups || availableGroups.length === 0)) {
     return (
       <div className="text-center py-12">
-        <p className="mb-2 text-gray-700 font-medium">当前账号没有可在该行动下激活的 NFT</p>
-        <p className="mb-4 text-sm text-gray-500">
+        <p className="mb-2 text-greyscale-700 font-medium">当前账号没有可在该行动下激活的 NFT</p>
+        <p className="mb-4 text-sm text-greyscale-500">
           {myGroups && myGroups.length > 0
             ? '已有 NFT 都已在该行动下激活。请先铸造一个新的链上社群名字 NFT。'
             : '请先铸造一个属于链上社群名字的 NFT，再回来激活该行动。'}
@@ -437,7 +437,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
   if (!actionParams) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">未找到扩展参数</p>
+        <p className="text-status-error">未找到扩展参数</p>
       </div>
     );
   }
@@ -451,7 +451,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
 
         {/* 治理票占比不足的警告 */}
         {isGovRatioInsufficient && (
-          <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+          <div className="text-sm text-status-error bg-status-error-soft border border-status-error-border rounded px-3 py-2">
             <div className="font-medium">⚠️ 治理票占比不足</div>
             <div className="mt-1">
               你的治理票占比{' '}
@@ -459,7 +459,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
               低于最小限制 <span className="font-semibold">{formatPercentage((Number(minGovRatio) * 100) / 1e18)}</span>
               ，无法激活链群。
             </div>
-            <div className="text-xs text-red-600 mt-1">您可以增加治理票数，再尝试激活链群。</div>
+            <div className="text-xs text-status-error mt-1">您可以增加治理票数，再尝试激活链群。</div>
           </div>
         )}
 
@@ -467,9 +467,9 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
         {groupId && (
           <div className="space-y-2">
             <label className="text-sm font-medium">（必填）待激活NFT</label>
-            <div className="flex items-center gap-2 rounded border border-gray-200 bg-gray-50 px-3 py-2">
-              <span className="text-gray-500 text-xs">#</span>
-              <span className="text-secondary font-semibold">{groupId.toString()}</span>
+            <div className="flex items-center gap-2 rounded border border-greyscale-200 bg-greyscale-50 px-3 py-2">
+              <span className="text-greyscale-500 text-xs">#</span>
+              <span className="text-data-public font-semibold">{groupId.toString()}</span>
               <span className="min-w-0 truncate text-greyscale-800">{directGroupName || '未命名链群'}</span>
             </div>
           </div>
@@ -499,7 +499,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                 ))}
               </SelectContent>
             </Select>
-            {!selectedGroupId && <p className="text-xs text-red-500">请选择一个NFT</p>}
+            {!selectedGroupId && <p className="text-xs text-status-error">请选择一个NFT</p>}
           </div>
         )}
         {/* 表单 */}
@@ -532,7 +532,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                 <FormItem>
                   <FormLabel>
                     （必填）单地址最小参与代币数{' '}
-                    <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                    <span className="text-greyscale-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="请填写数量，必须大于0" className="!ring-secondary-foreground" {...field} />
@@ -551,7 +551,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                 <FormItem>
                   <FormLabel>
                     （可选）链群容量上限{' '}
-                    <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                    <span className="text-greyscale-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="0 为不限制" className="!ring-secondary-foreground flex-1" {...field} />
@@ -569,7 +569,7 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
                 <FormItem>
                   <FormLabel>
                     （可选）单地址最大参与代币数{' '}
-                    <span className="text-gray-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
+                    <span className="text-greyscale-500 text-xs font-normal">{formattedJoinTokenSymbol}</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="0 为不做限制" className="!ring-secondary-foreground" {...field} />
@@ -604,36 +604,39 @@ const _GroupOPActivate: React.FC<GroupOPActivateProps> = ({ actionId, actionInfo
             <div
               className={`p-4 border rounded-lg ${
                 userBalance !== undefined && userBalance < stakeAmount
-                  ? 'bg-red-50 border-red-200'
-                  : 'bg-blue-50 border-blue-200'
+                  ? 'bg-status-error-soft border-status-error-border'
+                  : 'bg-status-info-soft border-status-info-border'
               }`}
             >
               <div
                 className={`text-sm mb-1 ${
-                  userBalance !== undefined && userBalance < stakeAmount ? 'text-red-800' : 'text-gray-800'
+                  userBalance !== undefined && userBalance < stakeAmount ? 'text-status-error' : 'text-greyscale-800'
                 }`}
               >
                 激活链群需质押代币：
               </div>
               <div
                 className={`text-lg font-semibold ${
-                  userBalance !== undefined && userBalance < stakeAmount ? 'text-red-900' : 'text-blue-900'
+                  userBalance !== undefined && userBalance < stakeAmount ? 'text-status-error' : 'text-status-info'
                 }`}
               >
                 <span className="flex items-center gap-1">
                   {formatTokenAmount(stakeAmount, 4, 'ceil')}{' '}
-                  <span className="text-sm text-gray-600">{actionParams?.stakeTokenSymbol}</span>
+                  <span className="text-sm text-greyscale-600">{actionParams?.stakeTokenSymbol}</span>
                 </span>
               </div>
-              <div
-                className={`text-xs mt-1 ${
-                  userBalance !== undefined && userBalance < stakeAmount ? 'text-red-600' : 'text-gray-600'
-                }`}
-              >
-                当前余额：{formatTokenAmount(userBalance || BigInt(0))}
+              <div className="text-xs mt-1 text-greyscale-600">
+                当前余额：
+                <span
+                  className={
+                    userBalance !== undefined && userBalance < stakeAmount ? 'text-status-error' : 'text-data-personal'
+                  }
+                >
+                  {formatTokenAmount(userBalance || BigInt(0))}
+                </span>
               </div>
               {userBalance !== undefined && userBalance < stakeAmount && (
-                <div className="text-xs text-red-700 font-medium mt-2">⚠️ 余额不足，无法激活链群</div>
+                <div className="text-xs text-status-error font-medium mt-2">⚠️ 余额不足，无法激活链群</div>
               )}
             </div>
 

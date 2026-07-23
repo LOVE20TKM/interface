@@ -341,13 +341,13 @@ const VoteRecordsPage: React.FC = () => {
                 {allRoundsData.map((roundData) => (
                   <div
                     key={roundData.round.toString()}
-                    className={`border border-gray-100 rounded-lg py-2 px-2 shadow-sm ${
-                      !roundData.hasVoting ? 'bg-gray-50' : 'bg-white'
+                    className={`border border-greyscale-100 rounded-lg py-2 px-2 shadow-sm ${
+                      !roundData.hasVoting ? 'bg-greyscale-50' : 'bg-card'
                     }`}
                   >
                     <div className="flex items-center mb-2">
                       <span className="text-greyscale-500 mr-2">轮次:</span>
-                      <span className={`text-xl font-bold ${roundData.hasVoting ? 'text-secondary' : 'text-gray-400'}`}>
+                      <span className={`text-xl font-bold ${roundData.hasVoting ? 'text-data-public' : 'text-greyscale-400'}`}>
                         {formatRoundForDisplay(roundData.round, token).toString()}
                       </span>
                     </div>
@@ -359,7 +359,7 @@ const VoteRecordsPage: React.FC = () => {
                             {/* 第一行：ID + 标题 */}
                             <div className="flex items-baseline mb-2">
                               <span className="text-greyscale-500 mr-1">No.</span>
-                              <span className="text-secondary text-lg font-bold mr-2">
+                              <span className="text-data-public text-lg font-bold mr-2">
                                 {item.actionInfo.head.id.toString()}
                               </span>
                               <span className="font-bold text-greyscale-800">{item.actionInfo.body.title}</span>
@@ -369,7 +369,7 @@ const VoteRecordsPage: React.FC = () => {
                             <div className="flex items-center space-x-6 text-sm text-greyscale-600">
                               <div className="flex items-center">
                                 <span className="mr-1">我的投票:</span>
-                                <span className="font-semibold text-secondary">
+                                <span className="font-semibold text-data-personal">
                                   {formatTokenAmount(item.votingAction.myVoteCount)}
                                 </span>
                               </div>
@@ -403,7 +403,7 @@ const VoteRecordsPage: React.FC = () => {
                   {isLoadingHistory || isLoadingMore ? (
                     <div className="flex flex-col items-center space-y-2">
                       <LoadingIcon />
-                      <span className="text-sm text-gray-500">正在加载更多轮次...</span>
+                      <span className="text-sm text-greyscale-500">正在加载更多轮次...</span>
                     </div>
                   ) : hasMoreRounds ? (
                     <div
@@ -413,15 +413,15 @@ const VoteRecordsPage: React.FC = () => {
                         loadMoreRounds();
                       }}
                     >
-                      <span className="text-sm text-gray-500 text-center">下滑自动加载更多轮次</span>
-                      <span className="text-xs text-gray-400 text-center">或点击此处手动加载</span>
+                      <span className="text-sm text-greyscale-500 text-center">下滑自动加载更多轮次</span>
+                      <span className="text-xs text-greyscale-400 text-center">或点击此处手动加载</span>
                       {/* 可见的检测标记 */}
-                      <div className="w-8 h-1 bg-gray-200 rounded opacity-50 mt-2"></div>
+                      <div className="w-8 h-1 bg-greyscale-200 rounded opacity-50 mt-2"></div>
                     </div>
                   ) : allRoundsData.length > 0 ? (
                     <div className="flex flex-col items-center space-y-2">
-                      <span className="text-sm text-gray-300">已加载所有轮次</span>
-                      <div className="w-12 h-0.5 bg-gray-200 rounded opacity-30"></div>
+                      <span className="text-sm text-greyscale-300">已加载所有轮次</span>
+                      <div className="w-12 h-0.5 bg-greyscale-200 rounded opacity-30"></div>
                     </div>
                   ) : null}
                 </div>

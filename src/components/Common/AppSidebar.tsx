@@ -233,7 +233,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarHeader></SidebarHeader>
         <SidebarContent>
           <div className="flex items-center justify-center p-4">
-            <div className="text-sm text-gray-500">加载中...</div>
+            <div className="text-sm text-greyscale-500">加载中...</div>
           </div>
         </SidebarContent>
         <SidebarRail />
