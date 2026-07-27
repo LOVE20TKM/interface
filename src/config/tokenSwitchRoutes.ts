@@ -17,6 +17,7 @@ export const tokenSwitchStayRoutes = [
   '/action/new',
   '/apps',
   '/apps/batch-transfer',
+  '/apps/burn',
   '/apps/theme',
   '/chat',
   '/chat/activate',

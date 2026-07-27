@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   Coins,
   Droplets,
+  Flame,
   LucideIcon,
   ListChecks,
   MessageCircle,
@@ -21,6 +22,7 @@ import Header from "@/src/components/Header";
 import { TokenContext } from "@/src/contexts/TokenContext";
 import { useGroupChatUnreadSummary } from "@/src/contexts/GroupChatSyncContext";
 import { isBatchTransferEnabled } from "@/src/hooks/contracts/useBatchTransfer";
+import { isBurnEnabled } from "@/src/hooks/contracts/useBurn";
 
 interface AppItem {
   name: string;
@@ -97,6 +99,15 @@ const appSections: AppSection[] = [
   {
     title: "其他",
     items: [
+      ...(isBurnEnabled
+        ? [
+            {
+              name: "销毁与锁定",
+              href: "/apps/burn",
+              icon: Flame,
+            },
+          ]
+        : []),
       {
         name: "主题",
         href: "/apps/theme",

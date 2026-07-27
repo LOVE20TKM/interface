@@ -198,6 +198,12 @@
     "selector": "0x06fdde03"
   },
   {
+    "contract": "Burn",
+    "functionName": "supportedExtensionFactories",
+    "signature": "supportedExtensionFactories()",
+    "selector": "0x0751c11f"
+  },
+  {
     "contract": "LOVE20SLToken",
     "functionName": "minter",
     "signature": "minter()",
@@ -432,10 +438,22 @@
     "selector": "0x11de9fc7"
   },
   {
+    "contract": "Burn",
+    "functionName": "roundCount",
+    "signature": "roundCount()",
+    "selector": "0x127f0b3f"
+  },
+  {
     "contract": "LOVE20Verify",
     "functionName": "stakedAmountOfVerifiers",
     "signature": "stakedAmountOfVerifiers(address,uint256)",
     "selector": "0x13232bb6"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "isRoundOpen",
+    "signature": "isRoundOpen(uint256)",
+    "selector": "0x140fa8b2"
   },
   {
     "contract": "GovVotedBanSource",
@@ -724,6 +742,12 @@
     "functionName": "addressBanDetails",
     "signature": "addressBanDetails(uint256,address[])",
     "selector": "0x19fed26c"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "scopeTokenAddress",
+    "signature": "scopeTokenAddress()",
+    "selector": "0x1a9c4caa"
   },
   {
     "contract": "LOVE20SLToken",
@@ -1110,6 +1134,12 @@
     "selector": "0x289945b7"
   },
   {
+    "contract": "Burn",
+    "functionName": "communityWeight",
+    "signature": "communityWeight(address)",
+    "selector": "0x28ca7344"
+  },
+  {
     "contract": "GroupBanList",
     "functionName": "senderIdBanListCount",
     "signature": "senderIdBanListCount(uint256)",
@@ -1132,6 +1162,12 @@
     "functionName": "BAN_THRESHOLD_RATIO",
     "signature": "BAN_THRESHOLD_RATIO()",
     "selector": "0x29320a4e"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "accountRoundBurnStats",
+    "signature": "accountRoundBurnStats(address,address,uint256)",
+    "selector": "0x29cef83f"
   },
   {
     "contract": "GroupJoin",
@@ -1632,6 +1668,12 @@
     "selector": "0x41377d10"
   },
   {
+    "contract": "Burn",
+    "functionName": "burnGovRewardToken",
+    "signature": "burnGovRewardToken(address,uint256,uint256)",
+    "selector": "0x41998b72"
+  },
+  {
     "contract": "LOVE20Mint",
     "functionName": "numOfMintGovRewardByAccount",
     "signature": "numOfMintGovRewardByAccount(address,address)",
@@ -1768,6 +1810,12 @@
     "functionName": "messagesBySenderCount",
     "signature": "messagesBySenderCount(uint256,uint256)",
     "selector": "0x4346042a"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "lockSLToken",
+    "signature": "lockSLToken(address,uint256,uint256)",
+    "selector": "0x4383fda3"
   },
   {
     "contract": "ExtensionCenter",
@@ -1980,6 +2028,12 @@
     "selector": "0x4fa0382f"
   },
   {
+    "contract": "Burn",
+    "functionName": "communityBurnStats",
+    "signature": "communityBurnStats(address)",
+    "selector": "0x509a04c6"
+  },
+  {
     "contract": "VerificationInfo",
     "functionName": "verificationInfoUpdateRoundsAtIndex",
     "signature": "verificationInfoUpdateRoundsAtIndex(address,string,uint256)",
@@ -2050,6 +2104,12 @@
     "functionName": "adminIds",
     "signature": "adminIds(uint256)",
     "selector": "0x55e14d22"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "startRound",
+    "signature": "startRound()",
+    "selector": "0x55e3f086"
   },
   {
     "contract": "ExtensionGroupService",
@@ -2184,6 +2244,12 @@
     "selector": "0x5b7991cd"
   },
   {
+    "contract": "Burn",
+    "functionName": "claimAirdrop",
+    "signature": "claimAirdrop()",
+    "selector": "0x5b88349d"
+  },
+  {
     "contract": "ExtensionFactoryBase",
     "functionName": "extensionsAtIndex",
     "signature": "extensionsAtIndex(uint256)",
@@ -2226,6 +2292,12 @@
     "selector": "0x5d8cedee"
   },
   {
+    "contract": "Burn",
+    "functionName": "communities",
+    "signature": "communities()",
+    "selector": "0x5dd81036"
+  },
+  {
     "contract": "LOVE20Group",
     "functionName": "MAX_GROUP_NAME_LENGTH",
     "signature": "MAX_GROUP_NAME_LENGTH()",
@@ -2266,6 +2338,12 @@
     "functionName": "gGroupIdsByAccountAtIndex",
     "signature": "gGroupIdsByAccountAtIndex(address,uint256)",
     "selector": "0x5f2528cc"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "communityRoundBurnStats",
+    "signature": "communityRoundBurnStats(address,uint256)",
+    "selector": "0x6040e0df"
   },
   {
     "contract": "GroupChat",
@@ -2376,6 +2454,12 @@
     "selector": "0x65925b90"
   },
   {
+    "contract": "Burn",
+    "functionName": "remainingAirdropShare",
+    "signature": "remainingAirdropShare()",
+    "selector": "0x659e1e65"
+  },
+  {
     "contract": "GroupVerify",
     "functionName": "MAX_ORIGIN_SCORE",
     "signature": "MAX_ORIGIN_SCORE()",
@@ -2386,6 +2470,12 @@
     "functionName": "remainingLaunchCount",
     "signature": "remainingLaunchCount(address,address)",
     "selector": "0x6667076c"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "lockSTToken",
+    "signature": "lockSTToken(address,uint256,uint256)",
+    "selector": "0x66e3dfa2"
   },
   {
     "contract": "BatchTransfer",
@@ -2640,6 +2730,12 @@
     "selector": "0x7464fc3d"
   },
   {
+    "contract": "Burn",
+    "functionName": "endRound",
+    "signature": "endRound()",
+    "selector": "0x749aa2d9"
+  },
+  {
     "contract": "GroupBanList",
     "functionName": "GROUP_ADMIN_ADDRESS",
     "signature": "GROUP_ADMIN_ADDRESS()",
@@ -2832,6 +2928,12 @@
     "selector": "0x7f1c4794"
   },
   {
+    "contract": "Burn",
+    "functionName": "burnActionRewardTokens",
+    "signature": "burnActionRewardTokens(uint256,tuple[])",
+    "selector": "0x7f797aa2"
+  },
+  {
     "contract": "GroupJoin",
     "functionName": "join",
     "signature": "join(address,uint256,uint256,string[])",
@@ -2914,6 +3016,12 @@
     "functionName": "descriptionByRound",
     "signature": "descriptionByRound(address,uint256,uint256)",
     "selector": "0x81ad2cbd"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "participants",
+    "signature": "participants(uint256,uint256)",
+    "selector": "0x81fb1fb4"
   },
   {
     "contract": "LOVE20Mint",
@@ -3010,6 +3118,12 @@
     "functionName": "stakeAddress",
     "signature": "stakeAddress()",
     "selector": "0x85107367"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "extensionCenter",
+    "signature": "extensionCenter()",
+    "selector": "0x856a7e48"
   },
   {
     "contract": "LOVE20MintViewer",
@@ -3276,6 +3390,12 @@
     "selector": "0x91c394b9"
   },
   {
+    "contract": "Burn",
+    "functionName": "totalCommunityWeight",
+    "signature": "totalCommunityWeight()",
+    "selector": "0x91ca9523"
+  },
+  {
     "contract": "GroupChat",
     "functionName": "message",
     "signature": "message(uint256,uint256)",
@@ -3286,6 +3406,12 @@
     "functionName": "gAccountsByGroupId",
     "signature": "gAccountsByGroupId(uint256)",
     "selector": "0x921bc0b9"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "isParticipant",
+    "signature": "isParticipant(address)",
+    "selector": "0x929066f5"
   },
   {
     "contract": "GovVotedBanSource",
@@ -3436,6 +3562,12 @@
     "functionName": "distrustVotersByGroupOwner",
     "signature": "distrustVotersByGroupOwner(address,uint256,address)",
     "selector": "0x96be026e"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "isSupportedExtensionFactory",
+    "signature": "isSupportedExtensionFactory(address)",
+    "selector": "0x98584bc6"
   },
   {
     "contract": "LOVE20Verify",
@@ -3694,6 +3826,12 @@
     "functionName": "gGroupIdsByTokenAddressByActionIdCount",
     "signature": "gGroupIdsByTokenAddressByActionIdCount(address,uint256)",
     "selector": "0xa4226a4d"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "accountShare",
+    "signature": "accountShare(address)",
+    "selector": "0xa447a5c6"
   },
   {
     "contract": "LOVE20SLToken",
@@ -4116,6 +4254,12 @@
     "selector": "0xb2ad3730"
   },
   {
+    "contract": "Burn",
+    "functionName": "accountBurnStats",
+    "signature": "accountBurnStats(address,address)",
+    "selector": "0xb3b9d15e"
+  },
+  {
     "contract": "GroupJoin",
     "functionName": "exit",
     "signature": "exit(address)",
@@ -4162,6 +4306,12 @@
     "functionName": "govRewardByAccount",
     "signature": "govRewardByAccount(address,uint256,address)",
     "selector": "0xb717e040"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "airdropTokenAddress",
+    "signature": "airdropTokenAddress()",
+    "selector": "0xb73e0e8b"
   },
   {
     "contract": "GroupMember",
@@ -4314,10 +4464,22 @@
     "selector": "0xc02c4ede"
   },
   {
+    "contract": "Burn",
+    "functionName": "accountTokenShare",
+    "signature": "accountTokenShare(address,address)",
+    "selector": "0xc0406dbb"
+  },
+  {
     "contract": "LOVE20Verify",
     "functionName": "scoreByActionIdByAccount",
     "signature": "scoreByActionIdByAccount(address,uint256,uint256,address)",
     "selector": "0xc0df7d59"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "scoreMultiplier",
+    "signature": "scoreMultiplier(address,uint256)",
+    "selector": "0xc1996c94"
   },
   {
     "contract": "ExtensionGroupAction",
@@ -4342,6 +4504,12 @@
     "functionName": "joinedAmount",
     "signature": "joinedAmount()",
     "selector": "0xc1c07678"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "quotaMultiplier",
+    "signature": "quotaMultiplier()",
+    "selector": "0xc1c19e2d"
   },
   {
     "contract": "GroupVerify",
@@ -4468,6 +4636,12 @@
     "functionName": "stakeLiquidity",
     "signature": "stakeLiquidity(address,uint256,uint256,uint256,uint256,uint256,address)",
     "selector": "0xc6ef3bd3"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "actionRewardBurnStates",
+    "signature": "actionRewardBurnStates(address,address,uint256)",
+    "selector": "0xc70e6ad6"
   },
   {
     "contract": "LOVE20RoundViewer",
@@ -4668,6 +4842,12 @@
     "selector": "0xcf756fdf"
   },
   {
+    "contract": "Burn",
+    "functionName": "govRewardBurnState",
+    "signature": "govRewardBurnState(address,address,uint256)",
+    "selector": "0xcfdb2035"
+  },
+  {
     "contract": "UniswapV2Router",
     "functionName": "getAmountsOut",
     "signature": "getAmountsOut(uint256,address[])",
@@ -4690,6 +4870,12 @@
     "functionName": "token1",
     "signature": "token1()",
     "selector": "0xd21220a7"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "scoreBase",
+    "signature": "scoreBase(address)",
+    "selector": "0xd2453641"
   },
   {
     "contract": "GroupJoin",
@@ -4756,6 +4942,12 @@
     "functionName": "permit",
     "signature": "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)",
     "selector": "0xd505accf"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "accountAirdropState",
+    "signature": "accountAirdropState(address)",
+    "selector": "0xd537dd7e"
   },
   {
     "contract": "LOVE20Token",
@@ -5002,6 +5194,12 @@
     "functionName": "SECOND_HALF_MIN_BLOCKS",
     "signature": "SECOND_HALF_MIN_BLOCKS()",
     "selector": "0xdd38ea93"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "participantsCount",
+    "signature": "participantsCount()",
+    "selector": "0xdd60c898"
   },
   {
     "contract": "LOVE20SLToken",

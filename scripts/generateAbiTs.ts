@@ -39,6 +39,9 @@ const groupChatAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_GROUP_CHAT_ABI_PATH
 const batchTransferAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_BATCH_TRANSFER_ABI_PATH
   ? resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_BATCH_TRANSFER_ABI_PATH')
   : undefined;
+const burnAbiDirPath = process.env.NEXT_PUBLIC_FOUNDRY_BURN_ABI_PATH
+  ? resolveAbiDirPath('NEXT_PUBLIC_FOUNDRY_BURN_ABI_PATH')
+  : undefined;
 
 // 指定要转换的文件名列表
 const coreFilesToConvert = [
@@ -94,6 +97,7 @@ const groupChatFilesToConvert = [
 ];
 
 const batchTransferFilesToConvert = ['BatchTransfer'];
+const burnFilesToConvert = ['Burn'];
 
 // 用于生成 TypeScript 文件的函数
 const generateTsFiles = (abiDirPath: string, filesToConvert: string[]) => {
@@ -150,4 +154,9 @@ if (groupChatAbiDirPath) {
 // 处理批量转账 ABI 文件
 if (batchTransferAbiDirPath) {
   generateTsFiles(batchTransferAbiDirPath, batchTransferFilesToConvert);
+}
+
+// 处理销毁与锁定 ABI 文件
+if (burnAbiDirPath) {
+  generateTsFiles(burnAbiDirPath, burnFilesToConvert);
 }

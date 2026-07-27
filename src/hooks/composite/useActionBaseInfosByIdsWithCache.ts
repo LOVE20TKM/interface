@@ -132,6 +132,7 @@ export interface UseActionBaseInfosByIdsWithCacheResult {
   actionInfos: ActionBaseInfo[];
   isPending: boolean;
   error: Error | null;
+  refetch: () => void;
 }
 
 /**
@@ -199,6 +200,7 @@ export const useActionBaseInfosByIdsWithCache = ({
     data: contractResults,
     isPending: isRpcPending,
     error: rpcError,
+    refetch,
   } = useUniversalReadContracts({
     contracts: contracts as any,
     query: {
@@ -279,10 +281,12 @@ export const useActionBaseInfosByIdsWithCache = ({
     }
     return uncachedActionIds.length > 0 && isRpcPending;
   }, [enabled, tokenAddress, actionIds.length, uncachedActionIds.length, isRpcPending]);
+  const resultError = contractResults?.find((result) => result?.status === 'failure')?.error;
 
   return {
     actionInfos,
     isPending,
-    error: rpcError || null,
+    error: (rpcError || resultError || null) as Error | null,
+    refetch: () => void refetch(),
   };
 };
