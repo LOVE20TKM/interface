@@ -312,36 +312,16 @@ export function useBurnAccountTokenShare(
 }
 
 export function useBurnAccountOverview(account: `0x${string}` | undefined) {
-  const contracts = useMemo(
-    () => [
-      {
-        address: BURN_CONTRACT_ADDRESS,
-        abi: BurnAbi,
-        functionName: 'accountShare',
-        args: [account ?? zeroAddress],
-      },
-      {
-        address: BURN_CONTRACT_ADDRESS,
-        abi: BurnAbi,
-        functionName: 'accountAirdropState',
-        args: [account ?? zeroAddress],
-      },
-    ],
-    [account],
-  );
-  const { data, isPending, error, refetch } = useUniversalReadContracts({
-    contracts: contracts as any,
-    query: { enabled: isBurnEnabled && !!account },
-  });
-  const shareResult = batchResult(data, 0);
+  const query = useBurnRead('accountAirdropState', [account ?? zeroAddress], !!account);
+  const airdropState = parseAirdropState(query.data);
 
   return {
-    totalShare: safeToBigInt(field(shareResult, 'share', 0)),
-    shareFinalized: Boolean(field(shareResult, 'finalized', 1)),
-    airdropState: parseAirdropState(batchResult(data, 1)),
-    isPending: isBurnEnabled && !!account && isPending,
-    error,
-    refetch,
+    totalShare: airdropState.share,
+    shareFinalized: airdropState.shareFinalized,
+    airdropState,
+    isPending: isBurnEnabled && !!account && query.isPending,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 
