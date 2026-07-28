@@ -1,0 +1,11 @@
+export interface CategoryStats {
+  amount: bigint;
+  score: bigint;
+}
+
+export interface BurnStats {
+  slTokenLock: CategoryStats;
+  stTokenLock: CategoryStats;
+  govRewardBurn: CategoryStats;
+  actionRewardBurn: CategoryStats;
+}

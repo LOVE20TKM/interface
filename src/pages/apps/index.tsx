@@ -102,7 +102,7 @@ const appSections: AppSection[] = [
       ...(isBurnEnabled
         ? [
             {
-              name: "销毁与锁定",
+              name: "BSC公平发射",
               href: "/apps/burn",
               icon: Flame,
             },

@@ -3210,6 +3210,12 @@
     "selector": "0x896467d4"
   },
   {
+    "contract": "Burn",
+    "functionName": "accountBurnStatsThroughRound",
+    "signature": "accountBurnStatsThroughRound(address,address,uint256)",
+    "selector": "0x899f924c"
+  },
+  {
     "contract": "LOVE20SLToken",
     "functionName": "burn",
     "signature": "burn(address)",
@@ -3640,6 +3646,12 @@
     "functionName": "setScopeSource",
     "signature": "setScopeSource(uint256,address)",
     "selector": "0x9b6578d1"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "communityBurnStatsThroughRound",
+    "signature": "communityBurnStatsThroughRound(address,uint256)",
+    "selector": "0x9bb1b676"
   },
   {
     "contract": "ExtensionGroupService",

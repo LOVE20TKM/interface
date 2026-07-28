@@ -4,20 +4,11 @@ import { isAddress, zeroAddress } from 'viem';
 
 import { BurnAbi } from '@/src/abis/Burn';
 import { safeToBigInt } from '@/src/lib/clientUtils';
+import { type BurnStats, type CategoryStats } from '@/src/lib/burnStats';
 import { useUniversalReadContract, useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 
-export interface CategoryStats {
-  amount: bigint;
-  score: bigint;
-}
-
-export interface BurnStats {
-  slTokenLock: CategoryStats;
-  stTokenLock: CategoryStats;
-  govRewardBurn: CategoryStats;
-  actionRewardBurn: CategoryStats;
-}
+export type { BurnStats, CategoryStats } from '@/src/lib/burnStats';
 
 export interface RewardBurnState {
   claimableRewardAmount: bigint;
@@ -180,9 +171,46 @@ export function useBurnScoreMultiplier(tokenAddress: `0x${string}` | undefined, 
   return { multiplier: safeToBigInt(query.data), ...query };
 }
 
+export function useBurnCommunityWeights(tokenAddresses: readonly `0x${string}`[]) {
+  const contracts = useMemo(
+    () =>
+      tokenAddresses.map((tokenAddress) => ({
+        address: BURN_CONTRACT_ADDRESS,
+        abi: BurnAbi,
+        functionName: 'communityWeight' as const,
+        args: [tokenAddress],
+      })),
+    [tokenAddresses],
+  );
+
+  const { data, isPending, error, refetch } = useUniversalReadContracts({
+    contracts: contracts as any,
+    query: { enabled: isBurnEnabled && contracts.length > 0 },
+  });
+  const resultError = (data as any)?.find((item: any) => item?.status === 'failure')?.error;
+  const weights = useMemo(
+    () => tokenAddresses.map((_, index) => safeToBigInt(batchResult(data, index))),
+    [data, tokenAddresses],
+  );
+
+  return { weights, isPending: isBurnEnabled && contracts.length > 0 && isPending, error: error || resultError, refetch };
+}
+
 export function useBurnCommunityRoundStats(tokenAddress: `0x${string}` | undefined, round: bigint | undefined) {
   const query = useBurnRead(
     'communityRoundBurnStats',
+    [tokenAddress ?? zeroAddress, round ?? BigInt(0)],
+    !!tokenAddress && round !== undefined,
+  );
+  return { stats: parseBurnStats(query.data), ...query };
+}
+
+export function useBurnCommunityStatsThroughRound(
+  tokenAddress: `0x${string}` | undefined,
+  round: bigint | undefined,
+) {
+  const query = useBurnRead(
+    'communityBurnStatsThroughRound',
     [tokenAddress ?? zeroAddress, round ?? BigInt(0)],
     !!tokenAddress && round !== undefined,
   );
@@ -196,6 +224,19 @@ export function useBurnAccountRoundStats(
 ) {
   const query = useBurnRead(
     'accountRoundBurnStats',
+    [account ?? zeroAddress, tokenAddress ?? zeroAddress, round ?? BigInt(0)],
+    !!account && !!tokenAddress && round !== undefined,
+  );
+  return { stats: parseBurnStats(query.data), ...query };
+}
+
+export function useBurnAccountStatsThroughRound(
+  account: `0x${string}` | undefined,
+  tokenAddress: `0x${string}` | undefined,
+  round: bigint | undefined,
+) {
+  const query = useBurnRead(
+    'accountBurnStatsThroughRound',
     [account ?? zeroAddress, tokenAddress ?? zeroAddress, round ?? BigInt(0)],
     !!account && !!tokenAddress && round !== undefined,
   );
