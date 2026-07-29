@@ -58,7 +58,7 @@
 
 ## 4. 社区选择
 
-Burn 的 `communities()` 是唯一参与社区列表。前端用现有 `LOVE20TokenViewer.tokenDetails` 批量补齐名称、符号、SL 地址和 ST 地址。
+Burn 的 `communitySymbols()` 与 `communities()` 按相同顺序给出构造时冻结的 symbol 和 Launch 解析地址。前端直接展示冻结 symbol，并用现有 `LOVE20TokenViewer.tokenDetails` 按地址批量补齐名称、SL 地址和 ST 地址。
 
 默认社区：
 
@@ -112,11 +112,13 @@ ST 凭证永久锁定
 | 内容 | 读取来源 |
 | --- | --- |
 | 范围代币 | `scopeTokenAddress()` |
+| 范围代币 symbol | `scopeTokenSymbol()` |
 | 空投代币 | `airdropTokenAddress()` |
 | 空投代币元数据 | `airdropTokenAddress` 对应 ERC20 的 `symbol()`、`decimals()` |
 | 活动轮次 | `startRound()`、`endRound()`、`roundCount()` |
 | 额度倍数 | `quotaMultiplier()` |
 | 参与社区 | `communities()` |
+| 参与社区 symbol | `communitySymbols()` |
 | 社区活动总权重 | `totalCommunityWeight()` |
 | 参与地址数 | `participantsCount()` |
 | 我的跨社区份额 | `accountShare(account)` |

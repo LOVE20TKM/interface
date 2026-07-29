@@ -504,11 +504,15 @@ export default function BurnPage() {
   );
   const selectedCommunityWeight =
     selectedCommunityIndex >= 0 ? communityWeights.weights[selectedCommunityIndex] : BigInt(0);
-  const tokenSymbol = selectedToken?.symbol || (selectedCommunity ? shortAddress(selectedCommunity) : '代币');
+  const tokenSymbol =
+    config.communitySymbols[selectedCommunityIndex] ||
+    selectedToken?.symbol ||
+    (selectedCommunity ? shortAddress(selectedCommunity) : '代币');
   const scopeTokenSymbol =
-    communityTokens?.find(
-      (item) => item.tokenAddress.toLowerCase() === config.scopeTokenAddress?.toLowerCase(),
-    )?.symbol || '范围代币';
+    config.scopeTokenSymbol ||
+    communityTokens?.find((item) => item.tokenAddress.toLowerCase() === config.scopeTokenAddress?.toLowerCase())
+      ?.symbol ||
+    '范围代币';
   const communitySelectorInfo = `所列社区都可参与本次活动，并基于活动开始前，各社区流动性质押里 ${scopeTokenSymbol} 的数量来计算各社区的活动份额。`;
   const tokenDecimals = Number(selectedToken?.decimals ?? 18);
   const slAddress = selectedToken?.slAddress;
@@ -994,6 +998,7 @@ export default function BurnPage() {
                       const detail = communityTokens?.find(
                         (item) => item.tokenAddress.toLowerCase() === community.toLowerCase(),
                       );
+                      const configuredSymbol = config.communitySymbols[index] || detail?.symbol;
                       const atIndex = detail?.name.indexOf('@') ?? -1;
                       const suffix = detail && atIndex >= 0 ? detail.name.slice(atIndex) : '';
                       const weightShare =
@@ -1004,7 +1009,7 @@ export default function BurnPage() {
                         <SelectItem
                           key={community}
                           value={community}
-                          textValue={detail ? `${detail.symbol}${suffix}` : shortAddress(community)}
+                          textValue={configuredSymbol ? `${configuredSymbol}${suffix}` : shortAddress(community)}
                           decoration={
                             <span className="whitespace-nowrap text-xs text-greyscale-500">
                               {communityWeights.isPending
@@ -1015,9 +1020,9 @@ export default function BurnPage() {
                             </span>
                           }
                         >
-                          {detail ? (
+                          {configuredSymbol ? (
                             <span className="inline-flex min-w-0 items-baseline gap-1">
-                              <span className="truncate font-semibold text-greyscale-900">{detail.symbol}</span>
+                              <span className="truncate font-semibold text-greyscale-900">{configuredSymbol}</span>
                               {suffix && <span className="truncate text-greyscale-400">{suffix}</span>}
                             </span>
                           ) : (

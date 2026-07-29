@@ -106,6 +106,7 @@ export function useBurnActivityConfig() {
   const contracts = useMemo(
     () =>
       [
+        'scopeTokenSymbol',
         'scopeTokenAddress',
         'airdropTokenAddress',
         'startRound',
@@ -113,6 +114,7 @@ export function useBurnActivityConfig() {
         'endRound',
         'quotaMultiplier',
         'totalCommunityWeight',
+        'communitySymbols',
         'communities',
         'participantsCount',
       ].map((functionName) => ({
@@ -132,15 +134,17 @@ export function useBurnActivityConfig() {
   const resultError = (data as any)?.find((item: any) => item?.status === 'failure')?.error;
 
   return {
-    scopeTokenAddress: batchResult(data, 0) as `0x${string}` | undefined,
-    airdropTokenAddress: batchResult(data, 1) as `0x${string}` | undefined,
-    startRound: safeToBigInt(batchResult(data, 2)),
-    roundCount: safeToBigInt(batchResult(data, 3)),
-    endRound: safeToBigInt(batchResult(data, 4)),
-    quotaMultiplier: safeToBigInt(batchResult(data, 5)),
-    totalCommunityWeight: safeToBigInt(batchResult(data, 6)),
-    communities: (batchResult(data, 7) as `0x${string}`[] | undefined) || [],
-    participantsCount: safeToBigInt(batchResult(data, 8)),
+    scopeTokenSymbol: (batchResult(data, 0) as string | undefined) || '',
+    scopeTokenAddress: batchResult(data, 1) as `0x${string}` | undefined,
+    airdropTokenAddress: batchResult(data, 2) as `0x${string}` | undefined,
+    startRound: safeToBigInt(batchResult(data, 3)),
+    roundCount: safeToBigInt(batchResult(data, 4)),
+    endRound: safeToBigInt(batchResult(data, 5)),
+    quotaMultiplier: safeToBigInt(batchResult(data, 6)),
+    totalCommunityWeight: safeToBigInt(batchResult(data, 7)),
+    communitySymbols: (batchResult(data, 8) as string[] | undefined) || [],
+    communities: (batchResult(data, 9) as `0x${string}`[] | undefined) || [],
+    participantsCount: safeToBigInt(batchResult(data, 10)),
     isPending: isBurnEnabled && isPending,
     error: error || resultError,
     refetch,

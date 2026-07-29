@@ -11,9 +11,9 @@ export const BurnAbi = [
         "internalType": "address"
       },
       {
-        "name": "scopeTokenAddress_",
-        "type": "address",
-        "internalType": "address"
+        "name": "scopeTokenSymbol_",
+        "type": "string",
+        "internalType": "string"
       },
       {
         "name": "airdropTokenAddress_",
@@ -26,9 +26,9 @@ export const BurnAbi = [
         "internalType": "struct CommunityWeight[]",
         "components": [
           {
-            "name": "tokenAddress",
-            "type": "address",
-            "internalType": "address"
+            "name": "tokenSymbol",
+            "type": "string",
+            "internalType": "string"
           },
           {
             "name": "weight",
@@ -937,6 +937,19 @@ export const BurnAbi = [
   },
   {
     "type": "function",
+    "name": "communitySymbols",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "communityWeight",
     "inputs": [
       {
@@ -1235,6 +1248,19 @@ export const BurnAbi = [
   },
   {
     "type": "function",
+    "name": "scopeTokenSymbol",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "scoreBase",
     "inputs": [
       {
@@ -1434,6 +1460,12 @@ export const BurnAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
+      },
+      {
+        "name": "tokenSymbol",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
       },
       {
         "name": "weight",
@@ -1707,9 +1739,9 @@ export const BurnAbi = [
     "name": "DuplicateCommunity",
     "inputs": [
       {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
+        "name": "tokenSymbol",
+        "type": "string",
+        "internalType": "string"
       }
     ]
   },
@@ -1745,9 +1777,9 @@ export const BurnAbi = [
     "name": "InvalidCommunityConfig",
     "inputs": [
       {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
+        "name": "tokenSymbol",
+        "type": "string",
+        "internalType": "string"
       }
     ]
   },
@@ -1766,9 +1798,9 @@ export const BurnAbi = [
     "name": "InvalidScopeToken",
     "inputs": [
       {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
+        "name": "tokenSymbol",
+        "type": "string",
+        "internalType": "string"
       }
     ]
   },

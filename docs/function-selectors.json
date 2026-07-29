@@ -2544,6 +2544,12 @@
     "selector": "0x6a8989c6"
   },
   {
+    "contract": "Burn",
+    "functionName": "scopeTokenSymbol",
+    "signature": "scopeTokenSymbol()",
+    "selector": "0x6ac0f218"
+  },
+  {
     "contract": "LOVE20Group",
     "functionName": "holdersCount",
     "signature": "holdersCount()",
@@ -5092,6 +5098,12 @@
     "functionName": "groupIds",
     "signature": "groupIds(address,uint256)",
     "selector": "0xd8afe8d1"
+  },
+  {
+    "contract": "Burn",
+    "functionName": "communitySymbols",
+    "signature": "communitySymbols()",
+    "selector": "0xda24692a"
   },
   {
     "contract": "ExtensionGroupAction",
