@@ -73,7 +73,9 @@ a {
     --destructive-foreground: 0 0% 98%;
 
     --status-info: 221 83% 53%;
-    --status-success: 142 64% 24%;
+    --status-success: 142 72% 29%;
+    --status-success-soft: 138 76% 97%;
+    --status-success-border: 141 79% 85%;
     --status-warning: 21 84% 31%;
     --status-error: 0 72% 51%;
 
@@ -145,6 +147,8 @@ a {
 
     --status-info: 213 94% 68%;
     --status-success: 160 60% 55%;
+    --status-success-soft: 160 60% 55% / 0.14;
+    --status-success-border: 160 60% 55% / 0.4;
     --status-warning: 45 93% 58%;
     --status-error: 0 91% 71%;
 

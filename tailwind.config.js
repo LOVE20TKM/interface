@@ -48,8 +48,8 @@ module.exports = {
           },
           success: {
             DEFAULT: 'hsl(var(--status-success))',
-            soft: 'hsl(var(--status-success) / 0.14)',
-            border: 'hsl(var(--status-success) / 0.4)',
+            soft: 'hsl(var(--status-success-soft))',
+            border: 'hsl(var(--status-success-border))',
           },
           warning: {
             DEFAULT: 'hsl(var(--status-warning))',
