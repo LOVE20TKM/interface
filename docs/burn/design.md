@@ -1,4 +1,4 @@
-# BSC公平发射前端设计
+# 新链公平发射前端设计
 
 状态：产品边界已确认，待实现。
 
@@ -8,7 +8,7 @@
 
 首版包含：
 
-- 在应用中心提供“BSC公平发射”入口。
+- 在应用中心提供“新链公平发射”入口。
 - 展示活动状态、参与地址数、预计或最终份额及空投状态。
 - 按参与社区和销毁轮次查看当前社区总计与个人统计。
 - 永久锁定当前全部 SL 或 ST 余额。
@@ -29,10 +29,10 @@
 ## 2. 入口与配置
 
 - 路由：`/apps/burn`。
-- 入口与页面标题：`BSC公平发射`。
+- 入口与页面标题：`新链公平发射`。
 - 配置：`NEXT_PUBLIC_CONTRACT_ADDRESS_BURN`。
 - 配置为有效非零地址时，应用中心显示入口。
-- 未配置时隐藏入口；直接访问路由时显示“当前环境未配置BSC公平发射活动”。
+- 未配置时隐藏入口；直接访问路由时显示“当前环境未配置新链公平发射活动”。
 - 页面代表整个 Burn 活动，不绑定单一 TokenContext 代币。
 
 ## 3. 页面状态
@@ -41,11 +41,11 @@
 
 只有 Verify `currentRound > 0` 时才计算候选开放轮次 `currentRound - 1`。`currentRound == 0` 时不得构造或向 `uint256` 查询传入负轮次，页面按“未开始”处理并默认预览 `startRound`。
 
-| 状态 | 条件 | 默认轮次 | 操作 |
-| --- | --- | --- | --- |
-| 未开始 | 尚无开放销毁轮次 | `startRound` | 只读，展示当前资产余额 |
-| 进行中 | `currentRound > 0`，且 `currentRound - 1` 在活动范围内并满足 `isRoundOpen` | 当前开放轮次 | 可操作 |
-| 已结束 | 份额已最终确定 | 全部轮次（累计） | 只读，可领取空投 |
+| 状态   | 条件                                                                       | 默认轮次         | 操作                   |
+| ------ | -------------------------------------------------------------------------- | ---------------- | ---------------------- |
+| 未开始 | 尚无开放销毁轮次                                                           | `startRound`     | 只读，展示当前资产余额 |
+| 进行中 | `currentRound > 0`，且 `currentRound - 1` 在活动范围内并满足 `isRoundOpen` | 当前开放轮次     | 可操作                 |
+| 已结束 | 份额已最终确定                                                             | 全部轮次（累计） | 只读，可领取空投       |
 
 轮次下拉包含：
 
@@ -70,7 +70,7 @@ Burn 的 `communitySymbols()` 与 `communities()` 按相同顺序给出构造时
 ## 5. 页面结构
 
 ```text
-Header：BSC公平发射
+Header：新链公平发射
 副标题：销毁/锁定资产，获取代币空投份额
 
 活动概况
@@ -109,33 +109,33 @@ ST 凭证永久锁定
 
 ### 6.1 活动级
 
-| 内容 | 读取来源 |
-| --- | --- |
-| 范围代币 | `scopeTokenAddress()` |
-| 范围代币 symbol | `scopeTokenSymbol()` |
-| 空投代币 | `airdropTokenAddress()` |
-| 空投代币元数据 | `airdropTokenAddress` 对应 ERC20 的 `symbol()`、`decimals()` |
-| 活动轮次 | `startRound()`、`endRound()`、`roundCount()` |
-| 额度倍数 | `quotaMultiplier()` |
-| 参与社区 | `communities()` |
-| 参与社区 symbol | `communitySymbols()` |
-| 社区活动总权重 | `totalCommunityWeight()` |
-| 参与地址数 | `participantsCount()` |
-| 我的跨社区份额 | `accountShare(account)` |
-| 我的空投状态 | `accountAirdropState(account)` |
+| 内容            | 读取来源                                                     |
+| --------------- | ------------------------------------------------------------ |
+| 范围代币        | `scopeTokenAddress()`                                        |
+| 范围代币 symbol | `scopeTokenSymbol()`                                         |
+| 空投代币        | `airdropTokenAddress()`                                      |
+| 空投代币元数据  | `airdropTokenAddress` 对应 ERC20 的 `symbol()`、`decimals()` |
+| 活动轮次        | `startRound()`、`endRound()`、`roundCount()`                 |
+| 额度倍数        | `quotaMultiplier()`                                          |
+| 参与社区        | `communities()`                                              |
+| 参与社区 symbol | `communitySymbols()`                                         |
+| 社区活动总权重  | `totalCommunityWeight()`                                     |
+| 参与地址数      | `participantsCount()`                                        |
+| 我的跨社区份额  | `accountShare(account)`                                      |
+| 我的空投状态    | `accountAirdropState(account)`                               |
 
 未连接钱包时仍可读取公共数据，个人数据和操作区提示连接钱包。
 
 ### 6.2 截至具体轮次累计
 
-| 内容 | Burn 读取 |
-| --- | --- |
-| 是否开放 | `isRoundOpen(round)` |
-| 本轮得分系数 | `scoreMultiplier(tokenAddress, round)` |
-| 当前社区截止轮次四类累计 | `communityBurnStatsThroughRound(tokenAddress, round)` |
-| 我的截止轮次四类累计 | `accountBurnStatsThroughRound(account, tokenAddress, round)` |
-| 治理激励与额度 | `govRewardBurnState(account, tokenAddress, round)` |
-| 各行动激励与额度 | `actionRewardBurnStates(account, tokenAddress, round)` |
+| 内容                     | Burn 读取                                                    |
+| ------------------------ | ------------------------------------------------------------ |
+| 是否开放                 | `isRoundOpen(round)`                                         |
+| 本轮得分系数             | `scoreMultiplier(tokenAddress, round)`                       |
+| 当前社区截止轮次四类累计 | `communityBurnStatsThroughRound(tokenAddress, round)`        |
+| 我的截止轮次四类累计     | `accountBurnStatsThroughRound(account, tokenAddress, round)` |
+| 治理激励与额度           | `govRewardBurnState(account, tokenAddress, round)`           |
+| 各行动激励与额度         | `actionRewardBurnStates(account, tokenAddress, round)`       |
 
 所有具体轮次都根据 `actionRewardBurnStates` 返回的 `actionId`，沿用现有行动查询能力补齐行动标题等展示信息。
 
@@ -153,12 +153,12 @@ ST 凭证永久锁定
 
 ### 6.3 当前社区份额概况与全部轮次（累计）
 
-| 内容 | Burn 读取 |
-| --- | --- |
-| 当前社区四类累计 | `communityBurnStats(tokenAddress)` |
-| 我的四类累计 | `accountBurnStats(account, tokenAddress)` |
+| 内容                       | Burn 读取                                  |
+| -------------------------- | ------------------------------------------ |
+| 当前社区四类累计           | `communityBurnStats(tokenAddress)`         |
+| 我的四类累计               | `accountBurnStats(account, tokenAddress)`  |
 | 本社区为我的全活动份额贡献 | `accountTokenShare(account, tokenAddress)` |
-| 我的跨社区总份额 | `accountShare(account)` |
+| 我的跨社区总份额           | `accountShare(account)`                    |
 
 个人份额按其归属展示：
 
