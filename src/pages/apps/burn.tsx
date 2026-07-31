@@ -66,11 +66,11 @@ const EMPTY_STATS: BurnStats = {
 const BURN_INFO = {
   activityPhase:
     "根据当前验证轮次判断活动处于未开始、进行中、结算中或已结束。只有进行中的当前开放轮次可以执行锁定和销毁。",
-  activityOverview:
-    "汇总本次活动的轮次范围、参与地址、额度倍数、个人份额和同链空投状态。活动结束前的个人份额为实时预估值。",
+  activityOverview: "汇总本次活动的轮次范围、参与地址数、额度倍数、个人活动份额。活动结束前的个人份额为实时预估值。",
   activityRounds: "在活动有效轮次区间内可销毁锁定资产，历史轮次不参与销毁。",
   participants: "至少一次通过销毁合约成功锁定或销毁资产的去重地址数。直接向合约转账不会计入。",
-  quotaMultiplier: "实际铸造的治理或行动激励乘以这个整数，得到该激励在对应轮次的总销毁额度。它不影响销毁得分。",
+  quotaMultiplier:
+    "实际铸造的治理或行动激励乘以这个整数，得到该激励在对应轮次的总销毁额度。当轮销毁激励不能超过当轮额度。",
   totalShare:
     "以整个活动的可分配份额为 100%，这是你在所有参与社区、所有活跃资产类别中的份额贡献总和。活动结束前是实时预估值，结束后才最终确定。",
   airdrop:
@@ -876,7 +876,7 @@ export default function BurnPage() {
           </span>
           <div>
             <h1 className="text-xl font-bold text-greyscale-900">新链公平发射</h1>
-            <p className="text-sm text-greyscale-500">销毁/锁定资产，获取代币空投份额</p>
+            <p className="text-sm text-greyscale-500">销毁/锁定资产，获取新链部署协议首个代币份额</p>
           </div>
         </div>
 
@@ -1377,7 +1377,7 @@ export default function BurnPage() {
 
             <CategorySection
               title="行动激励代币真实销毁"
-              description="输入总量后，系统按行动编号升序自动使用各行动的剩余额度。"
+              description="输入总量后，按行动编号升序自动使用各行动的剩余额度。"
               symbol={tokenSymbol}
               decimals={tokenDecimals}
               community={communityStats?.actionRewardBurn || EMPTY_STATS.actionRewardBurn}
