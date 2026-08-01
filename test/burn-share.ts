@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 
-import { calculateAccountCategoryRatio, calculateAccountCommunityShare } from '../src/lib/burnShare';
+import {
+  calculateAccountCategoryRatio,
+  calculateAccountCommunityShare,
+  calculateCategoryWeightRatio,
+} from '../src/lib/burnShare';
 import { type BurnStats, type CategoryWeights } from '../src/lib/burnStats';
 
 const WAD = BigInt('1000000000000000000');
@@ -20,6 +24,33 @@ const stats = (sl = BigInt(0), st = BigInt(0), gov = BigInt(0), action = BigInt(
 assert.equal(calculateAccountCommunityShare(stats(), stats(), equalWeights), BigInt(0));
 assert.equal(calculateAccountCategoryRatio(BigInt(50), BigInt(200)), WAD / BigInt(4));
 assert.equal(calculateAccountCategoryRatio(BigInt(0), BigInt(0)), BigInt(0));
+assert.equal(
+  calculateCategoryWeightRatio(BigInt(1), {
+    slTokenLock: BigInt(1),
+    stTokenLock: BigInt(3),
+    govRewardBurn: BigInt(5),
+    actionRewardBurn: BigInt(7),
+  }),
+  WAD / BigInt(16),
+);
+assert.equal(
+  calculateCategoryWeightRatio(BigInt(0), {
+    slTokenLock: BigInt(0),
+    stTokenLock: BigInt(1),
+    govRewardBurn: BigInt(1),
+    actionRewardBurn: BigInt(1),
+  }),
+  BigInt(0),
+);
+assert.equal(
+  calculateCategoryWeightRatio(BigInt(0), {
+    slTokenLock: BigInt(0),
+    stTokenLock: BigInt(0),
+    govRewardBurn: BigInt(0),
+    actionRewardBurn: BigInt(0),
+  }),
+  BigInt(0),
+);
 assert.equal(calculateAccountCommunityShare(stats(BigInt(100)), stats(BigInt(100)), equalWeights), WAD);
 assert.equal(
   calculateAccountCommunityShare(stats(BigInt(100), BigInt(200)), stats(BigInt(50), BigInt(50)), equalWeights),

@@ -7,6 +7,11 @@ export function calculateAccountCategoryRatio(accountScore: bigint, communitySco
   return communityScore > BigInt(0) ? (accountScore * WAD) / communityScore : BigInt(0);
 }
 
+export function calculateCategoryWeightRatio(weight: bigint, weights: CategoryWeights) {
+  const totalWeight = CATEGORY_KEYS.reduce((total, key) => total + weights[key], BigInt(0));
+  return totalWeight > BigInt(0) ? (weight * WAD) / totalWeight : BigInt(0);
+}
+
 export function calculateAccountCommunityShare(community: BurnStats, account: BurnStats, weights: CategoryWeights) {
   const activeCategories = CATEGORY_KEYS.filter((key) => community[key].score > BigInt(0));
   const activeWeight = activeCategories.reduce((total, key) => total + weights[key], BigInt(0));

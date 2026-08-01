@@ -1815,6 +1815,11 @@ export const BurnAbi = [
   },
   {
     "type": "error",
+    "name": "CategoryDisabled",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "DuplicateCommunity",
     "inputs": [
       {

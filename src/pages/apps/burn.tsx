@@ -53,7 +53,11 @@ import { useActionBaseInfosByIdsWithCache } from "@/src/hooks/composite/useActio
 import { useClaimReward } from "@/src/hooks/extension/base/contracts/useIReward";
 import { useIsOnTargetChain } from "@/src/hooks/useIsOnTargetChain";
 import { allocateActionBurn } from "@/src/lib/burnActionAllocation";
-import { calculateAccountCategoryRatio, calculateAccountCommunityShare } from "@/src/lib/burnShare";
+import {
+  calculateAccountCategoryRatio,
+  calculateAccountCommunityShare,
+  calculateCategoryWeightRatio,
+} from "@/src/lib/burnShare";
 
 const WAD = BigInt("1000000000000000000");
 const EMPTY_STATS: BurnStats = {
@@ -76,15 +80,17 @@ const BURN_INFO = {
   airdrop:
     "若活动配置了同链空投代币，最终份额确定后可以领取。可领取数量按领取时的空投池余额、你的最终份额和剩余未领取份额计算。",
   communityShare:
-    "以整个活动的可分配份额为 100%，这是当前社区为你贡献的部分。每个活跃类别先按部署时配置的权重分配当前社区份额，再按你在该类别的得分占社区类别总得分的比例分配。",
+    "以整个活动的可分配份额为 100%，这是当前社区为你贡献的部分。每个有参与记录的资产类别，先按活动预设的分配比例分配当前社区份额，再按你在该类别的得分占社区类别总得分的比例分配。",
   accountCommunityShare:
-    "把当前社区内部视为 100%，活跃资产类别先按部署时配置的权重分配社区份额，再按你在各类别的得分占该类别社区总得分的比例计算并相加。活动结束前会随参与情况变化。",
+    "把当前社区内部视为 100%，有参与记录的资产类别先按活动预设的分配比例分配社区份额，再按你在各类别的得分占该类别社区总得分的比例计算并相加。活动结束前会随参与情况变化。",
   scoreBonus:
     "当前社区在所选轮次的销毁得分额外加成。它只影响得分，不改变销毁额度。计算公式：本轮得分 = 销毁或锁定数量 × 链上得分系数 ÷ 10¹⁸；额外加成 =（链上得分系数 - 10¹⁸）÷ 10¹⁸ × 100%。",
   roundSelector:
     "选择具体轮次时展示从活动开始截止该轮的累计数量和累计得分；全部轮次展示活动累计。只有当前开放轮次可以执行锁定和销毁。",
   categoryRatio:
     "以当前社区本类别的截止轮次累计总得分为 100%，这是你的截止轮次累计得分占比。这个比例只比较同一社区、同一资产类别内的参与者。",
+  categoryWeight:
+    "这是所有启用类别都有参与记录时，本类别按活动配置得到的基础比例。没有参与记录的类别不参与分配，其余类别会按原比例重新分配。",
   balance: "当前连接钱包持有的可操作代币余额。SL、ST 会整笔锁定；激励代币销毁还会受到剩余额度限制。",
   estimatedScore: "按所选轮次的得分系数计算出的预计新增得分。最终链上结果以 10¹⁸ 为定点精度并向下取整。",
   claimableReward: "当前轮次按协议激励规则预计可以领取并铸造到钱包的数量。领取完成后才会生成销毁额度。",
@@ -240,7 +246,7 @@ function CategorySection({
   decimals,
   community,
   account,
-  categoryWeight,
+  categoryWeightRatio,
   isCumulative,
   hasAccount,
   loading,
@@ -253,7 +259,7 @@ function CategorySection({
   decimals: number;
   community: CategoryStats;
   account: CategoryStats;
-  categoryWeight: bigint;
+  categoryWeightRatio: bigint;
   isCumulative: boolean;
   hasAccount: boolean;
   loading: boolean;
@@ -287,15 +293,17 @@ function CategorySection({
         <div>
           <div className="flex flex-wrap items-baseline gap-2">
             <h3 className="text-base font-bold text-greyscale-900">{title}</h3>
-            <span className="break-all font-mono text-xs text-greyscale-500">
-              类别权重 {categoryWeight.toString()}
-            </span>
+            <InfoLabel
+              label={`预设分配比例 ${formatShare(categoryWeightRatio)}`}
+              info={BURN_INFO.categoryWeight}
+              className="break-all font-mono text-xs text-greyscale-500"
+            />
           </div>
           <p className="mt-1 text-sm text-greyscale-500">{description}</p>
         </div>
         <div className="rounded-md bg-greyscale-100 px-3 py-2 text-right">
           <InfoLabel
-            label="我在本社区本类别的累计占比"
+            label="我的累计得分占比"
             info={BURN_INFO.categoryRatio}
             className="text-xs text-greyscale-500"
           />
@@ -1182,51 +1190,67 @@ export default function BurnPage() {
               </div>
             )}
 
-            <CategorySection
-              title="SL 凭证永久锁定"
-              description="整笔锁定当前全部 SL，锁定后无法取回。"
-              symbol="SL"
-              decimals={slDecimals}
-              community={communityStats?.slTokenLock || EMPTY_STATS.slTokenLock}
-              account={accountStats?.slTokenLock || EMPTY_STATS.slTokenLock}
-              categoryWeight={config.categoryWeights.slTokenLock}
-              isCumulative={isCumulative}
-              hasAccount={!!address}
-              loading={statsPending}
-              error={statsError}
-            >
-              {showRoundOperations && renderReceiptOperation("SL", slBalance.balance, slDecimals, slApproval, lockSl)}
-            </CategorySection>
+            {config.categoryWeights.slTokenLock > BigInt(0) && (
+              <CategorySection
+                title="SL 凭证永久锁定"
+                description="整笔锁定当前全部 SL，锁定后无法取回。"
+                symbol="SL"
+                decimals={slDecimals}
+                community={communityStats?.slTokenLock || EMPTY_STATS.slTokenLock}
+                account={accountStats?.slTokenLock || EMPTY_STATS.slTokenLock}
+                categoryWeightRatio={calculateCategoryWeightRatio(
+                  config.categoryWeights.slTokenLock,
+                  config.categoryWeights,
+                )}
+                isCumulative={isCumulative}
+                hasAccount={!!address}
+                loading={statsPending}
+                error={statsError}
+              >
+                {showRoundOperations &&
+                  renderReceiptOperation("SL", slBalance.balance, slDecimals, slApproval, lockSl)}
+              </CategorySection>
+            )}
 
-            <CategorySection
-              title="ST 凭证永久锁定"
-              description="整笔锁定当前全部 ST，锁定后无法取回。"
-              symbol="ST"
-              decimals={stDecimals}
-              community={communityStats?.stTokenLock || EMPTY_STATS.stTokenLock}
-              account={accountStats?.stTokenLock || EMPTY_STATS.stTokenLock}
-              categoryWeight={config.categoryWeights.stTokenLock}
-              isCumulative={isCumulative}
-              hasAccount={!!address}
-              loading={statsPending}
-              error={statsError}
-            >
-              {showRoundOperations && renderReceiptOperation("ST", stBalance.balance, stDecimals, stApproval, lockSt)}
-            </CategorySection>
+            {config.categoryWeights.stTokenLock > BigInt(0) && (
+              <CategorySection
+                title="ST 凭证永久锁定"
+                description="整笔锁定当前全部 ST，锁定后无法取回。"
+                symbol="ST"
+                decimals={stDecimals}
+                community={communityStats?.stTokenLock || EMPTY_STATS.stTokenLock}
+                account={accountStats?.stTokenLock || EMPTY_STATS.stTokenLock}
+                categoryWeightRatio={calculateCategoryWeightRatio(
+                  config.categoryWeights.stTokenLock,
+                  config.categoryWeights,
+                )}
+                isCumulative={isCumulative}
+                hasAccount={!!address}
+                loading={statsPending}
+                error={statsError}
+              >
+                {showRoundOperations &&
+                  renderReceiptOperation("ST", stBalance.balance, stDecimals, stApproval, lockSt)}
+              </CategorySection>
+            )}
 
-            <CategorySection
-              title="治理激励代币真实销毁"
-              description="只有已经领取并实际铸造的治理激励才会生成销毁额度。"
-              symbol={tokenSymbol}
-              decimals={tokenDecimals}
-              community={communityStats?.govRewardBurn || EMPTY_STATS.govRewardBurn}
-              account={accountStats?.govRewardBurn || EMPTY_STATS.govRewardBurn}
-              categoryWeight={config.categoryWeights.govRewardBurn}
-              isCumulative={isCumulative}
-              hasAccount={!!address}
-              loading={statsPending}
-              error={statsError}
-            >
+            {config.categoryWeights.govRewardBurn > BigInt(0) && (
+              <CategorySection
+                title="治理激励代币真实销毁"
+                description="只有已经领取并实际铸造的治理激励才会生成销毁额度。"
+                symbol={tokenSymbol}
+                decimals={tokenDecimals}
+                community={communityStats?.govRewardBurn || EMPTY_STATS.govRewardBurn}
+                account={accountStats?.govRewardBurn || EMPTY_STATS.govRewardBurn}
+                categoryWeightRatio={calculateCategoryWeightRatio(
+                  config.categoryWeights.govRewardBurn,
+                  config.categoryWeights,
+                )}
+                isCumulative={isCumulative}
+                hasAccount={!!address}
+                loading={statsPending}
+                error={statsError}
+              >
               {showRoundDetails &&
                 (!isConnected ? (
                   <p className="text-sm text-greyscale-500">连接钱包后查看治理激励与额度。</p>
@@ -1387,21 +1411,26 @@ export default function BurnPage() {
                     )}
                   </div>
                 ))}
-            </CategorySection>
+              </CategorySection>
+            )}
 
-            <CategorySection
-              title="行动激励代币真实销毁"
-              description="输入总量后，按行动编号升序自动使用各行动的剩余额度。"
-              symbol={tokenSymbol}
-              decimals={tokenDecimals}
-              community={communityStats?.actionRewardBurn || EMPTY_STATS.actionRewardBurn}
-              account={accountStats?.actionRewardBurn || EMPTY_STATS.actionRewardBurn}
-              categoryWeight={config.categoryWeights.actionRewardBurn}
-              isCumulative={isCumulative}
-              hasAccount={!!address}
-              loading={statsPending}
-              error={statsError}
-            >
+            {config.categoryWeights.actionRewardBurn > BigInt(0) && (
+              <CategorySection
+                title="行动激励代币真实销毁"
+                description="输入总量后，按行动编号升序自动使用各行动的剩余额度。"
+                symbol={tokenSymbol}
+                decimals={tokenDecimals}
+                community={communityStats?.actionRewardBurn || EMPTY_STATS.actionRewardBurn}
+                account={accountStats?.actionRewardBurn || EMPTY_STATS.actionRewardBurn}
+                categoryWeightRatio={calculateCategoryWeightRatio(
+                  config.categoryWeights.actionRewardBurn,
+                  config.categoryWeights,
+                )}
+                isCumulative={isCumulative}
+                hasAccount={!!address}
+                loading={statsPending}
+                error={statsError}
+              >
               {showRoundDetails &&
                 (!isConnected ? (
                   <p className="text-sm text-greyscale-500">连接钱包后查看行动激励与额度。</p>
@@ -1541,7 +1570,8 @@ export default function BurnPage() {
                     )}
                   </div>
                 ))}
-            </CategorySection>
+              </CategorySection>
+            )}
           </>
         )}
       </main>
