@@ -9,3 +9,10 @@ export interface BurnStats {
   govRewardBurn: CategoryStats;
   actionRewardBurn: CategoryStats;
 }
+
+export interface CategoryWeights {
+  slTokenLock: bigint;
+  stTokenLock: bigint;
+  govRewardBurn: bigint;
+  actionRewardBurn: bigint;
+}

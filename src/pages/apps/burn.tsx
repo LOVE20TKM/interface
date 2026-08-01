@@ -76,9 +76,9 @@ const BURN_INFO = {
   airdrop:
     "若活动配置了同链空投代币，最终份额确定后可以领取。可领取数量按领取时的空投池余额、你的最终份额和剩余未领取份额计算。",
   communityShare:
-    "以整个活动的可分配份额为 100%，这是当前社区为你贡献的部分。每个活跃类别先等分当前社区份额，再按你在该类别的得分占社区类别总得分的比例分配。",
+    "以整个活动的可分配份额为 100%，这是当前社区为你贡献的部分。每个活跃类别先按部署时配置的权重分配当前社区份额，再按你在该类别的得分占社区类别总得分的比例分配。",
   accountCommunityShare:
-    "把当前社区内部视为 100%，活跃资产类别先等分社区份额，再按你在各类别的得分占该类别社区总得分的比例计算并相加。活动结束前会随参与情况变化。",
+    "把当前社区内部视为 100%，活跃资产类别先按部署时配置的权重分配社区份额，再按你在各类别的得分占该类别社区总得分的比例计算并相加。活动结束前会随参与情况变化。",
   scoreBonus:
     "当前社区在所选轮次的销毁得分额外加成。它只影响得分，不改变销毁额度。计算公式：本轮得分 = 销毁或锁定数量 × 链上得分系数 ÷ 10¹⁸；额外加成 =（链上得分系数 - 10¹⁸）÷ 10¹⁸ × 100%。",
   roundSelector:
@@ -240,6 +240,7 @@ function CategorySection({
   decimals,
   community,
   account,
+  categoryWeight,
   isCumulative,
   hasAccount,
   loading,
@@ -252,6 +253,7 @@ function CategorySection({
   decimals: number;
   community: CategoryStats;
   account: CategoryStats;
+  categoryWeight: bigint;
   isCumulative: boolean;
   hasAccount: boolean;
   loading: boolean;
@@ -283,7 +285,12 @@ function CategorySection({
     <section className="border-t border-greyscale-200 py-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="text-base font-bold text-greyscale-900">{title}</h3>
+          <div className="flex flex-wrap items-baseline gap-2">
+            <h3 className="text-base font-bold text-greyscale-900">{title}</h3>
+            <span className="break-all font-mono text-xs text-greyscale-500">
+              类别权重 {categoryWeight.toString()}
+            </span>
+          </div>
           <p className="mt-1 text-sm text-greyscale-500">{description}</p>
         </div>
         <div className="rounded-md bg-greyscale-100 px-3 py-2 text-right">
@@ -563,7 +570,11 @@ export default function BurnPage() {
   const statsError = isCumulative
     ? communityTotal.error || (address ? accountTotal.error : undefined)
     : communityThroughRound.error || (address ? accountThroughRound.error : undefined);
-  const accountCommunityShare = calculateAccountCommunityShare(communityTotal.stats, accountTotal.stats);
+  const accountCommunityShare = calculateAccountCommunityShare(
+    communityTotal.stats,
+    accountTotal.stats,
+    config.categoryWeights,
+  );
   const configuredCommunityShare =
     config.totalCommunityWeight > BigInt(0) ? (selectedCommunityWeight * WAD) / config.totalCommunityWeight : BigInt(0);
 
@@ -1178,6 +1189,7 @@ export default function BurnPage() {
               decimals={slDecimals}
               community={communityStats?.slTokenLock || EMPTY_STATS.slTokenLock}
               account={accountStats?.slTokenLock || EMPTY_STATS.slTokenLock}
+              categoryWeight={config.categoryWeights.slTokenLock}
               isCumulative={isCumulative}
               hasAccount={!!address}
               loading={statsPending}
@@ -1193,6 +1205,7 @@ export default function BurnPage() {
               decimals={stDecimals}
               community={communityStats?.stTokenLock || EMPTY_STATS.stTokenLock}
               account={accountStats?.stTokenLock || EMPTY_STATS.stTokenLock}
+              categoryWeight={config.categoryWeights.stTokenLock}
               isCumulative={isCumulative}
               hasAccount={!!address}
               loading={statsPending}
@@ -1208,6 +1221,7 @@ export default function BurnPage() {
               decimals={tokenDecimals}
               community={communityStats?.govRewardBurn || EMPTY_STATS.govRewardBurn}
               account={accountStats?.govRewardBurn || EMPTY_STATS.govRewardBurn}
+              categoryWeight={config.categoryWeights.govRewardBurn}
               isCumulative={isCumulative}
               hasAccount={!!address}
               loading={statsPending}
@@ -1382,6 +1396,7 @@ export default function BurnPage() {
               decimals={tokenDecimals}
               community={communityStats?.actionRewardBurn || EMPTY_STATS.actionRewardBurn}
               account={accountStats?.actionRewardBurn || EMPTY_STATS.actionRewardBurn}
+              categoryWeight={config.categoryWeights.actionRewardBurn}
               isCumulative={isCumulative}
               hasAccount={!!address}
               loading={statsPending}

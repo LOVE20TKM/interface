@@ -4,11 +4,11 @@ import { isAddress, zeroAddress } from 'viem';
 
 import { BurnAbi } from '@/src/abis/Burn';
 import { safeToBigInt } from '@/src/lib/clientUtils';
-import { type BurnStats, type CategoryStats } from '@/src/lib/burnStats';
+import { type BurnStats, type CategoryStats, type CategoryWeights } from '@/src/lib/burnStats';
 import { useUniversalReadContract, useUniversalReadContracts } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 
-export type { BurnStats, CategoryStats } from '@/src/lib/burnStats';
+export type { BurnStats, CategoryStats, CategoryWeights } from '@/src/lib/burnStats';
 
 export interface RewardBurnState {
   claimableRewardAmount: bigint;
@@ -113,6 +113,10 @@ export function useBurnActivityConfig() {
         'roundCount',
         'endRound',
         'quotaMultiplier',
+        'slTokenLockWeight',
+        'stTokenLockWeight',
+        'govRewardBurnWeight',
+        'actionRewardBurnWeight',
         'totalCommunityWeight',
         'communitySymbols',
         'communities',
@@ -141,10 +145,16 @@ export function useBurnActivityConfig() {
     roundCount: safeToBigInt(batchResult(data, 4)),
     endRound: safeToBigInt(batchResult(data, 5)),
     quotaMultiplier: safeToBigInt(batchResult(data, 6)),
-    totalCommunityWeight: safeToBigInt(batchResult(data, 7)),
-    communitySymbols: (batchResult(data, 8) as string[] | undefined) || [],
-    communities: (batchResult(data, 9) as `0x${string}`[] | undefined) || [],
-    participantsCount: safeToBigInt(batchResult(data, 10)),
+    categoryWeights: {
+      slTokenLock: safeToBigInt(batchResult(data, 7)),
+      stTokenLock: safeToBigInt(batchResult(data, 8)),
+      govRewardBurn: safeToBigInt(batchResult(data, 9)),
+      actionRewardBurn: safeToBigInt(batchResult(data, 10)),
+    } satisfies CategoryWeights,
+    totalCommunityWeight: safeToBigInt(batchResult(data, 11)),
+    communitySymbols: (batchResult(data, 12) as string[] | undefined) || [],
+    communities: (batchResult(data, 13) as `0x${string}`[] | undefined) || [],
+    participantsCount: safeToBigInt(batchResult(data, 14)),
     isPending: isBurnEnabled && isPending,
     error: error || resultError,
     refetch,

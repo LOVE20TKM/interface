@@ -38,19 +38,46 @@ export const BurnAbi = [
         ]
       },
       {
-        "name": "startRound_",
+        "name": "slTokenLockWeight_",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "roundCount_",
+        "name": "stTokenLockWeight_",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "quotaMultiplier_",
+        "name": "govRewardBurnWeight_",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "actionRewardBurnWeight_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "roundConfig",
+        "type": "tuple",
+        "internalType": "struct BurnRoundConfig",
+        "components": [
+          {
+            "name": "startRound",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "roundCount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "quotaMultiplier",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
       },
       {
         "name": "supportedExtensionFactories_",
@@ -563,6 +590,19 @@ export const BurnAbi = [
   },
   {
     "type": "function",
+    "name": "actionRewardBurnWeight",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "airdropTokenAddress",
     "inputs": [],
     "outputs": [
@@ -1056,6 +1096,19 @@ export const BurnAbi = [
   },
   {
     "type": "function",
+    "name": "govRewardBurnWeight",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "isParticipant",
     "inputs": [
       {
@@ -1296,6 +1349,32 @@ export const BurnAbi = [
     "outputs": [
       {
         "name": "multiplier",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "slTokenLockWeight",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "stTokenLockWeight",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -1771,6 +1850,11 @@ export const BurnAbi = [
         "internalType": "address"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidCategoryWeights",
+    "inputs": []
   },
   {
     "type": "error",
