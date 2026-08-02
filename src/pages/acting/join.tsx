@@ -13,6 +13,7 @@ import { TrialModeProvider } from '@/src/contexts/TrialModeContext';
 // my components
 import Header from '@/src/components/Header';
 import LoadingIcon from '@/src/components/Common/LoadingIcon';
+import AlertBox from '@/src/components/Common/AlertBox';
 import ActionPanelForJoin from '@/src/components/ActionDetail/ActionPanelForJoin';
 import SubmitJoin from '@/src/components/Join/SubmitJoin';
 import ExtensionActionJoinPanel from '@/src/components/Extension/Base/Action/ExtensionActionJoinPanel';
@@ -47,13 +48,21 @@ const JoinPage = () => {
 
   // 解析 groupId (如果有)
   const groupIdBigInt = groupId && typeof groupId === 'string' ? BigInt(groupId) : undefined;
+  const actionInfoError = errorActionInfo || errorExtension;
 
   return (
     <>
       <Header title="加入行动" showBackButton={true} />
       <main className="flex-grow">
-        {!id || Array.isArray(id) || isPendingActionInfo || isPendingExtension ? (
+        {!id || Array.isArray(id) || !token?.address || isPendingActionInfo || isPendingExtension ? (
           <LoadingIcon />
+        ) : actionInfoError ? (
+          <AlertBox
+            type="error"
+            message={`加载失败：${actionInfoError.message || '获取行动信息失败，请稍后重试'}`}
+          />
+        ) : !actionInfo ? (
+          <AlertBox type="warning" message="行动不存在：找不到指定的行动信息" />
         ) : (
           <TrialModeProvider extensionAddress={contractInfo?.extension} groupId={groupIdBigInt}>
             {/* 根据是否是扩展行动，显示不同的组件 */}

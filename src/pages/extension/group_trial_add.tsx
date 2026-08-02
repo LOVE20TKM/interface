@@ -38,6 +38,7 @@ import { getMaxJoinAmount } from '@/src/lib/extensionGroup';
 import { parseGroupTrialBatch } from '@/src/lib/groupTrialBatch';
 
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
+import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
 import { useTrialAccountsWaitingAdd } from '@/src/hooks/extension/plugins/group/contracts/useGroupJoin';
 import { useExtensionGroupDetail } from '@/src/hooks/extension/plugins/group/composite/useExtensionGroupDetail';
 import { useActionInfo } from '@/src/hooks/contracts/useLOVE20Submit';
@@ -273,6 +274,17 @@ const GroupTrialAddPage: React.FC = () => {
 
   // 显示提示的条件：有输入或总金额大于0
   const shouldShowAmountHint = hasAmountInput || totalTrialAmount > BigInt(0);
+  const joinedAmountTokenAddress = contractInfo?.joinedAmountTokenAddress as `0x${string}` | undefined;
+  const {
+    balance: tokenBalance,
+    isPending: isPendingTokenBalance,
+  } = useBalanceOf(
+    joinedAmountTokenAddress as `0x${string}`,
+    account as `0x${string}`,
+    !!joinedAmountTokenAddress && !!account,
+  );
+  const isInsufficientTokenBalance = tokenBalance !== undefined && totalTrialAmount > tokenBalance;
+  const isTokenBalanceUnavailable = isPendingTokenBalance || tokenBalance === undefined;
 
   const {
     approve,
@@ -283,7 +295,7 @@ const GroupTrialAddPage: React.FC = () => {
     error: errorAllowance,
     approvalActionText,
   } = useTokenApproval({
-    token: contractInfo?.joinedAmountTokenAddress as `0x${string}` | undefined,
+    token: joinedAmountTokenAddress,
     owner: account as `0x${string}` | undefined,
     spender: GROUP_JOIN_CONTRACT_ADDRESS,
     amount: totalTrialAmount,
@@ -307,6 +319,14 @@ const GroupTrialAddPage: React.FC = () => {
   const handleApprove = async () => {
     if (!GROUP_JOIN_CONTRACT_ADDRESS || totalTrialAmount === BigInt(0)) {
       toast.error('请先添加体验地址和金额');
+      return;
+    }
+    if (isTokenBalanceUnavailable) {
+      toast.error('代币余额读取中或读取失败，请稍后重试');
+      return;
+    }
+    if (isInsufficientTokenBalance) {
+      toast.error('代币余额不足');
       return;
     }
 
@@ -359,7 +379,25 @@ const GroupTrialAddPage: React.FC = () => {
       return;
     }
 
-    await trialAccountsWaitingAdd(extensionAddress, groupIdBigInt, trialAccounts, trialAmounts);
+    const submitTotalAmount = trialAmounts.reduce((sum, amount) => sum + amount, BigInt(0));
+    if (isPendingTokenBalance || tokenBalance === undefined) {
+      form.setError('root', { message: '代币余额读取中或读取失败，请稍后重试' });
+      return;
+    }
+    if (submitTotalAmount > tokenBalance) {
+      form.setError('root', {
+        message: `代币余额不足，还需要 ${formatTokenAmount(submitTotalAmount - tokenBalance)} ${
+          contractInfo?.joinedAmountTokenSymbol || ''
+        }`,
+      });
+      return;
+    }
+
+    try {
+      await trialAccountsWaitingAdd(extensionAddress, groupIdBigInt, trialAccounts, trialAmounts);
+    } catch (error) {
+      console.error('添加体验地址失败:', error);
+    }
   };
 
   if (!account) {
@@ -586,7 +624,13 @@ const GroupTrialAddPage: React.FC = () => {
                   onClick={handleApprove}
                   className="w-1/2"
                   disabled={
-                    isPendingApprove || isConfirmingApprove || isTokenApproved || totalTrialAmount === BigInt(0)
+                    isPendingAllowance ||
+                    isPendingApprove ||
+                    isConfirmingApprove ||
+                    isTokenApproved ||
+                    totalTrialAmount === BigInt(0) ||
+                    isTokenBalanceUnavailable ||
+                    isInsufficientTokenBalance
                   }
                 >
                   {isPendingApprove
@@ -598,7 +642,17 @@ const GroupTrialAddPage: React.FC = () => {
                     : `1.${approvalActionText}代币`}
                 </Button>
 
-                <Button type="submit" className="w-1/2" disabled={isPendingAdd || isConfirmingAdd || !isTokenApproved}>
+                <Button
+                  type="submit"
+                  className="w-1/2"
+                  disabled={
+                    isPendingAdd ||
+                    isConfirmingAdd ||
+                    !isTokenApproved ||
+                    isTokenBalanceUnavailable ||
+                    isInsufficientTokenBalance
+                  }
+                >
                   {isPendingAdd ? '2.提交中...' : isConfirmingAdd ? '2.确认中...' : '2.提交'}
                 </Button>
               </div>
@@ -612,6 +666,22 @@ const GroupTrialAddPage: React.FC = () => {
                       <span className="text-greyscale-500">{contractInfo?.joinedAmountTokenSymbol || ''}</span>
                     </span>
                   </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span>我的余额：</span>
+                    <span className="font-mono text-data-personal">
+                      {isPendingTokenBalance
+                        ? '读取中...'
+                        : tokenBalance !== undefined
+                        ? `${formatTokenAmount(tokenBalance)} ${contractInfo?.joinedAmountTokenSymbol || ''}`
+                        : '读取失败'}
+                    </span>
+                  </div>
+                  {isInsufficientTokenBalance && tokenBalance !== undefined && (
+                    <div role="alert" className="text-xs text-status-error mt-1">
+                      余额不足，还需要 {formatTokenAmount(totalTrialAmount - tokenBalance)}{' '}
+                      {contractInfo?.joinedAmountTokenSymbol || ''}
+                    </div>
+                  )}
                 </div>
               )}
             </form>
