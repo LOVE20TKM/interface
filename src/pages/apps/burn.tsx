@@ -68,6 +68,13 @@ const EMPTY_STATS: BurnStats = {
 };
 
 const BURN_INFO = {
+  activityDetails: `活动目的：部分伙伴希望在原生代币价值更稳定、流动性更好、链的规则更稳定的其他公链上继续参与 LOVE20，因此发起本次活动。参与者按最终份额获得新链上首次部署的 LOVE20 代币分配份额，最终部署哪条公链由社区讨论并投票决定。
+
+参与资产：活动支持四类资产：SL 流动性质押凭证、ST 加速质押凭证、治理激励和行动激励。SL、ST 会被永久锁定；治理激励和行动激励必须先实际领取并铸造，之后按实际铸造数量生成对应的销毁额度，再销毁对应社区代币。
+
+参与时间：活动只开放当前轮次。必须在当前轮次完成锁定或销毁，历史轮次不能补做，未使用的销毁额度也不能带到下一轮。在同一社区、同一资产类别内，同样数量越早参与，获得的销毁得分越高。
+
+份额分配：参与社区和社区权重在活动部署时确定并固定。只有本次活动配置中已完成发射的范围代币社区及其直接子币社区可以参与；未列入的社区、活动部署后新发射的代币和更深层子币不参与。每个社区内，四类资产分别计算份额，同类资产只与同类参与者竞争；没有实际得分的社区或类别不参与分配，对应份额按规则重新分配给其他有参与的社区或类别。`,
   activityPhase:
     "根据当前验证轮次判断活动处于未开始、进行中、结算中或已结束。只有进行中的当前开放轮次可以执行锁定和销毁。",
   activityOverview: "汇总本次活动的轮次范围、参与地址数、额度倍数、个人活动份额。活动结束前的个人份额为实时预估值。",
@@ -885,30 +892,15 @@ export default function BurnPage() {
     <>
       <Header title="新链公平发射" showBackButton />
       <main className="mx-auto w-full max-w-5xl px-4 pb-24 pt-3 sm:pt-6">
-        <div className="mb-5 flex items-start gap-3">
+        <div className="mb-5 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-md bg-red-50 text-red-600">
             <Flame className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-greyscale-900">新链公平发射</h1>
-            <div className="mt-2 space-y-2 text-sm leading-6 text-greyscale-500">
-              <p>
-                <span className="font-medium text-greyscale-700">活动目的：</span>
-                部分伙伴希望在原生代币价值更稳定、流动性更好、链上规则更稳定的其他公链上继续参与 LOVE20，因此发起本次活动。参与者按最终份额获得新链上首次部署的 LOVE20 代币分配份额，最终部署哪条公链由社区讨论并投票决定。
-              </p>
-              <p>
-                <span className="font-medium text-greyscale-700">参与资产：</span>
-                活动支持四类资产：SL 流动性质押凭证、ST 加速质押凭证、治理激励和行动激励。SL、ST 会被永久锁定；治理激励和行动激励必须先实际领取并铸造，之后按实际铸造数量生成对应的销毁额度，再销毁对应社区代币。
-              </p>
-              <p>
-                <span className="font-medium text-greyscale-700">参与时间：</span>
-                活动只开放当前轮次。必须在当前轮次完成锁定或销毁，历史轮次不能补做，未使用的销毁额度也不能带到下一轮。在同一社区、同一资产类别内，同样数量越早参与，获得的销毁得分越高。
-              </p>
-              <p>
-                <span className="font-medium text-greyscale-700">份额分配：</span>
-                参与社区和社区权重在活动部署时确定并固定。只有本次活动配置中已完成发射的范围代币社区及其直接子币社区可以参与；未列入的社区、活动部署后新发射的代币和更深层子币不参与。每个社区内，四类资产分别计算份额，同类资产只与同类参与者竞争；没有实际得分的社区或类别不参与分配，对应份额按规则重新分配给其他有参与的社区或类别。
-              </p>
-            </div>
+            <h1 className="flex items-center gap-1 text-xl font-bold text-greyscale-900">
+              新链公平发射
+              <InfoTooltip title="活动详情" content={BURN_INFO.activityDetails} className="p-0" />
+            </h1>
           </div>
         </div>
 
@@ -986,18 +978,17 @@ export default function BurnPage() {
                 />
               </div>
 
-              <div className="mt-4 border-t border-dashed border-greyscale-200 pt-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <InfoLabel
-                      label="同链空投"
-                      info={BURN_INFO.airdrop}
-                      className="text-sm font-semibold text-greyscale-900"
-                    />
-                    <div className="mt-1 text-sm text-greyscale-500">
-                      {!airdropConfigured
-                        ? "本活动未配置链上领取。"
-                        : !isConnected
+              {airdropConfigured && (
+                <div className="mt-4 border-t border-dashed border-greyscale-200 pt-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <InfoLabel
+                        label="同链空投"
+                        info={BURN_INFO.airdrop}
+                        className="text-sm font-semibold text-greyscale-900"
+                      />
+                      <div className="mt-1 text-sm text-greyscale-500">
+                        {!isConnected
                           ? "连接钱包后查看个人领取状态。"
                           : !overview.airdropState.shareFinalized
                             ? "活动结束并确定最终份额后可领取。"
@@ -1010,23 +1001,23 @@ export default function BurnPage() {
                                   : overview.airdropState.claimableAmount > BigInt(0)
                                     ? `当前可领取 ${formatAmount(overview.airdropState.claimableAmount, Number(airdropDecimals.decimals))} ${airdropSymbol.symbol}`
                                     : "无可领取空投。"}
+                      </div>
                     </div>
+                    {isConnected &&
+                      airdropMetadataReady &&
+                      overview.airdropState.shareFinalized &&
+                      !overview.airdropState.isClaimed &&
+                      overview.airdropState.claimableAmount > BigInt(0) && (
+                        <Button
+                          disabled={transactionBusy(claimAirdrop)}
+                          onClick={() => void claimAirdrop.claimAirdrop().catch(() => undefined)}
+                        >
+                          {transactionBusy(claimAirdrop) ? "领取中..." : "领取空投"}
+                        </Button>
+                      )}
                   </div>
-                  {airdropConfigured &&
-                    isConnected &&
-                    airdropMetadataReady &&
-                    overview.airdropState.shareFinalized &&
-                    !overview.airdropState.isClaimed &&
-                    overview.airdropState.claimableAmount > BigInt(0) && (
-                      <Button
-                        disabled={transactionBusy(claimAirdrop)}
-                        onClick={() => void claimAirdrop.claimAirdrop().catch(() => undefined)}
-                      >
-                        {transactionBusy(claimAirdrop) ? "领取中..." : "领取空投"}
-                      </Button>
-                    )}
                 </div>
-              </div>
+              )}
             </section>
 
             <section className="grid gap-4 py-5 sm:grid-cols-2">
