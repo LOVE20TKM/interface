@@ -48,6 +48,12 @@ const nextConfig = {
 
   // 针对旧版本浏览器的 Webpack 配置
   webpack: (config, { dev, isServer }) => {
+    if (dev) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@sentry/nextjs': require.resolve('./src/lib/sentryDevStub.ts'),
+      };
+    }
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
