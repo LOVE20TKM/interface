@@ -3,7 +3,7 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Flame, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
-import { formatUnits, parseUnits, zeroAddress } from "viem";
+import { parseUnits, zeroAddress } from "viem";
 import { useAccount } from "wagmi";
 
 import { Button } from "@/components/ui/button";
@@ -54,9 +54,15 @@ import { useClaimReward } from "@/src/hooks/extension/base/contracts/useIReward"
 import { useIsOnTargetChain } from "@/src/hooks/useIsOnTargetChain";
 import { allocateActionBurn } from "@/src/lib/burnActionAllocation";
 import {
+  formatBurnAmount as formatAmount,
+  formatBurnInputAmount as inputAmount,
+  formatExactBurnAmount as formatExactAmount,
+} from "@/src/lib/burnFormat";
+import {
   calculateAccountCategoryRatio,
   calculateAccountCommunityShare,
   calculateCategoryWeightRatio,
+  formatWadPercentage,
 } from "@/src/lib/burnShare";
 
 const WAD = BigInt("1000000000000000000");
@@ -119,56 +125,6 @@ interface ConfirmationState {
   run: () => Promise<unknown>;
 }
 
-const trimZeros = (value: string) => (value.includes(".") ? value.replace(/0+$/, "").replace(/\.$/, "") : value);
-
-const formatExactAmount = (value: bigint | undefined, decimals = 18) => {
-  if (value === undefined) return "-";
-  const [whole, fraction = ""] = trimZeros(formatUnits(value, decimals)).split(".");
-  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return fraction ? `${grouped}.${fraction}` : grouped;
-};
-
-const formatTinyAmount = (value: bigint, decimals: number) => {
-  const [, fraction = ""] = formatUnits(value, decimals).split(".");
-  let zeroCount = fraction.match(/^0*/)?.[0].length || 0;
-  if (zeroCount < 4 || zeroCount === fraction.length) return undefined;
-
-  const significantDigits = 4;
-  let significant = fraction.slice(zeroCount, zeroCount + significantDigits);
-  const nextDigit = fraction[zeroCount + significantDigits];
-  if (nextDigit && nextDigit >= "5") {
-    const rounded = (BigInt(significant) + BigInt(1)).toString();
-    if (rounded.length > significant.length) {
-      zeroCount -= 1;
-      significant = "1";
-    } else {
-      significant = rounded.padStart(significant.length, "0");
-    }
-  }
-
-  return `0.0{${zeroCount}}${significant.replace(/0+$/, "")}`;
-};
-
-const formatAmount = (value: bigint | undefined, decimals = 18, maxFractionDigits = 6) => {
-  if (value === undefined) return "-";
-  if (value > BigInt(0)) {
-    const tinyAmount = formatTinyAmount(value, decimals);
-    if (tinyAmount) return tinyAmount;
-  }
-  if (decimals <= maxFractionDigits) return formatExactAmount(value, decimals);
-
-  const precisionUnit = BigInt(`1${"0".repeat(decimals - maxFractionDigits)}`);
-  if (value > BigInt(0) && value < precisionUnit) {
-    const minimum = maxFractionDigits === 0 ? "1" : `0.${"0".repeat(maxFractionDigits - 1)}1`;
-    return `<${minimum}`;
-  }
-
-  const rounded = (value + precisionUnit / BigInt(2)) / precisionUnit;
-  return formatExactAmount(rounded, maxFractionDigits);
-};
-
-const inputAmount = (value: bigint, decimals: number) => trimZeros(formatUnits(value, decimals));
-
 const parseAmount = (value: string, decimals: number) => {
   if (!value.trim() || value.trim().startsWith("-")) return undefined;
   try {
@@ -183,8 +139,6 @@ const formatHundredths = (value: bigint) => {
   const fraction = (value % BigInt(100)).toString().padStart(2, "0").replace(/0+$/, "");
   return fraction ? `${whole}.${fraction}` : whole.toString();
 };
-
-const formatShare = (value: bigint) => `${formatHundredths((value * BigInt(10000)) / WAD)}%`;
 
 const shortAddress = (address: string) => `${address.slice(0, 6)}...${address.slice(-4)}`;
 
@@ -292,7 +246,7 @@ function CategorySection({
       ? "读取中..."
       : error
         ? "读取失败"
-        : formatShare(accountCategoryRatio);
+        : formatWadPercentage(accountCategoryRatio);
 
   return (
     <section className="border-t border-greyscale-200 py-5">
@@ -301,7 +255,7 @@ function CategorySection({
           <div className="flex flex-wrap items-baseline gap-2">
             <h3 className="text-base font-bold text-greyscale-900">{title}</h3>
             <InfoLabel
-              label={`预设分配比例 ${formatShare(categoryWeightRatio)}`}
+              label={`预设分配比例 ${formatWadPercentage(categoryWeightRatio)}`}
               info={BURN_INFO.categoryWeight}
               className="break-all font-mono text-xs text-greyscale-500"
             />
@@ -851,7 +805,7 @@ export default function BurnPage() {
             onClick={() =>
               openConfirmation({
                 title: `永久锁定全部 ${kind}`,
-                description: `将永久锁定当前全部 ${formatAmount(tokenBalanceValue, decimals)} ${kind}，该操作不可撤销。`,
+                description: `将永久锁定当前全部 ${formatExactAmount(tokenBalanceValue, decimals)} ${kind}，该操作不可撤销。`,
                 confirmText: `确认锁定全部 ${kind}`,
                 run: async () => {
                   if ((await ensureRoundOpen()) && selectedCommunity && selectedRoundNumber !== undefined) {
@@ -868,10 +822,9 @@ export default function BurnPage() {
     );
   };
 
-  const bonusBps =
-    scoreMultiplierReady && scoreMultiplier.multiplier >= WAD
-      ? ((scoreMultiplier.multiplier - WAD) * BigInt(10000)) / WAD
-      : BigInt(0);
+  const bonusRatio =
+    scoreMultiplierReady && scoreMultiplier.multiplier > WAD ? scoreMultiplier.multiplier - WAD : BigInt(0);
+  const bonusBps = (bonusRatio * BigInt(10000)) / WAD;
 
   if (!isBurnEnabled) {
     return (
@@ -971,7 +924,7 @@ export default function BurnPage() {
                         ? "读取中..."
                         : overview.error
                           ? "读取失败"
-                          : formatShare(overview.totalShare)
+                          : formatWadPercentage(overview.totalShare)
                   }
                   info={BURN_INFO.totalShare}
                   tone="personal"
@@ -1044,7 +997,7 @@ export default function BurnPage() {
                             ? "活动权重 ..."
                             : communityWeights.error
                               ? "活动权重 -"
-                              : `活动权重 ${formatShare(configuredCommunityShare)}`}
+                              : `活动权重 ${formatWadPercentage(configuredCommunityShare)}`}
                         </span>
                       )}
                     </div>
@@ -1072,7 +1025,7 @@ export default function BurnPage() {
                                 ? "活动权重 ..."
                                 : communityWeights.error
                                   ? "活动权重 -"
-                                  : `活动权重 ${formatShare(weightShare)}`}
+                                  : `活动权重 ${formatWadPercentage(weightShare)}`}
                             </span>
                           }
                         >
@@ -1103,7 +1056,7 @@ export default function BurnPage() {
                             ? "读取中..."
                             : communityTotal.error || accountTotal.error
                               ? "读取失败"
-                              : formatShare(accountCommunityShare)
+                              : formatWadPercentage(accountCommunityShare)
                       }
                       info={BURN_INFO.accountCommunityShare}
                       tone="personal"
@@ -1117,7 +1070,7 @@ export default function BurnPage() {
                             ? "读取中..."
                             : tokenShare.error
                               ? "读取失败"
-                              : formatShare(tokenShare.share.total)
+                              : formatWadPercentage(tokenShare.share.total)
                       }
                       info={BURN_INFO.communityShare}
                       tone="personal"
@@ -1168,7 +1121,7 @@ export default function BurnPage() {
                 {scoreMultiplierReady ? (
                   <>
                     <div className="flex items-center gap-1 font-semibold">
-                      <span>本轮得分加成 +{formatHundredths(bonusBps)}%</span>
+                      <span>本轮得分加成 {formatWadPercentage(bonusRatio)}</span>
                       <InfoTooltip title="本轮得分加成" content={BURN_INFO.scoreBonus} />
                     </div>
                     <div className="mt-1 text-xs">
@@ -1371,7 +1324,7 @@ export default function BurnPage() {
                                   govAmount &&
                                   openConfirmation({
                                     title: "销毁治理激励代币",
-                                    description: `将真实销毁 ${formatAmount(govAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
+                                    description: `将真实销毁 ${formatExactAmount(govAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
                                     confirmText: "确认销毁",
                                     run: async () => {
                                       if (
@@ -1518,7 +1471,7 @@ export default function BurnPage() {
                                     actionAmount &&
                                     openConfirmation({
                                       title: "批量销毁行动激励代币",
-                                      description: `将按上方明细真实销毁 ${formatAmount(actionAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
+                                      description: `将按上方明细真实销毁 ${formatExactAmount(actionAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
                                       confirmText: "确认批量销毁",
                                       run: async () => {
                                         if (

@@ -4,6 +4,7 @@ import {
   calculateAccountCategoryRatio,
   calculateAccountCommunityShare,
   calculateCategoryWeightRatio,
+  formatWadPercentage,
 } from '../src/lib/burnShare';
 import { type BurnStats, type CategoryWeights } from '../src/lib/burnStats';
 
@@ -71,5 +72,8 @@ assert.equal(
   }),
   WAD / BigInt(4),
 );
+assert.equal(formatWadPercentage(BigInt(0)), '0%');
+assert.equal(formatWadPercentage(BigInt('123456789000000000')), '12.34%');
+assert.equal(formatWadPercentage(BigInt(1)), '<0.01%');
 
 console.log('burn share ok');

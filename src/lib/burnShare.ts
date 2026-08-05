@@ -23,3 +23,12 @@ export function calculateAccountCommunityShare(community: BurnStats, account: Bu
   );
   return ratioTotal / activeWeight;
 }
+
+export function formatWadPercentage(value: bigint) {
+  const hundredths = (value * BigInt(10000)) / WAD;
+  if (value > BigInt(0) && hundredths === BigInt(0)) return '<0.01%';
+
+  const whole = hundredths / BigInt(100);
+  const fraction = (hundredths % BigInt(100)).toString().padStart(2, '0').replace(/0+$/, '');
+  return `${whole.toString()}${fraction ? `.${fraction}` : ''}%`;
+}
