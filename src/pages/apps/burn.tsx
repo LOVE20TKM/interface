@@ -228,9 +228,9 @@ function CategorySection({
   children?: React.ReactNode;
 }) {
   const displayAmount = (value: bigint) =>
-    loading ? "读取中..." : error ? "读取失败" : `${formatAmount(value, decimals)} ${symbol}`;
+    loading ? "读取中..." : error ? "读取失败" : formatAmount(value, decimals);
   const displayScore = (value: bigint) =>
-    loading ? "读取中..." : error ? "读取失败" : `${formatAmount(value, decimals)} 分`;
+    loading ? "读取中..." : error ? "读取失败" : formatAmount(value, decimals);
   const fullAmount = (value: bigint) =>
     loading || error ? undefined : `${formatExactAmount(value, decimals)} ${symbol}`;
   const fullScore = (value: bigint) => (loading || error ? undefined : `${formatExactAmount(value, decimals)} 分`);
@@ -255,7 +255,7 @@ function CategorySection({
           <div className="flex flex-wrap items-baseline gap-2">
             <h3 className="text-base font-bold text-greyscale-900">{title}</h3>
             <InfoLabel
-              label={`预设分配比例 ${formatWadPercentage(categoryWeightRatio)}`}
+              label={`占 ${formatWadPercentage(categoryWeightRatio)}`}
               info={BURN_INFO.categoryWeight}
               className="break-all font-mono text-xs text-greyscale-500"
             />
@@ -849,11 +849,27 @@ export default function BurnPage() {
           <span className="flex h-10 w-10 items-center justify-center rounded-md bg-red-50 text-red-600">
             <Flame className="h-5 w-5" />
           </span>
-          <div className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <h1 className="flex items-center gap-1 text-xl font-bold text-greyscale-900">
               新链公平发射
               <InfoTooltip title="活动详情" content={BURN_INFO.activityDetails} className="p-0" />
             </h1>
+            {!config.isPending && !isCurrentRoundPending && !publicError && (
+              <div className="flex items-center gap-1">
+                <span
+                  className={`rounded-full border px-3 py-1 text-sm font-bold ${
+                    activityPhase === "active"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : activityPhase === "finished"
+                        ? "border-greyscale-200 bg-greyscale-100 text-greyscale-700"
+                        : "border-amber-200 bg-amber-50 text-amber-700"
+                  }`}
+                >
+                  {phaseLabel}
+                </span>
+                <InfoTooltip title="活动状态" content={BURN_INFO.activityPhase} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -879,24 +895,10 @@ export default function BurnPage() {
             )}
 
             <section className="border-y border-greyscale-200 py-5">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="mb-4 flex items-center gap-1">
                 <div className="flex items-center gap-1">
                   <h2 className="text-base font-bold text-greyscale-900">活动概况</h2>
                   <InfoTooltip title="活动概况" content={BURN_INFO.activityOverview} />
-                </div>
-                <div className="flex items-center gap-1">
-                  <span
-                    className={`rounded-md px-2.5 py-1 text-xs font-semibold ${
-                      activityPhase === "active"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : activityPhase === "finished"
-                          ? "bg-greyscale-100 text-greyscale-700"
-                          : "bg-amber-50 text-amber-700"
-                    }`}
-                  >
-                    {phaseLabel}
-                  </span>
-                  <InfoTooltip title="活动状态" content={BURN_INFO.activityPhase} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -1150,7 +1152,7 @@ export default function BurnPage() {
             {config.categoryWeights.slTokenLock > BigInt(0) && (
               <CategorySection
                 title="SL 凭证永久锁定"
-                description="整笔锁定当前全部 SL，锁定后无法取回。"
+                description="锁定后无法取回，并放弃治理权。"
                 symbol="SL"
                 decimals={slDecimals}
                 community={communityStats?.slTokenLock || EMPTY_STATS.slTokenLock}
@@ -1171,7 +1173,7 @@ export default function BurnPage() {
             {config.categoryWeights.stTokenLock > BigInt(0) && (
               <CategorySection
                 title="ST 凭证永久锁定"
-                description="整笔锁定当前全部 ST，锁定后无法取回。"
+                description="锁定后无法取回，并放弃治理权。"
                 symbol="ST"
                 decimals={stDecimals}
                 community={communityStats?.stTokenLock || EMPTY_STATS.stTokenLock}
