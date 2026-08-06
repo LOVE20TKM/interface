@@ -67,11 +67,11 @@ export default function InfoTooltip({ title, content, className = '' }: InfoTool
           <div onClick={() => setIsOpen(true)}>
             <TooltipTriggerButton title={title} className={className} />
           </div>
-          <DrawerContent className="pb-safe">
-            <DrawerHeader>
+          <DrawerContent className="max-h-[90dvh] pb-safe">
+            <DrawerHeader className="shrink-0">
               <DrawerTitle className="text-lg font-semibold">{title}</DrawerTitle>
             </DrawerHeader>
-            <div className="px-4 pb-8 mb-10">
+            <div className="min-h-0 overflow-y-auto px-4 pb-8 mb-10">
               {contentNode}
             </div>
           </DrawerContent>

@@ -852,7 +852,26 @@ export default function BurnPage() {
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <h1 className="flex items-center gap-1 text-xl font-bold text-greyscale-900">
               新链公平发射
-              <InfoTooltip title="活动详情" content={BURN_INFO.activityDetails} className="p-0" />
+              <InfoTooltip
+                title="活动详情"
+                content={
+                  <>
+                    <p className="mb-4 text-sm leading-relaxed">
+                      本活动销毁合约开源代码：
+                      <a
+                        href="https://github.com/LOVE20TKM/burn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline"
+                      >
+                        https://github.com/LOVE20TKM/burn
+                      </a>
+                    </p>
+                    <p className="whitespace-pre-line text-sm leading-relaxed">{BURN_INFO.activityDetails}</p>
+                  </>
+                }
+                className="p-0"
+              />
             </h1>
             {!config.isPending && !isCurrentRoundPending && !publicError && (
               <div className="flex items-center gap-1">
