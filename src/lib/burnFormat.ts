@@ -18,21 +18,24 @@ const formatTinyBurnAmount = (value: bigint, decimals: number) => {
   return `0.0{${zeroCount}}${significant.replace(/0+$/, '')}`;
 };
 
-export const formatBurnAmount = (value: bigint | undefined, decimals = 18, maxFractionDigits = 6) => {
+export const formatBurnAmount = (value: bigint | undefined, decimals = 18) => {
   if (value === undefined) return '-';
   if (value > BigInt(0)) {
     const tinyAmount = formatTinyBurnAmount(value, decimals);
     if (tinyAmount) return tinyAmount;
   }
-  if (decimals <= maxFractionDigits) return formatExactBurnAmount(value, decimals);
+  const [whole] = formatUnits(value, decimals).split('.');
+  const integerDigits = whole === '0' ? 0 : whole.replace('-', '').length;
+  const fractionDigits = Math.max(0, 6 - integerDigits);
+  if (decimals <= fractionDigits) return formatExactBurnAmount(value, decimals);
 
-  const precisionUnit = BigInt(`1${'0'.repeat(decimals - maxFractionDigits)}`);
+  const precisionUnit = BigInt(`1${'0'.repeat(decimals - fractionDigits)}`);
   if (value > BigInt(0) && value < precisionUnit) {
-    const minimum = maxFractionDigits === 0 ? '1' : `0.${'0'.repeat(maxFractionDigits - 1)}1`;
+    const minimum = fractionDigits === 0 ? '1' : `0.${'0'.repeat(fractionDigits - 1)}1`;
     return `<${minimum}`;
   }
 
-  return formatExactBurnAmount(value / precisionUnit, maxFractionDigits);
+  return formatExactBurnAmount(value / precisionUnit, fractionDigits);
 };
 
 export const formatBurnInputAmount = (value: bigint, decimals: number) => trimZeros(formatUnits(value, decimals));

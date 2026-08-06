@@ -391,7 +391,7 @@ function ActionRewardRow({
         />
         <StatValue
           label="本次计划占用额度"
-          value={`${formatAmount(allocation, decimals)} ${tokenSymbol}`}
+          value={`${formatExactAmount(allocation, decimals)} ${tokenSymbol}`}
           info={BURN_INFO.allocation}
           tone="personal"
         />
@@ -1499,7 +1499,7 @@ export default function BurnPage() {
                             <p className="flex flex-wrap items-center gap-1 text-xs text-greyscale-500">
                               <InfoLabel label="本次最多可销毁" info={BURN_INFO.maxBurnable} />
                               <span>
-                                {formatAmount(maxActionAmount, tokenDecimals)} {tokenSymbol}。
+                                {formatExactAmount(maxActionAmount, tokenDecimals)} {tokenSymbol}。
                               </span>
                             </p>
                             {actionAmount && (
