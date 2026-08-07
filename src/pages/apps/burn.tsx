@@ -794,29 +794,36 @@ export default function BurnPage() {
           <p className="text-sm text-greyscale-500">无可锁定余额。</p>
         ) : !scoreMultiplierReady ? (
           <p className="text-sm text-red-600">得分加成读取失败，暂不能提交永久锁定。</p>
-        ) : approval.needsApproval ? (
-          <Button variant="outline" disabled={approval.buttonDisabled} onClick={() => void approval.approve()}>
-            {approval.buttonText} {kind}
-          </Button>
         ) : (
-          <Button
-            variant="destructive"
-            disabled={transactionBusy(transaction)}
-            onClick={() =>
-              openConfirmation({
-                title: `永久锁定全部 ${kind}`,
-                description: `将永久锁定当前全部 ${formatExactAmount(tokenBalanceValue, decimals)} ${kind}，该操作不可撤销。`,
-                confirmText: `确认锁定全部 ${kind}`,
-                run: async () => {
-                  if ((await ensureRoundOpen()) && selectedCommunity && selectedRoundNumber !== undefined) {
-                    await lock(selectedCommunity, selectedRoundNumber, tokenBalanceValue);
-                  }
-                },
-              })
-            }
-          >
-            {transactionBusy(transaction) ? "处理中..." : `永久锁定全部 ${kind}`}
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              variant="outline"
+              disabled={approval.buttonDisabled}
+              onClick={() => void approval.approve()}
+              className="w-full sm:flex-1"
+            >
+              {approval.isApproved ? `1.${kind} 已授权` : `1.${approval.buttonText} ${kind}`}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={approval.needsApproval || transactionBusy(transaction)}
+              onClick={() =>
+                openConfirmation({
+                  title: `永久锁定全部 ${kind}`,
+                  description: `将永久锁定当前全部 ${formatExactAmount(tokenBalanceValue, decimals)} ${kind}，该操作不可撤销。`,
+                  confirmText: `确认锁定全部 ${kind}`,
+                  run: async () => {
+                    if ((await ensureRoundOpen()) && selectedCommunity && selectedRoundNumber !== undefined) {
+                      await lock(selectedCommunity, selectedRoundNumber, tokenBalanceValue);
+                    }
+                  },
+                })
+              }
+              className="w-full sm:flex-1"
+            >
+              {transactionBusy(transaction) ? "2.处理中..." : `2.永久锁定全部 ${kind}`}
+            </Button>
+          </div>
         )}
       </div>
     );
@@ -1327,45 +1334,44 @@ export default function BurnPage() {
                                 最大
                               </Button>
                             </div>
-                            {govApproval.needsApproval ? (
-                              <Button
-                                variant="outline"
-                                disabled={govApproval.buttonDisabled}
-                                onClick={() => void govApproval.approve()}
-                              >
-                                {govApproval.buttonText}
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="destructive"
-                                disabled={
-                                  !govAmount || govInputError || !scoreMultiplierReady || transactionBusy(burnGov)
-                                }
-                                onClick={() =>
-                                  govAmount &&
-                                  openConfirmation({
-                                    title: "销毁治理激励代币",
-                                    description: `将真实销毁 ${formatExactAmount(govAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
-                                    confirmText: "确认销毁",
-                                    run: async () => {
-                                      if (
-                                        (await ensureRoundOpen()) &&
-                                        selectedCommunity &&
-                                        selectedRoundNumber !== undefined
-                                      ) {
-                                        await burnGov.burnGovRewardToken(
-                                          selectedCommunity,
-                                          selectedRoundNumber,
-                                          govAmount,
-                                        );
-                                      }
-                                    },
-                                  })
-                                }
-                              >
-                                {transactionBusy(burnGov) ? "处理中..." : "销毁治理激励"}
-                              </Button>
-                            )}
+                            <Button
+                              variant="outline"
+                              disabled={govApproval.buttonDisabled}
+                              onClick={() => void govApproval.approve()}
+                            >
+                              {govApproval.isApproved
+                                ? `1.${tokenSymbol} 已授权`
+                                : `1.${govApproval.buttonText} ${tokenSymbol}`}
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              disabled={
+                                govApproval.needsApproval ||
+                                !govAmount ||
+                                govInputError ||
+                                !scoreMultiplierReady ||
+                                transactionBusy(burnGov)
+                              }
+                              onClick={() =>
+                                govAmount &&
+                                openConfirmation({
+                                  title: "销毁治理激励代币",
+                                  description: `将真实销毁 ${formatExactAmount(govAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
+                                  confirmText: "确认销毁",
+                                  run: async () => {
+                                    if (
+                                      (await ensureRoundOpen()) &&
+                                      selectedCommunity &&
+                                      selectedRoundNumber !== undefined
+                                    ) {
+                                      await burnGov.burnGovRewardToken(selectedCommunity, selectedRoundNumber, govAmount);
+                                    }
+                                  },
+                                })
+                              }
+                            >
+                              {transactionBusy(burnGov) ? "2.处理中..." : "2.销毁治理激励"}
+                            </Button>
                           </div>
                           {govAmount && (
                             <p className="mt-2 flex flex-wrap items-center gap-1 text-xs text-greyscale-500">
@@ -1470,52 +1476,52 @@ export default function BurnPage() {
                                   最大
                                 </Button>
                               </div>
-                              {actionApproval.needsApproval ? (
-                                <Button
-                                  variant="outline"
-                                  disabled={actionApproval.buttonDisabled}
-                                  onClick={() => void actionApproval.approve()}
-                                >
-                                  {actionApproval.buttonText}
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="destructive"
-                                  disabled={
-                                    !actionAmount ||
-                                    actionInputError ||
-                                    !scoreMultiplierReady ||
-                                    actionAllocations.length === 0 ||
-                                    transactionBusy(burnActions)
-                                  }
-                                  onClick={() =>
-                                    actionAmount &&
-                                    openConfirmation({
-                                      title: "批量销毁行动激励代币",
-                                      description: `将按上方明细真实销毁 ${formatExactAmount(actionAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
-                                      confirmText: "确认批量销毁",
-                                      run: async () => {
-                                        if (
-                                          (await ensureRoundOpen()) &&
-                                          selectedCommunity &&
-                                          selectedRoundNumber !== undefined
-                                        ) {
-                                          await burnActions.burnActionRewardTokens(
-                                            selectedRoundNumber,
-                                            actionAllocations.map((allocation) => ({
-                                              tokenAddress: selectedCommunity,
-                                              actionId: allocation.actionId,
-                                              amount: allocation.amount,
-                                            })),
-                                          );
-                                        }
-                                      },
-                                    })
-                                  }
-                                >
-                                  {transactionBusy(burnActions) ? "处理中..." : "批量销毁"}
-                                </Button>
-                              )}
+                              <Button
+                                variant="outline"
+                                disabled={actionApproval.buttonDisabled}
+                                onClick={() => void actionApproval.approve()}
+                              >
+                                {actionApproval.isApproved
+                                  ? `1.${tokenSymbol} 已授权`
+                                  : `1.${actionApproval.buttonText} ${tokenSymbol}`}
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                disabled={
+                                  actionApproval.needsApproval ||
+                                  !actionAmount ||
+                                  actionInputError ||
+                                  !scoreMultiplierReady ||
+                                  actionAllocations.length === 0 ||
+                                  transactionBusy(burnActions)
+                                }
+                                onClick={() =>
+                                  actionAmount &&
+                                  openConfirmation({
+                                    title: "批量销毁行动激励代币",
+                                    description: `将按上方明细真实销毁 ${formatExactAmount(actionAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
+                                    confirmText: "确认批量销毁",
+                                    run: async () => {
+                                      if (
+                                        (await ensureRoundOpen()) &&
+                                        selectedCommunity &&
+                                        selectedRoundNumber !== undefined
+                                      ) {
+                                        await burnActions.burnActionRewardTokens(
+                                          selectedRoundNumber,
+                                          actionAllocations.map((allocation) => ({
+                                            tokenAddress: selectedCommunity,
+                                            actionId: allocation.actionId,
+                                            amount: allocation.amount,
+                                          })),
+                                        );
+                                      }
+                                    },
+                                  })
+                                }
+                              >
+                                {transactionBusy(burnActions) ? "2.处理中..." : "2.批量销毁"}
+                              </Button>
                             </div>
                             <p className="flex flex-wrap items-center gap-1 text-xs text-greyscale-500">
                               <InfoLabel label="本次最多可销毁" info={BURN_INFO.maxBurnable} />
