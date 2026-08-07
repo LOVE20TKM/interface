@@ -3,6 +3,16 @@ import { type BurnStats, type CategoryWeights } from './burnStats';
 const WAD = BigInt('1000000000000000000');
 const CATEGORY_KEYS = ['slTokenLock', 'stTokenLock', 'govRewardBurn', 'actionRewardBurn'] as const;
 
+export function calculateBurnScoreApy(scoreMultiplier: bigint, remainingRounds: bigint | undefined) {
+  if (scoreMultiplier < WAD || remainingRounds === undefined || remainingRounds < BigInt(0)) return undefined;
+  if (remainingRounds === BigInt(0)) return scoreMultiplier === WAD ? 0 : undefined;
+  return (
+    Math.expm1(
+      Math.log1p(Number(scoreMultiplier - WAD) / Number(WAD)) * (365 / Number(remainingRounds)),
+    ) * 100
+  );
+}
+
 export function calculateAccountCategoryRatio(accountScore: bigint, communityScore: bigint) {
   return communityScore > BigInt(0) ? (accountScore * WAD) / communityScore : BigInt(0);
 }

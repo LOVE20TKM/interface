@@ -5,6 +5,8 @@
 import { formatPercentage } from './format';
 import { safeToBigInt } from './clientUtils';
 
+const formatDailyApy = (dailyRate: number) => formatPercentage(Math.expm1(Math.log1p(dailyRate) * 365) * 100);
+
 /**
  * 计算治理质押的预计年化收益率(APY)
  * @param rewardForPhase 本轮治理激励总量
@@ -19,15 +21,6 @@ export const calculateAPY = (
 ): string => {
   if (!rewardForPhase || !tokenAmountForSl) return '0%';
 
-  // 年区块数 = 365天 * 86400秒/天 / 每个区块的秒数
-  const blocksPerYear = (365 * 86400 * 1000) / Number(process.env.NEXT_PUBLIC_BLOCK_TIME_MS || 0);
-  // 一个阶段的区块数
-  const phaseBlocks = safeToBigInt(process.env.NEXT_PUBLIC_PHASE_BLOCKS || '0');
-  if (blocksPerYear === 0 || phaseBlocks === BigInt(0)) {
-    console.error('配置错误: NEXT_PUBLIC_BLOCK_TIME_MS 或 NEXT_PUBLIC_PHASE_BLOCKS 未设置');
-    return '0%';
-  }
-
   // 所有质押资产总和
   const totalStaked = (tokenAmountForSl * BigInt(2) || BigInt(0)) + (stAmount || BigInt(0));
   // 避免除以零
@@ -35,11 +28,7 @@ export const calculateAPY = (
     return '0%';
   }
 
-  // 计算APY: (reward / totalStaked) / (phaseBlocks / blocksPerYear) * 100%
-  const apy = (Number(rewardForPhase) / Number(totalStaked) / (Number(phaseBlocks) / blocksPerYear)) * 100;
-
-  // 格式化APY，显示整数加2位小数，如果小数最后是0，则去掉
-  return formatPercentage(apy);
+  return formatDailyApy(Number(rewardForPhase) / Number(totalStaked));
 };
 
 /**
@@ -54,23 +43,9 @@ export const calculateActionAPY = (expectedReward?: bigint, joinedAmount?: bigin
   if (joinedAmount === undefined) return '0%';
   if (joinedAmount === BigInt(0)) return '∞';
 
-  // 年区块数 = 365天 * 86400秒/天 / 每个区块的秒数
-  const blocksPerYear = (365 * 86400 * 1000) / Number(process.env.NEXT_PUBLIC_BLOCK_TIME_MS || 0);
-  // 一个阶段的区块数
-  const phaseBlocks = safeToBigInt(process.env.NEXT_PUBLIC_PHASE_BLOCKS || '0');
-
-  if (blocksPerYear === 0 || phaseBlocks === BigInt(0)) {
-    console.error('配置错误: BLOCK_TIME 或 PHASE_BLOCKS 未设置或为0');
-    return '0%';
-  }
-
-  // 计算APY: 当轮行动激励 / 参与行动代币 / (一个阶段区块数/年区块数) * 100%
   const ratioScale = BigInt(1_000_000_000_000);
   const rewardRatio = Number((expectedReward * ratioScale) / joinedAmount) / Number(ratioScale);
-  const apy = (rewardRatio / (Number(phaseBlocks) / blocksPerYear)) * 100;
-
-  // 格式化APY，显示整数加2位小数，如果小数最后是0，则去掉
-  return formatPercentage(apy);
+  return formatDailyApy(rewardRatio);
 };
 
 /**

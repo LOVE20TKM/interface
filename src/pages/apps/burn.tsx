@@ -59,11 +59,13 @@ import {
   formatExactBurnAmount as formatExactAmount,
 } from "@/src/lib/burnFormat";
 import {
+  calculateBurnScoreApy,
   calculateAccountCategoryRatio,
   calculateAccountCommunityShare,
   calculateCategoryWeightRatio,
   formatWadPercentage,
 } from "@/src/lib/burnShare";
+import { formatPercentage } from "@/src/lib/format";
 
 const WAD = BigInt("1000000000000000000");
 const EMPTY_STATS: BurnStats = {
@@ -97,7 +99,7 @@ const BURN_INFO = {
   accountCommunityShare:
     "把当前社区内部视为 100%，有参与记录的资产类别先按活动预设的分配比例分配社区份额，再按你在各类别的得分占该类别社区总得分的比例计算并相加。活动结束前会随参与情况变化。",
   scoreBonus:
-    "当前社区在所选轮次的销毁得分额外加成。它只影响得分，不改变销毁额度。计算公式：本轮得分 = 销毁或锁定数量 × 链上得分系数 ÷ 10¹⁸；额外加成 =（链上得分系数 - 10¹⁸）÷ 10¹⁸ × 100%。",
+    "当前社区越早参与，计入的得分越高。本轮得分 = 销毁或锁定数量 ×（1 + 本轮得分加成）；加成只影响得分，不改变销毁额度。若加成覆盖之后 X 轮，折算 APY =（（1 + 本轮得分加成）^(365 ÷ X) - 1）× 100%，即按一轮一天、一年 365 轮估算。它仅用于比较得分加成，不代表实际资产收益。",
   roundSelector:
     "选择具体轮次时展示从活动开始截止该轮的累计数量和累计得分；全部轮次展示活动累计。只有当前开放轮次可以执行锁定和销毁。",
   categoryRatio:
@@ -832,6 +834,10 @@ export default function BurnPage() {
   const bonusRatio =
     scoreMultiplierReady && scoreMultiplier.multiplier > WAD ? scoreMultiplier.multiplier - WAD : BigInt(0);
   const bonusBps = (bonusRatio * BigInt(10000)) / WAD;
+  const remainingRounds = selectedRoundNumber === undefined ? undefined : config.endRound - selectedRoundNumber;
+  const scoreApy = calculateBurnScoreApy(scoreMultiplier.multiplier, remainingRounds);
+  const scoreApyLabel =
+    scoreApy === undefined ? "无法估算" : Number.isFinite(scoreApy) ? formatPercentage(scoreApy) : "∞";
 
   if (!isBurnEnabled) {
     return (
@@ -1149,7 +1155,9 @@ export default function BurnPage() {
                 {scoreMultiplierReady ? (
                   <>
                     <div className="flex items-center gap-1 font-semibold">
-                      <span>本轮得分加成 {formatWadPercentage(bonusRatio)}</span>
+                      <span>
+                        本轮得分加成 {formatWadPercentage(bonusRatio)} · 折算 APY {scoreApyLabel}
+                      </span>
                       <InfoTooltip title="本轮得分加成" content={BURN_INFO.scoreBonus} />
                     </div>
                     <div className="mt-1 text-xs">

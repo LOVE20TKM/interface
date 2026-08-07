@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 
 import {
+  calculateBurnScoreApy,
   calculateAccountCategoryRatio,
   calculateAccountCommunityShare,
   calculateCategoryWeightRatio,
@@ -75,5 +76,12 @@ assert.equal(
 assert.equal(formatWadPercentage(BigInt(0)), '0%');
 assert.equal(formatWadPercentage(BigInt('123456789000000000')), '12.34%');
 assert.equal(formatWadPercentage(BigInt(1)), '<0.01%');
+assert.equal(calculateBurnScoreApy(WAD, BigInt(0)), 0);
+assert.equal(calculateBurnScoreApy(BigInt('1010000000000000000'), BigInt(0)), undefined);
+assert.equal(calculateBurnScoreApy(WAD, undefined), undefined);
+assert.ok(
+  Math.abs((calculateBurnScoreApy(BigInt('3847200000000000000'), BigInt(2000)) || 0) - 27.875963633875823) <
+    0.000001,
+);
 
 console.log('burn share ok');
