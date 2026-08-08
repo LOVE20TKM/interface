@@ -75,7 +75,8 @@ assert.equal(
 );
 assert.equal(formatWadPercentage(BigInt(0)), '0%');
 assert.equal(formatWadPercentage(BigInt('123456789000000000')), '12.34%');
-assert.equal(formatWadPercentage(BigInt(1)), '<0.01%');
+assert.equal(formatWadPercentage(BigInt('370370370400')), '0.0{4}3703%');
+assert.equal(formatWadPercentage(BigInt(1)), '0.0{15}1%');
 assert.equal(calculateBurnScoreApy(WAD, BigInt(0)), 0);
 assert.equal(calculateBurnScoreApy(BigInt('1010000000000000000'), BigInt(0)), undefined);
 assert.equal(calculateBurnScoreApy(WAD, undefined), undefined);

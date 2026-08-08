@@ -1,4 +1,5 @@
 import { type BurnStats, type CategoryWeights } from './burnStats';
+import { formatBurnAmount } from './burnFormat';
 
 const WAD = BigInt('1000000000000000000');
 const CATEGORY_KEYS = ['slTokenLock', 'stTokenLock', 'govRewardBurn', 'actionRewardBurn'] as const;
@@ -36,7 +37,7 @@ export function calculateAccountCommunityShare(community: BurnStats, account: Bu
 
 export function formatWadPercentage(value: bigint) {
   const hundredths = (value * BigInt(10000)) / WAD;
-  if (value > BigInt(0) && hundredths === BigInt(0)) return '<0.01%';
+  if (value > BigInt(0) && hundredths === BigInt(0)) return `${formatBurnAmount(value * BigInt(100))}%`;
 
   const whole = hundredths / BigInt(100);
   const fraction = (hundredths % BigInt(100)).toString().padStart(2, '0').replace(/0+$/, '');
