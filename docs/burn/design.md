@@ -37,14 +37,14 @@
 
 ## 3. 页面状态
 
-页面通过 Burn 的 `startRound`、`endRound`，以及同一协议部署的 Verify `currentRound` 判断状态：
+页面通过 Burn 的 `startRound`、`endRound`，以及同一协议部署的 Vote `currentRound` 判断状态：
 
-只有 Verify `currentRound > 0` 时才计算候选开放轮次 `currentRound - 1`。`currentRound == 0` 时不得构造或向 `uint256` 查询传入负轮次，页面按“未开始”处理并默认预览 `startRound`。
+只有 Vote `currentRound > 2` 时才计算候选开放轮次 `currentRound - 3`。此前不得构造或向 `uint256` 查询传入负轮次，页面按“未开始”处理并默认预览 `startRound`。
 
 | 状态   | 条件                                                                       | 默认轮次         | 操作                   |
 | ------ | -------------------------------------------------------------------------- | ---------------- | ---------------------- |
 | 未开始 | 尚无开放销毁轮次                                                           | `startRound`     | 只读，展示当前资产余额 |
-| 进行中 | `currentRound > 0`，且 `currentRound - 1` 在活动范围内并满足 `isRoundOpen` | 当前开放轮次     | 可操作                 |
+| 进行中 | `currentRound > 2`，且 `currentRound - 3` 在活动范围内并满足 `isRoundOpen` | 当前开放轮次     | 可操作                 |
 | 已结束 | 份额已最终确定                                                             | 全部轮次（累计） | 只读，可领取空投       |
 
 轮次下拉包含：
@@ -343,7 +343,7 @@ bonusBps = floor((scoreMultiplier - 1e18) * 10000 / 1e18)
 
 1. 未配置 Burn 地址时应用入口隐藏，直接访问显示未配置状态。
 2. 配置后可读取活动、社区和默认轮次；当前代币不在社区列表时回退范围代币；`yarn generate:abi` 可以从 Burn Foundry 产物重复生成 `src/abis/Burn.ts`。
-3. 未开始、开放、历史、累计和已结束状态选择正确；Verify `currentRound == 0` 时不构造负轮次；未开始时展示当前社区代币、SL 和 ST 余额但不读取 allowance 或提供操作。
+3. 未开始、开放、历史、累计和已结束状态选择正确；Vote `currentRound <= 2` 时不构造负轮次；未开始时展示当前社区代币、SL 和 ST 余额但不读取 allowance 或提供操作。
 4. 具体轮次通过合约单次读取展示从活动开始截止该轮的累计数量、累计得分和本社区本类别累计占比，不按轮次循环查询；历史轮次不展示社区级份额，社区活动权重占比只放在社区选择器中。
 5. SL/ST 不出现数量输入，授权和整笔锁定必须分别确认。
 6. 未领取激励不产生额度；领取确认后按实际铸造量刷新额度。

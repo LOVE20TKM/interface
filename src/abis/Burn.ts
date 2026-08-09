@@ -1929,7 +1929,7 @@ export const BurnAbi = [
         "internalType": "uint256"
       },
       {
-        "name": "currentVerifyRound",
+        "name": "currentBurnRound",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -1945,7 +1945,7 @@ export const BurnAbi = [
     "name": "StartRoundTooEarly",
     "inputs": [
       {
-        "name": "currentVerifyRound",
+        "name": "minimumStartRound",
         "type": "uint256",
         "internalType": "uint256"
       },

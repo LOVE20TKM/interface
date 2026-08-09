@@ -47,7 +47,7 @@ import {
 import { useBalanceOf, useDecimals, useSymbol } from "@/src/hooks/contracts/useLOVE20Token";
 import { useMintActionReward, useMintGovReward } from "@/src/hooks/contracts/useLOVE20Mint";
 import { useTokenDetails } from "@/src/hooks/contracts/useLOVE20TokenViewer";
-import { useCurrentRound } from "@/src/hooks/contracts/useLOVE20Verify";
+import { useCurrentRound } from "@/src/hooks/contracts/useLOVE20Vote";
 import { useTokenApproval } from "@/src/hooks/contracts/useTokenApproval";
 import { useActionBaseInfosByIdsWithCache } from "@/src/hooks/composite/useActionBaseInfosByIdsWithCache";
 import { useClaimReward } from "@/src/hooks/extension/base/contracts/useIReward";
@@ -84,7 +84,7 @@ const BURN_INFO = {
 
 份额分配：参与社区和社区权重在活动部署时确定并固定。只有本次活动配置中已完成发射的范围代币社区及其直接子币社区可以参与；未列入的社区、活动部署后新发射的代币和更深层子币不参与。每个社区内，四类资产分别计算份额，同类资产只与同类参与者竞争；没有实际得分的社区或类别不参与分配，对应份额按规则重新分配给其他有参与的社区或类别。`,
   activityPhase:
-    "根据当前验证轮次判断活动处于未开始、进行中、结算中或已结束。只有进行中的当前开放轮次可以执行锁定和销毁。",
+    "根据当前投票轮次判断活动处于未开始、进行中、结算中或已结束。只有进行中的当前开放轮次可以执行锁定和销毁。",
   activityOverview: "汇总本次活动的轮次范围、参与地址数、额度倍数、个人活动份额。活动结束前的个人份额为实时预估值。",
   activityRounds: "在活动有效轮次区间内可销毁锁定资产，历史轮次不参与销毁。",
   participants: "至少一次通过销毁合约成功锁定或销毁资产的去重地址数。直接向合约转账不会计入。",
@@ -407,7 +407,7 @@ export default function BurnPage() {
   const isOnTargetChain = useIsOnTargetChain();
   const { token: contextToken } = useContext(TokenContext) || {};
   const config = useBurnActivityConfig();
-  const { currentRound, isPending: isCurrentRoundPending, error: currentRoundError } = useCurrentRound();
+  const { currentRound: currentVoteRound, isPending: isVoteRoundPending, error: voteRoundError } = useCurrentRound();
   const {
     tokens: communityTokens,
     isPending: communityTokensPending,
@@ -424,8 +424,8 @@ export default function BurnPage() {
   const [confirmation, setConfirmation] = useState<ConfirmationState | null>(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
 
-  const candidateRound = currentRound > BigInt(0) ? currentRound - BigInt(1) : undefined;
-  const finalized = currentRound > config.endRound + BigInt(1);
+  const candidateRound = currentVoteRound > BigInt(2) ? currentVoteRound - BigInt(3) : undefined;
+  const finalized = candidateRound !== undefined && candidateRound > config.endRound;
   const activityPhase: ActivityPhase = finalized
     ? "finished"
     : candidateRound === undefined || candidateRound < config.startRound
@@ -450,7 +450,7 @@ export default function BurnPage() {
   }, [communityTouched, config.communities, config.scopeTokenAddress, contextToken?.address]);
 
   useEffect(() => {
-    if (roundTouched || config.isPending || isCurrentRoundPending || !config.scopeTokenAddress) return;
+    if (roundTouched || config.isPending || isVoteRoundPending || !config.scopeTokenAddress) return;
     if (activityPhase === "finished" || activityPhase === "settling") setSelectedRound("all");
     else if (activityPhase === "active" && candidateRound !== undefined) setSelectedRound(candidateRound.toString());
     else setSelectedRound(config.startRound.toString());
@@ -460,7 +460,7 @@ export default function BurnPage() {
     config.isPending,
     config.scopeTokenAddress,
     config.startRound,
-    isCurrentRoundPending,
+    isVoteRoundPending,
     roundTouched,
   ]);
 
@@ -852,7 +852,7 @@ export default function BurnPage() {
     );
   }
 
-  const publicError = config.error || currentRoundError;
+  const publicError = config.error || voteRoundError;
 
   return (
     <>
@@ -886,7 +886,7 @@ export default function BurnPage() {
                 className="p-0"
               />
             </h1>
-            {!config.isPending && !isCurrentRoundPending && !publicError && (
+            {!config.isPending && !isVoteRoundPending && !publicError && (
               <div className="flex items-center gap-1">
                 <span
                   className={`rounded-full border px-3 py-1 text-sm font-bold ${
@@ -905,7 +905,7 @@ export default function BurnPage() {
           </div>
         </div>
 
-        {config.isPending || isCurrentRoundPending ? (
+        {config.isPending || isVoteRoundPending ? (
           <div className="rounded-md border border-greyscale-200 p-4 text-sm text-greyscale-500">
             正在读取活动配置...
           </div>

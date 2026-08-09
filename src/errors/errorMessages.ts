@@ -176,7 +176,7 @@ export const ErrorMessages: Record<string, string> = {
   SenderPairLengthMismatch: 'senderId 与 senderAddress 数量不一致',
   SourceAddressHasNoCode: '规则源地址未部署合约',
   StakeAmountMustBeSet: '质押数量必须大于0',
-  StartRoundTooEarly: '活动开始轮次早于当前验证轮次',
+  StartRoundTooEarly: '活动开始轮次早于允许的最早轮次',
   TitleEmpty: '标题不能为空',
   TokenSymbolExists: '代币符号已存在',
   TokensAlreadyClaimed: '代币已经领取',
