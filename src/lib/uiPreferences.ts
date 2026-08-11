@@ -26,3 +26,9 @@ export const liquidityZapPreference = createBooleanPreference(
   'liquidityZapPreferenceChanged',
   false,
 );
+
+export const newChainLaunchVisitedPreference = createBooleanPreference(
+  'love20:apps:newChainLaunchVisited',
+  'newChainLaunchVisitedChanged',
+  false,
+);

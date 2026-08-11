@@ -1,5 +1,5 @@
 'use client';
-import { useContext, useMemo, type MouseEvent } from 'react';
+import { useContext, useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { TokenContext } from '@/src/contexts/TokenContext';
@@ -7,12 +7,25 @@ import { useGroupChatUnreadSummary } from '@/src/contexts/GroupChatSyncContext';
 import { cn } from '@/lib/utils';
 import { MessageCircle, Users, Vote, User, Layers } from 'lucide-react';
 import { normalizeRouteKey, suppressNextRouteLoading } from '@/src/lib/routeLoading';
+import { isBurnEnabled } from '@/src/hooks/contracts/useBurn';
+import { newChainLaunchVisitedPreference } from '@/src/lib/uiPreferences';
 
 export function BottomNavigation() {
   const { token } = useContext(TokenContext) || {};
   const { badgeType, badgeLabel } = useGroupChatUnreadSummary();
   const router = useRouter();
   const hasUnreadChat = badgeType !== 'none';
+  const [hasVisitedNewChainLaunch, setHasVisitedNewChainLaunch] = useState(true);
+
+  useEffect(() => {
+    const isNewChainLaunchPage = router.pathname === '/apps/burn';
+    try {
+      if (isNewChainLaunchPage) newChainLaunchVisitedPreference.set(true);
+      setHasVisitedNewChainLaunch(isNewChainLaunchPage || newChainLaunchVisitedPreference.get());
+    } catch {
+      setHasVisitedNewChainLaunch(isNewChainLaunchPage);
+    }
+  }, [router.pathname]);
 
   const navItems = useMemo(() => {
     if (!token) return [];
@@ -33,7 +46,7 @@ export function BottomNavigation() {
         icon: Layers,
         isActive: router.pathname.startsWith('/apps'),
         isMain: false,
-        chatBadgeType: 'none',
+        chatBadgeType: isBurnEnabled && !hasVisitedNewChainLaunch ? 'intro-dot' : 'none',
         chatBadgeLabel: '0',
       },
       {
@@ -64,7 +77,7 @@ export function BottomNavigation() {
         chatBadgeLabel: '0',
       },
     ];
-  }, [badgeLabel, badgeType, hasUnreadChat, token, router.pathname]);
+  }, [badgeLabel, badgeType, hasUnreadChat, hasVisitedNewChainLaunch, token, router.pathname]);
 
   if (!token) return null;
 
@@ -148,7 +161,7 @@ export function BottomNavigation() {
                   item.chatBadgeType === 'intro-dot' ? (
                     <span
                       className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-greyscale-50 bg-red-500 shadow-md shadow-red-500/40"
-                      aria-label="聊天入口提示"
+                      aria-label={item.title === '应用' ? '新链公平发射应用待查看' : '聊天入口提示'}
                     >
                       <span
                         className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-70"

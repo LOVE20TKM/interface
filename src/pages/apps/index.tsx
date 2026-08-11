@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import Link from "next/link";
 import {
@@ -23,6 +23,7 @@ import { TokenContext } from "@/src/contexts/TokenContext";
 import { useGroupChatUnreadSummary } from "@/src/contexts/GroupChatSyncContext";
 import { isBatchTransferEnabled } from "@/src/hooks/contracts/useBatchTransfer";
 import { isBurnEnabled } from "@/src/hooks/contracts/useBurn";
+import { newChainLaunchVisitedPreference } from "@/src/lib/uiPreferences";
 
 interface AppItem {
   name: string;
@@ -144,10 +145,22 @@ function AppIcon({ item, symbol }: { item: AppItem; symbol?: string }) {
       <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-greyscale-100 text-secondary">
         <Icon className="h-5 w-5" />
         {item.hasUnread && (
-          <span
-            className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"
-            aria-label="有新消息"
-          />
+          item.name === "新链公平发射" ? (
+            <span
+              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-greyscale-50 bg-red-500 shadow-md shadow-red-500/40"
+              aria-label="新链公平发射应用待查看"
+            >
+              <span
+                className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-70"
+                aria-hidden="true"
+              />
+            </span>
+          ) : (
+            <span
+              className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"
+              aria-label="有新消息"
+            />
+          )
         )}
       </span>
       <div className="line-clamp-2 w-full text-sm font-semibold leading-tight text-greyscale-900">{item.name}</div>
@@ -161,6 +174,15 @@ export default function AppsPage() {
   const { totalUnread } = useGroupChatUnreadSummary();
   const symbol = token?.symbol;
   const hasUnreadChat = totalUnread > BigInt(0);
+  const [hasVisitedNewChainLaunch, setHasVisitedNewChainLaunch] = useState(true);
+
+  useEffect(() => {
+    try {
+      setHasVisitedNewChainLaunch(newChainLaunchVisitedPreference.get());
+    } catch {
+      setHasVisitedNewChainLaunch(false);
+    }
+  }, []);
 
   return (
     <>
@@ -181,7 +203,12 @@ export default function AppsPage() {
                   {section.items.map((app) => (
                     <AppIcon
                       key={app.name}
-                      item={{ ...app, hasUnread: app.name === "聊天" && hasUnreadChat }}
+                      item={{
+                        ...app,
+                        hasUnread:
+                          (app.name === "聊天" && hasUnreadChat) ||
+                          (app.href === "/apps/burn" && !hasVisitedNewChainLaunch),
+                      }}
                       symbol={symbol}
                     />
                   ))}
