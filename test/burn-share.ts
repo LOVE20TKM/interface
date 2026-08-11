@@ -7,7 +7,7 @@ import {
   calculateCategoryWeightRatio,
   formatWadPercentage,
 } from '../src/lib/burnShare';
-import { type BurnStats, type CategoryWeights } from '../src/lib/burnStats';
+import { getBurnActivityRoundsRemaining, type BurnStats, type CategoryWeights } from '../src/lib/burnStats';
 
 const WAD = BigInt('1000000000000000000');
 const equalWeights: CategoryWeights = {
@@ -84,5 +84,18 @@ assert.ok(
   Math.abs((calculateBurnScoreApy(BigInt('3847200000000000000'), BigInt(2000)) || 0) - 27.875963633875823) <
     0.000001,
 );
+assert.deepEqual(getBurnActivityRoundsRemaining(BigInt(4), BigInt(5), BigInt(7)), {
+  target: 'start',
+  rounds: BigInt(4),
+});
+assert.deepEqual(getBurnActivityRoundsRemaining(BigInt(8), BigInt(5), BigInt(7)), {
+  target: 'end',
+  rounds: BigInt(3),
+});
+assert.deepEqual(getBurnActivityRoundsRemaining(BigInt(10), BigInt(5), BigInt(7)), {
+  target: 'end',
+  rounds: BigInt(1),
+});
+assert.equal(getBurnActivityRoundsRemaining(BigInt(11), BigInt(5), BigInt(7)), undefined);
 
 console.log('burn share ok');

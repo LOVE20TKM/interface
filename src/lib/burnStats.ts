@@ -16,3 +16,11 @@ export interface CategoryWeights {
   govRewardBurn: bigint;
   actionRewardBurn: bigint;
 }
+
+export function getBurnActivityRoundsRemaining(currentVoteRound: bigint, startRound: bigint, endRound: bigint) {
+  const startVoteRound = startRound + BigInt(3);
+  if (currentVoteRound < startVoteRound) return { target: 'start' as const, rounds: startVoteRound - currentVoteRound };
+
+  const endVoteRound = endRound + BigInt(4);
+  if (currentVoteRound < endVoteRound) return { target: 'end' as const, rounds: endVoteRound - currentVoteRound };
+}

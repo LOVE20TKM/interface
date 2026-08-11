@@ -66,6 +66,7 @@ import {
   formatWadPercentage,
 } from "@/src/lib/burnShare";
 import { formatPercentage } from "@/src/lib/format";
+import { getBurnActivityRoundsRemaining } from "@/src/lib/burnStats";
 
 const WAD = BigInt("1000000000000000000");
 const EMPTY_STATS: BurnStats = {
@@ -855,6 +856,10 @@ export default function BurnPage() {
   }
 
   const publicError = config.error || voteRoundError;
+  const activityRoundsRemaining =
+    config.isPending || isVoteRoundPending || publicError
+      ? undefined
+      : getBurnActivityRoundsRemaining(currentVoteRound, config.startRound, config.endRound);
 
   return (
     <>
@@ -906,6 +911,13 @@ export default function BurnPage() {
             )}
           </div>
         </div>
+
+        {activityRoundsRemaining && (
+          <div className="mb-4 text-sm text-greyscale-500">
+            距离活动{activityRoundsRemaining.target === "start" ? "开始" : "结束"}还有
+            <span className="mx-1 font-bold text-greyscale-700">{activityRoundsRemaining.rounds.toString()}</span>轮
+          </div>
+        )}
 
         {config.isPending || isVoteRoundPending ? (
           <div className="rounded-md border border-greyscale-200 p-4 text-sm text-greyscale-500">
