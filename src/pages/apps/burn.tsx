@@ -77,11 +77,11 @@ const EMPTY_STATS: BurnStats = {
 };
 
 const BURN_INFO = {
-  activityDetails: `活动背景：部分伙伴希望在原生代币价值更稳定、流动性更好、链的规则更稳定的其他公链上继续参与LOVE20协议，因此发起本次活动。参与者按最终份额获得新链上首次部署的 LOVE20 代币分配份额，最终部署哪条公链由社区讨论并投票决定。
+  activityDetails: `活动背景：LOVE20协议即将启动多链部署，首个公链暂定为原生代币价值稳定、流动性好、链的规则稳定的BSC公链（最终部署哪条公链由参与销毁的社区成员讨论并投票决定）。参与者若想获得新链上首次部署的 LOVE20 代币分配份额，可通过四种方式销毁LOVE20协议生态资产（含子币）获得：流动性质押凭证、加速质押凭证、治理激励和行动激励。
 
 活动阶段：第一阶段：资产锁定销毁，第二阶段：公链部署选择投票，第三阶段：协议部署前社区公测，第四阶段：协议部署并可领取新部署协议代币。
 
-参与资产：活动支持TKM链上部署的LOVE20协议的四类资产：SL 流动性质押凭证、ST 加速质押凭证、治理激励和行动激励。SL、ST 会被永久锁定；治理激励和行动激励必须先实际领取并铸造，之后按实际铸造数量生成对应的销毁额度，再销毁对应社区代币。
+参与资产：活动支持TKM链上部署的LOVE20协议的四类资产销毁方式：SL 流动性质押凭证、ST 加速质押凭证、治理激励和行动激励。SL、ST 会被永久锁定；治理激励和行动激励必须先实际领取并铸造，之后按实际铸造数量生成对应的销毁额度，再销毁对应社区代币。
 
 参与时间：活动只开放当前轮次。必须在当前轮次完成锁定或销毁，历史轮次不能补做，未使用的销毁额度也不能带到下一轮。在同一社区、同一资产类别内，同样数量越早参与，获得的销毁得分越高。
 
@@ -120,6 +120,8 @@ const BURN_INFO = {
   action: "行动编号是激励和销毁额度的链上来源标识。基础行动由协议铸造合约发放，扩展行动由对应扩展合约发放。",
   maxBurnable: "当前钱包余额与所有已领取行动激励剩余额度总和两者中的较小值。",
 };
+
+const ACTIVITY_DETAIL_PARAGRAPHS = BURN_INFO.activityDetails.split("\n\n");
 
 type ActivityPhase = "not-started" | "active" | "settling" | "finished";
 
@@ -232,10 +234,8 @@ function CategorySection({
   error?: unknown;
   children?: React.ReactNode;
 }) {
-  const displayAmount = (value: bigint) =>
-    loading ? "读取中..." : error ? "读取失败" : formatAmount(value, decimals);
-  const displayScore = (value: bigint) =>
-    loading ? "读取中..." : error ? "读取失败" : formatAmount(value, decimals);
+  const displayAmount = (value: bigint) => (loading ? "读取中..." : error ? "读取失败" : formatAmount(value, decimals));
+  const displayScore = (value: bigint) => (loading ? "读取中..." : error ? "读取失败" : formatAmount(value, decimals));
   const fullAmount = (value: bigint) =>
     loading || error ? undefined : `${formatExactAmount(value, decimals)} ${symbol}`;
   const fullScore = (value: bigint) => (loading || error ? undefined : `${formatExactAmount(value, decimals)} 分`);
@@ -426,6 +426,7 @@ export default function BurnPage() {
   const [actionInput, setActionInput] = useState("");
   const [confirmation, setConfirmation] = useState<ConfirmationState | null>(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
+  const [activityDetailsExpanded, setActivityDetailsExpanded] = useState(false);
 
   const candidateRound = currentVoteRound > BigInt(2) ? currentVoteRound - BigInt(3) : undefined;
   const finalized = candidateRound !== undefined && candidateRound > config.endRound;
@@ -869,55 +870,75 @@ export default function BurnPage() {
           <span className="flex h-10 w-10 items-center justify-center rounded-md bg-red-50 text-red-600">
             <Flame className="h-5 w-5" />
           </span>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <h1 className="flex items-center gap-1 text-xl font-bold text-greyscale-900">
-              新链发射销毁活动
-              <InfoTooltip
-                title="活动详情"
-                content={
-                  <>
-                    <p className="mb-4 text-sm leading-relaxed">
-                      本活动销毁合约开源代码：
-                      <a
-                        href="https://github.com/LOVE20TKM/burn"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary underline"
-                      >
-                        https://github.com/LOVE20TKM/burn
-                      </a>
-                    </p>
-                    <p className="whitespace-pre-line text-sm leading-relaxed">{BURN_INFO.activityDetails}</p>
-                  </>
-                }
-                className="p-0"
-              />
-            </h1>
-            {!config.isPending && !isVoteRoundPending && !publicError && (
-              <div className="flex items-center gap-1">
-                <span
-                  className={`rounded-full border px-3 py-1 text-sm font-bold ${
-                    activityPhase === "active"
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                      : activityPhase === "finished"
-                        ? "border-greyscale-200 bg-greyscale-100 text-greyscale-700"
-                        : "border-amber-200 bg-amber-50 text-amber-700"
-                  }`}
-                >
-                  {phaseLabel}
-                </span>
-                <InfoTooltip title="活动状态" content={BURN_INFO.activityPhase} />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-bold text-greyscale-900">新链发射销毁活动</h1>
+              {!config.isPending && !isVoteRoundPending && !publicError && (
+                <div className="flex items-center gap-1">
+                  <span
+                    className={`rounded-full border px-3 py-1 text-sm font-bold ${
+                      activityPhase === "active"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : activityPhase === "finished"
+                          ? "border-greyscale-200 bg-greyscale-100 text-greyscale-700"
+                          : "border-amber-200 bg-amber-50 text-amber-700"
+                    }`}
+                  >
+                    {phaseLabel}
+                  </span>
+                  <InfoTooltip title="活动状态" content={BURN_INFO.activityPhase} />
+                </div>
+              )}
+            </div>
+            {activityRoundsRemaining && (
+              <div className="text-sm text-greyscale-500">
+                距离活动{activityRoundsRemaining.target === "start" ? "开始" : "结束"}还有
+                <span className="mx-1 font-bold text-greyscale-700">{activityRoundsRemaining.rounds.toString()}</span>轮
               </div>
             )}
           </div>
         </div>
 
-        {activityRoundsRemaining && (
-          <div className="mb-4 text-sm text-greyscale-500">
-            距离活动{activityRoundsRemaining.target === "start" ? "开始" : "结束"}还有
-            <span className="mx-1 font-bold text-greyscale-700">{activityRoundsRemaining.rounds.toString()}</span>轮
-          </div>
-        )}
+        <section className="mb-4 rounded-md border border-greyscale-200 bg-greyscale-50 px-3 py-3 text-sm leading-relaxed text-greyscale-600">
+          {(activityDetailsExpanded ? ACTIVITY_DETAIL_PARAGRAPHS : ACTIVITY_DETAIL_PARAGRAPHS.slice(0, 1)).map(
+            (paragraph, index, paragraphs) => (
+              <p className={index > 0 ? "mt-3" : undefined} key={paragraph}>
+                {paragraph}
+                {index === paragraphs.length - 1 && !activityDetailsExpanded && (
+                  <button
+                    type="button"
+                    className="ml-1 text-primary underline"
+                    aria-expanded={activityDetailsExpanded}
+                    onClick={() => setActivityDetailsExpanded((expanded) => !expanded)}
+                  >
+                    {activityDetailsExpanded ? "收起" : "展开"}
+                  </button>
+                )}
+              </p>
+            ),
+          )}
+          {activityDetailsExpanded && (
+            <p className="mt-3">
+              本活动销毁合约开源代码：
+              <a
+                href="https://github.com/LOVE20TKM/burn"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-1 text-primary underline"
+              >
+                https://github.com/LOVE20TKM/burn
+              </a>
+              <button
+                type="button"
+                className="ml-1 text-primary underline"
+                aria-expanded={activityDetailsExpanded}
+                onClick={() => setActivityDetailsExpanded(false)}
+              >
+                收起
+              </button>
+            </p>
+          )}
+        </section>
 
         {config.isPending || isVoteRoundPending ? (
           <div className="rounded-md border border-greyscale-200 p-4 text-sm text-greyscale-500">
@@ -1386,7 +1407,11 @@ export default function BurnPage() {
                                       selectedCommunity &&
                                       selectedRoundNumber !== undefined
                                     ) {
-                                      await burnGov.burnGovRewardToken(selectedCommunity, selectedRoundNumber, govAmount);
+                                      await burnGov.burnGovRewardToken(
+                                        selectedCommunity,
+                                        selectedRoundNumber,
+                                        govAmount,
+                                      );
                                     }
                                   },
                                 })
