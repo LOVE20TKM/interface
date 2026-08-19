@@ -845,10 +845,10 @@ export default function BurnPage() {
   if (!isBurnEnabled) {
     return (
       <>
-        <Header title="新链公平发射" showBackButton />
+        <Header title="新链发射销毁活动" showBackButton />
         <main className="mx-auto w-full max-w-4xl px-4 pb-24 pt-6">
           <div className="rounded-md border border-greyscale-200 bg-greyscale-50 p-4 text-sm text-greyscale-600">
-            当前环境未配置新链公平发射活动。
+            当前环境未配置新链发射销毁活动。
           </div>
         </main>
       </>
@@ -863,7 +863,7 @@ export default function BurnPage() {
 
   return (
     <>
-      <Header title="新链公平发射" showBackButton />
+      <Header title="新链发射销毁活动" showBackButton />
       <main className="mx-auto w-full max-w-5xl px-4 pb-24 pt-3 sm:pt-6">
         <div className="mb-5 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-md bg-red-50 text-red-600">
@@ -871,7 +871,7 @@ export default function BurnPage() {
           </span>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <h1 className="flex items-center gap-1 text-xl font-bold text-greyscale-900">
-              新链公平发射
+              新链发射销毁活动
               <InfoTooltip
                 title="活动详情"
                 content={

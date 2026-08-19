@@ -103,7 +103,7 @@ const appSections: AppSection[] = [
       ...(isBurnEnabled
         ? [
             {
-              name: "新链公平发射",
+              name: "新链发射销毁活动",
               href: "/apps/burn",
               icon: Flame,
             },
@@ -145,10 +145,10 @@ function AppIcon({ item, symbol }: { item: AppItem; symbol?: string }) {
       <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-greyscale-100 text-secondary">
         <Icon className="h-5 w-5" />
         {item.hasUnread && (
-          item.name === "新链公平发射" ? (
+          item.name === "新链发射销毁活动" ? (
             <span
               className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-greyscale-50 bg-red-500 shadow-md shadow-red-500/40"
-              aria-label="新链公平发射应用待查看"
+              aria-label="新链发射销毁活动应用待查看"
             >
               <span
                 className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-70"

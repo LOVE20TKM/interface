@@ -161,7 +161,7 @@ export function BottomNavigation() {
                   item.chatBadgeType === 'intro-dot' ? (
                     <span
                       className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-greyscale-50 bg-red-500 shadow-md shadow-red-500/40"
-                      aria-label={item.title === '应用' ? '新链公平发射应用待查看' : '聊天入口提示'}
+                      aria-label={item.title === '应用' ? '新链发射销毁活动应用待查看' : '聊天入口提示'}
                     >
                       <span
                         className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-70"
