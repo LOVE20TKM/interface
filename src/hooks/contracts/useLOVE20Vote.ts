@@ -1,11 +1,13 @@
 // hooks/contracts/useLOVE20Vote.ts
 import { useEffect } from 'react';
+import { useBlockNumber } from 'wagmi';
 import { useUniversalReadContract } from '@/src/lib/universalReadContract';
 import { useUniversalTransaction } from '@/src/lib/universalTransaction';
 import { logError, logWeb3Error } from '@/src/lib/debugUtils';
 
 import { LOVE20VoteAbi } from '@/src/abis/LOVE20Vote';
 import { safeToBigInt } from '@/src/lib/clientUtils';
+import { getVoteRoundFromBlock } from '@/src/lib/burnStats';
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_VOTE as `0x${string}`;
 
@@ -29,15 +31,65 @@ export const useCanVote = (tokenAddress: `0x${string}`, account: `0x${string}`) 
 
 /**
  * Hook to get the current round.
+ *
+ * Reads the current round directly from the contract's currentRound() function.
+ * Suitable for pages with user interactions where data refreshes on user actions.
  */
-export const useCurrentRound = () => {
+export const useCurrentRound = (enabled: boolean = true) => {
   const { data, isPending, error } = useUniversalReadContract({
     address: CONTRACT_ADDRESS,
     abi: LOVE20VoteAbi,
     functionName: 'currentRound',
     args: [],
+    query: { enabled },
   });
   return { currentRound: safeToBigInt(data), isPending, error };
+};
+
+/**
+ * Hook to get the current round with real-time block watching.
+ *
+ * Calculates the round from block number using originBlocks and phaseBlocks.
+ * Automatically updates when new blocks arrive via WebSocket.
+ *
+ * Use cases:
+ * - Background notifications that need automatic updates without user interaction
+ * - Real-time dashboards or monitoring interfaces
+ *
+ * For pages with user interactions, prefer useCurrentRound() to avoid unnecessary
+ * WebSocket connections.
+ */
+export const useLiveCurrentRound = (enabled: boolean = true) => {
+  const originQuery = useUniversalReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20VoteAbi,
+    functionName: 'originBlocks',
+    args: [],
+    query: { enabled },
+  });
+  const phaseQuery = useUniversalReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: LOVE20VoteAbi,
+    functionName: 'phaseBlocks',
+    args: [],
+    query: { enabled },
+  });
+  const { data: blockNumber, error: blockError } = useBlockNumber({
+    watch: enabled,
+    query: { enabled },
+  });
+  const originBlocks = safeToBigInt(originQuery.data);
+  const phaseBlocks = safeToBigInt(phaseQuery.data);
+  const currentRound =
+    enabled && blockNumber !== undefined && originQuery.data !== undefined && phaseQuery.data !== undefined
+      ? getVoteRoundFromBlock(blockNumber, originBlocks, phaseBlocks)
+      : BigInt(0);
+
+  return {
+    currentRound,
+    isPending: enabled && (originQuery.isPending || phaseQuery.isPending || blockNumber === undefined),
+    error: originQuery.error || phaseQuery.error || blockError,
+  };
 };
 
 /**

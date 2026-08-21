@@ -23,7 +23,7 @@ import { TokenContext } from "@/src/contexts/TokenContext";
 import { useGroupChatUnreadSummary } from "@/src/contexts/GroupChatSyncContext";
 import { isBatchTransferEnabled } from "@/src/hooks/contracts/useBatchTransfer";
 import { isBurnEnabled } from "@/src/hooks/contracts/useBurn";
-import { newChainLaunchVisitedPreference } from "@/src/lib/uiPreferences";
+import { useBurnActivityNotice } from "@/src/hooks/composite/useBurnActivityNotice";
 
 interface AppItem {
   name: string;
@@ -172,17 +172,9 @@ export default function AppsPage() {
   const { isConnected } = useAccount();
   const { token } = useContext(TokenContext) || {};
   const { totalUnread } = useGroupChatUnreadSummary();
+  const { shouldShowNotice } = useBurnActivityNotice();
   const symbol = token?.symbol;
   const hasUnreadChat = totalUnread > BigInt(0);
-  const [hasVisitedNewChainLaunch, setHasVisitedNewChainLaunch] = useState(true);
-
-  useEffect(() => {
-    try {
-      setHasVisitedNewChainLaunch(newChainLaunchVisitedPreference.get());
-    } catch {
-      setHasVisitedNewChainLaunch(false);
-    }
-  }, []);
 
   return (
     <>
@@ -207,7 +199,7 @@ export default function AppsPage() {
                         ...app,
                         hasUnread:
                           (app.name === "聊天" && hasUnreadChat) ||
-                          (app.href === "/apps/burn" && !hasVisitedNewChainLaunch),
+                          (app.href === "/apps/burn" && shouldShowNotice),
                       }}
                       symbol={symbol}
                     />

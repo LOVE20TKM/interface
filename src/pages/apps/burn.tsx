@@ -66,7 +66,13 @@ import {
   formatWadPercentage,
 } from "@/src/lib/burnShare";
 import { formatPercentage } from "@/src/lib/format";
-import { getBurnActivityRoundsRemaining } from "@/src/lib/burnStats";
+import {
+  getBurnActivityNoticeMarker,
+  getBurnActivityNoticePhase,
+  getBurnActivityRound,
+  getBurnActivityRoundsRemaining,
+} from "@/src/lib/burnStats";
+import { burnActivityNoticePreference } from "@/src/lib/uiPreferences";
 
 const WAD = BigInt("1000000000000000000");
 const EMPTY_STATS: BurnStats = {
@@ -428,7 +434,8 @@ export default function BurnPage() {
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [activityDetailsExpanded, setActivityDetailsExpanded] = useState(false);
 
-  const candidateRound = currentVoteRound > BigInt(2) ? currentVoteRound - BigInt(3) : undefined;
+  const candidateRound = getBurnActivityRound(currentVoteRound);
+  const burnNoticePhase = getBurnActivityNoticePhase(candidateRound, config.startRound, config.endRound);
   const finalized = candidateRound !== undefined && candidateRound > config.endRound;
   const activityPhase: ActivityPhase = finalized
     ? "finished"
@@ -437,6 +444,32 @@ export default function BurnPage() {
       : candidateRound <= config.endRound
         ? "active"
         : "settling";
+
+  useEffect(() => {
+    if (!config.isPending && !isVoteRoundPending && !config.error && !voteRoundError && activityPhase === "finished") {
+      setActivityDetailsExpanded(true);
+    }
+  }, [activityPhase, config.error, config.isPending, isVoteRoundPending, voteRoundError]);
+
+  useEffect(() => {
+    if (
+      config.isPending ||
+      config.error ||
+      !config.scopeTokenAddress ||
+      isVoteRoundPending ||
+      voteRoundError
+    ) return;
+    const marker = getBurnActivityNoticeMarker(burnNoticePhase, candidateRound);
+    if (marker !== undefined) burnActivityNoticePreference.setMarker(marker);
+  }, [
+    burnNoticePhase,
+    candidateRound,
+    config.error,
+    config.isPending,
+    config.scopeTokenAddress,
+    isVoteRoundPending,
+    voteRoundError,
+  ]);
   const phaseLabel = {
     "not-started": "未开始",
     active: "进行中",

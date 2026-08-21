@@ -7,25 +7,14 @@ import { useGroupChatUnreadSummary } from '@/src/contexts/GroupChatSyncContext';
 import { cn } from '@/lib/utils';
 import { MessageCircle, Users, Vote, User, Layers } from 'lucide-react';
 import { normalizeRouteKey, suppressNextRouteLoading } from '@/src/lib/routeLoading';
-import { isBurnEnabled } from '@/src/hooks/contracts/useBurn';
-import { newChainLaunchVisitedPreference } from '@/src/lib/uiPreferences';
+import { useBurnActivityNotice } from '@/src/hooks/composite/useBurnActivityNotice';
 
 export function BottomNavigation() {
   const { token } = useContext(TokenContext) || {};
   const { badgeType, badgeLabel } = useGroupChatUnreadSummary();
   const router = useRouter();
   const hasUnreadChat = badgeType !== 'none';
-  const [hasVisitedNewChainLaunch, setHasVisitedNewChainLaunch] = useState(true);
-
-  useEffect(() => {
-    const isNewChainLaunchPage = router.pathname === '/apps/burn';
-    try {
-      if (isNewChainLaunchPage) newChainLaunchVisitedPreference.set(true);
-      setHasVisitedNewChainLaunch(isNewChainLaunchPage || newChainLaunchVisitedPreference.get());
-    } catch {
-      setHasVisitedNewChainLaunch(isNewChainLaunchPage);
-    }
-  }, [router.pathname]);
+  const { shouldShowNotice } = useBurnActivityNotice();
 
   const navItems = useMemo(() => {
     if (!token) return [];
@@ -46,7 +35,8 @@ export function BottomNavigation() {
         icon: Layers,
         isActive: router.pathname.startsWith('/apps'),
         isMain: false,
-        chatBadgeType: isBurnEnabled && !hasVisitedNewChainLaunch ? 'intro-dot' : 'none',
+        chatBadgeType:
+          shouldShowNotice && !router.pathname.startsWith('/apps/burn') ? 'intro-dot' : 'none',
         chatBadgeLabel: '0',
       },
       {
@@ -77,7 +67,7 @@ export function BottomNavigation() {
         chatBadgeLabel: '0',
       },
     ];
-  }, [badgeLabel, badgeType, hasUnreadChat, hasVisitedNewChainLaunch, token, router.pathname]);
+  }, [badgeLabel, badgeType, hasUnreadChat, shouldShowNotice, token, router.pathname]);
 
   if (!token) return null;
 
