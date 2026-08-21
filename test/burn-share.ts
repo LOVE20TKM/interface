@@ -7,7 +7,15 @@ import {
   calculateCategoryWeightRatio,
   formatWadPercentage,
 } from '../src/lib/burnShare';
-import { getBurnActivityRoundsRemaining, type BurnStats, type CategoryWeights } from '../src/lib/burnStats';
+import {
+  getBurnActivityNoticeMarker,
+  getBurnActivityNoticePhase,
+  getBurnActivityRound,
+  getBurnActivityRoundsRemaining,
+  getVoteRoundFromBlock,
+  type BurnStats,
+  type CategoryWeights,
+} from '../src/lib/burnStats';
 
 const WAD = BigInt('1000000000000000000');
 const equalWeights: CategoryWeights = {
@@ -80,6 +88,19 @@ assert.equal(formatWadPercentage(BigInt(1)), '0.0{15}1%');
 assert.equal(calculateBurnScoreApy(WAD, BigInt(0)), 0);
 assert.equal(calculateBurnScoreApy(BigInt('1010000000000000000'), BigInt(0)), undefined);
 assert.equal(calculateBurnScoreApy(WAD, undefined), undefined);
+assert.equal(getBurnActivityRound(BigInt(2)), undefined);
+assert.equal(getBurnActivityRound(BigInt(5)), BigInt(2));
+assert.equal(getBurnActivityRound(BigInt(6)), BigInt(3));
+assert.equal(getVoteRoundFromBlock(BigInt(99), BigInt(100), BigInt(10)), BigInt(0));
+assert.equal(getVoteRoundFromBlock(BigInt(100), BigInt(100), BigInt(10)), BigInt(0));
+assert.equal(getVoteRoundFromBlock(BigInt(119), BigInt(100), BigInt(10)), BigInt(1));
+assert.equal(getBurnActivityNoticePhase(undefined, BigInt(5), BigInt(7)), 'not-started');
+assert.equal(getBurnActivityNoticePhase(BigInt(4), BigInt(5), BigInt(7)), 'not-started');
+assert.equal(getBurnActivityNoticePhase(BigInt(5), BigInt(5), BigInt(7)), 'active');
+assert.equal(getBurnActivityNoticePhase(BigInt(8), BigInt(5), BigInt(7)), 'finished');
+assert.equal(getBurnActivityNoticeMarker('not-started', undefined), 'pre-start');
+assert.equal(getBurnActivityNoticeMarker('active', BigInt(5)), BigInt(5));
+assert.equal(getBurnActivityNoticeMarker('finished', BigInt(8)), 'ended');
 assert.ok(
   Math.abs((calculateBurnScoreApy(BigInt('3847200000000000000'), BigInt(2000)) || 0) - 27.875963633875823) <
     0.000001,
