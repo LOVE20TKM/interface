@@ -83,7 +83,7 @@ const EMPTY_STATS: BurnStats = {
 };
 
 const BURN_INFO = {
-  activityDetails: `活动背景：LOVE20协议即将启动多链部署，首个公链暂定为原生代币价值稳定、流动性好、链的规则稳定的BSC公链（最终部署哪条公链由参与销毁的社区成员讨论并投票决定）。参与者可通过四种方式销毁LOVE20协议生态资产（含子币）：流动性质押凭证、加速质押凭证、治理激励和行动激励，以获得新链上首次部署的 LOVE20 代币分配份额。
+  activityDetails: `活动背景：LOVE20协议即将启动多链部署，首个公链暂定为原生代币价值稳定、流动性好、链的规则稳定的BSC公链（最终部署哪条公链由参与销毁的社区成员讨论并投票决定）。参与者可通过四种方式销毁/锁定LOVE20协议生态资产（含子币）：流动性质押凭证、加速质押凭证、治理激励和行动激励，以获得新链上首次部署的 LOVE20 代币分配份额。
 
 活动阶段：第一阶段：资产锁定销毁，第二阶段：公链部署选择投票，第三阶段：协议部署前社区公测，第四阶段：协议部署并可领取新部署协议代币。
 
@@ -454,13 +454,7 @@ export default function BurnPage() {
   }, [activityPhase, config.error, config.isPending, isVoteRoundPending, voteRoundError]);
 
   useEffect(() => {
-    if (
-      config.isPending ||
-      config.error ||
-      !config.scopeTokenAddress ||
-      isVoteRoundPending ||
-      voteRoundError
-    ) return;
+    if (config.isPending || config.error || !config.scopeTokenAddress || isVoteRoundPending || voteRoundError) return;
     const marker = getBurnActivityNoticeMarker(burnNoticePhase, candidateRound);
     if (marker !== undefined) burnActivityNoticePreference.setMarker(marker);
   }, [
@@ -551,9 +545,7 @@ export default function BurnPage() {
   const stAddress = selectedToken?.stAddress;
   const firstTokenAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_FIRST_TOKEN;
   const isFirstToken =
-    !!selectedCommunity &&
-    !!firstTokenAddress &&
-    selectedCommunity.toLowerCase() === firstTokenAddress.toLowerCase();
+    !!selectedCommunity && !!firstTokenAddress && selectedCommunity.toLowerCase() === firstTokenAddress.toLowerCase();
   const nativeTokenSymbol = process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL || "TKM";
 
   const communityThroughRound = useBurnCommunityStatsThroughRound(
@@ -959,14 +951,16 @@ export default function BurnPage() {
               <p className={index > 0 ? "mt-3" : undefined} key={paragraph}>
                 {paragraph}
                 {index === paragraphs.length - 1 && !activityDetailsExpanded && (
-                  <button
+                  <Button
                     type="button"
-                    className="ml-1 text-primary underline"
+                    variant="link"
+                    size="sm"
+                    className="ml-2 h-auto px-0 py-0 align-baseline font-semibold text-secondary"
                     aria-expanded={activityDetailsExpanded}
-                    onClick={() => setActivityDetailsExpanded((expanded) => !expanded)}
+                    onClick={() => setActivityDetailsExpanded(true)}
                   >
-                    {activityDetailsExpanded ? "收起" : "展开"}
-                  </button>
+                    展开活动详情
+                  </Button>
                 )}
               </p>
             ),
@@ -982,14 +976,16 @@ export default function BurnPage() {
               >
                 https://github.com/LOVE20TKM/burn
               </a>
-              <button
+              <Button
                 type="button"
-                className="ml-1 text-primary underline"
+                variant="link"
+                size="sm"
+                className="ml-2 h-auto px-0 py-0 align-baseline font-semibold text-secondary"
                 aria-expanded={activityDetailsExpanded}
                 onClick={() => setActivityDetailsExpanded(false)}
               >
-                收起
-              </button>
+                收起活动详情
+              </Button>
             </p>
           )}
         </section>
@@ -1274,8 +1270,8 @@ export default function BurnPage() {
 
             {config.categoryWeights.slTokenLock > BigInt(0) && (
               <CategorySection
-                title="SL 凭证永久锁定"
-                description="锁定后无法取回，并放弃治理权。"
+                title="流动性质押凭证SL永久锁定"
+                description="锁定后已质押资产无法取回，并放弃治理权。"
                 symbol="SL"
                 decimals={slDecimals}
                 community={communityStats?.slTokenLock || EMPTY_STATS.slTokenLock}
@@ -1295,8 +1291,8 @@ export default function BurnPage() {
 
             {config.categoryWeights.stTokenLock > BigInt(0) && (
               <CategorySection
-                title="ST 凭证永久锁定"
-                description="锁定后无法取回，并放弃治理权。"
+                title="加速激励质押凭证SL永久锁定"
+                description="锁定后已质押资产无法取回，并放弃治理权。"
                 symbol="ST"
                 decimals={stDecimals}
                 community={communityStats?.stTokenLock || EMPTY_STATS.stTokenLock}
@@ -1316,7 +1312,7 @@ export default function BurnPage() {
 
             {config.categoryWeights.govRewardBurn > BigInt(0) && (
               <CategorySection
-                title="治理激励代币真实销毁"
+                title="治理激励销毁"
                 description="只有已经领取并实际铸造的治理激励才会生成销毁额度。"
                 symbol={tokenSymbol}
                 decimals={tokenDecimals}
@@ -1499,7 +1495,7 @@ export default function BurnPage() {
 
             {config.categoryWeights.actionRewardBurn > BigInt(0) && (
               <CategorySection
-                title="行动激励代币真实销毁"
+                title="行动激励销毁"
                 description="输入总量后，按行动编号升序自动使用各行动的剩余额度。"
                 symbol={tokenSymbol}
                 decimals={tokenDecimals}
