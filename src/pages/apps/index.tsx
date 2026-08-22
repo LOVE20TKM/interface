@@ -39,6 +39,25 @@ interface AppSection {
 
 const appSections: AppSection[] = [
   {
+    title: "其他",
+    items: [
+      ...(isBurnEnabled
+        ? [
+            {
+              name: "新链发射销毁活动",
+              href: "/apps/burn",
+              icon: Flame,
+            },
+          ]
+        : []),
+      {
+        name: "主题",
+        href: "/apps/theme",
+        icon: Palette,
+      },
+    ],
+  },
+  {
     title: "代币",
     items: [
       {
@@ -94,25 +113,6 @@ const appSections: AppSection[] = [
         name: "聊天",
         href: "/chat/",
         icon: MessageCircle,
-      },
-    ],
-  },
-  {
-    title: "其他",
-    items: [
-      ...(isBurnEnabled
-        ? [
-            {
-              name: "新链发射销毁活动",
-              href: "/apps/burn",
-              icon: Flame,
-            },
-          ]
-        : []),
-      {
-        name: "主题",
-        href: "/apps/theme",
-        icon: Palette,
       },
     ],
   },

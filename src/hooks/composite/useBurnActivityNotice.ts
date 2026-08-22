@@ -24,13 +24,20 @@ export function useBurnActivityNotice() {
   const [visitedBurnMarker, setVisitedBurnMarker] = useState<ReturnType<typeof burnActivityNoticePreference.getMarker>>();
 
   useEffect(() => {
-    try {
-      setVisitedBurnMarker(
-        burnActivityNoticePreference.getMarker(burnNoticeReady ? burnNoticeMarker : undefined),
-      );
-    } catch {
-      setVisitedBurnMarker(undefined);
-    }
+    const syncVisitedMarker = () => {
+      try {
+        setVisitedBurnMarker(
+          burnActivityNoticePreference.getMarker(burnNoticeReady ? burnNoticeMarker : undefined),
+        );
+      } catch {
+        setVisitedBurnMarker(undefined);
+      }
+    };
+
+    syncVisitedMarker();
+    if (typeof window === 'undefined') return;
+    window.addEventListener(burnActivityNoticePreference.eventName, syncVisitedMarker);
+    return () => window.removeEventListener(burnActivityNoticePreference.eventName, syncVisitedMarker);
   }, [burnNoticeMarker, burnNoticeReady]);
 
   const shouldShowNotice =
@@ -42,6 +49,7 @@ export function useBurnActivityNotice() {
     shouldShowNotice,
     burnActivityRound,
     burnNoticePhase,
+    burnNoticeReady,
     burnNoticeMarker,
   };
 }

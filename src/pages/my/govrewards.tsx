@@ -18,6 +18,12 @@ import { TokenContext } from '@/src/contexts/TokenContext';
 import { useGovRewardsByAccountByRounds } from '@/src/hooks/contracts/useLOVE20MintViewer';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Verify';
 import { useMintGovReward } from '@/src/hooks/contracts/useLOVE20Mint';
+import { isBurnEnabled } from '@/src/hooks/contracts/useBurn';
+import { useBurnActivityNotice } from '@/src/hooks/composite/useBurnActivityNotice';
+import {
+  getBurnActivityNoticePhaseClassName,
+  getBurnActivityNoticePhaseLabel,
+} from '@/src/lib/burnStats';
 // my components
 import Header from '@/src/components/Header';
 import LeftTitle from '@/src/components/Common/LeftTitle';
@@ -29,6 +35,8 @@ const REWARDS_PER_PAGE = BigInt(20);
 const GovRewardsPage: React.FC = () => {
   const { token } = useContext(TokenContext) || {};
   const { address: account } = useAccount();
+  const { burnNoticePhase, burnNoticeReady } = useBurnActivityNotice();
+  const burnActivityPhase = burnNoticeReady ? burnNoticePhase : undefined;
   const { currentRound, error: errorCurrentRound, isPending: isLoadingCurrentRound } = useCurrentRound();
   const [startRound, setStartRound] = useState<bigint>(BigInt(0));
   const [endRound, setEndRound] = useState<bigint>(BigInt(0));
@@ -142,6 +150,22 @@ const GovRewardsPage: React.FC = () => {
     <>
       <Header title="治理激励" showBackButton={true} />
       <main className="flex-grow">
+        {isBurnEnabled && (
+          <div className="px-4 pt-3">
+            <Button variant="outline" className="w-full border-red-200 text-red-700" asChild>
+              <Link href="/apps/burn">
+                <span>进入新链发射销毁活动</span>
+                {burnActivityPhase && (
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-xs ${getBurnActivityNoticePhaseClassName(burnActivityPhase)}`}
+                  >
+                    {getBurnActivityNoticePhaseLabel(burnActivityPhase)}
+                  </span>
+                )}
+              </Link>
+            </Button>
+          </div>
+        )}
         {!token ? (
           <LoadingIcon />
         ) : (

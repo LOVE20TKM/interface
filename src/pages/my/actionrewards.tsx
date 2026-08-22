@@ -2,12 +2,20 @@
 
 import React, { useContext, useState } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 // my contexts
 import { TokenContext } from '@/src/contexts/TokenContext';
 
 // my hooks
 import { useActionsLatestRewards } from '@/src/hooks/composite/useActionsLatestRewards';
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Join';
+import { isBurnEnabled } from '@/src/hooks/contracts/useBurn';
+import { useBurnActivityNotice } from '@/src/hooks/composite/useBurnActivityNotice';
+import {
+  getBurnActivityNoticePhaseClassName,
+  getBurnActivityNoticePhaseLabel,
+} from '@/src/lib/burnStats';
 
 // my components
 import Header from '@/src/components/Header';
@@ -30,6 +38,8 @@ const ActRewardsPage: React.FC = () => {
   const router = useRouter();
   const { token } = useContext(TokenContext) || {};
   const { currentRound } = useCurrentRound();
+  const { burnNoticePhase, burnNoticeReady } = useBurnActivityNotice();
+  const burnActivityPhase = burnNoticeReady ? burnNoticePhase : undefined;
 
   // 铸造状态管理
   const [isMinting, setIsMinting] = useState(false);
@@ -57,6 +67,22 @@ const ActRewardsPage: React.FC = () => {
     <>
       <Header title="行动激励" showBackButton={true} />
       <main className="flex-grow">
+        {isBurnEnabled && (
+          <div className="px-4 pt-3">
+            <Button variant="outline" className="w-full border-red-200 text-red-700" asChild>
+              <Link href="/apps/burn">
+                <span>进入新链发射销毁活动</span>
+                {burnActivityPhase && (
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-xs ${getBurnActivityNoticePhaseClassName(burnActivityPhase)}`}
+                  >
+                    {getBurnActivityNoticePhaseLabel(burnActivityPhase)}
+                  </span>
+                )}
+              </Link>
+            </Button>
+          </div>
+        )}
         {!token ? (
           <LoadingIcon />
         ) : (

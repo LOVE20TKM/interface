@@ -19,6 +19,22 @@ export interface CategoryWeights {
 
 export type BurnActivityNoticePhase = 'not-started' | 'active' | 'finished';
 
+export function getBurnActivityNoticePhaseLabel(phase: BurnActivityNoticePhase) {
+  return {
+    'not-started': '未开始',
+    active: '进行中',
+    finished: '已结束',
+  }[phase];
+}
+
+export function getBurnActivityNoticePhaseClassName(phase: BurnActivityNoticePhase) {
+  return {
+    'not-started': 'border-amber-200 bg-amber-50 text-amber-700',
+    active: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    finished: 'border-greyscale-200 bg-greyscale-100 text-greyscale-700',
+  }[phase];
+}
+
 export function getBurnActivityRound(currentVoteRound: bigint) {
   return currentVoteRound > BigInt(2) ? currentVoteRound - BigInt(3) : undefined;
 }

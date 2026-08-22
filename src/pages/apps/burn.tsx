@@ -135,6 +135,7 @@ interface ConfirmationState {
   title: string;
   description: string;
   confirmText: string;
+  confirmationPhrase?: string;
   run: () => Promise<unknown>;
 }
 
@@ -431,6 +432,7 @@ export default function BurnPage() {
   const [govInput, setGovInput] = useState("");
   const [actionInput, setActionInput] = useState("");
   const [confirmation, setConfirmation] = useState<ConfirmationState | null>(null);
+  const [confirmationInput, setConfirmationInput] = useState("");
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [activityDetailsExpanded, setActivityDetailsExpanded] = useState(false);
 
@@ -547,6 +549,12 @@ export default function BurnPage() {
   const tokenDecimals = Number(selectedToken?.decimals ?? 18);
   const slAddress = selectedToken?.slAddress;
   const stAddress = selectedToken?.stAddress;
+  const firstTokenAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS_FIRST_TOKEN;
+  const isFirstToken =
+    !!selectedCommunity &&
+    !!firstTokenAddress &&
+    selectedCommunity.toLowerCase() === firstTokenAddress.toLowerCase();
+  const nativeTokenSymbol = process.env.NEXT_PUBLIC_NATIVE_TOKEN_SYMBOL || "TKM";
 
   const communityThroughRound = useBurnCommunityStatsThroughRound(
     isCumulative ? undefined : selectedCommunity,
@@ -773,10 +781,14 @@ export default function BurnPage() {
     }
   };
 
-  const openConfirmation = (state: ConfirmationState) => setConfirmation(state);
+  const openConfirmation = (state: ConfirmationState) => {
+    setConfirmationInput("");
+    setConfirmation(state);
+  };
 
   const runConfirmation = async () => {
     if (!confirmation) return;
+    if (confirmation.confirmationPhrase && confirmationInput.trim() !== confirmation.confirmationPhrase) return;
     setConfirmBusy(true);
     try {
       await confirmation.run();
@@ -849,8 +861,17 @@ export default function BurnPage() {
               onClick={() =>
                 openConfirmation({
                   title: `永久锁定全部 ${kind}`,
-                  description: `将永久锁定当前全部 ${formatExactAmount(tokenBalanceValue, decimals)} ${kind}，该操作不可撤销。`,
+                  description: [
+                    kind === "SL"
+                      ? `将永久锁定当前全部 ${formatExactAmount(tokenBalanceValue, decimals)} SL，该操作不可撤销。`
+                      : `将永久锁定当前全部 ${formatExactAmount(tokenBalanceValue, decimals)} ST，该操作不可撤销。`,
+                    "锁定 SL 或 ST 任意一种后，你的有效治理票将归 0，无法再参与治理并获得治理激励。",
+                    ...(kind === "SL" && isFirstToken
+                      ? [`这是首个代币的 SL，其中包含链的原生代币（${nativeTokenSymbol}），是否确认锁定？`]
+                      : []),
+                  ].join("\n\n"),
                   confirmText: `确认锁定全部 ${kind}`,
+                  confirmationPhrase: kind === "SL" ? "确认锁定SL" : undefined,
                   run: async () => {
                     if ((await ensureRoundOpen()) && selectedCommunity && selectedRoundNumber !== undefined) {
                       await lock(selectedCommunity, selectedRoundNumber, tokenBalanceValue);
@@ -1642,16 +1663,38 @@ export default function BurnPage() {
         <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{confirmation?.title}</DialogTitle>
-            <DialogDescription>{confirmation?.description}</DialogDescription>
+            <DialogDescription className="whitespace-pre-line">{confirmation?.description}</DialogDescription>
           </DialogHeader>
           <div className="flex items-start gap-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> 链上确认后无法撤销，请核对数量和轮次。
           </div>
+          {confirmation?.confirmationPhrase && (
+            <div className="space-y-2">
+              <label htmlFor="burn-confirmation-input" className="text-sm font-medium text-greyscale-800">
+                请输入“{confirmation.confirmationPhrase}”以继续
+              </label>
+              <Input
+                id="burn-confirmation-input"
+                value={confirmationInput}
+                onChange={(event) => setConfirmationInput(event.target.value)}
+                placeholder={confirmation.confirmationPhrase}
+                autoFocus
+                disabled={confirmBusy}
+              />
+            </div>
+          )}
           <DialogFooter className="gap-2 sm:space-x-0">
             <Button variant="outline" disabled={confirmBusy} onClick={() => setConfirmation(null)}>
               取消
             </Button>
-            <Button variant="destructive" disabled={confirmBusy} onClick={() => void runConfirmation()}>
+            <Button
+              variant="destructive"
+              disabled={
+                confirmBusy ||
+                (!!confirmation?.confirmationPhrase && confirmationInput.trim() !== confirmation.confirmationPhrase)
+              }
+              onClick={() => void runConfirmation()}
+            >
               {confirmBusy ? "处理中..." : confirmation?.confirmText}
             </Button>
           </DialogFooter>
