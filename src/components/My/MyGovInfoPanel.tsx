@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
+import { formatUnits } from 'viem';
 
 // my funcs
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
@@ -10,6 +11,7 @@ import { formatPhaseText } from '@/src/lib/domainUtils';
 import { useAccountStakeStatus, useCurrentRound } from '@/src/hooks/contracts/useLOVE20Stake';
 import { useMyGovData } from '@/src/hooks/composite/useMyGovData';
 import { useEstimatedGovRewardOfCurrentRound } from '@/src/hooks/contracts/useLOVE20MintViewer';
+import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
 
 // my contexts
 import { Token } from '@/src/contexts/TokenContext';
@@ -39,6 +41,26 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
     isPending: isPendingAccountStakeStatus,
     error: errorAccountStakeStatus,
   } = useAccountStakeStatus(token?.address as `0x${string}`, account as `0x${string}`);
+  const hasStake = slAmount !== undefined && slAmount > BigInt(0);
+
+  const {
+    balance: slBalance,
+    isPending: isPendingSlBalance,
+    error: errorSlBalance,
+  } = useBalanceOf(
+    token?.slTokenAddress as `0x${string}`,
+    account as `0x${string}`,
+    hasStake && !!token?.slTokenAddress && !!account,
+  );
+  const {
+    balance: stBalance,
+    isPending: isPendingStBalance,
+    error: errorStBalance,
+  } = useBalanceOf(
+    token?.stTokenAddress as `0x${string}`,
+    account as `0x${string}`,
+    hasStake && !!token?.stTokenAddress && !!account,
+  );
 
   // 获取治理票数据（合并RPC调用）
   const {
@@ -60,7 +82,12 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
 
   const isPendingGovRewards = isPendingGovData || isPendingAccountStakeStatus;
 
-  if (!token || (enableWithdraw && isPendingCurrentRound) || isPendingAccountStakeStatus) {
+  if (
+    !token ||
+    (enableWithdraw && isPendingCurrentRound) ||
+    isPendingAccountStakeStatus ||
+    (hasStake && (isPendingSlBalance || isPendingStBalance))
+  ) {
     return <LoadingIcon />;
   }
   if (!isPendingAccountStakeStatus && !slAmount) {
@@ -76,13 +103,29 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
     );
   }
 
+  const balanceReadFailed = !!errorSlBalance || !!errorStBalance || slBalance === undefined || stBalance === undefined;
+  const missingSlAmount =
+    slBalance !== undefined && slBalance < (slAmount ?? BigInt(0))
+      ? (slAmount ?? BigInt(0)) - slBalance
+      : BigInt(0);
+  const missingStAmount =
+    stBalance !== undefined && stBalance < (stAmount ?? BigInt(0))
+      ? (stAmount ?? BigInt(0)) - stBalance
+      : BigInt(0);
+
   return (
     <>
       <div className="stats w-full grid grid-cols-2 divide-x-0 ">
         <div className="stat place-items-center pt-0 pb-1 pl-1">
-          <div className="stat-title text-sm">我的治理票数</div>
+          <div className="stat-title text-sm">我的有效治理票数</div>
           <div className="stat-value text-xl text-data-personal">
-            {isPendingAccountStakeStatus ? <LoadingIcon /> : formatTokenAmount(validGovVotes || BigInt(0))}
+            {isPendingGovData ? (
+              <LoadingIcon />
+            ) : errorGovData || validGovVotes === undefined ? (
+              '读取失败'
+            ) : (
+              formatTokenAmount(validGovVotes)
+            )}
           </div>
           <div className="stat-desc text-xs mb-2 mt-1">
             {requestedUnstakeRound && requestedUnstakeRound > BigInt(0) && '注意：解锁期内治理票数为0'}
@@ -138,12 +181,30 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
       </div>
       {!isPendingGovData &&
         !isPendingAccountStakeStatus &&
+        !errorGovData &&
         validGovVotes !== undefined &&
         govVotes !== undefined &&
         validGovVotes <= BigInt(0) &&
         govVotes > BigInt(0) && (
-          <div className="text-sm mb-4 text-greyscale-500 text-center">
-            <div className="text-status-error">当前 sl 或 st 代币余额不足，导致有效治理票为0，请及时补足</div>
+          <div className="mb-4 space-y-1 text-center text-sm text-status-error">
+            {balanceReadFailed ? (
+              <div>SL/ST 凭证余额读取失败，暂时无法计算需补充数量。</div>
+            ) : (
+              <>
+                <div>治理票已失效，请补充：</div>
+                {missingSlAmount > BigInt(0) && (
+                  <div title={`精确数量：${formatUnits(missingSlAmount, token.decimals)}`}>
+                    SL 凭证 {formatTokenAmount(missingSlAmount, 4, 'ceil')}
+                  </div>
+                )}
+                {missingStAmount > BigInt(0) && (
+                  <div title={`精确数量：${formatUnits(missingStAmount, token.decimals)}`}>
+                    ST 凭证 {formatTokenAmount(missingStAmount, 4, 'ceil')}
+                  </div>
+                )}
+                <div>补足后可恢复治理票，继续参与治理或取消质押。</div>
+              </>
+            )}
           </div>
         )}
 

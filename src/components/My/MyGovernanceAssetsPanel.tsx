@@ -4,6 +4,7 @@ import { useAccount, useChainId } from 'wagmi';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Info } from 'lucide-react';
+import { formatUnits } from 'viem';
 
 // my funcs
 import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
@@ -14,7 +15,7 @@ import { useAccountStakeStatus, useUnstake, useWithdraw, useValidGovVotes } from
 import { useCurrentRound } from '@/src/hooks/contracts/useLOVE20Vote';
 import { useApprove as useApproveST } from '@/src/hooks/contracts/useLOVE20STToken';
 import { useApprove as useApproveSL } from '@/src/hooks/contracts/useLOVE20SLToken';
-import { useAllowance } from '@/src/hooks/contracts/useLOVE20Token';
+import { useAllowance, useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
 import { useTokenApprovalPreference } from '@/src/hooks/contracts/useTokenApproval';
 
 // my contexts
@@ -53,6 +54,27 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
     isPending: isPendingAccountStakeStatus,
     error: errorAccountStakeStatus,
   } = useAccountStakeStatus(token?.address as `0x${string}`, account as `0x${string}`);
+  const hasStake = slAmount !== undefined && slAmount > BigInt(0);
+
+  // 我的页展示钱包当前实际持有量；质押记录不会随 SL/ST 转出或永久锁定而减少。
+  const {
+    balance: slBalance,
+    isPending: isPendingSlBalance,
+    error: errorSlBalance,
+  } = useBalanceOf(
+    token?.slTokenAddress as `0x${string}`,
+    account as `0x${string}`,
+    hasStake && !!token?.slTokenAddress && !!account,
+  );
+  const {
+    balance: stBalance,
+    isPending: isPendingStBalance,
+    error: errorStBalance,
+  } = useBalanceOf(
+    token?.stTokenAddress as `0x${string}`,
+    account as `0x${string}`,
+    hasStake && !!token?.stTokenAddress && !!account,
+  );
 
   // 检查输入条件
   const checkInput = () => {
@@ -91,7 +113,11 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
     validGovVotes,
     isPending: isPendingValidGovVotes,
     error: errorValidGovVotes,
-  } = useValidGovVotes((token?.address as `0x${string}`) || '', (account as `0x${string}`) || '');
+  } = useValidGovVotes(
+    (token?.address as `0x${string}`) || '',
+    (account as `0x${string}`) || '',
+    hasStake,
+  );
 
   // 状态变量：判断各 token 是否已授权
   const [isSlTokenApproved, setIsSlTokenApproved] = useState(false);
@@ -222,7 +248,12 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
   if (!account) {
     return <div className="text-sm mt-4 text-greyscale-500 text-center">请先连接钱包</div>;
   }
-  if (!token || (enableWithdraw && isPendingCurrentRound) || isPendingAccountStakeStatus) {
+  if (
+    !token ||
+    (enableWithdraw && isPendingCurrentRound) ||
+    isPendingAccountStakeStatus ||
+    (hasStake && (isPendingValidGovVotes || isPendingSlBalance || isPendingStBalance))
+  ) {
     return <LoadingIcon />;
   }
   if (!isPendingAccountStakeStatus && !slAmount) {
@@ -233,6 +264,17 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
   const isApprovingSL = isPendingApproveSL || isConfirmingApproveSL;
   const isApprovingST = isPendingApproveST || isConfirmingApproveST;
   const allApproved = isSlTokenApproved && isStTokenApproved;
+  const balanceReadFailed = !!errorSlBalance || !!errorStBalance || slBalance === undefined || stBalance === undefined;
+  const displayedSlAmount = enableWithdraw ? slAmount : slBalance;
+  const displayedStAmount = enableWithdraw ? stAmount : stBalance;
+  const missingSlAmount =
+    slBalance !== undefined && slBalance < (slAmount ?? BigInt(0))
+      ? (slAmount ?? BigInt(0)) - slBalance
+      : BigInt(0);
+  const missingStAmount =
+    stBalance !== undefined && stBalance < (stAmount ?? BigInt(0))
+      ? (stAmount ?? BigInt(0)) - stBalance
+      : BigInt(0);
 
   // 是否可以取回代币
   const canWithdraw =
@@ -242,9 +284,9 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
     <>
       <div className="stats w-full grid grid-cols-2 divide-x-0 ">
         <div className="stat place-items-center pt-0 pb-1 pl-1">
-          <div className="stat-title text-sm">我的治理票数</div>
+          <div className="stat-title text-sm">我的有效治理票数</div>
           <div className="stat-value text-xl text-data-personal">
-            {isPendingAccountStakeStatus ? <LoadingIcon /> : formatTokenAmount(govVotes || BigInt(0))}
+            {errorValidGovVotes ? '读取失败' : formatTokenAmount(validGovVotes)}
           </div>
           <div className="stat-desc text-xs mb-2 mt-1">
             {requestedUnstakeRound && requestedUnstakeRound > BigInt(0) && '注意：解锁期内治理票数为0'}
@@ -267,7 +309,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
       <div className="stats w-full grid grid-cols-2 divide-x-0">
         <div className="stat place-items-center pt-0 pb-1 pl-1">
           <div className="stat-title text-sm flex items-center">
-            流动性质押凭证SL代币
+            {enableWithdraw ? '需归还的SL代币' : '钱包SL余额'}
             <AddToMetamask
               tokenAddress={token.slTokenAddress as `0x${string}`}
               tokenSymbol={'sl' + token.symbol}
@@ -275,11 +317,13 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
             />
           </div>
           <div className="stat-value text-xl text-data-personal">
-            {isPendingAccountStakeStatus ? (
-              <LoadingIcon />
+            {enableWithdraw ? (
+              formatTokenAmount(displayedSlAmount || BigInt(0))
+            ) : errorSlBalance || displayedSlAmount === undefined ? (
+              '读取失败'
             ) : (
               <Link href={`/my/liquid?symbol=${token.symbol}`} className="flex items-center hover:text-secondary-focus">
-                <span className="cursor-pointer">{formatTokenAmount(slAmount || BigInt(0))}</span>
+                <span className="cursor-pointer">{formatTokenAmount(displayedSlAmount || BigInt(0))}</span>
                 <Info size={16} className="ml-1 text-secondary cursor-pointer" />
               </Link>
             )}
@@ -292,7 +336,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
         </div>
         <div className="stat place-items-center pt-0 pb-1 pl-3">
           <div className="stat-title text-sm flex items-center">
-            代币质押凭证ST代币
+            {enableWithdraw ? '需归还的ST代币' : '钱包ST余额'}
             <AddToMetamask
               tokenAddress={token.stTokenAddress as `0x${string}`}
               tokenSymbol={'st' + token.symbol}
@@ -300,7 +344,11 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
             />
           </div>
           <div className="stat-value text-xl text-data-personal">
-            {isPendingAccountStakeStatus ? <LoadingIcon /> : formatTokenAmount(stAmount || BigInt(0))}
+            {enableWithdraw
+              ? formatTokenAmount(displayedStAmount || BigInt(0))
+              : errorStBalance || displayedStAmount === undefined
+                ? '读取失败'
+                : formatTokenAmount(displayedStAmount)}
           </div>
           <div className="stat-desc text-xs">
             <Button variant="link" className="text-secondary font-normal border-secondary" asChild>
@@ -311,12 +359,30 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
       </div>
       {!isPendingValidGovVotes &&
         !isPendingAccountStakeStatus &&
+        !errorValidGovVotes &&
         validGovVotes !== undefined &&
         govVotes !== undefined &&
         validGovVotes <= BigInt(0) &&
         govVotes > BigInt(0) && (
-          <div className="text-sm mb-4 text-greyscale-500 text-center">
-            <div className="text-status-error">当前 sl 或 st 代币余额不足，导致有效治理票为0，请及时补足</div>
+          <div className="mb-4 space-y-1 text-center text-sm text-status-error">
+            {balanceReadFailed ? (
+              <div>SL/ST 凭证余额读取失败，暂时无法计算需补充数量。</div>
+            ) : (
+              <>
+                <div>治理票已失效，请补充：</div>
+                {missingSlAmount > BigInt(0) && (
+                  <div title={`精确数量：${formatUnits(missingSlAmount, token.decimals)}`}>
+                    SL 凭证 {formatTokenAmount(missingSlAmount, 4, 'ceil')}
+                  </div>
+                )}
+                {missingStAmount > BigInt(0) && (
+                  <div title={`精确数量：${formatUnits(missingStAmount, token.decimals)}`}>
+                    ST 凭证 {formatTokenAmount(missingStAmount, 4, 'ceil')}
+                  </div>
+                )}
+                <div>补足后可恢复治理票，继续参与治理或取消质押。</div>
+              </>
+            )}
           </div>
         )}
 
