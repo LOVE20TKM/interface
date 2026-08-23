@@ -32,7 +32,7 @@ export const calculateAPY = (
 };
 
 /**
- * 计算行动激励的年化收益率(APY)
+ * 按一轮一天、单利计算行动激励的预计年化收益率
  * @param expectedReward 当轮行动激励
  * @param joinedAmount 参与行动代币
  * @returns 格式化后的APY百分比字符串
@@ -45,7 +45,7 @@ export const calculateActionAPY = (expectedReward?: bigint, joinedAmount?: bigin
 
   const ratioScale = BigInt(1_000_000_000_000);
   const rewardRatio = Number((expectedReward * ratioScale) / joinedAmount) / Number(ratioScale);
-  return formatDailyApy(rewardRatio);
+  return formatPercentage(rewardRatio * 365 * 100);
 };
 
 /**
