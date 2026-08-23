@@ -83,11 +83,11 @@ const EMPTY_STATS: BurnStats = {
 };
 
 const BURN_INFO = {
-  activityDetails: `活动背景：LOVE20协议即将启动多链部署，首个公链暂定为原生代币价值稳定、流动性好、链的规则稳定的BSC公链（最终部署哪条公链由参与销毁的社区成员讨论并投票决定）。参与者可通过四种方式销毁/锁定LOVE20协议生态资产（含子币）：流动性质押凭证、加速质押凭证、治理激励和行动激励，以获得新链上首次部署的 LOVE20 代币分配份额。
+  activityDetails: `活动背景：LOVE20协议即将启动多链部署，首个公链暂定为原生代币价值稳定、流动性好、链的规则稳定的BSC公链（最终部署哪条公链由参与销毁的社区成员讨论并投票决定）。参与者可通过四种方式销毁/锁定LOVE20协议生态资产（含子币）：流动性质押凭证、加速激励质押凭证、治理激励和行动激励，以获得新链上首次部署的 LOVE20 代币分配份额。
 
 活动阶段：第一阶段：资产锁定销毁，第二阶段：公链部署选择投票，第三阶段：协议部署前社区公测，第四阶段：协议部署并可领取新部署协议代币。
 
-参与资产：活动支持TKM链上部署的LOVE20协议的四类资产销毁方式：SL 流动性质押凭证、ST 加速质押凭证、治理激励和行动激励。SL、ST 会被永久锁定；治理激励和行动激励必须先实际领取并铸造，之后按实际铸造数量生成对应的销毁额度，再销毁对应社区代币。
+参与资产：活动支持TKM链上部署的LOVE20协议的四类资产销毁方式：SL 流动性质押凭证、ST 加速激励质押凭证、治理激励和行动激励。SL、ST 会被永久锁定；治理激励和行动激励必须先实际领取并铸造，之后按实际铸造数量生成对应的销毁额度，再销毁对应社区代币。
 
 参与时间：活动只开放当前轮次。必须在当前轮次完成锁定或销毁，历史轮次不能补做，未使用的销毁额度也不能带到下一轮。在同一社区、同一资产类别内，同样数量越早参与，获得的销毁得分越高。
 
@@ -327,6 +327,7 @@ function ActionRewardRow({
   tokenSymbol,
   decimals,
   canOperate,
+  showOperations,
   allocation,
   ensureRoundOpen,
   onConfirmed,
@@ -338,6 +339,7 @@ function ActionRewardRow({
   tokenSymbol: string;
   decimals: number;
   canOperate: boolean;
+  showOperations: boolean;
   allocation: bigint;
   ensureRoundOpen: () => Promise<boolean>;
   onConfirmed: () => void;
@@ -372,8 +374,13 @@ function ActionRewardRow({
           />
           <div className="mt-1 text-xs text-greyscale-500">{isExtension ? "扩展行动" : "基础行动"}</div>
         </div>
-        {canOperate && !reward.isClaimed && reward.claimableRewardAmount > BigInt(0) && (
-          <Button size="sm" variant="outline" disabled={transactionBusy(claimTransaction)} onClick={() => void claim()}>
+        {showOperations && !reward.isClaimed && reward.claimableRewardAmount > BigInt(0) && (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!canOperate || transactionBusy(claimTransaction)}
+            onClick={() => void claim()}
+          >
             {transactionBusy(claimTransaction) ? "领取中..." : "领取激励"}
           </Button>
         )}
@@ -655,6 +662,41 @@ export default function BurnPage() {
     govAmount && scoreMultiplierReady ? (govAmount * scoreMultiplier.multiplier) / WAD : undefined;
   const estimatedActionScore =
     actionAmount && scoreMultiplierReady ? (actionAmount * scoreMultiplier.multiplier) / WAD : undefined;
+  const hasGovQuota = govState.state.unusedQuotaAmount > BigInt(0);
+  const hasActionQuota = actionQuotaTotal > BigInt(0);
+  const hasCommunityTokenBalance = (tokenBalance.balance || BigInt(0)) > BigInt(0);
+  const communityTokenBalancePending = tokenBalance.isPending;
+  const communityTokenBalanceError = !!tokenBalance.error;
+  const govOperationMessage = !canOperate
+    ? operationUnavailableMessage
+    : !govState.state.isClaimed
+      ? govState.state.claimableRewardAmount > BigInt(0)
+        ? "请先领取并实际铸造治理激励，之后才会生成激励代币销毁额度。"
+        : "本轮无可领取治理激励，暂不会生成激励代币销毁额度。"
+      : !hasGovQuota
+        ? "当前没有激励代币销毁额度。"
+        : communityTokenBalancePending
+          ? "正在读取社区代币余额。"
+          : communityTokenBalanceError
+            ? "社区代币余额读取失败。"
+            : !hasCommunityTokenBalance
+              ? "当前钱包没有可销毁的社区代币。"
+              : !scoreMultiplierReady
+                ? "得分加成尚未读取完成或读取失败。"
+                : undefined;
+  const actionOperationMessage = !canOperate
+    ? operationUnavailableMessage
+    : !hasActionQuota
+      ? "当前没有行动激励销毁额度；请先领取并实际铸造行动激励。"
+      : communityTokenBalancePending
+        ? "正在读取社区代币余额。"
+        : communityTokenBalanceError
+          ? "社区代币余额读取失败。"
+          : !hasCommunityTokenBalance
+            ? "当前钱包没有可销毁的社区代币。"
+            : !scoreMultiplierReady
+              ? "得分加成尚未读取完成或读取失败。"
+              : undefined;
 
   const actionIds = useMemo(() => actionStates.states.map((state) => state.actionId), [actionStates.states]);
   const actionInfo = useActionBaseInfosByIdsWithCache({
@@ -792,6 +834,86 @@ export default function BurnPage() {
     }
   };
 
+  const renderGovBurnControls = () => {
+    const controlsDisabled = !canOperate || !govState.state.isClaimed || maxGovAmount === BigInt(0);
+
+    return (
+      <div className="space-y-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="relative flex-1">
+            <Input
+              inputMode="decimal"
+              placeholder={`输入要销毁的 ${tokenSymbol} 数量`}
+              value={govInput}
+              disabled={controlsDisabled}
+              onChange={(event) => setGovInput(event.target.value)}
+              className={govInputError ? "border-red-400 pr-16" : "pr-16"}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-0.5 h-9 px-2"
+              disabled={controlsDisabled}
+              onClick={() => setGovInput(inputAmount(maxGovAmount, tokenDecimals))}
+            >
+              最大
+            </Button>
+          </div>
+          <Button
+            variant="outline"
+            disabled={controlsDisabled || govApproval.buttonDisabled}
+            onClick={() => void govApproval.approve()}
+          >
+            {govApproval.isApproved ? `1.${tokenSymbol} 已授权` : `1.${govApproval.buttonText} ${tokenSymbol}`}
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={
+              controlsDisabled ||
+              govApproval.needsApproval ||
+              !govAmount ||
+              govInputError ||
+              !scoreMultiplierReady ||
+              transactionBusy(burnGov)
+            }
+            onClick={() =>
+              govAmount &&
+              openConfirmation({
+                title: "销毁治理激励代币",
+                description: `将真实销毁 ${formatExactAmount(govAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
+                confirmText: "确认销毁",
+                run: async () => {
+                  if ((await ensureRoundOpen()) && selectedCommunity && selectedRoundNumber !== undefined) {
+                    await burnGov.burnGovRewardToken(selectedCommunity, selectedRoundNumber, govAmount);
+                  }
+                },
+              })
+            }
+          >
+            {transactionBusy(burnGov) ? "2.处理中..." : "2.销毁治理激励"}
+          </Button>
+        </div>
+        <p className="flex flex-wrap items-center gap-1 text-xs text-greyscale-500">
+          <InfoLabel label="本次最多可销毁" info={BURN_INFO.maxBurnable} />
+          <span>
+            {formatExactAmount(maxGovAmount, tokenDecimals)} {tokenSymbol}。
+          </span>
+        </p>
+        {govAmount && (
+          <p className="flex flex-wrap items-center gap-1 text-xs text-greyscale-500">
+            <InfoLabel label="本次操作预计新增得分" info={BURN_INFO.estimatedScore} />
+            <span>
+              {scoreMultiplierReady ? `${formatAmount(estimatedGovScore, tokenDecimals)} 分` : "等待得分加成读取完成"}。
+            </span>
+          </p>
+        )}
+        {govInputError && <p className="text-xs text-red-600">请输入不超过剩余额度和钱包余额的有效数量。</p>}
+        {govOperationMessage && <p className="text-sm text-greyscale-500">{govOperationMessage}</p>}
+      </div>
+    );
+  };
+
   const renderReceiptOperation = (
     kind: "SL" | "ST",
     balance: bigint | undefined,
@@ -799,84 +921,97 @@ export default function BurnPage() {
     approval: typeof slApproval,
     transaction: { isPending: boolean; isConfirming: boolean },
   ) => {
-    if (!isConnected) return <p className="text-sm text-greyscale-500">连接钱包后可查看当前余额。</p>;
-    if (!canPreviewAssets) return <p className="text-sm text-greyscale-500">{operationUnavailableMessage}</p>;
-    if ((kind === "SL" && slBalance.isPending) || (kind === "ST" && stBalance.isPending)) {
-      return <p className="text-sm text-greyscale-500">正在读取余额...</p>;
-    }
-
+    const balancePending = kind === "SL" ? slBalance.isPending : stBalance.isPending;
+    const balanceError = kind === "SL" ? slBalance.error : stBalance.error;
+    const receiptAddress = kind === "SL" ? slAddress : stAddress;
     const tokenBalanceValue = balance || BigInt(0);
     const estimatedScore = scoreMultiplierReady ? (tokenBalanceValue * scoreMultiplier.multiplier) / WAD : undefined;
     const lock = kind === "SL" ? lockSl.lockSLToken : lockSt.lockSTToken;
+    const controlsDisabled =
+      !isConnected ||
+      !canOperate ||
+      !receiptAddress ||
+      !balance ||
+      tokenBalanceValue === BigInt(0) ||
+      !scoreMultiplierReady;
 
     return (
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <StatValue
             label={`当前钱包 ${kind} 余额`}
-            value={formatAmount(tokenBalanceValue, decimals)}
+            value={!isConnected ? "-" : balancePending ? "读取中..." : formatAmount(tokenBalanceValue, decimals)}
             info={BURN_INFO.balance}
             tone="personal"
           />
           <StatValue
             label="本次操作预计新增得分"
             value={
-              scoreMultiplier.isPending
-                ? "读取中..."
-                : scoreMultiplierReady
-                  ? `${formatAmount(estimatedScore, decimals)} 分`
-                  : "读取失败"
+              !isConnected
+                ? "-"
+                : scoreMultiplier.isPending
+                  ? "读取中..."
+                  : scoreMultiplierReady
+                    ? `${formatAmount(estimatedScore, decimals)} 分`
+                    : "读取失败"
             }
             info={BURN_INFO.estimatedScore}
             tone="personal"
           />
         </div>
-        {!canOperate ? (
-          <p className="text-sm text-greyscale-500">{operationUnavailableMessage} 当前只展示钱包余额。</p>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            variant="outline"
+            disabled={controlsDisabled || approval.buttonDisabled}
+            onClick={() => void approval.approve()}
+            className="w-full sm:flex-1"
+          >
+            {approval.isApproved ? `1.${kind} 已授权` : `1.${approval.buttonText} ${kind}`}
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={controlsDisabled || approval.needsApproval || transactionBusy(transaction)}
+            onClick={() =>
+              openConfirmation({
+                title: `永久锁定全部 ${kind}`,
+                description: [
+                  kind === "SL"
+                    ? `将永久锁定当前全部 ${formatExactAmount(tokenBalanceValue, decimals)} SL，该操作不可撤销。`
+                    : `将永久锁定当前全部 ${formatExactAmount(tokenBalanceValue, decimals)} ST，该操作不可撤销。`,
+                  "锁定 SL 或 ST 任意一种后，你的有效治理票将归 0，无法再参与治理并获得治理激励。",
+                  ...(kind === "SL" && isFirstToken
+                    ? [`这是首个代币的 SL，其中包含链的原生代币（${nativeTokenSymbol}），是否确认锁定？`]
+                    : []),
+                ].join("\n\n"),
+                confirmText: `确认锁定全部 ${kind}`,
+                confirmationPhrase: kind === "SL" ? "确认锁定SL" : undefined,
+                run: async () => {
+                  if ((await ensureRoundOpen()) && selectedCommunity && selectedRoundNumber !== undefined) {
+                    await lock(selectedCommunity, selectedRoundNumber, tokenBalanceValue);
+                  }
+                },
+              })
+            }
+            className="w-full sm:flex-1"
+          >
+            {transactionBusy(transaction) ? "2.处理中..." : `2.永久锁定全部 ${kind}`}
+          </Button>
+        </div>
+        {!isConnected ? (
+          <p className="text-sm text-greyscale-500">连接钱包后可查看余额并操作，当前按钮已禁用。</p>
+        ) : !canOperate ? (
+          <p className="text-sm text-greyscale-500">{operationUnavailableMessage} 当前按钮已禁用。</p>
+        ) : !receiptAddress ? (
+          <p className="text-sm text-red-600">{kind} 凭证地址读取失败，操作按钮已禁用。</p>
+        ) : balanceError ? (
+          <p className="text-sm text-red-600">{kind} 余额读取失败，操作按钮已禁用。</p>
+        ) : !balance ? (
+          <p className="text-sm text-greyscale-500">正在读取余额，当前按钮已禁用。</p>
         ) : tokenBalanceValue === BigInt(0) ? (
-          <p className="text-sm text-greyscale-500">无可锁定余额。</p>
+          <p className="text-sm text-greyscale-500">无可锁定余额，操作按钮已禁用。</p>
         ) : !scoreMultiplierReady ? (
-          <p className="text-sm text-red-600">得分加成读取失败，暂不能提交永久锁定。</p>
-        ) : (
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button
-              variant="outline"
-              disabled={approval.buttonDisabled}
-              onClick={() => void approval.approve()}
-              className="w-full sm:flex-1"
-            >
-              {approval.isApproved ? `1.${kind} 已授权` : `1.${approval.buttonText} ${kind}`}
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={approval.needsApproval || transactionBusy(transaction)}
-              onClick={() =>
-                openConfirmation({
-                  title: `永久锁定全部 ${kind}`,
-                  description: [
-                    kind === "SL"
-                      ? `将永久锁定当前全部 ${formatExactAmount(tokenBalanceValue, decimals)} SL，该操作不可撤销。`
-                      : `将永久锁定当前全部 ${formatExactAmount(tokenBalanceValue, decimals)} ST，该操作不可撤销。`,
-                    "锁定 SL 或 ST 任意一种后，你的有效治理票将归 0，无法再参与治理并获得治理激励。",
-                    ...(kind === "SL" && isFirstToken
-                      ? [`这是首个代币的 SL，其中包含链的原生代币（${nativeTokenSymbol}），是否确认锁定？`]
-                      : []),
-                  ].join("\n\n"),
-                  confirmText: `确认锁定全部 ${kind}`,
-                  confirmationPhrase: kind === "SL" ? "确认锁定SL" : undefined,
-                  run: async () => {
-                    if ((await ensureRoundOpen()) && selectedCommunity && selectedRoundNumber !== undefined) {
-                      await lock(selectedCommunity, selectedRoundNumber, tokenBalanceValue);
-                    }
-                  },
-                })
-              }
-              className="w-full sm:flex-1"
-            >
-              {transactionBusy(transaction) ? "2.处理中..." : `2.永久锁定全部 ${kind}`}
-            </Button>
-          </div>
-        )}
+          <p className="text-sm text-red-600">得分加成尚未读取完成或读取失败，操作按钮已禁用。</p>
+        ) : null}
       </div>
     );
   };
@@ -1268,231 +1403,6 @@ export default function BurnPage() {
               </div>
             )}
 
-            {config.categoryWeights.slTokenLock > BigInt(0) && (
-              <CategorySection
-                title="流动性质押凭证SL永久锁定"
-                description="锁定后已质押资产无法取回，并放弃治理权。"
-                symbol="SL"
-                decimals={slDecimals}
-                community={communityStats?.slTokenLock || EMPTY_STATS.slTokenLock}
-                account={accountStats?.slTokenLock || EMPTY_STATS.slTokenLock}
-                categoryWeightRatio={calculateCategoryWeightRatio(
-                  config.categoryWeights.slTokenLock,
-                  config.categoryWeights,
-                )}
-                isCumulative={isCumulative}
-                hasAccount={!!address}
-                loading={statsPending}
-                error={statsError}
-              >
-                {showRoundOperations && renderReceiptOperation("SL", slBalance.balance, slDecimals, slApproval, lockSl)}
-              </CategorySection>
-            )}
-
-            {config.categoryWeights.stTokenLock > BigInt(0) && (
-              <CategorySection
-                title="加速激励质押凭证SL永久锁定"
-                description="锁定后已质押资产无法取回，并放弃治理权。"
-                symbol="ST"
-                decimals={stDecimals}
-                community={communityStats?.stTokenLock || EMPTY_STATS.stTokenLock}
-                account={accountStats?.stTokenLock || EMPTY_STATS.stTokenLock}
-                categoryWeightRatio={calculateCategoryWeightRatio(
-                  config.categoryWeights.stTokenLock,
-                  config.categoryWeights,
-                )}
-                isCumulative={isCumulative}
-                hasAccount={!!address}
-                loading={statsPending}
-                error={statsError}
-              >
-                {showRoundOperations && renderReceiptOperation("ST", stBalance.balance, stDecimals, stApproval, lockSt)}
-              </CategorySection>
-            )}
-
-            {config.categoryWeights.govRewardBurn > BigInt(0) && (
-              <CategorySection
-                title="治理激励销毁"
-                description="只有已经领取并实际铸造的治理激励才会生成销毁额度。"
-                symbol={tokenSymbol}
-                decimals={tokenDecimals}
-                community={communityStats?.govRewardBurn || EMPTY_STATS.govRewardBurn}
-                account={accountStats?.govRewardBurn || EMPTY_STATS.govRewardBurn}
-                categoryWeightRatio={calculateCategoryWeightRatio(
-                  config.categoryWeights.govRewardBurn,
-                  config.categoryWeights,
-                )}
-                isCumulative={isCumulative}
-                hasAccount={!!address}
-                loading={statsPending}
-                error={statsError}
-              >
-                {showRoundDetails &&
-                  (!isConnected ? (
-                    <p className="text-sm text-greyscale-500">连接钱包后查看治理激励与额度。</p>
-                  ) : govState.isPending ? (
-                    <p className="text-sm text-greyscale-500">正在读取治理激励...</p>
-                  ) : govState.error ? (
-                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-red-600">
-                      <span>治理激励读取失败。</span>
-                      <Button size="sm" variant="outline" onClick={() => void govState.refetch()}>
-                        <RefreshCw className="h-4 w-4" /> 重试
-                      </Button>
-                    </div>
-                  ) : !govState.state.isClaimed ? (
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="grid flex-1 grid-cols-2 gap-3">
-                        <StatValue
-                          label="本轮预计可领取激励"
-                          value={`${formatAmount(govState.state.claimableRewardAmount, tokenDecimals)} ${tokenSymbol}`}
-                          info={BURN_INFO.claimableReward}
-                          tone="personal"
-                        />
-                        {canPreviewAssets && (
-                          <StatValue
-                            label="当前钱包余额"
-                            value={`${formatAmount(tokenBalance.balance, tokenDecimals)} ${tokenSymbol}`}
-                            info={BURN_INFO.balance}
-                            tone="personal"
-                          />
-                        )}
-                      </div>
-                      {canOperate && govState.state.claimableRewardAmount > BigInt(0) ? (
-                        <Button
-                          variant="outline"
-                          disabled={transactionBusy(mintGov)}
-                          onClick={() => void claimGovReward()}
-                        >
-                          {transactionBusy(mintGov) ? "领取中..." : "领取治理激励"}
-                        </Button>
-                      ) : !canOperate ? (
-                        <span className="text-sm text-greyscale-500">{operationUnavailableMessage}</span>
-                      ) : (
-                        <span className="text-sm text-greyscale-500">本轮无可领取治理激励。</span>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                        <StatValue
-                          label="本轮实际铸造激励"
-                          value={`${formatAmount(govState.state.claimedRewardAmount, tokenDecimals)} ${tokenSymbol}`}
-                          info={BURN_INFO.mintedReward}
-                          tone="personal"
-                        />
-                        <StatValue
-                          label="本轮总额度"
-                          value={`${formatAmount(govState.state.burnQuotaAmount, tokenDecimals)} ${tokenSymbol}`}
-                          info={BURN_INFO.totalQuota}
-                        />
-                        <StatValue
-                          label="本轮已用额度"
-                          value={`${formatAmount(govState.state.burnedAmount, tokenDecimals)} ${tokenSymbol}`}
-                          info={BURN_INFO.usedQuota}
-                        />
-                        <StatValue
-                          label="本轮剩余额度"
-                          value={`${formatAmount(govState.state.unusedQuotaAmount, tokenDecimals)} ${tokenSymbol}`}
-                          info={BURN_INFO.remainingQuota}
-                        />
-                        {canPreviewAssets && (
-                          <StatValue
-                            label="当前钱包余额"
-                            value={`${formatAmount(tokenBalance.balance, tokenDecimals)} ${tokenSymbol}`}
-                            info={BURN_INFO.balance}
-                            tone="personal"
-                          />
-                        )}
-                      </div>
-                      {!canOperate ? (
-                        <p className="text-sm text-greyscale-500">{operationUnavailableMessage}</p>
-                      ) : maxGovAmount > BigInt(0) ? (
-                        <>
-                          <div className="flex flex-col gap-2 sm:flex-row">
-                            <div className="relative flex-1">
-                              <Input
-                                inputMode="decimal"
-                                placeholder={`输入要销毁的 ${tokenSymbol} 数量`}
-                                value={govInput}
-                                onChange={(event) => setGovInput(event.target.value)}
-                                className={govInputError ? "border-red-400 pr-16" : "pr-16"}
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-1 top-0.5 h-9 px-2"
-                                onClick={() => setGovInput(inputAmount(maxGovAmount, tokenDecimals))}
-                              >
-                                最大
-                              </Button>
-                            </div>
-                            <Button
-                              variant="outline"
-                              disabled={govApproval.buttonDisabled}
-                              onClick={() => void govApproval.approve()}
-                            >
-                              {govApproval.isApproved
-                                ? `1.${tokenSymbol} 已授权`
-                                : `1.${govApproval.buttonText} ${tokenSymbol}`}
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              disabled={
-                                govApproval.needsApproval ||
-                                !govAmount ||
-                                govInputError ||
-                                !scoreMultiplierReady ||
-                                transactionBusy(burnGov)
-                              }
-                              onClick={() =>
-                                govAmount &&
-                                openConfirmation({
-                                  title: "销毁治理激励代币",
-                                  description: `将真实销毁 ${formatExactAmount(govAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
-                                  confirmText: "确认销毁",
-                                  run: async () => {
-                                    if (
-                                      (await ensureRoundOpen()) &&
-                                      selectedCommunity &&
-                                      selectedRoundNumber !== undefined
-                                    ) {
-                                      await burnGov.burnGovRewardToken(
-                                        selectedCommunity,
-                                        selectedRoundNumber,
-                                        govAmount,
-                                      );
-                                    }
-                                  },
-                                })
-                              }
-                            >
-                              {transactionBusy(burnGov) ? "2.处理中..." : "2.销毁治理激励"}
-                            </Button>
-                          </div>
-                          {govAmount && (
-                            <p className="mt-2 flex flex-wrap items-center gap-1 text-xs text-greyscale-500">
-                              <InfoLabel label="本次操作预计新增得分" info={BURN_INFO.estimatedScore} />
-                              <span>
-                                {scoreMultiplierReady
-                                  ? `${formatAmount(estimatedGovScore, tokenDecimals)} 分`
-                                  : "等待得分加成读取完成"}
-                                。
-                              </span>
-                            </p>
-                          )}
-                        </>
-                      ) : (
-                        <p className="text-sm text-greyscale-500">当前没有可用销毁额度或钱包余额。</p>
-                      )}
-                      {govInputError && (
-                        <p className="text-xs text-red-600">请输入不超过剩余额度和钱包余额的有效数量。</p>
-                      )}
-                    </div>
-                  ))}
-              </CategorySection>
-            )}
-
             {config.categoryWeights.actionRewardBurn > BigInt(0) && (
               <CategorySection
                 title="行动激励销毁"
@@ -1529,10 +1439,11 @@ export default function BurnPage() {
                         <RefreshCw className="h-4 w-4" /> 重试
                       </Button>
                     </div>
-                  ) : actionStates.states.length === 0 ? (
-                    <p className="text-sm text-greyscale-500">本轮没有可展示的行动激励。</p>
                   ) : (
                     <div className="space-y-4">
+                      {actionStates.states.length === 0 && (
+                        <p className="text-sm text-greyscale-500">本轮没有可展示的行动激励。</p>
+                      )}
                       <div className="space-y-2">
                         {actionStates.states.map((state) => (
                           <ActionRewardRow
@@ -1544,6 +1455,7 @@ export default function BurnPage() {
                             tokenSymbol={tokenSymbol}
                             decimals={tokenDecimals}
                             canOperate={canOperate}
+                            showOperations={showRoundOperations}
                             allocation={allocationByAction.get(state.actionId) || BigInt(0)}
                             ensureRoundOpen={ensureRoundOpen}
                             onConfirmed={refreshData}
@@ -1551,104 +1463,253 @@ export default function BurnPage() {
                         ))}
                       </div>
 
-                      {canOperate ? (
-                        maxActionAmount > BigInt(0) ? (
-                          <div className="space-y-2">
-                            <div className="flex flex-col gap-2 sm:flex-row">
-                              <div className="relative flex-1">
-                                <Input
-                                  inputMode="decimal"
-                                  placeholder={`输入行动激励销毁总量`}
-                                  value={actionInput}
-                                  onChange={(event) => setActionInput(event.target.value)}
-                                  className={actionInputError ? "border-red-400 pr-16" : "pr-16"}
-                                />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="absolute right-1 top-0.5 h-9 px-2"
-                                  onClick={() => setActionInput(inputAmount(maxActionAmount, tokenDecimals))}
-                                >
-                                  最大
-                                </Button>
-                              </div>
+                      {showRoundOperations ? (
+                        <div className="space-y-2">
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                            <div className="relative flex-1">
+                              <Input
+                                inputMode="decimal"
+                                placeholder={`输入行动激励销毁总量`}
+                                value={actionInput}
+                                disabled={!canOperate || maxActionAmount === BigInt(0)}
+                                onChange={(event) => setActionInput(event.target.value)}
+                                className={actionInputError ? "border-red-400 pr-16" : "pr-16"}
+                              />
                               <Button
-                                variant="outline"
-                                disabled={actionApproval.buttonDisabled}
-                                onClick={() => void actionApproval.approve()}
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-1 top-0.5 h-9 px-2"
+                                disabled={!canOperate || maxActionAmount === BigInt(0)}
+                                onClick={() => setActionInput(inputAmount(maxActionAmount, tokenDecimals))}
                               >
-                                {actionApproval.isApproved
-                                  ? `1.${tokenSymbol} 已授权`
-                                  : `1.${actionApproval.buttonText} ${tokenSymbol}`}
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                disabled={
-                                  actionApproval.needsApproval ||
-                                  !actionAmount ||
-                                  actionInputError ||
-                                  !scoreMultiplierReady ||
-                                  actionAllocations.length === 0 ||
-                                  transactionBusy(burnActions)
-                                }
-                                onClick={() =>
-                                  actionAmount &&
-                                  openConfirmation({
-                                    title: "批量销毁行动激励代币",
-                                    description: `将按上方明细真实销毁 ${formatExactAmount(actionAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
-                                    confirmText: "确认批量销毁",
-                                    run: async () => {
-                                      if (
-                                        (await ensureRoundOpen()) &&
-                                        selectedCommunity &&
-                                        selectedRoundNumber !== undefined
-                                      ) {
-                                        await burnActions.burnActionRewardTokens(
-                                          selectedRoundNumber,
-                                          actionAllocations.map((allocation) => ({
-                                            tokenAddress: selectedCommunity,
-                                            actionId: allocation.actionId,
-                                            amount: allocation.amount,
-                                          })),
-                                        );
-                                      }
-                                    },
-                                  })
-                                }
-                              >
-                                {transactionBusy(burnActions) ? "2.处理中..." : "2.批量销毁"}
+                                最大
                               </Button>
                             </div>
+                            <Button
+                              variant="outline"
+                              disabled={!canOperate || actionApproval.buttonDisabled || maxActionAmount === BigInt(0)}
+                              onClick={() => void actionApproval.approve()}
+                            >
+                              {actionApproval.isApproved
+                                ? `1.${tokenSymbol} 已授权`
+                                : `1.${actionApproval.buttonText} ${tokenSymbol}`}
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              disabled={
+                                actionApproval.needsApproval ||
+                                !canOperate ||
+                                !actionAmount ||
+                                actionInputError ||
+                                maxActionAmount === BigInt(0) ||
+                                !scoreMultiplierReady ||
+                                actionAllocations.length === 0 ||
+                                transactionBusy(burnActions)
+                              }
+                              onClick={() =>
+                                actionAmount &&
+                                openConfirmation({
+                                  title: "批量销毁行动激励代币",
+                                  description: `将按上方明细真实销毁 ${formatExactAmount(actionAmount, tokenDecimals)} ${tokenSymbol}，该操作不可撤销。`,
+                                  confirmText: "确认批量销毁",
+                                  run: async () => {
+                                    if (
+                                      (await ensureRoundOpen()) &&
+                                      selectedCommunity &&
+                                      selectedRoundNumber !== undefined
+                                    ) {
+                                      await burnActions.burnActionRewardTokens(
+                                        selectedRoundNumber,
+                                        actionAllocations.map((allocation) => ({
+                                          tokenAddress: selectedCommunity,
+                                          actionId: allocation.actionId,
+                                          amount: allocation.amount,
+                                        })),
+                                      );
+                                    }
+                                  },
+                                })
+                              }
+                            >
+                              {transactionBusy(burnActions) ? "2.处理中..." : "2.批量销毁"}
+                            </Button>
+                          </div>
+                          <p className="flex flex-wrap items-center gap-1 text-xs text-greyscale-500">
+                            <InfoLabel label="本次最多可销毁" info={BURN_INFO.maxBurnable} />
+                            <span>
+                              {formatExactAmount(maxActionAmount, tokenDecimals)} {tokenSymbol}。
+                            </span>
+                          </p>
+                          {actionAmount && (
                             <p className="flex flex-wrap items-center gap-1 text-xs text-greyscale-500">
-                              <InfoLabel label="本次最多可销毁" info={BURN_INFO.maxBurnable} />
+                              <InfoLabel label="本次操作预计新增得分" info={BURN_INFO.estimatedScore} />
                               <span>
-                                {formatExactAmount(maxActionAmount, tokenDecimals)} {tokenSymbol}。
+                                {scoreMultiplierReady
+                                  ? `${formatAmount(estimatedActionScore, tokenDecimals)} 分`
+                                  : "等待得分加成读取完成"}
+                                。
                               </span>
                             </p>
-                            {actionAmount && (
-                              <p className="flex flex-wrap items-center gap-1 text-xs text-greyscale-500">
-                                <InfoLabel label="本次操作预计新增得分" info={BURN_INFO.estimatedScore} />
-                                <span>
-                                  {scoreMultiplierReady
-                                    ? `${formatAmount(estimatedActionScore, tokenDecimals)} 分`
-                                    : "等待得分加成读取完成"}
-                                  。
-                                </span>
-                              </p>
-                            )}
-                            {actionInputError && (
-                              <p className="text-xs text-red-600">请输入不超过行动剩余额度和钱包余额的有效数量。</p>
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-greyscale-500">领取行动激励后，实际铸造数量才会生成销毁额度。</p>
-                        )
+                          )}
+                          {actionInputError && (
+                            <p className="text-xs text-red-600">请输入不超过行动剩余额度和钱包余额的有效数量。</p>
+                          )}
+                          {actionOperationMessage && (
+                            <p className="text-sm text-greyscale-500">
+                              {actionOperationMessage} 操作按钮已禁用。
+                            </p>
+                          )}
+                        </div>
                       ) : (
                         <p className="text-sm text-greyscale-500">{operationUnavailableMessage}</p>
                       )}
                     </div>
                   ))}
+              </CategorySection>
+            )}
+            {config.categoryWeights.govRewardBurn > BigInt(0) && (
+              <CategorySection
+                title="治理激励销毁"
+                description="只有已经领取并实际铸造的治理激励才会生成销毁额度。"
+                symbol={tokenSymbol}
+                decimals={tokenDecimals}
+                community={communityStats?.govRewardBurn || EMPTY_STATS.govRewardBurn}
+                account={accountStats?.govRewardBurn || EMPTY_STATS.govRewardBurn}
+                categoryWeightRatio={calculateCategoryWeightRatio(
+                  config.categoryWeights.govRewardBurn,
+                  config.categoryWeights,
+                )}
+                isCumulative={isCumulative}
+                hasAccount={!!address}
+                loading={statsPending}
+                error={statsError}
+              >
+                {showRoundDetails &&
+                  (!isConnected ? (
+                    <p className="text-sm text-greyscale-500">连接钱包后查看治理激励与额度。</p>
+                  ) : govState.isPending ? (
+                    <p className="text-sm text-greyscale-500">正在读取治理激励...</p>
+                  ) : govState.error ? (
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-red-600">
+                      <span>治理激励读取失败。</span>
+                      <Button size="sm" variant="outline" onClick={() => void govState.refetch()}>
+                        <RefreshCw className="h-4 w-4" /> 重试
+                      </Button>
+                    </div>
+                  ) : !govState.state.isClaimed ? (
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="grid flex-1 grid-cols-2 gap-3">
+                          <StatValue
+                            label="本轮预计可领取激励"
+                            value={`${formatAmount(govState.state.claimableRewardAmount, tokenDecimals)} ${tokenSymbol}`}
+                            info={BURN_INFO.claimableReward}
+                            tone="personal"
+                          />
+                          {canPreviewAssets && (
+                            <StatValue
+                              label="当前钱包余额"
+                              value={`${formatAmount(tokenBalance.balance, tokenDecimals)} ${tokenSymbol}`}
+                              info={BURN_INFO.balance}
+                              tone="personal"
+                            />
+                          )}
+                        </div>
+                        {showRoundOperations && govState.state.claimableRewardAmount > BigInt(0) ? (
+                          <Button
+                            variant="outline"
+                            disabled={!canOperate || transactionBusy(mintGov)}
+                            onClick={() => void claimGovReward()}
+                          >
+                            {transactionBusy(mintGov) ? "领取中..." : "领取治理激励"}
+                          </Button>
+                        ) : (
+                          <span className="text-sm text-greyscale-500">
+                            {showRoundOperations ? govOperationMessage : operationUnavailableMessage}
+                          </span>
+                        )}
+                      </div>
+                      {showRoundOperations && renderGovBurnControls()}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                        <StatValue
+                          label="本轮实际铸造激励"
+                          value={`${formatAmount(govState.state.claimedRewardAmount, tokenDecimals)} ${tokenSymbol}`}
+                          info={BURN_INFO.mintedReward}
+                          tone="personal"
+                        />
+                        <StatValue
+                          label="本轮总额度"
+                          value={`${formatAmount(govState.state.burnQuotaAmount, tokenDecimals)} ${tokenSymbol}`}
+                          info={BURN_INFO.totalQuota}
+                        />
+                        <StatValue
+                          label="本轮已用额度"
+                          value={`${formatAmount(govState.state.burnedAmount, tokenDecimals)} ${tokenSymbol}`}
+                          info={BURN_INFO.usedQuota}
+                        />
+                        <StatValue
+                          label="本轮剩余额度"
+                          value={`${formatAmount(govState.state.unusedQuotaAmount, tokenDecimals)} ${tokenSymbol}`}
+                          info={BURN_INFO.remainingQuota}
+                        />
+                        {canPreviewAssets && (
+                          <StatValue
+                            label="当前钱包余额"
+                            value={`${formatAmount(tokenBalance.balance, tokenDecimals)} ${tokenSymbol}`}
+                            info={BURN_INFO.balance}
+                            tone="personal"
+                          />
+                        )}
+                      </div>
+                      {showRoundOperations ? renderGovBurnControls() : <p className="text-sm text-greyscale-500">{operationUnavailableMessage}</p>}
+                    </div>
+                  ))}
+              </CategorySection>
+            )}
+
+            {config.categoryWeights.slTokenLock > BigInt(0) && (
+              <CategorySection
+                title="流动性质押凭证SL永久锁定"
+                description="锁定后已质押资产无法取回，并放弃治理权。"
+                symbol="SL"
+                decimals={slDecimals}
+                community={communityStats?.slTokenLock || EMPTY_STATS.slTokenLock}
+                account={accountStats?.slTokenLock || EMPTY_STATS.slTokenLock}
+                categoryWeightRatio={calculateCategoryWeightRatio(
+                  config.categoryWeights.slTokenLock,
+                  config.categoryWeights,
+                )}
+                isCumulative={isCumulative}
+                hasAccount={!!address}
+                loading={statsPending}
+                error={statsError}
+              >
+                {showRoundOperations && renderReceiptOperation("SL", slBalance.balance, slDecimals, slApproval, lockSl)}
+              </CategorySection>
+            )}
+
+            {config.categoryWeights.stTokenLock > BigInt(0) && (
+              <CategorySection
+                title="加速激励质押凭证ST永久锁定"
+                description="锁定后已质押资产无法取回，并放弃治理权。"
+                symbol="ST"
+                decimals={stDecimals}
+                community={communityStats?.stTokenLock || EMPTY_STATS.stTokenLock}
+                account={accountStats?.stTokenLock || EMPTY_STATS.stTokenLock}
+                categoryWeightRatio={calculateCategoryWeightRatio(
+                  config.categoryWeights.stTokenLock,
+                  config.categoryWeights,
+                )}
+                isCumulative={isCumulative}
+                hasAccount={!!address}
+                loading={statsPending}
+                error={statsError}
+              >
+                {showRoundOperations && renderReceiptOperation("ST", stBalance.balance, stDecimals, stApproval, lockSt)}
               </CategorySection>
             )}
           </>
