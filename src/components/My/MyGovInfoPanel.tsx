@@ -5,10 +5,10 @@ import { formatUnits } from 'viem';
 
 // my funcs
 import { formatPercentage, formatTokenAmount } from '@/src/lib/format';
-import { formatPhaseText } from '@/src/lib/domainUtils';
+import { formatPhaseText, getMissingStakeReceiptAmount } from '@/src/lib/domainUtils';
 
 // my hooks
-import { useAccountStakeStatus, useCurrentRound } from '@/src/hooks/contracts/useLOVE20Stake';
+import { useAccountStakeStatus } from '@/src/hooks/contracts/useLOVE20Stake';
 import { useMyGovData } from '@/src/hooks/composite/useMyGovData';
 import { useEstimatedGovRewardOfCurrentRound } from '@/src/hooks/contracts/useLOVE20MintViewer';
 import { useBalanceOf } from '@/src/hooks/contracts/useLOVE20Token';
@@ -25,11 +25,8 @@ interface MyGovInfoPanelProps {
   enableWithdraw?: boolean;
 }
 
-const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw = false }) => {
+const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token }) => {
   const { address: account } = useAccount();
-
-  // Hook：获取当前轮次
-  const { currentRound, isPending: isPendingCurrentRound, error: errorCurrentRound } = useCurrentRound(enableWithdraw);
 
   // Hook：获取质押状态
   const {
@@ -77,18 +74,23 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
     (token?.address as `0x${string}`) || '',
   );
 
-  // 我的加速激励的质押占比
-  const tokenStakedPercentage = stAmount && govData?.stAmount ? (Number(stAmount) / Number(govData.stAmount)) * 100 : 0;
+  // 加速激励只对当前有效治理者生效：SL/ST 任一凭证不足时，治理票和加速占比都归零。
+  const tokenStakedPercentage =
+    validGovVotes && validGovVotes > BigInt(0) && stAmount && govData?.stAmount
+      ? (Number(stAmount) / Number(govData.stAmount)) * 100
+      : 0;
 
   const isPendingGovRewards = isPendingGovData || isPendingAccountStakeStatus;
 
   if (
     !token ||
-    (enableWithdraw && isPendingCurrentRound) ||
     isPendingAccountStakeStatus ||
     (hasStake && (isPendingSlBalance || isPendingStBalance))
   ) {
     return <LoadingIcon />;
+  }
+  if (errorAccountStakeStatus) {
+    return <div className="py-4 text-center text-sm text-status-error">质押状态读取失败，暂时无法判断治理资产</div>;
   }
   if (!isPendingAccountStakeStatus && !slAmount) {
     return (
@@ -104,14 +106,8 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
   }
 
   const balanceReadFailed = !!errorSlBalance || !!errorStBalance || slBalance === undefined || stBalance === undefined;
-  const missingSlAmount =
-    slBalance !== undefined && slBalance < (slAmount ?? BigInt(0))
-      ? (slAmount ?? BigInt(0)) - slBalance
-      : BigInt(0);
-  const missingStAmount =
-    stBalance !== undefined && stBalance < (stAmount ?? BigInt(0))
-      ? (stAmount ?? BigInt(0)) - stBalance
-      : BigInt(0);
+  const missingSlAmount = getMissingStakeReceiptAmount(slAmount, slBalance, requestedUnstakeRound);
+  const missingStAmount = getMissingStakeReceiptAmount(stAmount, stBalance, requestedUnstakeRound);
 
   return (
     <>
@@ -128,7 +124,7 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
             )}
           </div>
           <div className="stat-desc text-xs mb-2 mt-1">
-            {requestedUnstakeRound && requestedUnstakeRound > BigInt(0) && '注意：解锁期内治理票数为0'}
+            {requestedUnstakeRound && requestedUnstakeRound > BigInt(0) && '注意：已申请解锁，治理票数为0'}
           </div>
         </div>
         <div className="stat place-items-center pt-0 pb-1 pl-1">
@@ -149,8 +145,10 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
         <div className="stat place-items-center pt-0 pb-1 pl-1">
           <div className="stat-title text-sm flex items-center">我的治理票占比</div>
           <div className="stat-value text-xl text-data-personal">
-            {isPendingGovData || isPendingGovData ? (
+            {isPendingGovData ? (
               <LoadingIcon />
+            ) : errorGovData || validGovVotes === undefined || !govData ? (
+              '读取失败'
             ) : (
               `${formatPercentage(governancePercentage.toString())}`
             )}
@@ -164,12 +162,12 @@ const MyGovInfoPanel: React.FC<MyGovInfoPanelProps> = ({ token, enableWithdraw =
         <div className="stat place-items-center pt-0 pb-1 pl-1">
           <div className="stat-title text-sm flex items-center">加速激励质押占比</div>
           <div className="stat-value text-xl text-data-personal">
-            {isPendingGovRewards || !currentRound ? (
+            {isPendingGovRewards ? (
               <LoadingIcon />
-            ) : tokenStakedPercentage > 0 ? (
-              formatPercentage(tokenStakedPercentage.toString())
+            ) : errorGovData || validGovVotes === undefined || !govData ? (
+              '读取失败'
             ) : (
-              '-'
+              formatPercentage(tokenStakedPercentage.toString())
             )}
           </div>
           <div className="stat-desc text-xs">

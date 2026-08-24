@@ -8,7 +8,7 @@ import { formatUnits } from 'viem';
 
 // my funcs
 import { formatTokenAmount, formatRoundForDisplay } from '@/src/lib/format';
-import { formatPhaseText } from '@/src/lib/domainUtils';
+import { formatPhaseText, getMissingStakeReceiptAmount } from '@/src/lib/domainUtils';
 
 // my hooks
 import { useAccountStakeStatus, useUnstake, useWithdraw, useValidGovVotes } from '@/src/hooks/contracts/useLOVE20Stake';
@@ -64,7 +64,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
   } = useBalanceOf(
     token?.slTokenAddress as `0x${string}`,
     account as `0x${string}`,
-    hasStake && !!token?.slTokenAddress && !!account,
+    !!token?.slTokenAddress && !!account,
   );
   const {
     balance: stBalance,
@@ -73,7 +73,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
   } = useBalanceOf(
     token?.stTokenAddress as `0x${string}`,
     account as `0x${string}`,
-    hasStake && !!token?.stTokenAddress && !!account,
+    !!token?.stTokenAddress && !!account,
   );
 
   // 检查输入条件
@@ -239,24 +239,29 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
 
   // 通知父组件质押状态变化
   useEffect(() => {
-    if (onStakeStatusChange && !isPendingAccountStakeStatus) {
+    if (onStakeStatusChange && !isPendingAccountStakeStatus && !errorAccountStakeStatus) {
       const hasStake = Boolean(slAmount && slAmount > BigInt(0));
       onStakeStatusChange(hasStake);
     }
-  }, [slAmount, isPendingAccountStakeStatus, onStakeStatusChange]);
+  }, [slAmount, isPendingAccountStakeStatus, errorAccountStakeStatus, onStakeStatusChange]);
 
   if (!account) {
     return <div className="text-sm mt-4 text-greyscale-500 text-center">请先连接钱包</div>;
+  }
+  if (errorAccountStakeStatus) {
+    return <div className="text-sm mt-4 text-status-error text-center">质押状态读取失败，暂时无法判断质押情况</div>;
   }
   if (
     !token ||
     (enableWithdraw && isPendingCurrentRound) ||
     isPendingAccountStakeStatus ||
-    (hasStake && (isPendingValidGovVotes || isPendingSlBalance || isPendingStBalance))
+    isPendingSlBalance ||
+    isPendingStBalance ||
+    (hasStake && isPendingValidGovVotes)
   ) {
     return <LoadingIcon />;
   }
-  if (!isPendingAccountStakeStatus && !slAmount) {
+  if (enableWithdraw && !isPendingAccountStakeStatus && !slAmount) {
     return <div className="text-sm mt-4 text-greyscale-500 text-center">您没有质押</div>;
   }
 
@@ -264,21 +269,20 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
   const isApprovingSL = isPendingApproveSL || isConfirmingApproveSL;
   const isApprovingST = isPendingApproveST || isConfirmingApproveST;
   const allApproved = isSlTokenApproved && isStTokenApproved;
+  const isUnstaking = requestedUnstakeRound !== undefined && requestedUnstakeRound > BigInt(0);
   const balanceReadFailed = !!errorSlBalance || !!errorStBalance || slBalance === undefined || stBalance === undefined;
   const displayedSlAmount = enableWithdraw ? slAmount : slBalance;
   const displayedStAmount = enableWithdraw ? stAmount : stBalance;
-  const missingSlAmount =
-    slBalance !== undefined && slBalance < (slAmount ?? BigInt(0))
-      ? (slAmount ?? BigInt(0)) - slBalance
-      : BigInt(0);
-  const missingStAmount =
-    stBalance !== undefined && stBalance < (stAmount ?? BigInt(0))
-      ? (stAmount ?? BigInt(0)) - stBalance
-      : BigInt(0);
+  const missingSlAmount = getMissingStakeReceiptAmount(slAmount, slBalance, requestedUnstakeRound);
+  const missingStAmount = getMissingStakeReceiptAmount(stAmount, stBalance, requestedUnstakeRound);
 
   // 是否可以取回代币
-  const canWithdraw =
-    requestedUnstakeRound && currentRound > requestedUnstakeRound + (promisedWaitingPhases || BigInt(0));
+  const canWithdraw = Boolean(
+    requestedUnstakeRound &&
+      !errorCurrentRound &&
+      currentRound > requestedUnstakeRound + (promisedWaitingPhases || BigInt(0)),
+  );
+  const unlockStatusText = errorCurrentRound ? '解锁状态读取失败' : canWithdraw ? '解锁完成，可取回' : '正在解锁中';
 
   return (
     <>
@@ -289,7 +293,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
             {errorValidGovVotes ? '读取失败' : formatTokenAmount(validGovVotes)}
           </div>
           <div className="stat-desc text-xs mb-2 mt-1">
-            {requestedUnstakeRound && requestedUnstakeRound > BigInt(0) && '注意：解锁期内治理票数为0'}
+            {isUnstaking && '注意：已申请解锁，治理票数为0'}
           </div>
         </div>
         <div className="stat place-items-center pt-0 pb-1 pl-1">
@@ -309,7 +313,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
       <div className="stats w-full grid grid-cols-2 divide-x-0">
         <div className="stat place-items-center pt-0 pb-1 pl-1">
           <div className="stat-title text-sm flex items-center">
-            {enableWithdraw ? '需归还的SL代币' : '钱包SL余额'}
+            {enableWithdraw ? (isUnstaking ? '已归还的SL代币' : '需归还的SL代币') : '钱包SL余额'}
             <AddToMetamask
               tokenAddress={token.slTokenAddress as `0x${string}`}
               tokenSymbol={'sl' + token.symbol}
@@ -328,15 +332,28 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
               </Link>
             )}
           </div>
-          <div className="stat-desc text-xs">
-            <Button variant="link" className="text-secondary font-normal border-secondary" asChild>
-              <Link href={`/stake/stakelp/?symbol=${token.symbol}`}>质押 获取治理票&nbsp;&gt;&gt;</Link>
-            </Button>
-          </div>
+          {enableWithdraw && isUnstaking ? (
+            <div className="stat-desc text-xs text-status-info">{unlockStatusText}</div>
+          ) : enableWithdraw ? (
+            <div className="stat-desc text-xs space-y-1">
+              <div>
+                当前钱包余额：{errorSlBalance || slBalance === undefined ? '读取失败' : formatTokenAmount(slBalance)}
+              </div>
+              {missingSlAmount > BigInt(0) && (
+                <div className="text-status-error">余额不足，还差 {formatTokenAmount(missingSlAmount, 4, 'ceil')}</div>
+              )}
+            </div>
+          ) : (
+            <div className="stat-desc text-xs">
+              <Button variant="link" className="text-secondary font-normal border-secondary" asChild>
+                <Link href={`/stake/stakelp/?symbol=${token.symbol}`}>质押 获取治理票&nbsp;&gt;&gt;</Link>
+              </Button>
+            </div>
+          )}
         </div>
         <div className="stat place-items-center pt-0 pb-1 pl-3">
           <div className="stat-title text-sm flex items-center">
-            {enableWithdraw ? '需归还的ST代币' : '钱包ST余额'}
+            {enableWithdraw ? (isUnstaking ? '已归还的ST代币' : '需归还的ST代币') : '钱包ST余额'}
             <AddToMetamask
               tokenAddress={token.stTokenAddress as `0x${string}`}
               tokenSymbol={'st' + token.symbol}
@@ -350,14 +367,28 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
                 ? '读取失败'
                 : formatTokenAmount(displayedStAmount)}
           </div>
-          <div className="stat-desc text-xs">
-            <Button variant="link" className="text-secondary font-normal border-secondary" asChild>
-              <Link href={`/stake/staketoken?symbol=${token.symbol}`}>质押 增加治理收益&nbsp;&gt;&gt;</Link>
-            </Button>
-          </div>
+          {enableWithdraw && isUnstaking ? (
+            <div className="stat-desc text-xs text-status-info">{unlockStatusText}</div>
+          ) : enableWithdraw ? (
+            <div className="stat-desc text-xs space-y-1">
+              <div>
+                当前钱包余额：{errorStBalance || stBalance === undefined ? '读取失败' : formatTokenAmount(stBalance)}
+              </div>
+              {missingStAmount > BigInt(0) && (
+                <div className="text-status-error">余额不足，还差 {formatTokenAmount(missingStAmount, 4, 'ceil')}</div>
+              )}
+            </div>
+          ) : (
+            <div className="stat-desc text-xs">
+              <Button variant="link" className="text-secondary font-normal border-secondary" asChild>
+                <Link href={`/stake/staketoken?symbol=${token.symbol}`}>质押 增加治理收益&nbsp;&gt;&gt;</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
       {!isPendingValidGovVotes &&
+        !enableWithdraw &&
         !isPendingAccountStakeStatus &&
         !errorValidGovVotes &&
         validGovVotes !== undefined &&
@@ -391,8 +422,12 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
           {/* 当用户还未申请取消质押时，显示三个按钮（从左至右依次为：授权 slToken、授权 stToken、取消质押） */}
           {!requestedUnstakeRound && (
             <>
-              <div className="flex justify-center space-x-2 mt-2">
-                <Button className="w-1/3" onClick={handleApproveSL} disabled={isApprovingSL || isSlTokenApproved}>
+              <div className="grid w-full grid-cols-1 gap-2 mt-2 sm:grid-cols-3">
+                <Button
+                  className="w-full min-w-0 !whitespace-normal text-center leading-tight"
+                  onClick={handleApproveSL}
+                  disabled={isApprovingSL || isSlTokenApproved}
+                >
                   {isApprovingSL
                     ? '1.提交中...'
                     : isConfirmingApproveSL
@@ -402,7 +437,7 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
                     : `1.${approvalActionText} sl${token?.symbol}`}
                 </Button>
                 <Button
-                  className="w-1/3"
+                  className="w-full min-w-0 !whitespace-normal text-center leading-tight"
                   onClick={handleApproveST}
                   disabled={!isSlTokenApproved || isApprovingST || isStTokenApproved}
                 >
@@ -415,9 +450,16 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
                     : `2.${approvalActionText} st${token?.symbol}`}
                 </Button>
                 <Button
-                  className="w-1/3"
+                  className="w-full min-w-0 !whitespace-normal text-center leading-tight"
                   onClick={handleUnstake}
-                  disabled={!allApproved || isPendingUnstake || isConfirmingUnstake || isConfirmedUnstake}
+                  disabled={
+                    !allApproved ||
+                    missingSlAmount > BigInt(0) ||
+                    missingStAmount > BigInt(0) ||
+                    isPendingUnstake ||
+                    isConfirmingUnstake ||
+                    isConfirmedUnstake
+                  }
                 >
                   {isPendingUnstake
                     ? '3.提交中'
@@ -429,13 +471,19 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
                 </Button>
               </div>
               <div className="text-center mt-4 text-sm text-greyscale-600">
-                解锁期，是从取消质押的阶段结束时开始计算
-                <br />
-                （现在取消质押后，投票轮第
-                <span className="text-data-personal mx-1">{`${
-                  formatRoundForDisplay(currentRound, token) + (promisedWaitingPhases || BigInt(0)) + BigInt(1)
-                } `}</span>
-                轮才能取回代币）
+                {errorCurrentRound ? (
+                  '当前轮次读取失败，暂时无法预计取回轮次'
+                ) : (
+                  <>
+                    解锁期，是从取消质押的阶段结束时开始计算
+                    <br />
+                    （现在取消质押后，投票轮第
+                    <span className="text-data-personal mx-1">{`${
+                      formatRoundForDisplay(currentRound, token) + (promisedWaitingPhases || BigInt(0)) + BigInt(1)
+                    } `}</span>
+                    轮才能取回代币）
+                  </>
+                )}
               </div>
             </>
           )}
@@ -447,7 +495,9 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
                   onClick={handleWithdraw}
                   disabled={!canWithdraw || isPendingWithdraw || isConfirmingWithdraw || isConfirmedWithdraw}
                 >
-                  {!canWithdraw
+                  {errorCurrentRound
+                    ? '解锁状态读取失败'
+                    : !canWithdraw
                     ? '已取消,第' +
                       (formatRoundForDisplay(requestedUnstakeRound, token) +
                         (promisedWaitingPhases || BigInt(0)) +
@@ -481,7 +531,9 @@ const MyGovernanceAssetsPanel: React.FC<MyGovernanceAssetsPanelProps> = ({
               asChild
             >
               <Link href={`/stake/unstake/?symbol=${token.symbol}`}>
-                {!canWithdraw
+                {errorCurrentRound
+                  ? '解锁状态读取失败'
+                  : !canWithdraw
                   ? '已取消, 第' +
                     (formatRoundForDisplay(requestedUnstakeRound, token) +
                       (promisedWaitingPhases || BigInt(0)) +

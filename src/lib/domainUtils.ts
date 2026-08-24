@@ -7,6 +7,17 @@ import { safeToBigInt } from './clientUtils';
 
 const formatDailyApy = (dailyRate: number) => formatPercentage(Math.expm1(Math.log1p(dailyRate) * 365) * 100);
 
+export const getMissingStakeReceiptAmount = (
+  requiredAmount: bigint | undefined,
+  walletBalance: bigint | undefined,
+  requestedUnstakeRound?: bigint,
+): bigint => {
+  if (!requiredAmount || walletBalance === undefined || (requestedUnstakeRound ?? BigInt(0)) > BigInt(0)) {
+    return BigInt(0);
+  }
+  return walletBalance < requiredAmount ? requiredAmount - walletBalance : BigInt(0);
+};
+
 /**
  * 计算治理质押的预计年化收益率(APY)
  * @param rewardForPhase 本轮治理激励总量
