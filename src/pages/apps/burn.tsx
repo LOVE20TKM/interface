@@ -1599,8 +1599,8 @@ export default function BurnPage() {
                     </div>
                   ) : !govState.state.isClaimed ? (
                     <div className="space-y-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="grid flex-1 grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="grid min-w-0 grid-cols-2 gap-3 sm:min-w-[18rem] sm:flex-1">
                           <StatValue
                             label="本轮预计可领取激励"
                             value={`${formatAmount(govState.state.claimableRewardAmount, tokenDecimals)} ${tokenSymbol}`}
@@ -1619,13 +1619,14 @@ export default function BurnPage() {
                         {showRoundOperations && govState.state.claimableRewardAmount > BigInt(0) ? (
                           <Button
                             variant="outline"
+                            className="w-full shrink-0 sm:w-auto"
                             disabled={!canOperate || transactionBusy(mintGov)}
                             onClick={() => void claimGovReward()}
                           >
                             {transactionBusy(mintGov) ? "领取中..." : "领取治理激励"}
                           </Button>
                         ) : (
-                          <span className="text-sm text-greyscale-500">
+                          <span className="min-w-0 break-words text-sm text-greyscale-500">
                             {showRoundOperations ? govOperationMessage : operationUnavailableMessage}
                           </span>
                         )}
